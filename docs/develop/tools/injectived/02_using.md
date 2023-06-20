@@ -5,11 +5,45 @@ title: Using Injectived
 
 # Using `injectived` 
 
-The following information explains the functions you can use from `injectived` , the command-line interface that connects to Injective and enables you to interact with the Injective blockchain. Every active validator and full node runs `injectived`  and communicates with their node via `injectived` . In this relationship, `injectived`  operates as both the client and the server. You can use `injectived`  to interact with the Injective blockchain by uploading contracts, querying data, managing staking activities, working with governance proposals, and more. For more general information at the command line, run `injectived`  --help. For more information about a specific `injectived`  command, append the -h or --help flag after the command, such as `injectived`  query --help.
+The following information explains the functions you can use from `injectived` , the command-line interface that connects to Injective and enables you to interact with the Injective blockchain. Every active validator and full node runs `injectived`  and communicates with their node via `injectived` . In this relationship, `injectived`  operates as both the client and the server. You can use `injectived`  to interact with the Injective blockchain by uploading contracts, querying data, managing staking activities, working with governance proposals, and more.
+
+For more general information about `injectived`, run: 
+
+```bash
+injectived --help
+```
+
+For more information about a specific `injectived`  command, append the -h or --help flag after the command. For example:
+
+```bash
+injectived query --help.
+```
+
 
 ## Accessing a Node
 
 To query the state and send transactions, you must connect to a node, which is the access point to the entire network of peer connections. You can either run your own full node or connect to someone else’s. See [Interacting with Nodes](../../../nodes/interact-node.md).
+
+:::tip
+An endpoint may be specified using the `--node=<Endpoint Address>` option. For example, to query the Injective Testnet:
+
+Command:
+```bash
+injectived query bank balances inj1clw20s2uxeyxtam6f7m84vgae92s9eh7vygagt --node=https://k8s.testnet.tm.injective.network:443
+```
+
+Response:
+```bash
+balances:
+- amount: "9990004452404000000000"
+  denom: inj
+- amount: "9689943532"
+  denom: peggy0x87aB3B4C8661e07D6372361211B96ed4Dc36B1B5
+pagination:
+  next_key: null
+  total: "0"
+```
+:::
 
 ## Configuring `injectived`
 
@@ -99,7 +133,7 @@ Some useful flags to consider in the `tx sign` command:
 
 #### Signing with Multiple Signers
 
-::: warning
+:::caution
 Please note that signing a transaction with multiple signers or with a multisig account, where at least one signer uses `SIGN_MODE_DIRECT`, is not yet possible. You may follow [this Github issue](https://github.com/cosmos/cosmos-sdk/issues/8141) for more info.
 :::
 

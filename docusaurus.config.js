@@ -12,8 +12,8 @@ const config = {
   tagline: "Welcome to Injective - the blockchain built for finance!",
   url: "https://docs.injective.network/",
   baseUrl: "/",
-  onBrokenLinks: "warn",
-  onBrokenMarkdownLinks: "warn",
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.png",
 
   // GitHub pages deployment config.

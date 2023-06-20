@@ -23,7 +23,7 @@ This matches Ethereum denomination of:
 1 wei = 1x10⁻¹⁸ ETH
 ```
 
-## Injective Token Economics
+## Injective Token Economics (Tokenomics)
 
 
 ## 1. Proof of Stake Security

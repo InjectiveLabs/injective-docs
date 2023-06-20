@@ -25,11 +25,12 @@ Find the real-time [current status](https://status.injective.network/) of the en
 
 | Service | Address |
 | --- | --- |
-| RPC | https://testnet.tm.injective.network |
-| LCD | https://testnet.lcd.injective.network |
-| gRPC| https://testnet.grpc.injective.network |
-| gRPC-Web| https://testnet.grpc-web.injective.network |
-| Indexer gRPC | https://testnet.api.injective.network |
+| RPC | https://k8s.testnet.tm.injective.network:443 |
+| LCD | https://k8s.testnet.lcd.injective.network |
+| gRPC| k8s.testnet.chain.grpc.injective.network:443 |
+| gRPC-Web| k8s.testnet.chain.grpc-web.injective.network:443 |
+| Indexer gRPC | k8s.testnet.exchange.grpc.injective.network:443 |
+| Indexer gRPC-Web | k8s.testnet.exchange.grpc-web.injective.network:443 |
 | Swagger | https://testnet.lcd.injective.network/swagger/ |
 | Hub | https://testnet.hub.injective.network/ |
 | Explorer | https://testnet.explorer.injective.network/ |

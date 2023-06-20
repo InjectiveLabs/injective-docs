@@ -12,4 +12,3 @@ title: Injectived Overview
 1. **[Install `injectived`](./01_install.md)**
 2. **[Using `injectived`](./02_using.md)**
 3. **[Commands](./03_commands.md)**
-4. **[Subcommands](./04_subcommands.md)**
