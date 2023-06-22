@@ -1,15 +1,10 @@
----
-sidebar_position: 4
-title: Events
----
-
 # Events
 
 The tokenfactory module emits the following events:
 
 An EventCreateTFDenom is emitted upon MsgCreateDenom execution, which creates a new token factory denom.
 
-```protobuf 
+```protobuf
 message EventCreateTFDenom {
   string account = 1;
   string denom = 2;
@@ -32,7 +27,7 @@ message EventBurnTFDenom {
   string burner_address = 1;
   cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
 }
-``` 
+```
 
 An EventChangeTFAdmin is emitted upon MsgChangeAdmin execution, which changes the admin address for a new token factory denom.
 
@@ -42,7 +37,7 @@ message EventChangeTFAdmin {
   string new_admin_address = 2;
 }
 
-``` 
+```
 
 An EventSetTFDenomMetadata is emitted upon MsgSetDenomMetadata execution, which sets the token factory denom metadata for a given token factory denom.
 

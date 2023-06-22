@@ -1,10 +1,7 @@
----
-sidebar_position: 3
----
-
 # Configure Peggo
 
 ## Equinox Testnet
+
 ### Step 1: Configure your Peggo relayer
 
 ```bash
@@ -31,7 +28,7 @@ Keyring path must be pointing to homedir of your injectived node, if you want re
 
 Learn more about Cosmos Keyring setup [here](https://docs.cosmos.network/master/run-node/keyring.html).
 
-**2. Cosmos Private Key (Unsafe)**  
+**2. Cosmos Private Key (Unsafe)**
 
 Simply update the `PEGGO_COSMOS_PK` with your Validator's Account private key.
 
@@ -46,11 +43,12 @@ There are two ways to provide the credential access - a Geth keystore with encry
 **1. Geth Keystore**
 
 Simply create a new private key store and update the following env variables:
+
 * `PEGGO_ETH_KEYSTORE_DIR`
 * `PEGGO_ETH_FROM`
 * `PEGGO_ETH_PASSPHRASE`
 
-You can find instructions for securely creating a new Ethereum account using a keystore in the Geth Documentation [here](https://geth.ethereum.org/docs/interface/managing-your-accounts).  
+You can find instructions for securely creating a new Ethereum account using a keystore in the Geth Documentation [here](https://geth.ethereum.org/docs/interface/managing-your-accounts).
 
 Example is provided below.
 
@@ -81,13 +79,13 @@ PEGGO_ETH_FROM=0x9782dc957DaE6aDc394294954B27e2118D05176C
 PEGGO_ETH_PASSPHRASE=12345678
 ```
 
-Then ensure that your Ethereum addresss has Kovan ETH. You can easily request Kovan ETH from the public faucet [here](https://gitter.im/kovan-testnet/faucet).  
+Then ensure that your Ethereum addresss has Kovan ETH. You can easily request Kovan ETH from the public faucet [here](https://gitter.im/kovan-testnet/faucet).
 
 **2. Ethereum Private Key (Unsafe)**
 
 Simply update the `PEGGO_ETH_PK` with a new Ethereum Private Key from a new account.
 
-Then ensure that your Ethereum addresss has Kovan ETH. You can easily request Kovan ETH from the public faucet [here](https://gitter.im/kovan-testnet/faucet).  
+Then ensure that your Ethereum addresss has Kovan ETH. You can easily request Kovan ETH from the public faucet [here](https://gitter.im/kovan-testnet/faucet).
 
 ### Step 2: Register Your Ethereum Address
 
@@ -143,9 +141,7 @@ journalctl -f -u peggo
 
 ### Step 5: (Optional) Protect Cosmos Keyring from unauthorized access
 
-:::important
-This is an advanced DevOps topic, consult with your sysadmin.
-:::
+:::important This is an advanced DevOps topic, consult with your sysadmin. :::
 
 Learn more about Cosmos Keyring setup [here](https://docs.cosmos.network/master/run-node/keyring.html). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
 
@@ -158,7 +154,6 @@ In Linux systems like Debian, Ubuntu and RHEL, this can be achieved using POSIX 
 * [Amazon Linux (RHEL)](https://www.redhat.com/sysadmin/linux-access-control-lists)
 
 ## Testnet
-
 
 ### Step 1: Configure your Peggo relayer
 
@@ -177,13 +172,14 @@ Peggo also requires access to your validator's delegated Injective Chain account
 #### Creating your delegated Cosmos Key for sending Injective Chain transactions
 
 Your peggo relayer can either
- - Use an explicitly delegated account key specific for sending validator specific Peggy transactions (i.e. `ValsetConfirm`, `BatchConfirm`, and `SendToCosmos` transactions)
- or
-  - Simply use your validator's account key.
+
+* Use an explicitly delegated account key specific for sending validator specific Peggy transactions (i.e. `ValsetConfirm`, `BatchConfirm`, and `SendToCosmos` transactions) or
+* Simply use your validator's account key.
 
 For isolation purposes, we recommend creating a delegated Cosmos key to send Injective Chain transactions instead of using your validator account key.
 
 To create a new key, run
+
 ```bash
 injectived keys add $ORCHESTRATOR_KEY_NAME
 ```
@@ -191,21 +187,25 @@ injectived keys add $ORCHESTRATOR_KEY_NAME
 Then ensure that your orchestrator inj address has INJ balance.
 
 To obtain your orchestrators's inj address, run
+
 ```bash
 injectived keys list $ORCHESTRATOR_KEY_NAME
 ```
 
 You can transfer INJ from your validator account to orchestrator address using this command
+
 ```bash
 injectived tx bank send $VALIDATOR_KEY_NAME  $ORCHESTRATOR_INJ_ADDRESS <amount-in-inj> --chain-id=injective-888 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
 ```
 
 Example
+
 ```bash
 injectived tx bank send genesis inj1u3eyz8nkvym0p42h79aqgf37gckf7szreacy9e 20000000000000000000inj --chain-id=injective-888  --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
 ```
 
 You can then verify that your orchestrator account has INJ balances by running
+
 ```bash
 injectived q bank balances $ORCHESTRATOR_INJ_ADDRESS
 ```
@@ -226,21 +226,23 @@ To use the default injectived key configuration, you should set the keyring path
 
 You can also read more about the Cosmos Keyring setup [here](https://docs.cosmos.network/master/run-node/keyring.html).
 
-**Option 2. Cosmos Private Key (Unsafe)**  
+**Option 2. Cosmos Private Key (Unsafe)**
 
 In the `.env` file, specify the `PEGGO_COSMOS_PK` corresponding to your peggo account signing key.
 
 If you are using a delegated account key configuration as recommended above, this will be your orchestrator account's private key. Otherwise, this should be your validator's account private key.
 
 To obtain your orchestrator's Cosmos private key (if applicable), run
+
 ```bash
 injectived keys unsafe-export-eth-key $ORCHESTRATOR_KEY_NAME
 ```
 
 To obtain your validator's Cosmos private key (if applicable), run
+
 ```bash
 injectived keys unsafe-export-eth-key $VALIDATOR_KEY_NAME
-````
+```
 
 Again, this method is less secure and is not recommended.
 
@@ -251,11 +253,12 @@ Peggo supports two options to provide signing key credentials - using the Geth k
 **Option 1. Geth Keystore**
 
 Simply create a new private key store and update the following env variables:
+
 * `PEGGO_ETH_KEYSTORE_DIR`
 * `PEGGO_ETH_FROM`
 * `PEGGO_ETH_PASSPHRASE`
 
-You can find instructions for securely creating a new Ethereum account using a keystore in the Geth Documentation [here](https://geth.ethereum.org/docs/interface/managing-your-accounts).  
+You can find instructions for securely creating a new Ethereum account using a keystore in the Geth Documentation [here](https://geth.ethereum.org/docs/interface/managing-your-accounts).
 
 For convience, an example is provided below.
 
@@ -289,29 +292,31 @@ PEGGO_ETH_FROM=0x9782dc957DaE6aDc394294954B27e2118D05176C
 PEGGO_ETH_PASSPHRASE=12345678
 ```
 
-Then ensure that your Ethereum address has enough ETH.   
+Then ensure that your Ethereum address has enough ETH.
 
 **Option 2. Ethereum Private Key (Unsafe)**
 
 Simply update the `PEGGO_ETH_PK` with a new Ethereum Private Key from a new account.
 
 Then ensure that your Ethereum address has ETH.
+
 ### Step 2: Register Your Orchestrator and Ethereum Address
 
-You can register orchestrator and ethereum address only once. It **CANNOT** be updated later.
-So Check twice before running below command.
+You can register orchestrator and ethereum address only once. It **CANNOT** be updated later. So Check twice before running below command.
+
 ```bash
 injectived tx peggy set-orchestrator-address $VALIDATOR_INJ_ADDRESS $ORCHESTRATOR_INJ_ADDRESS $ETHEREUM_ADDRESS --from $VALIDATOR_KEY_NAME --chain-id=injective-888 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
 
 ```
-- To obtain your validator's inj address, run, `injectived keys list $VALIDATOR_KEY_NAME`
-- To obtain your orchestrators's inj address, `injectived keys list $ORCHESTRATOR_KEY_NAME`
+
+* To obtain your validator's inj address, run, `injectived keys list $VALIDATOR_KEY_NAME`
+* To obtain your orchestrators's inj address, `injectived keys list $ORCHESTRATOR_KEY_NAME`
 
 Example:
+
 ```bash
 injectived tx peggy set-orchestrator-address inj10m247khat0esnl0x66vu9mhlanfftnvww67j9n inj1x7kvxlz2epqx3hpq6v8j8w859t29pgca4z92l2 0xf79D16a79130a07e77eE36e8067AeA783aBdA3b6 --from validator-key-name --chain-id=injective-888 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
 ```
-
 
 You can verify successful registration by checking for your Validator's mapped Ethereum address on https://testnet.lcd.injective.dev/peggy/v1/valset/current.
 
@@ -361,9 +366,7 @@ journalctl -f -u peggo
 
 ### Step 5: (Optional) Protect Cosmos Keyring from unauthorized access
 
-:::important
-This is an advanced DevOps topic, consult with your sysadmin.
-:::
+:::important This is an advanced DevOps topic, consult with your sysadmin. :::
 
 Learn more about Cosmos Keyring setup [here](https://docs.cosmos.network/master/run-node/keyring.html). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
 

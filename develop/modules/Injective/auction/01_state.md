@@ -1,15 +1,10 @@
----
-sidebar_position: 1
-title: State  
----
-
 # State
 
 ## Params
 
 Params is a module-wide configuration structure that stores system parameters and defines overall functioning of the auction module.
 
-- Params: `Paramsspace("auction") -> legacy_amino(params)`
+* Params: `Paramsspace("auction") -> legacy_amino(params)`
 
 ```go
 type Params struct {
@@ -35,7 +30,7 @@ type Bid struct {
 
 ### **AuctionRound**
 
-The current auction round. 
+The current auction round.
 
 * AuctionRound: `0x03 -> BigEndian(AuctionRound)`
 
@@ -44,4 +39,3 @@ The current auction round.
 This value is compared against current block time to decide an auction round settlement. When the exported chain is imported again, the EndingTimeStamp will be updated to the next value in future.
 
 * `EndingTimeStamp`: `0x04 -> BigEndian(EndingTimestamp)`
-

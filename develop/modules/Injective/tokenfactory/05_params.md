@@ -1,8 +1,3 @@
----
-sidebar_position: 5
-title: Params
----
-
 # Parameters
 
 The tokenfactory module contains the following parameters:

@@ -1,8 +1,3 @@
----
-sidebar_position: 8
-title: BeginBlocker
----
-
 # BeginBlocker
 
 The exchange [BeginBlocker](https://docs.cosmos.network/master/building-modules/beginblock-endblock.html) runs at the start of every block in our defined order as the last module.
@@ -12,7 +7,7 @@ The exchange [BeginBlocker](https://docs.cosmos.network/master/building-modules/
 1. Check the first to receive funding payments market. If the first market is not yet due to receive fundings (funding timestamp not reached), skip all fundings.
 2. Otherwise go through each market one by one:
    1. Skip market if funding timestamp is not yet reached.
-   2. Compute funding as `twap + hourlyInterestRate` where $\mathrm{twap = \frac{cumulativePrice}{timeInterval * 24}}$ with $\mathrm{timeInterval = lastTimestamp - startingTimestamp}$. The `cumulativePrice` is previously calculated with every trade as the time weighted difference between VWAP and mark price: $\mathrm{\frac{VWAP - markPrice}{markPrice} * timeElapsed}$.
+   2. Compute funding as `twap + hourlyInterestRate` where $\mathrm{twap = \frac{cumulativePrice}{timeInterval \* 24\}}$ with $\mathrm{timeInterval = lastTimestamp - startingTimestamp}$. The `cumulativePrice` is previously calculated with every trade as the time weighted difference between VWAP and mark price: $\mathrm{\frac{VWAP - markPrice}{markPrice} \* timeElapsed}$.
    3. Cap funding if required to the maximum defined by `HourlyFundingRateCap`.
    4. Set next funding timestamp.
    5. Emit `EventPerpetualMarketFundingUpdate`.
@@ -42,24 +37,22 @@ For each time expiry market, iterate through starting with first to expire:
 
 1. Check if the current trading rewards campaign is finished.
 2. If the campaign is finished, distribute reward tokens to eligible traders.
-
    1. Compute the available reward for each reward denom as `min(campaignRewardTokens, communityPoolRewardTokens)`
    2. Get the trader rewards based on the trading share from the respective trader calculated as `accountPoints * totalReward / totalTradingRewards`.
    3. Send reward tokens from community pool to trader.
    4. Reset total and all account trading reward points.
    5. Delete the current campaign ending timestamp.
-
 3. If a new campaign is launched, set the next current campaign ending timestamp as `CurrentCampaignStartTimestamp + CampaignDurationSeconds`.
 4. If no current campaign is ongoing and no new campaigns are launched, delete campaign info, market qualifications and market multipliers from storage.
 
 ### 5. Process Fee Discount Buckets
 
-- If the oldest bucket's end timestamp is older than the `block.timestamp - bucketCount * bucketDuration`:
-  - Prune the oldest bucket
-  - Iterate over all `bucketStartTimestamp + account → FeesPaidAmount`:
-    - Subtract the `FeesPaidAmount` from each account's `totalPastBucketFeesPaidAmount`
-    - Delete the account's `account → {tier, TTL timestamp}`. Note that this technically isn't necessary for correctness since we check the TTL timestamps in the Endblocker but is a state pruning strategy.
-  - Update the `CurrBucketStartTimestamp ← CurrBucketStartTimestamp + BucketDuration`.
+* If the oldest bucket's end timestamp is older than the `block.timestamp - bucketCount * bucketDuration`:
+  * Prune the oldest bucket
+  * Iterate over all `bucketStartTimestamp + account → FeesPaidAmount`:
+    * Subtract the `FeesPaidAmount` from each account's `totalPastBucketFeesPaidAmount`
+    * Delete the account's `account → {tier, TTL timestamp}`. Note that this technically isn't necessary for correctness since we check the TTL timestamps in the Endblocker but is a state pruning strategy.
+  * Update the `CurrBucketStartTimestamp ← CurrBucketStartTimestamp + BucketDuration`.
 
 ```
 bucket count 5 and with 100 sec duration

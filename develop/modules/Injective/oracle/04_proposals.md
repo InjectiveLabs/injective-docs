@@ -1,8 +1,3 @@
----
-sidebar_position: 4
-title: Governance Proposals
----
-
 # Governance Proposals
 
 ## GrantBandOraclePrivilegeProposal
@@ -90,9 +85,7 @@ message AuthorizeBandOracleRequestProposal {
 
 ## UpdateBandOracleRequestProposal
 
-This proposal is used for deleting a request or updating the request.
-When `DeleteRequestId` is not zero, it deletes the request with the id and finish its execution.
-When `DeleteRequestId` is zero, it update the request with id `UpdateOracleRequest.RequestId` to UpdateOracleRequest.
+This proposal is used for deleting a request or updating the request. When `DeleteRequestId` is not zero, it deletes the request with the id and finish its execution. When `DeleteRequestId` is zero, it update the request with id `UpdateOracleRequest.RequestId` to UpdateOracleRequest.
 
 ```protobuf
 message UpdateBandOracleRequestProposal {
@@ -108,8 +101,7 @@ message UpdateBandOracleRequestProposal {
 
 ## EnableBandIBCProposal
 
-This proposal is to enable IBC connection between Band chain and Injective chain.
-When the proposal is approved, it updates the BandIBCParams into newer one configured on the proposal.
+This proposal is to enable IBC connection between Band chain and Injective chain. When the proposal is approved, it updates the BandIBCParams into newer one configured on the proposal.
 
 ```protobuf
 message EnableBandIBCProposal {
@@ -123,4 +115,4 @@ message EnableBandIBCProposal {
 }
 ```
 
-The details of `BandIBCParams`, can be checked at **[State](./01_state.md)**
+The details of `BandIBCParams`, can be checked at [**State**](01\_state.md)

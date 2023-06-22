@@ -1,20 +1,14 @@
----
-sidebar_position: 1
-title: Interacting with Nodes
----
-
 # Interacting with a Node
 
 :::note
 
-There are multiple ways to interact with a node: using the CLI, using gRPC or using the REST endpoints. 
-:::
+There are multiple ways to interact with a node: using the CLI, using gRPC or using the REST endpoints. :::
 
 ## Option 1: Using the CLI
 
 You can use the `injectived` CLI to interact with a node. If you are interacting with a node in your local private network, make sure the node is running in the terminal before you use the CLI.
 
-For more details on how to use `injectived`, go to [Using `injectived`](../develop/tools/injectived/02_using.md).
+For more details on how to use `injectived`, go to [Using `injectived`](../develop/tools/injectived/02\_using.md).
 
 ## Option 2: Using gRPC
 
@@ -22,8 +16,8 @@ The Protobuf ecosystem developed tools for different use cases, including code-g
 
 Since the code generation library largely depends on your own tech stack, we will only present two alternatives:
 
-- `grpcurl` for generic debugging and testing
-- programmatically via Go, Python, or TS
+* `grpcurl` for generic debugging and testing
+* programmatically via Go, Python, or TS
 
 ### grpcurl
 
@@ -73,9 +67,7 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 ### Programmatically
 
-:::tip note
-The following examples are in Go, but the [Python](../../../develop/tools/injectivepy/) and [TS](../../../develop/tools/injectivets/) SDKs can also be used to programatically interact with a node/the Injective chain.
-:::
+:::tip note The following examples are in Go, but the [Python](../develop/tools/injectivepy/) and [TS](../develop/tools/injectivets/) SDKs can also be used to programatically interact with a node/the Injective chain. :::
 
 The following snippet shows how to query the state using gRPC inside a Go program. The idea is to create a gRPC connection, and use the Protobuf-generated client code to query the gRPC server.
 
@@ -154,11 +146,6 @@ func queryState() error {
     return nil
 }
 ```
-
-[//]: # (### CosmJS)
-
-[//]: # ()
-[//]: # (CosmJS documentation can be found at [https://cosmos.github.io/cosmjs]&#40;https://cosmos.github.io/cosmjs&#41;. As of January 2021, CosmJS documentation is still work in progress.)
 
 ## Option 3: Using the REST Endpoints
 

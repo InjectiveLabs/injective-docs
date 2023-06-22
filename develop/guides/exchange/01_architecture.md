@@ -1,8 +1,3 @@
----
-sidebar_position: 1
-title: Architecture
----
-
 # Architecture
 
 ## Injective Exchange Client
@@ -18,7 +13,9 @@ The repo of the Injective Exchange Client can be found [here](https://github.com
 Injective API nodes have two purposes: 1) serving as a data layer for the protocol and 2) providing fee delegation service.
 
 ### Purpose 1: Data Layer
-Injective API nodes index block events obtained from the Injective Chain and serve as a data layer for external clients. Due to the fact that the API nodes solely rely on publicly available data obtained from the Injective Chain, anyone can permissionlessly run their own API node and obtain a trustless data layer for interacting with the Injective Protocol. 
+
+Injective API nodes index block events obtained from the Injective Chain and serve as a data layer for external clients. Due to the fact that the API nodes solely rely on publicly available data obtained from the Injective Chain, anyone can permissionlessly run their own API node and obtain a trustless data layer for interacting with the Injective Protocol.
 
 ### Purpose 2: Fee Delegation Service
+
 Injective API nodes can also optionally provide fee delegation services on the individual transaction level for other users, wherein the exchange API node pays for the gas fees for a third party user. By doing so, users experience zero-fee trading on the Injective Chain.

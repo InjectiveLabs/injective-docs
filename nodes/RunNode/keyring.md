@@ -1,8 +1,3 @@
----
-sidebar_position: 1
-title: Set Up Keyring
----
-
 # Setting up the keyring
 
 :::tip This document describes how to configure and use the keyring and its various backends for an Injective Chain node. `injectived` should be installed prior to setting up the keyring. See [the Install `injectived` page](../../docs/develop/tools/injectived/install/) for more information. :::

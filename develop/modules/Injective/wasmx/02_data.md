@@ -1,11 +1,6 @@
----
-sidebar_position: 2
-title: Data
----
+# Data
 
-## Data
-
-### RegisteredContract
+## RegisteredContract
 
 Data stored about each contract
 

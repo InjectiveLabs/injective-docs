@@ -1,11 +1,9 @@
----
-sidebar_position: 5
-title: Events
----
 # Events
 
 The oracle module emits the following events:
+
 ## Band
+
 ```protobuf
 message SetBandPriceEvent {
   string relayer = 1;
@@ -39,7 +37,8 @@ message EventBandIBCResponseTimeout {
 }
 ```
 
-## Chainlink 
+## Chainlink
+
 ```protobuf
 message SetChainlinkPriceEvent {
   string feed_id = 1;
@@ -59,6 +58,7 @@ message SetCoinbasePriceEvent {
 ```
 
 ## Provider
+
 ```protobuf
 message SetProviderPriceEvent {
   string provider = 1;
@@ -69,6 +69,7 @@ message SetProviderPriceEvent {
 ```
 
 ## Pricefeed
+
 ```protobuf
 message SetPriceFeedPriceEvent {
   string relayer = 1;
@@ -82,6 +83,7 @@ message SetPriceFeedPriceEvent {
 ```
 
 ## Pyth
+
 ```protobuf
 message EventSetPythPrices {
   repeated PythPriceState prices = 1;

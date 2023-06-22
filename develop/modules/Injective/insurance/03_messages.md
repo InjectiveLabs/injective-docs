@@ -1,11 +1,6 @@
----
-sidebar_position: 3
-title: Messages
----
-
 # Messages
 
-In this section we describe the processing of the exchange messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](02_state_transitions.md) section.
+In this section we describe the processing of the exchange messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](02\_state\_transitions.md) section.
 
 ## Msg/CreateInsuranceFund
 
@@ -37,10 +32,9 @@ message MsgCreateInsuranceFund {
 
 **Fields description**
 
-- `Sender` field describes the creator of an insurance fund .
-- `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleType`, `Expiry` fields describe the derivative market info
-  that the insurance fund corresponds to.
-- `InitialDeposit` specifies the initial deposit amount used to underwrite the insurance fund.
+* `Sender` field describes the creator of an insurance fund .
+* `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleType`, `Expiry` fields describe the derivative market info that the insurance fund corresponds to.
+* `InitialDeposit` specifies the initial deposit amount used to underwrite the insurance fund.
 
 ## Msg/Underwrite
 
@@ -62,9 +56,9 @@ message MsgUnderwrite {
 
 **Fields description**
 
-- `Sender` field describes the underwriter of an insurance fund .
-- `MarketId` field describes the derivative market id to the insurance fund.
-- `Deposit` field describes the deposit amount to be added on the insurance fund.
+* `Sender` field describes the underwriter of an insurance fund .
+* `MarketId` field describes the derivative market id to the insurance fund.
+* `Deposit` field describes the deposit amount to be added on the insurance fund.
 
 ## Msg/RequestRedemption
 
@@ -86,6 +80,6 @@ message MsgRequestRedemption {
 
 **Fields description**
 
-- `Sender` field describes the redemption requester of an insurance fund .
-- `MarketId` field describes the derivative market id associated to the insurance fund.
-- `Amount` field describes the share token amount to be redeemed.
+* `Sender` field describes the redemption requester of an insurance fund .
+* `MarketId` field describes the derivative market id associated to the insurance fund.
+* `Amount` field describes the share token amount to be redeemed.

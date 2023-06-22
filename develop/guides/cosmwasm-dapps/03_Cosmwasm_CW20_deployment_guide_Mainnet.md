@@ -1,10 +1,4 @@
----
-sidebar_position: 5
-title: CosmWasm Governance and Mainnet Deployment Guide
----
-
 # CosmWasm Governance and Mainnet Deployment Guide
-
 
 This guide will get you started with the governance process of deploying and instantiating CosmWasm smart contracts on Injective Mainnet.
 
@@ -44,7 +38,7 @@ Let’s go through two key flags `instantiate-everybody` and `instantiate-only-a
 
 As mentioned above, contract instantiation permissions on Mainnet depend on the flags used when uploading the code. By default, it is set to permissionless, as we can verify on the genesis `wasmd` Injective setup:
 
-``` json
+```json
 "wasm": {
             "codes": [],
             "contracts": [],
@@ -60,17 +54,15 @@ As mentioned above, contract instantiation permissions on Mainnet depend on the 
         }
 ```
 
-Unless the contract has been uploaded with the flag `--instantiate-everybody false`, everybody can create new instances of that code. 
+Unless the contract has been uploaded with the flag `--instantiate-everybody false`, everybody can create new instances of that code.
 
-:::info
-The Injective Testnet is permissionless by default in order to allow developers to easily deploy contracts.
-::: 
+:::info The Injective Testnet is permissionless by default in order to allow developers to easily deploy contracts. :::
 
 ### Contract Instantiation Proposal
 
 ```bash
  injectived tx gov submit-proposal instantiate-contract [code_id_int64] [json_encoded_init_args] --label [text] --title [text] --description [text] --run-as [address] --admin [address,optional] --amount [coins,optional] [flags]
- ```
+```
 
 ```bash
 Flags:

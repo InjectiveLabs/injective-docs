@@ -1,8 +1,3 @@
----
-sidebar_position: 9
-title: Relay Semantics
----
-
 # Relay Semantics
 
 This document is designed to assist developers in implementing alternate Peggy relayers. The two major components of the Orchestrator which interact with Ethereum. The Peggy bridge has been designed for increased efficiency, not for ease of use. This means there are many implicit requirements of these external binaries which this document does it's best to make explicit.

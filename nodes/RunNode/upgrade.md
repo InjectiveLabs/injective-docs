@@ -1,8 +1,3 @@
----
-sidebar_position: 5
-title: Node Upgrades and Maintenance
----
-
 # Upgrading and Maintaining Your Node (For Non-Validators)
 
 ## Chain Upgrades

@@ -1,41 +1,36 @@
----
-sidebar_position: 5
-title: State Transitions
----
-
 # State Transitions
 
 This document describes the state transition operations pertaining to:
 
-- Deposit into exchange module account
-- Withdraw from exchange module account
-- Instant spot market launch
-- Instant perpetual market launch
-- Instant expiry futures market launch
-- Spot limit order creation
-- Batch creation of spot limit orders
-- Spot market order creation
-- Cancel spot order
-- Batch cancellation of spot order
-- Derivative limit order creation
-- Batch derivative limit order creation
-- Derivative market order creation
-- Cancel derivative order
-- Batch cancellation of derivative orders
-- Transfer between subaccounts
-- Transfer to external account
-- Liquidating a position
-- Increasing position margin
-- Spot market param update proposal
-- Exchange enable proposal
-- Spot market launch proposal
-- Perpetual market launch proposal
-- Expiry futures market launch proposal
-- Derivative market param update proposal
-- Trading rewards launch proposal
-- Trading rewards update proposal
-- Begin-blocker
-- End-blocker
+* Deposit into exchange module account
+* Withdraw from exchange module account
+* Instant spot market launch
+* Instant perpetual market launch
+* Instant expiry futures market launch
+* Spot limit order creation
+* Batch creation of spot limit orders
+* Spot market order creation
+* Cancel spot order
+* Batch cancellation of spot order
+* Derivative limit order creation
+* Batch derivative limit order creation
+* Derivative market order creation
+* Cancel derivative order
+* Batch cancellation of derivative orders
+* Transfer between subaccounts
+* Transfer to external account
+* Liquidating a position
+* Increasing position margin
+* Spot market param update proposal
+* Exchange enable proposal
+* Spot market launch proposal
+* Perpetual market launch proposal
+* Expiry futures market launch proposal
+* Derivative market param update proposal
+* Trading rewards launch proposal
+* Trading rewards update proposal
+* Begin-blocker
+* End-blocker
 
 ## Deposit into exchange module account
 
@@ -45,11 +40,11 @@ Deposit action is carried out by `MsgDeposit` which consists of `Sender`, `Subac
 
 **Steps**
 
-- Check that the denom specified in `msg.Amount` is a valid denom which exists in bank supply
-- Send coins from individual account to `exchange` module account and if fail, just revert
-- Get hash type of `subaccountID` from `msg.SubaccountId`, if it's zero subaccount, calculate dynamically from `msg.Sender` by using `SdkAddressToSubaccountID`
-- Increment deposit amount for the `subaccountID` by `msg.Amount`
-- Emit event for `EventSubaccountDeposit` with `msg.Sender`, `subaccountID` and `msg.Amount`
+* Check that the denom specified in `msg.Amount` is a valid denom which exists in bank supply
+* Send coins from individual account to `exchange` module account and if fail, just revert
+* Get hash type of `subaccountID` from `msg.SubaccountId`, if it's zero subaccount, calculate dynamically from `msg.Sender` by using `SdkAddressToSubaccountID`
+* Increment deposit amount for the `subaccountID` by `msg.Amount`
+* Emit event for `EventSubaccountDeposit` with `msg.Sender`, `subaccountID` and `msg.Amount`
 
 ## Withdraw from exchange module account
 
@@ -59,11 +54,11 @@ Withdraw action is carried out by `MsgWithdraw` which consists of `Sender`, `Sub
 
 **Steps**
 
-- Get hash type of `subaccountID` from `msg.SubaccountId`
-- Check the denom specified in `msg.Amount` is a valid denom which exists in bank supply
-- Decrement withdraw amount from `subaccountID` by `msg.Amount`, if fail, revert
-- Send coins from `exchange` module to `msg.Sender`
-- Emit event for `EventSubaccountWithdraw` with `subaccountID`, `msg.Sender`, and `msg.Amount`
+* Get hash type of `subaccountID` from `msg.SubaccountId`
+* Check the denom specified in `msg.Amount` is a valid denom which exists in bank supply
+* Decrement withdraw amount from `subaccountID` by `msg.Amount`, if fail, revert
+* Send coins from `exchange` module to `msg.Sender`
+* Emit event for `EventSubaccountWithdraw` with `subaccountID`, `msg.Sender`, and `msg.Amount`
 
 ## Instant spot market launch
 
@@ -71,11 +66,11 @@ Instant spot market launch action is carried out by `MsgInstantSpotMarketLaunch`
 
 **Steps**
 
-- Calculate `marketID` from `msg.BaseDenom` and `msg.QuoteDenom`
-- Check if same market launch proposal exists by `marketID` and revert if already exists
-- Launch spot market with `msg.Ticker`, `msg.BaseDenom`, `msg.QuoteDenom`, `msg.MinPriceTickSize`, `msg.MinQuantityTickSize` and revert if fail
-- Send instant listing fee(params.SpotMarketInstantListingFee) from `msg.Sender` to `exchange` module account
-- Lastly send the instant listing fee to the community spend pool
+* Calculate `marketID` from `msg.BaseDenom` and `msg.QuoteDenom`
+* Check if same market launch proposal exists by `marketID` and revert if already exists
+* Launch spot market with `msg.Ticker`, `msg.BaseDenom`, `msg.QuoteDenom`, `msg.MinPriceTickSize`, `msg.MinQuantityTickSize` and revert if fail
+* Send instant listing fee(params.SpotMarketInstantListingFee) from `msg.Sender` to `exchange` module account
+* Lastly send the instant listing fee to the community spend pool
 
 ## Instant perpetual market launch
 
@@ -83,11 +78,11 @@ Instant perpetual market launch action is carried out by `MsgInstantPerpetualMar
 
 **Steps**
 
-- Calculate `marketID` from `msg.Ticker`, `msg.QuoteDenom`, `msg.OracleBase`, `msg.OracleQuote` and `msg.OracleType`.
-- Check if same market launch proposal exists by `marketID` and revert if already exists
-- Send instant listing fee(params.DerivativeMarketInstantListingFee) from `msg.Sender` to `exchange` module account
-- Launch perpetual market with required params on `msg` object and revert if fail
-- Lastly send the instant listing fee to the community spend pool
+* Calculate `marketID` from `msg.Ticker`, `msg.QuoteDenom`, `msg.OracleBase`, `msg.OracleQuote` and `msg.OracleType`.
+* Check if same market launch proposal exists by `marketID` and revert if already exists
+* Send instant listing fee(params.DerivativeMarketInstantListingFee) from `msg.Sender` to `exchange` module account
+* Launch perpetual market with required params on `msg` object and revert if fail
+* Lastly send the instant listing fee to the community spend pool
 
 ## Instant expiry futures market launch
 
@@ -95,12 +90,12 @@ Instant expiry futures market launch action is carried out by `MsgInstantExpiryF
 
 **Steps**
 
-- Calculate `marketID` from `msg.Ticker`, `msg.QuoteDenom`, `msg.OracleBase`, `msg.OracleQuote`, `msg.OracleType` and `msg.Expiry`.
-- Check if same market launch proposal exists by `marketID` and revert if already exists
-- Send instant listing fee(params.DerivativeMarketInstantListingFee) from `msg.Sender` to `exchange` module account
-- Launch expiry futures market with required params on `msg` object and revert if fail
-- Trigger `EventExpiryFuturesMarketUpdate` event with market info
-- Lastly send the instant listing fee to the community spend pool
+* Calculate `marketID` from `msg.Ticker`, `msg.QuoteDenom`, `msg.OracleBase`, `msg.OracleQuote`, `msg.OracleType` and `msg.Expiry`.
+* Check if same market launch proposal exists by `marketID` and revert if already exists
+* Send instant listing fee(params.DerivativeMarketInstantListingFee) from `msg.Sender` to `exchange` module account
+* Launch expiry futures market with required params on `msg` object and revert if fail
+* Trigger `EventExpiryFuturesMarketUpdate` event with market info
+* Lastly send the instant listing fee to the community spend pool
 
 ## Spot limit order creation
 
@@ -108,14 +103,14 @@ Spot limit order creation is carried out by `MsgCreateSpotLimitOrder` which cons
 
 **Steps**
 
-- Check spot exchange is enabled to make an order on spot market and if not revert
-- Check order's price and quantity tick sizes fits market's min quantity and price tick size
-- Increment subaccount's `TradeNonce`
-- Reject if spot market id does not reference an active spot market
-- Calculate unique order hash with `TradeNonce`
-- Reject if the subaccount's available deposits does not have at least the required funds for the trade
-- Decrement the available balance by the funds amount needed to fund the order
-- Store the order in the transient limit order store and transient market indicator store
+* Check spot exchange is enabled to make an order on spot market and if not revert
+* Check order's price and quantity tick sizes fits market's min quantity and price tick size
+* Increment subaccount's `TradeNonce`
+* Reject if spot market id does not reference an active spot market
+* Calculate unique order hash with `TradeNonce`
+* Reject if the subaccount's available deposits does not have at least the required funds for the trade
+* Decrement the available balance by the funds amount needed to fund the order
+* Store the order in the transient limit order store and transient market indicator store
 
 **Note:** The order in transient store is executed on endblocker or if not, put on long-live store.
 
@@ -125,7 +120,7 @@ Batch creation of spot limit orders is carried out by `MsgBatchCreateSpotLimitOr
 
 **Steps**
 
-- Loop over the `msg.Orders` and create spot limit order as in `MsgCreateSpotLimitOrder`
+* Loop over the `msg.Orders` and create spot limit order as in `MsgCreateSpotLimitOrder`
 
 ## Spot market order creation
 
@@ -133,15 +128,15 @@ Spot market order creation is carried out by `MsgCreateSpotMarketOrder` which co
 
 **Steps**
 
-- Check spot exchange is enabled to make an order on spot market and if not revert
-- Check order's price and quantity tick sizes fits market's min quantity and price tick size
-- Increment subaccount's `TradeNonce`
-- Reject if spot market id does not reference an active spot market
-- Calculate unique order hash with `TradeNonce`
-- Check available balance to fund the market order
-- Calculate the worst acceptable price for the market order
-- Decrement deposit's AvailableBalance by the balance hold
-- Store the order in the transient spot market order store and transient market indicator store
+* Check spot exchange is enabled to make an order on spot market and if not revert
+* Check order's price and quantity tick sizes fits market's min quantity and price tick size
+* Increment subaccount's `TradeNonce`
+* Reject if spot market id does not reference an active spot market
+* Calculate unique order hash with `TradeNonce`
+* Check available balance to fund the market order
+* Calculate the worst acceptable price for the market order
+* Decrement deposit's AvailableBalance by the balance hold
+* Store the order in the transient spot market order store and transient market indicator store
 
 ## Cancel spot order
 
@@ -149,13 +144,13 @@ Spot order cancellation is carried out by `MsgCancelSpotOrder` which consists of
 
 **Steps**
 
-- Check spot exchange is enabled to execute the action and if not revert
-- Reject if spot market id does not reference an active, suspended or demolished spot market
-- Check spot limit order exists by `marketID`, `subaccountID` and `orderHash`
-- Add back the margin hold to available balance
-- Increment the available balance margin hold
-- Delete the order state from ordersStore and ordersIndexStore
-- Emit `EventCancelSpotOrder` event with marketID and order info
+* Check spot exchange is enabled to execute the action and if not revert
+* Reject if spot market id does not reference an active, suspended or demolished spot market
+* Check spot limit order exists by `marketID`, `subaccountID` and `orderHash`
+* Add back the margin hold to available balance
+* Increment the available balance margin hold
+* Delete the order state from ordersStore and ordersIndexStore
+* Emit `EventCancelSpotOrder` event with marketID and order info
 
 ## Batch cancellation of spot orders
 
@@ -163,7 +158,7 @@ Batch cancellation of spot orders is carried out by `MsgBatchCancelSpotOrders` w
 
 **Steps**
 
-- Loop over the `msg.Data` and cancel spot order as in `MsgCancelSpotOrder`
+* Loop over the `msg.Data` and cancel spot order as in `MsgCancelSpotOrder`
 
 ## Derivative limit order creation
 
@@ -171,22 +166,22 @@ Derivative limit order creation is carried out by `MsgCreateDerivativeLimitOrder
 
 **Steps**
 
-- Check derivative exchange is enabled to make an order on derivative market and if not revert
-- Reject if market order is already placed on the market by `subaccountID` (**Note:** Can't the market order and limit order core exist?)
-- Get derivative market and markPrice by `marketID`
-- Get orderbook metadata (`SubaccountOrderbookMetadata`) the for specified `marketID` and `subaccountID`
-- Ensure limit order is valid:
-  - Market config (market id and tick sizes)
-  - Subaccount trade nonce
-  - Subaccount max order count
-  - If reduce-only order:
-    - Position with valid quantity and opposite direction exists
-    - If order would result in other reduce-only orders becoming stale, reject it
-  - If limit order:
-    - Enough subaccount deposits for margin hold
-    - If order is in opposite direction of existing position and results in other reduce-only orders becoming stale, cancel the stale reduce-only orders
-- Store the order in the transient limit order store and transient market indicator store
-- Update orderbook metadata for subaccount
+* Check derivative exchange is enabled to make an order on derivative market and if not revert
+* Reject if market order is already placed on the market by `subaccountID` (**Note:** Can't the market order and limit order core exist?)
+* Get derivative market and markPrice by `marketID`
+* Get orderbook metadata (`SubaccountOrderbookMetadata`) the for specified `marketID` and `subaccountID`
+* Ensure limit order is valid:
+  * Market config (market id and tick sizes)
+  * Subaccount trade nonce
+  * Subaccount max order count
+  * If reduce-only order:
+    * Position with valid quantity and opposite direction exists
+    * If order would result in other reduce-only orders becoming stale, reject it
+  * If limit order:
+    * Enough subaccount deposits for margin hold
+    * If order is in opposite direction of existing position and results in other reduce-only orders becoming stale, cancel the stale reduce-only orders
+* Store the order in the transient limit order store and transient market indicator store
+* Update orderbook metadata for subaccount
 
 ## Batch creation of derivative limit orders
 
@@ -194,7 +189,7 @@ Batch creation of derivative limit orders is carried out by `MsgBatchCreateDeriv
 
 **Steps**
 
-- Loop over the `msg.Orders` and create derivative limit order as in `MsgCreateDerivativeLimitOrder`
+* Loop over the `msg.Orders` and create derivative limit order as in `MsgCreateDerivativeLimitOrder`
 
 ## Derivative market order creation
 
@@ -202,25 +197,27 @@ Derivative market order creation is carried out by `MsgCreateDerivativeMarketOrd
 
 **Steps**
 
-- Check derivative exchange is enabled to make an order on derivative market and if not revert
-- Check if `SubaccountID` that is going to make new order has limit derivative order or market order and reject. **Note:** Perpetual market can't place two market orders or both limit / market orders at the same time?
-- Check order's price and quantity tick sizes fits market's min quantity and price tick size
-- Increment Subaccount's `TradeNonce`
-- Reject if derivative market id does not reference an active derivative market
-- Calculate unique order hash with `TradeNonce`
-- Check that the market order worst price reaches the best opposing resting orderbook price
-- Check Order/Position Margin amount
-- 1. If it's reduce only order
-- A. Check if position for `subaccountID` on the market is not nil
-- B. Check that the order can close the position
-- C. Reject if position.quantity - AggregateReduceOnlyQuantity - order.quantity < 0
-- D. Set MarginHold as zero for no margin hold for selling positions
-- 2. If it's not reduce only order
-- A. Check available balance to fund the market order
-- B. Reject if the subaccount's available deposits does not have at least the required funds for the trade
-- C. Decrement deposit's AvailableBalance by the balance hold
-- For an opposing position, if AggregateVanillaQuantity > position.quantity - AggregateReduceOnlyQuantity - order.FillableQuantity, the new reduce-only order might invalidate some existing reduce-only orders or itself be invalid, and do operations for that.
-- Store the order in the transient derivative market order store and transient market indicator store
+* Check derivative exchange is enabled to make an order on derivative market and if not revert
+* Check if `SubaccountID` that is going to make new order has limit derivative order or market order and reject. **Note:** Perpetual market can't place two market orders or both limit / market orders at the same time?
+* Check order's price and quantity tick sizes fits market's min quantity and price tick size
+* Increment Subaccount's `TradeNonce`
+* Reject if derivative market id does not reference an active derivative market
+* Calculate unique order hash with `TradeNonce`
+* Check that the market order worst price reaches the best opposing resting orderbook price
+* Check Order/Position Margin amount
+*
+  1. If it's reduce only order
+* A. Check if position for `subaccountID` on the market is not nil
+* B. Check that the order can close the position
+* C. Reject if position.quantity - AggregateReduceOnlyQuantity - order.quantity < 0
+* D. Set MarginHold as zero for no margin hold for selling positions
+*
+  2. If it's not reduce only order
+* A. Check available balance to fund the market order
+* B. Reject if the subaccount's available deposits does not have at least the required funds for the trade
+* C. Decrement deposit's AvailableBalance by the balance hold
+* For an opposing position, if AggregateVanillaQuantity > position.quantity - AggregateReduceOnlyQuantity - order.FillableQuantity, the new reduce-only order might invalidate some existing reduce-only orders or itself be invalid, and do operations for that.
+* Store the order in the transient derivative market order store and transient market indicator store
 
 ## Cancel derivative order
 
@@ -228,14 +225,14 @@ Derivative order cancellation is carried out by `MsgCancelDerivativeOrder` which
 
 **Steps**
 
-- Check derivative exchange is enabled to execute the operation and if not revert
-- Reject if derivative market id does not reference an active derivative market
-- Check resting derivative limit order exists by `marketID`, `subaccountID` and `orderHash`
-- Add back the margin hold to available balance
-- Skip cancelling limit orders if their type shouldn't be cancelled
-- Delete the order state from ordersStore, ordersIndexStore and subaccountOrderStore
-- Update orderbook metadata for subaccount
-- Emit `EventCancelDerivativeOrder` event with marketID and order info
+* Check derivative exchange is enabled to execute the operation and if not revert
+* Reject if derivative market id does not reference an active derivative market
+* Check resting derivative limit order exists by `marketID`, `subaccountID` and `orderHash`
+* Add back the margin hold to available balance
+* Skip cancelling limit orders if their type shouldn't be cancelled
+* Delete the order state from ordersStore, ordersIndexStore and subaccountOrderStore
+* Update orderbook metadata for subaccount
+* Emit `EventCancelDerivativeOrder` event with marketID and order info
 
 ## Batch cancellation of derivative orders
 
@@ -243,7 +240,7 @@ Batch cancellation of derivative orders is carried out by `MsgBatchCancelDerivat
 
 **Steps**
 
-- Loop over the `msg.Data` and cancel spot order as in `MsgCancelDerivativeOrder`
+* Loop over the `msg.Data` and cancel spot order as in `MsgCancelDerivativeOrder`
 
 ## Batch order updates
 
@@ -251,11 +248,11 @@ Batch updating orders is carried out by `MsgBatchUpdateOrders` which consists of
 
 **Steps**
 
-- Cancel all orders in all market id specified by `SpotMarketIdsToCancelAll` and `DerivativeMarketIdsToCancelAll` for specified subaccount id
-- Loop over the `msg.SpotOrdersToCancel` and cancel spot limit order as in `MsgCancelSpotOrder`. If the cancel fails, continue to next order. The success of cancellations is reflected in the `MsgBatchUpdateOrdersResponse` as `SpotCancelSuccess`.
-- Loop over the `msg.DerivativeOrdersToCancel` and cancel derivative limit order as in `MsgCancelDerivativeOrder`. If the cancel fails, continue to next order. The success of cancellations is reflected in the `MsgBatchUpdateOrdersResponse` as `DerivativeCancelSuccess`.
-- Loop over the `msg.SpotOrdersToCreate` and create spot limit order as in `MsgCreateSpotOrder`. If the creation fails, continue to next order. Successful creations are reflected in the `MsgBatchUpdateOrdersResponse` as `SpotOrderHashes`.
-- Loop over the `msg.DerivativeOrdersToCreate` and create derivative limit order as in `MsgCreateDerivativeOrder`. If the creation fails, continue to next order. Successful creations are reflected in the `MsgBatchUpdateOrdersResponse` as `DerivativeOrderHashes`.
+* Cancel all orders in all market id specified by `SpotMarketIdsToCancelAll` and `DerivativeMarketIdsToCancelAll` for specified subaccount id
+* Loop over the `msg.SpotOrdersToCancel` and cancel spot limit order as in `MsgCancelSpotOrder`. If the cancel fails, continue to next order. The success of cancellations is reflected in the `MsgBatchUpdateOrdersResponse` as `SpotCancelSuccess`.
+* Loop over the `msg.DerivativeOrdersToCancel` and cancel derivative limit order as in `MsgCancelDerivativeOrder`. If the cancel fails, continue to next order. The success of cancellations is reflected in the `MsgBatchUpdateOrdersResponse` as `DerivativeCancelSuccess`.
+* Loop over the `msg.SpotOrdersToCreate` and create spot limit order as in `MsgCreateSpotOrder`. If the creation fails, continue to next order. Successful creations are reflected in the `MsgBatchUpdateOrdersResponse` as `SpotOrderHashes`.
+* Loop over the `msg.DerivativeOrdersToCreate` and create derivative limit order as in `MsgCreateDerivativeOrder`. If the creation fails, continue to next order. Successful creations are reflected in the `MsgBatchUpdateOrdersResponse` as `DerivativeOrderHashes`.
 
 ## Transfer between subaccounts
 
@@ -263,9 +260,9 @@ Transfer between subaccounts is executed by `MsgSubaccountTransfer` which consis
 
 **Steps**
 
-- Withdraw deposit from `msg.SourceSubaccountId` for `msg.Amount`, if fail revert transaction
-- Increment deposit of `msg.DestinationSubaccountId` by `msg.Amount`
-- Emit event for `EventSubaccountBalanceTransfer` with `SrcSubaccountId`, `DstSubaccountId` and `msg.Amount`
+* Withdraw deposit from `msg.SourceSubaccountId` for `msg.Amount`, if fail revert transaction
+* Increment deposit of `msg.DestinationSubaccountId` by `msg.Amount`
+* Emit event for `EventSubaccountBalanceTransfer` with `SrcSubaccountId`, `DstSubaccountId` and `msg.Amount`
 
 **Note:** With subaccount transfer, no need to transfer actual coins from bank module but changing the records are enough.
 
@@ -275,9 +272,9 @@ Transfer to external account is executed by `MsgExternalTransfer` which consists
 
 **Steps**
 
-- Withdraw deposit from `msg.SourceSubaccountId` for `msg.Amount`, if fail revert transaction
-- Increment deposit of `msg.DestinationSubaccountId` by `msg.Amount`
-- Emit event for `EventSubaccountBalanceTransfer` with `SrcSubaccountId`, `DstSubaccountId` and `msg.Amount`
+* Withdraw deposit from `msg.SourceSubaccountId` for `msg.Amount`, if fail revert transaction
+* Increment deposit of `msg.DestinationSubaccountId` by `msg.Amount`
+* Emit event for `EventSubaccountBalanceTransfer` with `SrcSubaccountId`, `DstSubaccountId` and `msg.Amount`
 
 **Note:** With subaccount transfer, no need to transfer actual coins from bank module but changing the records are enough.
 
@@ -290,30 +287,30 @@ Liquidating a position is executed by `MsgLiquidatePosition` which consists of `
 
 **Steps**
 
-- Check derivative exchange is enabled to liquidate a position on derivative market and if not revert
-- Reject if derivative market id does not reference an active derivative market
-- Get derivative market and markPrice by `marketID`
-- Get position for `marketID` and `subaccountID`
-- Calculate `liquidationPrice` and `bankruptcyPrice` from the position info
-- Determine vaporize or liquidate and if not all of them, revert
-- Cancel all reduce-only limit orders created by the position holder in the given market
-- Apply funding and update position
-- Cancel all market orders created by the position holder in the given market
-- Check and increment subaccount nonce, compute order hash
-- Calculate `liquidationOrder` hash
-- Set the liquidation order into the storage
-- Execute liquidation by matching position and liquidation order
-- Handle differently based on the payout is positive or negative (insurance fund is involved here in calculation)
-  - Positive Payout:
+* Check derivative exchange is enabled to liquidate a position on derivative market and if not revert
+* Reject if derivative market id does not reference an active derivative market
+* Get derivative market and markPrice by `marketID`
+* Get position for `marketID` and `subaccountID`
+* Calculate `liquidationPrice` and `bankruptcyPrice` from the position info
+* Determine vaporize or liquidate and if not all of them, revert
+* Cancel all reduce-only limit orders created by the position holder in the given market
+* Apply funding and update position
+* Cancel all market orders created by the position holder in the given market
+* Check and increment subaccount nonce, compute order hash
+* Calculate `liquidationOrder` hash
+* Set the liquidation order into the storage
+* Execute liquidation by matching position and liquidation order
+* Handle differently based on the payout is positive or negative (insurance fund is involved here in calculation)
+  * Positive Payout:
     1. Send half of the payout to liquidator (incentive for running liquidator bots)
     2. Send the other half to the insurance fund (incentive for participating in insurance funds)
-  - Negative Payout - Four levels of escalation to retrieve the funds:
+  * Negative Payout - Four levels of escalation to retrieve the funds:
     1. From trader's available balance
     2. From trader's locked balance by cancelling his vanilla limit orders
     3. From the insurance fund
     4. Not enough funds available. Pause the market and add markets to the storage to be settled in next block, see `BeginBlocker` specs.
-- If market is a perpetual market, upgrade VWAP data based on liquidation price and quantity
-- If there's remaining in liquidation order, return back remains by cancelling order
+* If market is a perpetual market, upgrade VWAP data based on liquidation price and quantity
+* If there's remaining in liquidation order, return back remains by cancelling order
 
 ## Increasing position margin
 
@@ -321,13 +318,13 @@ Increasing position margin is executed by `MsgIncreasePositionMargin` which cons
 
 **Steps**
 
-- Check derivative exchange is enabled to increase position margin on derivative market and if not revert
-- Reject if derivative market id does not reference an active derivative market
-- Get deposit of `sourceSubaccountID`
-- If `deposit.AvailableBalance` is lower than `msg.Amount`, revert
-- Get position by `marketID` and `destinationSubaccountID` and if not exist, revert
-- Reduce deposit amount of `sourceSubaccountID` by `msg.Amount`
-- Increase position margin by `msg.Amount` and update position in the store
+* Check derivative exchange is enabled to increase position margin on derivative market and if not revert
+* Reject if derivative market id does not reference an active derivative market
+* Get deposit of `sourceSubaccountID`
+* If `deposit.AvailableBalance` is lower than `msg.Amount`, revert
+* Get position by `marketID` and `destinationSubaccountID` and if not exist, revert
+* Reduce deposit amount of `sourceSubaccountID` by `msg.Amount`
+* Increase position margin by `msg.Amount` and update position in the store
 
 ## Exchange enable proposal
 
@@ -335,9 +332,9 @@ The enable of market type is done by `ExchangeEnableProposal` which consists of 
 
 **Steps**
 
-- `ValidateBasic` for proposal
-- If `p.ExchangeType` is spot market, enable spot exchange
-- If `p.ExchangeType` is derivative market, enable derivative market
+* `ValidateBasic` for proposal
+* If `p.ExchangeType` is spot market, enable spot exchange
+* If `p.ExchangeType` is derivative market, enable derivative market
 
 ## Spot market launch proposal
 
@@ -345,11 +342,11 @@ Launch of spot market is handled by `SpotMarketLaunchProposal` which consists of
 
 **Steps**
 
-- `ValidateBasic` for proposal
-- Validate `BaseDenom` and `QuoteDenom` are valid
-- Validate if same market does not exist by `msg.BaseDenom` and `msg.QuoteDenom`
-- Calculate RelayerFeeShareRate based on exchange module params. **Note:** for INJ currency, relayer share rate is set to 100%
-- Save spot market with calculated `ticker`, `baseDenom`, `quoteDenom`, `exchangeParams.DefaultSpotMakerFeeRate`, `exchangeParams.DefaultSpotTakerFeeRate`, `relayerFeeShareRate`, `minPriceTickSize`, `minQuantityTickSize`, `marketID`, and `MarketStatus_Active`.
+* `ValidateBasic` for proposal
+* Validate `BaseDenom` and `QuoteDenom` are valid
+* Validate if same market does not exist by `msg.BaseDenom` and `msg.QuoteDenom`
+* Calculate RelayerFeeShareRate based on exchange module params. **Note:** for INJ currency, relayer share rate is set to 100%
+* Save spot market with calculated `ticker`, `baseDenom`, `quoteDenom`, `exchangeParams.DefaultSpotMakerFeeRate`, `exchangeParams.DefaultSpotTakerFeeRate`, `relayerFeeShareRate`, `minPriceTickSize`, `minQuantityTickSize`, `marketID`, and `MarketStatus_Active`.
 
 ## Perpetual market launch proposal
 
@@ -357,14 +354,14 @@ Perpetual market launch is handled by `PerpetualMarketLaunchProposal` which cons
 
 **Steps**
 
-- `ValidateBasic` for proposal
-- Validate `quoteDenom`.
-- Calculate `marketID` from `ticker`, `quoteDenom`, `oracleBase`, `oracleQuote`, `oracleType`
-- Validate active or inactive perpetual market for `marketID` does not exist
-- Try getting derivative market price to check price oracle by `oracleBase`, `oracleQuote`, `oracleScaleFactor`, `oracleType`
-- Validate insurance fund exist for `marketID`
-- Calculate `defaultFundingInterval`, `nextFundingTimestamp`, `relayerFeeShareRate` from `exchange` module params
-- Execute `SetDerivativeMarketWithInfo` to set market info into the storage with `market`, `marketInfo` and `funding` objects
+* `ValidateBasic` for proposal
+* Validate `quoteDenom`.
+* Calculate `marketID` from `ticker`, `quoteDenom`, `oracleBase`, `oracleQuote`, `oracleType`
+* Validate active or inactive perpetual market for `marketID` does not exist
+* Try getting derivative market price to check price oracle by `oracleBase`, `oracleQuote`, `oracleScaleFactor`, `oracleType`
+* Validate insurance fund exist for `marketID`
+* Calculate `defaultFundingInterval`, `nextFundingTimestamp`, `relayerFeeShareRate` from `exchange` module params
+* Execute `SetDerivativeMarketWithInfo` to set market info into the storage with `market`, `marketInfo` and `funding` objects
 
 ## Expiry futures market launch proposal
 
@@ -372,15 +369,15 @@ Expiry futures market launch is handled by `ExpiryFuturesMarketLaunchProposal` w
 
 **Steps**
 
-- `ValidateBasic` for proposal
-- Validate `quoteDenom`
-- Calculate `marketID` from `p.Ticker`, `p.QuoteDenom`, `p.OracleBase`, `p.OracleQuote`, `p.OracleType` and `p.Expiry`
-- Validate active or inactive expiry futures market for `marketID` does not exist
-- If expiry time passed `ctx.BlockTime()` already, revert
-- Try getting derivative market price to check price oracle by `oracleBase`, `oracleQuote`, `oracleScaleFactor`, `oracleType`
-- Validate insurance fund exist for `marketID`
-- Calculate RelayerFeeShareRate based on exchange module params. **Note:** for INJ currency, relayer share rate is set to 100%
-- Execute `SetDerivativeMarketWithInfo` to set market info into the storage with `market`, `marketInfo` objects **Note:** TwapStartTimestamp is set to `expiry - thirtyMinutesInSeconds`.
+* `ValidateBasic` for proposal
+* Validate `quoteDenom`
+* Calculate `marketID` from `p.Ticker`, `p.QuoteDenom`, `p.OracleBase`, `p.OracleQuote`, `p.OracleType` and `p.Expiry`
+* Validate active or inactive expiry futures market for `marketID` does not exist
+* If expiry time passed `ctx.BlockTime()` already, revert
+* Try getting derivative market price to check price oracle by `oracleBase`, `oracleQuote`, `oracleScaleFactor`, `oracleType`
+* Validate insurance fund exist for `marketID`
+* Calculate RelayerFeeShareRate based on exchange module params. **Note:** for INJ currency, relayer share rate is set to 100%
+* Execute `SetDerivativeMarketWithInfo` to set market info into the storage with `market`, `marketInfo` objects **Note:** TwapStartTimestamp is set to `expiry - thirtyMinutesInSeconds`.
 
 ## Spot market param update proposal
 
@@ -388,10 +385,10 @@ The update of spot market param is handled by `SpotMarketParamUpdateProposal` wh
 
 **Steps**
 
-- `ValidateBasic` for proposal
-- Get spot market by `p.MarketId` and if not exist, revert
-- Reset the params for `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` and `Status` if not empty, if empty keep as it is.
-- Validate `MakerFeeRate` is bigger than `TakerFeeRate`.
+* `ValidateBasic` for proposal
+* Get spot market by `p.MarketId` and if not exist, revert
+* Reset the params for `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` and `Status` if not empty, if empty keep as it is.
+* Validate `MakerFeeRate` is bigger than `TakerFeeRate`.
 
 ## Derivative market param update proposal
 
@@ -399,97 +396,97 @@ Derivative market param update is handled by `DerivativeMarketParamUpdateProposa
 
 **Steps**
 
-- `ValidateBasic` for proposal
-- Validate Derivative market exists by `p.MarketId` and if not exist, revert
-- Reset the params for `InitialMarginRatio`, `MaintenanceMarginRatio`, `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` and `Status` if not empty, if empty keep as it is.
-- Validate `MakerFeeRate` is bigger than `TakerFeeRate`.
-- Validate `InitialMarginRatio` is bigger than `MaintenanceMarginRatio`.
-- Schedule Derivative market param update and update finalization on Endblocker - **Note:** this is due to the orders update for derivative market param update - should make sure nothing panics here.
+* `ValidateBasic` for proposal
+* Validate Derivative market exists by `p.MarketId` and if not exist, revert
+* Reset the params for `InitialMarginRatio`, `MaintenanceMarginRatio`, `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` and `Status` if not empty, if empty keep as it is.
+* Validate `MakerFeeRate` is bigger than `TakerFeeRate`.
+* Validate `InitialMarginRatio` is bigger than `MaintenanceMarginRatio`.
+* Schedule Derivative market param update and update finalization on Endblocker - **Note:** this is due to the orders update for derivative market param update - should make sure nothing panics here.
 
 ## Trading Rewards Campaign Launch Proposal
 
 **Steps**
 
-- `ValidateBasic` for proposal
-- No existing campaign may exist.
-- Campaign start timestamps must be in the future.
-- Campaign quote denoms must exist.
-- All start timestamps must match the duration.
-- Set Campaign Data (Reward Pools, Info, Market Qualifications and Market Point Multipliers)
-- Emit `EventTradingRewardCampaignUpdate`
+* `ValidateBasic` for proposal
+* No existing campaign may exist.
+* Campaign start timestamps must be in the future.
+* Campaign quote denoms must exist.
+* All start timestamps must match the duration.
+* Set Campaign Data (Reward Pools, Info, Market Qualifications and Market Point Multipliers)
+* Emit `EventTradingRewardCampaignUpdate`
 
 ## Trading Rewards Campaign Update Proposal
 
 **Steps**
 
-- `ValidateBasic` for proposal
-- All `StartTimestamp` inside `CampaignRewardPoolsUpdates` must equal an existing campaign.
-- `CampaignDurationSeconds` cannot be modified, but must match the current campaign.
-- `CampaignRewardPoolsUpdates` cannot modify the current campaign and may contain nil values to delete a reward pool.
-- Campaign start timestamps from `CampaignRewardPoolsAdditions` must be in the future.
-- Any campaign quote denoms must exist.
-- Delete Current Campaign Data (Info, Market Qualifications and Market Point Multipliers)
-- Set Campaign Data (Info, Market Qualifications and Market Point Multipliers)
-- Set Reward Pool Updates
-- Set Reward Pool Additions
-- Emit `EventTradingRewardCampaignUpdate`
+* `ValidateBasic` for proposal
+* All `StartTimestamp` inside `CampaignRewardPoolsUpdates` must equal an existing campaign.
+* `CampaignDurationSeconds` cannot be modified, but must match the current campaign.
+* `CampaignRewardPoolsUpdates` cannot modify the current campaign and may contain nil values to delete a reward pool.
+* Campaign start timestamps from `CampaignRewardPoolsAdditions` must be in the future.
+* Any campaign quote denoms must exist.
+* Delete Current Campaign Data (Info, Market Qualifications and Market Point Multipliers)
+* Set Campaign Data (Info, Market Qualifications and Market Point Multipliers)
+* Set Reward Pool Updates
+* Set Reward Pool Additions
+* Emit `EventTradingRewardCampaignUpdate`
 
 ## Fee Discount Schedule Proposal
 
 **Steps**
 
-- `ValidateBasic` for proposal
-- If Current Fee Discount Schedule exists, delete it along with Market Qualifications
-- Defined quote denoms must exist.
-- If a restart of the fee cycle is required (bucket count, bucket duration or quote denoms changed), delete all account fee buckets and restart cycle.
-- Set the first fee paid bucket timestamp as the current block time
-- Set New Fee Discount Schedule, delete it along with Market Qualifications
-- Set New Market Qualifications
+* `ValidateBasic` for proposal
+* If Current Fee Discount Schedule exists, delete it along with Market Qualifications
+* Defined quote denoms must exist.
+* If a restart of the fee cycle is required (bucket count, bucket duration or quote denoms changed), delete all account fee buckets and restart cycle.
+* Set the first fee paid bucket timestamp as the current block time
+* Set New Fee Discount Schedule, delete it along with Market Qualifications
+* Set New Market Qualifications
 
 ## CosmWasm Derivative Pools Subscription
 
 **Definitions and Terms**
 
-- $M$ - the derivative market corresponding to the fund
-- $F$ - total fund balance held by the fund in the quote currency of the derivative market (e.g. USDT)
-- $P$ - the position held by the fund (if any)
-  - $\mathrm{P_{margin}}$ - the margin held by the pool’s position (with funding applied)
-  - $\mathrm{P_{quantity}}$ - the quantity of the pool’s position
-  - $\mathrm{P_{entry\ price}}$ - the entry price of the pool’s position
-  - $\mathrm{P_{direction}}$ - long or short
-- $T$ - the total supply pool token shares representing ownership interest in the fund
-- $f$ - the subscriber’s total contribution to the fund
-- $b$ - the subscriber’s balance contribution to the fund
-- $t$ - the subscriber’s new pool token ownership interest arising from a new subscription
-- $\mathrm{\delta_q}$ - the position quantity delta for pool and subscriber
-- $\mathrm{\delta_m}$ - the pool's position margin delta
-- $\alpha$ - As the margin ratio, i.e. $\mathrm{\frac{margin}{MarkPrice \cdot quantity}}$
+* $M$ - the derivative market corresponding to the fund
+* $F$ - total fund balance held by the fund in the quote currency of the derivative market (e.g. USDT)
+* $P$ - the position held by the fund (if any)
+  * $\mathrm{P\_{margin\}}$ - the margin held by the pool’s position (with funding applied)
+  * $\mathrm{P\_{quantity\}}$ - the quantity of the pool’s position
+  * $\mathrm{P\_{entry\ price\}}$ - the entry price of the pool’s position
+  * $\mathrm{P\_{direction\}}$ - long or short
+* $T$ - the total supply pool token shares representing ownership interest in the fund
+* $f$ - the subscriber’s total contribution to the fund
+* $b$ - the subscriber’s balance contribution to the fund
+* $t$ - the subscriber’s new pool token ownership interest arising from a new subscription
+* $\mathrm{\delta\_q}$ - the position quantity delta for pool and subscriber
+* $\mathrm{\delta\_m}$ - the pool's position margin delta
+* $\alpha$ - As the margin ratio, i.e. $\mathrm{\frac{margin}{MarkPrice \cdot quantity\}}$
 
 **Steps**
 
-- Check that provided subscriber margin ratio is equal to or above the market's initial margin ratio.
-- Check that subscriber has sufficient funds.
-- Check that the pool's position's effective margin is above the initial margin ratio. If not, prevent subscriptions until pool.
-- Increase pool and subscriber position
-  - If pool is Long: $\mathrm{\delta_q = \frac{f \cdot P_{quantity}}{P_{quantity} \cdot (MarkPrice \cdot (\alpha+1)-P_{price})+F+P_{margin}}}$
-  - If pool is Short: $\mathrm{\delta_q = \frac{f \cdot P_{quantity}}{P_{quantity} \cdot (MarkPrice \cdot (\alpha-1) +P_{price})+F+P_{margin}}}$
-  - $\mathrm{\delta_m = \frac{\delta_q \cdot P_{margin}}{P_{quantity}}}$
-    - $\mathrm{\frac{P_{margin}}{P_{quantity}}}$ represents the current pool position’s unit margin, so that multiplied with position quantity delta gives us pool execution margin required if we don’t want to change this ratio
-  - Calculate subscriber position margin:
-    - If subscriber position is Long: $\mathrm{margin = \delta_q \cdot (MarkPrice \cdot (\alpha - 1) + P_{price})}$
-    - If subscriber position is Short: $\mathrm{margin = \delta_q \cdot (MarkPrice \cdot (\alpha + 1) - P_{price})}$
-- Calculate pool balance contribution as $\mathrm{f - SubscriberMargin - P_{margin}}$
-  - Apply PositionDelta for Pool with Delta:
-    1. ExecutionMargin = \delta_m
-    2. ExecutionQuantity = $\delta_q$
+* Check that provided subscriber margin ratio is equal to or above the market's initial margin ratio.
+* Check that subscriber has sufficient funds.
+* Check that the pool's position's effective margin is above the initial margin ratio. If not, prevent subscriptions until pool.
+* Increase pool and subscriber position
+  * If pool is Long: $\mathrm{\delta\_q = \frac{f \cdot P\_{quantity\}}{P\_{quantity} \cdot (MarkPrice \cdot (\alpha+1)-P\_{price})+F+P\_{margin\}}}$
+  * If pool is Short: $\mathrm{\delta\_q = \frac{f \cdot P\_{quantity\}}{P\_{quantity} \cdot (MarkPrice \cdot (\alpha-1) +P\_{price})+F+P\_{margin\}}}$
+  * $\mathrm{\delta\_m = \frac{\delta\_q \cdot P\_{margin\}}{P\_{quantity\}}}$
+    * $\mathrm{\frac{P\_{margin\}}{P\_{quantity\}}}$ represents the current pool position’s unit margin, so that multiplied with position quantity delta gives us pool execution margin required if we don’t want to change this ratio
+  * Calculate subscriber position margin:
+    * If subscriber position is Long: $\mathrm{margin = \delta\_q \cdot (MarkPrice \cdot (\alpha - 1) + P\_{price})}$
+    * If subscriber position is Short: $\mathrm{margin = \delta\_q \cdot (MarkPrice \cdot (\alpha + 1) - P\_{price})}$
+* Calculate pool balance contribution as $\mathrm{f - SubscriberMargin - P\_{margin\}}$
+  * Apply PositionDelta for Pool with Delta:
+    1. ExecutionMargin = \delta\_m
+    2. ExecutionQuantity = $\delta\_q$
     3. ExecutionPrice = PoolEntryPrice
-  - Apply PositionDelta for Contributor with Delta:
+  * Apply PositionDelta for Contributor with Delta:
     1. ExecutionMargin = SubscriberPositionMargin
-    2. ExecutionQuantity = $\delta_q$
+    2. ExecutionQuantity = $\delta\_q$
     3. ExecutionPrice = PoolEntryPrice
-- Apply DepositDelta for Pool with Delta of b
-- Apply DepositDelta for Subscriber with Delta of FundsAmount, note that if a subscriber already has a position in the opposite direction, this will close the position via netting and produce a payout that we have to add to his balance.
-- Set new information about contribution in smart contract.
-  - If $\mathrm{\delta_m \gt b}$: Calculate ownership rate as $\mathrm{rate = \frac{\delta_q}{P_{quantity}+\delta_q}}$
-  - Else: Calculate ownership rate as $\mathrm{rate = \frac{b}{F+b}}$
-  - Calculate $\mathrm{NewTokensToMint = \frac{TotalSupply \cdot rate}{1 - rate}}$
+* Apply DepositDelta for Pool with Delta of b
+* Apply DepositDelta for Subscriber with Delta of FundsAmount, note that if a subscriber already has a position in the opposite direction, this will close the position via netting and produce a payout that we have to add to his balance.
+* Set new information about contribution in smart contract.
+  * If $\mathrm{\delta\_m \gt b}$: Calculate ownership rate as $\mathrm{rate = \frac{\delta\_q}{P\_{quantity}+\delta\_q\}}$
+  * Else: Calculate ownership rate as $\mathrm{rate = \frac{b}{F+b\}}$
+  * Calculate $\mathrm{NewTokensToMint = \frac{TotalSupply \cdot rate}{1 - rate\}}$

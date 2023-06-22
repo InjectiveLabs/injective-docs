@@ -1,15 +1,10 @@
----
-sidebar_position: 11
-title: Parameters
----
-
 # Parameters
 
 The exchange module contains the following parameters:
 
 | Key                               | Type     | Example      |
 | --------------------------------- | -------- | ------------ |
-| SpotMarketInstantListingFee       | sdk.Coin | 100inj      |
+| SpotMarketInstantListingFee       | sdk.Coin | 100inj       |
 | DerivativeMarketInstantListingFee | sdk.Coin | 1000inj      |
 | DefaultSpotMakerFeeRate           | sdk.Dec  | 0.1%         |
 | DefaultSpotTakerFeeRate           | sdk.Dec  | 0.2%         |

@@ -1,7 +1,3 @@
----
-sidebar_position: 2
----
-
 # Glossary
 
 Use this glossary to learn about terms specific to Injective.

@@ -1,8 +1,3 @@
----
-sidebar_position: 2
-title: Local Node
----
-
 # Set Up and Run a Node in a Local Private Network
 
 Now that the keyring is populated, it's time to see how to locally run an Injective node. This guide will walk you through the process of setting up a standalone network locally. If you wish to run a node on Mainnet or Testnet, please follow the relevant guides:

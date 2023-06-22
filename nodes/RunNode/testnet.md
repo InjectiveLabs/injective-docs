@@ -1,11 +1,7 @@
----
-sidebar_position: 3
-title: Join Testnet
----
-
 # Join the Network
 
 ## Hardware Specification
+
 Node operators should expect to provision one or more data center locations with redundant power, networking, firewalls, HSMs and servers.
 
 The minimum hardware specifications are as follows, though they might rise as network usage increases:
@@ -58,6 +54,7 @@ cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
 ```
 
 You can also run verify the checksum of the genesis checksum - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
+
 ```bash
 sha256sum ~/.injectived/config/genesis.json
 ```
@@ -65,6 +62,7 @@ sha256sum ~/.injectived/config/genesis.json
 ## Configure `systemd` Service for `injectived`
 
 Edit the config at `/etc/systemd/system/injectived.service`:
+
 ```bash
 [Unit]
   Description=injectived
@@ -82,6 +80,7 @@ Edit the config at `/etc/systemd/system/injectived.service`:
 ```
 
 Starting and restarting the systemd service
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl restart injectived
@@ -97,7 +96,6 @@ journalctl -u injectived -f
 ## Sync with the network
 
 Refer to the Polkachu guide [here](https://polkachu.com/testnets/injective/snapshots) to download a snapshot and sync with the network.
-
 
 ### Support
 

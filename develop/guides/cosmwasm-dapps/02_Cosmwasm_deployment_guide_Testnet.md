@@ -1,8 +1,3 @@
----
-sidebar_position: 4
-title: CW20 Testnet Deployment Guide
----
-
 # Cosmwasm Testnet Deployment Guide
 
 This guide will get you started deploying `cw20` smart contracts on Injective Testnet. We'll use the `cw20-base` contract from [CosmWasm's collection of specifications and contracts](https://github.com/CosmWasm/cw-plus) designed for production use on real networks.

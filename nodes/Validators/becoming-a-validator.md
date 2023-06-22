@@ -1,8 +1,3 @@
----
-sidebar_position: 1
-label: Becoming a Validator
----
-
 # Becoming a Validator
 
 ### Hardware Requirements

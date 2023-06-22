@@ -1,13 +1,6 @@
----
-sidebar_position: 6
-title: Messages
----
-
 # Messages
 
-In this section we describe the processing of the exchange messages and the corresponding updates to the state. All
-created/modified state objects specified by each message are defined within the [State Transitions](./04_state_transitions.md)
-section.
+In this section we describe the processing of the exchange messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [State Transitions](04\_state\_transitions.md) section.
 
 ## Msg/Deposit
 
@@ -25,9 +18,9 @@ type MsgDeposit struct {
 
 **Fields description**
 
-- `Sender` field describes the address who deposits.
-- `SubaccountId` describes the ID of a sub-account to receive a deposit.
-- `Amount` specifies the deposit amount.
+* `Sender` field describes the address who deposits.
+* `SubaccountId` describes the ID of a sub-account to receive a deposit.
+* `Amount` specifies the deposit amount.
 
 ## Msg/Withdraw
 
@@ -44,9 +37,9 @@ type MsgWithdraw struct {
 
 **Fields description**
 
-- `Sender` field describes the address to receive withdrawal.
-- `SubaccountId` describes the ID of a sub-account to withdraw from.
-- `Amount` specifies the withdrawal amount.
+* `Sender` field describes the address to receive withdrawal.
+* `SubaccountId` describes the ID of a sub-account to withdraw from.
+* `Amount` specifies the withdrawal amount.
 
 ## Msg/InstantSpotMarketLaunch
 
@@ -65,12 +58,12 @@ type MsgInstantSpotMarketLaunch struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Ticker` describes the ticker for the spot market.
-- `BaseDenom` specifies the type of coin to use as the base currency.
-- `QuoteDenom` specifies the type of coin to use as the quote currency.
-- `MinPriceTickSize` defines the minimum tick size of the order's price.
-- `MinQuantityTickSize` defines the minimum tick size of the order's quantity.
+* `Sender` field describes the creator of this msg.
+* `Ticker` describes the ticker for the spot market.
+* `BaseDenom` specifies the type of coin to use as the base currency.
+* `QuoteDenom` specifies the type of coin to use as the quote currency.
+* `MinPriceTickSize` defines the minimum tick size of the order's price.
+* `MinQuantityTickSize` defines the minimum tick size of the order's quantity.
 
 ## Msg/InstantPerpetualMarketLaunch
 
@@ -96,19 +89,19 @@ type MsgInstantPerpetualMarketLaunch struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Ticker` field describes the ticker for the derivative market.
-- `QuoteDenom` field describes the type of coin to use as the base currency.
-- `OracleBase` field describes the oracle base currency.
-- `OracleQuote` field describes the oracle quote currency.
-- `OracleScaleFactor` field describes the scale factor for oracle prices.
-- `OracleType` field describes the oracle type.
-- `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
-- `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
-- `InitialMarginRatio` field describes the initial margin ratio for the derivative market.
-- `MaintenanceMarginRatio` field describes the maintenance margin ratio for the derivative market.
-- `MinPriceTickSize` field describes the minimum tick size of the order's price and margin.
-- `MinQuantityTickSize` field describes the minimum tick size of the order's quantity.
+* `Sender` field describes the creator of this msg.
+* `Ticker` field describes the ticker for the derivative market.
+* `QuoteDenom` field describes the type of coin to use as the base currency.
+* `OracleBase` field describes the oracle base currency.
+* `OracleQuote` field describes the oracle quote currency.
+* `OracleScaleFactor` field describes the scale factor for oracle prices.
+* `OracleType` field describes the oracle type.
+* `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
+* `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
+* `InitialMarginRatio` field describes the initial margin ratio for the derivative market.
+* `MaintenanceMarginRatio` field describes the maintenance margin ratio for the derivative market.
+* `MinPriceTickSize` field describes the minimum tick size of the order's price and margin.
+* `MinQuantityTickSize` field describes the minimum tick size of the order's quantity.
 
 ## Msg/InstantExpiryFuturesMarketLaunch
 
@@ -135,20 +128,20 @@ type MsgInstantExpiryFuturesMarketLaunch struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Ticker` field describes the ticker for the derivative market.
-- `QuoteDenom` field describes the type of coin to use as the quote currency.
-- `OracleBase` field describes the oracle base currency.
-- `OracleQuote` field describes the oracle quote currency.
-- `OracleScaleFactor` field describes the scale factor for oracle prices.
-- `OracleType` field describes the oracle type.
-- `Expiry` field describes the expiration time of the market.
-- `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
-- `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
-- `InitialMarginRatio` field describes the initial margin ratio for the derivative market.
-- `MaintenanceMarginRatio` field describes the maintenance margin ratio for the derivative market.
-- `MinPriceTickSize` field describes the minimum tick size of the order's price and margin.
-- `MinQuantityTickSize` field describes the minimum tick size of the order's quantity.
+* `Sender` field describes the creator of this msg.
+* `Ticker` field describes the ticker for the derivative market.
+* `QuoteDenom` field describes the type of coin to use as the quote currency.
+* `OracleBase` field describes the oracle base currency.
+* `OracleQuote` field describes the oracle quote currency.
+* `OracleScaleFactor` field describes the scale factor for oracle prices.
+* `OracleType` field describes the oracle type.
+* `Expiry` field describes the expiration time of the market.
+* `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
+* `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
+* `InitialMarginRatio` field describes the initial margin ratio for the derivative market.
+* `MaintenanceMarginRatio` field describes the maintenance margin ratio for the derivative market.
+* `MinPriceTickSize` field describes the minimum tick size of the order's price and margin.
+* `MinQuantityTickSize` field describes the minimum tick size of the order's quantity.
 
 ## Msg/CreateSpotLimitOrder
 
@@ -163,8 +156,8 @@ type MsgCreateSpotLimitOrder struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Order` field describes the order info.
+* `Sender` field describes the creator of this msg.
+* `Order` field describes the order info.
 
 ## Msg/BatchCreateSpotLimitOrders
 
@@ -179,8 +172,8 @@ type MsgBatchCreateSpotLimitOrders struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Orders` field describes the orders info.
+* `Sender` field describes the creator of this msg.
+* `Orders` field describes the orders info.
 
 ## Msg/CreateSpotMarketOrder
 
@@ -195,8 +188,8 @@ type MsgCreateSpotMarketOrder struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Order` field describes the order info.
+* `Sender` field describes the creator of this msg.
+* `Order` field describes the order info.
 
 ## Msg/CancelSpotOrder
 
@@ -213,10 +206,10 @@ type MsgCancelSpotOrder struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `MarketId` field describes the id of the market where the order is placed.
-- `SubaccountId` field describes the subaccount id that placed the order.
-- `OrderHash` field describes the hash of the order.
+* `Sender` field describes the creator of this msg.
+* `MarketId` field describes the id of the market where the order is placed.
+* `SubaccountId` field describes the subaccount id that placed the order.
+* `OrderHash` field describes the hash of the order.
 
 ## Msg/BatchCancelSpotOrders
 
@@ -231,8 +224,8 @@ type MsgBatchCancelSpotOrders struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Data` field describes the orders to cancel.
+* `Sender` field describes the creator of this msg.
+* `Data` field describes the orders to cancel.
 
 ## Msg/CreateDerivativeLimitOrder
 
@@ -247,8 +240,8 @@ type MsgCreateDerivativeLimitOrder struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Order` field describes the order info.
+* `Sender` field describes the creator of this msg.
+* `Order` field describes the order info.
 
 ## Batch creation of derivative limit orders
 
@@ -263,8 +256,8 @@ type MsgBatchCreateDerivativeLimitOrders struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Orders` field describes the orders info.
+* `Sender` field describes the creator of this msg.
+* `Orders` field describes the orders info.
 
 ## Msg/CreateDerivativeMarketOrder
 
@@ -280,8 +273,8 @@ type MsgCreateDerivativeMarketOrder struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Order` field describes the order info.
+* `Sender` field describes the creator of this msg.
+* `Order` field describes the order info.
 
 ## Msg/CancelDerivativeOrder
 
@@ -298,10 +291,10 @@ type MsgCancelDerivativeOrder struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `MarketId` field describes the id of the market where the order is placed.
-- `SubaccountId` field describes the subaccount id that placed the order.
-- `OrderHash` field describes the hash of the order.
+* `Sender` field describes the creator of this msg.
+* `MarketId` field describes the id of the market where the order is placed.
+* `SubaccountId` field describes the subaccount id that placed the order.
+* `OrderHash` field describes the hash of the order.
 
 ## Msg/BatchCancelDerivativeOrders
 
@@ -316,8 +309,8 @@ type MsgBatchCancelDerivativeOrders struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `Data` field describes the orders to cancel.
+* `Sender` field describes the creator of this msg.
+* `Data` field describes the orders to cancel.
 
 ## Msg/SubaccountTransfer
 
@@ -334,10 +327,10 @@ type MsgSubaccountTransfer struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `SourceSubaccountId` field describes a source subaccount to send coins from.
-- `DestinationSubaccountId` field describes a destination subaccount to send coins to.
-- `Amount` field describes the amount of coin to send.
+* `Sender` field describes the creator of this msg.
+* `SourceSubaccountId` field describes a source subaccount to send coins from.
+* `DestinationSubaccountId` field describes a destination subaccount to send coins to.
+* `Amount` field describes the amount of coin to send.
 
 ## Msg/ExternalTransfer
 
@@ -354,10 +347,10 @@ type MsgExternalTransfer struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `SourceSubaccountId` field describes a source subaccount to send coins from.
-- `DestinationSubaccountId` field describes a destination subaccount to send coins to.
-- `Amount` field describes the amount of coin to send.
+* `Sender` field describes the creator of this msg.
+* `SourceSubaccountId` field describes a source subaccount to send coins from.
+* `DestinationSubaccountId` field describes a destination subaccount to send coins to.
+* `Amount` field describes the amount of coin to send.
 
 ## Msg/LiquidatePosition
 
@@ -375,10 +368,10 @@ type MsgLiquidatePosition struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `SubaccountId` field describes a subaccount to receive liquidation amount.
-- `MarketId` field describes a market where the position is in.
-- `Order` field describes the order info.
+* `Sender` field describes the creator of this msg.
+* `SubaccountId` field describes a subaccount to receive liquidation amount.
+* `MarketId` field describes a market where the position is in.
+* `Order` field describes the order info.
 
 ## Msg/IncreasePositionMargin
 
@@ -398,13 +391,11 @@ type MsgIncreasePositionMargin struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `SourceSubaccountId` field describes a source subaccount to send balance from.
-- `DestinationSubaccountId` field describes a destination subaccount to receive balance.
-- `MarketId` field describes a market where positions are in.
-- `Amount` field describes amount to increase.
-
-
+* `Sender` field describes the creator of this msg.
+* `SourceSubaccountId` field describes a source subaccount to send balance from.
+* `DestinationSubaccountId` field describes a destination subaccount to receive balance.
+* `MarketId` field describes a market where positions are in.
+* `Amount` field describes amount to increase.
 
 ## Msg/BatchUpdateOrders
 
@@ -427,11 +418,11 @@ type MsgBatchUpdateOrders struct {
 
 **Fields description**
 
-- `Sender` field describes the creator of this msg.
-- `SubaccountId` field describes the sender's sub-account ID.
-- `SpotMarketIdsToCancelAll` field describes a list of spot market IDs for which the sender wants to cancel all open orders.
-- `DerivativeMarketIdsToCancelAll` field describes a list of derivative market IDs for which the sender wants to cancel all open orders.
-- `SpotOrdersToCancel` field describes specific spot orders the sender wants to cancel.
-- `DerivativeOrdersToCancel` field describes specific derivative orders the sender wants to cancel.
-- `SpotOrdersToCreate` field describes spot orders the sender wants to create.
-- `DerivativeOrdersToCreate` field describes derivative orders the sender wants to create.
+* `Sender` field describes the creator of this msg.
+* `SubaccountId` field describes the sender's sub-account ID.
+* `SpotMarketIdsToCancelAll` field describes a list of spot market IDs for which the sender wants to cancel all open orders.
+* `DerivativeMarketIdsToCancelAll` field describes a list of derivative market IDs for which the sender wants to cancel all open orders.
+* `SpotOrdersToCancel` field describes specific spot orders the sender wants to cancel.
+* `DerivativeOrdersToCancel` field describes specific derivative orders the sender wants to cancel.
+* `SpotOrdersToCreate` field describes spot orders the sender wants to create.
+* `DerivativeOrdersToCreate` field describes derivative orders the sender wants to create.

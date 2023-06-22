@@ -1,8 +1,3 @@
----
-sidebar_position: 7
-title: Governance Proposals
----
-
 # Governance Proposals
 
 ## Proposal/SpotMarketParamUpdate
@@ -25,15 +20,15 @@ type SpotMarketParamUpdateProposal struct {
 
 **Fields description**
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `MarketId` describes the id of the market to change params.
-- `MakerFeeRate` describes the target fee rate for makers.
-- `TakerFeeRate` describes the target fee rate for takers.
-- `RelayerFeeShareRate` describes the relayer fee share rate.
-- `MinPriceTickSize` defines the minimum tick size of the order's price.
-- `MinQuantityTickSize` defines the minimum tick size of the order's quantity.
-- `Status` describes the target status of the market.
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `MarketId` describes the id of the market to change params.
+* `MakerFeeRate` describes the target fee rate for makers.
+* `TakerFeeRate` describes the target fee rate for takers.
+* `RelayerFeeShareRate` describes the relayer fee share rate.
+* `MinPriceTickSize` defines the minimum tick size of the order's price.
+* `MinQuantityTickSize` defines the minimum tick size of the order's quantity.
+* `Status` describes the target status of the market.
 
 ## Proposal/ExchangeEnable
 
@@ -49,10 +44,9 @@ type ExchangeEnableProposal struct {
 
 **Fields description**
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `ExchangeType` describes the type of exchange, spot or derivatives.
-
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `ExchangeType` describes the type of exchange, spot or derivatives.
 
 ## Proposal/BatchExchangeModification
 
@@ -73,15 +67,14 @@ type BatchExchangeModificationProposal struct {
 
 **Fields description**
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `SpotMarketParamUpdateProposal` describes the SpotMarketParamUpdateProposal.
-- `DerivativeMarketParamUpdateProposal` describes the DerivativeMarketParamUpdateProposal.
-- `SpotMarketLaunchProposal` describes the SpotMarketLaunchProposal.
-- `PerpetualMarketLaunchProposal` describes the PerpetualMarketLaunchProposal.
-- `ExpiryFuturesMarketLaunchProposal` describes the ExpiryFuturesMarketLaunchProposal.
-- `TradingRewardCampaignUpdateProposal` describes the TradingRewardCampaignUpdateProposal.
-
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `SpotMarketParamUpdateProposal` describes the SpotMarketParamUpdateProposal.
+* `DerivativeMarketParamUpdateProposal` describes the DerivativeMarketParamUpdateProposal.
+* `SpotMarketLaunchProposal` describes the SpotMarketLaunchProposal.
+* `PerpetualMarketLaunchProposal` describes the PerpetualMarketLaunchProposal.
+* `ExpiryFuturesMarketLaunchProposal` describes the ExpiryFuturesMarketLaunchProposal.
+* `TradingRewardCampaignUpdateProposal` describes the TradingRewardCampaignUpdateProposal.
 
 ## Proposal/SpotMarketLaunch
 
@@ -103,15 +96,15 @@ type SpotMarketLaunchProposal struct {
 
 **Fields description**
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `Ticker` describes the ticker for the spot market.
-- `BaseDenom` specifies the type of coin to use as the base currency.
-- `QuoteDenom` specifies the type of coin to use as the quote currency.
-- `MinPriceTickSize` defines the minimum tick size of the order's price.
-- `MinQuantityTickSize` defines the minimum tick size of the order's quantity.
-- `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
-- `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `Ticker` describes the ticker for the spot market.
+* `BaseDenom` specifies the type of coin to use as the base currency.
+* `QuoteDenom` specifies the type of coin to use as the quote currency.
+* `MinPriceTickSize` defines the minimum tick size of the order's price.
+* `MinQuantityTickSize` defines the minimum tick size of the order's quantity.
+* `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
+* `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
 
 ## Proposal/PerpetualMarketLaunch
 
@@ -138,20 +131,20 @@ type PerpetualMarketLaunchProposal struct {
 
 **Fields description**
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `Ticker` field describes the ticker for the derivative market.
-- `QuoteDenom` field describes the type of coin to use as the base currency.
-- `OracleBase` field describes the oracle base currency.
-- `OracleQuote` field describes the oracle quote currency.
-- `OracleScaleFactor` field describes the scale factor for oracle prices.
-- `OracleType` field describes the oracle type.
-- `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
-- `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
-- `InitialMarginRatio` field describes the initial margin ratio for the derivative market.
-- `MaintenanceMarginRatio` field describes the maintenance margin ratio for the derivative market.
-- `MinPriceTickSize` field describes the minimum tick size of the order's price and margin.
-- `MinQuantityTickSize` field describes the minimum tick size of the order's quantity.
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `Ticker` field describes the ticker for the derivative market.
+* `QuoteDenom` field describes the type of coin to use as the base currency.
+* `OracleBase` field describes the oracle base currency.
+* `OracleQuote` field describes the oracle quote currency.
+* `OracleScaleFactor` field describes the scale factor for oracle prices.
+* `OracleType` field describes the oracle type.
+* `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
+* `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
+* `InitialMarginRatio` field describes the initial margin ratio for the derivative market.
+* `MaintenanceMarginRatio` field describes the maintenance margin ratio for the derivative market.
+* `MinPriceTickSize` field describes the minimum tick size of the order's price and margin.
+* `MinQuantityTickSize` field describes the minimum tick size of the order's quantity.
 
 ## Expiry futures market launch proposal
 
@@ -191,21 +184,21 @@ type ExpiryFuturesMarketLaunchProposal struct {
 
 **Fields description**
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `Ticker` field describes the ticker for the derivative market.
-- `QuoteDenom` field describes the type of coin to use as the quote currency.
-- `OracleBase` field describes the oracle base currency.
-- `OracleQuote` field describes the oracle quote currency.
-- `OracleScaleFactor` field describes the scale factor for oracle prices.
-- `OracleType` field describes the oracle type.
-- `Expiry` field describes the expiration time of the market.
-- `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
-- `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
-- `InitialMarginRatio` field describes the initial margin ratio for the derivative market.
-- `MaintenanceMarginRatio` field describes the maintenance margin ratio for the derivative market.
-- `MinPriceTickSize` field describes the minimum tick size of the order's price and margin.
-- `MinQuantityTickSize` field describes the minimum tick size of the order's quantity.
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `Ticker` field describes the ticker for the derivative market.
+* `QuoteDenom` field describes the type of coin to use as the quote currency.
+* `OracleBase` field describes the oracle base currency.
+* `OracleQuote` field describes the oracle quote currency.
+* `OracleScaleFactor` field describes the scale factor for oracle prices.
+* `OracleType` field describes the oracle type.
+* `Expiry` field describes the expiration time of the market.
+* `MakerFeeRate` field describes the trade fee rate for makers on the derivative market.
+* `TakerFeeRate` field describes the trade fee rate for takers on the derivative market.
+* `InitialMarginRatio` field describes the initial margin ratio for the derivative market.
+* `MaintenanceMarginRatio` field describes the maintenance margin ratio for the derivative market.
+* `MinPriceTickSize` field describes the minimum tick size of the order's price and margin.
+* `MinQuantityTickSize` field describes the minimum tick size of the order's quantity.
 
 ## Binary options market launch proposal
 
@@ -306,18 +299,18 @@ type DerivativeMarketParamUpdateProposal struct {
 
 **Fields description**
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `MarketId` describes the id of the market to change params.
-- `InitialMarginRatio` describes the target initial margin ratio.
-- `MaintenanceMarginRatio` describes the target maintenance margin ratio.
-- `MakerFeeRate` describes the target fee rate for makers.
-- `TakerFeeRate` describes the target fee rate for takers.
-- `RelayerFeeShareRate` describes the relayer fee share rate.
-- `MinPriceTickSize` defines the minimum tick size of the order's price.
-- `MinQuantityTickSize` defines the minimum tick size of the order's quantity.
-- `Status` describes the target status of the market.
-- `OracleParams` describes the new oracle parameters.
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `MarketId` describes the id of the market to change params.
+* `InitialMarginRatio` describes the target initial margin ratio.
+* `MaintenanceMarginRatio` describes the target maintenance margin ratio.
+* `MakerFeeRate` describes the target fee rate for makers.
+* `TakerFeeRate` describes the target fee rate for takers.
+* `RelayerFeeShareRate` describes the relayer fee share rate.
+* `MinPriceTickSize` defines the minimum tick size of the order's price.
+* `MinQuantityTickSize` defines the minimum tick size of the order's quantity.
+* `Status` describes the target status of the market.
+* `OracleParams` describes the new oracle parameters.
 
 ## Proposal/TradingRewardCampaignLaunch
 
@@ -334,10 +327,10 @@ type TradingRewardCampaignLaunchProposal struct {
 
 **Fields description**
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `CampaignInfo` describes the CampaignInfo.
-- `CampaignRewardPools` describes the CampaignRewardPools.
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `CampaignInfo` describes the CampaignInfo.
+* `CampaignRewardPools` describes the CampaignRewardPools.
 
 ## Proposal/TradingRewardCampaignUpdate
 
@@ -353,10 +346,10 @@ type TradingRewardCampaignUpdateProposal struct {
 }
 ```
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `CampaignRewardPoolsAdditions` describes the CampaignRewardPoolsAdditions.
-- `CampaignRewardPoolsUpdates` describes the CampaignRewardPoolsUpdates.
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `CampaignRewardPoolsAdditions` describes the CampaignRewardPoolsAdditions.
+* `CampaignRewardPoolsUpdates` describes the CampaignRewardPoolsUpdates.
 
 ## Proposal/FeeDiscount
 
@@ -370,9 +363,9 @@ type FeeDiscountProposal struct {
 }
 ```
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `Schedule` describes the Fee discount schedule.
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `Schedule` describes the Fee discount schedule.
 
 ## Proposal/TradingRewardPendingPointsUpdate
 
@@ -389,9 +382,7 @@ type TradingRewardPendingPointsUpdateProposal struct {
 
 **Fields description**
 
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `PendingPoolTimestamp` describes timestamp of the pending pool.
-- `RewardPointUpdates` describes the RewardPointUpdate.
-
-
+* `Title` describes the title of the proposal.
+* `Description` describes the description of the proposal.
+* `PendingPoolTimestamp` describes timestamp of the pending pool.
+* `RewardPointUpdates` describes the RewardPointUpdate.

@@ -1,9 +1,4 @@
----
-sidebar_position: 5
-title: Params
----
-
-## Params
+# Params
 
 The subspace for the wasmx module is `wasmx`.
 

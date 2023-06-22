@@ -1,14 +1,8 @@
----
-sidebar_position: 4
-title: Messages
----
+# Messages
 
-## Messages
+## MsgUpdateContract
 
-### MsgUpdateContract
-
-Updates registered contract execution params (gas price, limit). Can also define a new admin account.
-Can be called only by admin (if defined) or contract itself.
+Updates registered contract execution params (gas price, limit). Can also define a new admin account. Can be called only by admin (if defined) or contract itself.
 
 ```go
 
@@ -25,7 +19,7 @@ type MsgUpdateContract struct {
 }
 ```
 
-### MsgDeactivateContract
+## MsgDeactivateContract
 
 Deactivates a registered contract (it will no longer be executed in begin blocker)
 
@@ -38,7 +32,7 @@ type MsgDeactivateContract struct {
 }
 ```
 
-### MsgActivateContract
+## MsgActivateContract
 
 Reactivates a registered contract (it will be executed in begin blocker from now on again)
 
@@ -51,7 +45,7 @@ type MsgActivateContract struct {
 }
 ```
 
-### MsgExecuteContract
+## MsgExecuteContract
 
 Invokes a function defined within the smart contract. Function and parameters are encoded in `ExecuteMsg`, which is a JSON message encoded in Base64.
 
@@ -64,7 +58,7 @@ type MsgExecuteContract struct {
 }
 ```
 
-### MsgMigrateContract
+## MsgMigrateContract
 
 Can be issued by the owner of a migratable smart contract to reset its code ID to another one. `MigrateMsg` is a JSON message encoded in Base64.
 
@@ -77,7 +71,7 @@ type MsgMigrateContract struct {
 }
 ```
 
-### MsgUpdateContractOwner
+## MsgUpdateContractOwner
 
 Can be issued by the smart contract's owner to transfer ownership.
 

@@ -1,8 +1,3 @@
----
-sidebar_position: 2
-title: State
----
-
 # State
 
 Genesis state defines the initial state of the module to be used to setup the module.
@@ -30,12 +25,13 @@ type GenesisState struct {
 	PendingPayeeships []*PendingPayeeship
 }
 ```
+
 ## Params
 
-`Params` is a module-wide configuration that stores system parameters and defines overall functioning of the ocr module.
-This module is modifiable by governance using params update proposal natively supported by `gov` module.
+`Params` is a module-wide configuration that stores system parameters and defines overall functioning of the ocr module. This module is modifiable by governance using params update proposal natively supported by `gov` module.
 
 Struct for the `ocr` module params store.
+
 ```go
 type Params struct {
 	// Native denom for LINK coin in the bank keeper
@@ -175,6 +171,7 @@ type ContractConfig struct {
 	OffchainConfig []byte
 }
 ```
+
 ### FeedProperties
 
 `FeedProperties` is a unit to store the properties of feed by id.
@@ -206,8 +203,7 @@ type FeedProperties struct {
 
 ### PendingPayeeship
 
-`PendingPayeeship` is a record that is stored when a person is delegating payeeship to another address.
-When proposed payee accept this, this record is removed.
+`PendingPayeeship` is a record that is stored when a person is delegating payeeship to another address. When proposed payee accept this, this record is removed.
 
 ```go
 type PendingPayeeship struct {

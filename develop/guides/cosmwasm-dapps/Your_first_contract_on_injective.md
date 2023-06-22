@@ -1,8 +1,3 @@
----
-sidebar_position: 1
-title: Your First Contract on Injective
----
-
 # Your First Injective Smart Contract
 
 This example illustrates the structure of a basic smart contract. The [counter website](https://injective-simple-cosmwasm-sc.netlify.app/) allows you to interact with an instance of the smart contract on the Injective Testnet. If you have prior CosmWasm smart contract experience, feel free to skip this section.

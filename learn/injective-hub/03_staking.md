@@ -1,11 +1,6 @@
----
-sidebar_position: 3
-title: Staking
----
-
 # Staking
 
-Staking is the process of locking up your assets (in this case INJ) in order to validate transactions on the blockchain. Users who choose to stake will be able to obtain rewards as a result of that process. 
+Staking is the process of locking up your assets (in this case INJ) in order to validate transactions on the blockchain. Users who choose to stake will be able to obtain rewards as a result of that process.
 
 Injective follows a proof-of-stake mechanism, in which users can stake their tokens to certain Injective validators who will do the work of validating transactions, while the user reaps the benefit through only contributing assets.
 

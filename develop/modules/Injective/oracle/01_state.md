@@ -1,12 +1,9 @@
----
-sidebar_position: 1
-title: State
----
-
 # State
 
 ## Params
-The oracle module parameters. 
+
+The oracle module parameters.
+
 ```protobuf
 message Params {
   option (gogoproto.equal) = true;
@@ -14,7 +11,6 @@ message Params {
   string pyth_contract = 1;
 }
 ```
-
 
 ## PriceState
 
@@ -32,19 +28,19 @@ message PriceState {
 
 where
 
-- `Price` represents the normalized decimal price
-- `CumulativePrice` represents the cumulative price for a given oracle price feed since the start of the oracle price feed's creation.
-- `Timestamp` represents the time at which the blocktime at which the price state was relayed.
+* `Price` represents the normalized decimal price
+* `CumulativePrice` represents the cumulative price for a given oracle price feed since the start of the oracle price feed's creation.
+* `Timestamp` represents the time at which the blocktime at which the price state was relayed.
 
 Note that the `CumulativePrice` value follows the convention set by the [Uniswap V2 Oracle](https://uniswap.org/docs/v2/core-concepts/oracles/) and is used to allows modules to calculate Time-Weighted Average Price (TWAP) between 2 arbitrary block time intervals (t1, t2).
 
-$\mathrm{TWAP = \frac{CumulativePrice_2 - CumulativePrice_1}{Timestamp_2 - Timestamp_1}}$
+$\mathrm{TWAP = \frac{CumulativePrice\_2 - CumulativePrice\_1}{Timestamp\_2 - Timestamp\_1\}}$
 
 ## Band
 
 Band price data for a given symbol are represented and stored as follows:
 
-- BandPriceState: `0x01 | []byte(symbol) -> ProtocolBuffer(BandPriceState)`
+* BandPriceState: `0x01 | []byte(symbol) -> ProtocolBuffer(BandPriceState)`
 
 ```protobuf
 message BandPriceState {
@@ -60,22 +56,17 @@ Note that the `Rate` is the raw USD rate for the `Symbol` obtained from the Band
 
 Band relayers are stored by their address as follows.
 
-- BandRelayer: `0x02 | RelayerAddr -> []byte{}`
+* BandRelayer: `0x02 | RelayerAddr -> []byte{}`
 
 ## Band IBC
 
 This section describes all the state management to maintain the price by connecting to Band chain via IBC.
 
-- LatestClientID is maintained to manage unique clientID for band IBC packets. It is increased by 1 when sending price request packet into bandchain.
-
+* LatestClientID is maintained to manage unique clientID for band IBC packets. It is increased by 1 when sending price request packet into bandchain.
 * LatestClientID: `0x32 -> Formated(LatestClientID)`
-
-- LatestRequestID is maintained to manage unique `BandIBCOracleRequests`. Incremented by 1 when creating a new `BandIBCOracleRequest`.
-
+* LatestRequestID is maintained to manage unique `BandIBCOracleRequests`. Incremented by 1 when creating a new `BandIBCOracleRequest`.
 * LatestRequestID: `0x36 -> Formated(LatestRequestID)`
-
-- Band IBC price data for a given symbol is stored as follows:
-
+* Band IBC price data for a given symbol is stored as follows:
 * BandPriceState: `0x31 | []byte(symbol) -> ProtocolBuffer(BandPriceState)`
 
 ```protobuf
@@ -88,8 +79,7 @@ message BandPriceState {
 }
 ```
 
-- BandIBCCallDataRecord is stored as follows when sending price request packet into bandchain:
-
+* BandIBCCallDataRecord is stored as follows when sending price request packet into bandchain:
 * CalldataRecord: `0x33 | []byte(ClientId) -> ProtocolBuffer(CalldataRecord)`
 
 ```protobuf
@@ -99,8 +89,7 @@ message CalldataRecord {
 }
 ```
 
-- BandIBCOracleRequest is stored as follows when the governance configure oracle requests to send:
-
+* BandIBCOracleRequest is stored as follows when the governance configure oracle requests to send:
 * BandOracleRequest: `0x34 | []byte(RequestId) -> ProtocolBuffer(BandOracleRequest)`
 
 ```protobuf
@@ -133,8 +122,7 @@ message BandOracleRequest {
 }
 ```
 
-- BandIBCParams is stored as follows and configured by governance:
-
+* BandIBCParams is stored as follows and configured by governance:
 * BandIBCParams: `0x35 -> ProtocolBuffer(BandIBCParams)`
 
 `BandIBCParams` contains the information for IBC connection with band chain.
@@ -164,7 +152,7 @@ Note:
 
 Coinbase price data for a given symbol ("key") are represented and stored as follows:
 
-- CoinbasePriceState: `0x21 | []byte(key) -> CoinbasePriceState`
+* CoinbasePriceState: `0x21 | []byte(key) -> CoinbasePriceState`
 
 ```protobuf
 message CoinbasePriceState {
@@ -189,7 +177,7 @@ Note that the `Value` is the raw USD price data obtained from Coinbase which has
 
 Pricefeed price data for a given base quote pair are represented and stored as follows:
 
-- PriceFeedInfo: `0x11 + Keccak256Hash(base + quote) -> PriceFeedInfo`
+* PriceFeedInfo: `0x11 + Keccak256Hash(base + quote) -> PriceFeedInfo`
 
 ```protobuf
 message PriceFeedInfo {
@@ -198,7 +186,7 @@ message PriceFeedInfo {
 }
 ```
 
-- PriceFeedPriceState: `0x12 + Keccak256Hash(base + quote) -> PriceFeedPriceState`
+* PriceFeedPriceState: `0x12 + Keccak256Hash(base + quote) -> PriceFeedPriceState`
 
 ```protobuf
 message PriceFeedState {
@@ -209,12 +197,14 @@ message PriceFeedState {
 }
 ```
 
-- PriceFeedRelayer: `0x13 + Keccak256Hash(base + quote) + relayerAddr -> relayerAddr`
+* PriceFeedRelayer: `0x13 + Keccak256Hash(base + quote) + relayerAddr -> relayerAddr`
 
-## Provider 
+## Provider
+
 Provider price feeds are represented and stored as follows:
 
-- ProviderInfo: `0x61 + provider + @@@ -> ProviderInfo`
+* ProviderInfo: `0x61 + provider + @@@ -> ProviderInfo`
+
 ```protobuf
 message ProviderInfo {
   string provider = 1;
@@ -222,9 +212,9 @@ message ProviderInfo {
 }
 ```
 
-- ProviderIndex: `0x62 + relayerAddress -> provider`
+* ProviderIndex: `0x62 + relayerAddress -> provider`
+* ProviderPrices: `0x63 + provider + @@@ + symbol -> ProviderPriceState`
 
-- ProviderPrices: `0x63 + provider + @@@ + symbol -> ProviderPriceState`
 ```protobuf
 message ProviderPriceState {
   string symbol = 1;
@@ -235,7 +225,9 @@ message ProviderPriceState {
 ## Pyth
 
 Pyth prices are represented and stored as follows:
-- PythPriceState: `0x71 + priceID -> PythPriceState`
+
+* PythPriceState: `0x71 + priceID -> PythPriceState`
+
 ```protobuf
 message PythPriceState {
   bytes price_id = 1;

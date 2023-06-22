@@ -1,8 +1,3 @@
----
-sidebar_position: 3
-title: Commands
----
-
 # Commands
 
 This section describes the commands available from `injectived`, the command line interface that connects a running `injectived` process (node).

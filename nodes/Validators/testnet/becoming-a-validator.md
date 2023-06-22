@@ -1,19 +1,14 @@
----
-sidebar_position: 2
-label: Becoming a Validator
----
-
 # Becoming a Validator
 
 ### Hardware Requirements
 
-| *Minimum* | *Recommendation* | 
-| :---: | :---: |
-| RAM Memory  32GB  | RAM Memory 64GB |
-| CPU 8 cores  | CPU 8 cores  |
-| Storage 2TB  | Storage 2TB  |
-| Network 5Gbps+  | Network 5Gbps+  |
-| AWS Instance type t2.2xlarge  | AWS Instance type r6i.2xlarge  |
+|           _Minimum_          |        _Recommendation_       |
+| :--------------------------: | :---------------------------: |
+|        RAM Memory 32GB       |        RAM Memory 64GB        |
+|          CPU 8 cores         |          CPU 8 cores          |
+|          Storage 2TB         |          Storage 2TB          |
+|        Network 5Gbps+        |         Network 5Gbps+        |
+| AWS Instance type t2.2xlarge | AWS Instance type r6i.2xlarge |
 
 ### Step 1: Create a Validator Account
 
@@ -41,8 +36,8 @@ This will derive a new private key and encrypt it to disk. Make sure to remember
 It is the only way to recover your account if you ever forget your password.
 ```
 
-**⚠️ important ⚠️  
-The output will contain a mnemonic phrase that represents your key in plain text. Make sure to save this phrase as a backup of your key, since without a key you will not be able to control your validator. The phrase is better be backed up on physical paper, storing it in cloud storage may compromise your validator later.**
+**⚠️ important ⚠️**\
+**The output will contain a mnemonic phrase that represents your key in plain text. Make sure to save this phrase as a backup of your key, since without a key you will not be able to control your validator. The phrase is better be backed up on physical paper, storing it in cloud storage may compromise your validator later.**
 
 Remember the address starting from `inj`, this is going to be your Injective Chain Validator Account address.
 
@@ -71,12 +66,12 @@ echo $VALIDATOR_PUBKEY
 
 Then create your new validator initialized with a self-delegation with your INJ tokens. Most critically, you will need to decide on the values of your validator's staking parameters.
 
-- `--moniker` - Your validator's name
-- `--amount` - Your validator's initial amount of INJ to bond
-- `--commission-max-change-rate` - Your validator's maximum commission change rate percentage (per day)
-- `--commission-max-rate` - Your validator's maximum commission rate percentage
-- `--commission-rate` - Your validator's initial commission rate percentage
-- `--min-self-delegation` - Your validator's minimum required self delegation
+* `--moniker` - Your validator's name
+* `--amount` - Your validator's initial amount of INJ to bond
+* `--commission-max-change-rate` - Your validator's maximum commission change rate percentage (per day)
+* `--commission-max-rate` - Your validator's maximum commission rate percentage
+* `--commission-rate` - Your validator's initial commission rate percentage
+* `--min-self-delegation` - Your validator's minimum required self delegation
 
 Once you decide on your desired values, set them as follows.
 

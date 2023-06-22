@@ -1,12 +1,6 @@
----
-title: Trade
----
-
 # Trading on Injective
 
-:::tip
-[Trader API Documentation](https://api.injective.exchange/)
-:::
+:::tip [Trader API Documentation](https://api.injective.exchange/) :::
 
 Injective It is the first decentralized exchange-focused layer-1 blockchain for decentralized perpetual swaps, futures, and spot trading that unlocks the full potential of decentralized derivatives and borderless DeFi. Every component has been built to be fully trustless, censorship-resistant, publicly verifiable, and front-running resistant.
 

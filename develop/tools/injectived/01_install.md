@@ -1,21 +1,15 @@
----
-sidebar_position: 1
-title: Install Injectived
----
-
-
-# Install `Injectived` 
+# Install Injectived
 
 `injectived` is the command-line interface and daemon that connects to Injective and enables you to interact with the Injective blockchain. Injective core is the official Golang reference implementation of the Injective node software.
 
 ## Requirements
 
-- Golang v1.16.1 - go1.17.1 linux/amd64
-- Ensure your GOPATH and GOBIN environment variables are set up correctly.
-- Linux users: install build-essential.
-- 8 vCPU (4 physical core), x86_64 architecture processor
-- 64 GB RAM (or equivalent swap file set up)
-- 1 TB of storage space
+* Golang v1.16.1 - go1.17.1 linux/amd64
+* Ensure your GOPATH and GOBIN environment variables are set up correctly.
+* Linux users: install build-essential.
+* 8 vCPU (4 physical core), x86\_64 architecture processor
+* 64 GB RAM (or equivalent swap file set up)
+* 1 TB of storage space
 
 ## Option 1: From binary
 
@@ -27,10 +21,11 @@ wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download
 ```
 
 This zip file will contain three binaries and a virtual machine:
-- **`injectived`** - the Injective Chain daemon
-- **`peggo`** - the Injective Chain ERC-20 bridge relayer daemon
-- **`injective-exchange`** - the Injective Exchange daemon
-- **`libwasmvm.x86_64.so`** - the wasm virtual machine which is needed to execute smart contracts.
+
+* **`injectived`** - the Injective Chain daemon
+* **`peggo`** - the Injective Chain ERC-20 bridge relayer daemon
+* **`injective-exchange`** - the Injective Exchange daemon
+* **`libwasmvm.x86_64.so`** - the wasm virtual machine which is needed to execute smart contracts.
 
 Unzip and add `injectived`, `injective-exchange` and `peggo` to your `/usr/bin`. Also add `libwasmvm.x86_64.so` to user library path `/usr/lib`.
 
@@ -91,4 +86,3 @@ Verify that Injective core is installed correctly.
 ```bash
 injectived version
 ```
-

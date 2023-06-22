@@ -1,27 +1,19 @@
-import {
-  HomepageCard as Card,
-  HomepageSection as Section,
-} from "../../../src/components/HomepageComponents";
+# index
 
-import { DistributedIcon, CoreModulesIcon } from "../../../src/icons";
-import DocCardList from "@theme/DocCardList";
+import { HomepageCard as Card, HomepageSection as Section, } from "../../../src/components/HomepageComponents";
 
-# Injective Chain Modules
+import { DistributedIcon, CoreModulesIcon } from "../../../src/icons"; import DocCardList from "@theme/DocCardList";
 
-<Section title="Read all about Injective Chain or dive straight into the code with guides" id="web-sdks" hasSubSections >
-  <Section>
-    <Card
-      title="Injective Modules"
-      description="The native building blocks of Injective"
-      to="/develop/modules/Injective/auction/"
-      icon={<DistributedIcon />}
-    />
-         
-    <Card
-      title="Injective Cosmos Native Modules"
-      description="Injective Cosmos native modules"
-      to="/develop/modules/Core/auth/"
-      icon={<CoreModulesIcon />}
-   />    
-  </Section>
-</Section>
+## Injective Chain Modules
+
+} />
+
+```
+<Card
+  title="Injective Cosmos Native Modules"
+  description="Injective Cosmos native modules"
+  to="/develop/modules/Core/auth/"
+  icon={<CoreModulesIcon />}
+```
+
+/>

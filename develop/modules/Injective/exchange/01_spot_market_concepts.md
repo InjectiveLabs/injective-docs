@@ -1,8 +1,3 @@
----
-sidebar_position: 2
-title: Spot Market Concepts
----
-
 # Spot Market Concepts
 
 ## Definitions
@@ -11,58 +6,47 @@ In a Spot Market with ticker **AAA/BBB, AAA is the base asset, BBB is the quote 
 
 For example, in the ETH/USDT market
 
-- ETH is base asset
-- USDT is the quote asset
+* ETH is base asset
+* USDT is the quote asset
 
-The spot market's **price** refers to how much USDT (the quote asset) is required for one unit of ETH (the base
-asset). For all spot markets, **fees are always paid in the quote asset**, e.g., USDT.
+The spot market's **price** refers to how much USDT (the quote asset) is required for one unit of ETH (the base asset). For all spot markets, **fees are always paid in the quote asset**, e.g., USDT.
 
 **Debit vs Credit**
 
-- **Debit Amount** refers to the amount of asset that is withdrawn from an account.
-- **Credit Amount** refers to the amount of asset that is deposited to an account.
+* **Debit Amount** refers to the amount of asset that is withdrawn from an account.
+* **Credit Amount** refers to the amount of asset that is deposited to an account.
 
 **Refunds**
 
-In our system, a refund refers to the action of incrementing the **available balance** of an account. This liberation of
-funds occurs as the result of an encumbrance being lifted from the account (e.g. cancelling a limit order, reducing an
-order's payable fee to a maker fee, using less margin to fund a market order, etc.).
+In our system, a refund refers to the action of incrementing the **available balance** of an account. This liberation of funds occurs as the result of an encumbrance being lifted from the account (e.g. cancelling a limit order, reducing an order's payable fee to a maker fee, using less margin to fund a market order, etc.).
 
 ### Limit Buy Order
 
-A limit buy order seeks to buy a specified `Quantity` ETH (**base asset**) in exchange for `Quantity * Price` amount of
-USDT (**quote asset**) **plus fees** which depend on whether the limit order becomes executed as a maker order or a
-taker order.
+A limit buy order seeks to buy a specified `Quantity` ETH (**base asset**) in exchange for `Quantity * Price` amount of USDT (**quote asset**) **plus fees** which depend on whether the limit order becomes executed as a maker order or a taker order.
 
 ### Limit Sell Order
 
-A limit sell order seeks to sell a specified `Quantity` ETH (**base asset**) in exchange for `Quantity * Price` amount
-of USDT (**quote asset**) **minus fees** which depend on whether the limit order becomes executed as a maker order or a
-taker order.
+A limit sell order seeks to sell a specified `Quantity` ETH (**base asset**) in exchange for `Quantity * Price` amount of USDT (**quote asset**) **minus fees** which depend on whether the limit order becomes executed as a maker order or a taker order.
 
 ### Market Buy Order
 
-A market buy order seeks to buy a specified `Quantity` ETH (**base asset**) at a specified worst price which is at or near
-the current ask using the respective account quote asset balance (USDT) as collateral\*\* (inclusive of fees).
+A market buy order seeks to buy a specified `Quantity` ETH (**base asset**) at a specified worst price which is at or near the current ask using the respective account quote asset balance (USDT) as collateral\*\* (inclusive of fees).
 
-As a result, each market buy order implicitly has a maximum acceptable price associated with it, as filling the market
-order beyond that price would simply fail due to a lack of funds.
+As a result, each market buy order implicitly has a maximum acceptable price associated with it, as filling the market order beyond that price would simply fail due to a lack of funds.
 
 ### Market Sell Order
 
-A market sell order seeks to sell a specified `Quantity` ETH (**base asset**) at a specified worst price which is at or
-near the current bid in exchange for any amount of the quote asset (USDT) available in the market.
+A market sell order seeks to sell a specified `Quantity` ETH (**base asset**) at a specified worst price which is at or near the current bid in exchange for any amount of the quote asset (USDT) available in the market.
 
 As a result, each market sell order implicitly has a zero price associated with it.
 
 ### Market Data Requirements
 
-Orderbook data aside, so long as our Chain supports the **base capability** to obtain Tick by Tick trading data,
-aggregations can be applied to obtain most of the necessary higher order data, including
+Orderbook data aside, so long as our Chain supports the **base capability** to obtain Tick by Tick trading data, aggregations can be applied to obtain most of the necessary higher order data, including
 
-- OHLCV data
-- Account Trading History
-- Market Statistics
+* OHLCV data
+* Account Trading History
+* Market Statistics
 
 ## Spot Market Lifecycle
 
@@ -72,8 +56,7 @@ A market is first created either by the instant launch functionality through `Ms
 
 ### Listing Fee based Spot Market Creation
 
-Allow anyone to create an active spot market of their choice without requiring governance approval by burning a pre-set
-SpotMarketInstantListingFee of INJ.
+Allow anyone to create an active spot market of their choice without requiring governance approval by burning a pre-set SpotMarketInstantListingFee of INJ.
 
 We should still check that the denom is valid though.
 
@@ -92,13 +75,11 @@ If a spot market is an active state, it can accept orders and trades.
 
 #### Paused State
 
-If a spot market is a paused state, it will no longer accept orders and trades and will also not allow any users to take
-actions on that market (no order cancellations).
+If a spot market is a paused state, it will no longer accept orders and trades and will also not allow any users to take actions on that market (no order cancellations).
 
 #### Suspended State
 
-If a spot market is a suspended state, it will no longer accept orders and trades, and will only allow traders to cancel
-their orders.
+If a spot market is a suspended state, it will no longer accept orders and trades, and will only allow traders to cancel their orders.
 
 ## Demolished State
 
@@ -108,15 +89,15 @@ When a market becomes demolished, all outstanding orders are cancelled.
 
 There are three state transitions that correspond to the following status changes
 
-- Activate Action - **Paused or Suspended Status → Active Status**
-- Pause Action - **Active or Suspended Status → Paused Status**
-- Suspend Action - **Active or Paused Status → Suspended Status**
-- Demolish Action - **Paused or Suspended Status → Demolished Status**
+* Activate Action - **Paused or Suspended Status → Active Status**
+* Pause Action - **Active or Suspended Status → Paused Status**
+* Suspend Action - **Active or Paused Status → Suspended Status**
+* Demolish Action - **Paused or Suspended Status → Demolished Status**
 
 ### Spot Market Parameter Update
 
 The following parameters exist for Spot Markets
 
-- SpotMarketInstantListingFee
-- DefaultSpotMakerFeeRate
-- DefaultSpotTakerFeeRate
+* SpotMarketInstantListingFee
+* DefaultSpotMakerFeeRate
+* DefaultSpotTakerFeeRate

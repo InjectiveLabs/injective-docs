@@ -1,8 +1,3 @@
----
-sidebar_position: 10
-title: Events
----
-
 # Events
 
 The exchange module emits the following events:

@@ -1,8 +1,3 @@
----
-sidebar_position: 4
-title: State
----
-
 # State
 
 Genesis state defines the initial state of the module to be used to setup the module.
@@ -61,8 +56,7 @@ type GenesisState struct {
 
 ## Params
 
-`Params` is a module-wide configuration that stores system parameters and defines overall functioning of the exchange module.
-This configuration is modifiable by governance using params update proposal natively supported by `gov` module.
+`Params` is a module-wide configuration that stores system parameters and defines overall functioning of the exchange module. This configuration is modifiable by governance using params update proposal natively supported by `gov` module.
 
 It defines default fee objects to be used for spot and derivative markets and funding parameters for derivative markets and instant listing fees.
 
@@ -183,8 +177,7 @@ type MarketOrderIndicator struct {
 
 ## SpotMarket
 
-`SpotMarket` is the structure to store all the required information and state for a spot market.
-Spot markets are stored by hash of the market to query the market efficiently.
+`SpotMarket` is the structure to store all the required information and state for a spot market. Spot markets are stored by hash of the market to query the market efficiently.
 
 ```go
 // An object describing trade pair of two assets.
@@ -214,8 +207,7 @@ type SpotMarket struct {
 
 ## SpotOrderBook
 
-`SpotOrderBook` is a structure to store spot limit orders for a specific market.
-Two objects are created, one for buy orders and one for sell orders.
+`SpotOrderBook` is a structure to store spot limit orders for a specific market. Two objects are created, one for buy orders and one for sell orders.
 
 ```go
 // Spot Exchange Limit Orderbook
@@ -260,8 +252,7 @@ type SpotMarketOrder struct {
 
 ## DerivativeMarket
 
-`DerivativeMarket` is the structure to store all the required information and state for a derivative market.
-Derivative markets are stored by hash of the market to query the market efficiently.
+`DerivativeMarket` is the structure to store all the required information and state for a derivative market. Derivative markets are stored by hash of the market to query the market efficiently.
 
 ```go
 // An object describing a derivative market in the Injective Futures Protocol.
@@ -303,8 +294,7 @@ type DerivativeMarket struct {
 
 ## DerivativeOrderBook
 
-`DerivativeOrderBook` is a structure to store derivative limit orders for a specific market.
-Two objects are created, one for buy orders and one for sell orders.
+`DerivativeOrderBook` is a structure to store derivative limit orders for a specific market. Two objects are created, one for buy orders and one for sell orders.
 
 ```go
 // Spot Exchange Limit Orderbook
@@ -397,8 +387,7 @@ type SubaccountPosition struct {
 
 ## ExpiryFuturesMarketInfo
 
-`ExpiryFuturesMarketInfo` is a structure to keep the information of expiry futures market.
-It is stored by the id of the market.
+`ExpiryFuturesMarketInfo` is a structure to keep the information of expiry futures market. It is stored by the id of the market.
 
 ```go
 type ExpiryFuturesMarketInfo struct {

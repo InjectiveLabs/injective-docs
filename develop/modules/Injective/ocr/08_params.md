@@ -1,8 +1,3 @@
----
-order: 8
-title: Params
----
-
 # Parameters
 
 The ocr module contains the following parameters:

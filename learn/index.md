@@ -1,8 +1,3 @@
----
-title: Learn
-slug: /learn
----
+# Learn
 
 import DocCardList from '@theme/DocCardList';
-
-<DocCardList />

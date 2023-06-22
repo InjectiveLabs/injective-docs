@@ -1,8 +1,3 @@
----
-sidebar_position: 4
-title: Governance Proposals
----
-
 # Governance Proposals
 
 ## SetConfigProposal
@@ -22,11 +17,11 @@ message SetConfigProposal {
 
 **Steps**
 
-- Validate basics for the proposal
-- Ensure module's `LinkDenom` is same as proposal's `LinkDenom`
-- set `p.Config.OnchainConfig.ChainId` from `ctx.ChainID`
-- Set feed config for `feedId`
-- Set feed transmissions and observations count for `Config.Transmitters`
+* Validate basics for the proposal
+* Ensure module's `LinkDenom` is same as proposal's `LinkDenom`
+* set `p.Config.OnchainConfig.ChainId` from `ctx.ChainID`
+* Set feed config for `feedId`
+* Set feed transmissions and observations count for `Config.Transmitters`
 
 ## SetBatchConfigProposal
 

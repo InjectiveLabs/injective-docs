@@ -1,8 +1,3 @@
----
-sidebar_position: 4
-title: Events
----
-
 # Events
 
 The auction module emits the following events:
@@ -11,18 +6,16 @@ The auction module emits the following events:
 
 ### Msg/Bid
 
-| Type             | Attribute Key | Attribute Value    |
-| ---------------- | ------------- | ------------------ |
-| EventBid | Bidder |  |
-| EventBid | Amount |  |
-| EventBid | Round |  |
-
+| Type     | Attribute Key | Attribute Value |
+| -------- | ------------- | --------------- |
+| EventBid | Bidder        |                 |
+| EventBid | Amount        |                 |
+| EventBid | Round         |                 |
 
 ## EndBlocker
 
-| Type                  | Attribute Key         | Attribute Value           |
-| --------------------- | --------------------- | ------------------------- |
-| EventAuctionResult | Winner |
-| EventAuctionResult | Amount |
-| EventAuctionResult | Round |
-
+| Type               | Attribute Key | Attribute Value |
+| ------------------ | ------------- | --------------- |
+| EventAuctionResult | Winner        |                 |
+| EventAuctionResult | Amount        |                 |
+| EventAuctionResult | Round         |                 |

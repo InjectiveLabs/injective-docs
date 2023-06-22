@@ -1,38 +1,33 @@
----
-sidebar_position: 2
-title: Using Injectived
----
+# Using injectived
 
-# Using `injectived` 
+The following information explains the functions you can use from `injectived` , the command-line interface that connects to Injective and enables you to interact with the Injective blockchain. Every active validator and full node runs `injectived` and communicates with their node via `injectived` . In this relationship, `injectived` operates as both the client and the server. You can use `injectived` to interact with the Injective blockchain by uploading contracts, querying data, managing staking activities, working with governance proposals, and more.
 
-The following information explains the functions you can use from `injectived` , the command-line interface that connects to Injective and enables you to interact with the Injective blockchain. Every active validator and full node runs `injectived`  and communicates with their node via `injectived` . In this relationship, `injectived`  operates as both the client and the server. You can use `injectived`  to interact with the Injective blockchain by uploading contracts, querying data, managing staking activities, working with governance proposals, and more.
-
-For more general information about `injectived`, run: 
+For more general information about `injectived`, run:
 
 ```bash
 injectived --help
 ```
 
-For more information about a specific `injectived`  command, append the -h or --help flag after the command. For example:
+For more information about a specific `injectived` command, append the -h or --help flag after the command. For example:
 
 ```bash
 injectived query --help.
 ```
 
-
 ## Accessing a Node
 
 To query the state and send transactions, you must connect to a node, which is the access point to the entire network of peer connections. You can either run your own full node or connect to someone else’s. See [Interacting with Nodes](../../../nodes/interact-node.md).
 
-:::tip
-An endpoint may be specified using the `--node=<Endpoint Address>` option. For example, to query the Injective Testnet:
+:::tip An endpoint may be specified using the `--node=<Endpoint Address>` option. For example, to query the Injective Testnet:
 
 Command:
+
 ```bash
 injectived query bank balances inj1clw20s2uxeyxtam6f7m84vgae92s9eh7vygagt --node=https://k8s.testnet.tm.injective.network:443
 ```
 
 Response:
+
 ```bash
 balances:
 - amount: "9990004452404000000000"
@@ -43,6 +38,7 @@ pagination:
   next_key: null
   total: "0"
 ```
+
 :::
 
 ## Configuring `injectived`
@@ -98,11 +94,11 @@ injectived tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000inj --chain-id=inje
 
 will run the following steps:
 
-- generate a transaction with one `Msg` (`x/bank`'s `MsgSend`), and print the generated transaction to the console.
-- ask the user for confirmation to send the transaction from the `$MY_VALIDATOR_ADDRESS` account.
-- fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](../../../nodes/RunNode/keyring.md) in a previous step.
-- sign the generated transaction with the keyring's account.
-- broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
+* generate a transaction with one `Msg` (`x/bank`'s `MsgSend`), and print the generated transaction to the console.
+* ask the user for confirmation to send the transaction from the `$MY_VALIDATOR_ADDRESS` account.
+* fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](../../../nodes/RunNode/keyring.md) in a previous step.
+* sign the generated transaction with the keyring's account.
+* broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
 
 The CLI bundles all the necessary steps into a simple-to-use user experience. However, it's possible to run all the steps individually too.
 
@@ -128,14 +124,12 @@ This command will decode the unsigned transaction and sign it with `SIGN_MODE_DI
 
 Some useful flags to consider in the `tx sign` command:
 
-- `--sign-mode`: you may use `amino-json` to sign the transaction using `SIGN_MODE_LEGACY_AMINO_JSON`,
-- `--offline`: sign in offline mode. This means that the `tx sign` command doesn't connect to the node to retrieve the signer's account number and sequence, both needed for signing. In this case, you must manually supply the `--account-number` and `--sequence` flags. This is useful for offline signing, i.e. signing in a secure environment which doesn't have access to the internet.
+* `--sign-mode`: you may use `amino-json` to sign the transaction using `SIGN_MODE_LEGACY_AMINO_JSON`,
+* `--offline`: sign in offline mode. This means that the `tx sign` command doesn't connect to the node to retrieve the signer's account number and sequence, both needed for signing. In this case, you must manually supply the `--account-number` and `--sequence` flags. This is useful for offline signing, i.e. signing in a secure environment which doesn't have access to the internet.
 
 #### Signing with Multiple Signers
 
-:::caution
-Please note that signing a transaction with multiple signers or with a multisig account, where at least one signer uses `SIGN_MODE_DIRECT`, is not yet possible. You may follow [this Github issue](https://github.com/cosmos/cosmos-sdk/issues/8141) for more info.
-:::
+:::caution Please note that signing a transaction with multiple signers or with a multisig account, where at least one signer uses `SIGN_MODE_DIRECT`, is not yet possible. You may follow [this Github issue](https://github.com/cosmos/cosmos-sdk/issues/8141) for more info. :::
 
 Signing with multiple signers is done with the `tx multisign` command. This command assumes that all signers use `SIGN_MODE_LEGACY_AMINO_JSON`. The flow is similar to the `tx sign` command flow, but instead of signing an unsigned transaction file, each signer signs the file signed by previous signer(s). The `tx multisign` command will append signatures to the existing transactions. It is important that signers sign the transaction **in the same order** as given by the transaction, which is retrievable using the `GetSigners()` method.
 
@@ -161,6 +155,6 @@ injectived tx broadcast tx_signed.json
 
 You may optionally pass the `--broadcast-mode` flag to specify which response to receive from the node:
 
-- `block`: the CLI waits for the tx to be committed in a block.
-- `sync`: the CLI waits for a CheckTx execution response only.
-- `async`: the CLI returns immediately (transaction might fail).
+* `block`: the CLI waits for the tx to be committed in a block.
+* `sync`: the CLI waits for a CheckTx execution response only.
+* `async`: the CLI returns immediately (transaction might fail).

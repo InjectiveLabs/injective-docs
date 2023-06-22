@@ -1,8 +1,3 @@
----
-sidebar_position: 3
-title: Messages
----
-
 # Messages
 
 In this section we describe the processing of the ocr messages and the corresponding updates to the state.
@@ -22,13 +17,13 @@ message MsgCreateFeed {
 
 **Steps**
 
-- Ensure `Sender` is module admin
-- Ensure `msg.Config.OnchainConfig.LinkDenom` is module param's `LinkDenom`
-- Set `OnchainConfig.ChainId` from `ctx.ChainID`
-- Ensure `FeedConfig` with same `FeedId` does not exist
-- Set latest `EpochAndRound` to `(0, 0)`
-- Set feed config for `feedId`
-- Set feed trasmissions count and observations count to 1
+* Ensure `Sender` is module admin
+* Ensure `msg.Config.OnchainConfig.LinkDenom` is module param's `LinkDenom`
+* Set `OnchainConfig.ChainId` from `ctx.ChainID`
+* Ensure `FeedConfig` with same `FeedId` does not exist
+* Set latest `EpochAndRound` to `(0, 0)`
+* Set feed config for `feedId`
+* Set feed trasmissions count and observations count to 1
 
 ## Msg/UpdateFeed
 
@@ -66,13 +61,13 @@ message MsgUpdateFeed {
 
 **Steps**
 
-- Get previous feed config by `feedId` and ensure it exists
-- Ensure `Sender` is feed admin or feed billing admin
-- Ensure billing admin is not changing Signers, Transmitters and feed admin
-- Process rewards payout for previous feed config
-- Delete previous feed transmission and observation counts
-- Set latest `EpochAndRound` to `(0, 0)`
-- Update signers, transmitters, `LinkPerObservation`, `LinkPerTransmission`, `LinkDenom`, `FeedAdmin`, `BillingAdmin` if set.
+* Get previous feed config by `feedId` and ensure it exists
+* Ensure `Sender` is feed admin or feed billing admin
+* Ensure billing admin is not changing Signers, Transmitters and feed admin
+* Process rewards payout for previous feed config
+* Delete previous feed transmission and observation counts
+* Set latest `EpochAndRound` to `(0, 0)`
+* Update signers, transmitters, `LinkPerObservation`, `LinkPerTransmission`, `LinkDenom`, `FeedAdmin`, `BillingAdmin` if set.
 
 ## Msg/Transmit
 
@@ -96,15 +91,15 @@ message MsgTransmit {
 
 **Steps**
 
-- Get epoch and round for `feedId`
-- Ensure that the report is not staled one by checking `msg.Epoch` and `msg.Round`
-- Get feed config and config info from `feedId`
-- Check msg.ConfigDigest equals to feed config info's latest config digest
-- Check if transmitter is valid transmitter configured in `feedConfig`
-- Save transmitter report
-- Emit event for trasmission
-- Validate signatures and the number of signatures
-- Increment feed observation and transmission counts
+* Get epoch and round for `feedId`
+* Ensure that the report is not staled one by checking `msg.Epoch` and `msg.Round`
+* Get feed config and config info from `feedId`
+* Check msg.ConfigDigest equals to feed config info's latest config digest
+* Check if transmitter is valid transmitter configured in `feedConfig`
+* Save transmitter report
+* Emit event for trasmission
+* Validate signatures and the number of signatures
+* Increment feed observation and transmission counts
 
 ## Msg/FundFeedRewardPool
 
@@ -123,12 +118,12 @@ message MsgFundFeedRewardPool {
 
 **Steps**
 
-- Get previous reward pool amount from `feedId`
-- If previous amount is empty, initiate the pool amount with zero integer
-- Ensure previous amount denom is not different from deposit denom if exist
-- Send coins from account to the module account (`ocr` module)
-- Update reward pool amount with `amount` field addition
-- Call `AfterFundFeedRewardPool` hook if hooks is set
+* Get previous reward pool amount from `feedId`
+* If previous amount is empty, initiate the pool amount with zero integer
+* Ensure previous amount denom is not different from deposit denom if exist
+* Send coins from account to the module account (`ocr` module)
+* Update reward pool amount with `amount` field addition
+* Call `AfterFundFeedRewardPool` hook if hooks is set
 
 ## Msg/WithdrawFeedRewardPool
 
@@ -147,10 +142,10 @@ message MsgWithdrawFeedRewardPool {
 
 **Steps**
 
-- Get feed config from `feedId`
-- Ensure `msg.Sender` is `feedAdmin` or `billingAdmin`
-- Process reward for the feed
-- Withdraw specified amount `msg.Amount` from module account
+* Get feed config from `feedId`
+* Ensure `msg.Sender` is `feedAdmin` or `billingAdmin`
+* Process reward for the feed
+* Withdraw specified amount `msg.Amount` from module account
 
 ## Msg/SetPayees
 
@@ -172,11 +167,13 @@ message MsgSetPayees {
 
 **Steps**
 
-- Get feed config from `feedId` and ensure that feed config exists
-- Ensure `msg.Sender` is feed admin
-- Iterating `msg.Transmitters`,
-- 1. Ensure payee is set already for the transmitter
-- 2. Set payee for the transmitter
+* Get feed config from `feedId` and ensure that feed config exists
+* Ensure `msg.Sender` is feed admin
+* Iterating `msg.Transmitters`,
+*
+  1. Ensure payee is set already for the transmitter
+*
+  2. Set payee for the transmitter
 
 ## Msg/TransferPayeeship
 
@@ -198,10 +195,10 @@ message MsgTransferPayeeship {
 
 **Steps**
 
-- Get feed config from `feedId` and ensure that feed config exists
-- Ensure msg.Sender is current payee
-- Check previous pending payeeship transfer record and ensure previous payeeship transfer does not conflict
-- Set payeeship transfer record
+* Get feed config from `feedId` and ensure that feed config exists
+* Ensure msg.Sender is current payee
+* Check previous pending payeeship transfer record and ensure previous payeeship transfer does not conflict
+* Set payeeship transfer record
 
 ## Msg/AcceptPayeeship
 
@@ -221,7 +218,7 @@ message MsgAcceptPayeeship {
 
 **Steps**
 
-- Get feed config from `feedId` and ensure that feed config exists
-- Get pending payeeship transfer record for `msg.Transmitter` and `feedId`
-- Reset payee for `feedId` and `transmitter`
-- Delete pending payeeship transfer for `transmitter` of `feedId`
+* Get feed config from `feedId` and ensure that feed config exists
+* Get pending payeeship transfer record for `msg.Transmitter` and `feedId`
+* Reset payee for `feedId` and `transmitter`
+* Delete pending payeeship transfer for `transmitter` of `feedId`
