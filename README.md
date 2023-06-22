@@ -1,41 +1,44 @@
-# Website
+---
+sidebar_position: 1
+slug: /
+description: >-
+  Welcome to the official documentation for Injective, learn the basics of what
+  Injective is, understand how it works and start building the most powerful
+  financial dApp
+---
 
-Injective Docs is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+# Injective Docs
 
-### Installation
+### Getting Stared
 
-```
-$ yarn
-```
+<div align="center" data-full-width="true">
 
-### Local Development
+<figure><img src=".gitbook/assets/8385819_currency_digital_offering_coin_initial_ico (1).svg" alt="" width="125"><figcaption><p><strong>Dev Tools</strong></p></figcaption></figure>
 
-```
-$ yarn start
-```
+ 
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+<figure><img src=".gitbook/assets/8385840_coin_crypto_growth_interest_invest_income_passive.svg" alt="" width="125"><figcaption><p><strong><code>Dev Guides</code></strong></p></figcaption></figure>
 
-### Build
+ 
 
-```
-$ yarn build
-```
+<figure><img src=".gitbook/assets/8385828_connection_cube_structure_network_technology_blockchain.svg" alt="" width="125"><figcaption></figcaption></figure>
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+</div>
 
-### Deployment
+| Dev Tools                                | Dev Guides                                   | Injective Native Modules                                 |
+| ---------------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| Set up your tools and build on Injective | Learn by doing, CosmWasm and Exchange guides | Injective is an open, interoperable layer-one blockchain |
 
-Using SSH:
 
-```
-$ USE_SSH=true yarn deploy
-```
 
-Not using SSH:
+<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-cover data-type="files"></th></tr></thead><tbody><tr><td><strong>Dev Tools</strong></td><td></td><td>Set up your tools and build on Injective</td><td><a href=".gitbook/assets/8385819_currency_digital_offering_coin_initial_ico (1).svg">8385819_currency_digital_offering_coin_initial_ico (1).svg</a></td></tr><tr><td>Dev Guides</td><td></td><td>Learn by doing, CosmWasm and Exchange guides</td><td><a href=".gitbook/assets/8385840_coin_crypto_growth_interest_invest_income_passive.svg">8385840_coin_crypto_growth_interest_invest_income_passive.svg</a></td></tr><tr><td>Injective Native Modules</td><td></td><td>Injective is an open, interoperable layer-one blockchain</td><td><a href=".gitbook/assets/8385828_connection_cube_structure_network_technology_blockchain.svg">8385828_connection_cube_structure_network_technology_blockchain.svg</a></td></tr></tbody></table>
 
-```
-$ GIT_USER=<Your GitHub username> yarn deploy
-```
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+
+
+
+### Explore Injective Chain
+
+### Help & Support
+
+} /> } /> } />
