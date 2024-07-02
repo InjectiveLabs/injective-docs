@@ -1,7 +1,7 @@
 # Table of contents
 
 * [Injective Docs](README.md)
-* [🛠 Develop](develop/README.md)
+* [🛠️ Develop](develop/README.md)
   * [Cascade - SVM Chain](develop/cascade-svm-chain.md)
   * [index](develop/index.md)
   * [Public Endpoints](develop/public-endpoints.md)
@@ -124,6 +124,7 @@
       * [Local Injective](develop/tools/local-injective/index.md)
 * [trade](trade/README.md)
   * [Trading on Injective](trade/index.md)
+  * [Launching a Trading Pair](trade/launching-a-trading-pair.md)
 * [nodes](nodes/README.md)
   * [Nodes & Validators Overview](nodes/index.md)
   * [Interacting with a Node](nodes/interact-node.md)
