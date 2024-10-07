@@ -1,11 +1,9 @@
 # Dependencies
 /node_modules
+/temp
 
 # Production
 /build
-
-#Modules info that gets regenarated on each build
-/docs/develop/modules
 
 # Generated files
 .docusaurus

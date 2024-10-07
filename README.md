@@ -1,24 +1,74 @@
+# 🌟 Injective Docs
+
+[The main documentation for Injective](https://docs.injective.network)
+
 ---
-description: >-
-  Welcome to the official documentation for Injective, learn the basics of what
-  Injective is, understand how it works and start building the most powerful
-  financial dApp
+
+## 📚 Getting Started
+
+1. Clone the repository and install dependencies
+
+```bash
+$ git clone git@github.com:InjectiveLabs/injective-docs.git
+$ cd injective-docs
+$ yarn
+```
+
+2. Regenerate documentation based on the desired branches for `injective-core` and `cosmos-sdk`
+   _Note: you can change the branches/tags in the `scripts/setup.sh` file_
+
+```bash
+$ yarn generate
+```
+
+You can now either run the documentation locally OR build it for deployment and deploy it to the desired hosting service.
+
+## 📚 Local Development
+
+```
+$ yarn start
+```
+
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+
+## 📚 Build
+
+```
+$ yarn build
+```
+
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+## 📚 Deployment
+
+Using SSH:
+
+```
+$ USE_SSH=true yarn deploy
+```
+
+Not using SSH:
+
+```
+$ GIT_USER=<Your GitHub username> yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+
 ---
 
-# Injective Docs
+## 🔓 License
 
-## Getting Stared
+Copyright © 2021 - 2024 Injective Foundation (https://injective.com/)
 
-Read all about Injective Chain or dive straight into the code with guides
+<a href="https://iili.io/mNneZN.md.png"><img src="https://iili.io/mNneZN.md.png" style="width: 300px; max-width: 100%; height: auto" />
 
-<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-cover data-type="files"></th></tr></thead><tbody><tr><td><strong>Dev Tools</strong></td><td></td><td>Set up your tools and build on Injective</td><td><a href=".gitbook/assets/8385819_currency_digital_offering_coin_initial_ico (1).svg">8385819_currency_digital_offering_coin_initial_ico (1).svg</a></td></tr><tr><td>Dev Guides</td><td></td><td>Learn by doing, CosmWasm and Exchange guides</td><td><a href=".gitbook/assets/8385840_coin_crypto_growth_interest_invest_income_passive.svg">8385840_coin_crypto_growth_interest_invest_income_passive.svg</a></td></tr><tr><td>Injective Native Modules</td><td></td><td>Injective is an open, interoperable layer-one blockchain</td><td><a href=".gitbook/assets/8385828_connection_cube_structure_network_technology_blockchain.svg">8385828_connection_cube_structure_network_technology_blockchain.svg</a></td></tr></tbody></table>
+Originally released by Injective Foundation under: <br />
+Apache License <br />
+Version 2.0, January 2004 <br />
+http://www.apache.org/licenses/
 
-## Explore Injective Chain
-
-Get familiar with Injective Chain and explore its main concepts.
-
-<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-cover data-type="files"></th></tr></thead><tbody><tr><td>What is Injective?</td><td></td><td>Injective is an open, interoperable layer-one blockchain for building powerful DeFi applications</td><td></td></tr><tr><td>Injective Hub</td><td></td><td>The platform and gateway that allows you to interact directly with Injective</td><td><a href=".gitbook/assets/8385836_money_send_transfer_crypto_bank_withdraw (1).svg">8385836_money_send_transfer_crypto_bank_withdraw (1).svg</a></td></tr><tr><td>Injective Basic Concepts</td><td></td><td>Cover all the Injective main concepts including the INJ Coin, Gas, Fees, Wallets and more</td><td><a href=".gitbook/assets/8385833_chip_token_money_budget_cryptocurrency_digital_coins.svg">8385833_chip_token_money_budget_cryptocurrency_digital_coins.svg</a></td></tr></tbody></table>
-
-## Help & Support
-
-} /> } /> } />
+<p>&nbsp;</p>
+<div align="center">
+  <sub><em>Powering the future of decentralized finance.</em></sub>
+</div>
