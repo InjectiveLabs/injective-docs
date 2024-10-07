@@ -5,6 +5,7 @@ const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 const math = require("remark-math");
 const katex = require("rehype-katex");
+import "dotenv/config";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -19,7 +20,7 @@ const config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: "Injective", // Usually your GitHub org/user name.
-  projectName: "injective-core/docs", // Usually your repo name.
+  projectName: "injective-docs", // Usually your repo name.
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -51,6 +52,9 @@ const config = {
         blog: false,
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
+        },
+        gtag: {
+          trackingID: process.env.APP_GOOGLE_ANALYTICS_KEY,
         },
       }),
     ],
@@ -88,29 +92,29 @@ const config = {
         },
         items: [
           {
-            to: '/learn',
-            label: 'Learn',
-            position: 'left',
+            to: "/learn",
+            label: "Learn",
+            position: "left",
           },
           {
-            to: '/develop',
-            label: 'Develop',
-            position: 'left',
+            to: "/develop",
+            label: "Develop",
+            position: "left",
           },
           {
-            to: '/trade',
-            label: 'Trade',
-            position: 'left',
+            to: "/trade",
+            label: "Trade",
+            position: "left",
           },
           {
-            to: '/nodes',
-            label: 'Nodes & Validators',
-            position: 'left',
+            to: "/nodes",
+            label: "Nodes & Validators",
+            position: "left",
           },
           {
-            to: '/resources',
-            label: 'Resources',
-            position: 'left',
+            to: "/resources",
+            label: "Resources",
+            position: "left",
           },
           {
             href: "https://injective.com/",

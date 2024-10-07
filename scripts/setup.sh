@@ -32,4 +32,29 @@ cp $STUB_DIR/core_index.mdx.stub $CORE_DIR/index.mdx
 cp $STUB_DIR/injective_category.json.stub $INJECTIVE_DIR/_category_.json
 cp $STUB_DIR/injective_index.mdx.stub $INJECTIVE_DIR/index.mdx
 
+## 1. Manually replace wrong import paths
+## authz
+search1="(../modules/auth/)"
+replace1="(../auth/)"
+
+FILES=$( find $CORE_DIR/authz -type f )
+
+for file in $FILES
+do
+	sed -ie "s/${search1//\//\\/}/${replace1//\//\\/}/g" $file
+done
+
+## auth
+search2="(../modules/authz/)"
+replace2="(../authz/)"
+
+FILES=$( find $CORE_DIR/auth -type f )
+
+for file in $FILES
+do
+	sed -ie "s/${search2//\//\\/}/${replace2//\//\\/}/g" $file
+done
+
+rm $CORE_DIR/authz/README.mde
+rm $CORE_DIR/auth/README.mde
 rm -rf $BUILD_DIR
