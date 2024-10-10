@@ -5,6 +5,24 @@ title: Governance Proposals
 
 # Governance Proposals
 
+## Governance Proposal for Oracles
+
+A governance proposal should be passed to create an oracle. For example:
+
+```
+injectived tx oracle grant-provider-privilege-proposal PDYZE \
+  inj1f8gs4ehm5r0e93uaz77wwvsc4wdd25rn4nzpkn \
+  --title="Paradyze Oracle Registration" \
+  --description="Registering Paradyze as an oracle provider" \
+  --chain-id=injective-888 \
+  --from=pdyze_oracle \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas-prices=160000000inj \
+  --gas=20000000 \
+  --deposit="40000000000000000000inj"
+```
+To successfully pass the proposal for testnet, please, immediately contact the Injective dev team.
+
 ## GrantBandOraclePrivilegeProposal
 
 Band Oracle privileges can be granted to Relayer accounts of Band provider through a `GrantBandOraclePrivilegeProposal`.
