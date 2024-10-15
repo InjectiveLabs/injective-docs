@@ -67,3 +67,7 @@ Governance approves a **FeeDiscountProposal** which defines a fee discount **sch
 - If the fee discount proposal was passed less than 30 days ago, i.e. `BucketCount * BucketDuration` hasn't passed yet since the creation of the proposal, the fee volume requirement is ignored so we don't unfairly penalize market makers who onboard immediately.
 
 Internally the trading volumes are stored in buckets, typically 30 buckets each lasting 24 hours. When a bucket is older than 30 days, it gets removed. Additionally for performance reasons there is a cache for retrieving the fee discount tier for an account. This cache is updated every 24 hours.
+
+### Stake Delegations/Grants
+
+Staked INJ requirements for fee discount tiers can be met through grants from other addresses that have staked their INJ. The total staked INJ value used for fee discount calculations is `OwnStake + StakeGrantedFromGranter - TotalStakeGrantedToOthers`. Note that although several grants can be made to a single address, **only one grant can be activated** for use at a single time. However, a single address can make up to 25 grants to other addresses at a time. Granted stake cannot be regranted.
