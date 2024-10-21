@@ -1,7 +1,7 @@
 # Table of contents
 
 * [About Injective](README.md)
-* [Getting Started](getting-started/README.md)
+* Getting Started
   * [Wallet](getting-started/wallet/README.md)
     * [Create a wallet](getting-started/wallet/create-a-wallet.md)
     * [Staking](getting-started/wallet/staking.md)
@@ -15,7 +15,7 @@
   * [Transactions](getting-started/transactions/README.md)
     * [Gas and Fees](getting-started/transactions/gas-and-fees.md)
     * [Messages](getting-started/transactions/messages.md)
-* [Guides](guides/README.md)
+* Guides
   * [Create Wallet](https://blog.injective.com/en/how-to-create-an-injective-wallet-2/)
   * [Bridge](guides/bridge/README.md)
     * [From Ethereum](https://blog.injective.com/en/how-to-bridge-from-ethereum-to-injective-using-metamask/)
@@ -24,7 +24,7 @@
     * [From Solana](https://blog.injective.com/en/how-to-bridge-from-solana-to-injective-using-phantom/)
   * [Launch a token](guides/launch-a-token.md)
   * [Launch a market](guides/launch-a-market.md)
-* [Toolkits](toolkits/README.md)
+* Toolkits
   * [injectived](toolkits/injectived/README.md)
     * [Install injectived](toolkits/injectived/install-injectived.md)
     * [Using injectived](toolkits/injectived/using-injectived.md)
