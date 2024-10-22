@@ -1,0 +1,3 @@
+# CW20 Standard
+
+The CW20 token standard provides a framework for the permissionless creation and management of fungible tokens that more closely resembles the [ERC20 standard](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/). As stated above, the TokenFactory is encouraged due to its native integration with the Cosmos SDK, but should you wish to use the CW20 standard for any reason, you can convert CW20 tokens to TokenFactory tokens and vice versa using the [CW20 Adapter](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md). For more information regarding the CW20 standard, see its formal specification [here](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md).
