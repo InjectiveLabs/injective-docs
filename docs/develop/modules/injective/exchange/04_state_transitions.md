@@ -34,10 +34,11 @@ This document describes the state transition operations pertaining to:
 - Derivative market param update proposal
 - Trading rewards launch proposal
 - Trading rewards update proposal
-- Begin-blocker
-- End-blocker
+- Fee discount schedule proposal
+- Stake grant authorizations
+- Stake grant activation
 
-## Deposit into exchange module account
+## Deposit Into Exchange Module Account
 
 Deposit action is carried out by `MsgDeposit` which consists of `Sender`, `SubaccountId` and `Amount` fields.
 
@@ -51,7 +52,7 @@ Deposit action is carried out by `MsgDeposit` which consists of `Sender`, `Subac
 - Increment deposit amount for the `subaccountID` by `msg.Amount`
 - Emit event for `EventSubaccountDeposit` with `msg.Sender`, `subaccountID` and `msg.Amount`
 
-## Withdraw from exchange module account
+## Withdraw From Exchange Module Account
 
 Withdraw action is carried out by `MsgWithdraw` which consists of `Sender`, `SubaccountId` and `Amount` fields.
 
@@ -65,7 +66,7 @@ Withdraw action is carried out by `MsgWithdraw` which consists of `Sender`, `Sub
 - Send coins from `exchange` module to `msg.Sender`
 - Emit event for `EventSubaccountWithdraw` with `subaccountID`, `msg.Sender`, and `msg.Amount`
 
-## Instant spot market launch
+## Instant Spot Market Launch
 
 Instant spot market launch action is carried out by `MsgInstantSpotMarketLaunch` which consists of `Sender`, `Ticker`, `BaseDenom`, `QuoteDenom`, `MinPriceTickSize` and `MinQuantityTickSize` fields.
 
@@ -77,7 +78,7 @@ Instant spot market launch action is carried out by `MsgInstantSpotMarketLaunch`
 - Send instant listing fee(params.SpotMarketInstantListingFee) from `msg.Sender` to `exchange` module account
 - Lastly send the instant listing fee to the community spend pool
 
-## Instant perpetual market launch
+## Instant Perpetual Market Launch
 
 Instant perpetual market launch action is carried out by `MsgInstantPerpetualMarketLaunch` which consists of `Sender`, `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleScaleFactor`, `OracleType`, `MakerFeeRate`, `TakerFeeRate`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MinPriceTickSize` and `MinQuantityTickSize` fields.
 
@@ -89,7 +90,7 @@ Instant perpetual market launch action is carried out by `MsgInstantPerpetualMar
 - Launch perpetual market with required params on `msg` object and revert if fail
 - Lastly send the instant listing fee to the community spend pool
 
-## Instant expiry futures market launch
+## Instant Expiry Futures Market Launch
 
 Instant expiry futures market launch action is carried out by `MsgInstantExpiryFuturesMarketLaunch` which consists of `Sender`, `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleScaleFactor`, `OracleType`, `Expiry`, `MakerFeeRate`, `TakerFeeRate`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MinPriceTickSize` and `MinQuantityTickSize` fields.
 
@@ -102,7 +103,7 @@ Instant expiry futures market launch action is carried out by `MsgInstantExpiryF
 - Trigger `EventExpiryFuturesMarketUpdate` event with market info
 - Lastly send the instant listing fee to the community spend pool
 
-## Spot limit order creation
+## Spot Limit Order Creation
 
 Spot limit order creation is carried out by `MsgCreateSpotLimitOrder` which consists of `Sender` and `Order`.
 
@@ -119,7 +120,7 @@ Spot limit order creation is carried out by `MsgCreateSpotLimitOrder` which cons
 
 **Note:** The order in transient store is executed on endblocker or if not, put on long-live store.
 
-## Batch creation of spot limit orders
+## Batch Creation of Spot Limit Orders
 
 Batch creation of spot limit orders is carried out by `MsgBatchCreateSpotLimitOrders` which consists of `Sender` and `Orders`.
 
@@ -127,7 +128,7 @@ Batch creation of spot limit orders is carried out by `MsgBatchCreateSpotLimitOr
 
 - Loop over the `msg.Orders` and create spot limit order as in `MsgCreateSpotLimitOrder`
 
-## Spot market order creation
+## Spot Market Order Creation
 
 Spot market order creation is carried out by `MsgCreateSpotMarketOrder` which consists of `Sender` and `Order`.
 
@@ -143,7 +144,7 @@ Spot market order creation is carried out by `MsgCreateSpotMarketOrder` which co
 - Decrement deposit's AvailableBalance by the balance hold
 - Store the order in the transient spot market order store and transient market indicator store
 
-## Cancel spot order
+## Cancel Spot Order
 
 Spot order cancellation is carried out by `MsgCancelSpotOrder` which consists of `Sender` and `MarketId`, `SubaccountId` and `OrderHash`.
 
@@ -157,7 +158,7 @@ Spot order cancellation is carried out by `MsgCancelSpotOrder` which consists of
 - Delete the order state from ordersStore and ordersIndexStore
 - Emit `EventCancelSpotOrder` event with marketID and order info
 
-## Batch cancellation of spot orders
+## Batch Cancellation of Spot Orders
 
 Batch cancellation of spot orders is carried out by `MsgBatchCancelSpotOrders` which consists of `Sender` and `Data`.
 
@@ -165,7 +166,7 @@ Batch cancellation of spot orders is carried out by `MsgBatchCancelSpotOrders` w
 
 - Loop over the `msg.Data` and cancel spot order as in `MsgCancelSpotOrder`
 
-## Derivative limit order creation
+## Derivative Limit Order Creation
 
 Derivative limit order creation is carried out by `MsgCreateDerivativeLimitOrder` which consists of `Sender` and `Order`.
 
@@ -188,7 +189,7 @@ Derivative limit order creation is carried out by `MsgCreateDerivativeLimitOrder
 - Store the order in the transient limit order store and transient market indicator store
 - Update orderbook metadata for subaccount
 
-## Batch creation of derivative limit orders
+## Batch Creation of Derivative Limit Orders
 
 Batch creation of derivative limit orders is carried out by `MsgBatchCreateDerivativeLimitOrders` which consists of `Sender` and `Orders`.
 
@@ -196,7 +197,7 @@ Batch creation of derivative limit orders is carried out by `MsgBatchCreateDeriv
 
 - Loop over the `msg.Orders` and create derivative limit order as in `MsgCreateDerivativeLimitOrder`
 
-## Derivative market order creation
+## Derivative Market Order Creation
 
 Derivative market order creation is carried out by `MsgCreateDerivativeMarketOrder` which consists of `Sender` and `Order`.
 
@@ -222,7 +223,7 @@ Derivative market order creation is carried out by `MsgCreateDerivativeMarketOrd
 - For an opposing position, if AggregateVanillaQuantity > position.quantity - AggregateReduceOnlyQuantity - order.FillableQuantity, the new reduce-only order might invalidate some existing reduce-only orders or itself be invalid, and do operations for that.
 - Store the order in the transient derivative market order store and transient market indicator store
 
-## Cancel derivative order
+## Cancel Derivative Order
 
 Derivative order cancellation is carried out by `MsgCancelDerivativeOrder` which consists of `Sender`, `MarketId`, `SubaccountId` and `OrderHash`.
 
@@ -237,7 +238,7 @@ Derivative order cancellation is carried out by `MsgCancelDerivativeOrder` which
 - Update orderbook metadata for subaccount
 - Emit `EventCancelDerivativeOrder` event with marketID and order info
 
-## Batch cancellation of derivative orders
+## Batch Cancellation of Derivative Orders
 
 Batch cancellation of derivative orders is carried out by `MsgBatchCancelDerivativeOrders` which consists of `Sender` and `Data`.
 
@@ -245,7 +246,7 @@ Batch cancellation of derivative orders is carried out by `MsgBatchCancelDerivat
 
 - Loop over the `msg.Data` and cancel spot order as in `MsgCancelDerivativeOrder`
 
-## Batch order updates
+## Batch Order Updates
 
 Batch updating orders is carried out by `MsgBatchUpdateOrders` which consists of `Sender` and `Orders`.
 
@@ -257,7 +258,7 @@ Batch updating orders is carried out by `MsgBatchUpdateOrders` which consists of
 - Loop over the `msg.SpotOrdersToCreate` and create spot limit order as in `MsgCreateSpotOrder`. If the creation fails, continue to next order. Successful creations are reflected in the `MsgBatchUpdateOrdersResponse` as `SpotOrderHashes`.
 - Loop over the `msg.DerivativeOrdersToCreate` and create derivative limit order as in `MsgCreateDerivativeOrder`. If the creation fails, continue to next order. Successful creations are reflected in the `MsgBatchUpdateOrdersResponse` as `DerivativeOrderHashes`.
 
-## Transfer between subaccounts
+## Transfer Between Subaccounts
 
 Transfer between subaccounts is executed by `MsgSubaccountTransfer` which consists of `Sender`, `SourceSubaccountId`, `DestinationSubaccountId` and `Amount`.
 
@@ -269,7 +270,7 @@ Transfer between subaccounts is executed by `MsgSubaccountTransfer` which consis
 
 **Note:** With subaccount transfer, no need to transfer actual coins from bank module but changing the records are enough.
 
-## Transfer to external account
+## Transfer to External Account
 
 Transfer to external account is executed by `MsgExternalTransfer` which consists of `Sender`, `SourceSubaccountId`, `DestinationSubaccountId` and `Amount`.
 
@@ -284,7 +285,7 @@ Transfer to external account is executed by `MsgExternalTransfer` which consists
 1. Event should be different for subaccount transfer and external transfer.
 2. There's no difference in subaccount transfer and external transfer, still need to keep different messages?
 
-## Liquidating a position
+## Liquidating a Position
 
 Liquidating a position is executed by `MsgLiquidatePosition` which consists of `Sender`, `SubaccountId`, `MarketId` and `Order`.
 
@@ -315,7 +316,7 @@ Liquidating a position is executed by `MsgLiquidatePosition` which consists of `
 - If market is a perpetual market, upgrade VWAP data based on liquidation price and quantity
 - If there's remaining in liquidation order, return back remains by cancelling order
 
-## Increasing position margin
+## Increasing Position Margin
 
 Increasing position margin is executed by `MsgIncreasePositionMargin` which consists of `Sender`, `SourceSubaccountId`, `DestinationSubaccountId`, `MarketId` and `Amount`.
 
@@ -329,7 +330,7 @@ Increasing position margin is executed by `MsgIncreasePositionMargin` which cons
 - Reduce deposit amount of `sourceSubaccountID` by `msg.Amount`
 - Increase position margin by `msg.Amount` and update position in the store
 
-## Exchange enable proposal
+## Exchange Enable Proposal
 
 The enable of market type is done by `ExchangeEnableProposal` which consists of `Title`, `Description` and `ExchangeType`.
 
@@ -339,7 +340,7 @@ The enable of market type is done by `ExchangeEnableProposal` which consists of 
 - If `p.ExchangeType` is spot market, enable spot exchange
 - If `p.ExchangeType` is derivative market, enable derivative market
 
-## Spot market launch proposal
+## Spot Market Launch Proposal
 
 Launch of spot market is handled by `SpotMarketLaunchProposal` which consists of `Title`, `Description`, `Ticker`, `BaseDenom`, `QuoteDenom`, `MinPriceTickSize` and `MinQuantityTickSize` fields.
 
@@ -351,7 +352,7 @@ Launch of spot market is handled by `SpotMarketLaunchProposal` which consists of
 - Calculate RelayerFeeShareRate based on exchange module params. **Note:** for INJ currency, relayer share rate is set to 100%
 - Save spot market with calculated `ticker`, `baseDenom`, `quoteDenom`, `exchangeParams.DefaultSpotMakerFeeRate`, `exchangeParams.DefaultSpotTakerFeeRate`, `relayerFeeShareRate`, `minPriceTickSize`, `minQuantityTickSize`, `marketID`, and `MarketStatus_Active`.
 
-## Perpetual market launch proposal
+## Perpetual Market Launch Proposal
 
 Perpetual market launch is handled by `PerpetualMarketLaunchProposal` which consists of `Title`, `Description`, `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleScaleFactor`, `OracleType`, `MakerFeeRate`, `TakerFeeRate`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MinPriceTickSize` and `MinQuantityTickSize` fields.
 
@@ -366,7 +367,7 @@ Perpetual market launch is handled by `PerpetualMarketLaunchProposal` which cons
 - Calculate `defaultFundingInterval`, `nextFundingTimestamp`, `relayerFeeShareRate` from `exchange` module params
 - Execute `SetDerivativeMarketWithInfo` to set market info into the storage with `market`, `marketInfo` and `funding` objects
 
-## Expiry futures market launch proposal
+## Expiry Futures Market Launch Proposal
 
 Expiry futures market launch is handled by `ExpiryFuturesMarketLaunchProposal` which consists of `Title`, `Description`, `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleScaleFactor`, `OracleType`, `Expiry`, `MakerFeeRate`, `TakerFeeRate`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MinPriceTickSize` and `MinQuantityTickSize` fields.
 
@@ -382,7 +383,7 @@ Expiry futures market launch is handled by `ExpiryFuturesMarketLaunchProposal` w
 - Calculate RelayerFeeShareRate based on exchange module params. **Note:** for INJ currency, relayer share rate is set to 100%
 - Execute `SetDerivativeMarketWithInfo` to set market info into the storage with `market`, `marketInfo` objects **Note:** TwapStartTimestamp is set to `expiry - thirtyMinutesInSeconds`.
 
-## Spot market param update proposal
+## Spot Market Param Update Proposal
 
 The update of spot market param is handled by `SpotMarketParamUpdateProposal` which consists of `Title`, `Description`, `MarketId`, `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` and `Status`.
 
@@ -393,7 +394,7 @@ The update of spot market param is handled by `SpotMarketParamUpdateProposal` wh
 - Reset the params for `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` and `Status` if not empty, if empty keep as it is.
 - Validate `MakerFeeRate` is bigger than `TakerFeeRate`.
 
-## Derivative market param update proposal
+## Derivative Market Param Update Proposal
 
 Derivative market param update is handled by `DerivativeMarketParamUpdateProposal` which consists of `Title`, `Description`, `MarketId`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` and `Status`.
 
@@ -445,3 +446,24 @@ Derivative market param update is handled by `DerivativeMarketParamUpdateProposa
 - Set the first fee paid bucket timestamp as the current block time
 - Set New Fee Discount Schedule, delete it along with Market Qualifications
 - Set New Market Qualifications
+
+## Stake Grant Authorizations
+
+**Steps**
+
+- Check if an existing grant from the granter already exists for the grantee
+- Calculate the new total amount of stake granted to the grantee by subtracting the existing grant amounts and adding the new grant amounts (essentially overwrites the existing grant amounts with the new grant amounts)
+- Ensure valid grant authorizations by making sure total amount granted is less than or equal to total amount staked by granter
+- Update grant amounts for grantee
+- Set grant to active if the current active grant is from the same granter or if there is no current active grant
+- Emit `EventGrantAuthorizations` with granter and grants
+
+
+## Stake Grant Activation
+
+**Steps**
+
+- Check to make sure grant from granter to grantee exists
+- Check to make sure granter is not granting more than their total staked amount
+- If grant amount is 0, delete the grant, otherwise write new grant amount to store
+- Emit `EventGrantActivation` with grantee, granter, and amount

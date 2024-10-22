@@ -53,10 +53,20 @@ message EventDerivativeMarketPaused {
   string missing_funds_rate = 4;
 }
 
+message EventMarketBeyondBankruptcy {
+  string market_id = 1;
+  string settle_price = 2;
+  string missing_market_funds = 3;
+}
+
+message EventAllPositionsHaircut {
+  string market_id = 1;
+  string settle_price = 2;
+  string missing_funds_rate = 3;
+}
+
 message EventBinaryOptionsMarketUpdate {
-  BinaryOptionsMarket market = 1 [
-    (gogoproto.nullable) = false
-  ];
+  BinaryOptionsMarket market = 1 [ (gogoproto.nullable) = false ];
 }
 
 message EventNewSpotOrders {
@@ -73,43 +83,28 @@ message EventNewDerivativeOrders {
 
 message EventCancelSpotOrder {
   string market_id = 1;
-  SpotLimitOrder order = 2 [
-    (gogoproto.nullable) = false
-  ];
+  SpotLimitOrder order = 2 [ (gogoproto.nullable) = false ];
 }
 
 message EventSpotMarketUpdate {
-  SpotMarket market = 1 [
-    (gogoproto.nullable) = false
-  ];
+  SpotMarket market = 1 [ (gogoproto.nullable) = false ];
 }
 
 message EventPerpetualMarketUpdate {
-  DerivativeMarket market = 1 [
-    (gogoproto.nullable) = false
-  ];
-  PerpetualMarketInfo perpetual_market_info = 2[
-    (gogoproto.nullable) = true
-  ];
-  PerpetualMarketFunding funding = 3[
-    (gogoproto.nullable) = true
-  ];
+  DerivativeMarket market = 1 [ (gogoproto.nullable) = false ];
+  PerpetualMarketInfo perpetual_market_info = 2 [ (gogoproto.nullable) = true ];
+  PerpetualMarketFunding funding = 3 [ (gogoproto.nullable) = true ];
 }
 
 message EventExpiryFuturesMarketUpdate {
-  DerivativeMarket market = 1 [
-    (gogoproto.nullable) = false
-  ];
-  ExpiryFuturesMarketInfo expiry_futures_market_info = 3[
-    (gogoproto.nullable) = true
-  ];
+  DerivativeMarket market = 1 [ (gogoproto.nullable) = false ];
+  ExpiryFuturesMarketInfo expiry_futures_market_info = 3
+      [ (gogoproto.nullable) = true ];
 }
 
 message EventPerpetualMarketFundingUpdate {
   string market_id = 1;
-  PerpetualMarketFunding funding = 2[
-    (gogoproto.nullable) = false
-  ];
+  PerpetualMarketFunding funding = 2 [ (gogoproto.nullable) = false ];
   bool is_hourly_funding = 3;
   string funding_rate = 4 [
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
@@ -124,39 +119,40 @@ message EventPerpetualMarketFundingUpdate {
 message EventSubaccountDeposit {
   string src_address = 1;
   bytes subaccount_id = 2;
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
 }
 
 message EventSubaccountWithdraw {
   bytes subaccount_id = 1;
   string dst_address = 2;
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
 }
 
 message EventSubaccountBalanceTransfer {
   string src_subaccount_id = 1;
   string dst_subaccount_id = 2;
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
 }
 
-message EventBatchDepositUpdate {
-  repeated DepositUpdate deposit_updates = 1;
+message EventBatchDepositUpdate { repeated DepositUpdate deposit_updates = 1; }
+
+message DerivativeMarketOrderCancel {
+  DerivativeMarketOrder market_order = 1 [ (gogoproto.nullable) = true ];
+  string cancel_quantity = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message EventCancelDerivativeOrder {
   string market_id = 1;
   bool isLimitCancel = 2;
-  DerivativeLimitOrder limit_order = 3 [
-    (gogoproto.nullable) = true
-  ];
-  DerivativeMarketOrderCancel market_order_cancel = 4 [
-    (gogoproto.nullable) = true
-  ];
+  DerivativeLimitOrder limit_order = 3 [ (gogoproto.nullable) = true ];
+  DerivativeMarketOrderCancel market_order_cancel = 4
+      [ (gogoproto.nullable) = true ];
 }
 
-message EventFeeDiscountSchedule {
-  FeeDiscountSchedule schedule = 1;
-}
+message EventFeeDiscountSchedule { FeeDiscountSchedule schedule = 1; }
 
 message EventTradingRewardCampaignUpdate {
   TradingRewardCampaignInfo campaign_info = 1;
@@ -165,5 +161,81 @@ message EventTradingRewardCampaignUpdate {
 
 message EventTradingRewardDistribution {
   repeated AccountRewards account_rewards = 1;
+}
+
+message EventNewConditionalDerivativeOrder {
+  string market_id = 1;
+  DerivativeOrder order = 2;
+  bytes hash = 3;
+  bool is_market = 4;
+}
+
+message EventCancelConditionalDerivativeOrder {
+  string market_id = 1;
+  bool isLimitCancel = 2;
+  DerivativeLimitOrder limit_order = 3 [ (gogoproto.nullable) = true ];
+  DerivativeMarketOrder market_order = 4 [ (gogoproto.nullable) = true ];
+}
+
+message EventConditionalDerivativeOrderTrigger {
+  bytes market_id = 1;
+  bool isLimitTrigger = 2;
+  bytes triggered_order_hash = 3;
+  bytes placed_order_hash = 4;
+  string triggered_order_cid = 5;
+}
+
+message EventOrderFail {
+  bytes account = 1;
+  repeated bytes hashes = 2;
+  repeated uint32 flags = 3;
+  repeated string cids = 4;
+}
+
+message EventAtomicMarketOrderFeeMultipliersUpdated {
+  repeated MarketFeeMultiplier market_fee_multipliers = 1;
+}
+
+message EventOrderbookUpdate {
+  repeated OrderbookUpdate spot_updates = 1;
+  repeated OrderbookUpdate derivative_updates = 2;
+}
+
+message OrderbookUpdate {
+  uint64 seq = 1;
+  Orderbook orderbook = 2;
+}
+
+message Orderbook {
+  bytes market_id = 1;
+  repeated Level buy_levels = 2;
+  repeated Level sell_levels = 3;
+}
+
+message EventGrantAuthorizations {
+  string granter = 1;
+  repeated GrantAuthorization grants = 2;
+}
+
+message EventGrantActivation {
+  string grantee = 1;
+  string granter = 2;
+  string amount = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message EventInvalidGrant {
+  string grantee = 1;
+  string granter = 2;
+}
+
+message EventOrderCancelFail {
+  string market_id = 1;
+  string subaccount_id = 2;
+  string order_hash = 3;
+  string cid = 4;
+  string description = 5;
 }
 ```
