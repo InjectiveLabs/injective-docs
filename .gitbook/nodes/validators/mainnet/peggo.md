@@ -183,7 +183,7 @@ Please note that the default keyring backend is `file` and that as such peggo wi
 
 To use the default injectived key configuration, you should set the keyring path to the home directory of your injectived node, e.g., `~/.injectived`.
 
-You can also read more about the Cosmos Keyring setup [here](https://docs.cosmos.network/main/run-node/keyring.html).
+You can also read more about the Cosmos Keyring setup [here](https://docs.cosmos.network/v0.46/run-node/keyring.html).
 
 #### **Option 2. Cosmos Private Key (Unsafe)**
 
@@ -279,7 +279,7 @@ journalctl -f -u peggo
 This is an advanced DevOps topic, consult with your sysadmin.
 {% endhint %}
 
-Learn more about Cosmos Keyring setup [here](https://docs.cosmos.network/master/run-node/keyring.html). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
+Learn more about Cosmos Keyring setup [here](https://docs.cosmos.network/v0.46/run-node/keyring.html). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
 
 Some sections of the Injective Staking documentation will guide you through using this key for governance purposes, i.e. submitting transactions and setting up an Ethereum bridge. In order to protect the keys from unauthorized access, even when the keyring passphrase is leaked via configs, you can set OS permissions to allow disk access to `injectived` / `peggo` processes only.
 
