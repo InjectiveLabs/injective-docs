@@ -155,7 +155,7 @@ Node operators should deploy bare metal servers to achieve optimal performance. 
 See the [Injective releases repo](https://github.com/InjectiveLabs/testnet/releases) for the most recent releases. Non-validator node operators do not need to install `peggo`.
 
 ```bash
-wget -L https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
+wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv peggo /usr/bin
 sudo mv injectived /usr/bin
@@ -258,7 +258,7 @@ Node operators should deploy bare metal servers to achieve optimal performance. 
 See the [Injective chain releases repo](https://github.com/InjectiveLabs/injective-chain-releases/releases/) for the most recent releases. Non-validator node operators do not need to install `peggo`.
 
 ```bash
-wget -L https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv peggo /usr/bin
 sudo mv injectived /usr/bin
