@@ -1,10 +1,11 @@
-# OCR
+# Ocr
 
 ## Abstract
 
 OCR module is to store chainlink's OCR(Off-Chain Report) info into the chain storage.
 
-Feed configuration is managed by module admin and report move to on-chain by transmitters and observers. Transmitters and observers are rewarded in LINK token on the chain configured by governance.
+Feed configuration is managed by module admin and report move to on-chain by transmitters and observers.
+Transmitters and observers are rewarded in LINK token on the chain configured by governance.
 
 While storing feed information, module provide hooks where oracle module can use for the calculation of cumulative price for futures market.
 

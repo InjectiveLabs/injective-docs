@@ -102,6 +102,7 @@
       * [Events](developers/modules/injective/exchange/09_events.md)
       * [Params](developers/modules/injective/exchange/10_params.md)
       * [MsgPrivilegedExecuteContract](developers/modules/injective/exchange/11_msg_privileged_execute_contract.md)
+      * [Gas Heuristics](developers/modules/injective/exchange/12_gas_heuristics.md)
       * [Errors](developers/modules/injective/exchange/99_errors.md)
     * [Insurance](developers/modules/injective/insurance/README.md)
       * [State](developers/modules/injective/insurance/01_state.md)

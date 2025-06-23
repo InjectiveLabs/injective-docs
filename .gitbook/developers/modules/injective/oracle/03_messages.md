@@ -7,7 +7,9 @@ title: Messages
 
 ## MsgRelayBandRates
 
-Authorized Band relayers can relay price feed data for multiple symbols with the `MsgRelayBandRates` message. The registered handler iterates over all the symbols present in the `MsgRelayBandRates` and creates/updates the `BandPriceState` for each symbol.
+Authorized Band relayers can relay price feed data for multiple symbols with the `MsgRelayBandRates` message.
+The registered handler iterates over all the symbols present in the `MsgRelayBandRates` and creates/updates the
+`BandPriceState` for each symbol.
 
 ```protobuf
 message MsgRelayBandRates {
@@ -80,11 +82,12 @@ message MsgRequestBandIBCRates {
 }
 ```
 
-Anyone can broadcast this message and no specific authorization is needed. The handler checks if `BandIbcEnabled` flag is true and go ahead sending a request.
+Anyone can broadcast this message and no specific authorization is needed.
+The handler checks if `BandIbcEnabled` flag is true and go ahead sending a request.
 
 ## MsgRelayPythPrices
 
-`MsgRelayPythPrices` is a message for the Pyth contract relay prices to the oracle module.
+`MsgRelayPythPrices` is a message for the Pyth contract relay prices to the oracle module.  
 
 ```protobuf
 // MsgRelayPythPrices defines a SDK message for updating Pyth prices
@@ -123,11 +126,12 @@ enum PythStatus {
 }
 ```
 
-This message is expected to fail if the Relayer (`sender`) does not equal the Pyth contract address as defined in the oracle module Params.
+This message is expected to fail if the Relayer (`sender`) does not equal the Pyth contract address as defined in the 
+oracle module Params. 
 
 ## MsgRelayStorkPrices
 
-`MsgRelayStorkPrices` is a message for the Stork contract relay prices to the oracle module.
+`MsgRelayStorkPrices` is a message for the Stork contract relay prices to the oracle module.  
 
 ```protobuf
 // MsgRelayStorkPrices defines a SDK message for relaying price message from Stork API.
@@ -156,11 +160,10 @@ message SignedPriceOfAssetPair {
 }
 ```
 
-This message is expected to fail if:
-
-* the Relayer (`sender`) is not an authorized oracle publisher or if `assetId` is not unique amongst the provided asset pairs
-* ECDSA signature verification fails for the `SignedPriceOfAssetPair`
-* the difference between timestamps exceeds the `MaxStorkTimestampIntervalNano` (500 milliseconds).
+This message is expected to fail if: 
+- the Relayer (`sender`) is not an authorized oracle publisher or if `assetId` is not unique amongst the provided asset pairs 
+- ECDSA signature verification fails for the `SignedPriceOfAssetPair`  
+- the difference between timestamps exceeds the `MaxStorkTimestampIntervalNano` (500 milliseconds).
 
 ## MsgRelayProviderPrices
 
