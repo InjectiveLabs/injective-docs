@@ -41,9 +41,9 @@ Note that the version used in this tutorial was `1.2.3-stable`. Be sure to use t
 {% hint style="info" %}
 If you are starting a new project from scratch:
 
-- Create a new directory for the project
-- Create a new `foundry.toml` file inside it
-- Create an `src` subdirectory
+* Create a new directory for the project
+* Create a new `foundry.toml` file inside it
+* Create an `src` subdirectory
 
 ```shell
 mkdir my-first-smart-contract-inj
@@ -156,7 +156,7 @@ First use `cast sig`, this time on a different function:
 cast sig "function increment()"
 ```
 
-This should produce a different function signature from befoe, since it is another function:
+This should produce a different function signature from before, as points to a different function:
 
 ```text
 0xd09de08a
@@ -173,8 +173,8 @@ cast send \
   0xd09de08a
 ```
 
-If you visit the smart contract address in a block exporer, you should see the new transaction registered against it.
+If you visit the smart contract address in a block explorer, you should see the new transaction registered against it.
 
-If you repeat the `cast call` command above which invoke `number()`, you should get an updated value of `1` this time.
+If you repeat the `cast call` command above, which invokes `number()`, you should get an updated value of `1` this time.
 
 <table data-card-size="large" data-view="cards" data-full-width="false"><thead><tr><th></th><th data-type="content-ref"></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td>← Previous</td><td><a href="../evm-developers.md">evm-developers.md</a></td><td><a href="../evm-developers.md">evm-developers.md</a></td></tr><tr><td>Next →</td><td><a href="guides/">guides</a></td><td><a href="guides/">guides</a></td></tr></tbody></table>
