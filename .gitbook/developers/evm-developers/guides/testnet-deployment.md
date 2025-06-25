@@ -45,7 +45,7 @@ cd path/to/your/project
 Your private key should have INJ on the Injective network. A transaction will be created which requires a gas fee. You can request EVM testnet funds [here](https://testnet.faucet.injective.network/)
 {% endhint %}
 
-This command creates a transaction, and submits it to the network. If the transaction is successful, the smart contract will be deployed, and the address it is deployed at will be output.
+This command creates a transaction and submits it to the network. If the transaction is successful, the smart contract will be deployed, and the address it is deployed at will be output.
 
 ```shell
 # Broadcasting
@@ -63,7 +63,7 @@ Be sure to copy the address at which the smart contract was deployed, as you wil
 
 After the deployment is completed, if you visit a network explorer, such as Blockscout, and search for the address of the smart contract, you will see that it has bytecode.
 
-However, to add more details, you need to verify the contract.
+However, to see aditional details, you need to verify the contract.
 
 ```bash
 forge verify-contract \
