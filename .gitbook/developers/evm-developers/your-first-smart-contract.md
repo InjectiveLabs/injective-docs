@@ -102,7 +102,7 @@ You can read more about the process of [testnet-deployment.md](guides/testnet-de
 // WiP
 ```
 
-#### Using Casttive
+#### Using Foundry
 
 Let's query the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/)
 
@@ -120,7 +120,7 @@ cast call --rpc-url injectiveEvm {SmartContractAddress} 0x8381f58a
 // WiP
 ```
 
-#### Using Cast
+#### Using Foundry
 
 Let's make a transaction and change the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/)
 
