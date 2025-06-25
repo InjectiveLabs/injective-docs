@@ -61,7 +61,11 @@ We can build a simple **Counter** example and then do a transaction/query the sm
 
 ### Smart Contract Code
 
-This is just a simple Counter smart contract written in Solidity.
+Next, create a simple Counter smart contract written in Solidity.
+
+```shell
+touch src/counter.sol
+```
 
 ```solidity
 // SPDX-License-Identifier: UNLICENSED
