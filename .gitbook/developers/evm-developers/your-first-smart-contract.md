@@ -125,7 +125,10 @@ This should produce the following output, which is the function signature:
 We use this function signature in `cast call`, which performs the actual query:
 
 ```shell
-cast call --rpc-url injectiveEvm {SmartContractAddress} 0x8381f58a
+cast call \
+  --rpc-url injectiveEvm \
+  {SmartContractAddress} \
+  0x8381f58a
 ```
 
 This outputs the return value of invoking `number()` on your deployed smart contract.
@@ -159,7 +162,12 @@ This should produce a different function signature from befoe, since it is anoth
 We use this `cast send`, which performs the actual transaction:
 
 ```shell
-cast send --legacy --rpc-url injectiveEvm --private-key {YourPrivateKey} {SmartContractAddress} 0xd09de08a
+cast send \
+  --legacy \
+  --rpc-url injectiveEvm \
+  --private-key {YourPrivateKey} \
+  {SmartContractAddress} \
+  0xd09de08a
 ```
 
 <table data-card-size="large" data-view="cards" data-full-width="false"><thead><tr><th></th><th data-type="content-ref"></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td>← Previous</td><td><a href="../evm-developers.md">evm-developers.md</a></td><td><a href="../evm-developers.md">evm-developers.md</a></td></tr><tr><td>Next →</td><td><a href="guides/">guides</a></td><td><a href="guides/">guides</a></td></tr></tbody></table>

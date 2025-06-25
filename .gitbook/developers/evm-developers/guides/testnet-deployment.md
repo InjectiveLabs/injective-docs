@@ -45,12 +45,25 @@ cd path/to/your/project
 Your private key should have INJ on the Injective network. A transaction will be created which requires a gas fee. You can request EVM testnet funds [here](https://testnet.faucet.injective.network/)
 {% endhint %}
 
-<pre class="language-bash"><code class="lang-bash"># Simulating
-<strong>forge create src/{YourContract}.sol:{ContractName} --rpc-url injectiveEvm --private-key {YourPrivateKey}
-</strong>
+```shell
+# Simulating
+forge create \
+  src/{YourContract}.sol:{ContractName} \
+  --rpc-url injectiveEvm \
+  --legacy \
+  --private-key \
+  {YourPrivateKey}
+```
+
+```shell
 # Broadcasting
-forge create src/{YourContract}.sol:{ContractName} --rpc-url injectiveEvm --legacy --private-key {YourPrivateKey} --broadcast
-</code></pre>
+forge create \
+  src/{YourContract}.sol:{ContractName} \
+  --rpc-url injectiveEvm \
+  --legacy \
+  --private-key {YourPrivateKey} \
+  --broadcast
+```
 
 ### Verifying on Blockscout
 
