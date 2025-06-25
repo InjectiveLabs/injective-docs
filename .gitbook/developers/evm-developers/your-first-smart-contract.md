@@ -10,8 +10,8 @@ Building and Deploying smart contracts on Injective should be quite simple. As y
 
 1. We'll develop the smart contract,
 2. Do a [testnet-deployment.md](guides/testnet-deployment.md "mention") on the Injective's EVM Testnet,
-3. Query the smart contract using [Cast](https://book.getfoundry.sh/reference/cast/),
-4. Send a transaction to change the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/),
+3. Query the smart contract using [`cast`](https://getfoundry.sh/cast/reference/overview),
+4. Send a transaction to change the smart contract state using [`cast`](https://getfoundry.sh/cast/reference/overview),
 
 ## Requirements
 
@@ -108,7 +108,7 @@ You can read more about the process of [testnet-deployment.md](guides/testnet-de
 
 #### Using Foundry
 
-Let's query the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/)
+Let's query the smart contract state using [`cast`](https://getfoundry.sh/cast/reference/overview).
 
 First use `cast sig`:
 
@@ -145,7 +145,7 @@ If you have yet to perform any transactions on this smart contract, it should sh
 
 #### Using Foundry
 
-Let's make a transaction and change the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/)
+Let's make a transaction and change the smart contract state using [`cast`](https://getfoundry.sh/cast/reference/overview).
 
 First use `cast sig`, this time on a different function:
 
