@@ -110,11 +110,27 @@ You can read more about the process of [testnet-deployment.md](guides/testnet-de
 
 Let's query the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/)
 
-```bash
-cast sig "function number() returns (uint256)" 0x8381f58a
+First use `cast sig`:
 
+```shell
+cast sig "function number() returns (uint256)"
+```
+
+This should produce the following output, which is the function signature:
+
+```text
+0x8381f58a
+```
+
+We use this function signature in `cast call`, which performs the actual query:
+
+```shell
 cast call --rpc-url injectiveEvm {SmartContractAddress} 0x8381f58a
 ```
+
+This outputs the return value of invoking `number()` on your deployed smart contract.
+
+If you have yet to perform any transactions on this smart contract, it should show `0`.
 
 ### Transactions against the Smart Contract
 
@@ -128,9 +144,21 @@ cast call --rpc-url injectiveEvm {SmartContractAddress} 0x8381f58a
 
 Let's make a transaction and change the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/)
 
-```bash
-cast sig "function increment()" 0xd09de08a
+First use `cast sig`, this time on a different function:
 
+```shell
+cast sig "function increment()"
+```
+
+This should produce a different function signature from befoe, since it is another function:
+
+```text
+0xd09de08a
+```
+
+We use this `cast send`, which performs the actual transaction:
+
+```shell
 cast send --legacy --rpc-url injectiveEvm --private-key {YourPrivateKey} {SmartContractAddress} 0xd09de08a
 ```
 
