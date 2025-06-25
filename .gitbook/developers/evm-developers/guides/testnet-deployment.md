@@ -69,11 +69,14 @@ forge create \
   --broadcast
 ```
 
-Be sure to copy the address at which the smart contrct was deployed, as you will need to use it in subsequent commands.
+Be sure to copy the address at which the smart contract was deployed, as you will need to use it in subsequent commands.
+
 
 ### Verifying on Blockscout
 
-After the deployment is completed, you can verify the contract.
+After the deployment is completed, if you visit a network explorer, such as Blockscout, and search for the address of the smart contract, you will see that it has bytecode.
+
+However, to add more details you need to verify the contract.
 
 ```bash
 forge verify-contract \
@@ -84,7 +87,7 @@ forge verify-contract \
   src/{YourContract}.sol:{ContractName}
 ```
 
-After that, you can navigate to the contract address in Explorer to see the code, parsed logs, and callable methods ([example](https://k8s.testnet.evm.blockscout.injective.network/address/0x2f9f80b89ef4C9AaBcd630E62B740d6a2f3065E4)).
+After that, you can navigate to the contract address in Explorer to see the code, the ABI, parsed logs, and callable methods ([example](https://k8s.testnet.evm.blockscout.injective.network/address/0x2f9f80b89ef4C9AaBcd630E62B740d6a2f3065E4)).
 
 {% hint style="info" %}
 You can read more about foundry deploying [here](https://book.getfoundry.sh/forge/deploying), or you can check other deployment options [here](https://book.getfoundry.sh/reference/forge/forge-create). You can also read more about forge verify-contract [here](https://book.getfoundry.sh/reference/forge/forge-verify-contract).
