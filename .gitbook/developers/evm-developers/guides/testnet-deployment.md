@@ -76,7 +76,7 @@ Be sure to copy the address at which the smart contract was deployed, as you wil
 
 After the deployment is completed, if you visit a network explorer, such as Blockscout, and search for the address of the smart contract, you will see that it has bytecode.
 
-However, to add more details you need to verify the contract.
+However, to add more details, you need to verify the contract.
 
 ```bash
 forge verify-contract \
