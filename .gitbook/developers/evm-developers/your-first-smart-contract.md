@@ -10,10 +10,13 @@ Building and Deploying smart contracts on Injective should be quite simple. As y
 
 1. We'll develop the smart contract,
 2. Do a [testnet-deployment.md](guides/testnet-deployment.md "mention") on the Injective's EVM Testnet,
-3. Query the smart contract using [Cast](https://book.getfoundry.sh/reference/cast/),
-4. Send a transaction to change the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/),
+3. Query the smart contract using [`cast`](https://getfoundry.sh/cast/reference/overview),
+4. Send a transaction to change the smart contract state using [`cast`](https://getfoundry.sh/cast/reference/overview),
 
 ## Requirements
+
+You will need a wallet, and an account that has been funded with some Testnet INJ.
+After creating your account, be sure to copy your private key somewhere accessible, as you will need it to complete this tutorial.
 
 {% hint style="info" %}
 You can request EVM testnet funds from the official Testnet faucet [here](https://testnet.faucet.injective.network/).
@@ -27,13 +30,30 @@ curl -L https://foundry.paradigm.xyz | bash
 
 To verify the installation:
 
-```
+```shell
 forge --version
 ```
 
+Note that the version used in this tutorial was `1.2.3-stable`. Be sure to use this version or later when following along.
+
 2. Add Injective EVM to your `foundry.toml`
 
+{% hint style="info" %}
+If you are starting a new project from scratch:
+
+- Create a new directory for the project
+- Create a new `foundry.toml` file inside it
+- Create an `src` subdirectory
+
+```shell
+mkdir my-first-smart-contract-inj
+cd my-first-smart-contract-inj
+touch foundry.toml
+mkdir src
 ```
+{% endhint %}
+
+```toml
 [rpc_endpoints]
 injectiveEvm = "https://k8s.testnet.json-rpc.injective.network/"
 ```
@@ -44,7 +64,11 @@ We can build a simple **Counter** example and then do a transaction/query the sm
 
 ### Smart Contract Code
 
-This is just a simple Counter smart contract written in Solidity.
+Next, create a simple Counter smart contract written in Solidity.
+
+```shell
+touch src/counter.sol
+```
 
 ```solidity
 // SPDX-License-Identifier: UNLICENSED
@@ -85,15 +109,34 @@ You can read more about the process of [testnet-deployment.md](guides/testnet-de
 // WiP
 ```
 
-#### Using Casttive
+#### Using Foundry
 
-Let's query the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/)
+Let's query the smart contract state using [`cast`](https://getfoundry.sh/cast/reference/overview).
 
-```bash
-cast sig "function number() returns (uint256)" 0x8381f58a
+First use `cast sig`:
 
-cast call --rpc-url injectiveEvm {SmartContractAddress} 0x8381f58a
+```shell
+cast sig "function number() returns (uint256)"
 ```
+
+This should produce the following output, which is the function signature:
+
+```text
+0x8381f58a
+```
+
+We use this function signature in `cast call`, which performs the actual query:
+
+```shell
+cast call \
+  --rpc-url injectiveEvm \
+  {SmartContractAddress} \
+  0x8381f58a
+```
+
+This outputs the return value of invoking `number()` on your deployed smart contract.
+
+If you have yet to perform any transactions on this smart contract, it should show `0`.
 
 ### Transactions against the Smart Contract
 
@@ -103,14 +146,35 @@ cast call --rpc-url injectiveEvm {SmartContractAddress} 0x8381f58a
 // WiP
 ```
 
-#### Using Cast
+#### Using Foundry
 
-Let's make a transaction and change the smart contract state using [Cast](https://book.getfoundry.sh/reference/cast/)
+Let's make a transaction and change the smart contract state using [`cast`](https://getfoundry.sh/cast/reference/overview).
 
-```bash
-cast sig "function increment()" 0xd09de08a
+First use `cast sig`, this time on a different function:
 
-cast send --legacy --rpc-url injectiveEvm --private-key {YourPrivateKey} {SmartContractAddress} 0xd09de08a
+```shell
+cast sig "function increment()"
 ```
+
+This should produce a different function signature from befoe, since it is another function:
+
+```text
+0xd09de08a
+```
+
+We use this `cast send`, which performs the actual transaction:
+
+```shell
+cast send \
+  --legacy \
+  --rpc-url injectiveEvm \
+  --private-key {YourPrivateKey} \
+  {SmartContractAddress} \
+  0xd09de08a
+```
+
+If you visit the smart contract address in a block exporer, you should see the new transaction registered against it.
+
+If you repeat the `cast call` command above which invoke `number()`, you should get an updated value of `1` this time.
 
 <table data-card-size="large" data-view="cards" data-full-width="false"><thead><tr><th></th><th data-type="content-ref"></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td>← Previous</td><td><a href="../evm-developers.md">evm-developers.md</a></td><td><a href="../evm-developers.md">evm-developers.md</a></td></tr><tr><td>Next →</td><td><a href="guides/">guides</a></td><td><a href="guides/">guides</a></td></tr></tbody></table>
