@@ -49,7 +49,7 @@ Your private key should have INJ on the Injective network. A transaction will be
 <strong>forge create src/{YourContract}.sol:{ContractName} --rpc-url injectiveEvm --private-key {YourPrivateKey}
 </strong>
 # Broadcasting
-forge create src/{YourContract}.sol:{ContractName} --rpc-url injectiveEvm --private-key {YourPrivateKey} --broadcast
+forge create src/{YourContract}.sol:{ContractName} --rpc-url injectiveEvm --legacy --private-key {YourPrivateKey} --broadcast
 </code></pre>
 
 ### Verifying on Blockscout
