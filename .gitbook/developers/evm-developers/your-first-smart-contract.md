@@ -35,7 +35,22 @@ Note that the version used in this tutorial was `1.2.3-stable`. Be sure to use t
 
 2. Add Injective EVM to your `foundry.toml`
 
+{% hint style="info" %}
+If you are starting a new project from scratch:
+
+- Create a new directory for the project
+- Create a new `foundry.toml` file inside it
+- Create an `src` subdirectory
+
+```shell
+mkdir my-first-smart-contract-inj
+cd my-first-smart-contract-inj
+touch foundry.toml
+mkdir src
 ```
+{% endhint %}
+
+```toml
 [rpc_endpoints]
 injectiveEvm = "https://k8s.testnet.json-rpc.injective.network/"
 ```
