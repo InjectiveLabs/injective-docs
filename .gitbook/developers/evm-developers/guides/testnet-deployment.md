@@ -45,6 +45,8 @@ cd path/to/your/project
 Your private key should have INJ on the Injective network. A transaction will be created which requires a gas fee. You can request EVM testnet funds [here](https://testnet.faucet.injective.network/)
 {% endhint %}
 
+This command creates a transaction, but simply displays it without submitting it to the network. Therefore the smart contract does not get deployed.
+
 ```shell
 # Simulating
 forge create \
@@ -55,6 +57,8 @@ forge create \
   {YourPrivateKey}
 ```
 
+This command does the same as above, but submits it to the network. Therefore the smart contract should get deployed.
+
 ```shell
 # Broadcasting
 forge create \
@@ -64,6 +68,8 @@ forge create \
   --private-key {YourPrivateKey} \
   --broadcast
 ```
+
+Be sure to copy the address at which the smart contrct was deployed, as you will need to use it in subsequent commands.
 
 ### Verifying on Blockscout
 

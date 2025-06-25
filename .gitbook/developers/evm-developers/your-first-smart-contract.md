@@ -15,6 +15,9 @@ Building and Deploying smart contracts on Injective should be quite simple. As y
 
 ## Requirements
 
+You will need a wallet, and an account that has been funded with some Testnet INJ.
+After creating your account, be sure to copy your private key somewhere accessible, as you will need it to complete this tutorial.
+
 {% hint style="info" %}
 You can request EVM testnet funds from the official Testnet faucet [here](https://testnet.faucet.injective.network/).
 {% endhint %}
