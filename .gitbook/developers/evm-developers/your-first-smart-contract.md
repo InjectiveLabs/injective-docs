@@ -27,9 +27,11 @@ curl -L https://foundry.paradigm.xyz | bash
 
 To verify the installation:
 
-```
+```shell
 forge --version
 ```
+
+Note that the version used in this tutorial was `1.2.3-stable`. Be sure to use this version or later when following along.
 
 2. Add Injective EVM to your `foundry.toml`
 
