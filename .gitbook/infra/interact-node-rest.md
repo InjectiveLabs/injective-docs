@@ -17,7 +17,7 @@ Make sure to replace `localhost:1317` with the REST endpoint of your node, confi
 
 The list of all available REST endpoints is available as a Swagger specification file; it can be viewed at `localhost:1317/swagger`. Make sure that the `api.swagger` field is set to true in your `app.toml` file.
 
-#### Query for historical state using REST
+## Query for historical state using REST
 
 Querying for historical state is done using the HTTP header `x-cosmos-block-height`. For example, a curl command would look like:
 
@@ -25,7 +25,7 @@ Querying for historical state is done using the HTTP header `x-cosmos-block-heig
 curl \
     -X GET \
     -H "Content-Type: application/json" \
-    -H "x-cosmos-block-height: 279256"
+    -H "x-cosmos-block-height: 279256" \
     http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR
 ```
 
@@ -33,7 +33,7 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 ## Cross-Origin Resource Sharing (CORS)
 
-[CORS policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) are not enabled by default to help with security. If you would like to use the rest-server in a public environment we recommend you provide a reverse proxy, this can be done with [nginx](https://www.nginx.com/). For testing and development purposes, there is an `enabled-unsafe-cors` field inside `app.toml`.
+[CORS policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) are not enabled by default to help with security. If you would like to use the rest-server , we recommend you provide a reverse proxy. This can be done with [nginx](https://www.nginx.com/). For testing and development purposes, there is an `enabled-unsafe-cors` field inside `app.toml`.
 
 ## Sending Transactions
 
