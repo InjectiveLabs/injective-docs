@@ -197,6 +197,6 @@ redirects:
   developers/getting-started/guides/convert-addresses: developers/convert-addresses.md
   toolkits: developers/injectived/README.md
   toolkits/injectived: developers/injectived/README.md
-  toolkits/injectived/install-injectived: developers/injectived/install-injectived.md
-  toolkits/injectived/using-injectived: developers/injectived/using-injectived.md
+  toolkits/injectived/install-injectived: developers/injectived/install.md
+  toolkits/injectived/using-injectived: developers/injectived/use.md
   toolkits/injectived/advanced: developers/injectived/advanced.md
