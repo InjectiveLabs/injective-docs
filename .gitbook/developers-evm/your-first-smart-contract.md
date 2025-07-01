@@ -1,15 +1,15 @@
 # Your First Smart Contract
 
 {% hint style="info" %}
-* You can find the chain details on the [evm-developers.md](../evm-developers.md "mention") page
+* You can find the chain details on the [EVM developers](./README.md "mention") page
 * You can find an example of a simple Counter contract and deployment instructions within the [injective-foundry-example](https://github.com/InjectiveLabs/injective-foundry-example).
-* You can also read our general-purpose [testnet-deployment.md](guides/testnet-deployment.md "mention") guides.
+* You can also read our general-purpose [testnet-deployment.md](./testnet-deployment.md "mention") guides.
 {% endhint %}
 
 Building and Deploying smart contracts on Injective should be quite simple. As your first example, we'll take a look at a simple Counter smart contract example.
 
 1. We'll develop the smart contract,
-2. Do a [testnet-deployment.md](guides/testnet-deployment.md "mention") on the Injective's EVM Testnet,
+2. Do a [testnet-deployment.md](./testnet-deployment.md "mention") on the Injective's EVM Testnet,
 3. Query the smart contract using [`cast`](https://getfoundry.sh/cast/reference/overview),
 4. Send a transaction to change the smart contract state using [`cast`](https://getfoundry.sh/cast/reference/overview),
 
@@ -99,7 +99,7 @@ contract Counter {
 
 ### Deployment
 
-You can read more about the process of [testnet-deployment.md](guides/testnet-deployment.md "mention") in the page referenced in the link.
+You can read more about the process of [testnet-deployment.md](./testnet-deployment.md "mention") in the page referenced in the link.
 
 ### Querying the Smart Contract
 
@@ -177,4 +177,4 @@ If you visit the smart contract address in a block explorer, you should see the 
 
 If you repeat the `cast call` command above, which invokes `number()`, you should get an updated value of `1` this time.
 
-<table data-card-size="large" data-view="cards" data-full-width="false"><thead><tr><th></th><th data-type="content-ref"></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td>← Previous</td><td><a href="../evm-developers.md">evm-developers.md</a></td><td><a href="../evm-developers.md">evm-developers.md</a></td></tr><tr><td>Next →</td><td><a href="guides/">guides</a></td><td><a href="guides/">guides</a></td></tr></tbody></table>
+<table data-card-size="large" data-view="cards" data-full-width="false"><thead><tr><th></th><th data-type="content-ref"></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td>← Previous</td><td><a href="./README.md">EVM developers</a></td><td><a href="./README.md">EVM developers</a></td></tr><tr><td>Next →</td><td><a href="./precompiles.md">Precompiles</a></td><td><a href="./precompiles.md">Precompiles</a></td></tr></tbody></table>

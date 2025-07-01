@@ -18,13 +18,11 @@ You can request private EVM testnet funds [here](https://testnet.faucet.injectiv
 
 For more information about Injective EVM Testnet see the following pages:
 
-* [Testnet Deployment](../guides/testnet-deployment.md)
-* [EVM Equivalence](evm-equivalence.md)
-* [MultiVM Token Standard](multivm-token-standard.md)
-* [Start Building on EVM](../../evm-developers.md)
+* [Testnet Deployment](../testnet-deployment.md)
+* [EVM Equivalence](./evm-equivalence.md)
+* [MultiVM Token Standard](./multivm-token-standard.md)
+* [Start Building on EVM](./README.md)
 
 ## Injective EVM Mainnet
 
 Coming soon.
-
-<table data-card-size="large" data-view="cards" data-full-width="false"><thead><tr><th></th><th data-type="content-ref"></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td>← Previous</td><td><a href="./">.</a></td><td><a href="./">.</a></td></tr><tr><td>Next →</td><td><a href="evm-equivalence.md">evm-equivalence.md</a></td><td><a href="evm-equivalence.md">evm-equivalence.md</a></td></tr></tbody></table>

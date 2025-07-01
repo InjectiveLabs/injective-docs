@@ -79,5 +79,3 @@ After that, you can navigate to the contract address in Explorer to see the code
 {% hint style="info" %}
 You can read more about foundry deploying [here](https://book.getfoundry.sh/forge/deploying), or you can check other deployment options [here](https://book.getfoundry.sh/reference/forge/forge-create). You can also read more about forge verify-contract [here](https://book.getfoundry.sh/reference/forge/forge-verify-contract).
 {% endhint %}
-
-<table data-card-size="large" data-view="cards" data-full-width="false"><thead><tr><th></th><th data-type="content-ref"></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td>← Previous</td><td><a href="../../../guides/">guides</a></td><td><a href="./">.</a></td></tr><tr><td>Next →</td><td><a href="../technical-information/">technical-information</a></td><td><a href="../technical-information/">technical-information</a></td></tr></tbody></table>
