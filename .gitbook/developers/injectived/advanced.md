@@ -26,7 +26,7 @@ injectived add-genesis-account acc1 100000000000inj
 
 ### `collect-gentxs`
 
-Collects genesis transactions and outputs them to `genesis.json`. For more information on `genesis.json`, see the Join Testnet or Join Mainnet guide [here](../../nodes/getting-started/running-a-node/join-a-network.md).
+Collects genesis transactions and outputs them to `genesis.json`. For more information on `genesis.json`, see the Join Testnet or Join Mainnet guide [here](../../infra/join-a-network.md).
 
 **Syntax**
 

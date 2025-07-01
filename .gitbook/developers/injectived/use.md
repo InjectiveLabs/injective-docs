@@ -6,7 +6,7 @@ The following page explains what one can do via `injectived`, the command-line i
 
 ### Ensuring injectived is installed
 
-See [Install injectived](install-injectived.md) for more information. If you have installed `injectived` successfully, you should be able to run the following command:
+See [Install injectived](./install.md) for more information. If you have installed `injectived` successfully, you should be able to run the following command:
 
 ```bash
 injectived version
@@ -55,7 +55,7 @@ Before you can access the Injective blockchain, you need to have a node running.
 
 To query the state and send transactions, you must connect to a node, which is the access point to the entire network of peer connections. You can either run your own full node or connect to someone else’s.
 
-[Running own node](../../nodes/getting-started/running-a-node/join-a-network.md) is for advanced users only. For most users, it is recommended to connect to a public node.
+[Running own node](../../infra/join-a-network.md) is for advanced users only. For most users, it is recommended to connect to a public node.
 
 To set the RPC endpoint, you can use the following command:
 

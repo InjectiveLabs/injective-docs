@@ -4,7 +4,7 @@ Within this document, we'll outline some examples on how to convert addresses be
 
 ### Convert Hex <> Bech32 address
 
-As we've mentioned in the [wallet](../../../getting-started/wallet/ "mention") section, Injective addresses are compatible with Ethereum addresses. You can convert between the two formats easily.&#x20;
+As we've mentioned in the [wallet](../defi/wallet/README.md "mention") section, Injective addresses are compatible with Ethereum addresses. You can convert between the two formats easily.&#x20;
 
 ### Using TypeScript
 
