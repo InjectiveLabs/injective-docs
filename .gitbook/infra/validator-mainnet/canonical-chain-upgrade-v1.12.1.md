@@ -10,12 +10,10 @@ All nodes, validator and non-consensus nodes must be upgraded as soon as possibl
 
 Validators should also upgrade the peggo version.
 
-* Summary
-* Risks
-* Recovery
-* Upgrade Procedure
-* Notes for Validator Operators
-* Notes for Service Providers
+* [Summary](#summary)
+* [Recovery](#recovery)
+* [Upgrade Procedure](#upgrade-procedure)
+* [Notes for Validator Operators](#notes-for-validators)
 
 ### Summary
 

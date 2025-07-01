@@ -12,8 +12,8 @@ Following [proposal 198](https://hub.injective.network/proposals/198/) This indi
 * [Risks](canonical-10009.md#risks)
 * [Recovery](canonical-10009.md#recovery)
 * [Upgrade Procedure](canonical-10009.md#upgrade-procedure)
-* [Notes for Validator Operators](canonical-10009.md##notes-for-validator-operators)
-* [Notes for Service Providers](canonical-10009.md##notes-for-DEX-relayer-providers)
+* [Notes for Validator Operators](canonical-10009.md#notes-for-validator-operators)
+* [Notes for Service Providers](canonical-10009.md#notes-for-dex-relayer-providers)
 
 ## Summary
 

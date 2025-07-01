@@ -12,7 +12,7 @@ Following [proposal #106](https://hub.injective.network/proposals/106) This indi
 * [Risks](#risks)
 * [Recovery](#recovery)
 * [Upgrade Procedure](#upgrade-procedure)
-* [Notes for Service Providers](#notes-for-DEX-relayer-providers)
+* [Notes for Service Providers](#notes-for-dex-relayer-providers)
 
 ## Summary
 

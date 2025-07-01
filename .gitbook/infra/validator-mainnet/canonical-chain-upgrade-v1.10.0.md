@@ -4,12 +4,12 @@ Friday, March 17th, 2023
 
 Following [proposal 207](https://hub.injective.network/proposals/207/) This indicates that the upgrade procedure should be performed on block number **28864000**
 
-- Summary
-- Risks
-- Recovery
-- Upgrade Procedure
-- Notes for Validator Operators
-- Notes for Service Providers
+* [Summary](canonical-10009.md#summary)
+* [Risks](canonical-10009.md#risks)
+* [Recovery](canonical-10009.md#recovery)
+* [Upgrade Procedure](canonical-10009.md#upgrade-procedure)
+* [Notes for Validator Operators](canonical-10009.md#notes-for-validator-operators)
+* [Notes for Service Providers](canonical-10009.md#notes-for-dex-relayer-providers)
 
 ### Summary
 
