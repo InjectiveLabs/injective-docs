@@ -1,7 +1,7 @@
 # Launch a Market
 
 {% hint style="info" %}
-The prerequisite for launching a market is to [launch-a-token.md](launch-a-token.md "mention")
+The prerequisite for launching a market is to [launch-a-token.md](./token-launch.md "mention")
 {% endhint %}
 
 Launching a trading pair on Injective is quick, easy, and best of all, permissionless!&#x20;

@@ -6,9 +6,9 @@ There are two options for launching a token on Injective: bridging an existing t
 
 ## Bridging <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
 
-The easiest way to launch a token on Injective is by bridging your existing assets from one of the supported networks that Injective is interoperable with. There are guides in the [bridge](bridge/ "mention") sections that you can reference to bridge assets from other networks to Injective.
+The easiest way to launch a token on Injective is by bridging your existing assets from one of the supported networks that Injective is interoperable with. There are guides in the [bridge](../defi/bridge/README.md "mention") sections that you can reference to bridge assets from other networks to Injective.
 
-Once the bridging process is completed, a token will be created on Injective, which you can then use to [launch-a-market.md](launch-a-market.md "mention").
+Once the bridging process is completed, a token will be created on Injective, which you can then use to [launch-a-market.md](./market-launch.md "mention").
 
 ## Creating a New Token
 
@@ -35,7 +35,7 @@ You can learn more about Launching a token on the [TypeScript Documentation](htt
 #### Using Injective CLI
 
 {% hint style="info" %}
-You have to have `injectived` installed locally before proceeding with this tutorial. You cal learn more about it on the [getting-started](../getting-started/ "mention")page in the Nodes section.
+You have to have `injectived` installed locally before proceeding with this tutorial. You can learn more about it on the [injectived](../developers/injectived/ "mention")page.
 {% endhint %}
 
 Once you have `injectived` installed and a key added, you can use the CLI to launch your token:
