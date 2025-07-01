@@ -29,9 +29,9 @@ cargo install cargo-generate
 
 ### injectived
 
-Make sure you have `injectived` installed locally. You can follow the [install-injectived.md](../../../toolkits/injectived/install-injectived.md "mention")guide to get `injectived` and other prerequisites running locally.&#x20;
+Make sure you have `injectived` installed locally. You can follow the [install-injectived.md](../developers/injectived/install.md "mention")guide to get `injectived` and other prerequisites running locally.&#x20;
 
-Once you have `injectived` installed, you should also [start a local chain instance.](../../../toolkits/injectived/install-injectived.md#start-injectived)
+Once you have `injectived` installed, you should also [start a local chain instance.](..//developers/injectived/install.md#start-injectived)
 
 ### Compile CosmWasm Contracts
 
@@ -454,4 +454,4 @@ Here are the main differences between a `local` and `testnet` development/deploy
 * Instead of using `injective-1` as a `chainId` you should use `injective-888` i.e the `chain-id` flag should now be `--chain-id="injective-888"`
 * You can use the [Injective Testnet Explorer](https://testnet.explorer.injective.network/codes/) to find information about the `codeId` of the uploaded smart contracts OR find your instantiated smart contract
 
-You can read more on the `injectived` and how to use it to query/send transactions against `testnet` [using-injectived.md](../../../toolkits/injectived/using-injectived.md "mention").
+You can read more on the `injectived` and how to use it to query/send transactions against `testnet` [using-injectived.md](../developers/injectived/use.md "mention").

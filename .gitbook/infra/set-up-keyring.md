@@ -1,7 +1,7 @@
 # Setting up the keyring
 
 {% hint style="info" %}
-This document describes how to configure and use the keyring and its various backends for an Injective node. `injectived` should be installed prior to setting up the keyring. See the [Install `injectived` page](../../../toolkits/injectived/install-injectived.md) for more information.
+This document describes how to configure and use the keyring and its various backends for an Injective node. `injectived` should be installed prior to setting up the keyring. See the [Install `injectived` page](../developers/injectived/install.md) for more information.
 {% endhint %}
 
 The keyring holds the private/public keypairs used to interact with the node. For instance, a validator key needs to be set up before running the Injective node, so that blocks can be correctly signed. The private key can be stored in different locations, called "backends", such as a file or the operating system's own key storage.
