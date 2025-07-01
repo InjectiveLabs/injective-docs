@@ -9,8 +9,8 @@ INJECTIVE_DIR=./.gitbook/developers-native/injective
 mkdir -p $BUILD_DIR
 rm -rf $CORE_DIR
 rm -rf $INJECTIVE_DIR
-mkdir $CORE_DIR
-mkdir $INJECTIVE_DIR
+mkdir -p $CORE_DIR
+mkdir -p $INJECTIVE_DIR
 
 if [ "$GH_CORE_USER" ] && [ "$GH_CORE_TOKEN" ]; then
     echo "Using GitHub credentials for cloning injective-core"
