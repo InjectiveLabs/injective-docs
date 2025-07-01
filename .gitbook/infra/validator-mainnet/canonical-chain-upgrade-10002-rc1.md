@@ -13,11 +13,10 @@ In case of a failed migration via the upgrade module, the Injective Labs team wi
 
 Following [proposal #65](https://hub.injective.network/proposals/65) This indicates that the upgrade procedure should be performed on block number **4,352,000**.
 
-* [Summary](canonical-10002-rc1.md#summary)
-* [Risks](canonical-10002-rc1.md#risks)
-* [Recovery](canonical-10002-rc1.md#recovery)
-* [Upgrade Procedure](canonical-10002-rc1.md#upgrade-procedure)
-* [Notes for Service Providers](canonical-10002-rc1.md#notes-for-DEX-relayer-providers)
+* [Summary](#summary)
+* [Risks](#risks)
+* [Recovery](#recovery)
+* [Upgrade Procedure](#upgrade-procedure)
 
 ## Summary
 
