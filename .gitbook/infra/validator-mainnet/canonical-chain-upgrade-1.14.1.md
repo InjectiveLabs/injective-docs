@@ -8,12 +8,11 @@ Tuesday, March 4th, 2025
 
 Following [Proposal 500](https://hub.injective.network/proposals/500) This indicates that the upgrade procedure should be performed on block number **108175000**
 
-* [Summary](canonical-1.14.1.md#summary)
-* [Risks](canonical-1.14.1.md#risks)
-* [Recovery](canonical-1.14.1.md#recovery)
-* [Upgrade Procedure](canonical-1.14.1.md#upgrade-procedure)
-* [Notes for Validator Operators](canonical-1.14.1.md##notes-for-validator-operators)
-* [Notes for Service Providers](canonical-1.14.1.md##notes-for-DEX-relayer-providers)
+* [Summary](#summary)
+* [Risks](#risks)
+* [Recovery](#recovery)
+* [Upgrade Procedure](#upgrade-procedure)
+* [Notes for Validators](#notes-for-validators)
 
 ## Summary
 
