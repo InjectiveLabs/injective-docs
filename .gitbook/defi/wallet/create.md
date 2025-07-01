@@ -14,4 +14,4 @@ You can create an Injective wallet using your preferred wallet by following the 
 
 You can create an Injective wallet for your development purposes using [injectived](../../developers/injectived/ "mention") in a CLI environment. You can do that using the `injectived keys` [command](../../developers/injectived/advanced.md#keys).&#x20;
 
-You can also learn more about keyring management using `injectived` on this page [1.-setting-up-the-keyring.md](../../nodes/getting-started/running-a-node/1.-setting-up-the-keyring.md "mention")
+You can also learn more about keyring management using `injectived` on this page [set-up-keyring.md](../../infra/set-up-keyring.md "mention")
