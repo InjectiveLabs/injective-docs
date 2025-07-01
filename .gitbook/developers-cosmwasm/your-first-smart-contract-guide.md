@@ -400,12 +400,12 @@ This produces an `artifacts` directory with a `PROJECT_NAME.wasm`, as well as `c
 
 `injectived` is the command-line interface and daemon that connects to Injective and enables you to interact with the Injective blockchain.
 
-If you want to interact with your Smart Contract locally using CLI, you have to have `injectived` installed. To do so, you can follow the installation guidelines here [#install-injectived](your-first-smart-contract.md#install-injectived "mention").
+If you want to interact with your Smart Contract locally using CLI, you have to have `injectived` installed. To do so, you can follow the installation guidelines here [#install-injectived](#install-injectived "mention").
 
 Alternatively, a Docker image has been prepared to make this tutorial easier.
 
 {% hint style="info" %}
-If you install `injectived` from the binary, ignore the docker commands. On the [public endpoints section](../../nodes/public-endpoints.md) you can find the right --node info to interact with Mainnet and Testnet.&#x20;
+If you install `injectived` from the binary, ignore the docker commands. On the [public endpoints section](../infra/public-endpoints.md) you can find the right --node info to interact with Mainnet and Testnet.&#x20;
 {% endhint %}
 
 Executing this command will make the docker container execute indefinitely.
@@ -477,7 +477,7 @@ curl -X GET "https://sentry.testnet.lcd.injective.network/cosmos/bank/v1beta1/ba
 
 ## Upload the Wasm Contract
 
-Now it's time to upload the `.wasm` file that you compiled in the previous steps to the Injective Testnet. Please note that the procedure for mainnet is different and [requires a governance proposal.](guides/mainnet-deployment.md)
+Now it's time to upload the `.wasm` file that you compiled in the previous steps to the Injective Testnet. Please note that the procedure for mainnet is different and [requires a governance proposal.](./mainnet-deployment-guide.md)
 
 ```bash
 # inside the "injective-core-staging" container, or from the contract directory if running injectived locally
