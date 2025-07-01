@@ -8,11 +8,10 @@ Thursday, December 30th, 2021
 
 Following [proposal #93](https://hub.injective.network/proposals/93) This indicates that the upgrade procedure should be performed on block number **6159200**
 
-* [Summary](canonical-10003-rc1.md#summary)
-* [Risks](canonical-10003-rc1.md#risks)
-* [Recovery](canonical-10003-rc1.md#recovery)
-* [Upgrade Procedure](canonical-10003-rc1.md#upgrade-procedure)
-* [Notes for Service Providers](canonical-10003-rc1.md#notes-for-DEX-relayer-providers)
+* [Summary](#summary)
+* [Risks](#risks)
+* [Recovery](#recovery)
+* [Notes for Service Providers](#notes-for-dex-relayer-providers)
 
 ## Summary
 
@@ -68,7 +67,7 @@ In the event that the upgrade does not succeed, validators and operators must re
     ```
 
     \
-    **NOTE**: It is recommended for validators and operators to take a full data snapshot at the export height before proceeding in case the upgrade does not go as planned or if not enough voting power comes online in a sufficient and agreed upon amount of time. In such a case, the chain will fallback to continue operating the Chain. See [Recovery](canonical-10003-rc1.md#recovery) for details on how to proceed.
+    **NOTE**: It is recommended for validators and operators to take a full data snapshot at the export height before proceeding in case the upgrade does not go as planned or if not enough voting power comes online in a sufficient and agreed upon amount of time. In such a case, the chain will fallback to continue operating the Chain. See [Recovery](#recovery) for details on how to proceed.
 3.  Download and install the injective-chain `10003-rc1 release`
 
     ```bash

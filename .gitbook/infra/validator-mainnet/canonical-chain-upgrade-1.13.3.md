@@ -6,12 +6,11 @@ sidebar_position: 18
 
 Thursday, Dec 19th, 2024
 
-* [Summary](canonical-1.13.3.md#summary)
-* [Risks](canonical-1.13.3.md#risks)
-* [Recovery](canonical-1.13.3.md#recovery)
-* [Upgrade Procedure](canonical-1.13.3.md#upgrade-procedure)
-* [Notes for Validator Operators](canonical-1.13.3.md##notes-for-validator-operators)
-* [Notes for Service Providers](canonical-1.13.3.md##notes-for-DEX-relayer-providers)
+* [Summary](#summary)
+* [Risks](#risks)
+* [Recovery](#recovery)
+* [Upgrade Procedure](#upgrade-procedure)
+* [Notes for Validator Operators](#notes-for-validators)
 
 ## Summary
 

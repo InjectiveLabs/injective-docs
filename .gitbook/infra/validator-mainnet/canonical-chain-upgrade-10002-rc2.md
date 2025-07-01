@@ -8,11 +8,10 @@ November 15th, 2021
 
 Following [proposal #70](https://hub.injective.network/proposals/70) This indicates that the upgrade procedure should be performed on block number **4, 594, 100**
 
-* [Summary](canonical-10002-rc2.md#summary)
-* [Risks](canonical-10002-rc2.md#risks)
-* [Recovery](canonical-10002-rc2.md#recovery)
-* [Upgrade Procedure](canonical-10002-rc2.md#upgrade-procedure)
-* [Notes for Service Providers](canonical-10002-rc2.md#notes-for-DEX-relayer-providers)
+* [Summary](#summary)
+* [Risks](#risks)
+* [Recovery](#recovery)
+* [Upgrade Procedure](#upgrade-procedure)
 
 ## Summary
 
@@ -67,7 +66,7 @@ In the event that the upgrade does not succeed, validators and operators must re
     cp ~/.injectived ./injectived-backup
     ```
 
-    **NOTE**: It is recommended for validators and operators to take a full data snapshot at the export height before proceeding in case the upgrade does not go as planned or if not enough voting power comes online in a sufficient and agreed upon amount of time. In such a case, the chain will fallback to continue operating. See [Recovery](canonical-10002-rc2.md#recovery) for details on how to proceed.
+    **NOTE**: It is recommended for validators and operators to take a full data snapshot at the export height before proceeding in case the upgrade does not go as planned or if not enough voting power comes online in a sufficient and agreed upon amount of time. In such a case, the chain will fallback to continue operating. See [Recovery](#recovery) for details on how to proceed.
 3.  Download and install the injective-chain `10002-rc2 release`
 
     ```bash

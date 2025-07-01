@@ -8,12 +8,11 @@ Thursday, August 1st, 2024
 
 Following [proposal 420](https://hub.injective.network/proposals/420/) This indicates that the upgrade procedure should be performed on block number **80319200**
 
-* [Summary](canonical-1.13.0.md#summary)
-* [Risks](canonical-1.13.0.md#risks)
-* [Recovery](canonical-1.13.0.md#recovery)
-* [Upgrade Procedure](canonical-1.13.0.md#upgrade-procedure)
-* [Notes for Validator Operators](canonical-1.13.0.md##notes-for-validator-operators)
-* [Notes for Service Providers](canonical-1.13.0.md##notes-for-DEX-relayer-providers)
+* [Summary](#summary)
+* [Risks](#risks)
+* [Recovery](#recovery)
+* [Upgrade Procedure](#upgrade-procedure)
+* [Notes for Validator Operators](#notes-for-validator-operator)
 
 ## Summary
 
