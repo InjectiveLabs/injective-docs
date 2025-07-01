@@ -3,8 +3,8 @@ injective_core_branch=master
 cosmos_sdk_branch=v0.50.x-inj
 BUILD_DIR=./temp
 STUB_DIR=./scripts/stub
-CORE_DIR=./.gitbook/developers/modules/core
-INJECTIVE_DIR=./.gitbook/developers/modules/injective
+CORE_DIR=./.gitbook/developers-native/core
+INJECTIVE_DIR=./.gitbook/developers-native/injective
 
 mkdir -p $BUILD_DIR
 rm -rf $CORE_DIR
@@ -13,11 +13,14 @@ mkdir $CORE_DIR
 mkdir $INJECTIVE_DIR
 
 if [ "$GH_CORE_USER" ] && [ "$GH_CORE_TOKEN" ]; then
+    echo "Using GitHub credentials for cloning injective-core"
     git clone https://$GH_CORE_USER:$GH_CORE_TOKEN@github.com/InjectiveLabs/injective-core.git $BUILD_DIR/injective-core -b $injective_core_branch --depth 1 --single-branch > /dev/null
 else
-    git clone https://github.com/InjectiveLabs/injective-core.git $BUILD_DIR/injective-core -b $injective_core_branch --depth 1 --single-branch > /dev/null
+    echo "Using public access to clone injective-core"
+    git clone https://github.com/InjectiveFoundation/injective-core.git $BUILD_DIR/injective-core -b $injective_core_branch --depth 1 --single-branch > /dev/null
 fi
 
+echo "Cloning cosmos-sdk..."
 git clone https://github.com/InjectiveLabs/cosmos-sdk.git $BUILD_DIR/cosmos-sdk -b $cosmos_sdk_branch --depth 1 --single-branch > /dev/null
 
 ## Generate errors docs
