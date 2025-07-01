@@ -365,38 +365,11 @@ _To be added soon_
 4. [Imperator](https://www.imperator.co/services/chain-services/mainnets/injective).
 5. [Bware Labs](https://bwarelabs.com/snapshots).
 
-Alternatively, you can use the pruned snapshots from Injective Labs on AWS S3.
-
-```bash
-systemctl stop injectived
-injectived tendermint unsafe-reset-all --home $HOME/.injectived
-SNAP=$(aws s3 ls --no-sign-request s3://injective-snapshots/mainnet/pruned/ | grep ".tar.lz4" | sort | tail -n 1 | awk '{print $4}')
-aws s3 cp --no-sign-request s3://injective-snapshots/mainnet/pruned/$SNAP .
-lz4 -c -d $SNAP  | tar -x -C $HOME/.injectived/
-rm $SNAP
-systemctl start injectived
-```
-
 Should the Injective `mainnet-config seeds.txt` list not work (the node fails to sync blocks), ChainLayer, Polkachu, and Autostake maintain peer lists (can be used in the `persistent_peers` field in `config.toml`) or addressbooks (for faster peer discovery).
 
-**Archival** (>20TB)
+**Archival** 
 
-```bash
-systemctl stop injectived
-injectived tendermint unsafe-reset-all --home $HOME/.injectived
-aws s3 sync --no-sign-request --delete s3://injective-snapshots/mainnet/injectived/data $HOME/.injectived/data
-aws s3 sync --no-sign-request --delete s3://injective-snapshots/mainnet/injectived/wasm $HOME/.injectived/wasm
-systemctl start injectived
-```
-
-At this point, [GEX](https://github.com/cosmos/gex) can be used to monitor the node's sync status. If the snapshot has been correcly loaded, the number of connected peers should increase from 0 and the latest block should steadily increase, signalling the node syncing with its peers. Note that it may take a few or several hours for the node to catch up to the network's block height depending on the age of the snapshot.
-
-In the case where the latest block does not increase and the number of connected peers is 0 or remains low, the seed list in `seeds.txt` may be outdated, and the `seeds` or `persistent_peers` fields can be updated using a validator's seed or peer list respectively, before the node is started again.
-
-```bash
-go install github.com/cosmos/gex@latest
-gex
-```
+To make serving archival data more accessible we split data into different segments. These segments are stored in `s3://injective-snapshots/mainnet/subnode/` 
 
 **Support**
 
