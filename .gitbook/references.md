@@ -13,7 +13,7 @@ Developer tools and resources to get you building on Injective
 | **Resource**                                                                                  | **Description**                                                                                                             |
 | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | [Injective 101](https://injective.notion.site/Injective-101-589dedc4c9c04531aae503dbb235d443) | One-stop-shop for Injective resources                                                                                       |
-| [Injectived](toolkits/injectived/)                                                            | Command-line interface and node daemon that connects to Injective                                                           |
+| [Injectived](./developers/injectived/README.md)                                                            | Command-line interface and node daemon that connects to Injective                                                           |
 | [Injective Explorer](https://explorer.injective.network/)                                     | Analytics platform that enables anyone to search addresses, trades, tokens, transactions, and other activities on Injective |
 | [Injective Local](https://github.com/InjectiveLabs/injective-local)                           | Injective testnet and ecosystem containerized with Docker and orchestrated with a simple docker-compose file.               |
 | [Injective REST API](https://lcd.injective.network/swagger/)                                  | Swagger API explorer                                                                                                        |
@@ -21,7 +21,7 @@ Developer tools and resources to get you building on Injective
 | [Injective API Reference](https://api.injective.exchange)                                     | Detailed API documentation for interacting with Injective for traders                                                       |
 | [Real-time Status (Mainnet)](https://status.injective.network/)                               | Real-time status of the endpoints and of the Injective network                                                              |
 | [Real-time Status (Testnet)](https://testnet.status.injective.network)                        | Real-time status of the endpoints and of the Injective testnet network                                                      |
-| [Cosmovisor](nodes/validators/cosmosvisor.md)                                                 | Small process manager around Cosmos SDK binaries that monitors the governance module                                        |
+| [Cosmovisor](./infra/cosmovisor.md)                                                 | Small process manager around Cosmos SDK binaries that monitors the governance module                                        |
 | [CosmosSDK](https://docs.cosmos.network/v0.52/build)                                          | The Cosmos SDK documentation serving as a valuable resource for developers integrating with the Injective ecosystem         |
 
 ### Ecosystem Tools and Resources
@@ -67,8 +67,8 @@ Find developer support on Discord or Telegram
 
 ### Public Endpoints
 
-For a list of public endpoints, visit [public-endpoints.md](nodes/public-endpoints.md "mention")
+For a list of public endpoints, visit [public endpoints](./infra/public-endpoints.md "mention")
 
 ### Private / Dedicated Node Services
 
-For a full list of private node services, see [private-nodes.md](nodes/private-nodes.md "mention")
+For a full list of private node services, see [premium endpoints](infra/premium-endpoints.md "mention")
