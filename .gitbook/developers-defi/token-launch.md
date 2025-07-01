@@ -16,13 +16,13 @@ You can also create a new token on Injective using the `TokenFactory` module. Th
 
 ### Using Injective Hub <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
 
-The [Injective Hub](https://hub.injective.network/token-factory/) web app provides you the ability to create and manage tokens seamlessly, creating a market on Injective's [native orderbook](https://docs.injective.network/develop/modules/injective/exchange), etc.
+The [Injective Hub](https://hub.injective.network/token-factory/) web app provides you the ability to create and manage tokens seamlessly, creating a market on Injective's [native orderbook](../developers-native/injective/exchange), etc.
 
-### Using TokenStation[​](https://docs.injective.network/develop/guides/token-launch/#3-via-tokenstation) <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+### Using TokenStation[​](../developers-defi/token-launch.md) <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
 
-The [TokenStation](https://www.tokenstation.app/) web app provides you the ability to create and manage tokens seamlessly, creating a market on Injective's [native orderbook](../developers/modules/injective/exchange/), launching an airdrop, and much more.
+The [TokenStation](https://www.tokenstation.app/) web app provides you the ability to create and manage tokens seamlessly, creating a market on Injective's [native orderbook](../developers-native/injective/exchange/), launching an airdrop, and much more.
 
-### Using DojoSwap[​](https://docs.injective.network/develop/guides/token-launch/#4-via-dojoswap) <a href="#id-4-via-dojoswap" id="id-4-via-dojoswap"></a>
+### Using DojoSwap[​](../developers-defi/token-launch.md#4-via-dojoswap) <a href="#id-4-via-dojoswap" id="id-4-via-dojoswap"></a>
 
 Similar to above, you can utilize [DojoSwap's Market Creation module](https://docs.dojo.trading/introduction/market-creation) to create, manage, and list your token, along with several other useful features.
 

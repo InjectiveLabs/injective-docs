@@ -9,7 +9,6 @@ Tuesday, August 20th, 2024
 Following [proposal 424](https://hub.injective.network/proposal/424/) This indicates that the upgrade procedure should be performed on block number **82830000**
 
 * [Summary](#summary)
-* [Risks](#risks)
 * [Recovery](#recovery)
 * [Upgrade Procedure](#upgrade-procedure)
 * [Notes for Validator Operators](#notes-for-validators)

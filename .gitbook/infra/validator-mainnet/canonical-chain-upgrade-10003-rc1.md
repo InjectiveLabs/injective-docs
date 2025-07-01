@@ -11,7 +11,7 @@ Following [proposal #93](https://hub.injective.network/proposals/93) This indica
 * [Summary](#summary)
 * [Risks](#risks)
 * [Recovery](#recovery)
-* [Notes for Service Providers](#notes-for-dex-relayer-providers)
+* [Notes for DEX Relayer Providers](#notes-for-dex-relayer-providers)
 
 ## Summary
 

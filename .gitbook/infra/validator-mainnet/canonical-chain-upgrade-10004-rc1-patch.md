@@ -13,7 +13,7 @@ This indicates that the upgrade procedure should be performed on block number **
 * [Summary](#summary)
 * [Recovery](#recovery)
 * [Upgrade Procedure](#upgrade-procedure)
-* [Notes for Service Providers](#notes-for-dex-relayer-providers)
+* [Notes for DEX Relayer Providers](#notes-for-dex-relayer-providers)
 
 ## Summary
 

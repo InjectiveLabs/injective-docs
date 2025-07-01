@@ -13,7 +13,7 @@ Following [proposal 170)](https://hub.injective.network/proposals/170/) This ind
 * [Recovery](#recovery)
 * [Upgrade Procedure](#upgrade-procedure)
 * [Notes for Validator Operators](#notes-for-validators)
-* [Notes for Service Providers](#notes-for-dex-relayer-providers)
+* [Notes for DEX Relayer Providers](#notes-for-dex-relayer-providers)
 
 ## Summary
 

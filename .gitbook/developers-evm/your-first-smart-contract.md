@@ -6,10 +6,10 @@
 * You can also read our general-purpose [testnet-deployment.md](./testnet-deployment.md "mention") guides.
 {% endhint %}
 
-Building and Deploying smart contracts on Injective should be quite simple. As your first example, we'll take a look at a simple Counter smart contract example.
+Building and deploying smart contracts on Injective is straightforward. As your first example, we'll take a look at a simple Counter smart contract example.
 
 1. We'll develop the smart contract,
-2. Do a [testnet-deployment.md](./testnet-deployment.md "mention") on the Injective's EVM Testnet,
+2. Deploy to the Injective EVM Testnet following the steps in [testnet-deployment.md](./testnet-deployment.md "mention"),
 3. Query the smart contract using [`cast`](https://getfoundry.sh/cast/reference/overview),
 4. Send a transaction to change the smart contract state using [`cast`](https://getfoundry.sh/cast/reference/overview),
 
@@ -99,7 +99,7 @@ contract Counter {
 
 ### Deployment
 
-You can read more about the process of [testnet-deployment.md](./testnet-deployment.md "mention") in the page referenced in the link.
+Read more about [Testnet Deployment](./testnet-deployment.md "mention").
 
 ### Querying the Smart Contract
 

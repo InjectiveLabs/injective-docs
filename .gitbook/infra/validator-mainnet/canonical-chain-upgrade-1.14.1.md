@@ -9,7 +9,6 @@ Tuesday, March 4th, 2025
 Following [Proposal 500](https://hub.injective.network/proposals/500) This indicates that the upgrade procedure should be performed on block number **108175000**
 
 * [Summary](#summary)
-* [Risks](#risks)
 * [Recovery](#recovery)
 * [Upgrade Procedure](#upgrade-procedure)
 * [Notes for Validators](#notes-for-validators)
