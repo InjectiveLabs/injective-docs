@@ -15,7 +15,7 @@ description: Essential information about the Injective EVM network
 #### Tokens&#x20;
 
 * wINJ (wrapped INJ) - `0x0000000088827d2d103ee2d9A6b781773AE03FfB`
-* erc20:USDT (MTS USDT) - `0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`
+* USDT (MTS USDT) - `0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`
 
 {% hint style="info" %}
 You can request private EVM testnet funds [here](https://testnet.faucet.injective.network/)
