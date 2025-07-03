@@ -367,10 +367,6 @@ _To be added soon_
 
 Should the Injective `mainnet-config seeds.txt` list not work (the node fails to sync blocks), ChainLayer, Polkachu, and Autostake maintain peer lists (can be used in the `persistent_peers` field in `config.toml`) or addressbooks (for faster peer discovery).
 
-**Archival** 
-
-To make serving archival data more accessible we split data into different segments. These segments are stored in `s3://injective-snapshots/mainnet/subnode/` 
-
 **Support**
 
 For any further questions, you can always connect with the Injective Team via [Discord](https://discord.gg/injective), [Telegram](https://t.me/joininjective), or [email](mailto:contact@injectivelabs.org)
