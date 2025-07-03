@@ -6,6 +6,15 @@ structure:
 
 redirects:
   develop/public-endpoints: nodes/public-endpoints.md
+  guides: developers/README.md
+  develop/cheat-sheet: developers/README.md
+  develop/tech-concepts: developers/README.md
+  nodes/RunNode/testnet: infra/run-node.md
+  develop/tools: developers/injectived/README.md
+  develop/guides: developers/README.md
+  develop/modules: developers-native/README.md
+  develop/modules/Core/auth: developers-native/core/auth/README.md
+  develop/guides/cosmwasm-dapps: developers-cosmwasm/create-uis-guide.md
   getting-started: README.md
   getting-started/wallet: defi/wallet/README.md
   getting-started/wallet/create-a-wallet: defi/wallet/create.md
