@@ -1,13 +1,8 @@
-# Summary
+# Table of contents
 
 * [About Injective](README.md)
-<!-- * [Injective 101](https://injective.notion.site/Injective-d48cbe6cb04141e082ff2c85a73ba67a?pvs=4) -->
-<!-- * [Injective FAQ](faq.md) -->
 * [Glossary](glossary.md)
 * [References](references.md)
-
-----
-
 * [DeFi](defi/README.md)
   * [Wallet](defi/wallet/README.md)
     * [Create a wallet](defi/wallet/create.md)
@@ -16,7 +11,6 @@
     * [INJ coin](defi/tokens/inj-coin.md)
     * [Token Factory](defi/tokens/token-factory.md)
     * [CW20 Standard](defi/tokens/cw20-standard.md)
-    <!-- * [Get INJ](defi/tokens/get-inj.md) -->
   * [Bridge](defi/bridge/README.md)
     * [From Ethereum](https://blog.injective.com/en/how-to-bridge-from-ethereum-to-injective-using-metamask/)
     * [From Solana](https://blog.injective.com/en/how-to-bridge-from-solana-to-injective-using-phantom/)
@@ -25,21 +19,15 @@
   * [Staking](defi/staking.md)
   * [Governance](defi/governance.md)
   * [Auction](defi/auction.md)
-  <!-- * [Queries](defi/queries.md) -->
   * [Transactions](defi/transactions.md)
   * [Transaction Gas and Fees](defi/transaction-fees.md)
-  <!-- * [FAQ](defi/faq.md) -->
   * [Trading Documentation](https://docs.trading.injective.network)
   * [Injective Hub](https://hub.injective.network)
   * [Injective Explorer](https://explorer.injective.network)
-
 * [Infrastructure](infra/README.md)
-  <!-- * [Networks](infra/networks.md) -->
   * [Command Line Node Interaction](infra/interact-node-command-line.md)
   * [gRPC Node Interaction](infra/interact-node-grpc.md)
   * [Go Node Interaction](infra/interact-node-go.md)
-  <!-- * [TypeScript Node Interaction](infra/interact-node-typescript.md) -->
-  <!-- * [Python Node Interaction](infra/interact-node-python.md) -->
   * [REST Node Interaction](infra/interact-node-rest.md)
   * [Run Node](infra/run-node.md)
   * [Set up Keyring](infra/set-up-keyring.md)
@@ -73,12 +61,7 @@
     * [Peggo](infra/validator-testnet/peggo.md)
   * [Public Endpoints](infra/public-endpoints.md)
   * [Premium Endpoints](infra/premium-endpoints.md)
-  <!-- * [Set up Indexer](infra/indexer-setup.md) -->
   * [Indexer API Reference](https://api.injective.network/swagger/#/)
-  <!-- * [FAQ](infra/faq.md) -->
-
-----
-
 * [Developers](developers/README.md)
   * [Convert addresses](developers/convert-addresses.md)
   * [injectived](developers/injectived/README.md)
@@ -94,7 +77,6 @@
   * [Injective CosmWasm SDK](https://github.com/InjectiveLabs/cw-injective)
   * [Injective Rust SDK](https://github.com/InjectiveLabs/injective-rust)
   * [The Graph](https://docs.substreams.dev/documentation/how-to-guides/injective)
-
 * [EVM Developers](developers-evm/README.md)
   * [Your First Smart Contract](developers-evm/your-first-smart-contract.md)
   * [Testnet Deployment](developers-evm/testnet-deployment.md)
@@ -108,7 +90,6 @@
   * [Infrastructure & Tooling](developers-evm/infrastructure-and-tooling.md)
   * [EVM Testnet Faucet](https://testnet.faucet.injective.network/)
   * [EVM Testnet Explorer](https://testnet.blockscout.injective.network/blocks)
-
 * [Cosmwasm Developers](developers-cosmwasm/README.md)
   * [Your First Smart Contract](developers-cosmwasm/your-first-smart-contract-guide.md)
   * [Local Development Guide](developers-cosmwasm/local-development-guide.md)
@@ -119,7 +100,6 @@
   * [Using Injective Queries and Messages](developers-cosmwasm/cosmwasm-any.md)
   * [CW20 Adapter](developers-cosmwasm/cw20-adapter.md)
   * [Injective Test Tube](developers-cosmwasm/injective-test-tube.md)
-
 * [DeFi Developers](developers-defi/README.md)
   * [Min Price Tick Size Calculation](developers-defi/calculate-min-price-tick-size.md)
   * [Min Quantity Tick Size Calculation](developers-defi/min-quantity-tick-size.md)
@@ -128,10 +108,8 @@
   * [Launch a Market](developers-defi/market-launch.md)
   * [Denom Metadata](developers-defi/denom-and-bank.md)
   * [Provider Oracle](developers-defi/provider-oracle.md)
-  <!-- * [Liquidity Provision](developers-defi/liquidity-provision.md) -->
   * [Build a DEX](https://docs.ts.injective.network/building-dapps/dapps-examples/dex)
   * [Exchange API Reference](https://api.injective.exchange/)
-
 * [Native Developers](developers-native/README.md)
   * [Injective Module](developers-native/injective/README.md)
     * [Auction](developers-native/injective/auction/README.md)
