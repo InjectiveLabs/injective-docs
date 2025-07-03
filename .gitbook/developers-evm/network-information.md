@@ -12,10 +12,10 @@ description: Essential information about the Injective EVM network
 * WS Endpoint: [https://k8s.testnet.ws.injective.network/](https://k8s.testnet.ws.injective.network/)
 * Explorer: [https://testnet.blockscout.injective.network/blocks](https://testnet.blockscout.injective.network/blocks) ([Mirror](https://testnet-injective.cloud.blockscout.com/blocks) by BlockScout)
 
-#### Wrapped Tokens&#x20;
+#### Tokens&#x20;
 
 * wINJ (wrapped INJ) - `0x0000000088827d2d103ee2d9A6b781773AE03FfB`
-* wUSDT (wrapped USDT) - `0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`
+* erc20:USDT (MTS USDT) - `0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`
 
 {% hint style="info" %}
 You can request private EVM testnet funds [here](https://testnet.faucet.injective.network/)
