@@ -1,4 +1,4 @@
-# Setup Hardhat and Compile a Smart Contract
+# Setup Hardhat and compile a smart contract
 
 ## Prerequisites
 
@@ -74,6 +74,8 @@ The smart contract that is included in this demo is very basic. It:
 - Exposes a `value()` query method.
 - Exposes an `increment(num)` transaction method.
 
+Open the file: `contracts/Counter.sol`
+
 ```solidity
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
@@ -98,15 +100,17 @@ npx hardhat compile
 
 Hardhat will automatically download and run the version of the Solidity compiler (`solc`) that was configured in the `hardhat.config.js` file.
 
+## Check the compilation output
+
 After the compiler completes, you should see additional directories in the project directory:
 
 ```text
 hardhat-inj/
   artifacts/
-    /build-info
+    build-info/
       ...
-    /contracts
-      /Counter.sol
+    contracts/
+      Counter.sol/
         Counter.json --> open this file
         ...
   cache/
@@ -117,3 +121,8 @@ Open the `Counter.json` file indicated.
 In it you should see the compiler outputs, including `abi`, and `bytecode`.
 
 These are needed for following steps!
+
+## Next steps
+
+Now that you have set up a Hardhat project and compiled a smart contract, you are ready to test that smart contract!
+Check out the [test a smart contract using Hardhat](./test-hardhat.md) tutorial next.
