@@ -3,7 +3,6 @@
 ## Prerequisites
 
 You should already have a hardhat project set up, and have compiled your smart contract successfully.
-
 See the [setup Hardhat and compile a smart contract](./compile-hardhat.md) tutorial for how to do so.
 
 ## Edit the test specifications
@@ -82,8 +81,7 @@ If all the test work as planned, you should see the following output:
 
 This is followed by a table which include additional reporting on gas, which is a measure of the complexity and transaction costs.
 
-
 ## Next steps
 
 Now that you have tested your smart contract, you are ready to deploy that smart contract!
-Check out the [deploy a smart contract using Hardhat](./test-deploy.md) tutorial next.
+Check out the [deploy a smart contract using Hardhat](./deploy-hardhat.md) tutorial next.
