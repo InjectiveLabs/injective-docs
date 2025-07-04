@@ -37,6 +37,12 @@ If successful, the address at which your smart contract was deployed will be out
 
 Note that on other EVM networks, transactions (including deployment transacrtions), do not need to specify a gas price and a gas limit. Currently, however, this is necessary on Injective.
 
+## Run the deployment script
+
+```shell
+npx hardhat run script/deploy.js --network inj_testnet
+```
+
 Copy the deployed address, visit [`https://testnet.blockscout.injective.network`](https://testnet.blockscout.injective.network/), and paste the address in the search field.
 You'll visit the smart contract page in the block explorer for the smart contract that you have just deployed.
 
