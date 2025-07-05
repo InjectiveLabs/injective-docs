@@ -2,10 +2,10 @@
 
 ## Prerequisites
 
-You should already have a hardhat project set up, and have deployed your smart contract successfully.
-See the [deploy Hardhat and compile a smart contract](./deploy-hardhat.md) tutorial for how to do so.
+You should already have a Hardhat project set up, and have deployed your smart contract successfully.
+See the [deploy a smart contract using Hardhat](./deploy-hardhat.md) tutorial for how to do so.
 
-Optionally, but strong recommended: You should also have verified your smart contract successfully.
+Optionally, but strongly recommended: You should also have verified your smart contract successfully.
 See the [verify a smart contract using Hardhat](./verify-hardhat.md) tutorial for how to do so.
 
 ## Start the Hardhat console
@@ -13,13 +13,13 @@ See the [verify a smart contract using Hardhat](./verify-hardhat.md) tutorial fo
 Use the following command to start an interactive Javascript REPL.
 
 ```shell
-npx hardhat node --network inj_testnet
+npx hardhat console --network inj_testnet
 ```
 
-Now the shell will be NodeJs instead of bash/ zsh/ any other hsell you were using.
+Now the shell will be NodeJs instead of bash/ zsh/ any other shell you were using.
 Here we will create an instance of the Counter smart contract.
-To do so use `ethers.getContractFactory(...)` and `contract.attach('0x...');`.
-For example if the smart contract was deployed to `0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b`, the command should look like this:
+To do so, use `ethers.getContractFactory(...)` and `contract.attach('0x...');`.
+For example, if the smart contract was deployed to `0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b`, the command should look like this:
 
 ```js
 > const Counter = await ethers.getContractFactory('Counter');

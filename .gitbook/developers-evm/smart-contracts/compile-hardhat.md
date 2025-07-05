@@ -16,7 +16,7 @@ v22.16.0
 ```
 <!-- TODO add links for installing NodeJs -->
 
-You will also need an account in Injective Testnet, that has INJ tokens needed to pay for transaction fees.
+You will also need an account on the Injective Testnet, which has an INJ balance for paying transaction fees.
 If you don't have one yet, set up a wallet and use the Testnet faucet.
 <!-- TODO add links for the above instructions -->
 
@@ -118,9 +118,8 @@ hardhat-inj/
 ```
 
 Open the `Counter.json` file indicated.
-In it you should see the compiler outputs, including `abi`, and `bytecode`.
-
-These are needed for following steps!
+In it, you should see the compiler outputs, including the `abi` and `bytecode` fields.
+These artifacts are used in all later steps (test, deploy, verify, and interact).
 
 ## Next steps
 

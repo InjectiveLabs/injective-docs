@@ -7,14 +7,14 @@ See the [setup Hardhat and compile a smart contract](./compile-hardhat.md) tutor
 
 ## Edit the test specifications
 
-As the smart contract we are testing is so minimal, so are the test cases that it needs.
+As the smart contract we are testing is minimal, so are the test cases that it needs.
 
 Before testing, we need to deploy the smart contract.
 This happens in the `before` block.
 This is because smart contracts cannot execute in isolation, they must be within the EVM to execute.
 In Hardhat, by default, the tests will execute in an emulated in-memory EVM instance, which is transient, so the deployment is perfunctory.
 
-Open the file: `contracts/Counter.sol`
+Open the file: `test/Counter.test.js`
 
 ```js
 const { expect } = require('chai');
@@ -60,8 +60,8 @@ npx hardhat test
 ```
 
 The following command runs the test, but **not** within the emulated EVM instance.
-Instead the smart contract is deployed to the Injective EVM Testnet, a public network, and then tests are run agaisnt those.
-This is not recommended in most cases, and is only needed in seelct advanced use cases.
+Instead, the smart contract is deployed to the Injective Testnet (a public network), and then tests are run against it.
+This is **not recommended** in most cases, and is only needed in select/ advanced use cases.
 
 ```shell
 npx hardhat test --network inj_testnet
@@ -69,17 +69,17 @@ npx hardhat test --network inj_testnet
 
 ## Check the test output
 
-If all the test work as planned, you should see the following output:
+If all the tests work as planned, you should see the following output:
 
 ```text
   Counter
     ✔ should start with a count of 0
     ✔ should increment the count starting from zero
-    ✔ should decrement the count starting from non-zero
+    ✔ should increment the count starting from non-zero
   3 passing (41ms)
 ```
 
-This is followed by a table which include additional reporting on gas, which is a measure of the complexity and transaction costs.
+This is followed by a table which includes additional reporting on gas, which is a measure of the complexity and transaction costs.
 
 ## Next steps
 
