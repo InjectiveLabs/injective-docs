@@ -19,7 +19,7 @@ However, EVM uses a numeric chain ID of `1439`.
 While these are different, they map to the **same** network.
 {% endhint %}
 
-#### Tokens&#x20;
+### Tokens
 
 * wINJ (wrapped INJ) - [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://testnet.blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
 * USDT (MTS USDT) - [`0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`](https://testnet.blockscout.injective.network/address/0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60)
