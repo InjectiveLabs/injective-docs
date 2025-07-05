@@ -30,7 +30,7 @@ async function main() {
 }
 ```
 
-Recall that after compiling the smart contracts, we looked at `artifacts/contracts/Counter.sol/Counter.json`? In this script `ethers.getContractFactory('Counter')` retrieves that file, and extracts ABI and EVM bytecode from it.
+Recall that after compiling the smart contracts, we looked at `artifacts/contracts/Counter.sol/Counter.json`? In this script, `ethers.getContractFactory('Counter')` retrieves that file, and extracts ABI and EVM bytecode from it.
 The following lines use that information to construct a deployment transaction and submit it to the network.
 If successful, the address at which your smart contract was deployed will be output, for example:
 [`0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b`](https://testnet.blockscout.injective.network/address/0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b)

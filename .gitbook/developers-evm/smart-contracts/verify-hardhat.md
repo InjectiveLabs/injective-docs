@@ -88,7 +88,7 @@ Previously there was only "ByteCode" available, and now "Code", "Compiler", and 
 Still within the "Contract" tab,
 select the "Read/Write contract" sub-tab.
 Previously this did not exist,
-but now you can interact with all of the functions in the smart contract right within the block explorer.
+but now you can interact with every smart contract function directly from the block explorer.
 
 ## Next steps
 

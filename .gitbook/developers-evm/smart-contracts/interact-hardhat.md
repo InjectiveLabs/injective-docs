@@ -16,8 +16,8 @@ Use the following command to start an interactive Javascript REPL.
 npx hardhat console --network inj_testnet
 ```
 
-Now the shell will be NodeJs instead of bash/ zsh/ any other shell you were using.
-Here we will create an instance of the Counter smart contract.
+Now the shell will be a NodeJs REPL instead of your regular shell (bash, zsh, et cetera).
+In this REPL, we will create an instance of the `Counter` smart contract.
 To do so, use `ethers.getContractFactory(...)` and `contract.attach('0x...');`.
 For example, if the smart contract was deployed to `0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b`, the command should look like this:
 
@@ -32,7 +32,9 @@ Now you can interact with the smart contract using `counter`.
 
 ## Invoke function - query
 
-Queries are read-only invocations, so the smart contract state is not updated.
+Queries do not modify state, and are read-only operations.
+Thus smart contract state is not updated.
+This means that there is no need for a wallet, signatures, or transaction fees (gas).
 Use the following command to query the `value()` function.
 
 ```js
@@ -42,8 +44,9 @@ Use the following command to query the `value()` function.
 
 ## Invoke function - transaction
 
-Transactions are write invocations, so the smart contract state is updated.
-Since transactions are involved, they need to be signed by the wallet, and transaction fees (in gas) need to be paid.
+Transactions modify state, and are write operations.
+Thus smart contract state is updated.
+This means that the transaction needs to be signed by the wallet, and transaction fees (gas) need to be paid.
 Use the following command to transact the `increment(num)` function.
 
 ```js
