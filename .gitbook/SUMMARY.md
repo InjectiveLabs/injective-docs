@@ -1,8 +1,6 @@
 # Table of contents
 
 * [About Injective](README.md)
-* [Glossary](glossary.md)
-* [References](references.md)
 * [DeFi](defi/README.md)
   * [Wallet](defi/wallet/README.md)
     * [Create a wallet](defi/wallet/create.md)
@@ -213,3 +211,5 @@
     * [Upgrade](developers-native/core/upgrade/README.md)
     * [Circuit](developers-native/core/circuit/README.md)
     * [Genutil](developers-native/core/genutil/README.md)
+* [Glossary](glossary.md)
+* [References](references.md)
