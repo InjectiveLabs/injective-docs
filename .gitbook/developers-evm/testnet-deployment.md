@@ -54,6 +54,8 @@ forge create \
   --rpc-url injectiveEvm \
   --legacy \
   --private-key {YourPrivateKey} \
+  --gas-price 30000000000 \
+  --gas-limit 2000000 \
   --broadcast
 ```
 
