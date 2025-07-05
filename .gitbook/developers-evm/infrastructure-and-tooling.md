@@ -14,12 +14,17 @@ BlockScoutInjective is supported by a rich ecosystem of industry-leading infrast
 
 <table data-header-hidden><thead><tr><th width="150.27734375"></th><th></th></tr></thead><tbody>
 <tr><td><a href="https://thegraph.com/networks/injective/?subnetwork=injective-testnet">The Graph</a></td><td>
-The Graph’s state-of-the-art Substreams and Substreams-powered subgraph solution, developed by <a href="https://www.streamingfast.io/">StreamingFast</a>, Injective provides developers seamless access to on-chain data.
-<br />
+<p>
+The Graph’s state-of-the-art Substreams and Substreams-powered subgraph solution, developed by <a href="https://www.streamingfast.io/">StreamingFast</a> for Injective, provides developers seamless access to on-chain data.
+</p>
+<ul>
+<li>
 <a href="https://docs.substreams.dev/tutorials/intro-to-tutorials/injective">Substreams Injective quick start</a>
-<br />
+</li>
+<li>
 <a href="https://thegraph.com/docs/en/subgraphs/quick-start/">Subgraphs Injective quick start</a>
-</td></tr>
+</li>
+</ul>
 </tbody></table>
 
 ### Block Explorers
