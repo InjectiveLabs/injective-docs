@@ -20,7 +20,7 @@ Open the file:  `script/deploy.js`
 async function main() {
     const Counter = await ethers.getContractFactory('Counter');
     const counter = await Counter.deploy({
-        gasPrice: 30e9,
+        gasPrice: 160e6,
         gasLimit: 2e6,
     });
     await counter.waitForDeployment();
