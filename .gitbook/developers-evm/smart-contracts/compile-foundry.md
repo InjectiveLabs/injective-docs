@@ -53,7 +53,26 @@ foundry-inj/
 The `foundry.toml` file is already pre-configured to connect to the Injective EVM Testnet.
 All you need to do before proceeding is to provide it with a private key of your Injective Testnet account.
 
-TODO keystore and cast walet import 
+Enter the following command to import a private key, and save it against an account named `injTest`:
+
+```shell
+cast wallet import injTest --interactive
+```
+
+This will prompt you for the private key, and also a password that you need to enter each time you wish to use this account.
+Note that when you type or paste text for the private key and password, nothing is shown in the terminal.
+The output should look similar to this:
+
+```
+Enter private key:
+Enter password:
+`injTest` keystore was saved successfully. Address: 0x58f936cb685bd6a7dc9a21fa83e8aaaf8edd5724
+```
+
+{% hint style="info" %}
+This saves an encrypted version of the private key in `~/.foundry/keystores`,
+and in subsequent commands can be accessed using the `--account` CLI flag.
+{% endhint %}
 
 ## Edit the smart contract
 

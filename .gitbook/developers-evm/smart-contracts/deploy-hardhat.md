@@ -39,6 +39,8 @@ Note that on other EVM networks, transactions (including deployment transactions
 
 ## Run the deployment script
 
+Run the following command to deploy the smart contract:
+
 ```shell
 npx hardhat run script/deploy.js --network inj_testnet
 ```
@@ -47,7 +49,6 @@ Copy the deployed address, visit [`https://testnet.blockscout.injective.network`
 You'll visit the smart contract page in the block explorer for the smart contract that you have just deployed.
 
 If you click on the "Contract" tab, you should see the EVM bytecode for that contract, and it will match the EVM bytecode found in your artifacts directory after compilation.
-
 
 ## Next steps
 
