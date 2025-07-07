@@ -1,4 +1,4 @@
-# EVM Smart Contract Development
+# Your First EVM Smart Contract
 
 ## Hardhat
 
