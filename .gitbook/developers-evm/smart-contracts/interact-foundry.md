@@ -5,14 +5,14 @@
 You should already have a Foundry project set up, and have deployed your smart contract successfully.
 See the [deploy a smart contract using Foundry](./deploy-foundry.md) tutorial for how to do so.
 
-Optionally, but strongly recommended: You should also have verified your smart contract successfully.
+Optionally, but strongly recommended: You should also have successfully verified your smart contract.
 See the [verify a smart contract using Foundry](./verify-foundry.md) tutorial for how to do so.
 
 ## Invoke function - query
 
 Queries do not modify state, and are read-only operations.
-Thus smart contract state is not updated.
-This means that there is no need for a wallet, signatures, or transaction fees (gas).
+So smart contract state is not updated.
+Therefore, no wallets, signatures, or transaction fees (gas) are required.
 
 Use the following command to query the `value()` function:
 
@@ -48,8 +48,9 @@ It is the raw representation in hexadecimal for Solidity's `uint256` (the return
 ## Invoke function - transaction
 
 Transactions modify state, and are write operations.
-Thus smart contract state is updated.
-This means that the transaction needs to be signed by the wallet, and transaction fees (gas) need to be paid.
+So smart contract state is updated.
+The transaction must be signed by a wallet, and transaction fees (gas) need to be paid.
+
 Use the following command to transact the `increment(num)` function.
 
 ```shell
@@ -60,7 +61,8 @@ cast send \
   --gas-limit 2000000 \
   --account injTest \
   ${SC_ADDRESS} \
-  "increment(uint256)"
+  "increment(uint256)" \
+  1
 ```
 
 Replace `${SC_ADDRESS}` with the address at which you deployed your smart contract.
@@ -105,7 +107,7 @@ to                   0x213bA803265386C10CE04a2cAa0f31FF3440b9cF
 After updating the state, you can query the new state.
 The result will reflect the state change.
 
-```js
+```shell
 cast call \
   --rpc-url injectiveEvm \
   ${SC_ADDRESS} \

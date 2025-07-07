@@ -10,7 +10,7 @@ See the [setup Foundry and compile a smart contract](./compile-foundry.md) tutor
 As the smart contract we are testing is minimal, so are the test cases that it needs.
 
 Before testing, we need to deploy the smart contract.
-This happens in the `before` block.
+This happens in the `setUp` block.
 This is because smart contracts cannot execute in isolation, they must be within the EVM to execute.
 In Foundry, by default, the tests will execute in an emulated in-memory EVM instance, which is transient, so the deployment is perfunctory.
 
@@ -30,16 +30,16 @@ contract CounterTest is Test {
         counter = new Counter();
     }
 
-    function test_InitialValue() public view {
+    function testInitialValue() public view {
         assertEq(counter.value(), 0);
     }
 
-    function test_IncrementValueFromZero() public {
+    function testIncrementValueFromZero() public {
         counter.increment(100);
         assertEq(counter.value(), 100);
     }
 
-    function test_IncrementValueFromNonZero() public {
+    function testIncrementValueFromNonZero() public {
         counter.increment(100);
         counter.increment(23);
         assertEq(counter.value(), 123);
@@ -62,7 +62,7 @@ The following command runs the tests we just looked at.
 forge test
 ```
 
-<!-- include comamnd to run tests in public network instead of emulated EVM -->
+<!-- TODO include command to run tests in public network instead of emulated EVM -->
 
 ## Check the test output
 
@@ -70,9 +70,9 @@ If all the tests work as planned, you should see some output similar to the foll
 
 ```text
 Ran 3 tests for test/Counter.t.sol:CounterTest
-[PASS] test_IncrementValueFromNonZero() (gas: 32298)
-[PASS] test_IncrementValueFromZero() (gas: 31329)
-[PASS] test_InitialValue() (gas: 10392)
+[PASS] testIncrementValueFromNonZero() (gas: 32298)
+[PASS] testIncrementValueFromZero() (gas: 31329)
+[PASS] testInitialValue() (gas: 10392)
 Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 5.35ms (3.16ms CPU time)
 
 Ran 1 test suite in 171.04ms (5.35ms CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)

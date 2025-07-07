@@ -9,9 +9,9 @@ See the [deploy a smart contract using Foundry](./deploy-foundry.md) tutorial fo
 
 The process of verification does not have any effect on the smart contract itself, or any other state of the network.
 
-Instead, it is a standardised process through which network explorers are provided with the original source code of the smart contract deployed at a particular address. The network explorer **independently compiles** that source code, and verifies that the resultant bytecode it is indeed a **match** with the bytecode present from the smart contract's deployment transaction.
+Instead, it is a standardised process through which network explorers are provided with the original source code of the smart contract deployed at a particular address. The network explorer **independently compiles** that source code, and verifies that the resultant bytecode is indeed a **match** with the bytecode present from the smart contract's deployment transaction.
 
-If verification passes (there is a match), then that "unlocks" a new mode within the block explorer for that particular smart contract's page.
+If verification passes (there is a match), the block explorer "unlocks" an enhanced mode within for that particular smart contract's page.
 More smart contract details are now displayed, including:
 * Full source code (Solidity)
 * ABI (JSON)
@@ -64,7 +64,8 @@ The more interesting outcome is visiting the network explorer.
 Visit the network explorer URL from the verification output.
 Then select the "Contract" tab.
 Then select the "Code" sub-tab.
-Previously there was only "ByteCode" available, and now "Code", "Compiler", and "ABI" are also available.
+Previously there was only "ByteCode" available,
+and now "Code", "Compiler", and "ABI" are also available.
 
 Still within the "Contract" tab,
 select the "Read/Write contract" sub-tab.
