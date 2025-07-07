@@ -168,6 +168,8 @@ We use this `cast send`, which performs the actual transaction:
 cast send \
   --legacy \
   --rpc-url injectiveEvm \
+  --gas-price 160000000 \
+  --gas-limit 2000000 \
   --private-key {YourPrivateKey} \
   {SmartContractAddress} \
   0xd09de08a
