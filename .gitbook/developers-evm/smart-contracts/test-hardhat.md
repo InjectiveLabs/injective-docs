@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-You should already have a hardhat project set up, and have compiled your smart contract successfully.
+You should already have a Hardhat project set up, and have compiled your smart contract successfully.
 See the [setup Hardhat and compile a smart contract](./compile-hardhat.md) tutorial for how to do so.
 
 ## Edit the test specifications
@@ -69,7 +69,7 @@ npx hardhat test --network inj_testnet
 
 ## Check the test output
 
-If all the tests work as planned, you should see the following output:
+If all the tests work as planned, you should see some output similar to the following:
 
 ```text
   Counter
