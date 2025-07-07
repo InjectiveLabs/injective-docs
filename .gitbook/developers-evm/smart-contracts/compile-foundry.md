@@ -1,0 +1,1 @@
+# Setup Foundry and compile a smart contract
