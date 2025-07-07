@@ -16,9 +16,12 @@ v22.16.0
 ```
 <!-- TODO add links for installing NodeJs -->
 
-You will also need an account on the Injective Testnet, which has an INJ balance for paying transaction fees.
-If you don't have one yet, set up a wallet and use the Testnet faucet.
-<!-- TODO add links for the above instructions -->
+You will need a wallet, and an account that has been funded with some Testnet INJ.
+After creating your account, be sure to copy your private key somewhere accessible, as you will need it to complete this tutorial.
+
+{% hint style="info" %}
+You can request EVM testnet funds from the [Injective Testnet faucet](https://testnet.faucet.injective.network/).
+{% endhint %}
 
 ## Set up a new Hardhat project
 
@@ -117,7 +120,7 @@ hardhat-inj/
     ...
 ```
 
-Open the `Counter.json` file indicated.
+Open the `Counter.json` file (`artifacts/contracts/Counter.sol/Counter.json`).
 In it, you should see the compiler outputs, including the `abi` and `bytecode` fields.
 These artifacts are used in all later steps (test, deploy, verify, and interact).
 

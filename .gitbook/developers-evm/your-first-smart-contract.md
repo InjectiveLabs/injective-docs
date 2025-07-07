@@ -19,7 +19,7 @@ You will need a wallet, and an account that has been funded with some Testnet IN
 After creating your account, be sure to copy your private key somewhere accessible, as you will need it to complete this tutorial.
 
 {% hint style="info" %}
-You can request EVM testnet funds from the official Testnet faucet [here](https://testnet.faucet.injective.network/).
+You can request EVM testnet funds from the [Injective Testnet faucet](https://testnet.faucet.injective.network/).
 {% endhint %}
 
 1. The guide uses [foundry](https://book.getfoundry.sh/) for deployments. Install it by running:
