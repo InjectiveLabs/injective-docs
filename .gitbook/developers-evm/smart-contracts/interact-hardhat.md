@@ -104,3 +104,5 @@ Press `Ctrl+C` twice in a row, or enter the `.exit` command.
 ## Next steps
 
 Congratulations, you have completed this entire guide for developing EVM smart contracts on Injective using Hardhat!
+
+<!-- TODO add link to building a dapp when that is available -->
