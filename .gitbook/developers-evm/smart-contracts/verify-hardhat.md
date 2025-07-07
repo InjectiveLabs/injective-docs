@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-You should already have a hardhat project set up, and have deployed your smart contract successfully.
+You should already have a Hardhat project set up, and have deployed your smart contract successfully.
 See the [deploy a smart contract using Hardhat](./deploy-hardhat.md) tutorial for how to do so.
 
 ## What is smart contract verification?
@@ -18,6 +18,8 @@ More smart contract details are now displayed, including:
 * Transactions and events are shown with higher detail (parsed using ABI)
 
 Additionally, if the user connects their wallet, they can invoke functions within the network explorer itself to query the smart contract, and even send transactions to update its state.
+
+<!-- TODO consider moving this section to FAQs -->
 
 ## Edit smart contract verification configuration
 
