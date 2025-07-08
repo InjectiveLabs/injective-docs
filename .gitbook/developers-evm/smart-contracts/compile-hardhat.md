@@ -14,7 +14,11 @@ This guide was written using the following version:
 ```text
 v22.16.0
 ```
-<!-- TODO add links for installing NodeJs -->
+
+If you do not have NodeJs installed yet, do so using:
+
+- Linux or Mac: [NVM](https://github.com/nvm-sh/nvm)
+- Windows: [NVM for Windows](https://github.com/coreybutler/nvm-windows)
 
 You will need a wallet, and an account that has been funded with some Testnet INJ.
 

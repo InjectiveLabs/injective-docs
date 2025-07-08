@@ -111,4 +111,6 @@ Press `Ctrl+C` twice in a row, or enter the `.exit` command.
 
 Congratulations, you have completed this entire guide for developing EVM smart contracts on Injective using Hardhat!
 
-<!-- TODO add link to building a dapp when that is available -->
+Smart contracts do not provide a user experience for non-technical users.
+To cater to them, you will need to build a decentralised application.
+To do so, check out the [your first DApp](../dapps/README.md) guides!

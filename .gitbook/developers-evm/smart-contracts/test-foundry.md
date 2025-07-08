@@ -62,8 +62,6 @@ The following command runs the tests we just looked at.
 forge test
 ```
 
-<!-- TODO include command to run tests in public network instead of emulated EVM -->
-
 ## Check the test output
 
 If all the tests work as planned, you should see some output similar to the following:

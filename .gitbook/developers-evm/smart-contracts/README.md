@@ -1,5 +1,11 @@
 # Your First EVM Smart Contract
 
+Smart contracts are code that runs on a blockchain.
+You can compile Solidity smart contracts,
+and test, deploy, verify, and interact with them on Injective's Ethereum Virtual Machine (EVM).
+You can do so using standard EVM developer tools and frameworks too.
+These guides show you how to do so using Hardhat and Foundry.
+
 ## Hardhat
 
 This guide will walk you through building an EVM Smart Contract on Injective Testnet using [Hardhat](https://hardhat.org/).
@@ -19,3 +25,9 @@ This guide will walk you through building an EVM Smart Contract on Injective Tes
 * [Deploy a smart contract using Foundry](./deploy-foundry.md)
 * [Verify a smart contract using Foundry](./verify-foundry.md)
 * [Interact with a smart contract using Foundry](./interact-foundry.md)
+
+## Next steps
+
+Smart contracts do not provide a user experience for non-technical users.
+To cater to them, you will need to build a decentralised application.
+To do so, check out the [your first DApp](../dapps/README.md) guides!
