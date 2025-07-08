@@ -5,7 +5,7 @@
 You should already have a Hardhat project set up, and have deployed your smart contract successfully.
 See the [deploy a smart contract using Hardhat](./deploy-hardhat.md) tutorial for how to do so.
 
-Optionally, but strongly recommended: You should also have verified your smart contract successfully.
+Optionally, but strongly recommended: You should also have successfully verified your smart contract.
 See the [verify a smart contract using Hardhat](./verify-hardhat.md) tutorial for how to do so.
 
 ## Start the Hardhat console
@@ -41,9 +41,10 @@ Now you can interact with the smart contract using `counter`.
 
 ## Invoke function - query
 
-Queries do not modify state, and are read-only operations.
-Thus smart contract state is not updated.
-This means that there is no need for a wallet, signatures, or transaction fees (gas).
+Queries are read-only operations.
+So smart contract state **is not updated**.
+As *no state change* is needed, no wallets, signatures, or transaction fees (gas) are required.
+
 Use the following command to query the `value()` function.
 
 ```js
@@ -69,14 +70,19 @@ Thus `BigInt` needs to be used instead.
 
 ## Invoke function - transaction
 
-Transactions modify state, and are write operations.
-Thus smart contract state is updated.
-This means that the transaction needs to be signed by the wallet, and transaction fees (gas) need to be paid.
+Transactions are write operations.
+So smart contract **state is updated**.
+As *state change* can occur, the transaction must be signed by a wallet, and transaction fees (gas) need to be paid.
+
 Use the following command to transact the `increment(num)` function.
 
 ```js
 await counter.increment(1, { gasPrice: 160e6, gasLimit: 2e6 });
 ```
+{% hint style="info" %}
+Note that gas price is stated in *wei*.
+1 wei = 10^-18 INJ.
+{% endhint %}
 
 If successful, this should produce a result similar to the following:
 
@@ -104,3 +110,5 @@ Press `Ctrl+C` twice in a row, or enter the `.exit` command.
 ## Next steps
 
 Congratulations, you have completed this entire guide for developing EVM smart contracts on Injective using Hardhat!
+
+<!-- TODO add link to building a dapp when that is available -->

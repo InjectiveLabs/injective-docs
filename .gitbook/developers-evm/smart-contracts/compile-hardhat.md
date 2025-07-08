@@ -16,9 +16,20 @@ v22.16.0
 ```
 <!-- TODO add links for installing NodeJs -->
 
-You will also need an account on the Injective Testnet, which has an INJ balance for paying transaction fees.
-If you don't have one yet, set up a wallet and use the Testnet faucet.
-<!-- TODO add links for the above instructions -->
+You will need a wallet, and an account that has been funded with some Testnet INJ.
+
+{% hint style="info" %}
+You can request EVM testnet funds from the [Injective Testnet faucet](https://testnet.faucet.injective.network/).
+{% endhint %}
+
+After creating your account, be sure to copy your private key somewhere accessible, as you will need it to complete this tutorial.
+
+{% hint style="info" %}
+Note that private keys should be handled with caution.
+The instructions here should be considered sufficient for local development and Testnet.
+However, these are **not** secure enough for private keys used on Mainnet.
+Please ensure that you follow best practices for key security on Mainnet, and do not re-use the same keys/ accounts between Mainnet and other networks.
+{% endhint %}
 
 ## Set up a new Hardhat project
 
@@ -77,7 +88,7 @@ The smart contract that is included in this demo is very basic. It:
 Open the file: `contracts/Counter.sol`
 
 ```solidity
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
 contract Counter {
@@ -117,7 +128,7 @@ hardhat-inj/
     ...
 ```
 
-Open the `Counter.json` file indicated.
+Open the `Counter.json` file (`artifacts/contracts/Counter.sol/Counter.json`).
 In it, you should see the compiler outputs, including the `abi` and `bytecode` fields.
 These artifacts are used in all later steps (test, deploy, verify, and interact).
 

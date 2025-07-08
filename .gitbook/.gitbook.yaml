@@ -188,9 +188,11 @@ redirects:
   developers/cosmwasm-developers/page-1: developers-cosmwasm/cw20-adapter.md
   developers/cosmwasm-developers/injective-test-tube: developers-cosmwasm/injective-test-tube.md
   developers/evm-developers: developers-evm/README.md
-  developers/evm-developers/your-first-smart-contract: developers-evm/your-first-smart-contract.md
-  developers/evm-developers/guides: developers-evm/testnet-deployment.md
-  developers/evm-developers/guides/testnet-deployment: developers-evm/testnet-deployment.md
+  developers-evm/your-first-smart-contract: developers-evm/smart-contracts/README.md
+  developers/evm-developers/your-first-smart-contract: developers-evm/smart-contracts/README.md
+  developers/evm-developers/guides: developers-evm/smart-contracts/README.md
+  developers-evm/testnet-deployment: developers-evm/smart-contracts/README.md
+  developers/evm-developers/guides/testnet-deployment: developers-evm/smart-contracts/README.md
   developers/evm-developers/technical-information: developers-evm/network-information.md
   developers/evm-developers/technical-information/network-information: developers-evm/network-information.md
   developers/evm-developers/technical-information/evm-equivalence: developers-evm/evm-equivalence.md
