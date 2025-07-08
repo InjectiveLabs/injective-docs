@@ -10,9 +10,9 @@ See the [verify a smart contract using Foundry](./verify-foundry.md) tutorial fo
 
 ## Invoke function - query
 
-Queries do not modify state, and are read-only operations.
-So smart contract state is not updated.
-Therefore, no wallets, signatures, or transaction fees (gas) are required.
+Queries are read-only operations.
+So smart contract state **is not updated**.
+As *no state change* is needed, no wallets, signatures, or transaction fees (gas) are required.
 
 Use the following command to query the `value()` function:
 
@@ -47,9 +47,9 @@ It is the raw representation in hexadecimal for Solidity's `uint256` (the return
 
 ## Invoke function - transaction
 
-Transactions modify state, and are write operations.
-So smart contract state is updated.
-The transaction must be signed by a wallet, and transaction fees (gas) need to be paid.
+Transactions are write operations.
+So smart contract **state is updated**.
+As *state change* can occur, the transaction must be signed by a wallet, and transaction fees (gas) need to be paid.
 
 Use the following command to transact the `increment(num)` function.
 
@@ -64,6 +64,11 @@ cast send \
   "increment(uint256)" \
   1
 ```
+
+{% hint style="info" %}
+Note that gas price is stated in *wei*.
+1 wei = 10^-18 INJ.
+{% endhint %}
 
 Replace `${SC_ADDRESS}` with the address at which you deployed your smart contract.
 

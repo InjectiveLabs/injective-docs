@@ -64,12 +64,12 @@ The more interesting outcome is visiting the network explorer.
 Visit the network explorer URL from the verification output.
 Then select the "Contract" tab.
 Then select the "Code" sub-tab.
-Previously there was only "ByteCode" available,
+Previously, there was only "ByteCode" available,
 and now "Code", "Compiler", and "ABI" are also available.
 
 Still within the "Contract" tab,
 select the "Read/Write contract" sub-tab.
-Previously this did not exist,
+Previously, this did not exist,
 but now you can interact with every smart contract function directly from the block explorer.
 
 ## Next steps

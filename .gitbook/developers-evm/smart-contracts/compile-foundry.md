@@ -45,6 +45,12 @@ git clone https://github.com/injective-dev/foundry-inj
 cd foundry-inj
 ```
 
+Install the `forge-std` library, which provides utility functions used in this project.
+
+```shell
+forge install foundry-rs/forge-std
+```
+
 ## Orientation
 
 Open the repo in your code editor/ IDE, and take a look at the directory structure.
@@ -72,7 +78,7 @@ Use the private key of the account which you have just created and funded earlie
 Note that when you type or paste text for the private key and password, nothing is shown in the terminal.
 The output should look similar to this:
 
-```
+```text
 Enter private key:
 Enter password:
 `injTest` keystore was saved successfully. Address: 0x58f936cb685bd6a7dc9a21fa83e8aaaf8edd5724

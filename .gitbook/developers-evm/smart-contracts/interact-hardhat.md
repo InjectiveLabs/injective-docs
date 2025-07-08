@@ -41,9 +41,9 @@ Now you can interact with the smart contract using `counter`.
 
 ## Invoke function - query
 
-Queries do not modify state, and are read-only operations.
-So smart contract state is not updated.
-Therefore, no wallets, signatures, or transaction fees (gas) are required.
+Queries are read-only operations.
+So smart contract state **is not updated**.
+As *no state change* is needed, no wallets, signatures, or transaction fees (gas) are required.
 
 Use the following command to query the `value()` function.
 
@@ -70,15 +70,19 @@ Thus `BigInt` needs to be used instead.
 
 ## Invoke function - transaction
 
-Transactions modify state, and are write operations.
-So smart contract state is updated.
-The transaction must be signed by a wallet, and transaction fees (gas) need to be paid.
+Transactions are write operations.
+So smart contract **state is updated**.
+As *state change* can occur, the transaction must be signed by a wallet, and transaction fees (gas) need to be paid.
 
 Use the following command to transact the `increment(num)` function.
 
 ```js
 await counter.increment(1, { gasPrice: 160e6, gasLimit: 2e6 });
 ```
+{% hint style="info" %}
+Note that gas price is stated in *wei*.
+1 wei = 10^-18 INJ.
+{% endhint %}
 
 If successful, this should produce a result similar to the following:
 
