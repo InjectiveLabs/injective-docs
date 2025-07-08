@@ -1,8 +1,6 @@
 # Table of contents
 
 * [About Injective](README.md)
-* [Glossary](glossary.md)
-* [References](references.md)
 * [DeFi](defi/README.md)
   * [Wallet](defi/wallet/README.md)
     * [Create a wallet](defi/wallet/create.md)
@@ -90,6 +88,9 @@
     * [Deploy with Foundry](developers-evm/smart-contracts/deploy-foundry.md)
     * [Verify with Foundry](developers-evm/smart-contracts/verify-foundry.md)
     * [Interact with Foundry](developers-evm/smart-contracts/interact-foundry.md)
+  * [Your First DApp](developers-evm/dapps/README.md)
+    * [Connect with MetaMask](developers-evm/dapps/connect-with-metamask.md)
+    * [Connect with WalletConnect](developers-evm/dapps/connect-with-walletconnect.md)
   * [EVM Equivalence](developers-evm/evm-equivalence.md)
   * [MultiVM Token Standard](developers-evm/multivm-token-standard.md)
   * [Precompiles](developers-evm/precompiles.md)
@@ -222,3 +223,5 @@
     * [Upgrade](developers-native/core/upgrade/README.md)
     * [Circuit](developers-native/core/circuit/README.md)
     * [Genutil](developers-native/core/genutil/README.md)
+* [Glossary](glossary.md)
+* [References](references.md)
