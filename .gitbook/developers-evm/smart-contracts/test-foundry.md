@@ -3,7 +3,7 @@
 ## Prerequisites
 
 You should already have a Foundry project set up, and have compiled your smart contract successfully.
-See the [setup Foundry and compile a smart contract](./compile-foundry.md) tutorial for how to do so.
+See the [set up Foundry and compile a smart contract](./compile-foundry.md) tutorial for how to do so.
 
 ## Edit the test specifications
 

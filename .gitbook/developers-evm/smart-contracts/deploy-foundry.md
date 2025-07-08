@@ -3,7 +3,7 @@
 ## Prerequisites
 
 You should already have a Foundry project set up, and have compiled your smart contract successfully.
-See the [setup Foundry and compile a smart contract](./compile-foundry.md) tutorial for how to do so.
+See the [set up Foundry and compile a smart contract](./compile-foundry.md) tutorial for how to do so.
 
 Optionally, but strongly recommended: You should also have tested your smart contract successfully.
 See the [test a smart contract using Foundry](./test-foundry.md) tutorial for how to do so.
@@ -25,7 +25,7 @@ forge create \
 
 {% hint style="info" %}
 Note that we're using the `injTest` account saved to the keystore,
-which was previously set up in [setup Foundry and compile a smart contract](./compile-foundry.md).
+which was previously set up in [set up Foundry and compile a smart contract](./compile-foundry.md).
 {% endhint %}
 
 The output should look similar to:

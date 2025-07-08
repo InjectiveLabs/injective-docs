@@ -1,4 +1,4 @@
-# Setup Foundry and compile a smart contract
+# Set up Foundry and compile a smart contract
 
 ## Prerequisites
 

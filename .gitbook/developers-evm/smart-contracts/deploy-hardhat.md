@@ -3,7 +3,7 @@
 ## Prerequisites
 
 You should already have a Hardhat project set up, and have compiled your smart contract successfully.
-See the [setup Hardhat and compile a smart contract](./compile-hardhat.md) tutorial for how to do so.
+See the [set up Hardhat and compile a smart contract](./compile-hardhat.md) tutorial for how to do so.
 
 Optionally, but strongly recommended: You should also have tested your smart contract successfully.
 See the [test a smart contract using Hardhat](./test-hardhat.md) tutorial for how to do so.

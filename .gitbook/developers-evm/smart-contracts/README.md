@@ -4,7 +4,7 @@
 
 This guide will walk you through building an EVM Smart Contract on Injective Testnet using [Hardhat](https://hardhat.org/).
 
-* [Setup Hardhat and compile a smart contract](./compile-hardhat.md)
+* [Set up Hardhat and compile a smart contract](./compile-hardhat.md)
 * [Test a smart contract using Hardhat](./test-hardhat.md)
 * [Deploy a smart contract using Hardhat](./deploy-hardhat.md)
 * [Verify a smart contract using Hardhat](./verify-hardhat.md)
@@ -14,7 +14,7 @@ This guide will walk you through building an EVM Smart Contract on Injective Tes
 
 This guide will walk you through building an EVM Smart Contract on Injective Testnet using [Foundry](https://getfoundry.sh/).
 
-* [Setup Foundry and compile a smart contract](./compile-foundry.md)
+* [Set up Foundry and compile a smart contract](./compile-foundry.md)
 * [Test a smart contract using Foundry](./test-foundry.md)
 * [Deploy a smart contract using Foundry](./deploy-foundry.md)
 * [Verify a smart contract using Foundry](./verify-foundry.md)

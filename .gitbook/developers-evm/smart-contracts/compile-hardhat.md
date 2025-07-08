@@ -1,4 +1,4 @@
-# Setup Hardhat and compile a smart contract
+# Set up Hardhat and compile a smart contract
 
 ## Prerequisites
 
