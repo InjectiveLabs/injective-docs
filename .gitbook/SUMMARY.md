@@ -59,6 +59,7 @@
     * [Peggo](infra/validator-testnet/peggo.md)
   * [Public Endpoints](infra/public-endpoints.md)
   * [Premium Endpoints](infra/premium-endpoints.md)
+  * [Archival Setup](infra/archival-setup.md)
   * [Indexer API Reference](https://api.injective.network/swagger/#/)
 * [Developers](developers/README.md)
   * [Convert addresses](developers/convert-addresses.md)
