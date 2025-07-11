@@ -1,4 +1,8 @@
-# Exchange Developers
+---
+icon: money-bill-transfer
+---
+
+# DeFi Developers
 
 Injective marks the forefront of exchange-focused layer-1 blockchains offering decentralized perpetual swaps, futures, and spot trading. It fully taps into the possibilities of decentralized derivatives and borderless DeFi. Every component is designed to embody complete trustlessness, resistance to censorship, public verifiability, and resilience against front-running.
 
@@ -12,6 +16,4 @@ The goal of Injective's incentive mechanism is to allow exchanges competing amon
 
 An exchange can easily set up a client (such as a UI on web or mobile) and an API provider.
 
-Head to our TypeScript documentation to [bootstrap your DEX ](https://docs.ts.injective.network/building-dapps/dapps-examples/dex)with few clicks!&#x20;
-
-[^1]: Exchange
+Head to our TypeScript documentation to [bootstrap your DEX ](https://docs.ts.injective.network/building-dapps/dapps-examples/dex)with few clicks!
