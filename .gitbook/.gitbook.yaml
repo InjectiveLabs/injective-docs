@@ -178,6 +178,7 @@ redirects:
   developers/exchange-developers/provider-oracle: developers-defi/provider-oracle.md
   developers/cosmwasm-developers: developers-cosmwasm/README.md
   developers/cosmwasm-developers/your-first-smart-contract: developers-cosmwasm/your-first-smart-contract-guide.md
+  developers-cosmwasm/your-first-smart-contract-guide: developers-cosmwasm/smart-contracts/your-first-smart-contract.md
   developers/cosmwasm-developers/guides: developers-cosmwasm/local-development-guide.md
   developers/cosmwasm-developers/guides/local-development: developers-cosmwasm/local-development-guide.md
   developers/cosmwasm-developers/guides/mainnet-deployment: developers-cosmwasm/mainnet-deployment-guide.md

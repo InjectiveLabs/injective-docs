@@ -2,7 +2,7 @@
 description: Essential information about the Injective EVM network
 ---
 
-# Network Information
+# EVM Network Information
 
 ## Injective EVM Testnet Details
 
@@ -17,6 +17,8 @@ description: Essential information about the Injective EVM network
 Note that the Injective Chain ID is natively `injective-888`.
 However, EVM uses a numeric chain ID of `1439`.
 While these are different, they map to the **same** network.
+
+See [network information](../developers/network-information.md) for more details.
 {% endhint %}
 
 ### Tokens

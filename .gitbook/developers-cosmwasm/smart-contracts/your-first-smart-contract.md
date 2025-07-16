@@ -1,8 +1,8 @@
-# Your First Smart Contract
+# Your First CosmWasm Smart Contract
 
 Within this section, we'll explain how to setup your environment for CosmWasm Smart Contracts Development.&#x20;
 
-### Prerequisites
+## Prerequisites
 
 Before starting, make sure you have [`rustup`](https://rustup.rs/) along with recent versions of `rustc` and `cargo` installed. Currently, we are testing on Rust v1.58.1+.
 
@@ -20,12 +20,12 @@ rustup target add wasm32-unknown-unknown
 cargo install cargo-generate
 ```
 
-### Objectives
+## Objectives
 
 * Create and interact with a smart contract that increases and resets a counter to a given value
 * Understand the basics of a CosmWasm smart contract, learn how to deploy it on Injective, and interact with it using Injective tools
 
-### CosmWasm Contract Basics
+## CosmWasm Contract Basics
 
 A smart contract can be considered an instance of a [singleton object](https://en.wikipedia.org/wiki/Singleton_pattern) whose internal state is persisted on the blockchain. Users can trigger state changes by sending the smart contract JSON messages, and users can also query its state by sending a request formatted as a JSON message. These JSON messages are different than Injective blockchain messages such as `MsgSend` and `MsgExecuteContract`.
 
@@ -37,7 +37,7 @@ As a smart contract writer, your job is to define 3 functions that compose your 
 
 In our [sample counter contract](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/msg.rs), we will implement one `instantiate`, one `query`, and two `execute` methods.
 
-### Start with a Template
+## Start with a Template
 
 In your working directory, quickly launch your smart contract with the recommended folder structure and build options by running the following commands:
 
@@ -48,7 +48,7 @@ cd my-first-contract
 
 This helps get you started by providing the basic boilerplate and structure for a smart contract. In the [`src/contract.rs`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs) file you will find that the standard CosmWasm entrypoints [`instantiate()`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L15), [`execute()`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L35), and [`query()`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L72) are properly exposed and hooked up.
 
-### State
+## State
 
 {% hint style="info" %}
 You can learn more about CosmWasm State on their [documentation](https://book.cosmwasm.com/basics/state.html).
@@ -95,7 +95,7 @@ Notice how the `State` struct holds both `count` and `owner`. In addition, the `
 
 `Addr` refers to a human-readable Injective address prefixed with `inj`, e.g. `inj1clw20s2uxeyxtam6f7m84vgae92s9eh7vygagt`.
 
-### InstantiateMsg
+## InstantiateMsg
 
 {% hint style="info" %}
 You can learn more about CosmWasm [InstantiateMsg on their documentation](https://github.com/CosmWasm/docs/blob/archive/dev-academy/develop-smart-contract/01-intro.md#instantiatemsg)
@@ -105,7 +105,7 @@ The `InstantiateMsg` is provided to the contract when a user instantiates a cont
 
 On the Injective blockchain, the uploading of a contract's code and the instantiation of a contract are regarded as separate events, unlike on Ethereum. This is to allow a small set of vetted contract archetypes to exist as multiple instances sharing the same base code, but be configured with different parameters (imagine one canonical ERC20, and multiple tokens that use its code).
 
-#### Example
+### Example
 
 For your contract, the contract creator is expected to supply the initial state in a JSON message. We can see in the message definition below that the message holds one parameter `count`, which represents the initial count.
 
@@ -115,7 +115,7 @@ For your contract, the contract creator is expected to supply the initial state 
 }
 ```
 
-#### Message Definition
+### Message Definition
 
 ```c
 // src/msg.rs
@@ -130,7 +130,7 @@ pub struct InstantiateMsg {
 
 ```
 
-#### Contract Logic
+### Contract Logic
 
 In `contract.rs`, you will define your first entry-point, `instantiate()`, or where the contract is instantiated and passed its `InstantiateMsg`. Extract the count from the message and set up your initial state where:
 
@@ -160,7 +160,7 @@ pub fn instantiate(
 }
 ```
 
-### ExecuteMsg
+## ExecuteMsg
 
 {% hint style="info" %}
 &#x20;You can learn more about CosmWasm ExecuteMsg in their [documentation](https://book.cosmwasm.com/basics/execute.html).
@@ -173,7 +173,7 @@ We have [two ExecuteMsg](https://github.com/InjectiveLabs/cw-counter/blob/59b9fe
 * `Increment` has no input parameter and increases the value of count by 1.
 * `Reset` takes a 32-bit integer as a parameter and resets the value of `count` to the input parameter.
 
-#### Example
+### Example
 
 **Increment**
 
@@ -197,7 +197,7 @@ Only the owner can reset the count to a specific number. See Logic below for the
 }
 ```
 
-#### Message Definition
+### Message Definition
 
 For `ExecuteMsg`, an `enum` can be used to multiplex over the different types of messages that your contract can understand. The `serde` attribute rewrites your attribute keys in snake case and lower case, so you'll have `increment` and `reset` instead of `Increment` and `Reset` when serializing and deserializing across JSON.
 
@@ -212,7 +212,7 @@ pub enum ExecuteMsg {
 }
 ```
 
-#### Logic
+### Logic
 
 ```c
 // src/contract.rs
@@ -263,7 +263,7 @@ pub fn try_reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Respons
 
 The logic for reset is very similar to increment—except this time, it first checks that the message sender is permitted to invoke the reset function (in this case, it must be the contract owner).
 
-### QueryMsg
+## QueryMsg
 
 {% hint style="info" %}
 You can learn more about CosmWasm [QueryMsg in their documentation](https://docs.cosmwasm.com/docs/smart-contracts/query)
@@ -273,7 +273,7 @@ The `GetCount` [query message](https://github.com/InjectiveLabs/cw-counter/blob/
 
 See the implementation details in Logic below.
 
-#### Example
+### Example
 
 The template contract only supports one type of `QueryMsg`:
 
@@ -295,7 +295,7 @@ Which should return:
 }
 ```
 
-#### Message Definition
+### Message Definition
 
 To support data queries in the contract, you'll have to define both a `QueryMsg` format (which represents requests), as well as provide the structure of the query's output—`CountResponse` in this case. You must do this because `query()` will send information back to the user through structured JSON, so you must make the shape of your response known. See Generating JSON Schema for more info.
 
@@ -317,7 +317,7 @@ pub struct CountResponse {
 }
 ```
 
-#### Logic
+### Logic
 
 The logic for `query()` is similar to that of `execute()`; however, since `query()` is called without the end-user making a transaction, the `env` argument is omitted as no information is necessary.
 
@@ -337,7 +337,7 @@ fn query_count(deps: Deps) -> StdResult<CountResponse> {
 }
 ```
 
-### Unit test
+## Unit test
 
 Unit tests should be run as the first line of assurance before deploying the code on chain. They are quick to execute and can provide helpful backtraces on failures with the `RUST_BACKTRACE=1` flag:
 
@@ -347,7 +347,7 @@ cargo unit-test // run this with RUST_BACKTRACE=1 for helpful backtraces
 
 You can find the [unit test implementation](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/contract.rs#L88) at `src/contract.rs`
 
-### Building the Contract
+## Building the Contract
 
 Now that we understand and have tested the contract, we can run the following command to build the contract. This will check for any preliminary errors before we optimize the contract in the next step.
 
@@ -396,7 +396,7 @@ See [The Cargo Book](https://doc.rust-lang.org/cargo/reference/config.html#netgi
 
 This produces an `artifacts` directory with a `PROJECT_NAME.wasm`, as well as `checksums.txt`, containing the Sha256 hash of the Wasm file. The Wasm file is compiled deterministically (anyone else running the same docker on the same git commit should get the identical file with the same Sha256 hash).
 
-### Install `injectived`
+## Install `injectived`
 
 `injectived` is the command-line interface and daemon that connects to Injective and enables you to interact with the Injective blockchain.
 
@@ -652,7 +652,7 @@ injectived query wasm contract inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 --node
 ```
 {% endhint %}
 
-### Querying the Contract
+## Querying the Contract
 
 As we know from earlier, the only QueryMsg we have is `get_count`.
 
@@ -675,7 +675,7 @@ We see that `count` is 99, as set when we instantiated the contract.
 If you query the same contract, you may receive a different response as others may have interacted with the contract and incremented or reset the count.
 {% endhint %}
 
-### Execute the Contract
+## Execute the Contract
 
 Let's now interact with the contract by incrementing the counter.
 
