@@ -154,6 +154,8 @@
     * [Connections](developers-native/wallets/connections.md)
     * [Strategy](developers-native/wallets/strategy.md)
     * [Offchain Data](developers-native/wallets/offchain-data.md)
+  * [Bridges](developers-native/bridges/README.md)
+    * [Ethereum Bridge](developers-native/bridges/ethereum.md)
   * [Injective Modules](developers-native/injective/README.md)
     * [Auction](developers-native/injective/auction/README.md)
       * [State](developers-native/injective/auction/01_state.md)
