@@ -36,11 +36,9 @@ Every transaction we want to broadcast to Injective has the same flow. The flow 
 | Topic                                             | Description                                                |
 | ------------------------------------------------- | ---------------------------------------------------------- |
 | [Using the Ethereum approach](ethereum.md)        | Prepare/Sign EIP712 typed data then broadcast              |
-| [Using the Cosmos approach](transactions-cosmos/) | Prepare/Sign/Broadcast Cosmos transactions                 |
+| [Using the Cosmos approach](cosmos.md) | Prepare/Sign/Broadcast Cosmos transactions                 |
 | [Using a Private Key](private-key.md)             | Prepare/Sign/Broadcast Cosmos transaction with private key |
 | [Web3Gateway Microservice](web3-gateway.md)       | A microservice for supporting fee Delegation               |
 | [Msg Broadcaster](msgbroadcaster.md)              | Abstraction for broadcasting messages                      |
-
-
 
 **The messages that are available (and examples) can be found in Core Modules section of the Wiki.**
