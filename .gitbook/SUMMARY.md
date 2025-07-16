@@ -133,6 +133,8 @@
   * [Build a DEX](https://docs.ts.injective.network/building-dapps/dapps-examples/dex)
   * [Exchange API Reference](https://api.injective.exchange/)
 * [Native Developers](developers-native/README.md)
+  * [Bridges](developers-native/bridges/README.md)
+  *   [Ethereum Bridge](developers-native/bridges/ethereum.md)
   * [Injective Module](developers-native/injective/README.md)
     * [Auction](developers-native/injective/auction/README.md)
       * [State](developers-native/injective/auction/01_state.md)
