@@ -84,7 +84,6 @@
     * [Token Metadata](developers/assets/token-metadata.md)
     * [Injective List](developers/assets/injective-list.md)
     * [Creating Tokens](developers/assets/token-create.md)
-    * [Denom Client (deprecated)](developers/assets/denom-client.md)
   * [Testnet Faucet](https://testnet.faucet.injective.network)
   * [DApps](developers/dapps/README.md)
     * [Nuxt configuration](developers/dapps/configure-nuxt.md)
