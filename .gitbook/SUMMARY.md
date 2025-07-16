@@ -98,7 +98,7 @@
     * [Deploy with Foundry](developers-evm/smart-contracts/deploy-foundry.md)
     * [Verify with Foundry](developers-evm/smart-contracts/verify-foundry.md)
     * [Interact with Foundry](developers-evm/smart-contracts/interact-foundry.md)
-  * [Your First DApp](developers-evm/dapps/README.md)
+  * [Your First EVM DApp](developers-evm/dapps/README.md)
     * [Connect with MetaMask](developers-evm/dapps/connect-with-metamask.md)
     * [Connect with WalletConnect](developers-evm/dapps/connect-with-walletconnect.md)
   * [EVM Equivalence](developers-evm/evm-equivalence.md)

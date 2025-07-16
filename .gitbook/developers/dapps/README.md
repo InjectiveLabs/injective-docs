@@ -6,6 +6,11 @@ Injective is natively interoperable with several well-known blockchain networks,
 
 Within this section we are going to explore configuring different UI frameworks to work with the `@injectivelabs` packages so you can start building decentralized applications on top of Injective. We are also going to showcase example (simple) dApps built on top of Injective.
 
+{% hint style="info" %}
+If you are looking for how to build a DApp on Injective EVM,
+you should check out the guides in [your first EVM DApp](../../developers-evm/dapps/README.md).
+{% endhint %}
+
 ### Create Injective dApp CLI tool
 
 The simplest way to start your journey on Injective is using our CLI tool. To do this, simply write this command and follow the instructions in your terminal!&#x20;
@@ -18,8 +23,8 @@ $ npx @injectivelabs/create-injective-app
 
 | Topic                                     | Description                 |
 | ----------------------------------------- | --------------------------- |
-| [Configuring Nuxt](configure-nuxt.md)   | Configuring Nuxt 3.x + Vite |
-| [Configuring React](configure-react.md) | Configuring React 18 + Vite |
+| [Configuring Nuxt](configure-nuxt.md)     | Configuring Nuxt 3.x + Vite |
+| [Configuring React](configure-react.md)   | Configuring React 18 + Vite |
 
 ### DApps
 
