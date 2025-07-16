@@ -84,7 +84,6 @@
     * [Token Metadata](developers/assets/token-metadata.md)
     * [Injective List](developers/assets/injective-list.md)
     * [Creating Tokens](developers/assets/token-create.md)
-  * [Testnet Faucet](https://testnet.faucet.injective.network)
   * [DApps](developers/dapps/README.md)
     * [Nuxt configuration](developers/dapps/configure-nuxt.md)
     * [React configuration](developers/dapps/configure-react.md)
@@ -92,7 +91,8 @@
     * [Smart contract examples](developers/dapps/example-smart-contract.md)
     * [DEX examples](developers/dapps/example-dex.md)
     * [Webpack examples](developers/dapps/example-webpack.md)
-<!--    * [Bridge examples](developers/dapps/example-bridge.md) -->
+    <!-- * [Bridge examples](developers/dapps/example-bridge.md) -->
+  * [Testnet Faucet](https://testnet.faucet.injective.network)
   * [Chain API Reference](https://sentry.lcd.injective.network/swagger/#/)
   * [Injective TypeScript SDK](https://docs.ts.injective.network)
   * [Injective Go SDK](https://github.com/InjectiveLabs/sdk-go/)
