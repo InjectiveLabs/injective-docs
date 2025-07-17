@@ -186,6 +186,7 @@
     * [Portfolio](developers-native/query-indexer-stream/portfolio.md)
     * [Spot](developers-native/query-indexer-stream/spot.md)
     * [Explorer](developers-native/query-indexer-stream/explorer.md)
+  * [Querying Ethereum with GraphQL](developers-native/query-ethereum/README.md)
   * [Injective Modules](developers-native/injective/README.md)
     * [Auction](developers-native/injective/auction/README.md)
       * [State](developers-native/injective/auction/01_state.md)
