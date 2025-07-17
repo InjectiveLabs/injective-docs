@@ -1,4 +1,4 @@
-# Building DApps
+# Building dApps
 
 Injective is a Layer-1 blockchain built for finance. Injective offers developers out-of-the-box primitives for building decentralized financial applications in addition to an open and permissionless smart contracts layer providing advanced capabilities in building robust Web3 applications.
 
@@ -7,8 +7,8 @@ Injective is natively interoperable with several well-known blockchain networks,
 Within this section we are going to explore configuring different UI frameworks to work with the `@injectivelabs` packages so you can start building decentralized applications on top of Injective. We are also going to showcase example (simple) dApps built on top of Injective.
 
 {% hint style="info" %}
-If you are looking for how to build a DApp on Injective EVM,
-you should check out the guides in [your first EVM DApp](../../developers-evm/dapps/README.md).
+If you are looking for how to build a dApp on Injective EVM,
+you should check out the guides in [your first EVM dApp](../../developers-evm/dapps/README.md).
 {% endhint %}
 
 ### Create Injective dApp CLI tool
@@ -26,7 +26,7 @@ $ npx @injectivelabs/create-injective-app
 | [Configuring Nuxt](configure-nuxt.md)     | Configuring Nuxt 3.x + Vite |
 | [Configuring React](configure-react.md)   | Configuring React 18 + Vite |
 
-### DApps
+### dApps
 
 | Topic                                      | Description                                              |
 | ------------------------------------------ | -------------------------------------------------------- |
