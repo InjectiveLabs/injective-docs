@@ -7,11 +7,12 @@ description: Essential information about the Injective EVM network
 ## Injective EVM Testnet Details
 
 * Chain ID: `1439`
-* JSON-RPC Endpoint: [`https://k8s.testnet.json-rpc.injective.network/`](https://k8s.testnet.json-rpc.injective.network/)
-* WS Endpoint: [`https://k8s.testnet.ws.injective.network/`](https://k8s.testnet.ws.injective.network/)
+* JSON-RPC Endpoint: `https://k8s.testnet.json-rpc.injective.network/`\
+* WS Endpoint: `https://k8s.testnet.ws.injective.network/`
 * Faucet: [`https://testnet.faucet.injective.network/`](https://testnet.faucet.injective.network/)
-* Explorer: [`https://testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/) ([Mirror](https://testnet-injective.cloud.blockscout.com/) by BlockScout)
-* Explorer API: [`https://testnet.blockscout-api.injective.network/api`](https://testnet.blockscout-api.injective.network/api)
+* Explorer: [`https://testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/)
+* Explorer (mirror by Blockscout): [`https://testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
+* Explorer API: `https://testnet.blockscout-api.injective.network/api`
 
 {% hint style="info" %}
 Note that the Injective Chain ID is natively `injective-888`.
@@ -29,10 +30,14 @@ See [network information](../developers/network-information.md) for more details
 
 For more information about Injective EVM Testnet see the following pages:
 
-* [Testnet Deployment](../testnet-deployment.md)
-* [EVM Equivalence](evm-equivalence.md)
-* [MultiVM Token Standard](multivm-token-standard.md)
-* [Start Building on EVM](./)
+* Basics:
+  * [Start Building on EVM](./README.md)
+  * [Your first EVM smart contract](./smart-contracts/README.md)
+  * [Your first EVM dApp](./dapps/README.md)
+* Advanced:
+  * [EVM Equivalence](evm-equivalence.md)
+  * [MultiVM Token Standard](multivm-token-standard.md)
+  * [Precompiles](./precompiles.md)
 
 ## Injective EVM Mainnet
 

@@ -30,7 +30,7 @@ For an Injective-native token, skip the bridging portion and head straight to st
 
 ![Bridging Completion](<../.gitbook/assets/Docs - Transaction Submitted.png>)
 
-6. After the bridging transaction is complete, you're able to list the token permissionlessly on Injective by navigating to the [Injective Hub](http://hub.injective.network/proposal/create).
+6. After the bridging transaction is complete, you're able to list the token permissionlessly on Injective by navigating to the [Injective Hub](https://injhub.com/proposal/create/).
 
 ![List on Injective](<../.gitbook/assets/Docs - New Proposal.png>)
 

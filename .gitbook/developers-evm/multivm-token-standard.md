@@ -19,10 +19,10 @@ MTS (MultiVM Token Standard) ensures that every token on Injective—whether dep
 
 The system comprises two main components:
 
-* [**Bank Precompile**](./precompiles/bank-precompile.md)**:**
+* [**Bank Precompile**](./bank-precompile.md):
   * Developed in Go, this precompile is embedded directly in the Injective EVM.
   * It provides a Solidity interface that proxies ERC20 operations—such as mint, burn, and transfer—to the bank module.
-* [**ERC20 Module**](./erc20-module.md)**:**
+* [**ERC20 Module**](./erc20-module.md):
   * This module maps native bank denoms (e.g., INJ, IBC tokens, Peggy assets) to an ERC20 contract within the EVM.
   * It deploys MTS-compliant ERC20 contracts that always reflect the canonical token balance as maintained by the bank module.
 
@@ -30,9 +30,9 @@ The system comprises two main components:
 
 ### **Creating an** MT&#x53;**-Compliant Token**
 
-1. [**Using Our Prebuilt Templates**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src)**:**
+1. [**Using Our Prebuilt Templates**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
    * Start with the provided Solidity templates, such as `BankERC20.sol`, `MintBurnBankERC20.sol`, or `FixedSupplyBankERC20.sol`.
-2. [**Deploying the Contract**](./testnet-deployment.md)**:**
+2. [**Deploying the Contract**](./smart-contracts/README.md):
    * Deploy your MTS token contract on the Injective EVM network.
    * The contract automatically interacts with the Bank Precompile to update the canonical state.
 

@@ -4,7 +4,7 @@ The [swap contract](https://github.com/InjectiveLabs/swap-contract) allows an in
 
 ### Getting started
 
-Anyone can instantiate an instance of the swap contract. There is a version of this contract uploaded on Injective mainnet already, and can be found [here](https://explorer.injective.network/code/67/).
+Anyone can instantiate an instance of the swap contract. There is a version of this contract uploaded on Injective mainnet already, and can be found [here](https://injscan.com/code/67/).
 
 Before instantiating the contract, as the contract owner, you have three questions to answer:
 

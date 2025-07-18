@@ -25,7 +25,7 @@ Native EVM on Injective supports the latest version of `geth`, ensuring that dev
 1. [Ethereum Gas Price Source](https://etherscan.io/chart/gasprice) ↩︎
 2. [Polygon Gas Price Source](https://polygonscan.com/chart/gasprice) ↩︎
 3. [Optimism Gas Price Source](https://optimistic.etherscan.io/chart/gasprice) ↩︎
-4. [Avalanche Gas Price Source](https://snowtrace.io/chart/gasprice) ↩︎
+4. [Avalanche Gas Price Source](https://snowtrace.io/gastracker) ↩︎
 5. [BnB Smart Chain Gas Price Source](https://bscscan.com/chart/gasprice) ↩︎
 6. [Sei Gas Prices Config](https://github.com/sei-protocol/chain-registry/blob/main/gas.json) ↩︎
 7. [Injective Launches Gas Compression](https://blog.injective.com/en/injective-unveils-fee-reductions-with-gas-compression/) ↩︎

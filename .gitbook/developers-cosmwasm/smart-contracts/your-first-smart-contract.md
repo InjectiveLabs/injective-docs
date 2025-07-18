@@ -82,7 +82,7 @@ Injective smart contracts have the ability to keep persistent state through Inje
 
 Data can only be persisted as raw bytes, so any notion of structure or data type must be expressed as a pair of serializing and deserializing functions. For instance, objects must be stored as bytes, so you must supply both the function that encodes the object into bytes to save it on the blockchain, as well as the function that decodes the bytes back into data types that your contract logic can understand. The choice of byte representation is up to you, so long as it provides a clean, bi-directional mapping.
 
-Fortunately, CosmWasm provides utility crates, such as [`cosmwasm_storage`](https://crates.io/crates/cosmwasm-storage), which provides convenient high-level abstractions for data containers such as a "singleton" and "bucket", which automatically provide serialization and deserialization for commonly-used types, such as structs and Rust numbers. Additionally, the[`cw-storage-plus`](https://docs.cosmwasm.com/docs/smart-contracts/state/cw-plus/) crate can be used for a more efficient storage mechanism.
+Fortunately, CosmWasm provides utility crates, such as [`cosmwasm-storage`](https://crates.io/crates/cosmwasm-storage), which provides convenient high-level abstractions for data containers such as a "singleton" and "bucket", which automatically provide serialization and deserialization for commonly-used types, such as structs and Rust numbers. Additionally, the[`cw-storage-plus`](https://cosmwasm.cosmos.network/smart-contracts/state/cw-plus/) crate can be used for a more efficient storage mechanism.
 
 Notice how the `State` struct holds both `count` and `owner`. In addition, the `derive` attribute is applied to auto-implement some useful traits:
 
@@ -405,7 +405,8 @@ If you want to interact with your Smart Contract locally using CLI, you have to 
 Alternatively, a Docker image has been prepared to make this tutorial easier.
 
 {% hint style="info" %}
-If you install `injectived` from the binary, ignore the docker commands. On the [public endpoints section](../infra/public-endpoints.md) you can find the right --node info to interact with Mainnet and Testnet.&#x20;
+If you install `injectived` from the binary, ignore the docker commands.
+In the [public endpoints section](../../infra/public-endpoints.md) you can find the right --node info to interact with Mainnet and Testnet.
 {% endhint %}
 
 Executing this command will make the docker container execute indefinitely.
@@ -477,7 +478,7 @@ curl -X GET "https://sentry.testnet.lcd.injective.network/cosmos/bank/v1beta1/ba
 
 ## Upload the Wasm Contract
 
-Now it's time to upload the `.wasm` file that you compiled in the previous steps to the Injective Testnet. Please note that the procedure for mainnet is different and [requires a governance proposal.](./mainnet-deployment-guide.md)
+Now it's time to upload the `.wasm` file that you compiled in the previous steps to the Injective Testnet. Please note that the procedure for mainnet is different and [requires a governance proposal.](../mainnet-deployment-guide.md)
 
 ```bash
 # inside the "injective-core-staging" container, or from the contract directory if running injectived locally
