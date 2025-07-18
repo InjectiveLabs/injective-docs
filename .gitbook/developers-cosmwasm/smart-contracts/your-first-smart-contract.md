@@ -185,7 +185,7 @@ Any user can increment the current count by 1.
 }
 ```
 
-**Reset**
+#### Reset
 
 Only the owner can reset the count to a specific number. See Logic below for the implementation details.
 

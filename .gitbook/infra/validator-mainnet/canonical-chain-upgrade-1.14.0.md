@@ -6,7 +6,7 @@ sidebar_position: 19
 
 Monday, February 17th, 2025
 
-Following [Proposal 494](https://hub.injective.network/proposals/494/) This indicates that the upgrade procedure should be performed on block number **106315000**
+Following [Proposal 494](https://injhub.com/proposals/494/) This indicates that the upgrade procedure should be performed on block number **106315000**
 
 * [Summary](#summary)
 * [Risks](#risks)

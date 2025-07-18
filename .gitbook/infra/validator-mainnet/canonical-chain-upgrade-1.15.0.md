@@ -6,7 +6,7 @@ sidebar_position: 21
 
 Tuesday, April 22th, 2025
 
-Following [Proposal 518](https://hub.injective.network/proposals/518) This indicates that the upgrade procedure should be performed on block number **114590000**
+Following [Proposal 518](https://injhub.com/proposals/518) This indicates that the upgrade procedure should be performed on block number **114590000**
 
 * [Summary](#summary)
 * [Recovery](#recovery)

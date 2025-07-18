@@ -6,7 +6,7 @@ sidebar_position: 14
 
 Thursday, January 11th, 2024
 
-Following [proposal 314](https://hub.injective.network/proposals/314/) This indicates that the upgrade procedure should be performed on block number **57076000**
+Following [proposal 314](https://injhub.com/proposals/314/) This indicates that the upgrade procedure should be performed on block number **57076000**
 
 * [Summary](#summary)
 * [Risks](#risks)

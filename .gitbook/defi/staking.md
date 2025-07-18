@@ -8,11 +8,11 @@ Injective follows a proof-of-stake mechanism, in which users can stake their INJ
 
 ### Stake INJ
 
-[Stake](https://hub.injective.network/staking) your INJ to a validator to start earning rewards.
+[Stake](https://injhub.com/stake) your INJ to a validator to start earning rewards.
 
 ### Withdraw staking rewards
 
-Rewards start accruing the moment you stake INJ. Monitor your rewards in the staking section of [Injective Hub](https://hub.injective.network/staking). Once you have earned a sufficient amount of rewards, you may withdraw them at any time.
+Rewards start accruing the moment you stake INJ. Monitor your rewards in the staking section of [Injective Hub](https://injhub.com/stake). Once you have earned a sufficient amount of rewards, you may withdraw them at any time.
 
 ### Redelegate
 
