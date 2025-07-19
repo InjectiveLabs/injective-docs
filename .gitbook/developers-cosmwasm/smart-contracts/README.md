@@ -2,7 +2,7 @@
 
 ## What is CosmWasm?
 
-CosmWasm is a novel smart contracting platform built for the Cosmos ecosystem. You can learn more about CosmWasm [here](https://docs.cosmwasm.com/docs/), or see the [CosmWasm Book](https://book.cosmwasm.com/index.html) for a guide on creating CosmWasm smart contracts.
+CosmWasm is a novel smart contracting platform built for the Cosmos ecosystem. You can learn more about CosmWasm from [the CosmWasm docs](https://cosmwasm.cosmos.network/), or see the [CosmWasm Book](https://book.cosmwasm.com/index.html) for a guide on creating CosmWasm smart contracts.
 
 ## Developing CosmWasm Smart Contracts
 
