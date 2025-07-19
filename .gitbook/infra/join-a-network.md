@@ -233,7 +233,7 @@ journalctl -u injectived -f
 
 #### Sync with the network
 
-Refer to the Polkachu guide [here](https://polkachu.com/testnets/injective/snapshots) to download a snapshot and sync with the network.
+Refer to the [Polkachu Injective Testnet Node Snapshot](https://polkachu.com/testnets/injective/snapshots) to download a snapshot and sync with the network.
 
 **Support**
 
@@ -361,9 +361,9 @@ _To be added soon_
 
 1. [Polkachu](https://polkachu.com/tendermint_snapshots/injective).
 2. [HighStakes](https://tools.highstakes.ch/files/injective.tar.gz).
-3. [AutoStake](http://snapshots.autostake.net/injective-1/).
-4. [Imperator](https://www.imperator.co/services/chain-services/mainnets/injective).
-5. [Bware Labs](https://bwarelabs.com/snapshots).
+3. [Imperator](https://www.imperator.co/services/chain-services/mainnets/injective).
+4. [Bware Labs](https://bwarelabs.com/snapshots).
+5. [AutoStake](https://autostake.com/networks/injective/#validator).
 
 Should the Injective `mainnet-config seeds.txt` list not work (the node fails to sync blocks), ChainLayer, Polkachu, and Autostake maintain peer lists (can be used in the `persistent_peers` field in `config.toml`) or addressbooks (for faster peer discovery).
 

@@ -11,7 +11,7 @@ The upgrade will take place via an on-chain software upgrade proposal passed by 
 
 In case of a failed migration via the upgrade module, the Injective Labs team will post an official `injective-canonical-chain` genesis file, but it is recommended that validators should do try to export the genesis on their own node to verify the resulting genesis file.
 
-Following [proposal #65](https://hub.injective.network/proposals/65) This indicates that the upgrade procedure should be performed on block number **4,352,000**.
+Following [proposal #65](https://injhub.com/proposals/65) This indicates that the upgrade procedure should be performed on block number **4,352,000**.
 
 * [Summary](#summary)
 * [Risks](#risks)
