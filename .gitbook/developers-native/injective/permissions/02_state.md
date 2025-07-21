@@ -31,7 +31,7 @@ type Role struct {
 }
 ```
 
-- As previously mentioned, Permissions is the sum of all permitted [Action](https://www.notion.so/Action-13e7a004ab7580ef8c16cebd37096d91?pvs=21) values
+- As previously mentioned, Permissions is the sum of all permitted [Action](https://www.notion.so/injective/Permissions-Module-Guide-1317a004ab7580889f44d924cc9c0ffe#13e7a004ab7580ef8c16cebd37096d91) values
 
 ## ActorRoles
 

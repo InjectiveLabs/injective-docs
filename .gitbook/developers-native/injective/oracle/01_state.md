@@ -181,7 +181,7 @@ message CoinbasePriceState {
 }
 ```
 
-More details about the Coinbase price oracle can be found in the [Coinbase API docs](https://docs.pro.coinbase.com/#oracle) as well as this explanatory [blog post](https://blog.coinbase.com/introducing-the-coinbase-price-oracle-6d1ee22c7068).
+More details about the Coinbase price oracle can be found in the [Coinbase API docs](https://docs.pro.coinbase.com/#oracle) as well as this explanatory [blog post](https://www.coinbase.com/en-gb/blog/introducing-the-coinbase-price-oracle).
 
 Note that the `Value` is the raw USD price data obtained from Coinbase which has is scaled by 1e6 (e.g. a price of 1.42 is 1420000) while the PriceState has the normalized decimal price (e.g. 1.42).
 
