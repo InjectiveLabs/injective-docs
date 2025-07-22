@@ -6,7 +6,7 @@ sidebar_position: 10
 
 Thursday, September 1st, 2022
 
-Following [proposal 170)](https://hub.injective.network/proposals/170/) This indicates that the upgrade procedure should be performed on block number **14731000**
+Following [proposal 170)](https://injhub.com/proposals/170/) This indicates that the upgrade procedure should be performed on block number **14731000**
 
 * [Summary](#summary)
 * [Risks](#risks)

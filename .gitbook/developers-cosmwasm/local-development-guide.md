@@ -345,9 +345,9 @@ INIT='{"name":"Albcoin","symbol":"ALB","decimals":6,"initial_balances":[{"addres
 yes 12345678 | injectived tx wasm instantiate $CODE_ID $INIT --label="Albcoin Token" --from=genesis --chain-id="injective-1" --yes --gas-prices=500000000inj --gas=20000000 --no-admin
 ```
 
-Now the address of the instantiated contract can be obtained on [http://localhost:10337/swagger/#/Query/ContractsByCode](http://localhost:10337/swagger/#/Query/ContractsByCode)
+Now the address of the instantiated contract can be obtained on `http://localhost:10337/swagger/#/Query/ContractsByCode`
 
-And the contract info metadata can be obtained on [http://localhost:10337/swagger/#/Query/ContractInfo](http://localhost:10337/swagger/#/Query/ContractInfo) or by CLI query
+And the contract info metadata can be obtained on `http://localhost:10337/swagger/#/Query/ContractInfo` or by CLI query
 
 ```bash
 CONTRACT=$(injectived query wasm list-contract-by-code $CODE_ID --output json | jq -r '.contracts[-1]')

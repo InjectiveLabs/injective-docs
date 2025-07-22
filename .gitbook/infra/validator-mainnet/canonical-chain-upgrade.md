@@ -1,6 +1,6 @@
 # Canonical Chain Upgrades
 
-### History of Canonical Chain Upgrades
+## History of Canonical Chain Upgrades
 
 ***
 
@@ -12,7 +12,7 @@ Block number: [4,352,000](https://explorer.injective.network/block/4352000)
 
 Released Artifacts: [Injective Chain 10002-rc1 release](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.1.0-1636178708)
 
-Following [proposal #65](https://hub.injective.network/proposals/65)
+Following [proposal #65](https://injhub.com/proposals/65)
 
 ***
 
@@ -24,7 +24,7 @@ Block number: [4,594,100](https://explorer.injective.network/block/4594100)
 
 Released Artifacts: [Injective Chain 10002-rc2 release](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.1.1-1636733798)
 
-Following [proposal #70](https://hub.injective.network/proposals/70)
+Following [proposal #70](https://injhub.com/proposals/70)
 
 ***
 
@@ -36,7 +36,7 @@ Block number: [6,159,200](https://explorer.injective.network/block/6159200)
 
 Released Artifacts: [Mainnet-10003-rc1-1640627705](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.1.1-1640627705)
 
-Following [proposal #93](https://hub.injective.network/proposals/93)
+Following [proposal #93](https://injhub.com/proposals/93)
 
 ***
 
@@ -48,7 +48,7 @@ Block number: [7067700](https://explorer.injective.network/block/7067700)
 
 Released Artifacts: [Mainnet-10004-rc1-v1.4.0-1642928125](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.4.0-1642928125)
 
-Following [proposal #106](https://hub.injective.network/proposals/106)
+Following [proposal #106](https://injhub.com/proposals/106)
 
 ***
 

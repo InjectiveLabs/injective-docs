@@ -6,7 +6,7 @@ sidebar_position: 6
 
 Tuesday, January 25th, 2022
 
-Following [proposal #106](https://hub.injective.network/proposals/106) This indicates that the upgrade procedure should be performed on block number **7067700**
+Following [proposal #106](https://injhub.com/proposals/106) This indicates that the upgrade procedure should be performed on block number **7067700**
 
 * [Summary](#summary)
 * [Risks](#risks)

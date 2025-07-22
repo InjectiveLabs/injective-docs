@@ -6,14 +6,14 @@ sidebar_position: 11
 
 Thursday, November 21st, 2022
 
-Following [proposal 182](https://hub.injective.network/proposals/182/) This indicates that the upgrade procedure should be performed on block number **19761600**
+Following [proposal 182](https://injhub.com/proposals/182/) This indicates that the upgrade procedure should be performed on block number **19761600**
 
-* [Summary](canonical-10008.md#summary)
-* [Risks](canonical-10008.md#risks)
-* [Recovery](canonical-10008.md#recovery)
-* [Upgrade Procedure](canonical-10008.md#upgrade-procedure)
-* [Notes for Validator Operators](canonical-10008.md#notes-for-validator-operators)
-* [Notes for Service Providers](canonical-10008.md#notes-for-dex-relayer-providers)
+* [Summary](#summary)
+* [Risks](#risks)
+* [Recovery](#recovery)
+* [Upgrade Procedure](#upgrade-procedure)
+* [Notes for Validator Operators](#notes-for-validator-operators)
+* [Notes for Service Providers](#notes-for-dex-relayer-providers)
 
 ## Summary
 
@@ -72,7 +72,7 @@ Validator operators should configure the **timeout_commit** in **config.toml** t
     ```
 
     \
-    **NOTE**: It is recommended for validators and operators to take a full data snapshot at the export height before proceeding in case the upgrade does not go as planned or if not enough voting power comes online in a sufficient and agreed upon amount of time. In such a case, the chain will fallback to continue operating the Chain. See [Recovery](canonical-10008.md#recovery) for details on how to proceed.
+    **NOTE**: It is recommended for validators and operators to take a full data snapshot at the export height before proceeding in case the upgrade does not go as planned or if not enough voting power comes online in a sufficient and agreed upon amount of time. In such a case, the chain will fallback to continue operating the Chain. See [Recovery](#recovery) for details on how to proceed.
 3.  Download and install the injective-chain `10008 release`
 
     ```bash

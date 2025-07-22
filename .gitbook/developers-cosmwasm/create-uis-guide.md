@@ -15,5 +15,5 @@ Now, interacting with the contract is as simple as clicking a button and signing
 ![](https://docs.injective.network/img/metamask_select_testnet.png)
 
 {% hint style="info" %}
-You may notice that you get an "Unauthorized" error message when attempting to reset the count. This is expected behavior! Recall from the [contract logic for reset](https://docs.injective.network/develop/guides/injective-101/your-first-contract#reset) that only the contract owner is permitted to reset the count. Since you did not instantiate the exact contract that the frontend is interacting with, you don't have the required permissions to reset the count.
+You may notice that you get an "Unauthorized" error message when attempting to reset the count. This is expected behavior! Recall from the [contract logic for reset](./smart-contracts/your-first-smart-contract.md#reset) that only the contract owner is permitted to reset the count. Since you did not instantiate the exact contract that the frontend is interacting with, you don't have the required permissions to reset the count.
 {% endhint %}

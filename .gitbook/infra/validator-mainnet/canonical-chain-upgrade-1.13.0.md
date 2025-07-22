@@ -6,7 +6,7 @@ sidebar_position: 16
 
 Thursday, August 1st, 2024
 
-Following [proposal 420](https://hub.injective.network/proposals/420/) This indicates that the upgrade procedure should be performed on block number **80319200**
+Following [proposal 420](https://injhub.com/proposals/420/) This indicates that the upgrade procedure should be performed on block number **80319200**
 
 * [Summary](#summary)
 * [Risks](#risks)

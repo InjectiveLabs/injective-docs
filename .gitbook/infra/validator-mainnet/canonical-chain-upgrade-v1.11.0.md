@@ -6,7 +6,7 @@ sidebar_position: 13
 
 Thursday, June 1st, 2023
 
-Following [proposal 231](https://hub.injective.network/proposals/231/) This indicates that the upgrade procedure should be performed on block number **34775000**
+Following [proposal 231](https://injhub.com/proposals/231/) This indicates that the upgrade procedure should be performed on block number **34775000**
 
 * [Summary](#summary)
 * [Risks](#risks)
