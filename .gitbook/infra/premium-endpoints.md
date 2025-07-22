@@ -11,7 +11,7 @@ Here is a list of external providers offering private Injective infrastructure s
 * [QuickNode](https://www.quicknode.com/chains/inj)
 * [CryptoCrew](https://forms.gle/Aa2XYBB4sLxzHNzc6)
 * [Imperator](https://www.imperator.co/products/dedicated-and-rpc-nodes#get-started)
-* [AllNodes](https://www.allnodes.com/inj)
+* [AllNodes](https://injective.publicnode.com/)
 * [NowNodes](https://nownodes.io/injective-inj)
 * [RockX](https://access.rockx.com/product/injective-blockchain-api-for-web3-builders)
 

@@ -1,6 +1,6 @@
 # Simple HTML example with Webpack
 
-The [example](https://github.com/InjectiveLabs/injective-ts-webpack-example) is based on the [Cosmos transaction handling section](../../transactions/transactions-cosmos/).
+The [example](https://github.com/InjectiveLabs/injective-ts-webpack-example) is based on the [Cosmos transaction handling section](../../developers-native/transactions/cosmos.md).
 
 ## Running the example
 

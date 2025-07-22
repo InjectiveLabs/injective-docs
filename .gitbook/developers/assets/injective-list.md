@@ -4,8 +4,7 @@ We have moved the on-chain denoms token metadata to the [injective-list](https:/
 
 Here is an example of how to integrate injective-list with the TokenFactoryStatic class:
 
-1. Download the injective list json file from github:
-   https://github.com/InjectiveLabs/injective-lists?tab=readme-ov-file#-usage
+1. Download the [Injective list JSON file](https://github.com/InjectiveLabs/injective-lists?tab=readme-ov-file#-usage) from GitHub
 
 2. Use the `TokenStaticFactory` class from the `sdk-ts` package
 

@@ -2,9 +2,9 @@
 description: Connect your wallet with MetaMask or WalletConnect
 ---
 
-# Your First EVM DApp
+# Your First EVM dApp
 
-DApps are front end applications that interact with a blockchain,
+dApps are front end applications that interact with a blockchain,
 typically with smart contracts.
 
 Do check out [your first EVM smart contract](../smart-contracts/README.md) first!

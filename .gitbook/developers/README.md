@@ -19,8 +19,8 @@ Injective is the only blockchain specifically designed for cross-chain trading, 
 ## What Are You Interested In?
 
 <table data-view="cards"><thead><tr><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th><th data-hidden data-card-cover data-type="files"></th></tr></thead><tbody>
-<tr><td>EVM</td><td>Build smart contracts and DApps on Injective's Ethereum Virtual Machine</td><td><a href="../developers-evm/">evm-developers</a></td><td><a href="../.gitbook/assets/dev-hero.png">launch-token-hero.png</a></td></tr>
-<tr><td>Cosmwasm</td><td>Build smart contracts and DApps on Injective's CosmWasm module</td><td><a href="../developers-cosmwasm/">cosmwasm-developers</a></td><td><a href="../.gitbook/assets/launch-token-hero.png">launch-token-hero.png</a></td></tr>
+<tr><td>EVM</td><td>Build smart contracts and dApps on Injective's Ethereum Virtual Machine</td><td><a href="../developers-evm/">evm-developers</a></td><td><a href="../.gitbook/assets/dev-hero.png">launch-token-hero.png</a></td></tr>
+<tr><td>Cosmwasm</td><td>Build smart contracts and dApps on Injective's CosmWasm module</td><td><a href="../developers-cosmwasm/">cosmwasm-developers</a></td><td><a href="../.gitbook/assets/launch-token-hero.png">launch-token-hero.png</a></td></tr>
 <tr><td>DeFi</td><td>Build decentralized finance applications, for example a DEX like Helix</td><td><a href="../developers-defi/">defi-developers</a></td><td><a href="../.gitbook/assets/trader-hero.png">trader-hero.png</a></td></tr>
 <tr><td>Native Modules</td><td>Build using Injective's native modules. (low-level)</td><td><a href="../developers-native/">modules</a></td><td><a href="../.gitbook/assets/txs-hero.png">txs-hero.png</a></td></tr>
 </tbody></table>

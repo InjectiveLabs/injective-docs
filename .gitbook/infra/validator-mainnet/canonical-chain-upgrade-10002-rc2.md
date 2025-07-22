@@ -6,7 +6,7 @@ sidebar_position: 4
 
 November 15th, 2021
 
-Following [proposal #70](https://hub.injective.network/proposals/70) This indicates that the upgrade procedure should be performed on block number **4, 594, 100**
+Following [proposal #70](https://injhub.com/proposals/70) This indicates that the upgrade procedure should be performed on block number **4, 594, 100**
 
 * [Summary](#summary)
 * [Risks](#risks)
