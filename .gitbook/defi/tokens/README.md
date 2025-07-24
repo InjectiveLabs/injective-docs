@@ -16,4 +16,4 @@ Depending on the origin of the denom and how it was created on Injective, we hav
 
 We'll share more details about these denom types later on in this document.&#x20;
 
-Learn how to get denom metadata [here](https://docs.ts.injective.network/readme/assets#token-metadata).
+Learn how to get [denom metadata](../../developers/assets/token-metadata.md).

@@ -122,7 +122,7 @@ import {
 } from "@injectivelabs/sdk-ts";
 import { BigNumberInBase, BigNumberInWei } from "@injectivelabs/utils";
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
-// refer to https://docs.ts.injective.network/readme/assets/injective-list
+// refer to https://github.com/InjectiveLabs/injective-lists
 import { tokens } from '../data/tokens.json'
 
 const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[])
@@ -198,7 +198,7 @@ import {
 } from "@injectivelabs/sdk-ts";
 import { BigNumberInBase } from "@injectivelabs/utils";
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
-// refer to https://docs.ts.injective.network/readme/assets/injective-list
+// refer to https://github.com/InjectiveLabs/injective-lists
 import { tokens } from '../data/tokens.json'
 
 const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[])
@@ -269,7 +269,7 @@ import {
 } from "@injectivelabs/sdk-ts";
 import { BigNumberInBase } from "@injectivelabs/utils";
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
-// refer to https://docs.ts.injective.network/readme/assets/injective-list
+// refer to https://github.com/InjectiveLabs/injective-lists
 import { tokens } from '../data/tokens.json'
 
 const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[])

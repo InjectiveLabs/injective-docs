@@ -1,7 +1,7 @@
 # Creating UIs
 
 {% hint style="info" %}
-More comprehensive docs about creating UIs as well as bootstrapping options can be found on the [TypeScript docs](https://docs.ts.injective.network/building-dapps/dapps-examples). &#x20;
+More comprehensive docs about creating UIs as well as bootstrapping options can be found on the [dApps docs](../developers/dapps/README.md).
 {% endhint %}
 
 We've interacted with our contract through the Injective CLI, but this is not ideal for most dApp users. A web UI can provide a much better experience! Rather than sending transaction messages through `injectived`, we can abstract away the complexity and provide the user with two buttons—one to increment the count, and one to reset the count.

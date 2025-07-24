@@ -30,7 +30,7 @@ Similar to above, you can utilize [DojoSwap's Market Creation module](https://do
 
 #### Using TypeScript
 
-You can learn more about Launching a token on the [TypeScript Documentation](https://docs.ts.injective.network/readme/assets/creating-tokens).
+Learn more about [launching a token](../developers/assets/token-create.md).
 
 #### Using Injective CLI
 

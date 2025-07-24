@@ -147,7 +147,7 @@
   * [Launch a Market](developers-defi/market-launch.md)
   * [Denom Metadata](developers-defi/denom-and-bank.md)
   * [Provider Oracle](developers-defi/provider-oracle.md)
-  * [Build a DEX](https://docs.ts.injective.network/building-dapps/dapps-examples/dex)
+  * [Build a DEX](developers/dapps/example-dex.md)
   * [Exchange API Reference](https://api.injective.exchange/)
 * [Native Developers](developers-native/README.md)
   * [Wallets](developers-native/wallets/README.md)

@@ -22,4 +22,4 @@ To convert back to a human-readable format:
 
 $$\text{humanReadableFormat} = \text{value} \times 10^{-\text{baseDecimals}}$$
 
-Also, be sure to check out our [typescript docs](https://docs.ts.injective.network/calculations/min-quantity-tick-size).
+Also, be sure to check out our [concepts](../developers/concepts/calculation-min-price-tick-size.md).

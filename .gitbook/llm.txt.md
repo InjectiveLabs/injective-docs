@@ -63,7 +63,7 @@ Injective is a high-performance, interoperable layer-one blockchain for building
 
 ### SDKs
 
-* [Injective TS SDK](https://docs.ts.injective.network/): TypeScript SDK for building applications on Injective.
+* [Injective TS SDK](https://github.com/InjectiveLabs/injective-ts): TypeScript SDK for building applications on Injective.
 * [Injective Go SDK](https://github.com/InjectiveLabs/sdk-go/): Go SDK for developers working with Injective.
 * [Injective Python SDK](https://github.com/InjectiveLabs/sdk-python): Python SDK for integrating with the Injective blockchain.
 * [Injective CW SDK](https://github.com/InjectiveLabs/cw-injective): CosmWasm SDK for smart contract development on Injective.
@@ -87,7 +87,7 @@ Injective is a high-performance, interoperable layer-one blockchain for building
 ### Developer Resources
 
 * [Exchange Developers](https://docs.injective.network/developers/exchange-developers): Resources for developers building exchanges on Injective.
-* [Build a DEX](https://docs.ts.injective.network/building-dapps/dapps-examples/dex): Guide for creating a decentralized exchange on the Injective platform.
+* [Build a DEX](developers/dapps/example-dex.md): Guide for creating a decentralized exchange on the Injective platform.
 * [Provider Oracle](https://docs.injective.network/developers/exchange-developers/provider-oracle): Information on using oracles within Injective.
 * [Cosmwasm Developers](https://docs.injective.network/developers/cosmwasm-developers): Resources for developers working with CosmWasm on Injective.
 * [Your First Smart Contract](https://docs.injective.network/developers/cosmwasm-developers/your-first-smart-contract): A tutorial for creating your first smart contract on Injective.
