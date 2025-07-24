@@ -2,22 +2,22 @@
 
 A `denom` is how tokens are represented within the `Bank` module of Injective. These assets can be used for trading, creating new markets on the exchange module, participating in auctions, transferring to another address, etc.
 
-One of the biggest pain points for developers and traders is getting the metadata of these `denoms`. This metadata includes `decimals`, `symbol`, `name`, etc.&#x20;
+One of the biggest pain points for developers and traders is getting the metadata of these `denoms`. This metadata includes `decimals`, `symbol`, `name`, etc.
 
-This guide shows how to fetch `denom` metadata directly from the `injective-lists` repository and map it to your `denom`. You can also use this approach to map `denoms`'s metadata for Spot and Derivative Markets.&#x20;
+This guide shows how to fetch `denom` metadata directly from the `injective-lists` repository and map it to your `denom`. You can also use this approach to map `denoms`'s metadata for Spot and Derivative Markets.
 
 ## Injective Lists
 
 `injective-lists` is a public repository that holds metadata information for all tokens on Injective. It's the most up-to-date and reliable source of this particular information. You can submit your token information by creating a PR for this repo. Be sure to correctly specify the fields. In particular,  `"denom"` field (read about [token standards](../defi/tokens/README.md)) should have respective `ibc`, `peggy` and `factory` prefixes depending on the token standard.
 
-The metadata is fetched automatically for new `denoms` on chain every 30 minutes and the `json` files are regenerated.&#x20;
+The metadata is fetched automatically for new `denoms` on chain every 30 minutes and the `json` files are regenerated.
 
 You can head to the [https://github.com/InjectiveLabs/injective-lists/tree/master/json/tokens](https://github.com/InjectiveLabs/injective-lists/tree/master/json/tokens) folder and download the metadata based on the environment:
 
 1. [Mainnet Raw JSON](https://raw.githubusercontent.com/InjectiveLabs/injective-lists/refs/heads/master/json/tokens/mainnet.json)
 2. [Testnet Raw JSON](https://github.com/InjectiveLabs/injective-lists/blob/master/json/tokens/testnet.json)
 
-Once you have the JSON, you have to map the metadata with the particular `denom`.&#x20;
+Once you have the JSON, you have to map the metadata with the particular `denom`.
 
 The interface that this metadata information has is
 

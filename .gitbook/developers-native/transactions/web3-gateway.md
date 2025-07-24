@@ -41,11 +41,11 @@ The `BroadcastTx` method is responsible for broadcasting the transaction to the 
 
 ## Prepare/BroadcastCosmosTx
 
-The above methods are used when we use **Ethereum Native wallets** to sign and broadcast transactions as we sign an EIP712 transaction representation.&#x20;
+The above methods are used when we use **Ethereum Native wallets** to sign and broadcast transactions as we sign an EIP712 transaction representation.
 
-If we want support fee delegation on Cosmos native wallets using the Web3Gateway, we can omit the PrepareCosmosTx call (or call it if we need the Web3Gateway signer's `publicKey`), prepare the transaction on the client side, sign it using a Cosmos wallet, and broadcast it using the `BroadcastCosmosTx` method.&#x20;
+If we want support fee delegation on Cosmos native wallets using the Web3Gateway, we can omit the PrepareCosmosTx call (or call it if we need the Web3Gateway signer's `publicKey`), prepare the transaction on the client side, sign it using a Cosmos wallet, and broadcast it using the `BroadcastCosmosTx` method.
 
-The way this works is we add the `publicKey` of the `Web3Gateway`'s signer to the `authInfo` object in the `TxRaw` and then sign the transaction using the `privateKey` on the API side when we broadcast&#x20;
+The way this works is we add the `publicKey` of the `Web3Gateway`'s signer to the `authInfo` object in the `TxRaw` and then sign the transaction using the `privateKey` on the API side when we broadcast
 
 {% hint style="info" %}
 The difference with the previous EIP712 approach is that we need to sign the transaction using the `Web3Gateway`'s signer in advance i.e when we generate the EIP712 -> meaning that we need to use `PrepareTx` and can't generate the transaction on the client side.).

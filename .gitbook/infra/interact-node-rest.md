@@ -37,6 +37,6 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 ## Sending Transactions
 
-Sending transactions using gRPC and REST requires some additional steps: generating the transaction, signing it, and finally broadcasting it.&#x20;
+Sending transactions using gRPC and REST requires some additional steps: generating the transaction, signing it, and finally broadcasting it.
 
-You can learn more in [transactions](../defi/transactions.md "mention").&#x20;
+You can learn more in [transactions](../defi/transactions.md "mention").

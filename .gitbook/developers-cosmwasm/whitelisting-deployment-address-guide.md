@@ -1,6 +1,6 @@
 # Whitelisting deployment address
 
-Contract upload on Injective mainnet requires governance approval. You can read through the guide to do so in the [mainnet-deployment.md](./mainnet-deployment-guide.md "mention") guide.&#x20;
+Contract upload on Injective mainnet requires governance approval. You can read through the guide to do so in the [mainnet-deployment.md](./mainnet-deployment-guide.md "mention") guide.
 
 This structure has been put in place for multiple reasons:
 

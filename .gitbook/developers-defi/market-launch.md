@@ -4,9 +4,9 @@
 The prerequisite for launching a market is to [launch-a-token.md](./token-launch.md "mention")
 {% endhint %}
 
-Launching a trading pair on Injective is quick, easy, and best of all, permissionless!&#x20;
+Launching a trading pair on Injective is quick, easy, and best of all, permissionless!
 
-The following tutorial assumes the pair is listed with an ERC-20 token bridged from Ethereum as the base asset, paired with INJ as the quote asset.&#x20;
+The following tutorial assumes the pair is listed with an ERC-20 token bridged from Ethereum as the base asset, paired with INJ as the quote asset.
 
 For an Injective-native token, skip the bridging portion and head straight to step 6.
 

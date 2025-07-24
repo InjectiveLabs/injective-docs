@@ -49,9 +49,9 @@ const prepareCosmosTxResponse = await indexerGrpcTransactionApi.prepareCosmosTxR
 console.log(prepareCosmosTxResponse)
 ```
 
-### Fetch response for broadcasting transactions using the Web3Gateway&#x20;
+### Fetch response for broadcasting transactions using the Web3Gateway
 
-Use `MsgBroadcasterWithPk` to broadcast transactions within a node/CLI environment, which can be found in `@injectivelabs/sdk-ts`.&#x20;
+Use `MsgBroadcasterWithPk` to broadcast transactions within a node/CLI environment, which can be found in `@injectivelabs/sdk-ts`.
 
 Use `@injectivelabs/wallet-core`'s `MsgBroadcaster` class for more details on broadcasting a transactions in a browser environment.
 
@@ -103,7 +103,7 @@ const broadcastTxResponse = await indexerGrpcTransactionApi.broadcastTxRequest({
 console.log(broadcastTxResponse)
 ```
 
-### Fetch response for broadcasting a cosmos transactions.&#x20;
+### Fetch response for broadcasting a cosmos transactions.
 
 ```ts
 import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts'
