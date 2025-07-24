@@ -16,7 +16,7 @@ You can also create a new token on Injective using the `TokenFactory` module. Th
 
 ### Using Injective Hub <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
 
-The [Injective Hub](https://hub.injective.network/token-factory/) web app provides you the ability to create and manage tokens seamlessly, creating a market on Injective's [native orderbook](../developers-native/injective/exchange), etc.
+The [Injective Hub](https://injhub.com/token-factory/) web app provides you the ability to create and manage tokens seamlessly, creating a market on Injective's [native orderbook](../developers-native/injective/exchange), etc.
 
 ### Using TokenStation[​](../developers-defi/token-launch.md) <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
 

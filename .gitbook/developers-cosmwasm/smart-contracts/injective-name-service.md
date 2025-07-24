@@ -4,7 +4,7 @@ Within this section, we will look at how to query the Injective name service con
 
 ## Abstraction Service (deprecated)
 
-~~You can use our `InjNameService`~~ [~~abstraction~~](../../../deprecated/sdk-ui-ts/src/service/injNameService.ts) ~~to query the smart contracts with a single method call. Below this example, you can also find the raw implementation on how to query the smart contracts in case you need more flexibility.~~
+~~You can use our `InjNameService` abstraction to query the smart contracts with a single method call. Below this example, you can also find the raw implementation on how to query the smart contracts in case you need more flexibility.~~
 
 <pre class="language-typescript"><code class="lang-typescript">import { getNetworkEndpoints, Network } from '@injectivelabs/network'
 import { InjNameService } from '@injectivelabs/sdk-ui-ts'
