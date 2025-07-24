@@ -19,8 +19,6 @@ Developer tools and resources to get you building on Injective
 | [Injective REST API](https://lcd.injective.network/swagger/)                                  | Swagger API explorer                                                                                                        |
 | [Injective TypeScript SDK](https://docs.ts.injective.network)                                 | Build dApps on Injectuve using TypeScript                                                                                   |
 | [Injective API Reference](https://api.injective.exchange)                                     | Detailed API documentation for interacting with Injective for traders                                                       |
-| [Real-time Status (Mainnet)](https://status.injective.network/)                               | Real-time status of the endpoints and of the Injective network                                                              |
-| [Real-time Status (Testnet)](https://testnet.status.injective.network)                        | Real-time status of the endpoints and of the Injective testnet network                                                      |
 | [Cosmovisor](./infra/cosmovisor.md)                                                 | Small process manager around Cosmos SDK binaries that monitors the governance module                                        |
 | [CosmosSDK](https://docs.cosmos.network/main/build)                                          | The Cosmos SDK documentation serving as a valuable resource for developers integrating with the Injective ecosystem         |
 
