@@ -509,12 +509,12 @@ txhash: 912458AA8E0D50A479C8CF0DD26196C49A65FCFBEEB67DF8A2EA22317B130E2C
 
 Check your address on the [Injective Testnet Explorer](https://testnet.explorer.injective.network), and look for a transaction with the `txhash` returned from storing the code on chain. The transaction type should be `MsgStoreCode`.
 
-You can see all stored codes on Injective Testnet under [Code](https://testnet.explorer.injective.network/codes/).
+You can see all stored codes on Injective Testnet under [Code](https://testnet.explorer.injective.network/smart-contracts/code/).
 
 {% hint style="info" %}
 There are different ways to find the code that you just stored:
 
-* Look for the TxHash on the Injective Explorer [codes list](https://testnet.explorer.injective.network/codes/); it is most likely the most recent.
+* Look for the TxHash on the Injective Explorer [codes list](https://testnet.explorer.injective.network/smart-contracts/code/); it is most likely the most recent.
 * Use `injectived` to query transaction info.&#x20;
 {% endhint %}
 
