@@ -6,7 +6,7 @@ description: Understanding EVM equivalence on Injective
 
 ## Injective EVM vs. Ethereum Mainnet
 
-Injective's native EVM us a fully embedded execution environment that has been integrated into the core architecture of the chain. It is designed to be a 1:1 equivalent to Ethereum in terms of development experience.&#x20;
+Injective's native EVM us a fully embedded execution environment that has been integrated into the core architecture of the chain. It is designed to be a 1:1 equivalent to Ethereum in terms of development experience.
 
 Native EVM on Injective supports the latest version of `geth`, ensuring that developers have access to the latest features, tooling, security patches, and improvements. In addition, Injective’s EVM enhances performance and expands capabilities, granting access to Injective's sophisticated financial infrastructure that extends beyond what’s available on Ethereum.
 
@@ -25,7 +25,7 @@ Native EVM on Injective supports the latest version of `geth`, ensuring that dev
 1. [Ethereum Gas Price Source](https://etherscan.io/chart/gasprice) ↩︎
 2. [Polygon Gas Price Source](https://polygonscan.com/chart/gasprice) ↩︎
 3. [Optimism Gas Price Source](https://optimistic.etherscan.io/chart/gasprice) ↩︎
-4. [Avalanche Gas Price Source](https://snowtrace.io/gastracker) ↩︎
+4. [Avalanche Gas Price Source](https://snowtrace.io/insight/leaderboard/gas-tracker) ↩︎
 5. [BnB Smart Chain Gas Price Source](https://bscscan.com/chart/gasprice) ↩︎
 6. [Sei Gas Prices Config](https://github.com/sei-protocol/chain-registry/blob/main/gas.json) ↩︎
 7. [Injective Launches Gas Compression](https://blog.injective.com/en/injective-unveils-fee-reductions-with-gas-compression/) ↩︎
@@ -34,6 +34,3 @@ Native EVM on Injective supports the latest version of `geth`, ensuring that dev
 
 Coming soon.
 
-
-
-<table data-card-size="large" data-view="cards" data-full-width="false"><thead><tr><th></th><th data-type="content-ref"></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td>← Previous</td><td><a href="broken-reference">Broken link</a></td><td><a href="broken-reference">Broken link</a></td></tr><tr><td>Next → </td><td><a href="broken-reference">Broken link</a></td><td><a href="broken-reference">Broken link</a></td></tr></tbody></table>

@@ -13,7 +13,7 @@ you should check out the guides in [your first EVM dApp](../../developers-evm/da
 
 ### Create Injective dApp CLI tool
 
-The simplest way to start your journey on Injective is using our CLI tool. To do this, simply write this command and follow the instructions in your terminal!&#x20;
+The simplest way to start your journey on Injective is using our CLI tool. To do this, simply write this command and follow the instructions in your terminal!
 
 ```bash
 $ npx @injectivelabs/create-injective-app

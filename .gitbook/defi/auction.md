@@ -14,7 +14,7 @@ The Burn Auction is made possible by two modules that are native to Injective, `
 
 INJ 2.0, released in 2023, made it possible for any application to contribute to the Auction Fund, not just those using the exchange module. Injective’s April 2024 INJ Burn Upgrade expanded access to this feature, allowing for individual users to make contributions. As a result, any project or user can directly contribute to the Injective Burn Auction, which in turn can boost the overall value and effectiveness of the Burn Auction.
 
-The Burn Auction occurs weekly, ending at 9:00 UTC-4:00. Participation can be conducted via the Injective Hub or direct interaction with the chain itself. The [Injective Hub](https://hub.injective.network/auction) and [Injective Explorer](https://explorer.injective.network/) provide real-time tracking of the total INJ burned via the Burn Auction to date.
+The Burn Auction occurs weekly, ending at 9:00 UTC-4:00. Participation can be conducted via the Injective Hub or direct interaction with the chain itself. The [Injective Hub](https://injhub.com/auction) and [Injective Explorer](https://explorer.injective.network/) provide real-time tracking of the total INJ burned via the Burn Auction to date.
 
 ### Exchange Module
 

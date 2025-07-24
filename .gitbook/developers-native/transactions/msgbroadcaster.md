@@ -6,7 +6,7 @@ An example of usage can be found on our [Helix demo repo](https://github.com/Inj
 
 ## MsgBroadcaster + Wallet Strategy
 
-This MsgBroadcaster is used alongside the Wallet Strategy class for building decentralized applications.&#x20;
+This MsgBroadcaster is used alongside the Wallet Strategy class for building decentralized applications.
 
 To instantiate (and use) the `MsgBroadcaster` class, you can use the following code snippet
 

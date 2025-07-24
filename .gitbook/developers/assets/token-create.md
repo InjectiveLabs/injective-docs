@@ -11,9 +11,9 @@ A single account can create multiple denoms, by providing a unique subdenom for 
 * Set their token metadata on chain
 
 {% hint style="info" %}
-One special use case for the factory denoms is the `CW20_ADAPTER`. Using this adapter, assets represented as CW20 can be converted to a bank denom which then can be used to launch a market, send easily on chain, etc.&#x20;
+One special use case for the factory denoms is the `CW20_ADAPTER`. Using this adapter, assets represented as CW20 can be converted to a bank denom which then can be used to launch a market, send easily on chain, etc.
 
-The denom for a CW20 asset is always in the `factory/{CW20_ADAPTER_CONTRACT_ADDRESS}/{CW20_ASSET_ADDRESS}` where `CW20_ADAPTER_CONTRACT_ADDRESS=inj14ejqjyq8um4p3xfqj74yld5waqljf88f9eneuk` for mainnet.&#x20;
+The denom for a CW20 asset is always in the `factory/{CW20_ADAPTER_CONTRACT_ADDRESS}/{CW20_ASSET_ADDRESS}` where `CW20_ADAPTER_CONTRACT_ADDRESS=inj14ejqjyq8um4p3xfqj74yld5waqljf88f9eneuk` for mainnet.
 {% endhint %}
 
 To start creating your denoms, head to our [TokenFactory Core Module page](../../developers-native/examples/token-factory.md)to see examples.

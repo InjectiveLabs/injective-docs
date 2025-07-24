@@ -1,6 +1,6 @@
 # Local Development
 
-This guide will get you started deploying `cw20` smart contracts on a local Injective network running on your computer.&#x20;
+This guide will get you started deploying `cw20` smart contracts on a local Injective network running on your computer.
 
 We'll use the `cw20-base` contract from [CosmWasm's collection of specifications and contracts](https://github.com/CosmWasm/cw-plus) designed for production use on real networks. `cw20-base` is a basic implementation of a `cw20` compatible contract that can be imported in any custom contract you want to build on. It contains a straightforward but complete implementation of the cw20 spec along with all extensions. `cw20-base` can be deployed as-is or imported by other contracts.
 
@@ -29,7 +29,7 @@ cargo install cargo-generate
 
 ### injectived
 
-Make sure you have `injectived` installed locally. You can follow the [install-injectived.md](../developers/injectived/install.md "mention")guide to get `injectived` and other prerequisites running locally.&#x20;
+Make sure you have `injectived` installed locally. You can follow the [install-injectived.md](../developers/injectived/install.md "mention")guide to get `injectived` and other prerequisites running locally.
 
 Once you have `injectived` installed, you should also [start a local chain instance.](..//developers/injectived/install.md#start-injectived)
 
@@ -449,9 +449,9 @@ injectived query wasm contract-state smart $CONTRACT "$BALANCE_QUERY" --output j
 Here are the main differences between a `local` and `testnet` development/deployment
 
 * You can use our [Injective Testnet Faucet](https://testnet.faucet.injective.network) to get testnet funds to your address,
-* You can use the [Injective Testnet Explorer](https://testnet.explorer.injective.network/codes/) to query your transactions and get more details,&#x20;
+* You can use the [Injective Testnet Explorer](https://testnet.explorer.injective.network/smart-contracts/code/) to query your transactions and get more details,
 * When you are using `injectived` you have to specify the `testnet` rpc using the `node` flag `--node=https://testnet.sentry.tm.injective.network:443`
 * Instead of using `injective-1` as a `chainId` you should use `injective-888` i.e the `chain-id` flag should now be `--chain-id="injective-888"`
-* You can use the [Injective Testnet Explorer](https://testnet.explorer.injective.network/codes/) to find information about the `codeId` of the uploaded smart contracts OR find your instantiated smart contract
+* You can use the [Injective Testnet Explorer](https://testnet.explorer.injective.network/smart-contracts/code/) to find information about the `codeId` of the uploaded smart contracts OR find your instantiated smart contract
 
 You can read more on the `injectived` and how to use it to query/send transactions against `testnet` [using-injectived.md](../developers/injectived/use.md "mention").

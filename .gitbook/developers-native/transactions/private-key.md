@@ -1,6 +1,6 @@
 # Private Key Transaction
 
-In this document, we are going to show you how to use a PrivateKey to sign transactions on Injective.&#x20;
+In this document, we are going to show you how to use a PrivateKey to sign transactions on Injective.
 
 Every transaction on Injective follows the same flow. The flow consists of three steps: preparing, signing and broadcasting the transaction. Let's dive into each step separately and explain the process in-depth (including examples) so we can understand the whole transaction flow.
 
@@ -222,9 +222,9 @@ import { BigNumberInBase, DEFAULT_STD_FEE } from '@injectivelabs/utils'
 
 ## Example with MsgBroadcasterWithPk
 
-You can use the `MsgBroadcasterWithPk` class from the `@injectivelabs/sdk-ts` package which abstracts away most of the logic written above into a single class.&#x20;
+You can use the `MsgBroadcasterWithPk` class from the `@injectivelabs/sdk-ts` package which abstracts away most of the logic written above into a single class.
 
-**This abstraction allows you to sign transactions in a Node/CLI environment.**&#x20;
+**This abstraction allows you to sign transactions in a Node/CLI environment.**
 
 ```ts
 import { MsgSend, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'

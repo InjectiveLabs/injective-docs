@@ -23,4 +23,4 @@ console.log(token)
 
 There are few edge cases that we have to consider while using the `TokenFactory`:
 
-- If you are trying to query token metadata for a denom that doesn't exist in the [list of tokens](https://github.com/InjectiveLabs/injective-ts/blob/master/deprecated/token-metadata/src/tokens/tokens/tokens.ts) the `TokenFactory` will return undefined. If so, you should follow our [CONTRIBUTION guide](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) to add the token metadata information in the package.
+- If you are trying to query token metadata for a denom that doesn't exist in the [list of tokens](https://github.com/InjectiveLabs/injective-lists) the `TokenFactory` will return undefined. If so, you should follow our [CONTRIBUTION guide](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) to add the token metadata information in the package.

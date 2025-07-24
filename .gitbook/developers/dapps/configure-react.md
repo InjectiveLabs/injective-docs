@@ -27,7 +27,7 @@ These are the most commonly used packages from the `injective-ts` monorepo.
 
 ### 3. Configuring Vite and adding polyfills
 
-First, add the needed polyfill packages and buffer&#x20;
+First, add the needed polyfill packages and buffer
 
 {% hint style="info" %}
 One of the main dependencies for any crypto-related decentralized application is `Buffer`. To make sure we add `Buffer` To our project, we can install it as a dependency and then make a import it to the global/window object.
