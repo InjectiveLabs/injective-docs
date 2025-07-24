@@ -76,7 +76,7 @@ console.log(txHash)
 
 ### MsgBurn
 
-The admin can burn the supply of the token factory. Everyone else can use this message to burn their funds only.&#x20;
+The admin can burn the supply of the token factory. Everyone else can use this message to burn their funds only.
 
 ```ts
 import { MsgBurn } from '@injectivelabs/sdk-ts'

@@ -4,9 +4,9 @@ Example code snippets to query the indexer for subaccount related data.
 
 ## Using gRPC
 
-### Fetch user's portfolio details&#x20;
+### Fetch user's portfolio details
 
-This includes available balance, unrealized Pnl, and portfolio value. Note: **deprecated** -> use [Portfolio](querying-indexer-portfolio.md#using-grpc) instead
+This includes available balance, unrealized Pnl, and portfolio value. Note: **deprecated** -> use [Portfolio](../query-indexer/portfolio.md#using-grpc) instead
 
 ```ts
 import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'

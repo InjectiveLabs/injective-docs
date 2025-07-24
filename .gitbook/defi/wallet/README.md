@@ -6,7 +6,7 @@ There are a variety of different wallets that are supported on Injective. Users 
 
 ### Overview
 
-Injective's `Account` type uses Ethereum's ECDSA secp256k1 curve for keys. Simply put, Injective's Account is native (compatible) with Ethereum accounts, allowing Ethereum-native wallets, such as MetaMask, to interact with Injective. Popular Cosmos wallets like Keplr and Leap have also integrated with Injective.&#x20;
+Injective's `Account` type uses Ethereum's ECDSA secp256k1 curve for keys. Simply put, Injective's Account is native (compatible) with Ethereum accounts, allowing Ethereum-native wallets, such as MetaMask, to interact with Injective. Popular Cosmos wallets like Keplr and Leap have also integrated with Injective.
 
 #### Ethereum-Based Wallets
 

@@ -28,5 +28,5 @@ If a proposal passes, Injective contributors will begin to work together to put 
 
 * For more details on the governance proposal process, read Injective's [blog](https://blog.injective.com/en/injective-governance-proposal-procedure/).
 * To participate in blockchain governance, join the [Injective Discord](https://discord.com/invite/NK4qdbv) or the [Injective Governance Forum](https://gov.injective.network).
-* Visit the [Injective Hub](https://hub.injective.network/governance) to view Injective proposals and participate in voting.
+* Visit the [Injective Hub](https://injhub.com/governance) to view Injective proposals and participate in voting.
 

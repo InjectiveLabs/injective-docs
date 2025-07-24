@@ -5,7 +5,7 @@ This section describes the commands available from `injectived`, the command lin
 {% hint style="info" %}
 Several `injectived` commands require subcommands, arguments, or flags to operate. To view this information, run the `injectived` command with the `--help` or `-h` flag. See `query` or `tx` for usage examples of the help flag.
 
-For the `chain-id` argument, `injective-1` should be used for mainnet, and `injective-888` should be used for testnet.&#x20;
+For the `chain-id` argument, `injective-1` should be used for mainnet, and `injective-888` should be used for testnet.
 {% endhint %}
 
 ### `add-genesis-account`

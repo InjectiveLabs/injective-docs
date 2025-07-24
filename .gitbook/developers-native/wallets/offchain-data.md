@@ -1,9 +1,9 @@
 # Offchain (Arbitrary) Data
 
-On this page, we'll provide an example of how to sign and verify arbitrary data as per the [ADR-036](https://docs.cosmos.network/main/build/architecture/adr-036-arbitrary-signature) specification on Cosmos.&#x20;
+On this page, we'll provide an example of how to sign and verify arbitrary data as per the [ADR-036](https://docs.cosmos.network/main/build/architecture/adr-036-arbitrary-signature) specification on Cosmos.
 
 {% hint style="info" %}
-You can use the `generateArbitrarySignDoc` function from `@injectivelabs/sdk-ts` to generate ADR-36 compatible `signDoc`. You can then use it to sign/verify using a browser wallet or in a CLI environment. Make sure you are using the latest package versions.&#x20;
+You can use the `generateArbitrarySignDoc` function from `@injectivelabs/sdk-ts` to generate ADR-36 compatible `signDoc`. You can then use it to sign/verify using a browser wallet or in a CLI environment. Make sure you are using the latest package versions.
 {% endhint %}
 
 #### Sign and verify using a browser wallet like Keplr

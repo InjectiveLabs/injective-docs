@@ -21,7 +21,7 @@ We **do not recommend** using these in production for applications having high u
 | Indexer gRPC     | sentry.exchange.grpc.injective.network:443                 |
 | Indexer gRPC-Web | https://sentry.exchange.grpc-web.injective.network:443     |
 | Indexer EventProvider | k8s.global.mainnet.events.grpc.injective.network:443     |
-| Hub              | https://hub.injective.network/                                |
+| Hub              | https://injhub.com/                                |
 | Explorer         | https://explorer.injective.network/                           |
 | Faucet           | https://inj.supply/                                           |
 

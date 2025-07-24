@@ -96,9 +96,9 @@ const type = '/injective.crypto.v1beta1.ethsecp256k1.PubKey'
 
 #### Convert Cosmos address to Injective Address
 
-As Injective has a different derivation path than the default Cosmos one, you need the `publicKey` of the account to convert a Cosmos `publicAddress` to Injective one.&#x20;
+As Injective has a different derivation path than the default Cosmos one, you need the `publicKey` of the account to convert a Cosmos `publicAddress` to Injective one.
 
-Here is an example of how to do it&#x20;
+Here is an example of how to do it
 
 ```typescript
 import { config } from "dotenv";

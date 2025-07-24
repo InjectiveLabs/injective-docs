@@ -588,7 +588,7 @@ Note:
 
 How to find the subaccountId that you will be transferring from:
 
-* you can query your existing subaccountIds via the [account portfolio api](../querying/querying-api/querying-indexer-portfolio.md).
+* you can query your existing subaccountIds via the [account portfolio api](../query-indexer/portfolio.md).
 
 How to use funds that are currently associated with your Injective Address in bank module:
 

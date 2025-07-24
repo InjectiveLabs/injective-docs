@@ -50,7 +50,7 @@ To proceed with the next step, you will need to obtain some real INJ on Mainnet 
 
 ### Step 3: "Transfer" INJ to your validator account on Injective
 
-Deposit your Mainnet INJ tokens into your validator's account on Injective by using the staking dashboard. You will have to [connect your wallet](https://medium.com/injective-labs/injective-hub-guide-9a14f09f6a7d) on our [Hub](https://hub.injective.network/bridge) and then deposit INJ from Ethereum Mainnet network. This will trigger an automated bridge that maps tokens from Ethereum network to Injective.
+Deposit your Mainnet INJ tokens into your validator's account on Injective by using the staking dashboard. You will have to [connect your wallet](https://medium.com/injective-labs/injective-hub-guide-9a14f09f6a7d) on our [Hub](https://injhub.com/bridge) and then deposit INJ from Ethereum Mainnet network. This will trigger an automated bridge that maps tokens from Ethereum network to Injective.
 
 After a few minutes, you should be able to verify that your deposit was successful on the UI. Alternatively, you can query your account balance using the `injectived` CLI with the following command:
 

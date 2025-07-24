@@ -1,6 +1,6 @@
 # Your First CosmWasm Smart Contract
 
-Within this section, we'll explain how to setup your environment for CosmWasm Smart Contracts Development.&#x20;
+Within this section, we'll explain how to setup your environment for CosmWasm Smart Contracts Development.
 
 ## Prerequisites
 
@@ -380,7 +380,7 @@ docker run --rm -v "$(pwd)":/code \
 ```
 
 {% hint style="info" %}
-CosmWasm does not recommend using the ARM64 version of the compiler because it produces different Wasm artifacts from the Intel/AMD version. For release/production, only contracts built with Intel/AMD optimizers are recommended for use. See [here](https://github.com/CosmWasm/rust-optimizer#notice) for the note from CosmWasm.&#x20;
+CosmWasm does not recommend using the ARM64 version of the compiler because it produces different Wasm artifacts from the Intel/AMD version. For release/production, only contracts built with Intel/AMD optimizers are recommended for use. See [here](https://github.com/CosmWasm/rust-optimizer#notice) for the note from CosmWasm.
 {% endhint %}
 
 {% hint style="warning" %}
@@ -391,7 +391,7 @@ You may receive an `` Unable to update registry `crates-io` `` error while runni
 git-fetch-with-cli = true
 ```
 
-See [The Cargo Book](https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli) for more information.&#x20;
+See [The Cargo Book](https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli) for more information.
 {% endhint %}
 
 This produces an `artifacts` directory with a `PROJECT_NAME.wasm`, as well as `checksums.txt`, containing the Sha256 hash of the Wasm file. The Wasm file is compiled deterministically (anyone else running the same docker on the same git commit should get the identical file with the same Sha256 hash).
@@ -466,7 +466,7 @@ export INJ_ADDRESS= <your inj address>
 You can request testnet funds for your recently generated test address using the [Injective test faucet](https://faucet.injective.network/).
 {% endhint %}
 
-Now you have successfully created `testuser` an Injective Testnet. It should also hold some funds after requesting `testnet` funds from the faucet.&#x20;
+Now you have successfully created `testuser` an Injective Testnet. It should also hold some funds after requesting `testnet` funds from the faucet.
 
 To confirm, search for your address on the [Injective Testnet Explorer](https://testnet.explorer.injective.network/) to check your balance.
 
@@ -509,13 +509,13 @@ txhash: 912458AA8E0D50A479C8CF0DD26196C49A65FCFBEEB67DF8A2EA22317B130E2C
 
 Check your address on the [Injective Testnet Explorer](https://testnet.explorer.injective.network), and look for a transaction with the `txhash` returned from storing the code on chain. The transaction type should be `MsgStoreCode`.
 
-You can see all stored codes on Injective Testnet under [Code](https://testnet.explorer.injective.network/codes/).
+You can see all stored codes on Injective Testnet under [Code](https://testnet.explorer.injective.network/smart-contracts/code/).
 
 {% hint style="info" %}
 There are different ways to find the code that you just stored:
 
-* Look for the TxHash on the Injective Explorer [codes list](https://testnet.explorer.injective.network/codes/); it is most likely the most recent.
-* Use `injectived` to query transaction info.&#x20;
+* Look for the TxHash on the Injective Explorer [codes list](https://testnet.explorer.injective.network/smart-contracts/code/); it is most likely the most recent.
+* Use `injectived` to query transaction info.
 {% endhint %}
 
 To query the transaction use the `txhash` and verify the contract was deployed.

@@ -1,14 +1,14 @@
 # Ledger through Keplr Wallet Transaction
 
-On this page, we are going to have a look at the implementation for Injective when your users are using a Ledger device through the Keplr wallet.&#x20;
+On this page, we are going to have a look at the implementation for Injective when your users are using a Ledger device through the Keplr wallet.
 
-As explained before, Injective uses a different derivation curve from the rest of the Cosmos chains which means that the users have to use the Ethereum app (for now) to interact with Injective.&#x20;
+As explained before, Injective uses a different derivation curve from the rest of the Cosmos chains which means that the users have to use the Ethereum app (for now) to interact with Injective.
 
-The easiest way all of the edge cases covered and a full out-of-the-box solution for all of the supported wallets on Injective I suggest you have a look at the [MsgBroadcaster + WalletStrategy ](./msgbroadcaster.md#msgbroadcaster-+-wallet-strategy)abstraction. If you want to do your own implementation, let's go through the code example together.&#x20;
+The easiest way all of the edge cases covered and a full out-of-the-box solution for all of the supported wallets on Injective I suggest you have a look at the [MsgBroadcaster + WalletStrategy ](./msgbroadcaster.md#msgbroadcaster-+-wallet-strategy)abstraction. If you want to do your own implementation, let's go through the code example together.
 
 ## Overview
 
-Keplr exposes a `experimentalSignEIP712CosmosTx_v0` method which can be utilized to sign EIP712 typed data (automatically generated on the Keplr side by passing a Cosmos StdSignDoc to the method above) and allow EVM-compatible chains to get proper signatures when we have Ledger devices connected through Keplr.&#x20;
+Keplr exposes a `experimentalSignEIP712CosmosTx_v0` method which can be utilized to sign EIP712 typed data (automatically generated on the Keplr side by passing a Cosmos StdSignDoc to the method above) and allow EVM-compatible chains to get proper signatures when we have Ledger devices connected through Keplr.
 
 Here is the function's signature:
 

@@ -41,7 +41,7 @@ console.log(txHash)
 
 ### MsgMultiSend
 
-This message is used to send to multiple recipients from multiple senders.&#x20;
+This message is used to send to multiple recipients from multiple senders.
 
 ```typescript
 import { MsgMultiSend, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'

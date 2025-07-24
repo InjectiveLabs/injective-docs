@@ -4,7 +4,7 @@ The [example](https://github.com/InjectiveLabs/injective-ts-webpack-example) is 
 
 ## Running the example
 
-Clone the project repo:&#x20;
+Clone the project repo:
 
 ```
 git clone https://github.com/InjectiveLabs/injective-ts-webpack-example.git

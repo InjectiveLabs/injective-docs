@@ -1,6 +1,6 @@
 # Testnet Proposals
 
-Let's say that you want to submit a proposal on `testnet`. Because there is a short period of voting time for the proposals, we recommend lowering the deposit on the proposal to not make the proposal go into voting stage directly. Basically, it should be slightly less than `min_deposit` value.&#x20;
+Let's say that you want to submit a proposal on `testnet`. Because there is a short period of voting time for the proposals, we recommend lowering the deposit on the proposal to not make the proposal go into voting stage directly. Basically, it should be slightly less than `min_deposit` value.
 
 Once you submit the proposal, you should reach out to the team:
 

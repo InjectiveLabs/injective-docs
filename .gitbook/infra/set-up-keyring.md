@@ -37,7 +37,7 @@ injectived --keyring-backend=file start
 ```
 
 {% hint style="info" %}
-The first time you add a key to an empty keyring, you will be prompted to type the password twice.&#x20;
+The first time you add a key to an empty keyring, you will be prompted to type the password twice.
 {% endhint %}
 
 #### The `pass` backend
@@ -77,7 +77,7 @@ The `memory` backend stores keys in memory. The keys are immediately deleted aft
 You can use `injectived keys` for help about the keys command and `injectived keys [command] --help` for more information about a particular subcommand.
 
 {% hint style="info" %}
-You can also enable auto-completion with the `injectived completion` command. For example, at the start of a bash session, run `. <(injectived completion)`, and all `injectived` subcommands will be auto-completed.&#x20;
+You can also enable auto-completion with the `injectived completion` command. For example, at the start of a bash session, run `. <(injectived completion)`, and all `injectived` subcommands will be auto-completed.
 {% endhint %}
 
 To create a new key in the keyring, run the `add` subcommand with a `<key_name>` argument. For the purpose of this tutorial, we will solely use the `test` backend, and call our new key `my_validator`. This key will be used in the next section.
