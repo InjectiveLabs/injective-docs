@@ -16,4 +16,4 @@ The goal of Injective's incentive mechanism is to allow exchanges competing amon
 
 An exchange can easily set up a client (such as a UI on web or mobile) and an API provider.
 
-Head to our TypeScript documentation to [bootstrap your DEX ](https://docs.ts.injective.network/building-dapps/dapps-examples/dex)with few clicks!
+Head to our [DEX tutorial](../developers/dapps/example-dex.md) bootstrap your with few clicks!

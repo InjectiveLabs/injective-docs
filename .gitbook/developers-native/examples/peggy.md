@@ -15,7 +15,7 @@ import { TokenPrice, MsgSendToEth, TokenStaticFactory, MsgBroadcasterWithPk } fr
 import { BigNumberInBase } from '@injectivelabs/utils'
 import { ChainId } from '@injectivelabs/ts-types'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-// refer to https://docs.ts.injective.network/readme/assets/injective-list
+// refer to https://github.com/InjectiveLabs/injective-lists
 import { tokens } from '../data/tokens.json'
 
 export const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[])

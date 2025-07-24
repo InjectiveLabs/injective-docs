@@ -3,7 +3,7 @@
 {% hint style="info" %}
 The following examples are in Go, but the Python and TS SDKs can also be used to programatically interact with a node/Injective.
 
-* [TypeScript Examples](https://docs.ts.injective.network/core-modules)
+* [TypeScript Examples](../developers-native/examples/README.md)
 * [Python Examples](https://github.com/InjectiveLabs/sdk-python/tree/master/examples)
 {% endhint %}
 
