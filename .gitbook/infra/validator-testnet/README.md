@@ -115,7 +115,13 @@ Extra `create-validator` options to consider:
 --website=         		The validator's (optional) website
 ```
 
-You can check that your validator was successfully created by checking the [staking dashboard](https://staking.injective.network/validators) or by entering the following CLI command.
+You can check that your validator was successfully created by checking the
+[staking dashboard](https://injhub.com/stake/),
+and scrolling down to the "Validators" section.
+It looks like this:
+![Inj Hub Staking Validators Section](../../.gitbook/assets/inj-hub-staking-validators-section.png)
+
+Alternatively, enter the following CLI command:
 
 ```bash
 injectived q staking validators
