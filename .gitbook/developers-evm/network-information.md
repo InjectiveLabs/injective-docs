@@ -7,16 +7,34 @@ description: Essential information about the Injective EVM network
 ## Injective EVM Testnet Details
 
 * Chain ID: `1439`
-* JSON-RPC Endpoint: `https://k8s.testnet.json-rpc.injective.network/`\
+* JSON-RPC Endpoint: `https://k8s.testnet.json-rpc.injective.network/`
 * WS Endpoint: `https://k8s.testnet.ws.injective.network/`
-* Faucet: [`https://testnet.faucet.injective.network/`](https://testnet.faucet.injective.network/)
-* Explorer: [`https://testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/)
-* Explorer (mirror by Blockscout): [`https://testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
+* Faucet: [`testnet.faucet.injective.network/`](https://testnet.faucet.injective.network/)
+* Explorer: [`testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/)
+* Explorer (mirror by Blockscout): [`testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
 * Explorer API: `https://testnet.blockscout-api.injective.network/api`
 
 {% hint style="info" %}
 Note that the Injective Chain ID is natively `injective-888`.
 However, EVM uses a numeric chain ID of `1439`.
+While these are different, they map to the **same** network.
+
+See [network information](../developers/network-information.md) for more details.
+{% endhint %}
+
+## Injective EVM Mainnet Details
+
+* Chain ID: `1776`
+* JSON-RPC Endpoint: `https://json-rpc.injective.network/`
+* WS Endpoint: `https://ws.injective.network/`
+* Faucet: N/A, to obtain Mainnet INJ see [`injective.com/getinj/`](https://injective.com/getinj/)
+* Explorer: [`blockscout.injective.network`](https://blockscout.injective.network/)
+* Explorer (mirror by Blockscout): [`injective.cloud.blockscout.com`](https://injective.cloud.blockscout.com)
+* Explorer API: `https://blockscout-api.injective.network`
+
+{% hint style="info" %}
+Note that the Injective Chain ID is natively `injective-1`.
+However, EVM uses a numeric chain ID of `1776`.
 While these are different, they map to the **same** network.
 
 See [network information](../developers/network-information.md) for more details.
