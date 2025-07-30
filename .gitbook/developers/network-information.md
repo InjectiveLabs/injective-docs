@@ -26,3 +26,11 @@ See [EVM network information](../developers-evm/network-information.md) for more
 
 * Chain ID: `injective-1`
 * Node: `https://sentry.tm.injective.network:443`
+
+{% hint style="info" %}
+Note that the Injective Chain ID for EVM is `1776`.
+However, it natively uses a chain ID of `injective-1`.
+While the chain IDs are different, they map to the **same** network.
+
+See [EVM network information](../developers-evm/network-information.md) for more details.
+{% endhint %}
