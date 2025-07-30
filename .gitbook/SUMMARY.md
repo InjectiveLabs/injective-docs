@@ -55,6 +55,7 @@
     * [v1.14.0](infra/validator-mainnet/canonical-chain-upgrade-1.14.0.md)
     * [v1.14.1](infra/validator-mainnet/canonical-chain-upgrade-1.14.1.md)
     * [v1.15.0](infra/validator-mainnet/canonical-chain-upgrade-1.15.0.md)
+    * [v1.16.0](infra/validator-mainnet/canonical-chain-upgrade-1.16.0.md)
   * [Testnet Validator](infra/validator-testnet/README.md)
     * [Peggo](infra/validator-testnet/peggo.md)
   * [Public Endpoints](infra/public-endpoints.md)
