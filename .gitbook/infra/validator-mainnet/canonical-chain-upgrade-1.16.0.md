@@ -11,13 +11,13 @@ Following [Proposal 541](https://injhub.com/proposal/541/) This indicates that t
 
 ## Summary
 
-The Injective Chain will undergo a scheduled enhancement upgrade on **Thursday, July 31st, 2025, 14:00 UTC**.
+The Injective Chain will undergo a scheduled enhancement upgrade on **Thursday, July 31st, 2025, 16:00 UTC**.
 
 The following is a short summary of the upgrade steps:
 
-1. Vote and wait till the node panics at block height **114590000**.
+1. Vote and wait till the node panics at block height **127250000**.
 2. Backing up configs, data, and keys used for running the Injective Chain.
-3. Install the [v1.16.0-1753404855](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.16.0-1753404855)
+3. Install the [v1.16.0](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.16.0-1753404855) binaries.
 4. Start your node with the new injectived binary to fulfill the upgrade.
 
 Upgrade coordination and support for validators will be available on the `#validators` private channel of the [Injective Discord](https://discord.gg/injective).
@@ -50,11 +50,12 @@ You must remove the wasm cache before upgrading to the new version:
 rm -rf .injectived/wasm/wasm/cache/
 ```
 
-1.  Verify you are currently running the correct version (`6f2fd4889`) of `injectived`:
+1.  Verify you are currently running the correct version (`v1.15.0`) of `injectived`:
 
     ```bash
-    injectived version
-    Version v1.15.0 (6f2fd4889)
+    $ injectived version
+    Version v1.15.0 (013606f41)
+    Compiled at 20250528-1843 using Go go1.24.0 (amd64)
     ```
 
 2.  Make a backup of your `.injectived` directory:
@@ -72,11 +73,11 @@ rm -rf .injectived/wasm/wasm/cache/
     sudo mv libwasmvm.x86_64.so /usr/lib
     ```
 
-4.  Verify you are currently running the correct version (`9570603`) of `injectived` after downloading the`v1.16.0` release:
+4.  Verify you are currently running the correct version (`v1.16.0`) of `injectived` after downloading the`v1.16.0` release:
 
     ```bash
-    injectived version
-    Version v1.16.0 (9570603)
+    Version v1.16.0 (95706035d)
+    Compiled at 20250725-0055 using Go go1.23.9 (amd64)
     ```
 
 5.  Start `injectived`:
@@ -85,11 +86,11 @@ rm -rf .injectived/wasm/wasm/cache/
     injectived start
     ```
 
-6.  Verify you are currently running the correct version (`9570603`) of `peggo` after downloading the `v1.16.0` release:
+6.  Verify you are currently running the correct version (`v1.16.0-peggofix`) of `peggo` after downloading the `v1.16.0` release:
 
     ```bash
-    peggo version
-    Version dev (9570603)
+    Version v1.16.0-peggofix (3b346ece0)
+    Compiled at 20250730-2027 using Go go1.23.9 (amd64)
     ```
 
 7.  Start peggo:
