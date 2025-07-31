@@ -7,8 +7,8 @@ description: Essential information about the Injective EVM network
 ## Injective EVM Mainnet Details
 
 * Chain ID: `1776`
-* JSON-RPC Endpoint: `https://json-rpc.injective.network/`
-* WS Endpoint: `https://ws.injective.network/`
+* JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
+* WS Endpoint: `wss://sentry.evm-ws.injective.network`
 * Faucet: N/A, to obtain Mainnet INJ see [`injective.com/getinj`](https://injective.com/getinj/)
 * Explorer: [`blockscout.injective.network`](https://blockscout.injective.network/)
 * Explorer API: `https://blockscout-api.injective.network`
