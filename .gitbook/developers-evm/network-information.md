@@ -4,14 +4,37 @@ description: Essential information about the Injective EVM network
 
 # EVM Network Information
 
+## Injective EVM Mainnet Details
+
+* Chain ID: `1776`
+* JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
+* WS Endpoint: `wss://sentry.evm-ws.injective.network`
+* Faucet: N/A, to obtain Mainnet INJ see [`injective.com/getinj`](https://injective.com/getinj/)
+* Explorer: [`blockscout.injective.network`](https://blockscout.injective.network/)
+* Explorer API: `https://blockscout-api.injective.network`
+
+{% hint style="info" %}
+Note that the Injective Chain ID is natively `injective-1`.
+However, EVM uses a numeric chain ID of `1776`.
+While these are different, they map to the **same** network.
+
+See [network information](../developers/network-information.md) for more details.
+{% endhint %}
+
+### More Providers
+
+* Explorer - Blockscout mirror: [`injective.cloud.blockscout.com`](https://injective.cloud.blockscout.com)
+* JSON-RPC - Quicknode [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
+  * Note that you will need to create an account on quicknode to obtain an endpoint URL
+  * [Quicknode JSON-RPC documentation](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
+
 ## Injective EVM Testnet Details
 
 * Chain ID: `1439`
-* JSON-RPC Endpoint: `https://k8s.testnet.json-rpc.injective.network/`\
+* JSON-RPC Endpoint: `https://k8s.testnet.json-rpc.injective.network/`
 * WS Endpoint: `https://k8s.testnet.ws.injective.network/`
-* Faucet: [`https://testnet.faucet.injective.network/`](https://testnet.faucet.injective.network/)
-* Explorer: [`https://testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/)
-* Explorer (mirror by Blockscout): [`https://testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
+* Faucet: [`testnet.faucet.injective.network/`](https://testnet.faucet.injective.network/)
+* Explorer: [`testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/)
 * Explorer API: `https://testnet.blockscout-api.injective.network/api`
 
 {% hint style="info" %}
@@ -21,6 +44,10 @@ While these are different, they map to the **same** network.
 
 See [network information](../developers/network-information.md) for more details.
 {% endhint %}
+
+### More Providers
+
+* Explorer - Blockscout mirror: [`testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
 
 ### Tokens
 
@@ -38,7 +65,3 @@ For more information about Injective EVM Testnet see the following pages:
   * [EVM Equivalence](evm-equivalence.md)
   * [MultiVM Token Standard](multivm-token-standard.md)
   * [Precompiles](./precompiles.md)
-
-## Injective EVM Mainnet
-
-Coming soon.
