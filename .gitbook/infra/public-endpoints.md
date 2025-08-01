@@ -6,8 +6,6 @@ We **do not recommend** using these in production for applications having high u
 
 ## Mainnet
 
-#### Find the [real-time status](https://status.injective.network/) of the endpoints and of the Injective network.
-
 | Service          			| Address                                                       |
 | ---------------- | ------------------------------------------------------------- |
 | Chain Swagger          | https://sentry.lcd.injective.network/swagger/#/               		 |
@@ -24,10 +22,9 @@ We **do not recommend** using these in production for applications having high u
 | Hub              | https://injhub.com/                                |
 | Explorer         | https://explorer.injective.network/                           |
 | Faucet           | https://inj.supply/                                           |
+| Status           | https://uptime.com/statuspage/status.injective.network                                           |
 
 ## Testnet
-
-#### Find the [real-time status](https://testnet.status.injective.network) of the endpoints and the Injective testnet network.
 
 | Service          | Address                                                               |
 | ---------------- | --------------------------------------------------------------------- |
@@ -45,3 +42,4 @@ We **do not recommend** using these in production for applications having high u
 | Hub              | https://testnet.hub.injective.network/                                |
 | Explorer         | https://testnet.explorer.injective.network/                           |
 | Faucet           | https://testnet.faucet.injective.network/                             |
+| Status           | https://uptime.com/statuspage/testnet.status.injective.network                            |
