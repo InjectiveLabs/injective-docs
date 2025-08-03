@@ -11,7 +11,7 @@ Following [Proposal 544](https://injhub.com/proposal/544/) This indicates that t
 
 ## Summary
 
-The Injective Chain will undergo a scheduled enhancement upgrade on **Monday, August 4th, 2025, 16:00 UTC**.
+The Injective Chain will undergo a scheduled enhancement upgrade on **Monday, August 4th, 2025, 12:00 UTC**.
 
 The following is a short summary of the upgrade steps:
 
@@ -54,8 +54,8 @@ rm -rf .injectived/wasm/wasm/cache/
 
     ```bash
     $ injectived version
-    Version v1.16.0 (9570603)
-    Compiled at 20250528-1843 using Go go1.24.0 (amd64)
+    Version v1.16.0 (95706035d)
+    Compiled at 20250725-0055 using Go go1.23.9 (amd64)
     ```
 
 2.  Make a backup of your `.injectived` directory:
@@ -64,7 +64,7 @@ rm -rf .injectived/wasm/wasm/cache/
     cp ~/.injectived ./injectived-backup
     ```
 
-3. Download and install the `injective-chain` release for `v1.16.0`:
+3. Download and install the `injective-chain` release for `v1.16.1`:
 
     ```bash
     wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.16.1-1754161770/linux-amd64.zip
@@ -76,8 +76,8 @@ rm -rf .injectived/wasm/wasm/cache/
 4.  Verify you are currently running the correct version (`v1.16.1`) of `injectived` after downloading the`v1.16.1` release:
 
     ```bash
-    Version v1.16.1 (8be67e8)
-    Compiled at 20250725-0055 using Go go1.23.9 (amd64)
+    Version v1.16.1 (8be67e82d)
+    Compiled at 20250802-1910 using Go go1.23.9
     ```
 
 5.  Start `injectived`:
@@ -86,11 +86,11 @@ rm -rf .injectived/wasm/wasm/cache/
     injectived start
     ```
 
-6.  Verify you are currently running the correct version (`v1.16.1-peggo`) of `peggo` after downloading the `v1.16.1` release:
+6.  Verify you are currently running the correct version (`v1.16.1`) of `peggo` after downloading the `v1.16.1` release:
 
     ```bash
-    Version v1.16.1-peggo (8be67e8)
-    Compiled at 20250730-2027 using Go go1.23.9 (amd64)
+    Version v1.16.1 (8be67e82d)
+    Compiled at 20250802-1913 using Go go1.23.9
     ```
 
 7.  Start peggo:
