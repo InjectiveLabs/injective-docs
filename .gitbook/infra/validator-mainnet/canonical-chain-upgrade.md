@@ -1,5 +1,33 @@
 # Canonical Chain Upgrades
 
+## Verify release versions
+
+If you would like to verify `injectived` or `peggo` version numbers via Docker,
+follow the instructions in the [`verify-injective-release`](https://github.com/injective-dev/snippets-inj/tree/main/verify-injective-release) code snippet.
+
+This is useful if you are on an operating system other than Linux,
+and would like to independently verify the binaries in each release.
+
+For example, for v1.16.1, it should produce the following output:
+
+```text
+injectived version
+Version v1.16.1 (8be67e82d)
+Compiled at 20250802-1910 using Go go1.23.9 (amd64)
+peggo version
+Version v1.16.1 (8be67e82d)
+Compiled at 20250802-1913 using Go go1.23.9 (amd64)
+```
+
+Note that this contains not only the version numbers (e.g. `v.1.16.1`),
+but also contains the following:
+
+- The binary release hashes (e.g. `8be67e82d`)
+- The compiled time stamp (e.g. `20250802-1910`)
+- The compiler (e.g. `Go go1.23.9 (amd64)`)
+
+You can verify that these **match** the values stated in the [Injective chain releases](https://github.com/InjectiveLabs/injective-chain-releases/releases) page on Github.
+
 ## History of Canonical Chain Upgrades
 
 ***
