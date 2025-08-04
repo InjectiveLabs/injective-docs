@@ -1,5 +1,70 @@
 # Canonical Chain Upgrades
 
+## Verify release versions
+
+### Releases on Github
+
+If you would like to verify `injectived` or `peggo` version numbers via Docker,
+follow the instructions in the [`verify-injective-release`](https://github.com/injective-dev/snippets-inj/tree/main/verify-injective-release) code snippet.
+
+This is useful if you are on an operating system other than Linux,
+and would like to independently verify the binaries in each release.
+
+For example, for `v1.16.1`, it should produce the following output:
+
+```text
+injectived version
+Version v1.16.1 (8be67e82d)
+Compiled at 20250802-1910 using Go go1.23.9 (amd64)
+peggo version
+Version v1.16.1 (8be67e82d)
+Compiled at 20250802-1913 using Go go1.23.9 (amd64)
+```
+
+### Releases on Docker
+
+These are more straightforward, as each binary needs a single command.
+
+For `injectived`, use the following command:
+
+```shell
+docker run -it --rm injectivelabs/injective-core:v1.16.1 injectived version
+```
+
+This should produce output similar to:
+
+```text
+Version v1.16.1 (8be67e8)
+Compiled at 20250802-1909 using Go go1.23.9 (arm64)
+```
+
+For `peggo`, use the following command:
+
+```shell
+docker run -it --rm injectivelabs/injective-core:v1.16.1 peggo version
+```
+
+This should produce output similar to:
+
+```text
+Version v1.16.1 (8be67e8)
+Compiled at 20250802-1911 using Go go1.23.9 (arm64)
+```
+
+Note that you should replace `v1.16.1` in the commands above
+with your intended Injective release version number.
+
+### Checking for matches
+
+Note that the output from the above commmands contain
+the following in addition to the version numbers (e.g. `v1.16.1`):
+
+- The binary release hashes (e.g. `8be67e82d`)
+- The compiled time stamp (e.g. `20250802-1910`)
+- The compiler (e.g. `Go go1.23.9 (amd64)`)
+
+You can verify that these **match** the values stated in the [Injective chain releases](https://github.com/InjectiveLabs/injective-chain-releases/releases) page on Github.
+
 ## History of Canonical Chain Upgrades
 
 ***
