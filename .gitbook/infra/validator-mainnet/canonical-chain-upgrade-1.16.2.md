@@ -17,7 +17,7 @@ The following is a short summary of the upgrade steps:
 
 1. Vote and wait till the node panics at block height **129772500**.
 2. Backing up configs, data, and keys used for running the Injective Chain.
-3. Install the [v1.16.2]https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.16.2-1755212690) binaries.
+3. Install the [v1.16.2](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.16.2-1755212690) binaries.
 4. Start your node with the new injectived binary to fulfill the upgrade.
 
 Upgrade coordination and support for validators will be available on the `#validators` private channel of the [Injective Discord](https://discord.gg/injective).
@@ -50,12 +50,12 @@ You must remove the wasm cache before upgrading to the new version:
 rm -rf .injectived/wasm/wasm/cache/
 ```
 
-1.  Verify you are currently running the correct version (`v1.16.0`) of `injectived`:
+1.  Verify you are currently running the correct version (`v1.16.1`) of `injectived`:
 
     ```bash
     $ injectived version
-    Version v1.16.0 (95706035d)
-    Compiled at 20250725-0055 using Go go1.23.9 (amd64)
+    Version v1.16.1 (8be67e82d)
+    Compiled at 20250802-1913 using Go go1.23.9
     ```
 
 2.  Make a backup of your `.injectived` directory:
