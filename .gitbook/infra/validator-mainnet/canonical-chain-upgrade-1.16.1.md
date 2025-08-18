@@ -89,6 +89,7 @@ rm -rf .injectived/wasm/wasm/cache/
 6.  Verify you are currently running the correct version (`v1.16.1`) of `peggo` after downloading the `v1.16.1` release:
 
     ```bash
+    $ peggo version
     Version v1.16.1 (8be67e82d)
     Compiled at 20250802-1913 using Go go1.23.9
     ```
