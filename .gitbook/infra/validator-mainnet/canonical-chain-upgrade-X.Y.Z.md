@@ -17,7 +17,7 @@ The following is a short summary of the upgrade steps:
 
 1. Vote and wait till the node panics at block height **<!-- $BLOCK_NUM -->**.
 2. Backing up configs, data, and keys used for running the Injective Chain.
-3. Install the [<!-- $VERSION -->]https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/<!-- $VERSION -->-<!-- $VERSION_ID -->) binaries.
+3. Install the [<!-- $VERSION -->](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/<!-- $VERSION -->-<!-- $VERSION_ID -->) binaries.
 4. Start your node with the new injectived binary to fulfill the upgrade.
 
 Upgrade coordination and support for validators will be available on the `#validators` private channel of the [Injective Discord](https://discord.gg/injective).
