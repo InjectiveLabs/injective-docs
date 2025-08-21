@@ -45,7 +45,7 @@ $$
 {% hint style="info" %}
 $$Other\ Preallocations$$ refers to the static market reward allocations for non-BTC, ETH, and INJ perp markets.
 
-For more information on $$TAR$$ each epoch, see the [Reward Pool](../olp-rewards.md) page.
+For more information on $$TAR$$ each epoch, see the [Reward Pool](./rewards.md) page.
 {% endhint %}
 
 For each eligible market, the product of the MM[^1]’s $$LS^{0.7}$$ and $$Volume$$ is aggregated across all MMs. Rewards are allocated to each market based on the proportional aggregate products across all applicable markets. The preallocation amount (1%) for the market is also added in.&#x20;
@@ -74,7 +74,7 @@ $$
 Rewards_{MM_i} = \sum_{Market}\left(Rewards_{Market} * \frac {TS_{MM_i, \ Market}} {\sum_{MM} TS_{MM,\ Market}} \right)
 $$
 
-**Each** [**MM**](#user-content-fn-3)[^3] **will receive rewards based on the** [**MM**](#user-content-fn-4)[^4]**’s proportional**[ $$TS$$ ](scoring-formula-methodology.md#total-score)**within the market, subject to governance approval.**&#x20;
+**Each** [**MM**](#user-content-fn-3)[^3] **will receive rewards based on the** [**MM**](#user-content-fn-4)[^4]**’s proportional**[ $$TS$$ ](./scoring.md#total-score)**within the market, subject to governance approval.**&#x20;
 
 {% hint style="info" %}
 Rewards for addresses totaling < 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process.&#x20;
