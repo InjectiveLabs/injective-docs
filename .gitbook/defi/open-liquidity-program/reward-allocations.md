@@ -86,7 +86,7 @@ $$
 Rewards_{MM_i} = \sum_{Market}\left(Rewards_{Market} * \frac {TS_{MM_i, \ Market}} {\sum_{MM} TS_{MM,\ Market}} \right)
 $$
 
-**Each institutional liquidity provider** **will receive rewards based on their proportional**[ $$TS$$ ](scoring-formula-methodology.md#total-score)**within the market, subject to governance approval.**&#x20;
+**Each institutional liquidity provider** **will receive rewards based on their proportional**[ $$TS$$ ](./scoring.md#total-score)**within the market, subject to governance approval.**&#x20;
 
 {% hint style="info" %}
 Rewards for addresses totaling < 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process.&#x20;

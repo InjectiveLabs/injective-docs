@@ -12,7 +12,7 @@ $$
 TS_{Market} = (LS_{Epoch})^a \cdot (Uptime_{Epoch})^b \cdot (Volume_{epoch})^c
 $$
 
-where $$LS_{epoch}$$ is the MM's [Liquidity Score](scoring-formula-methodology.md#liquidity-score) in the market in the epoch, $$Uptime_{Epoch}$$is the MM's [Uptime score](scoring-formula-methodology.md#uptime-score) in the market in the epoch, and $$Volume_{epoch}$$ is the MM's total volume (maker and taker) in the market in the epoch.
+where $$LS_{epoch}$$ is the MM's [Liquidity Score](./scoring.md#liquidity-score) in the market in the epoch, $$Uptime_{Epoch}$$is the MM's [Uptime score](./scoring.md#uptime-score) in the market in the epoch, and $$Volume_{epoch}$$ is the MM's total volume (maker and taker) in the market in the epoch.
 
 {% hint style="info" %}
 $$a$$, $$b$$, and $$c$$ are exponent [parameters](formula-parameters.md) that weight the different components of the formula.
@@ -52,7 +52,7 @@ $$
 Uptime_{Epoch} = \sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases}
 $$
 
-$$Uptime_{Epoch}$$ is the number of order book snapshots throughout the epoch in which the MM[^4] had a [positive Bid Liquidity Score _**and**_ a positive Ask Liquidity Score](scoring-formula-methodology.md#liquidity-score) in the market of interest. This means  the MM[^5] quoted on both sides of the order book with order sizes greater than or equal to $$MinDepth$$ with spreads less than or equal to $$MaxSpread$$ in the snapshot.
+$$Uptime_{Epoch}$$ is the number of order book snapshots throughout the epoch in which the MM[^4] had a [positive Bid Liquidity Score _**and**_ a positive Ask Liquidity Score](./scoring.md#liquidity-score) in the market of interest. This means  the MM[^5] quoted on both sides of the order book with order sizes greater than or equal to $$MinDepth$$ with spreads less than or equal to $$MaxSpread$$ in the snapshot.
 
 For MMs[^6] who qualify for OLP rewards (for the first time ever) partway through an epoch, $$Uptime_{Epoch}$$ is scaled based on the total number of snapshots from the moment of qualification to the end of the epoch.&#x20;
 
