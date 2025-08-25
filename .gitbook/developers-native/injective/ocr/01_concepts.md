@@ -44,7 +44,7 @@ Notes:
 
 ### Integration Overview
 
-Chainlink has several [price data feeds](https://docs.chain.link/data-feeds/price-feeds) including:
+Chainlink has several [price data feeds](https://data.chain.link/ethereum/mainnet/stablecoins) including:
 
 - 80 Crypto/USD pairs (e.g. ETH/USD, BTC/USD)
 - 17 Stablecoin pairs (e.g. USDT/USD, USDC/USD)
