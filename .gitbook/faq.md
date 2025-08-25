@@ -28,3 +28,12 @@ Q: When maintaining a private node:
 A: Event provider can be pruned. One can use the public event provider endpoint for the initial sync.  Then resort to local deployment, but only from the latest height. Therefore, yes can be skipped.
 
 ----
+
+## EVM
+
+Q: Does Injective have a deployment of the [`multicall3`](https://www.multicall3.com/) smart contract? <!-- tachida2k -->
+
+A: Yes.
+[Injective Testnet `multicall3`](https://testnet.blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
+
+----
