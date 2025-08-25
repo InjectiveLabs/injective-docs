@@ -354,5 +354,6 @@
     * [Upgrade](developers-native/core/upgrade/README.md)
     * [Circuit](developers-native/core/circuit/README.md)
     * [Genutil](developers-native/core/genutil/README.md)
+* [FAQ](faq.md)
 * [Glossary](glossary.md)
 * [References](references.md)
