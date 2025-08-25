@@ -19,7 +19,7 @@ The `Permissions` module is tightly coupled with the `TokenFactory` module. It a
 
 Since the `Permissions` module relies on the existence of a `TokenFactory` denom to function, the `TokenFactory` denom should be launched first, followed by the creation of a `Permissions` namespace.
 
-- See [TokenFactory](../../../developers-native/injective/tokenfactory) for documentation on the `TokenFactory` module
+- See https://docs.injective.network/developers/modules/injective/tokenfactory for documentation on the `TokenFactory` module
 - See https://docs.injective.network/guides/launch-a-token for a guide on launching a token with the module
     - Note: The `TokenFactory` admin should not be changed to the null address (inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49) because the `Permissions` module requires the creator of the  `Permissions` namespace to be the admin of the corresponding `TokenFactory` denom.
 
