@@ -13,15 +13,22 @@ mkdir -p $CORE_DIR
 mkdir -p $INJECTIVE_DIR
 
 if [ "$GH_CORE_USER" ] && [ "$GH_CORE_TOKEN" ]; then
-    echo "Using GitHub credentials for cloning injective-core"
-    git clone https://$GH_CORE_USER:$GH_CORE_TOKEN@github.com/InjectiveLabs/injective-core.git $BUILD_DIR/injective-core -b $injective_core_branch --depth 1 --single-branch > /dev/null
+  echo "Using GitHub credentials for cloning injective-core"
+  INJ_CORE_GIT_URL="https://${GH_CORE_USER}:${GH_CORE_TOKEN}@github.com/InjectiveLabs/injective-core.git"
 else
-    echo "Using public access to clone injective-core"
-    git clone https://github.com/InjectiveFoundation/injective-core.git $BUILD_DIR/injective-core -b $injective_core_branch --depth 1 --single-branch > /dev/null
+  echo "Using org access to clone injective-core"
+  INJ_CORE_GIT_URL="org-44571224@github.com:InjectiveLabs/injective-core.git"
 fi
+git clone "${INJ_CORE_GIT_URL}" "${BUILD_DIR}/injective-core" \
+  -b "${injective_core_branch}" \
+  --depth 1 \
+  --single-branch > /dev/null
 
 echo "Cloning cosmos-sdk..."
-git clone https://github.com/InjectiveLabs/cosmos-sdk.git $BUILD_DIR/cosmos-sdk -b $cosmos_sdk_branch --depth 1 --single-branch > /dev/null
+git clone "https://github.com/InjectiveLabs/cosmos-sdk.git" "${BUILD_DIR}/cosmos-sdk" \
+  -b "${cosmos_sdk_branch}" \
+  --depth 1 \
+  --single-branch > /dev/null
 
 ## Generate errors docs
 ./$BUILD_DIR/injective-core/scripts/docs/generate_errors_docs.sh
