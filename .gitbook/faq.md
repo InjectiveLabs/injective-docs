@@ -22,7 +22,8 @@ which is 1 to 1, and bidirectional.
 ## Infrastructure
 
 Q: When maintaining a private node:
-- should we store 2.5 Ti archival data (event provider)?
+
+- Should we store 2.5 Ti archival data (event provider)?
 - Can we skip that part and make indexer work?
 
 A: Event provider can be pruned. One can use the public event provider endpoint for the initial sync.  Then resort to local deployment, but only from the latest height. Therefore, yes can be skipped.
@@ -34,6 +35,8 @@ A: Event provider can be pruned. One can use the public event provider endpoint 
 Q: Does Injective have a deployment of the [`multicall3`](https://www.multicall3.com/) smart contract? <!-- tachida2k -->
 
 A: Yes.
-[Injective Testnet `multicall3`](https://testnet.blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
+
+- Injective Testnet `multicall3`: [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://testnet.blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
+- Injective Mainnet `multicall3`: [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
 
 ----
