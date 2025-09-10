@@ -6,6 +6,20 @@ Injective is natively interoperable with several well-known blockchain networks,
 
 Within this section we are going to explore configuring different UI frameworks to work with the `@injectivelabs` packages so you can start building decentralized applications on top of Injective. We are also going to showcase example (simple) dApps built on top of Injective.
 
+For security reasons, we recommend using the stable package versions of NPM packages.
+
+**Stable Package Version**
+
+![](https://img.shields.io/npm/v/%40injectivelabs/sdk-ts/latest?label=%40injectivelabs%2Fsdk-ts) ![](https://img.shields.io/npm/v/%40injectivelabs/wallet-ts/latest?label=%40injectivelabs%2Fwallet-ts) ![](https://img.shields.io/npm/v/%40injectivelabs/networks/latest?label=%40injectivelabs%2Fnetworks) ![](https://img.shields.io/npm/v/%40injectivelabs/ts-types/latest?label=%40injectivelabs%2Fts-types) ![](https://img.shields.io/npm/v/%40injectivelabs/utils/latest?label=%40injectivelabs%2Futils)
+
+**Latest Package Versions:**
+
+![](https://img.shields.io/npm/v/%40injectivelabs/sdk-ts/next?label=%40injectivelabs%2Fsdk-ts) ![](https://img.shields.io/npm/v/%40injectivelabs/wallet-ts/next?label=%40injectivelabs%2Fwallet-ts) ![](https://img.shields.io/npm/v/%40injectivelabs/networks/next?label=%40injectivelabs%2Fnetworks) ![](https://img.shields.io/npm/v/%40injectivelabs/ts-types/next?label=%40injectivelabs%2Fts-types) ![](https://img.shields.io/npm/v/%40injectivelabs/utils/next?label=%40injectivelabs%2Futils)
+
+{% hint style="info" %}
+The latest versions are published using the `next` tag. For stable versions use the `latest` tag or check npm registry for the latest stable version.
+{% endhint %}
+
 {% hint style="info" %}
 If you are looking for how to build a dApp on Injective EVM,
 you should check out the guides in [your first EVM dApp](../../developers-evm/dapps/README.md).
