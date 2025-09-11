@@ -28,7 +28,7 @@ Native EVM on Injective supports the latest version of `geth`, ensuring that dev
 4. [Avalanche Gas Price Source](https://snowtrace.io/insight/leaderboard/gas-tracker) ↩︎
 5. [BnB Smart Chain Gas Price Source](https://bscscan.com/chart/gasprice) ↩︎
 6. [Sei Gas Prices Config](https://github.com/sei-protocol/chain-registry/blob/main/gas.json) ↩︎
-7. [Injective Launches Gas Compression](https://blog.injective.com/en/injective-unveils-fee-reductions-with-gas-compression/) ↩︎
+7. [Injective Launches Gas Compression](https://injective.com/blog/injective-unveils-fee-reductions-with-gas-compression/) ↩︎
 
 ## EIP-1559 Configuration
 
