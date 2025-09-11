@@ -8,7 +8,7 @@ Creating a wallet on Injective is as simple as sending some funds to your Inject
 
 ### Browser Wallets
 
-You can create an Injective wallet using your preferred wallet by following the [tutorial on our blog](https://blog.injective.com/en/how-to-create-an-injective-wallet-2/).
+You can create an Injective wallet using your preferred wallet by following the [tutorial on our blog](https://injective.com/blog/how-to-create-an-injective-wallet-2/).
 
 ### Local Wallets
 
