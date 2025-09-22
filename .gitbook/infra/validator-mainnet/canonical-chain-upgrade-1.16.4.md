@@ -11,7 +11,7 @@ Following [IIP 560](https://injhub.com/proposal/560/) This indicates that the up
 
 ## Summary
 
-The Injective Chain will undergo a scheduled enhancement upgrade on **Thursday, 25th September, 2025,14:00 UTC**.
+The Injective Chain will undergo a scheduled enhancement upgrade on **Thursday, 25th September, 2025, 14:00 UTC**.
 
 The following is a short summary of the upgrade steps:
 
@@ -40,15 +40,17 @@ It is critically important to backup the `.injectived/data/priv_validator_state.
 
 In the event that the upgrade does not succeed, validators and operators must restore the snapshot and downgrade back to Injective Chain release [v1.16.2](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.16.2-1755212690) and continue this earlier chain until next upgrade announcement.
 
-### Upgrade Procedure
+## Upgrade Procedure
 
-## Notes for Validators
+### Notes for Validators
 
 You must remove the wasm cache before upgrading to the new version:
 
 ```shell
 rm -rf .injectived/wasm/wasm/cache/
 ```
+
+### Steps
 
 1.  Verify you are currently running the correct version (`v1.16.2`) of `injectived`:
 
@@ -61,7 +63,7 @@ rm -rf .injectived/wasm/wasm/cache/
 2.  Make a backup of your `.injectived` directory:
 
     ```bash
-    cp ~/.injectived ./injectived-backup
+    cp -r ~/.injectived ./injectived-backup
     ```
 
 3. Download and install the `injective-chain` release for `v1.16.4`:
