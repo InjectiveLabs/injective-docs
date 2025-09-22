@@ -2,7 +2,7 @@
 
 Thursday, 25th September, 2025
 
-Following [Proposal <!-- $PROPOSAL_NUM -->](https://injhub.com/proposal/<!-- $PROPOSAL_NUM -->/) This indicates that the upgrade procedure should be performed on block number **134805000**
+Following [IIP 560](https://injhub.com/proposal/560/) This indicates that the upgrade procedure should be performed on block number **134805000**
 
 * [Summary](#summary)
 * [Recovery](#recovery)

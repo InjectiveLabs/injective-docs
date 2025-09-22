@@ -2,7 +2,7 @@
 
 <!-- $DATE (e.g. Tuesday, August 19th, 2025) -->
 
-Following [Proposal <!-- $PROPOSAL_NUM -->](https://injhub.com/proposal/<!-- $PROPOSAL_NUM -->/) This indicates that the upgrade procedure should be performed on block number **<!-- $BLOCK_NUM -->**
+Following [IIP <!-- $PROPOSAL_NUM -->](https://injhub.com/proposal/<!-- $PROPOSAL_NUM -->/) This indicates that the upgrade procedure should be performed on block number **<!-- $BLOCK_NUM -->**
 
 * [Summary](#summary)
 * [Recovery](#recovery)
