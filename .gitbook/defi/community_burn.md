@@ -36,7 +36,7 @@ A quick reference box (almost like a cheat sheet) with the most important parame
 3. **Claim Earnings**\
    When the event concludes, all INJ commitments are exchanged for the revenue collected that month. This revenue, made up of multiple different tokens, is distributed pro rata to all participants.\
    \
-   To claim, simply go to Injective Hub → Community Burn, and press Claim next to the round you participated in under Burn Auction History.
+   To claim, simply go to Injective Hub → Community Burn, and press Claim next to the round you participated in under Burn History.
 4. **INJ Burn**\
    The total INJ collected from all participants is permanently burned, reducing the total supply of INJ.
 5. **Get Ready for Next Month**\
@@ -55,13 +55,3 @@ The burn transaction is onchain and can be tracked via the [Injective Hub](https
 
 **What if I miss a round?**\
 You’ll need to wait until next month’s event opens.
-
-### Exchange Module
-
-The exchange module is one of Injective’s central differentiators from other blockchains. This technical instrument is what powers the shared liquidity environment on Injective and fuels the Burn Auction. The entire process of orderbook management, trade execution, order matching, and settlement occurs on-chain through the logic codified by the module.
-
-The design feature that is key to the Burn Auction is the built-in revenue-sharing structure for applications employing the exchange module. Herein, a portion of the accrued revenue is allocated to the auction module for inclusion in the current Burn Auction event, while the remaining portion is retained by the application utilizing the module to power its exchange services.
-
-### Auction Module
-
-The auction module provides two essential services for the operation of the Community Burn: token collection and auction orchestration. For token collection, the module periodically gathers tokens from the exchange module, pooling them into an Community Burn Fund. Importantly, the Community Burn Fund also receives tokens from applications that do not utilize the exchange module but have opted into participation, as well as from individual user contributions.
