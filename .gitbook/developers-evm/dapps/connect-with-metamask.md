@@ -103,7 +103,7 @@ export async function connectMetaMask() {
 
 Sample code
 
-[counter contract](../your-first-smart-contract.md) ABI:
+[counter contract](broken-reference) ABI:
 
 ```tsx
 // abi/counterAbi.ts

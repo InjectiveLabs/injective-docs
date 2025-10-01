@@ -7,14 +7,13 @@ title: State
 
 The tokenfactory module keeps state of the following primary objects:
 
-## Denom Authority Metadata 
+## Denom Authority Metadata
 
-- 0x02 + | + denom + |  + 0x01 ⇒ `DenomAuthorityMetadata`
+* 0x02 + | + denom + | + 0x01 ⇒ `DenomAuthorityMetadata`
 
 ## Denom Creators
 
-- 0x03 + | + creator + | denom ⇒ denom
-
+* 0x03 + | + creator + | denom ⇒ denom
 
 ```protobuf
 // DenomAuthorityMetadata specifies metadata for addresses that have specific
@@ -57,12 +56,14 @@ message GenesisDenom {
   ];
 }
 ```
+
 ## Params
 
-`Params` is a module-wide configuration that stores system parameters and defines overall functioning of the tokenfactory module.
+`Params` is a module-wide configuration that stores system parameters and defines overall functioning of the tokenfactory module.\
 This module is modifiable by governance using params update proposal natively supported by `gov` module.
 
 Struct for the `ocr` module params store.
+
 ```protobuf
 // Params defines the parameters for the tokenfactory module.
 message Params {

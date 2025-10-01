@@ -3,16 +3,16 @@ sidebar_position: 2
 title: Keepers
 ---
 
-# Keepers
+# Keeper
 
-The oracle module currently provides three different exported keeper interfaces which can be passed to other modules
-which need to read price feeds. Modules should use the least-permissive interface which provides the functionality they
+The oracle module currently provides three different exported keeper interfaces which can be passed to other modules\
+which need to read price feeds. Modules should use the least-permissive interface which provides the functionality they\
 require.
 
 ## Oracle Module ViewKeeper
 
-The oracle module ViewKeeper provides the ability to obtain price data as well as cumulative price data for any
-supported oracle type and oracle pair. 
+The oracle module ViewKeeper provides the ability to obtain price data as well as cumulative price data for any\
+supported oracle type and oracle pair.
 
 ```go
 type ViewKeeper interface {
@@ -21,7 +21,7 @@ type ViewKeeper interface {
 }
 ```
 
-Note that the `GetPrice` for Coinbase oracles returns the 5 minute TWAP price. 
+Note that the `GetPrice` for Coinbase oracles returns the 5 minute TWAP price.
 
 ## Band
 
@@ -77,7 +77,7 @@ type CoinbaseKeeper interface {
 }
 ```
 
-The `GetCoinbasePrice` returns the 5 minute TWAP price of the CoinbasePriceState based off the `CoinbasePriceState.Timestamp` values provided by Coinbase. 
+The `GetCoinbasePrice` returns the 5 minute TWAP price of the CoinbasePriceState based off the `CoinbasePriceState.Timestamp` values provided by Coinbase.
 
 ## PriceFeeder
 
@@ -117,4 +117,5 @@ type StorkKeeper interface {
 	GetAllStorkPriceStates(ctx sdk.Context) []*types.StorkPriceState
 }
 ```
+
 The GetStorkPrice returns the price(`value`) of the StorkPriceState.

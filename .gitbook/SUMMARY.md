@@ -30,7 +30,7 @@
     * [Using IBC](https://injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/)
   * [Staking](defi/staking.md)
   * [Governance](defi/governance.md)
-  * [Auction](defi/auction.md)
+  * [Community Burn](defi/community_burn.md)
   * [Transactions](defi/transactions.md)
   * [Transaction Gas and Fees](defi/transaction-fees.md)
   * [Open Liquidity Program](defi/open-liquidity-program/README.md)
@@ -124,7 +124,6 @@
     * [Smart contract examples](developers/dapps/example-smart-contract.md)
     * [DEX examples](developers/dapps/example-dex.md)
     * [Webpack examples](developers/dapps/example-webpack.md)
-    <!-- * [Bridge examples](developers/dapps/example-bridge.md) -->
   * [Testnet Faucet](https://testnet.faucet.injective.network)
   * [Chain API Reference](https://sentry.lcd.injective.network/swagger/#/)
   * [Injective TypeScript SDK](https://docs.ts.injective.network)

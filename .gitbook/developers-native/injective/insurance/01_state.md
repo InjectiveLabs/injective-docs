@@ -9,7 +9,7 @@ title: State
 
 `Params` is a module-wide configuration structure that stores system parameters and defines overall functioning of the insurance module.
 
-- Params: `Paramsspace("insurance") -> legacy_amino(params)`
+* Params: `Paramsspace("insurance") -> legacy_amino(params)`
 
 ```go
 
@@ -70,7 +70,7 @@ type RedemptionSchedule struct {
 }
 ```
 
-Additionally, we introduce `next_share_denom_id` and `next_redemption_schedule_id` to manage insurance fund share token
+Additionally, we introduce `next_share_denom_id` and `next_redemption_schedule_id` to manage insurance fund share token\
 denom and redemption schedules from various users.
 
 ```go
@@ -87,6 +87,5 @@ type GenesisState struct {
 
 ## Pending Redemptions
 
-Pending Redemptions Objects are kept to store all the information about redemption requests and to auto-withdraw when
+Pending Redemptions Objects are kept to store all the information about redemption requests and to auto-withdraw when\
 the duration pass.
-

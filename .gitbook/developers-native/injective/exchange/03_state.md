@@ -61,7 +61,7 @@ type GenesisState struct {
 
 ## Params
 
-`Params` is a module-wide configuration that stores system parameters and defines overall functioning of the exchange module.
+`Params` is a module-wide configuration that stores system parameters and defines overall functioning of the exchange module.\
 This configuration is modifiable by governance using params update proposal natively supported by `gov` module.
 
 It defines default fee objects to be used for spot and derivative markets and funding parameters for derivative markets and instant listing fees.
@@ -184,7 +184,7 @@ type MarketOrderIndicator struct {
 
 ## SpotMarket
 
-`SpotMarket` is the structure to store all the required information and state for a spot market.
+`SpotMarket` is the structure to store all the required information and state for a spot market.\
 Spot markets are stored by hash of the market to query the market efficiently.
 
 ```go
@@ -215,7 +215,7 @@ type SpotMarket struct {
 
 ## SpotOrderBook
 
-`SpotOrderBook` is a structure to store spot limit orders for a specific market.
+`SpotOrderBook` is a structure to store spot limit orders for a specific market.\
 Two objects are created, one for buy orders and one for sell orders.
 
 ```go
@@ -261,7 +261,7 @@ type SpotMarketOrder struct {
 
 ## DerivativeMarket
 
-`DerivativeMarket` is the structure to store all the required information and state for a derivative market.
+`DerivativeMarket` is the structure to store all the required information and state for a derivative market.\
 Derivative markets are stored by hash of the market to query the market efficiently.
 
 ```go
@@ -304,7 +304,7 @@ type DerivativeMarket struct {
 
 ## DerivativeOrderBook
 
-`DerivativeOrderBook` is a structure to store derivative limit orders for a specific market.
+`DerivativeOrderBook` is a structure to store derivative limit orders for a specific market.\
 Two objects are created, one for buy orders and one for sell orders.
 
 ```go
@@ -398,7 +398,7 @@ type SubaccountPosition struct {
 
 ## ExpiryFuturesMarketInfo
 
-`ExpiryFuturesMarketInfo` is a structure to keep the information of expiry futures market.
+`ExpiryFuturesMarketInfo` is a structure to keep the information of expiry futures market.\
 It is stored by the id of the market.
 
 ```go

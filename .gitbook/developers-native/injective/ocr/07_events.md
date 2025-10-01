@@ -89,14 +89,11 @@ The ocr module emits the following events:
 
 ### SetBatchConfigProposal
 
-| Type             | Attribute Key             | Attribute Value             |
-| ---------------- | ------------------------- | --------------------------- |
-| EventConfigSet[] | ConfigDigest              | {ConfigDigest}              |
-| EventConfigSet[] | PreviousConfigBlockNumber | {PreviousConfigBlockNumber} |
-| EventConfigSet[] | Config                    | {Config}                    |
-| EventConfigSet[] | ConfigInfo                | {ConfigInfo}                |
+| Type              | Attribute Key             | Attribute Value             |
+| ----------------- | ------------------------- | --------------------------- |
+| EventConfigSet\[] | ConfigDigest              | {ConfigDigest}              |
+| EventConfigSet\[] | PreviousConfigBlockNumber | {PreviousConfigBlockNumber} |
+| EventConfigSet\[] | Config                    | {Config}                    |
+| EventConfigSet\[] | ConfigInfo                | {ConfigInfo}                |
 
 ## BeginBlocker
-
-| Type | Attribute Key | Attribute Value |
-| ---- | ------------- | --------------- |

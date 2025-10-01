@@ -5,15 +5,15 @@ title: Messages
 
 # Messages
 
-This is a reference document for Peggy message types. For code reference and exact arguments see the [proto definitions](https://github.com/InjectiveLabs/injective-core/blob/master/proto/injective/peggy/v1/msgs.proto). 
+This is a reference document for Peggy message types. For code reference and exact arguments see the [proto definitions](https://github.com/InjectiveLabs/injective-core/blob/master/proto/injective/peggy/v1/msgs.proto).
 
 ## User messages
 
-These are messages sent on the Injective Chain peggy module by the end user. See [workflow](./02_workflow.md) for a more detailed summary of the entire deposit and withdraw process.
+These are messages sent on the Injective Chain peggy module by the end user. See [workflow](02_workflow.md) for a more detailed summary of the entire deposit and withdraw process.
 
 ### SendToEth
 
-Sent to Injective whenever a user wishes to make a withdrawal back to Ethereum. Submitted amount is removed from the user's balance immediately.
+Sent to Injective whenever a user wishes to make a withdrawal back to Ethereum. Submitted amount is removed from the user's balance immediately.\
 The withdrawal is added to the outgoing tx pool as a `types.OutgoingTransferTx` where it will remain until it is included in a batch.
 
 ```go
@@ -36,7 +36,7 @@ type MsgCancelSendToEth struct {
 	Sender        string    // original sender of the withdrawal
 }
 
-``` 
+```
 
 ### SubmitBadSignatureEvidence
 
@@ -56,10 +56,9 @@ These messages are sent by the `Batch Creator` subprocess of `peggo`
 
 ### RequestBatch
 
-This message is sent whenever some `Batch Creator` finds pooled withdrawals that when batched would satisfy their minimum batch fee (`PEGGO_MIN_BATCH_FEE_USD`).
-After receiving this message the `Peggy module` collects all withdrawals of the requested token denom, creates a unique token batch (`types.OutgoingTxBatch`) and places it in the `Outgoing Batch pool`.
+This message is sent whenever some `Batch Creator` finds pooled withdrawals that when batched would satisfy their minimum batch fee (`PEGGO_MIN_BATCH_FEE_USD`).\
+After receiving this message the `Peggy module` collects all withdrawals of the requested token denom, creates a unique token batch (`types.OutgoingTxBatch`) and places it in the `Outgoing Batch pool`.\
 Withdrawals that are batched cannot be cancelled with `MsgCancelSendToEth`.
-
 
 ```go
 type MsgRequestBatch struct {
@@ -68,15 +67,14 @@ type MsgRequestBatch struct {
 }
 ```
 
-
 ## Oracle Messages
 
 These messages are sent by the `Oracle` subprocess of `peggo`
 
 ### DepositClaim
 
-Sent to Injective when a `SendToInjectiveEvent` is emitted from the `Peggy contract`.
-This occurs whenever a user is making an individual deposit from Ethereum to Injective. 
+Sent to Injective when a `SendToInjectiveEvent` is emitted from the `Peggy contract`.\
+This occurs whenever a user is making an individual deposit from Ethereum to Injective.
 
 ```go
 type MsgDepositClaim struct {
@@ -92,7 +90,7 @@ type MsgDepositClaim struct {
 
 ### WithdrawClaim
 
-Sent to Injective when a `TransactionBatchExecutedEvent` is emitted from the `Peggy contract`.
+Sent to Injective when a `TransactionBatchExecutedEvent` is emitted from the `Peggy contract`.\
 This occurs when a `Relayer` has successfully called `submitBatch` on the contract to complete a batch of withdrawals.
 
 ```go
@@ -107,7 +105,7 @@ type MsgWithdrawClaim struct {
 
 ### ValsetUpdatedClaim
 
-Sent to Injective when a `ValsetUpdatedEvent` is emitted from the `Peggy contract`.
+Sent to Injective when a `ValsetUpdatedEvent` is emitted from the `Peggy contract`.\
 This occurs when a `Relayer` has successfully called `updateValset` on the contract to update the `Validator Set` on Ethereum.
 
 ```go
@@ -125,8 +123,8 @@ type MsgValsetUpdatedClaim struct {
 
 ### ERC20DeployedClaim
 
-Sent to Injective when a `ERC20DeployedEvent` is emitted from the `Peggy contract`.
-This occurs whenever the `deployERC20` method is called on the contract to issue a new token asset eligible for bridging. 
+Sent to Injective when a `ERC20DeployedEvent` is emitted from the `Peggy contract`.\
+This occurs whenever the `deployERC20` method is called on the contract to issue a new token asset eligible for bridging.
 
 ```go
 type MsgERC20DeployedClaim struct {
@@ -141,15 +139,14 @@ type MsgERC20DeployedClaim struct {
 }
 ```
 
-
 ## Signer Messages
 
 These messages are sent by the `Signer` subprocess of `peggo`
 
 ### ConfirmBatch
 
-When `Signer` finds a batch that the `Orchestrator` (`Validator`) has not signed off, it constructs a signature with its `Delegated Ethereum Key` and sends the confirmation to Injective.
-It's crucial that a `Validator` eventually provides their confirmation for a created batch as they will be slashed otherwise. 
+When `Signer` finds a batch that the `Orchestrator` (`Validator`) has not signed off, it constructs a signature with its `Delegated Ethereum Key` and sends the confirmation to Injective.\
+It's crucial that a `Validator` eventually provides their confirmation for a created batch as they will be slashed otherwise.
 
 ```go
 type MsgConfirmBatch struct {
@@ -163,7 +160,7 @@ type MsgConfirmBatch struct {
 
 ### ValsetConfirm
 
-When `Signer` finds a valset update that the `Orchestrator` (`Validator`) has not signed off, it constructs a signature with its `Delegated Ethereum Key` and sends the confirmation to Injective.
+When `Signer` finds a valset update that the `Orchestrator` (`Validator`) has not signed off, it constructs a signature with its `Delegated Ethereum Key` and sends the confirmation to Injective.\
 It's crucial that a `Validator` eventually provides their confirmation for a created valset update as they will be slashed otherwise.
 
 ```go
@@ -185,8 +182,8 @@ These are messages sent directly using the validator's message key.
 
 ### SetOrchestratorAddresses
 
-Sent to Injective by an `Operator` managing a `Validator` node. Before being able to start their `Orchestrator` (`peggo`) process, they must register a chosen Ethereum address to represent their `Validator` on Ethereum. 
-Optionally, an additional Injective address can be provided (`Orchestrator` field) to represent that `Validator` in the bridging process (`peggo`). Defaults to `Validator`'s own address if omitted.  
+Sent to Injective by an `Operator` managing a `Validator` node. Before being able to start their `Orchestrator` (`peggo`) process, they must register a chosen Ethereum address to represent their `Validator` on Ethereum.\
+Optionally, an additional Injective address can be provided (`Orchestrator` field) to represent that `Validator` in the bridging process (`peggo`). Defaults to `Validator`'s own address if omitted.
 
 ```go
 type MsgSetOrchestratorAddresses struct {
@@ -195,5 +192,5 @@ type MsgSetOrchestratorAddresses struct {
 	EthAddress   string // the Sender's (Validator) delegated Ethereum address
 }
 ```
-This message sets the Orchestrator's delegate keys. 
 
+This message sets the Orchestrator's delegate keys.
