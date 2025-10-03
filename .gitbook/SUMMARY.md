@@ -30,7 +30,7 @@
     * [Using IBC](https://injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/)
   * [Staking](defi/staking.md)
   * [Governance](defi/governance.md)
-  * [Community Burn](defi/community_burn.md)
+  * [Community Burn](defi/community-burn.md)
   * [Transactions](defi/transactions.md)
   * [Transaction Gas and Fees](defi/transaction-fees.md)
   * [Open Liquidity Program](defi/open-liquidity-program/README.md)
