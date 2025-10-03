@@ -1,0 +1,33 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Injective Docs",
+  "colors": {
+    "primary": "#ff0000"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "DeFi",
+        "icon": "notebook-text",
+        "tag": "NEW",
+        "pages": [
+          "defi",
+          "defi/wallet"
+        ]
+      },
+      {
+        "group": "Developers",
+        "icon": "notebook-text",
+        "tag": "NEW",
+        "pages": [
+          "developers",
+          "developers/convert-addresses"
+        ]
+      }
+    ]
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs"
+  }
+}
