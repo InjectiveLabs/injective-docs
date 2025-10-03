@@ -3,31 +3,2241 @@
   "theme": "mint",
   "name": "Injective Docs",
   "colors": {
-    "primary": "#ff0000"
+    "primary": "#004D9D",
+    "light": "#29A19C",
+    "dark": "#0D1821"
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs"
   },
   "navigation": {
     "groups": [
       {
-        "group": "DeFi",
-        "icon": "notebook-text",
-        "tag": "NEW",
+        "group": "About Injective",
         "pages": [
-          "defi",
-          "defi/wallet"
+          "README"
+        ]
+      },
+      {
+        "group": "DeFi",
+        "pages": [
+          "defi/README",
+          {
+            "group": "Wallet",
+            "pages": [
+              "defi/wallet/README",
+              {
+                "group": "Create a wallet",
+                "pages": [
+                  "defi/wallet/create"
+                ]
+              },
+              {
+                "group": "Accounts",
+                "pages": [
+                  "defi/wallet/accounts"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Trading",
+            "pages": [
+              "defi/trading/README",
+              {
+                "group": "Order Types",
+                "pages": [
+                  "defi/trading/order-types"
+                ]
+              },
+              {
+                "group": "Trading Fees and Rebates",
+                "pages": [
+                  "defi/trading/fees"
+                ]
+              },
+              {
+                "group": "Margin Trading",
+                "pages": [
+                  "defi/trading/margin"
+                ]
+              },
+              {
+                "group": "Liquidation",
+                "pages": [
+                  "defi/trading/margin-liquidation"
+                ]
+              },
+              {
+                "group": "Funding Rates",
+                "pages": [
+                  "defi/trading/margin-funding-rates"
+                ]
+              },
+              {
+                "group": "Performing Liquidations",
+                "pages": [
+                  "defi/trading/margin-performing-liquidations"
+                ]
+              },
+              {
+                "group": "Derivatives",
+                "pages": [
+                  "defi/trading/derivatives"
+                ]
+              },
+              {
+                "group": "Perpetuals",
+                "pages": [
+                  "defi/trading/derivatives-perpetuals"
+                ]
+              },
+              {
+                "group": "Expiry Futures",
+                "pages": [
+                  "defi/trading/derivatives-expiry-futures"
+                ]
+              },
+              {
+                "group": "Election Perpetual",
+                "pages": [
+                  "defi/trading/derivatives-election-perpetual"
+                ]
+              },
+              {
+                "group": "Pre-Launch Futures",
+                "pages": [
+                  "defi/trading/derivatives-pre-launch-futures"
+                ]
+              },
+              {
+                "group": "Index Perpetual Futures",
+                "pages": [
+                  "defi/trading/derivatives-index-perpetual-futures"
+                ]
+              },
+              {
+                "group": "iAssets",
+                "pages": [
+                  "defi/trading/derivatives-iassets"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Token Standards",
+            "pages": [
+              "defi/tokens/README",
+              {
+                "group": "INJ coin",
+                "pages": [
+                  "defi/tokens/inj-coin"
+                ]
+              },
+              {
+                "group": "Token Factory",
+                "pages": [
+                  "defi/tokens/token-factory"
+                ]
+              },
+              {
+                "group": "CW20 Standard",
+                "pages": [
+                  "defi/tokens/cw20-standard"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Bridge",
+            "pages": [
+              "defi/bridge/README",
+              {
+                "group": "From Ethereum",
+                "pages": [
+                  "https:/injective.com/blog/how-to-bridge-from-ethereum-to-injective-using-metamask/"
+                ]
+              },
+              {
+                "group": "From Solana",
+                "pages": [
+                  "https:/injective.com/blog/how-to-bridge-from-solana-to-injective-using-phantom/"
+                ]
+              },
+              {
+                "group": "Using Wormhole",
+                "pages": [
+                  "https:/injective.com/blog/how-to-bridge-to-injective-using-wormhole/"
+                ]
+              },
+              {
+                "group": "Using IBC",
+                "pages": [
+                  "https:/injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Staking",
+            "pages": [
+              "defi/staking"
+            ]
+          },
+          {
+            "group": "Governance",
+            "pages": [
+              "defi/governance"
+            ]
+          },
+          {
+            "group": "Community Burn",
+            "pages": [
+              "defi/community-burn"
+            ]
+          },
+          {
+            "group": "Transactions",
+            "pages": [
+              "defi/transactions"
+            ]
+          },
+          {
+            "group": "Transaction Gas and Fees",
+            "pages": [
+              "defi/transaction-fees"
+            ]
+          },
+          {
+            "group": "Open Liquidity Program",
+            "pages": [
+              "defi/open-liquidity-program/README",
+              {
+                "group": "Introduction",
+                "pages": [
+                  "defi/open-liquidity-program/introduction"
+                ]
+              },
+              {
+                "group": "Rewards",
+                "pages": [
+                  "defi/open-liquidity-program/rewards"
+                ]
+              },
+              {
+                "group": "Epochs",
+                "pages": [
+                  "defi/open-liquidity-program/epochs"
+                ]
+              },
+              {
+                "group": "Eligibility",
+                "pages": [
+                  "defi/open-liquidity-program/eligibility"
+                ]
+              },
+              {
+                "group": "Program Details",
+                "pages": [
+                  "defi/open-liquidity-program/program-details"
+                ]
+              },
+              {
+                "group": "Scoring Formula/Methodology",
+                "pages": [
+                  "defi/open-liquidity-program/scoring"
+                ]
+              },
+              {
+                "group": "Formula Parameters",
+                "pages": [
+                  "defi/open-liquidity-program/formula-parameters"
+                ]
+              },
+              {
+                "group": "Reward Allocations",
+                "pages": [
+                  "defi/open-liquidity-program/reward-allocations"
+                ]
+              },
+              {
+                "group": "Flexible Reward Allocations",
+                "pages": [
+                  "defi/open-liquidity-program/flexible-reward-allocations"
+                ]
+              },
+              {
+                "group": "Eligible Markets",
+                "pages": [
+                  "defi/open-liquidity-program/eligible-markets"
+                ]
+              },
+              {
+                "group": "Legacy Reward Allocations",
+                "pages": [
+                  "defi/open-liquidity-program/reward-allocations-legacy"
+                ]
+              },
+              {
+                "group": "Reward Disbursements",
+                "pages": [
+                  "defi/open-liquidity-program/reward-disbursements"
+                ]
+              },
+              {
+                "group": "Performance Tracking",
+                "pages": [
+                  "defi/open-liquidity-program/performance-tracking"
+                ]
+              },
+              {
+                "group": "Volatility Response Modifications",
+                "pages": [
+                  "defi/open-liquidity-program/volatility-response-modifications"
+                ]
+              },
+              {
+                "group": "Fee Tiers",
+                "pages": [
+                  "defi/open-liquidity-program/fee-tiers"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Injective Hub",
+            "pages": [
+              "https:/hub.injective.network"
+            ]
+          },
+          {
+            "group": "Injective Explorer",
+            "pages": [
+              "https:/explorer.injective.network"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Infrastructure",
+        "pages": [
+          "infra/README",
+          {
+            "group": "Command Line Node Interaction",
+            "pages": [
+              "infra/interact-node-command-line"
+            ]
+          },
+          {
+            "group": "gRPC Node Interaction",
+            "pages": [
+              "infra/interact-node-grpc"
+            ]
+          },
+          {
+            "group": "Go Node Interaction",
+            "pages": [
+              "infra/interact-node-go"
+            ]
+          },
+          {
+            "group": "REST Node Interaction",
+            "pages": [
+              "infra/interact-node-rest"
+            ]
+          },
+          {
+            "group": "Run Node",
+            "pages": [
+              "infra/run-node"
+            ]
+          },
+          {
+            "group": "Set up Keyring",
+            "pages": [
+              "infra/set-up-keyring"
+            ]
+          },
+          {
+            "group": "Join Network",
+            "pages": [
+              "infra/join-a-network"
+            ]
+          },
+          {
+            "group": "Cosmovisor",
+            "pages": [
+              "infra/cosmovisor"
+            ]
+          },
+          {
+            "group": "Upgrade Node",
+            "pages": [
+              "infra/upgrade-node"
+            ]
+          },
+          {
+            "group": "Mainnet Validator",
+            "pages": [
+              "infra/validator-mainnet/README",
+              {
+                "group": "Peggo",
+                "pages": [
+                  "infra/validator-mainnet/peggo"
+                ]
+              },
+              {
+                "group": "Canonical Chain Upgrades",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade"
+                ]
+              },
+              {
+                "group": "v1.16.4",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.4"
+                ]
+              },
+              {
+                "group": "v1.16.2",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.2"
+                ]
+              },
+              {
+                "group": "v1.16.1",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.1"
+                ]
+              },
+              {
+                "group": "v1.16.0",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.0"
+                ]
+              },
+              {
+                "group": "v1.15.0",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.15.0"
+                ]
+              },
+              {
+                "group": "v1.14.1",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.14.1"
+                ]
+              },
+              {
+                "group": "v1.14.0",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.14.0"
+                ]
+              },
+              {
+                "group": "v1.13.3",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.13.3"
+                ]
+              },
+              {
+                "group": "v1.13.2",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.13.2"
+                ]
+              },
+              {
+                "group": "v1.13.0 - Altaris",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.13.0"
+                ]
+              },
+              {
+                "group": "v1.12.1",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-v1.12.1"
+                ]
+              },
+              {
+                "group": "v1.12.0 - Volan",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-v1.12.0"
+                ]
+              },
+              {
+                "group": "v1.11.0",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-v1.11.0"
+                ]
+              },
+              {
+                "group": "v1.10.0",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-v1.10.0"
+                ]
+              },
+              {
+                "group": "10009",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10009"
+                ]
+              },
+              {
+                "group": "10008 - Camelot",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10008"
+                ]
+              },
+              {
+                "group": "10007-rc1",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10007-rc1"
+                ]
+              },
+              {
+                "group": "10006-rc1",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10006-rc1"
+                ]
+              },
+              {
+                "group": "10005-rc1",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10005-rc1"
+                ]
+              },
+              {
+                "group": "10004-rc1-patch",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1-patch"
+                ]
+              },
+              {
+                "group": "10004-rc1",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1"
+                ]
+              },
+              {
+                "group": "10003-rc1",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10003-rc1"
+                ]
+              },
+              {
+                "group": "10002-rc2",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10002-rc2"
+                ]
+              },
+              {
+                "group": "10002-rc1",
+                "pages": [
+                  "infra/validator-mainnet/canonical-chain-upgrade-10002-rc1"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Testnet Validator",
+            "pages": [
+              "infra/validator-testnet/README",
+              {
+                "group": "Peggo",
+                "pages": [
+                  "infra/validator-testnet/peggo"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Public Endpoints",
+            "pages": [
+              "infra/public-endpoints"
+            ]
+          },
+          {
+            "group": "Premium Endpoints",
+            "pages": [
+              "infra/premium-endpoints"
+            ]
+          },
+          {
+            "group": "Archival Setup",
+            "pages": [
+              "infra/archival-setup"
+            ]
+          },
+          {
+            "group": "Indexer API Reference",
+            "pages": [
+              "https:/api.injective.network/swagger/#/"
+            ]
+          }
         ]
       },
       {
         "group": "Developers",
-        "icon": "notebook-text",
-        "tag": "NEW",
         "pages": [
-          "developers",
-          "developers/convert-addresses"
+          "developers/README",
+          {
+            "group": "Convert addresses",
+            "pages": [
+              "developers/convert-addresses"
+            ]
+          },
+          {
+            "group": "Network Information",
+            "pages": [
+              "developers/network-information"
+            ]
+          },
+          {
+            "group": "injectived",
+            "pages": [
+              "developers/injectived/README",
+              {
+                "group": "Install injectived",
+                "pages": [
+                  "developers/injectived/install"
+                ]
+              },
+              {
+                "group": "Using injectived",
+                "pages": [
+                  "developers/injectived/use"
+                ]
+              },
+              {
+                "group": "injectived Commands",
+                "pages": [
+                  "developers/injectived/advanced"
+                ]
+              },
+              {
+                "group": "Testnet Proposals",
+                "pages": [
+                  "developers/testnet-proposals"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Concepts",
+            "pages": [
+              "developers/concepts/README",
+              {
+                "group": "Sentry Node",
+                "pages": [
+                  "developers/concepts/sentry-node"
+                ]
+              },
+              {
+                "group": "Indexer API",
+                "pages": [
+                  "developers/concepts/indexer-api"
+                ]
+              },
+              {
+                "group": "Trading Account",
+                "pages": [
+                  "developers/concepts/trading-account"
+                ]
+              },
+              {
+                "group": "gRPC and Protobuf",
+                "pages": [
+                  "developers/concepts/grpc-protobuf"
+                ]
+              },
+              {
+                "group": "Token Factory",
+                "pages": [
+                  "developers/concepts/token-factory"
+                ]
+              },
+              {
+                "group": "Market min price tick size calculation",
+                "pages": [
+                  "developers/concepts/calculation-min-price-tick-size"
+                ]
+              },
+              {
+                "group": "Market min quantity tick size calculation",
+                "pages": [
+                  "developers/concepts/calculation-min-quantity-tick-size"
+                ]
+              },
+              {
+                "group": "CosmJs Support",
+                "pages": [
+                  "developers/concepts/cosmjs-support"
+                ]
+              },
+              {
+                "group": "Networks",
+                "pages": [
+                  "developers/concepts/networks"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Assets",
+            "pages": [
+              "developers/assets/README",
+              {
+                "group": "Denom",
+                "pages": [
+                  "developers/assets/denom"
+                ]
+              },
+              {
+                "group": "Token Metadata",
+                "pages": [
+                  "developers/assets/token-metadata"
+                ]
+              },
+              {
+                "group": "Injective List",
+                "pages": [
+                  "developers/assets/injective-list"
+                ]
+              },
+              {
+                "group": "Creating Tokens",
+                "pages": [
+                  "developers/assets/token-create"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "dApps",
+            "pages": [
+              "developers/dapps/README",
+              {
+                "group": "Nuxt configuration",
+                "pages": [
+                  "developers/dapps/configure-nuxt"
+                ]
+              },
+              {
+                "group": "React configuration",
+                "pages": [
+                  "developers/dapps/configure-react"
+                ]
+              },
+              {
+                "group": "Running examples",
+                "pages": [
+                  "developers/dapps/run-examples"
+                ]
+              },
+              {
+                "group": "Smart contract examples",
+                "pages": [
+                  "developers/dapps/example-smart-contract"
+                ]
+              },
+              {
+                "group": "DEX examples",
+                "pages": [
+                  "developers/dapps/example-dex"
+                ]
+              },
+              {
+                "group": "Webpack examples",
+                "pages": [
+                  "developers/dapps/example-webpack"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Testnet Faucet",
+            "pages": [
+              "https:/testnet.faucet.injective.network"
+            ]
+          },
+          {
+            "group": "Chain API Reference",
+            "pages": [
+              "https:/sentry.lcd.injective.network/swagger/#/"
+            ]
+          },
+          {
+            "group": "Injective TypeScript SDK",
+            "pages": [
+              "https:/docs.ts.injective.network"
+            ]
+          },
+          {
+            "group": "Injective Go SDK",
+            "pages": [
+              "https:/github.com/InjectiveLabs/sdk-go/"
+            ]
+          },
+          {
+            "group": "Injective Python SDK",
+            "pages": [
+              "https:/github.com/InjectiveLabs/sdk-python"
+            ]
+          },
+          {
+            "group": "Injective CosmWasm SDK",
+            "pages": [
+              "https:/github.com/InjectiveLabs/cw-injective"
+            ]
+          },
+          {
+            "group": "Injective Rust SDK",
+            "pages": [
+              "https:/github.com/InjectiveLabs/injective-rust"
+            ]
+          },
+          {
+            "group": "The Graph",
+            "pages": [
+              "https:/docs.substreams.dev/documentation/how-to-guides/injective"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "EVM Developers",
+        "pages": [
+          "developers-evm/README",
+          {
+            "group": "EVM Network Information",
+            "pages": [
+              "developers-evm/network-information"
+            ]
+          },
+          {
+            "group": "Your First EVM Smart Contract",
+            "pages": [
+              "developers-evm/smart-contracts/README",
+              {
+                "group": "Compile with Hardhat",
+                "pages": [
+                  "developers-evm/smart-contracts/compile-hardhat"
+                ]
+              },
+              {
+                "group": "Test with Hardhat",
+                "pages": [
+                  "developers-evm/smart-contracts/test-hardhat"
+                ]
+              },
+              {
+                "group": "Deploy with Hardhat",
+                "pages": [
+                  "developers-evm/smart-contracts/deploy-hardhat"
+                ]
+              },
+              {
+                "group": "Verify with Hardhat",
+                "pages": [
+                  "developers-evm/smart-contracts/verify-hardhat"
+                ]
+              },
+              {
+                "group": "Interact with Hardhat",
+                "pages": [
+                  "developers-evm/smart-contracts/interact-hardhat"
+                ]
+              },
+              {
+                "group": "Compile with Foundry",
+                "pages": [
+                  "developers-evm/smart-contracts/compile-foundry"
+                ]
+              },
+              {
+                "group": "Test with Foundry",
+                "pages": [
+                  "developers-evm/smart-contracts/test-foundry"
+                ]
+              },
+              {
+                "group": "Deploy with Foundry",
+                "pages": [
+                  "developers-evm/smart-contracts/deploy-foundry"
+                ]
+              },
+              {
+                "group": "Verify with Foundry",
+                "pages": [
+                  "developers-evm/smart-contracts/verify-foundry"
+                ]
+              },
+              {
+                "group": "Interact with Foundry",
+                "pages": [
+                  "developers-evm/smart-contracts/interact-foundry"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Your First EVM dApp",
+            "pages": [
+              "developers-evm/dapps/README",
+              {
+                "group": "Connect with MetaMask",
+                "pages": [
+                  "developers-evm/dapps/connect-with-metamask"
+                ]
+              },
+              {
+                "group": "Connect with WalletConnect",
+                "pages": [
+                  "developers-evm/dapps/connect-with-walletconnect"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "EVM Equivalence",
+            "pages": [
+              "developers-evm/evm-equivalence"
+            ]
+          },
+          {
+            "group": "MultiVM Token Standard",
+            "pages": [
+              "developers-evm/multivm-token-standard"
+            ]
+          },
+          {
+            "group": "Precompiles",
+            "pages": [
+              "developers-evm/precompiles"
+            ]
+          },
+          {
+            "group": "Bank Precompile",
+            "pages": [
+              "developers-evm/bank-precompile"
+            ]
+          },
+          {
+            "group": "Exchange Precompile",
+            "pages": [
+              "developers-evm/exchange-precompile"
+            ]
+          },
+          {
+            "group": "ERC20 Module",
+            "pages": [
+              "developers-evm/erc20-module"
+            ]
+          },
+          {
+            "group": "Infrastructure & Tooling",
+            "pages": [
+              "developers-evm/infrastructure-and-tooling"
+            ]
+          },
+          {
+            "group": "EVM Testnet Faucet",
+            "pages": [
+              "https:/testnet.faucet.injective.network/"
+            ]
+          },
+          {
+            "group": "EVM Testnet Explorer",
+            "pages": [
+              "https:/testnet.blockscout.injective.network/blocks"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Cosmwasm Developers",
+        "pages": [
+          "developers-cosmwasm/README",
+          {
+            "group": "CosmWasm Smart Contracts",
+            "pages": [
+              "developers-cosmwasm/smart-contracts/README",
+              {
+                "group": "Your First CosmWasm Smart Contract",
+                "pages": [
+                  "developers-cosmwasm/smart-contracts/your-first-smart-contract"
+                ]
+              },
+              {
+                "group": "Injective Name Service",
+                "pages": [
+                  "developers-cosmwasm/smart-contracts/injective-name-service"
+                ]
+              },
+              {
+                "group": "NeptuneService",
+                "pages": [
+                  "developers-cosmwasm/smart-contracts/neptune-service"
+                ]
+              },
+              {
+                "group": "CW20 to Bank & Market Order in One Transaction",
+                "pages": [
+                  "developers-cosmwasm/smart-contracts/cw20-convert-market-order"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Local Development Guide",
+            "pages": [
+              "developers-cosmwasm/local-development-guide"
+            ]
+          },
+          {
+            "group": "Mainnet Deployment Guide",
+            "pages": [
+              "developers-cosmwasm/mainnet-deployment-guide"
+            ]
+          },
+          {
+            "group": "Whitelisting Deployment Address Guide",
+            "pages": [
+              "developers-cosmwasm/whitelisting-deployment-address-guide"
+            ]
+          },
+          {
+            "group": "Create your Swap Contract Guide",
+            "pages": [
+              "developers-cosmwasm/create-your-swap-contract-guide"
+            ]
+          },
+          {
+            "group": "Creating UIs Guide",
+            "pages": [
+              "developers-cosmwasm/create-uis-guide"
+            ]
+          },
+          {
+            "group": "Using Injective Queries and Messages",
+            "pages": [
+              "developers-cosmwasm/cosmwasm-any"
+            ]
+          },
+          {
+            "group": "CW20 Adapter",
+            "pages": [
+              "developers-cosmwasm/cw20-adapter"
+            ]
+          },
+          {
+            "group": "Injective Test Tube",
+            "pages": [
+              "developers-cosmwasm/injective-test-tube"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "DeFi Developers",
+        "pages": [
+          "developers-defi/README",
+          {
+            "group": "Min Price Tick Size Calculation",
+            "pages": [
+              "developers-defi/calculate-min-price-tick-size"
+            ]
+          },
+          {
+            "group": "Min Quantity Tick Size Calculation",
+            "pages": [
+              "developers-defi/min-quantity-tick-size"
+            ]
+          },
+          {
+            "group": "Testnet Faucet Integration",
+            "pages": [
+              "developers-defi/testnet-faucet-integration"
+            ]
+          },
+          {
+            "group": "Launch a Token",
+            "pages": [
+              "developers-defi/token-launch"
+            ]
+          },
+          {
+            "group": "Launch a Market",
+            "pages": [
+              "developers-defi/market-launch"
+            ]
+          },
+          {
+            "group": "Denom Metadata",
+            "pages": [
+              "developers-defi/denom-and-bank"
+            ]
+          },
+          {
+            "group": "Provider Oracle",
+            "pages": [
+              "developers-defi/provider-oracle"
+            ]
+          },
+          {
+            "group": "Exchange API Reference",
+            "pages": [
+              "https:/api.injective.exchange/"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Native Developers",
+        "pages": [
+          "developers-native/README",
+          {
+            "group": "Wallets",
+            "pages": [
+              "developers-native/wallets/README",
+              {
+                "group": "Accounts",
+                "pages": [
+                  "developers-native/wallets/accounts"
+                ]
+              },
+              {
+                "group": "Connections",
+                "pages": [
+                  "developers-native/wallets/connections"
+                ]
+              },
+              {
+                "group": "Strategy",
+                "pages": [
+                  "developers-native/wallets/strategy"
+                ]
+              },
+              {
+                "group": "Offchain Data",
+                "pages": [
+                  "developers-native/wallets/offchain-data"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Bridges",
+            "pages": [
+              "developers-native/bridges/README",
+              {
+                "group": "Ethereum Bridge",
+                "pages": [
+                  "developers-native/bridges/ethereum"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Transactions",
+            "pages": [
+              "developers-native/transactions/README",
+              {
+                "group": "Cosmos Transaction",
+                "pages": [
+                  "developers-native/transactions/cosmos"
+                ]
+              },
+              {
+                "group": "Ledger through Keplr Wallet Transaction",
+                "pages": [
+                  "developers-native/transactions/cosmos-ledger-keplr"
+                ]
+              },
+              {
+                "group": "Ethereum Transaction",
+                "pages": [
+                  "developers-native/transactions/ethereum"
+                ]
+              },
+              {
+                "group": "Ledger through Keplr Wallet Transaction",
+                "pages": [
+                  "developers-native/transactions/ethereum-ledger"
+                ]
+              },
+              {
+                "group": "MsgBroadcaster Transaction",
+                "pages": [
+                  "developers-native/transactions/msgbroadcaster"
+                ]
+              },
+              {
+                "group": "Private Key Transaction",
+                "pages": [
+                  "developers-native/transactions/private-key"
+                ]
+              },
+              {
+                "group": "Web3 Gateway Transaction",
+                "pages": [
+                  "developers-native/transactions/web3-gateway"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Transaction Examples",
+            "pages": [
+              "developers-native/examples/README",
+              {
+                "group": "Auction",
+                "pages": [
+                  "developers-native/examples/auction"
+                ]
+              },
+              {
+                "group": "AuthZ",
+                "pages": [
+                  "developers-native/examples/authz"
+                ]
+              },
+              {
+                "group": "Bank",
+                "pages": [
+                  "developers-native/examples/bank"
+                ]
+              },
+              {
+                "group": "Distribution",
+                "pages": [
+                  "developers-native/examples/distribution"
+                ]
+              },
+              {
+                "group": "Exchange",
+                "pages": [
+                  "developers-native/examples/exchange"
+                ]
+              },
+              {
+                "group": "Fee Grant",
+                "pages": [
+                  "developers-native/examples/feegrant"
+                ]
+              },
+              {
+                "group": "Governance",
+                "pages": [
+                  "developers-native/examples/governance"
+                ]
+              },
+              {
+                "group": "IBC",
+                "pages": [
+                  "developers-native/examples/ibc"
+                ]
+              },
+              {
+                "group": "Insurance",
+                "pages": [
+                  "developers-native/examples/insurance"
+                ]
+              },
+              {
+                "group": "Peggy",
+                "pages": [
+                  "developers-native/examples/peggy"
+                ]
+              },
+              {
+                "group": "Permissions",
+                "pages": [
+                  "developers-native/examples/permissions"
+                ]
+              },
+              {
+                "group": "Staking",
+                "pages": [
+                  "developers-native/examples/staking"
+                ]
+              },
+              {
+                "group": "Token Factory",
+                "pages": [
+                  "developers-native/examples/token-factory"
+                ]
+              },
+              {
+                "group": "Wasm",
+                "pages": [
+                  "developers-native/examples/wasm"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Querying the Chain",
+            "pages": [
+              "developers-native/query-chain/README",
+              {
+                "group": "Auction",
+                "pages": [
+                  "developers-native/query-chain/auction"
+                ]
+              },
+              {
+                "group": "Auth",
+                "pages": [
+                  "developers-native/query-chain/auth"
+                ]
+              },
+              {
+                "group": "Bank",
+                "pages": [
+                  "developers-native/query-chain/bank"
+                ]
+              },
+              {
+                "group": "Distribution",
+                "pages": [
+                  "developers-native/query-chain/distribution"
+                ]
+              },
+              {
+                "group": "Exchange",
+                "pages": [
+                  "developers-native/query-chain/exchange"
+                ]
+              },
+              {
+                "group": "Governance",
+                "pages": [
+                  "developers-native/query-chain/governance"
+                ]
+              },
+              {
+                "group": "IBC",
+                "pages": [
+                  "developers-native/query-chain/ibc"
+                ]
+              },
+              {
+                "group": "Mint",
+                "pages": [
+                  "developers-native/query-chain/mint"
+                ]
+              },
+              {
+                "group": "Insurance Fund",
+                "pages": [
+                  "developers-native/query-chain/insurance-funds"
+                ]
+              },
+              {
+                "group": "Oracle",
+                "pages": [
+                  "developers-native/query-chain/oracle"
+                ]
+              },
+              {
+                "group": "Peggy",
+                "pages": [
+                  "developers-native/query-chain/peggy"
+                ]
+              },
+              {
+                "group": "Permissions",
+                "pages": [
+                  "developers-native/query-chain/permissions"
+                ]
+              },
+              {
+                "group": "Staking",
+                "pages": [
+                  "developers-native/query-chain/staking"
+                ]
+              },
+              {
+                "group": "Tendermint",
+                "pages": [
+                  "developers-native/query-chain/tendermint"
+                ]
+              },
+              {
+                "group": "Wasm",
+                "pages": [
+                  "developers-native/query-chain/wasm"
+                ]
+              },
+              {
+                "group": "WasmX",
+                "pages": [
+                  "developers-native/query-chain/wasmx"
+                ]
+              },
+              {
+                "group": "Token Factory",
+                "pages": [
+                  "developers-native/query-chain/token-factory"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Querying the Indexer",
+            "pages": [
+              "developers-native/query-indexer/README",
+              {
+                "group": "Account",
+                "pages": [
+                  "developers-native/query-indexer/account"
+                ]
+              },
+              {
+                "group": "Auction",
+                "pages": [
+                  "developers-native/query-indexer/auction"
+                ]
+              },
+              {
+                "group": "Derivatives",
+                "pages": [
+                  "developers-native/query-indexer/derivatives"
+                ]
+              },
+              {
+                "group": "Explorer",
+                "pages": [
+                  "developers-native/query-indexer/explorer"
+                ]
+              },
+              {
+                "group": "Insurance Funds",
+                "pages": [
+                  "developers-native/query-indexer/insurance-funds"
+                ]
+              },
+              {
+                "group": "Markets",
+                "pages": [
+                  "developers-native/query-indexer/markets"
+                ]
+              },
+              {
+                "group": "Leaderboard",
+                "pages": [
+                  "developers-native/query-indexer/leaderboard"
+                ]
+              },
+              {
+                "group": "Mito",
+                "pages": [
+                  "developers-native/query-indexer/mito"
+                ]
+              },
+              {
+                "group": "Oracle",
+                "pages": [
+                  "developers-native/query-indexer/oracle"
+                ]
+              },
+              {
+                "group": "Portfolio",
+                "pages": [
+                  "developers-native/query-indexer/portfolio"
+                ]
+              },
+              {
+                "group": "Spot",
+                "pages": [
+                  "developers-native/query-indexer/spot"
+                ]
+              },
+              {
+                "group": "Web3 Gateway Transactions",
+                "pages": [
+                  "developers-native/query-indexer/transaction"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Streaming the Indexer",
+            "pages": [
+              "developers-native/query-indexer-stream/README",
+              {
+                "group": "Account",
+                "pages": [
+                  "developers-native/query-indexer-stream/account"
+                ]
+              },
+              {
+                "group": "Auction",
+                "pages": [
+                  "developers-native/query-indexer-stream/auction"
+                ]
+              },
+              {
+                "group": "Derivatives",
+                "pages": [
+                  "developers-native/query-indexer-stream/derivatives"
+                ]
+              },
+              {
+                "group": "Oracle",
+                "pages": [
+                  "developers-native/query-indexer-stream/oracle"
+                ]
+              },
+              {
+                "group": "Portfolio",
+                "pages": [
+                  "developers-native/query-indexer-stream/portfolio"
+                ]
+              },
+              {
+                "group": "Spot",
+                "pages": [
+                  "developers-native/query-indexer-stream/spot"
+                ]
+              },
+              {
+                "group": "Explorer",
+                "pages": [
+                  "developers-native/query-indexer-stream/explorer"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Querying Ethereum with GraphQL",
+            "pages": [
+              "developers-native/query-ethereum/README"
+            ]
+          },
+          {
+            "group": "Injective Modules",
+            "pages": [
+              "developers-native/injective/README",
+              {
+                "group": "Auction",
+                "pages": [
+                  "developers-native/injective/auction/README",
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/auction/01_state"
+                    ]
+                  },
+                  {
+                    "group": "Messages",
+                    "pages": [
+                      "developers-native/injective/auction/02_messages"
+                    ]
+                  },
+                  {
+                    "group": "EndBlock",
+                    "pages": [
+                      "developers-native/injective/auction/03_end_block"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "developers-native/injective/auction/04_events"
+                    ]
+                  },
+                  {
+                    "group": "Params",
+                    "pages": [
+                      "developers-native/injective/auction/05_params"
+                    ]
+                  },
+                  {
+                    "group": "Errors",
+                    "pages": [
+                      "developers-native/injective/auction/99_errors"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Exchange",
+                "pages": [
+                  "developers-native/injective/exchange/README",
+                  {
+                    "group": "Derivative Markets Concepts",
+                    "pages": [
+                      "developers-native/injective/exchange/00_derivative_market_concepts"
+                    ]
+                  },
+                  {
+                    "group": "Spot Markets Concepts",
+                    "pages": [
+                      "developers-native/injective/exchange/01_spot_market_concepts"
+                    ]
+                  },
+                  {
+                    "group": "Binary Option Markets Concepts",
+                    "pages": [
+                      "developers-native/injective/exchange/02_binary_options_markets"
+                    ]
+                  },
+                  {
+                    "group": "Other Concepts",
+                    "pages": [
+                      "developers-native/injective/exchange/02_other_concepts"
+                    ]
+                  },
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/exchange/03_state"
+                    ]
+                  },
+                  {
+                    "group": "State Transitions",
+                    "pages": [
+                      "developers-native/injective/exchange/04_state_transitions"
+                    ]
+                  },
+                  {
+                    "group": "Messages",
+                    "pages": [
+                      "developers-native/injective/exchange/05_messages"
+                    ]
+                  },
+                  {
+                    "group": "Proposals",
+                    "pages": [
+                      "developers-native/injective/exchange/06_proposals"
+                    ]
+                  },
+                  {
+                    "group": "BeginBlock",
+                    "pages": [
+                      "developers-native/injective/exchange/07_begin_block"
+                    ]
+                  },
+                  {
+                    "group": "EndBlock",
+                    "pages": [
+                      "developers-native/injective/exchange/08_end_block"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "developers-native/injective/exchange/09_events"
+                    ]
+                  },
+                  {
+                    "group": "Params",
+                    "pages": [
+                      "developers-native/injective/exchange/10_params"
+                    ]
+                  },
+                  {
+                    "group": "MsgPrivilegedExecuteContract",
+                    "pages": [
+                      "developers-native/injective/exchange/11_msg_privileged_execute_contract"
+                    ]
+                  },
+                  {
+                    "group": "Errors",
+                    "pages": [
+                      "developers-native/injective/exchange/99_errors"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "ERC20",
+                "pages": [
+                  "developers-native/injective/erc20/README",
+                  {
+                    "group": "Concepts",
+                    "pages": [
+                      "developers-native/injective/erc20/01_concepts"
+                    ]
+                  },
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/erc20/02_state"
+                    ]
+                  },
+                  {
+                    "group": "Messages",
+                    "pages": [
+                      "developers-native/injective/erc20/03_messages"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "developers-native/injective/erc20/04_events"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "EVM",
+                "pages": [
+                  "developers-native/injective/evm/README",
+                  {
+                    "group": "Concepts",
+                    "pages": [
+                      "developers-native/injective/evm/01_concepts"
+                    ]
+                  },
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/evm/02_state"
+                    ]
+                  },
+                  {
+                    "group": "State Transitions",
+                    "pages": [
+                      "developers-native/injective/evm/03_state_transitions"
+                    ]
+                  },
+                  {
+                    "group": "Transactions",
+                    "pages": [
+                      "developers-native/injective/evm/04_transactions"
+                    ]
+                  },
+                  {
+                    "group": "ABCI",
+                    "pages": [
+                      "developers-native/injective/evm/05_abci"
+                    ]
+                  },
+                  {
+                    "group": "Hooks",
+                    "pages": [
+                      "developers-native/injective/evm/06_hooks"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "developers-native/injective/evm/07_events"
+                    ]
+                  },
+                  {
+                    "group": "Params",
+                    "pages": [
+                      "developers-native/injective/evm/08_params"
+                    ]
+                  },
+                  {
+                    "group": "Client",
+                    "pages": [
+                      "developers-native/injective/evm/09_client"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Insurance",
+                "pages": [
+                  "developers-native/injective/insurance/README",
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/insurance/01_state"
+                    ]
+                  },
+                  {
+                    "group": "State Transitions",
+                    "pages": [
+                      "developers-native/injective/insurance/02_state_transitions"
+                    ]
+                  },
+                  {
+                    "group": "Messages",
+                    "pages": [
+                      "developers-native/injective/insurance/03_messages"
+                    ]
+                  },
+                  {
+                    "group": "EndBlock",
+                    "pages": [
+                      "developers-native/injective/insurance/04_end_block"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "developers-native/injective/insurance/05_events"
+                    ]
+                  },
+                  {
+                    "group": "Params",
+                    "pages": [
+                      "developers-native/injective/insurance/06_params"
+                    ]
+                  },
+                  {
+                    "group": "Improvements",
+                    "pages": [
+                      "developers-native/injective/insurance/07_future_improvements"
+                    ]
+                  },
+                  {
+                    "group": "Errors",
+                    "pages": [
+                      "developers-native/injective/insurance/99_errors"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "OCR",
+                "pages": [
+                  "developers-native/injective/ocr/README",
+                  {
+                    "group": "Concepts",
+                    "pages": [
+                      "developers-native/injective/ocr/01_concepts"
+                    ]
+                  },
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/ocr/02_state"
+                    ]
+                  },
+                  {
+                    "group": "Messages",
+                    "pages": [
+                      "developers-native/injective/ocr/03_messages"
+                    ]
+                  },
+                  {
+                    "group": "Proposals",
+                    "pages": [
+                      "developers-native/injective/ocr/04_proposals"
+                    ]
+                  },
+                  {
+                    "group": "BeginBlock",
+                    "pages": [
+                      "developers-native/injective/ocr/05_begin_block"
+                    ]
+                  },
+                  {
+                    "group": "Hooks",
+                    "pages": [
+                      "developers-native/injective/ocr/06_hooks"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "developers-native/injective/ocr/07_events"
+                    ]
+                  },
+                  {
+                    "group": "Params",
+                    "pages": [
+                      "developers-native/injective/ocr/08_params"
+                    ]
+                  },
+                  {
+                    "group": "Errors",
+                    "pages": [
+                      "developers-native/injective/ocr/99_errors"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Oracle",
+                "pages": [
+                  "developers-native/injective/oracle/README",
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/oracle/01_state"
+                    ]
+                  },
+                  {
+                    "group": "Keeper",
+                    "pages": [
+                      "developers-native/injective/oracle/02_keeper"
+                    ]
+                  },
+                  {
+                    "group": "Messages",
+                    "pages": [
+                      "developers-native/injective/oracle/03_messages"
+                    ]
+                  },
+                  {
+                    "group": "Proposals",
+                    "pages": [
+                      "developers-native/injective/oracle/04_proposals"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "developers-native/injective/oracle/05_events"
+                    ]
+                  },
+                  {
+                    "group": "Improvements",
+                    "pages": [
+                      "developers-native/injective/oracle/06_future_improvements"
+                    ]
+                  },
+                  {
+                    "group": "Errors",
+                    "pages": [
+                      "developers-native/injective/oracle/99_errors"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Peggy",
+                "pages": [
+                  "developers-native/injective/peggy/README",
+                  {
+                    "group": "Definitions",
+                    "pages": [
+                      "developers-native/injective/peggy/01_definitions"
+                    ]
+                  },
+                  {
+                    "group": "Workflow",
+                    "pages": [
+                      "developers-native/injective/peggy/02_workflow"
+                    ]
+                  },
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/peggy/03_state"
+                    ]
+                  },
+                  {
+                    "group": "Messages",
+                    "pages": [
+                      "developers-native/injective/peggy/04_messages"
+                    ]
+                  },
+                  {
+                    "group": "Slashing",
+                    "pages": [
+                      "developers-native/injective/peggy/05_slashing"
+                    ]
+                  },
+                  {
+                    "group": "EndBlock",
+                    "pages": [
+                      "developers-native/injective/peggy/06_end_block"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "developers-native/injective/peggy/07_events"
+                    ]
+                  },
+                  {
+                    "group": "Params",
+                    "pages": [
+                      "developers-native/injective/peggy/08_params"
+                    ]
+                  },
+                  {
+                    "group": "Relay Semantics",
+                    "pages": [
+                      "developers-native/injective/peggy/09_relay_semantics"
+                    ]
+                  },
+                  {
+                    "group": "Improvements",
+                    "pages": [
+                      "developers-native/injective/peggy/10_future_improvements"
+                    ]
+                  },
+                  {
+                    "group": "Errors",
+                    "pages": [
+                      "developers-native/injective/peggy/99_errors"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Permissions",
+                "pages": [
+                  "developers-native/injective/permissions/README",
+                  {
+                    "group": "Concepts",
+                    "pages": [
+                      "developers-native/injective/permissions/01_concepts"
+                    ]
+                  },
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/permissions/02_state"
+                    ]
+                  },
+                  {
+                    "group": "State Transition",
+                    "pages": [
+                      "developers-native/injective/permissions/03_state_transitions"
+                    ]
+                  },
+                  {
+                    "group": "Errors",
+                    "pages": [
+                      "developers-native/injective/permissions/99_errors"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "TokenFactory",
+                "pages": [
+                  "developers-native/injective/tokenfactory/README",
+                  {
+                    "group": "Concepts",
+                    "pages": [
+                      "developers-native/injective/tokenfactory/01_concepts"
+                    ]
+                  },
+                  {
+                    "group": "State",
+                    "pages": [
+                      "developers-native/injective/tokenfactory/02_state"
+                    ]
+                  },
+                  {
+                    "group": "Messages",
+                    "pages": [
+                      "developers-native/injective/tokenfactory/03_messages"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "developers-native/injective/tokenfactory/04_events"
+                    ]
+                  },
+                  {
+                    "group": "Params",
+                    "pages": [
+                      "developers-native/injective/tokenfactory/05_params"
+                    ]
+                  },
+                  {
+                    "group": "Errors",
+                    "pages": [
+                      "developers-native/injective/tokenfactory/99_errors"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "WasmX",
+                "pages": [
+                  "developers-native/injective/wasmx/README",
+                  {
+                    "group": "Concepts",
+                    "pages": [
+                      "developers-native/injective/wasmx/01_concepts"
+                    ]
+                  },
+                  {
+                    "group": "Data",
+                    "pages": [
+                      "developers-native/injective/wasmx/02_data"
+                    ]
+                  },
+                  {
+                    "group": "Proposals",
+                    "pages": [
+                      "developers-native/injective/wasmx/03_proposals"
+                    ]
+                  },
+                  {
+                    "group": "Messages",
+                    "pages": [
+                      "developers-native/injective/wasmx/04_messages"
+                    ]
+                  },
+                  {
+                    "group": "Params",
+                    "pages": [
+                      "developers-native/injective/wasmx/05_params"
+                    ]
+                  },
+                  {
+                    "group": "Errors",
+                    "pages": [
+                      "developers-native/injective/wasmx/99_errors"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Lanes",
+                "pages": [
+                  "developers-native/injective/lanes/README"
+                ]
+              },
+              {
+                "group": "TxFees",
+                "pages": [
+                  "developers-native/injective/txfees/README"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Core Modules",
+            "pages": [
+              "developers-native/core/README",
+              {
+                "group": "Auth",
+                "pages": [
+                  "developers-native/core/auth/README"
+                ]
+              },
+              {
+                "group": "AuthZ",
+                "pages": [
+                  "developers-native/core/authz/README"
+                ]
+              },
+              {
+                "group": "Bank",
+                "pages": [
+                  "developers-native/core/bank/README"
+                ]
+              },
+              {
+                "group": "Consensus",
+                "pages": [
+                  "developers-native/core/consensus/README"
+                ]
+              },
+              {
+                "group": "Crisis",
+                "pages": [
+                  "developers-native/core/crisis/README"
+                ]
+              },
+              {
+                "group": "Distribution",
+                "pages": [
+                  "developers-native/core/distribution/README"
+                ]
+              },
+              {
+                "group": "Evidence",
+                "pages": [
+                  "developers-native/core/evidence/README"
+                ]
+              },
+              {
+                "group": "Feegrant",
+                "pages": [
+                  "developers-native/core/feegrant/README"
+                ]
+              },
+              {
+                "group": "Gov",
+                "pages": [
+                  "developers-native/core/gov/README"
+                ]
+              },
+              {
+                "group": "Group",
+                "pages": [
+                  "developers-native/core/group/README"
+                ]
+              },
+              {
+                "group": "Mint",
+                "pages": [
+                  "developers-native/core/mint/README"
+                ]
+              },
+              {
+                "group": "NFT",
+                "pages": [
+                  "developers-native/core/nft/README"
+                ]
+              },
+              {
+                "group": "Params",
+                "pages": [
+                  "developers-native/core/params/README"
+                ]
+              },
+              {
+                "group": "Slashing",
+                "pages": [
+                  "developers-native/core/slashing/README"
+                ]
+              },
+              {
+                "group": "Staking",
+                "pages": [
+                  "developers-native/core/staking/README"
+                ]
+              },
+              {
+                "group": "Upgrade",
+                "pages": [
+                  "developers-native/core/upgrade/README"
+                ]
+              },
+              {
+                "group": "Circuit",
+                "pages": [
+                  "developers-native/core/circuit/README"
+                ]
+              },
+              {
+                "group": "Genutil",
+                "pages": [
+                  "developers-native/core/genutil/README"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "group": "FAQ",
+        "pages": [
+          "faq"
+        ]
+      },
+      {
+        "group": "Glossary",
+        "pages": [
+          "glossary"
+        ]
+      },
+      {
+        "group": "References",
+        "pages": [
+          "references"
         ]
       }
     ]
-  },
-  "styling": {
-    "eyebrows": "breadcrumbs"
   }
 }
