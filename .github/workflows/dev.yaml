@@ -1,0 +1,33 @@
+name: Injective Chain canonical docs deployment
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      SSH_USER: ${{ secrets.DEVNET_SSH_USER }}
+      SSH_KEY: ${{ secrets.DEVNET_SSH_KEY }}
+      SSH_HOST: ${{ secrets.DEVNET_SSH_HOST }}
+      APP_GOOGLE_ANALYTICS_KEY: ${{ secrets.APP_DEVNET_GOOGLE_ANALYTICS_KEY }}
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/devnet.key
+          chmod 600 ~/.ssh/devnet.key
+
+          cat >>~/.ssh/config <<END
+          Host injective-devnet
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/devnet.key
+            StrictHostKeyChecking no
+          END
+      - name: Check out the source
+        run: ssh injective-devnet 'cd ~/injective/injective-docs && git stash && git checkout dev -- && git pull origin dev'
+      - name: Install Dependencies and generate module docs
+        run: ssh injective-devnet 'export PATH=~/.nvm/versions/node/v16.15.0/bin/:$PATH && cd ~/injective/injective-docs && rm -rf node_modules && yarn install'
+      - name: Build static site and copy the dist
+        run: ssh injective-devnet 'export PATH=~/.nvm/versions/node/v16.15.0/bin/:$PATH && cd ~/injective/injective-docs && yarn build'

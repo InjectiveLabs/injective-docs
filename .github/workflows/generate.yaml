@@ -1,0 +1,37 @@
+name: Injective Docs Generation
+
+on: workflow_dispatch
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env: 
+      GH_CORE_USER: ${{ secrets.GH_CORE_USER }}
+      GH_CORE_TOKEN: ${{ secrets.GH_CORE_TOKEN }}
+      GH_DOCS_TOKEN: ${{ secrets.GH_DOCS_TOKEN }}
+    steps:
+      - name: Checkout injective-docs
+        uses: actions/checkout@v1
+        with:
+          repository: InjectiveLabs/injective-docs
+          ref: dev
+          path: ./injective-docs
+
+      - name: Generate new docs from injective-core
+        run: |
+          export GH_CORE_USER=${{ secrets.GH_CORE_USER }}
+          export GH_CORE_TOKEN=${{ secrets.GH_CORE_TOKEN }}
+          export GH_DOCS_TOKEN=${{ secrets.GH_DOCS_TOKEN }}
+          ./scripts/setup.sh
+
+      - name: Set up Git user
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Commit the changes to injective-docs
+        run: |
+          git add .
+          git commit -m "chore: docs regenerated" || echo "No changes to commit"
+          git remote set-url origin https://${{ secrets.GH_CORE_USER }}:${{ secrets.GH_DOCS_TOKEN }}@github.com/InjectiveLabs/injective-docs.git
+          git push || echo "No changes to push"

@@ -1,0 +1,27 @@
+{
+  "name": "injective-docs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "generate:core-specs": "./scripts/injective-core-specs.sh"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {},
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=16.14"
+  }
+}
