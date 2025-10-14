@@ -25,70 +25,77 @@ import {
   ChainGrpcBankApi,
   IndexerGrpcSpotApi,
   IndexerGrpcDerivativesApi,
-} from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+} from "@injectivelabs/sdk-ts";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
 // Getting the pre-defined endpoints for the Testnet environment
 // (using TestnetK8s here because we want to use the Kubernetes infra)
-export const NETWORK = Network.Testnet
-export const ENDPOINTS = getNetworkEndpoints(NETWORK)
+export const NETWORK = Network.Testnet;
+export const ENDPOINTS = getNetworkEndpoints(NETWORK);
 
-export const chainBankApi = new ChainGrpcBankApi(ENDPOINTS.grpc)
-export const indexerSpotApi = new IndexerGrpcSpotApi(ENDPOINTS.indexer)
+export const chainBankApi = new ChainGrpcBankApi(ENDPOINTS.grpc);
+export const indexerSpotApi = new IndexerGrpcSpotApi(ENDPOINTS.indexer);
 export const indexerDerivativesApi = new IndexerGrpcDerivativesApi(
-  ENDPOINTS.indexer,
-)
+  ENDPOINTS.indexer
+);
 
 export const indexerSpotStream = new IndexerGrpcDerivativeStream(
-  ENDPOINTS.indexer,
-)
+  ENDPOINTS.indexer
+);
 export const indexerDerivativeStream = new IndexerGrpcDerivativeStream(
-  ENDPOINTS.indexer,
-)
+  ENDPOINTS.indexer
+);
 ```
 
 Then, we also need to setup a wallet connection to allow the user to connect to our DEX and start signing transactions. To make this happen we are going to use our `@injectivelabs/wallet-strategy` package which allows users to connect with a various of different wallet providers and use them to sign transactions on Injective.
 
 ```ts
 // filename: Wallet.ts
-import { Wallet } from '@injectivelabs/wallet-base'
-import { WalletStrategy } from '@injectivelabs/wallet-strategy'
-import { ChainId, EthereumChainId } from '@injectivelabs/ts-types'
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { WalletStrategy } from "@injectivelabs/wallet-strategy";
 
-const chainId = ChainId.Testnet // The Injective Chain chainId
-const ethereumChainId = EthereumChainId.Goerli // The Ethereum Chain ID
+const chainId = ChainId.Testnet; // The Injective Testnet Chain ID
+const evmChainId = EvmChainId.TestnetEvm; // The Injective Evm Testnet Chain ID
 
-export const alchemyRpcEndpoint = `https://eth-goerli.alchemyapi.io/v2/${process.env.APP_ALCHEMY_GOERLI_KEY}`
+export const alchemyRpcEndpoint = `https://eth-goerli.alchemyapi.io/v2/${process.env.APP_ALCHEMY_SEPOLIA_KEY}`;
 
 export const walletStrategy = new WalletStrategy({
-  chainId: CHAIN_ID,
-  ethereumOptions: {
+  chainId,
+  evmOptions: {
+    evmChainId,
     rpcUrl: alchemyRpcEndpoint,
-    ethereumChainId: ETHEREUM_CHAIN_ID,
   },
-})
+});
 ```
 
-If we don't want to use Ethereum native wallets, just omit the `ethereumOptions` within the `WalletStrategy` constructor.
+If we don't want to use Ethereum native wallets, just omit the `evmOptions` within the `WalletStrategy` constructor.
 
 Finally, to do the whole transaction flow (prepare + sign + broadcast) on Injective we are going to use the MsgBroadcaster class.
 
 ```ts
 // filename: MsgBroadcaster.ts
-import { Wallet } from '@injectivelabs/wallet-base'
-import { BaseWalletStrategy, MsgBroadcaster } from '@injectivelabs/wallet-core'
-import { MetamaskStrategy } from '@injectivelabs/wallet-evm'
+import { Wallet } from "@injectivelabs/wallet-base";
+import { EvmWalletStrategy } from "@injectivelabs/wallet-evm";
+import { BaseWalletStrategy, MsgBroadcaster } from "@injectivelabs/wallet-core";
 
-const strategyArgs: WalletStrategyArguments = {} /** define the args */
-const strategyEthArgs: ConcreteEthereumWalletStrategyArgs = {} /** if the wallet is an Ethereum wallet */
+const strategyArgs: WalletStrategyArguments = {}; /** define the args */
+const strategyEthArgs: ConcreteEthereumWalletStrategyArgs =
+  {}; /** if the wallet is an Ethereum wallet */
 const strategies = {
-  [Wallet.Metamask]: new MetamaskStrategy(strategyEthArgs)
-}
+  [Wallet.Metamask]: new EvmWalletStrategy(strategyEthArgs),
+};
 
-export const walletStrategy = new BaseWalletStrategy({...strategyArgs, strategies})
+export const walletStrategy = new BaseWalletStrategy({
+  ...strategyArgs,
+  strategies,
+});
 
-const broadcasterArgs: MsgBroadcasterOptions = {} /** define the broadcaster args */
-export const msgBroadcaster = new MsgBroadcaster({...broadcasterArgs, walletStrategy})
+const broadcasterArgs: MsgBroadcasterOptions =
+  {}; /** define the broadcaster args */
+export const msgBroadcaster = new MsgBroadcaster({
+  ...broadcasterArgs,
+  walletStrategy,
+});
 ```
 
 ## Connect to the user's wallet
@@ -100,42 +107,42 @@ Note: We can switch between the "active" wallet within the `WalletStrategy` usin
 ```ts
 // filename: WalletConnection.ts
 import {
+  ErrorType,
   WalletException,
   UnspecifiedErrorCode,
-  ErrorType,
-} from '@injectivelabs/exceptions'
-import { Wallet } from '@injectivelabs/wallet-base'
-import { walletStrategy } from './Wallet.ts'
+} from "@injectivelabs/exceptions";
+import { Wallet } from "@injectivelabs/wallet-base";
+import { walletStrategy } from "./Wallet.ts";
 
 export const getAddresses = async (wallet: Wallet): Promise<string[]> => {
-  walletStrategy.setWallet(wallet)
+  walletStrategy.setWallet(wallet);
 
-  const addresses = await walletStrategy.getAddresses()
+  const addresses = await walletStrategy.getAddresses();
 
   if (addresses.length === 0) {
     throw new WalletException(
-      new Error('There are no addresses linked in this wallet.'),
+      new Error("There are no addresses linked in this wallet."),
       {
         code: UnspecifiedErrorCode,
         type: ErrorType.WalletError,
-      },
-    )
+      }
+    );
   }
 
   if (!addresses.every((address) => !!address)) {
     throw new WalletException(
-      new Error('There are no addresses linked in this wallet.'),
+      new Error("There are no addresses linked in this wallet."),
       {
         code: UnspecifiedErrorCode,
         type: ErrorType.WalletError,
-      },
-    )
+      }
+    );
   }
 
   // If we are using Ethereum native wallets the 'addresses' are the hex addresses
   // If we are using Cosmos native wallets the 'addresses' are bech32 injective addresses,
-  return addresses
-}
+  return addresses;
+};
 ```
 
 ## Querying
@@ -212,7 +219,7 @@ Finally, let's make some transactions. For this example, we are going to:
 
 ```ts
 // filename: Transactions.ts
-import { BigNumberInWei } from '@injectivelabs/utils'
+import { toChainFormat } from '@injectivelabs/utils'
 import {
   MsgSend,
   MsgCreateSpotLimitOrder,
@@ -230,7 +237,7 @@ export const makeMsgSend = ({
 }) => {
   const amount = {
     denom,
-    amount: new BigNumberInBase(amount).toWei(/** denom's decimals */)
+    amount: toChainFormat(amount)
   }
 
   return MsgSend.fromJSON({
