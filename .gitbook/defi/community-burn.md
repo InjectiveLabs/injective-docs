@@ -1,8 +1,12 @@
-# Community Burn
+---
+hidden: true
+---
 
-### What is the Community Burn?
+# Community BuyBack
 
-The Community Burn is a monthly onchain event that allows anyone to take part in Injective’s deflationary mechanism. Participants commit INJ, and in return receive a pro rata share of the revenue generated across the Injective ecosystem. The INJ exchanged is then permanently burned, reducing the total supply.
+### What is the Community BuyBack?
+
+The Community BuyBack is a monthly onchain event that allows anyone to take part in Injective’s deflationary mechanism. Participants commit INJ, and in return receive a pro rata share of the revenue generated across the Injective ecosystem. The INJ exchanged is then permanently burned, reducing the total supply.
 
 This process rewards the community, increases scarcity of INJ, and aligns long-term value with ecosystem success. The Community Burn evolved from the original Burn Auction, replacing the winner-take-all model with a simpler, more accessible, and community-driven design.
 
@@ -36,11 +40,11 @@ A quick reference box (almost like a cheat sheet) with the most important parame
 3. **Claim Earnings**\
    When the event concludes, all INJ commitments are exchanged for the revenue collected that month. This revenue, made up of multiple different tokens, is distributed pro rata to all participants.\
    \
-   To claim, simply go to Injective Hub → Community Burn, and press Claim next to the round you participated in under Burn History.
-4. **INJ Burn**\
+   To claim, simply go to Injective Hub → Community BuyBack, and press Claim next to the round you participated in under Burn History.
+4. **INJ BuyBack**\
    The total INJ collected from all participants is permanently burned, reducing the total supply of INJ.
 5. **Get Ready for Next Month**\
-   Track your earnings, monitor stats from previous rounds, and stay updated on the next Community Burn directly from your Injective Hub dashboard. All slot reservations, commitments, burn transactions, and distributions are publicly visible onchain.
+   Track your earnings, monitor stats from previous rounds, and stay updated on the next Community BuyBack directly from your Injective Hub dashboard. All slot reservations, commitments, burn transactions, and distributions are publicly visible onchain.
 
 ### FAQ
 
