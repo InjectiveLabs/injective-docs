@@ -1,8 +1,9 @@
 ---
 description: OLP Reward Allocations (through Epoch 42)
+hidden: true
 ---
 
-# Reward Allocations (Legacy)
+# Legacy Reward Allocations
 
 ## Market Reward Allocations
 
@@ -13,7 +14,7 @@ Rewards are allocated to [eligible markets](eligible-markets.md) in two differen
 
 ### Static Market Reward Allocations (Preallocations)
 
-12.5% of INJ rewards will be preallocated to each of the BTC/USDT PERP market, ETH/USDT PERP market, and INJ/USDT PERP market. 1% will be preallocated to each remaining eligible market as a minimum allocation:&#x20;
+12.5% of INJ rewards will be preallocated to each of the BTC/USDT PERP market, ETH/USDT PERP market, and INJ/USDT PERP market. 1% will be preallocated to each remaining eligible market as a minimum allocation:
 
 | Market                 | Total Allocation                                                                       |
 | ---------------------- | -------------------------------------------------------------------------------------- |
@@ -28,7 +29,7 @@ Static allocations may change over time as more markets are added to the eligibl
 
 ### Dynamic Market Reward Allocations
 
-The remaining rewards will be allocated to the eligible markets (excluding BTC/ETH/INJ Perps) based on the following equation:&#x20;
+The remaining rewards will be allocated to the eligible markets (excluding BTC/ETH/INJ Perps) based on the following equation:
 
 $$
 Rewards_{Market_i} = TAR * Preallocation_{Market_i} + TAR * (1- Preallocation_{Total}) *\newline \frac {\sum\limits_{MM} (LS_{MM,\  Market_i})^{0.7} * Volume_{MM,\  Market_i}} {\sum\limits_{Market}\sum\limits_{MM} (LS_{MM,\ Market})^{0.7}*Volume_{MM,\ Market}}
@@ -45,10 +46,10 @@ $$
 {% hint style="info" %}
 $$Other\ Preallocations$$ refers to the static market reward allocations for non-BTC, ETH, and INJ perp markets.
 
-For more information on $$TAR$$ each epoch, see the [Reward Pool](./rewards.md) page.
+For more information on $$TAR$$ each epoch, see the [Reward Pool](rewards.md) page.
 {% endhint %}
 
-For each eligible market, the product of the MM[^1]’s $$LS^{0.7}$$ and $$Volume$$ is aggregated across all MMs. Rewards are allocated to each market based on the proportional aggregate products across all applicable markets. The preallocation amount (1%) for the market is also added in.&#x20;
+For each eligible market, the product of the MM[^1]’s $$LS^{0.7}$$ and $$Volume$$ is aggregated across all MMs. Rewards are allocated to each market based on the proportional aggregate products across all applicable markets. The preallocation amount (1%) for the market is also added in.
 
 #### Markets Added Partway Through an Epoch
 
@@ -74,16 +75,12 @@ $$
 Rewards_{MM_i} = \sum_{Market}\left(Rewards_{Market} * \frac {TS_{MM_i, \ Market}} {\sum_{MM} TS_{MM,\ Market}} \right)
 $$
 
-**Each** [**MM**](#user-content-fn-3)[^3] **will receive rewards based on the** [**MM**](#user-content-fn-4)[^4]**’s proportional**[ $$TS$$ ](./scoring.md#total-score)**within the market, subject to governance approval.**&#x20;
+**Each** [**MM**](#user-content-fn-1)[^1] **will receive rewards based on the** [**MM**](#user-content-fn-1)[^1]**’s proportional**[ $$TS$$ ](scoring.md#total-score)**within the market, subject to governance approval.**
 
 {% hint style="info" %}
-Rewards for addresses totaling < 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process.&#x20;
+Rewards for addresses totaling < 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process.
 {% endhint %}
 
 [^1]: Market Maker
 
 [^2]: Market Makers
-
-[^3]: Market Maker
-
-[^4]: Market Maker

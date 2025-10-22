@@ -16,7 +16,7 @@ Rewards are allocated to [eligible markets](eligible-markets.md) in three differ
 
 12.5% of INJ rewards will be preallocated to each of the BTC/USDT PERP market, ETH/USDT PERP market, and INJ/USDT PERP market. The remaining INJ for the epoch will be allocated to each remaining eligible market with a minimum allocation of 100 INJ.
 
-<table><thead><tr><th width="165.875">Market</th><th>Allocation (until epoch 51)</th><th>Allocation (from epoch 52)</th></tr></thead><tbody><tr><td>BTC/USDT Perp</td><td>12.5%</td><td>13.33%</td></tr><tr><td>ETH/USDT Perp</td><td>12.5%</td><td>13.33%</td></tr><tr><td>INJ/USDT Perp</td><td>12.5%</td><td>13.33%</td></tr><tr><td>INJ/USDT Spot</td><td>5%</td><td>5%</td></tr><tr><td>Other Eligible Markets</td><td>Formula based allocation (see below)</td><td></td></tr></tbody></table>
+<table><thead><tr><th width="165.875">Market</th><th>Allocation (thru epoch 51)</th><th>Allocation (from epoch 52)</th></tr></thead><tbody><tr><td>BTC/USDT Perp</td><td>12.5%</td><td>13.33%</td></tr><tr><td>ETH/USDT Perp</td><td>12.5%</td><td>13.33%</td></tr><tr><td>INJ/USDT Perp</td><td>12.5%</td><td>13.33%</td></tr><tr><td>INJ/USDT Spot</td><td>5%</td><td>5%</td></tr><tr><td>Other Eligible Markets</td><td>Formula based allocation (see below)</td><td></td></tr></tbody></table>
 
 {% hint style="info" %}
 Static allocations may change over time as more markets are added to the eligible list
@@ -86,5 +86,3 @@ $$
 {% hint style="info" %}
 Rewards for addresses totaling < 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process.
 {% endhint %}
-
-For the reward allocation process up through epoch 42, please see [reward-allocations-legacy.md](reward-allocations-legacy.md "mention").
