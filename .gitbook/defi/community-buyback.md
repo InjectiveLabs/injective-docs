@@ -1,7 +1,3 @@
----
-hidden: true
----
-
 # Community BuyBack
 
 ### What is the Community BuyBack?
