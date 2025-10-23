@@ -51,7 +51,7 @@ Your share equals your committed INJ divided by the total INJ committed across a
 No, commitments are final once submitted.
 
 **How do I know the burn happened?**\
-The burn transaction is onchain and can be tracked via the [Injective Hub](https://injhub.com/community-burn).
+The burn transaction is onchain and can be tracked via the [Injective Hub](https://injhub.com/community-buyback).
 
 **What if I miss a round?**\
 You’ll need to wait until next month’s event opens.
