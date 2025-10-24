@@ -49,7 +49,7 @@ See [network information](../developers/network-information.md) for more details
 
 * Explorer - Blockscout mirror: [`testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
 
-### Token Contracts
+## Token Contracts
 
 {% tabs %}
 {% tab title="Mainnet" %}
