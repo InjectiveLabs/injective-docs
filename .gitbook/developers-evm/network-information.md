@@ -49,11 +49,23 @@ See [network information](../developers/network-information.md) for more details
 
 * Explorer - Blockscout mirror: [`testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
 
-### Tokens
+### Token Contracts
 
+{% tabs %}
+{% tab title="Mainnet" %}
+* USDT(MTS USDT)  - [`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`](https://blockscout.injective.network/address/0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13)
+  * Note that this follows the [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard), meaning the same token can be used across all Injective modules (EVM and Cosmos) without a bridge.
+* wETH(wrapped ETH) - [`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`](https://blockscout.injective.network/address/0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7)
+* wINJ(wrapped INJ) - [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
+* USDC - [`0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989`](https://blockscout.injective.network/address/0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989)
+{% endtab %}
+
+{% tab title="Testnet" %}
 * wINJ (wrapped INJ) - [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://testnet.blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
 * USDT (MTS USDT) - [`0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`](https://testnet.blockscout.injective.network/address/0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60)
   * Note that this follows the [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard), which means the same token can be used in all Injective modules (EVM, Cosmos) without using a bridge.
+{% endtab %}
+{% endtabs %}
 
 For more information about Injective EVM Testnet see the following pages:
 
