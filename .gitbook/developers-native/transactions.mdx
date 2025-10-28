@@ -12,14 +12,14 @@ Messages are the instructions included in transactions to specify the state chan
 
 There is an abstraction class (_MsgBase_) that we export from the `@injectivelabs/sdk-ts` and every message extends the `MsgBase` interface, which has couple of mapping functionalities:
 
-* `toData` -> Converts the Message to a simple Object representation,
-* `toProto` -> Returns a proto representation of the Message,
-* `toDirectSign` -> Converts the Message to a proto representation,
-* `toAmino` -> Converts the Message to a amino representation + type,
-* `toWeb3` -> alternative for `toAmino`, with the difference of the Message path type,
-* `toEip712Types` -> Generates the EIP712 types for the Message,
-* `toEip712` -> Generates the Message EIP712 value
-* `toJSON` -> Converts the message to a JSON representation,
+* `toData` → Converts the Message to a simple Object representation,
+* `toProto` → Returns a proto representation of the Message,
+* `toDirectSign` → Converts the Message to a proto representation,
+* `toAmino` → Converts the Message to a amino representation + type,
+* `toWeb3` → alternative for `toAmino`, with the difference of the Message path type,
+* `toEip712Types` → Generates the EIP712 types for the Message,
+* `toEip712` → Generates the Message EIP712 value
+* `toJSON` → Converts the message to a JSON representation,
 
 ### Transaction Context
 

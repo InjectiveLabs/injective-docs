@@ -98,7 +98,7 @@ temporally diverge too far from each other. Given the initial margin ratio, an o
 * The margin must fulfill: `Margin ≥ InitialMarginRatio * Price * Quantity`, e.g., in a market with maximally 20x leverage,\
   the initial margin ratio would be 0.05. Any new position will have a margin which is at least 0.05 of its notional.
 * The margin must fulfill the mark price requirement:
-* `Margin >= Quantity * (InitialMarginRatio * MarkPrice - PNL)`
+* `Margin ≥ Quantity * (InitialMarginRatio * MarkPrice - PNL)`
 
 PNL is the expected profit and loss of the position if it was closed at the current MarkPrice. Solved for MarkPrice this results in:
 
@@ -111,8 +111,8 @@ Throughout the lifecycle of an active position, if the following margin requirem
 to liquidation. (Note: for simplicity of notation but without loss of generality, we assume the position considered does\
 not have any funding).
 
-* For Longs: `Margin >= Quantity * MaintenanceMarginRatio * MarkPrice - (MarkPrice - EntryPrice)`
-* For Shorts: `Margin >= Quantity * MaintenanceMarginRatio * MarkPrice - (EntryPrice - MarkPrice)`
+* For Longs: `Margin ≥ Quantity * MaintenanceMarginRatio * MarkPrice - (MarkPrice - EntryPrice)`
+* For Shorts: `Margin ≥ Quantity * MaintenanceMarginRatio * MarkPrice - (EntryPrice - MarkPrice)`
 
 **Liquidation Payouts**
 

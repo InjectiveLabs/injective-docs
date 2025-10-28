@@ -18,9 +18,9 @@ The mark price is based on two price feeds: 1) EWMA (Exponentially Weighted Movi
 
 And during the various phases of the timeline, a different price feed would be used.
 
-* Before asset is listed on CEX -> EWMA price feed
-* Within 24 hours of asset is listed on CEX -> EWMA price feed
-* 24 hours after asset is listed on CEX -> CEX API price feed
+* Before asset is listed on CEX → EWMA price feed
+* Within 24 hours of asset is listed on CEX → EWMA price feed
+* 24 hours after asset is listed on CEX → CEX API price feed
 
 This design is used to prevent a sudden distortion in mark price if the difference between EWMA price feed and CEX API price feed is great.&#x20;
 

@@ -458,7 +458,7 @@ to keep track of the highest infraction amount for every single slashing period.
 The maximum number of slashing periods is the `len(UnbondingPeriod) / len(JailPeriod)`.\
 The current defaults in Gaia for the `UnbondingPeriod` and `JailPeriod` are 3 weeks\
 and 2 days, respectively. This means there could potentially be up to 11 slashing\
-periods concurrently being tracked per validator. If we set the `JailPeriod >= UnbondingPeriod`,\
+periods concurrently being tracked per validator. If we set the `JailPeriod ≥ UnbondingPeriod`,\
 we only have to track 1 slashing period (i.e not have to track slashing periods).
 
 Currently, in the jail period implementation, once a validator unjails, all of\

@@ -773,7 +773,7 @@ delegated to this validator). At this point the validator is said to be an\
 after the unbonding period has passed.
 
 Each block the validator queue is to be checked for mature unbonding validators\
-(namely with a completion time <= current time and completion height <= current\
+(namely with a completion time ≤ current time and completion height ≤ current\
 block height). At this point any mature validators which do not have any\
 delegations remaining are deleted from state. For all other mature unbonding\
 validators that still have remaining delegations, the `validator.Status` is\

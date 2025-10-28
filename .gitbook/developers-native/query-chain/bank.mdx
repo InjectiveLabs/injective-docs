@@ -6,8 +6,12 @@ Example code snippets to query the chain for bank module related data.
 
 ### Fetch bank module params
 
-<pre class="language-ts"><code class="lang-ts"><strong>import { ChainGrpcBankApi } from '@injectivelabs/sdk-ts'
-</strong>import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+<pre class="language-ts">
+<code class="lang-ts">
+<strong>
+import { ChainGrpcBankApi } from '@injectivelabs/sdk-ts'
+</strong>
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc)
@@ -15,7 +19,8 @@ const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc)
 const moduleParams = await chainGrpcBankApi.fetchModuleParams()
 
 console.log(moduleParams)
-</code></pre>
+</code>
+</pre>
 
 ### Fetching injective address's balances
 
