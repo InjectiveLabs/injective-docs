@@ -60,10 +60,10 @@
                 "group": "Bridge",
                 "pages": [
                   "defi/bridge",
-                  "https:/injective.com/blog/how-to-bridge-from-ethereum-to-injective-using-metamask/",
-                  "https:/injective.com/blog/how-to-bridge-from-solana-to-injective-using-phantom/",
-                  "https:/injective.com/blog/how-to-bridge-to-injective-using-wormhole/",
-                  "https:/injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/"
+                  "redirects/https_injective_com_blog_how_to_bridge_from_ethereum_to_injective_using_metamask",
+                  "redirects/https_injective_com_blog_how_to_bridge_from_solana_to_injective_using_phantom",
+                  "redirects/https_injective_com_blog_how_to_bridge_to_injective_using_wormhole",
+                  "redirects/https_injective_com_blog_how_to_bridge_from_cosmos_to_injective_using_keplr"
                 ]
               },
               "defi/staking",
@@ -92,8 +92,8 @@
                   "defi/open-liquidity-program/fee-tiers"
                 ]
               },
-              "https:/hub.injective.network",
-              "https:/explorer.injective.network"
+              "redirects/https_hub_injective_network",
+              "redirects/https_explorer_injective_network"
             ]
           },
           {
@@ -151,7 +151,7 @@
               "infra/public-endpoints",
               "infra/premium-endpoints",
               "infra/archival-setup",
-              "https:/api.injective.network/swagger/#/"
+              "redirects/https_api_injective_network_swagger"
             ]
           },
           {
@@ -207,14 +207,14 @@
                   "developers/dapps/example-webpack"
                 ]
               },
-              "https:/testnet.faucet.injective.network",
-              "https:/sentry.lcd.injective.network/swagger/#/",
-              "https:/docs.ts.injective.network",
-              "https:/github.com/InjectiveLabs/sdk-go/",
-              "https:/github.com/InjectiveLabs/sdk-python",
-              "https:/github.com/InjectiveLabs/cw-injective",
-              "https:/github.com/InjectiveLabs/injective-rust",
-              "https:/docs.substreams.dev/documentation/how-to-guides/injective"
+              "redirects/https_testnet_faucet_injective_network",
+              "redirects/https_sentry_lcd_injective_network_swagger",
+              "redirects/https_docs_ts_injective_network",
+              "redirects/https_github_com_InjectiveLabs_sdk_go",
+              "redirects/https_github_com_InjectiveLabs_sdk_python",
+              "redirects/https_github_com_InjectiveLabs_cw_injective",
+              "redirects/https_github_com_InjectiveLabs_injective_rust",
+              "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective"
             ]
           },
           {
@@ -253,8 +253,8 @@
               "developers-evm/exchange-precompile",
               "developers-evm/erc20-module",
               "developers-evm/infrastructure-and-tooling",
-              "https:/testnet.faucet.injective.network/",
-              "https:/testnet.blockscout.injective.network/blocks"
+              "redirects/https_testnet_faucet_injective_network",
+              "redirects/https_testnet_blockscout_injective_network_blocks"
             ]
           },
           {
@@ -292,7 +292,7 @@
               "developers-defi/market-launch",
               "developers-defi/denom-and-bank",
               "developers-defi/provider-oracle",
-              "https:/api.injective.exchange/"
+              "redirects/https_api_injective_exchange"
             ]
           },
           {
