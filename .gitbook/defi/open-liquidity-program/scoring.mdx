@@ -14,9 +14,9 @@ $$
 
 where $$LS_{epoch}$$ is the MM's [Liquidity Score](./scoring.md#liquidity-score) in the market in the epoch, $$Uptime_{Epoch}$$is the MM's [Uptime score](./scoring.md#uptime-score) in the market in the epoch, and $$Volume_{epoch}$$ is the MM's total volume (maker and taker) in the market in the epoch.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 $$a$$, $$b$$, and $$c$$ are exponent [parameters](formula-parameters.md) that weight the different components of the formula.
-{% endhint %}
+</Callout>
 
 ## Liquidity Score
 
@@ -42,9 +42,9 @@ $$LS_{N_{Ask}}$$ follows the same logic as $$LS_{N_{Bid}}$$, but on the ask side
 
 $$Spread$$ is calculated from the mid-price[^3] (distance from mid-price divided by mid-price).
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 For the current values of $$MinDepth$$ and $$MaxSpread$$, see the [Formula Parameters page](formula-parameters.md).
-{% endhint %}
+</Callout>
 
 ## Uptime Score
 
@@ -58,9 +58,9 @@ For MMs[^6] who qualify for OLP rewards (for the first time ever) partway throug
 
 For example, suppose there are exactly 40,320 snapshots in an epoch and an MM[^7] qualifies for the first time with exactly 20,000 snapshots remaining. Also suppose the MM[^8] had an $$Uptime_{Epoch}$$ of 18,0000 as defined by the scoring formula above during the remainder of the epoch. In this case, $$Uptime_{Epoch}$$ would be scaled to $$\frac{18000}{20000}*40320 = 36288$$.
 
-{% hint style="warning" %}
+<Callout icon="warning" color="#07C1FF" iconType="regular">
 For MM[^9] addresses that qualify partway through an epoch but have qualified in the past (the address failed to maintain eligibility at some point), $$Uptime_{Epoch}$$ will not be scaled. This is to disincentivize addresses from losing their eligibility from epoch to epoch.
-{% endhint %}
+</Callout>
 
 ## Volume
 
@@ -88,9 +88,9 @@ $$
 LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} + \frac{AskDepth_2}{Spread_2} + … \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 For information on individual reward calculations each epoch, see the [Reward Allocations page](reward-allocations.md).
-{% endhint %}
+</Callout>
 
 [^1]: Market Maker
 

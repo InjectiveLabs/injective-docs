@@ -2,11 +2,11 @@
 
 ## Gas and Fees
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 Learn about the differences between `Gas` and `Fees` on Injective.
 
 Pre-requisite Readings -> [Cosmos SDK Gas](https://docs.cosmos.network/main/build/modules/auth#gas--fees)
-{% endhint %}
+</Callout>
 
 Gas represents the amount of computational effort required to execute specific operations on the state machine.
 
@@ -20,11 +20,11 @@ fee = gas * gas price
 
 Gas is used to make sure that operations do not require an excess amount of computational power to complete, and to deter bad-acting users from spamming the network.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 **Minimum gas price:** The minimum gas price set by validators is currently `160,000,000inj`. To find the amount paid in `inj`, multiply the gas price by the gas amount and divide by 1e18 (INJ has 18 decimals).
 
 **For example:** if `gasWanted` is 104,519, then `gasFees` = 160,000,000 \* 104,519 / 1e18 = 0.000016723`inj`
-{% endhint %}
+</Callout>
 
 ### Cosmos SDK `Gas`
 

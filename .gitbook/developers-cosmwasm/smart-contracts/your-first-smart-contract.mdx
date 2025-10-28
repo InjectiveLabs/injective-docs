@@ -50,9 +50,9 @@ This helps get you started by providing the basic boilerplate and structure for 
 
 ## State
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 You can learn more about CosmWasm State on their [documentation](https://book.cosmwasm.com/basics/state.html).
-{% endhint %}
+</Callout>
 
 `State` handles the state of the database where smart contract data is stored and accessed.
 
@@ -97,9 +97,9 @@ Notice how the `State` struct holds both `count` and `owner`. In addition, the `
 
 ## InstantiateMsg
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 You can learn more about CosmWasm [InstantiateMsg on their documentation](https://github.com/CosmWasm/docs/blob/archive/dev-academy/develop-smart-contract/01-intro.md#instantiatemsg)
-{% endhint %}
+</Callout>
 
 The `InstantiateMsg` is provided to the contract when a user instantiates a contract on the blockchain through a `MsgInstantiateContract`. This provides the contract with its configuration as well as its initial state.
 
@@ -162,9 +162,9 @@ pub fn instantiate(
 
 ## ExecuteMsg
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 &#x20;You can learn more about CosmWasm ExecuteMsg in their [documentation](https://book.cosmwasm.com/basics/execute.html).
-{% endhint %}
+</Callout>
 
 The `ExecuteMsg` is a JSON message passed to the `execute()` function through a `MsgExecuteContract`. Unlike the `InstantiateMsg`, the `ExecuteMsg` can exist as several different types of messages to account for the different types of functions that a smart contract can expose to a user. The [`execute()` function](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L35) demultiplexes these different types of messages to its appropriate message handler logic.
 
@@ -265,9 +265,9 @@ The logic for reset is very similar to increment—except this time, it first ch
 
 ## QueryMsg
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 You can learn more about CosmWasm [QueryMsg in their documentation](https://docs.cosmwasm.com/docs/smart-contracts/query)
-{% endhint %}
+</Callout>
 
 The `GetCount` [query message](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/msg.rs#L16) has no parameters and returns the `count` value.
 
@@ -357,9 +357,9 @@ cargo wasm
 
 Next, we must optimize the contract in order to ready the code for upload to the chain.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 Read more details on [preparing the Wasm bytecode for production](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/Developing.md#preparing-the-wasm-bytecode-for-production)
-{% endhint %}
+</Callout>
 
 CosmWasm has [rust-optimizer](https://github.com/CosmWasm/rust-optimizer), an optimizing compiler that can produce a small and consistent build output. The easiest method to use the tool is to use a published Docker image—check [here](https://hub.docker.com/r/cosmwasm/rust-optimizer/tags) for the latest x86 version, or [here](https://hub.docker.com/r/cosmwasm/rust-optimizer-arm64/tags) for the latest ARM version. With Docker running, run the following command to mount the contract code to `/code` and optimize the output (you can use an absolute path instead of `$(pwd)` if you don't want to `cd` to the directory first):
 
@@ -379,11 +379,11 @@ docker run --rm -v "$(pwd)":/code \
   cosmwasm/rust-optimizer-arm64:0.12.12
 ```
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 CosmWasm does not recommend using the ARM64 version of the compiler because it produces different Wasm artifacts from the Intel/AMD version. For release/production, only contracts built with Intel/AMD optimizers are recommended for use. See [here](https://github.com/CosmWasm/rust-optimizer#notice) for the note from CosmWasm.
-{% endhint %}
+</Callout>
 
-{% hint style="warning" %}
+<Callout icon="warning" color="#07C1FF" iconType="regular">
 You may receive an `` Unable to update registry `crates-io` `` error while running the command. Try adding the following lines to the `Cargo.toml` file located within the contract directory and running the command again:
 
 ```toml
@@ -392,7 +392,7 @@ git-fetch-with-cli = true
 ```
 
 See [The Cargo Book](https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli) for more information.
-{% endhint %}
+</Callout>
 
 This produces an `artifacts` directory with a `PROJECT_NAME.wasm`, as well as `checksums.txt`, containing the Sha256 hash of the Wasm file. The Wasm file is compiled deterministically (anyone else running the same docker on the same git commit should get the identical file with the same Sha256 hash).
 
@@ -404,10 +404,10 @@ If you want to interact with your Smart Contract locally using CLI, you have to 
 
 Alternatively, a Docker image has been prepared to make this tutorial easier.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 If you install `injectived` from the binary, ignore the docker commands.
 In the [public endpoints section](../../infra/public-endpoints.md) you can find the right --node info to interact with Mainnet and Testnet.
-{% endhint %}
+</Callout>
 
 Executing this command will make the docker container execute indefinitely.
 
@@ -462,9 +462,9 @@ Take a moment to write down the address or export it as an env variable, as you 
 export INJ_ADDRESS= <your inj address>
 ```
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 You can request testnet funds for your recently generated test address using the [Injective test faucet](https://faucet.injective.network/).
-{% endhint %}
+</Callout>
 
 Now you have successfully created `testuser` an Injective Testnet. It should also hold some funds after requesting `testnet` funds from the faucet.
 
@@ -511,12 +511,12 @@ Check your address on the [Injective Testnet Explorer](https://testnet.explorer.
 
 You can see all stored codes on Injective Testnet under [Code](https://testnet.explorer.injective.network/smart-contracts/code/).
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 There are different ways to find the code that you just stored:
 
 * Look for the TxHash on the Injective Explorer [codes list](https://testnet.explorer.injective.network/smart-contracts/code/); it is most likely the most recent.
 * Use `injectived` to query transaction info.
-{% endhint %}
+</Callout>
 
 To query the transaction use the `txhash` and verify the contract was deployed.
 
@@ -605,9 +605,9 @@ Take a minute to generate the schema ([take a look at it here](https://github.co
 
 Now that we have the code on Injective, it is time to instantiate the contract to interact with it.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 Reminder On CosmWasm, the upload of a contract's code and the instantiation of a contract are regarded as separate events
-{% endhint %}
+</Callout>
 
 To instantiate the contract, run the following CLI command with the code_id you got in the previous step, along with the [JSON encoded initialization arguments](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/schema/cw-counter.json#L7) and a label (a human-readable name for this contract in lists).
 
@@ -641,7 +641,7 @@ tx: null
 txhash: 01804F525FE336A5502E3C84C7AE00269C7E0B3DC9AA1AB0DDE3BA62CF93BE1D
 ```
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 You can find the contract address and metadata by:
 
 * Looking on the [Testnet Explorer](https://www.injscan.com/smart-contracts/)
@@ -651,7 +651,7 @@ You can find the contract address and metadata by:
 ```bash
 injectived query wasm contract inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 --node=https://testnet.sentry.tm.injective.network:443
 ```
-{% endhint %}
+</Callout>
 
 ## Querying the Contract
 
@@ -672,9 +672,9 @@ injectived query wasm contract-state smart inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlc
 
 We see that `count` is 99, as set when we instantiated the contract.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 If you query the same contract, you may receive a different response as others may have interacted with the contract and incremented or reset the count.
-{% endhint %}
+</Callout>
 
 ## Execute the Contract
 
@@ -695,9 +695,9 @@ If we query the contract for the count, we see:
 {"data":{"count":100}}
 ```
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 **yes 12345678 |** automatically pipes (passes) the passphrase to the input of **injectived tx wasm execute** so you do not need to enter it manually.
-{% endhint %}
+</Callout>
 
 To reset the counter:
 
@@ -725,9 +725,9 @@ In addition to defining custom smart contract logic, CosmWasm also allows contra
 
 The `BankMsg::Send` message allows the contract to transfer tokens to another address. This can be useful in various scenarios, such as distributing rewards or returning funds to users.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 **Note:** If you want to send funds and execute a function on another contract at the same time, don't use BankMsg::Send. Instead, use WasmMsg::Execute and set the respective funds field.
-{% endhint %}
+</Callout>
 
 ### Constructing the Message
 

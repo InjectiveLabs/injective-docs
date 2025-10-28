@@ -317,9 +317,9 @@ pub struct InstantiateMsg {
 
 The first step of instantiating the contract is to select an address to supply with our initial CW20 token allocation. In our case, we can just use the genesis address since we have the keys already set up, but feel free to generate new addresses and keys.
 
-{% hint style="warning" %}
+<Callout icon="warning" color="#07C1FF" iconType="regular">
 Make sure you have the private keys for the address you choose—you won't be able to test token transfers from the address otherwise. In addition, the chosen address must be a valid address on the chain (the address must have received funds at some point in the past) and must have balances to pay for gas when executing the contract.
-{% endhint %}
+</Callout>
 
 To find the genesis address, run:
 

@@ -14,11 +14,11 @@ An Injective address can qualify for OLP by meeting the following criteria:
 
 Assuming both of these requirements have been met, the address will qualify for OLP rewards on the 4th day at 00:00 UTC. Once qualified, an address will remain eligible for rewards through the rest of the epoch unless special circumstances (e.g. abusing the system, wash trading, etc.) compel the removal of the address. Note that activity prior to qualification will not count towards rewards.
 
-{% hint style="warning" %}
+<Callout icon="warning" color="#07C1FF" iconType="regular">
 It may be prudent to consolidate trading strategies into a single address to increase maker volume. Otherwise, addresses with less maker volume than the required threshold will not qualify for rewards even if volume on an aggregate level between multiple addresses exceeds the threshold.&#x20;
 
 See [documentation on the Injective `authz` module](https://docs.injective.network/develop/modules/Core/authz/) for a method of executing multiple strategies from a single address while retaining trading [fee discounts](https://helixapp.com/fee-discounts).
-{% endhint %}
+</Callout>
 
 ## Maintaining Next Epoch Eligibility/Pre-Qualification
 
@@ -34,9 +34,9 @@ If the address was eligible for the entire epoch through a previous epoch's pre-
 
 **Any address that fails to account for at least 0.25% of applicable maker volume in an epoch will be disqualified from OLP at the start of the next epoch**. If the address wishes to rejoin the program, the address must go through the [clean slate qualification process](eligibility.md#clean-slate-qualification) again (though the address does not have to opt out of T\&E another time). Note that any liquidity contributed on days that the address is not eligible will not be rewarded retroactively once the address requalifies.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 Disqualification occurs at the end of each epoch, meaning addresses continue to accrue rewards within the epoch regardless of next epoch eligibility.
-{% endhint %}
+</Callout>
 
 ## Tracking Eligibility
 

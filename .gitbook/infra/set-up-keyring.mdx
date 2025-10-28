@@ -1,8 +1,8 @@
 # Setting up the keyring
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 This document describes how to configure and use the keyring and its various backends for an Injective node. `injectived` should be installed prior to setting up the keyring. See the [Install `injectived` page](../developers/injectived/install.md) for more information.
-{% endhint %}
+</Callout>
 
 The keyring holds the private/public keypairs used to interact with the node. For instance, a validator key needs to be set up before running the Injective node, so that blocks can be correctly signed. The private key can be stored in different locations, called "backends", such as a file or the operating system's own key storage.
 
@@ -36,17 +36,17 @@ yes $KEYPASSWD | injectived keys show me
 injectived --keyring-backend=file start
 ```
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 The first time you add a key to an empty keyring, you will be prompted to type the password twice.
-{% endhint %}
+</Callout>
 
 #### The `pass` backend
 
 The `pass` backend uses the [pass](https://www.passwordstore.org/) utility to manage on-disk encryption of keys' sensitive data and metadata. Keys are stored inside `gpg` encrypted files within app-specific directories. `pass` is available for the most popular UNIX operating systems as well as GNU/Linux distributions. Please refer to its manual page for information on how to download and install it.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 `pass` uses [GnuPG](https://gnupg.org/) for encryption. `gpg` automatically invokes the `gpg-agent` daemon upon execution, which handles the caching of GnuPG credentials. Please refer to `gpg-agent` man page for more information on how to configure cache parameters such as credentials TTL and passphrase expiration.
-{% endhint %}
+</Callout>
 
 The password store must be set up prior to first use:
 
@@ -76,9 +76,9 @@ The `memory` backend stores keys in memory. The keys are immediately deleted aft
 
 You can use `injectived keys` for help about the keys command and `injectived keys [command] --help` for more information about a particular subcommand.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 You can also enable auto-completion with the `injectived completion` command. For example, at the start of a bash session, run `. <(injectived completion)`, and all `injectived` subcommands will be auto-completed.
-{% endhint %}
+</Callout>
 
 To create a new key in the keyring, run the `add` subcommand with a `<key_name>` argument. For the purpose of this tutorial, we will solely use the `test` backend, and call our new key `my_validator`. This key will be used in the next section.
 

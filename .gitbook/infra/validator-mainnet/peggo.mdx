@@ -59,9 +59,9 @@ PEGGO_STATSD_MOCKING=false
 PEGGO_STATSD_DISABLED=true
 ```
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 **IMPORTANT NOTE:** if you're running your own `injectived` (Injective node) and `geth` (Ethereum node) processes, ensure that they are in sync with the latest state. Outdated nodes can skew the business logic of `peggo` to display "false alarm" logs sometimes.
-{% endhint %}
+</Callout>
 
 ## Step 1: Configuring .env
 
@@ -225,9 +225,9 @@ injectived tx peggy set-orchestrator-address inj10m247khat0esnl0x66vu9mhlanfftnv
 
 You can verify successful registration by checking for your Validator's mapped Ethereum address on https://lcd.injective.network/peggy/v1/valset/current.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 **NOTE:** Once you've registered your Orchestrator with the `set-orchestrator-address` message, you **CANNOT** register again. Once this step is complete, your `Validator` is bound to the provided Ethereum address (as well the Delegated address you may have provided). In other words, your peggo must always run with the addresses you provided for registration.
-{% endhint %}
+</Callout>
 
 ### Step 3: Start the Relayer
 
@@ -275,9 +275,9 @@ journalctl -f -u peggo
 
 ### Step 5: (Optional) Protect Cosmos Keyring from unauthorized access
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 This is an advanced DevOps topic, consult with your sysadmin.
-{% endhint %}
+</Callout>
 
 Learn more about Cosmos Keyring setup [here](https://docs.cosmos.network/v0.46/run-node/keyring.html). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
 

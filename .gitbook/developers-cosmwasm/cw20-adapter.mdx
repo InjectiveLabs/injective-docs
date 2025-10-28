@@ -62,9 +62,9 @@ pub fn handle_register_msg(
 
 Implementation of the Receiver CW-20 interface.
 
-{% hint style="danger" %}
+<Callout icon="danger" color="#07C1FF" iconType="regular">
 Must be called by the CW-20 contract only.
-{% endhint %}
+</Callout>
 
 ```rust
 ExecuteMsg::Receive { sender, amount, msg: _ } => execute_receive::handle_on_received_cw20_funds_msg(deps, env, info, sender, amount)

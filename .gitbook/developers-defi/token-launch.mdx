@@ -34,9 +34,9 @@ Learn more about [launching a token](../developers/assets/token-create.md).
 
 #### Using Injective CLI
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 You have to have `injectived` installed locally before proceeding with this tutorial. You can learn more about it on the [injectived](../developers/injectived/ "mention")page.
-{% endhint %}
+</Callout>
 
 Once you have `injectived` installed and a key added, you can use the CLI to launch your token:
 
@@ -92,13 +92,13 @@ It's recommended once you have minted the initial supply to change admin to the 
 injectived tx tokenfactory change-admin factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak NEW_ADDRESS --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
 ```
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 The examples above are for testnet. If you want to run them on mainnet, do the following changes:
 
 `injective-888` > `injective-1`
 
 `https://testnet.sentry.tm.injective.network:443` > `http://sentry.tm.injective.network:443`
-{% endhint %}
+</Callout>
 
 #### Using Cosmwasm
 

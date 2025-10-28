@@ -47,6 +47,6 @@ If we want support fee delegation on Cosmos native wallets using the Web3Gateway
 
 The way this works is we add the `publicKey` of the `Web3Gateway`'s signer to the `authInfo` object in the `TxRaw` and then sign the transaction using the `privateKey` on the API side when we broadcast
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 The difference with the previous EIP712 approach is that we need to sign the transaction using the `Web3Gateway`'s signer in advance i.e when we generate the EIP712 -> meaning that we need to use `PrepareTx` and can't generate the transaction on the client side.).
-{% endhint %}
+</Callout>

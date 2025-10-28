@@ -61,9 +61,9 @@ cat $HOME/.injectived/config/genesis.json | jq '.app_state["gov"]["deposit_param
 cat $HOME/.injectived/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
 ```
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 The commands above will only work if the default `.injectived` directory is used. For a specific directory, either modify the commands above or manually edit the `genesis.json` file to reflect the changes.
-{% endhint %}
+</Callout>
 
 #### Create Keys for the Validator Account
 

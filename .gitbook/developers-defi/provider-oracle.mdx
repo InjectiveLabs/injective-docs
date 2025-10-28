@@ -1,8 +1,8 @@
 # Provider Oracle
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 Prerequisite reading [Injective Oracle Module](../developers-native/injective/oracle/)
-{% endhint %}
+</Callout>
 
 The goal of this section is to provide users a guide on how to launch and maintain an oracle provider on Injective. These oracles can be used for various purposes, like Perpetual Markets, Expiry Futures Markets, [Binary Options markets](../developers-native/injective/exchange/02_binary_options_markets.md), etc.
 
@@ -10,9 +10,9 @@ First, what is an oracle provider? It's an oracle **TYPE** that allows external 
 
 The first thing developers need to do is register their provider under the Oracle Provider type. You can do that by submitting a `GrantProviderPrivilegeProposal` governance proposal. Once the proposal passes, your provider will be registered, and you can relay price feeds. You can do it in a CLI environment using `injectived` (`grant-provider-privilege-proposal [providerName] [relayers] --title [title] --description [desc] [flags]`) or using any of our SDKs to create the message and broadcast it to the chain.
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 You can see an example on how to submit this proposal in the Oracle Module Proposals Section
-{% endhint %}
+</Callout>
 
 _Note: the `relayers` of the `GrantProviderPrivilegeProposal` are addresses that will be whitelisted to submit the price feeds to Injective._
 

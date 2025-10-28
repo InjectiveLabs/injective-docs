@@ -22,9 +22,9 @@ Rewards are allocated to [eligible markets](eligible-markets.md) in two differen
 | INJ/USDT Perp          | 12.5%                                                                                  |
 | Other Eligible Markets | 1% each + formula based allocation, with reward cap based on formula (see table below) |
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 Static allocations may change over time as more markets are added to the eligible list
-{% endhint %}
+</Callout>
 
 ### Dynamic Market Reward Allocations
 
@@ -42,11 +42,11 @@ $$
 \text{and} \quad TAR = Total\ Available\ Rewards
 $$
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 $$Other\ Preallocations$$ refers to the static market reward allocations for non-BTC, ETH, and INJ perp markets.
 
 For more information on $$TAR$$ each epoch, see the [Reward Pool](./rewards.md) page.
-{% endhint %}
+</Callout>
 
 For each eligible market, the product of the MM[^1]’s $$LS^{0.7}$$ and $$Volume$$ is aggregated across all MMs. Rewards are allocated to each market based on the proportional aggregate products across all applicable markets. The preallocation amount (1%) for the market is also added in.&#x20;
 
@@ -76,9 +76,9 @@ $$
 
 **Each** [**MM**](#user-content-fn-3)[^3] **will receive rewards based on the** [**MM**](#user-content-fn-4)[^4]**’s proportional**[ $$TS$$ ](./scoring.md#total-score)**within the market, subject to governance approval.**&#x20;
 
-{% hint style="info" %}
+<Callout icon="info" color="#07C1FF" iconType="regular">
 Rewards for addresses totaling < 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process.&#x20;
-{% endhint %}
+</Callout>
 
 [^1]: Market Maker
 
