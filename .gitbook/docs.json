@@ -12,12 +12,15 @@
   },
   "navigation": {
     "groups": [
-      {
-        "group": "Injective",
-        "pages": [
-          "README",
+          {
+            "group": "Start here",
+            "pages": [
+              "README"
+            ]
+          },
           {
             "group": "DeFi",
+            "icon": "coins",
             "pages": [
               "defi",
               {
@@ -98,6 +101,7 @@
           },
           {
             "group": "Infrastructure",
+            "icon": "network-wired",
             "pages": [
               "infra",
               "infra/interact-node-command-line",
@@ -156,6 +160,7 @@
           },
           {
             "group": "Developers",
+            "icon": "laptop-code",
             "pages": [
               "developers",
               "developers/convert-addresses",
@@ -219,6 +224,7 @@
           },
           {
             "group": "EVM Developers",
+            "icon": "rectangle-code",
             "pages": [
               "developers-evm",
               "developers-evm/network-information",
@@ -259,6 +265,7 @@
           },
           {
             "group": "Cosmwasm Developers",
+            "icon": "comet",
             "pages": [
               "developers-cosmwasm",
               {
@@ -283,6 +290,7 @@
           },
           {
             "group": "DeFi Developers",
+            "icon": "money-bill-transfer",
             "pages": [
               "developers-defi",
               "developers-defi/calculate-min-price-tick-size",
@@ -297,6 +305,7 @@
           },
           {
             "group": "Native Developers",
+            "icon": "microchip",
             "pages": [
               "developers-native",
               {
@@ -588,11 +597,14 @@
               }
             ]
           },
-          "faq",
-          "glossary",
-          "references"
-        ]
-      }
+          {
+            "group": "More",
+            "pages": [
+              "faq",
+              "glossary",
+              "references"
+            ]
+          }
     ]
   }
 }
