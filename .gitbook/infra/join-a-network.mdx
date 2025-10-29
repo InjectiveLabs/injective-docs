@@ -4,8 +4,8 @@ This guide will walk you through the process of setting up a standalone network 
 
 You can also find the hardware requirements for each network in the respective tabs.
 
-{% tabs %}
-{% tab title="Local Network" %}
+<Tabs>
+<Tab title="Local Network">
 To easily set up a local node, download and run the `setup.sh` script. This will initialize your local Injective network.
 
 ```bash
@@ -135,9 +135,9 @@ injectived start # Blocks should start coming in after running this
 ```
 
 This command allows you to run a single node, which is is enough to interact with the chain through the node, but you may wish to run multiple nodes at the same time to see how consensus occurs between them.
-{% endtab %}
+</Tab>
 
-{% tab title="Testnet Network" %}
+<Tab title="Testnet Network">
 #### Hardware Specification
 
 Node operators should deploy bare metal servers to achieve optimal performance. Additionally, validator nodes must meet the recommended hardware specifications and particularly the CPU requirements, to ensure high uptime.
@@ -238,9 +238,9 @@ Refer to the [Polkachu Injective Testnet Node Snapshot](https://polkachu.com/tes
 **Support**
 
 For any further questions, you can always connect with the Injective Team via [Discord](https://discord.gg/injective), [Telegram](https://t.me/joininjective), or [email](mailto:contact@injectivelabs.org).
-{% endtab %}
+</Tab>
 
-{% tab title="Mainnet Network" %}
+<Tab title="Mainnet Network">
 #### Hardware Specification
 
 Node operators should deploy bare metal servers to achieve optimal performance. Additionally, validator nodes must meet the recommended hardware specifications and particularly the CPU requirements, to ensure high uptime.
@@ -370,5 +370,5 @@ Should the Injective `mainnet-config seeds.txt` list not work (the node fails to
 **Support**
 
 For any further questions, you can always connect with the Injective Team via [Discord](https://discord.gg/injective), [Telegram](https://t.me/joininjective), or [email](mailto:contact@injectivelabs.org)
-{% endtab %}
-{% endtabs %}
+</Tab>
+</Tabs>
