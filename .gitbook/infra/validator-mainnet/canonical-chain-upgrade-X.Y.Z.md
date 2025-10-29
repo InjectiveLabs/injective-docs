@@ -55,13 +55,13 @@ rm -rf .injectived/wasm/wasm/cache/
 1.  Verify you are currently running the correct version (`{/* $VERSION_PREV */}`) of `injectived`:
 
     {/* $INJECTIVED_PREV_OUTPUT */}
-    <!-- e.g.
+    {/*  e.g.
     ```bash
     $ injectived version
     Version v1.16.1 (8be67e82d)
     Compiled at 20250802-1913 using Go go1.23.9
     ```
-    -->
+    */}
 
 2.  Make a backup of your `.injectived` directory:
 
@@ -81,13 +81,13 @@ rm -rf .injectived/wasm/wasm/cache/
 4.  Verify you are currently running the correct version (`{/* $VERSION */}`) of `injectived` after downloading the `{/* $VERSION */}` release:
 
     {/* $INJECTIVED_PREV_OUTPUT */}
-    <!-- e.g.
+    {/* e.g.
     ```bash
     $ injectived version
     Version v1.16.2 (437674d)
     Compiled at 20250814-2305 using Go go1.23.9
     ```
-    -->
+    */}
 
 5.  Start `injectived`:
 
@@ -98,13 +98,13 @@ rm -rf .injectived/wasm/wasm/cache/
 6.  Verify you are currently running the correct version (`{/* $VERSION */}`) of `peggo` after downloading the `{/* $VERSION */}` release:
 
     {/* $PEGGO_PREV_OUTPUT */}
-    <!-- e.g.
+    {/* e.g.
     ```bash
     $ peggo version
     Version v1.16.2 (437674d)
     Compiled at 20250814-2307 using Go go1.23.9
     ```
-    -->
+    */}
 
 7.  Start peggo:
 
