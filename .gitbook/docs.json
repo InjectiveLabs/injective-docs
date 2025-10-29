@@ -14,12 +14,14 @@
     "groups": [
           {
             "group": "Start here",
+            "expanded": true,
             "pages": [
               "README"
             ]
           },
           {
             "group": "DeFi",
+            "expanded": false,
             "icon": "coins",
             "pages": [
               "defi",
@@ -101,6 +103,7 @@
           },
           {
             "group": "Infrastructure",
+            "expanded": false,
             "icon": "network-wired",
             "pages": [
               "infra",
@@ -160,6 +163,7 @@
           },
           {
             "group": "Developers",
+            "expanded": false,
             "icon": "laptop-code",
             "pages": [
               "developers",
@@ -224,6 +228,7 @@
           },
           {
             "group": "EVM Developers",
+            "expanded": false,
             "icon": "rectangle-code",
             "pages": [
               "developers-evm",
@@ -265,6 +270,7 @@
           },
           {
             "group": "Cosmwasm Developers",
+            "expanded": false,
             "icon": "comet",
             "pages": [
               "developers-cosmwasm",
@@ -290,6 +296,7 @@
           },
           {
             "group": "DeFi Developers",
+            "expanded": false,
             "icon": "money-bill-transfer",
             "pages": [
               "developers-defi",
@@ -305,6 +312,7 @@
           },
           {
             "group": "Native Developers",
+            "expanded": false,
             "icon": "microchip",
             "pages": [
               "developers-native",
@@ -599,6 +607,7 @@
           },
           {
             "group": "More",
+            "expanded": true,
             "pages": [
               "faq",
               "glossary",
