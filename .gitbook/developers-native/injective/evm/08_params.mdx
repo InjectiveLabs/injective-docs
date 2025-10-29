@@ -1,7 +1,3 @@
-<!--
-order: 8
--->
-
 # Parameters
 
 The evm module contains the following parameters:
