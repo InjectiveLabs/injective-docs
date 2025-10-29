@@ -6,9 +6,11 @@
     "generate:core-specs": "./scripts/injective-core-specs.sh"
   },
   "dependencies": {
-    "dotenv": "^16.4.5"
+    "dotenv": "16.4.5"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "gitbook-parsers": "0.8.9"
+  },
   "browserslist": {
     "production": [
       ">0.5%",
