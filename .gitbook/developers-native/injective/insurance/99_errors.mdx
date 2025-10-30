@@ -1,4 +1,6 @@
-# Error Codes
+---
+title: Error Codes
+---
 
 This document lists the error codes used in the module.
 

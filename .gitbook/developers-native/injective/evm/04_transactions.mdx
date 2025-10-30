@@ -1,4 +1,6 @@
-# Transactions
+---
+title: Transactions
+---
 
 This section defines the `sdk.Msg` concrete types that result in the state transitions defined on the previous section.
 

@@ -1,4 +1,6 @@
-# Events
+---
+title: Events
+---
 
 The `x/evm` module emits the Cosmos SDK events after a state execution. The EVM module emits events of the relevant transaction fields, as well as the transaction logs (ethereum events).
 
