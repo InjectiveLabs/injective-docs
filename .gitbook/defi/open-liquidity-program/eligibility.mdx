@@ -27,11 +27,11 @@ To automatically qualify for the next epoch after qualifying for the current epo
 
 If the address was eligible for the entire epoch through a previous epoch's pre-qualification, that address must account for at least 0.25% of the maker volume of [eligible markets](./eligible-markets/) in the entire epoch.&#x20;
 
-* Example: Address `inj1a` enters epoch 22 prequalified from maintaining eligibility in epoch 21. Suppose the cumulative maker volume of [eligible markets](./eligible-markets/) in epoch 22 totals $200M. Then `inj1a` must contribute at least $500,000 of the $200M in [eligible markets](./eligible-markets/) by the end of epoch 22 to maintain automatic eligibility for epoch 23.
+* Example: Address `inj1a` enters epoch 22 prequalified from maintaining eligibility in epoch 21. Suppose the cumulative maker volume of [eligible markets](./eligible-markets.md) in epoch 22 totals $200M. Then `inj1a` must contribute at least $500,000 of the $200M in [eligible markets](./eligible-markets.md) by the end of epoch 22 to maintain automatic eligibility for epoch 23.
 
 ## Disqualification
 
-**Any address that fails to account for at least 0.25% of applicable maker volume in an epoch will be disqualified from OLP at the start of the next epoch**. If the address wishes to rejoin the program, the address must go through the [clean slate qualification process](eligibility.md#clean-slate-qualification) again (though the address does not have to opt out of T\&E another time). Note that any liquidity contributed on days that the address is not eligible will not be rewarded retroactively once the address requalifies.
+**Any address that fails to account for at least 0.25% of applicable maker volume in an epoch will be disqualified from OLP at the start of the next epoch**. If the address wishes to rejoin the program, the address must go through the [clean slate qualification process](./eligibility/#clean-slate-qualification) again (though the address does not have to opt out of T\&E another time). Note that any liquidity contributed on days that the address is not eligible will not be rewarded retroactively once the address requalifies.
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
 Disqualification occurs at the end of each epoch, meaning addresses continue to accrue rewards within the epoch regardless of next epoch eligibility.

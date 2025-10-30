@@ -5,7 +5,7 @@ title: Reward Allocations
 
 ## Market Reward Allocations
 
-Rewards are allocated to [eligible markets](eligible-markets/) in three different methods :
+Rewards are allocated to [eligible markets](./eligible-markets/) in three different methods :
 
 1. Static allocations
 2. Minimum allocation with a dynamic component
@@ -75,7 +75,7 @@ $$
 
 where _TPR_ is equal to the percentage (expressed as a decimal) of total preallocated rewards (currently 0.375) and _n_ is the number of non-preallocated pairs.
 
-Any reward allocations that exceed the cap will be redistributed amongst the other eligible markets according to the [dynamic allocation formula](reward-allocations.md#dynamic-market-reward-allocations).
+Any reward allocations that exceed the cap will be redistributed amongst the other eligible markets according to the [dynamic allocation formula](./reward-allocations/#dynamic-market-reward-allocations).
 
 ## Reward Allocations
 
@@ -85,7 +85,7 @@ $$
 Rewards_{MM_i} = \sum_{Market}\left(Rewards_{Market} * \frac {TS_{MM_i, \ Market}} {\sum_{MM} TS_{MM,\ Market}} \right)
 $$
 
-**Each institutional liquidity provider** **will receive rewards based on their proportional**[ $$TS$$ ](./scoring.md#total-score)**within the market, subject to governance approval.**&#x20;
+**Each institutional liquidity provider** **will receive rewards based on their proportional**[ $$TS$$ ](./scoring/#total-score)**within the market, subject to governance approval.**&#x20;
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
 Rewards for addresses totaling < 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process.&#x20;

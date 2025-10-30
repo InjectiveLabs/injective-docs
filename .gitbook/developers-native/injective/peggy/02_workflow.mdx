@@ -48,8 +48,8 @@ The peggo orchestrators observe this event and decide if a Cosmos asset has been
 
 The `peggo orchestrator` process consists of 4 subprocesses running concurrently at exact intervals (loops). These are:
 
-* `Signer` which signs new `Validator Set` updates and `Token Batches` with the `Operator`'s Ethereum keys and submits using [messages](04_messages.md#Ethereum-Signer-messages).
-* `Oracle` which observes Ethereum events and sends them as [claims](04_messages.md#Oracle-messages) to Injective.
+* `Signer` which signs new `Validator Set` updates and `Token Batches` with the `Operator`'s Ethereum keys and submits using [messages](04_messages/#Ethereum-Signer-messages).
+* `Oracle` which observes Ethereum events and sends them as [claims](04_messages/#Oracle-messages) to Injective.
 * `Relayer` which submits confirmed `Validator Set` updates and `Token Batches` to the `Peggy Contract` on Ethereum
 * `Batch Creator` which observes (new) withdrawals on Injective and decides which of these to batch according to their type and the configured `PEGGO_MIN_BATCH_FEE_USD` value
 
@@ -66,7 +66,7 @@ On the receiving end, all pooled withdrawals matching the token type in the requ
 The responsibility of Signer is to provide confirmations that an `Operator (Orchestrator)` is partaking in bridge activity. Failure to provide these confirmations results in slashing penalties for the orchestrator's `Validator`.\
 In other words, this process **must be running at all times** for a `Validator` node.
 
-Any payload moving in the Injective->Ethereum pipeline (`Validator Set` updates/`Token Batches`) requires `Validator` signatures to be successfully relayed to Ethereum. Certain calls on `Peggy Contract` accept an array of signatures to be checked against the `Validator Set` in the contract itself.`Orchestrators` make these signatures with their `Delegate Ethereum address`: this is an Ethereum address decided by the `Operator` upon initial setup ([SetOrchestratorAddress](04_messages.md#setorchestratoraddresses)). This address then represents that validator on the Ethereum blockchain and will be added as a signing member of the multisig with a weighted voting power as close as possible to the Injective Chain voting power.
+Any payload moving in the Injective->Ethereum pipeline (`Validator Set` updates/`Token Batches`) requires `Validator` signatures to be successfully relayed to Ethereum. Certain calls on `Peggy Contract` accept an array of signatures to be checked against the `Validator Set` in the contract itself.`Orchestrators` make these signatures with their `Delegate Ethereum address`: this is an Ethereum address decided by the `Operator` upon initial setup ([SetOrchestratorAddress](04_messages/#setorchestratoraddresses)). This address then represents that validator on the Ethereum blockchain and will be added as a signing member of the multisig with a weighted voting power as close as possible to the Injective Chain voting power.
 
 Whenever `Signer` finds that there is a unconfirmed valset update (token batch) present within the `Peggy Module` it issues a `MsgConfirmValset` (`MsgConfirmBatch`) as proof that the operating `Validator` is active in bridge activity.
 
