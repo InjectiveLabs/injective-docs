@@ -18,10 +18,10 @@ MTS (MultiVM Token Standard) ensures that every token on Injective—whether dep
 
 The system comprises two main components:
 
-* [**Bank Precompile**](./bank-precompile.md):
+* [**Bank Precompile**](./bank-precompile/):
   * Developed in Go, this precompile is embedded directly in the Injective EVM.
   * It provides a Solidity interface that proxies ERC20 operations—such as mint, burn, and transfer—to the bank module.
-* [**ERC20 Module**](./erc20-module.md):
+* [**ERC20 Module**](./erc20-module/):
   * This module maps native bank denoms (e.g., INJ, IBC tokens, Peggy assets) to an ERC20 contract within the EVM.
   * It deploys MTS-compliant ERC20 contracts that always reflect the canonical token balance as maintained by the bank module.
 
@@ -42,7 +42,7 @@ The system comprises two main components:
 Injective’s EVM is integrated directly into the Cosmos-based chain.
 
 * EVM smart contracts, when using MTS, perform operations that reflect immediately on native modules (such as the exchange, staking, and governance modules).
-* [JSON-RPC endpoints](./network-information.md) provided within the Injective binary are compatible with Ethereum, ensuring smooth developer integration.
+* [JSON-RPC endpoints](./network-information/) provided within the Injective binary are compatible with Ethereum, ensuring smooth developer integration.
 
 #### **Cross-Chain Operations**
 
@@ -64,7 +64,7 @@ Injective’s EVM is integrated directly into the Cosmos-based chain.
 #### **Security**
 
 * The [bank module](../developers-native/core/bank/), as the single source of truth, underpins MTS’s security by ensuring that token balances are consistent and verifiable.
-* The use of [precompiles](./precompiles.md) prevents common pitfalls like state desynchronization, ensuring that all operations—no matter where initiated—update the same canonical ledger.
+* The use of [precompiles](./precompiles/) prevents common pitfalls like state desynchronization, ensuring that all operations—no matter where initiated—update the same canonical ledger.
 * Advanced security guidelines and best practices for smart contract development are provided in our security section and external resources.
 
 **ℹ️ Note:**

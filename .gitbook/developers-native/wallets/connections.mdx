@@ -6,9 +6,9 @@ Injective supports both Ethereum and Cosmos native wallets. You can use popular 
 
 ### Wallet Strategy
 
-The recommended way to have support for all of these wallets out of the box is to use the [WalletStrategy](strategy.md) abstraction we've built. This approach will enable your dApp users to connect and interact with different wallets.
+The recommended way to have support for all of these wallets out of the box is to use the [WalletStrategy](strategy/) abstraction we've built. This approach will enable your dApp users to connect and interact with different wallets.
 
-Combining it with the [MsgBroadcaster](../transactions/msgbroadcaster.md) abstraction allows you to sign transactions using one function call. This is what's being used on all products like Helix, Hub, Explorer, etc., and we strongly recommend using this approach in your dApp.
+Combining it with the [MsgBroadcaster](../transactions/msgbroadcaster/) abstraction allows you to sign transactions using one function call. This is what's being used on all products like Helix, Hub, Explorer, etc., and we strongly recommend using this approach in your dApp.
 
 In case you still want to use some wallet natively (without the WalletStrategy class), we are going to provide examples of how to connect to a dApp built on Injective via Metamask and Keplr in this doc.
 
@@ -39,7 +39,7 @@ console.log(injectiveAddresses)
 
 * **Sign transactions using Metamask**
 
-An example of how to prepare + sign + broadcast a transaction on Injective using Metamask can be found [here](../transactions/ethereum.md).
+An example of how to prepare + sign + broadcast a transaction on Injective using Metamask can be found [here](../transactions/ethereum/).
 
 ### Keplr
 
@@ -70,4 +70,4 @@ const getKeplr = () => {
 ```
 * **Sign transactions using Keplr**
 
-An example of how to prepare + sign + broadcast a transaction on Injective using Keplr can be found in [Cosmos Transactions](../transactions/cosmos.md).
+An example of how to prepare + sign + broadcast a transaction on Injective using Keplr can be found in [Cosmos Transactions](../transactions/cosmos/).

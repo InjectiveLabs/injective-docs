@@ -14,7 +14,7 @@ $$
 where $$LS_{epoch}$$ is the MM's [Liquidity Score](./scoring.md#liquidity-score) in the market in the epoch, $$Uptime_{Epoch}$$is the MM's [Uptime score](./scoring.md#uptime-score) in the market in the epoch, and $$Volume_{epoch}$$ is the MM's total volume (maker and taker) in the market in the epoch.
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-$$a$$, $$b$$, and $$c$$ are exponent [parameters](formula-parameters.md) that weight the different components of the formula.
+$$a$$, $$b$$, and $$c$$ are exponent [parameters](formula-parameters/) that weight the different components of the formula.
 </Callout>
 
 ## Liquidity Score
@@ -42,7 +42,7 @@ $$LS_{N_{Ask}}$$ follows the same logic as $$LS_{N_{Bid}}$$, but on the ask side
 $$Spread$$ is calculated from the mid-price[^3] (distance from mid-price divided by mid-price).
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-For the current values of $$MinDepth$$ and $$MaxSpread$$, see the [Formula Parameters page](formula-parameters.md).
+For the current values of $$MinDepth$$ and $$MaxSpread$$, see the [Formula Parameters page](formula-parameters/).
 </Callout>
 
 ## Uptime Score
@@ -88,7 +88,7 @@ LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} + \frac{AskDepth_2}{Spread_2} + … \
 $$
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-For information on individual reward calculations each epoch, see the [Reward Allocations page](reward-allocations.md).
+For information on individual reward calculations each epoch, see the [Reward Allocations page](reward-allocations/).
 </Callout>
 
 [^1]: Market Maker
