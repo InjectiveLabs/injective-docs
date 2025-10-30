@@ -59,7 +59,7 @@ cp $STUB_DIR/injective.modules.md.stub $INJECTIVE_DIR/README.md
 ## 1. Manually replace wrong import paths
 ## authz
 search1="(../modules/auth/)"
-replace1="(../auth/)"
+replace1="(./auth/)"
 
 FILES=$( find $CORE_DIR/authz -type f )
 
@@ -70,7 +70,7 @@ done
 
 ## auth
 search2="(../modules/authz/)"
-replace2="(../authz/)"
+replace2="(./authz/)"
 
 FILES=$( find $CORE_DIR/auth -type f )
 
