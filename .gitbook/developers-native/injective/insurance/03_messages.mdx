@@ -5,7 +5,7 @@ title: Messages
 
 # Messages
 
-In this section we describe the processing of the exchange messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](02_state_transitions/) section.
+In this section we describe the processing of the exchange messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](./02_state_transitions/) section.
 
 ## Msg/CreateInsuranceFund
 
@@ -37,14 +37,14 @@ message MsgCreateInsuranceFund {
 
 **Fields description**
 
-* `Sender` field describes the creator of an insurance fund .
-* `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleType`, `Expiry` fields describe the derivative market info\
+- `Sender` field describes the creator of an insurance fund .
+- `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleType`, `Expiry` fields describe the derivative market info
   that the insurance fund corresponds to.
-* `InitialDeposit` specifies the initial deposit amount used to underwrite the insurance fund.
+- `InitialDeposit` specifies the initial deposit amount used to underwrite the insurance fund.
 
 Disclaimer: When creating an insurance fund a small portion of shares (1%) will be reserved by the fund itself (protocol owned liquidity). A value of 1 USD is recommended as first subscription.
 
-Motivation behind this feature is to avoid potential rounding issues when underwriting to a fund. For example, without having protocol owned liquidity, if the original fund creator would take out most of their shares leaving but a small amount, the value of the share token could diverge drastically from the original value. The next underwriter would then have to provide a much larger deposit despite gaining the same amount of shares.
+Motivation behind this feature is to avoid potential rounding issues when underwriting to a fund. For example, without having protocol owned liquidity, if the original fund creator would take out most of their shares leaving but a small amount, the value of the share token could diverge drastically from the original value. The next underwriter would then have to provide a much larger deposit despite gaining the same amount of shares.  
 
 ## Msg/Underwrite
 
@@ -66,9 +66,9 @@ message MsgUnderwrite {
 
 **Fields description**
 
-* `Sender` field describes the underwriter of an insurance fund .
-* `MarketId` field describes the derivative market id to the insurance fund.
-* `Deposit` field describes the deposit amount to be added on the insurance fund.
+- `Sender` field describes the underwriter of an insurance fund .
+- `MarketId` field describes the derivative market id to the insurance fund.
+- `Deposit` field describes the deposit amount to be added on the insurance fund.
 
 ## Msg/RequestRedemption
 
@@ -90,6 +90,6 @@ message MsgRequestRedemption {
 
 **Fields description**
 
-* `Sender` field describes the redemption requester of an insurance fund .
-* `MarketId` field describes the derivative market id associated to the insurance fund.
-* `Amount` field describes the share token amount to be redeemed.
+- `Sender` field describes the redemption requester of an insurance fund .
+- `MarketId` field describes the derivative market id associated to the insurance fund.
+- `Amount` field describes the share token amount to be redeemed.

@@ -44,7 +44,7 @@ At its core, a namespace comprises:
 
 - The denomination of the `TokenFactory` asset. The denom in the namespace corresponds to the `TokenFactory` asset with the same name, of which the creator of the namespace is also the admin of the `TokenFactory` asset
 
-![image.png](NamespaceRoleCreationPermissionsFlow.png)
+![image.png](./NamespaceRoleCreationPermissionsFlow.png)
 
 **Actions**
 
@@ -110,7 +110,7 @@ At its core, a namespace comprises:
 - Role actors are permitted to execute any action for which any of their roles allow
     - For example, if role ABC had permissions to mint, send, and receive, then any role actor with role ABC would be permitted to `mint`, `send`, and `receive` the namespace asset. Suppose role XYZ had `burn` and `mint` permissions, and an actor had role ABC as well as XYZ. Then the actor would be permitted to `mint`, `send`, `receive`, and `burn` the asset.
 
-![image.png](PolicyManagers.png)
+![image.png](./PolicyManagers.png)
 
 **Policy Statuses**
 
