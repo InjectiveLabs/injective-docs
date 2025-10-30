@@ -1,877 +1,849 @@
 ---
 sidebar_position: 1
-title: '`x/group`'
 ---
+
+# `x/gov`
 
 ## Abstract
 
-The following documents specify the group module.
+This paper specifies the Governance module of the Cosmos SDK, which was first
+described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper) in
+June 2016.
 
-This module allows the creation and management of on-chain multisig accounts and enables voting for message execution based on configurable decision policies.
+The module enables Cosmos SDK based blockchain to support an on-chain governance
+system. In this system, holders of the native staking token of the chain can vote
+on proposals on a 1 token 1 vote basis. Next is a list of features the module
+currently supports:
+
+* **Proposal submission:** Users can submit proposals with a deposit. Once the
+minimum deposit is reached, the proposal enters voting period. The minimum deposit can be reached by collecting deposits from different users (including proposer) within deposit period.
+* **Vote:** Participants can vote on proposals that reached MinDeposit and entered voting period.
+* **Inheritance and penalties:** Delegators inherit their validator's vote if
+they don't vote themselves.
+* **Claiming deposit:** Users that deposited on proposals can recover their
+deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period (minimum deposit not reached within deposit period), the deposit is burned.
+
+This module is in use on the Cosmos Hub (a.k.a [gaia](https://github.com/cosmos/gaia)).
+Features that may be added in the future are described in [Future Improvements](#future-improvements).
 
 ## Contents
 
+The following specification uses *ATOM* as the native staking token. The module
+can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the native
+staking token of the chain.
+
 * [Concepts](#concepts)
-    * [Group](#group)
-    * [Group Policy](#group-policy)
-    * [Decision Policy](#decision-policy)
-    * [Proposal](#proposal)
-    * [Pruning](#pruning)
+    * [Proposal submission](#proposal-submission)
+    * [Deposit](#deposit)
+    * [Vote](#vote)
+    * [Software Upgrade](#software-upgrade)
 * [State](#state)
-    * [Group Table](#group-table)
-    * [Group Member Table](#group-member-table)
-    * [Group Policy Table](#group-policy-table)
-    * [Proposal Table](#proposal-table)
-    * [Vote Table](#vote-table)
-* [Msg Service](#msg-service)
-    * [Msg/CreateGroup](#msgcreategroup)
-    * [Msg/UpdateGroupMembers](#msgupdategroupmembers)
-    * [Msg/UpdateGroupAdmin](#msgupdategroupadmin)
-    * [Msg/UpdateGroupMetadata](#msgupdategroupmetadata)
-    * [Msg/CreateGroupPolicy](#msgcreategrouppolicy)
-    * [Msg/CreateGroupWithPolicy](#msgcreategroupwithpolicy)
-    * [Msg/UpdateGroupPolicyAdmin](#msgupdategrouppolicyadmin)
-    * [Msg/UpdateGroupPolicyDecisionPolicy](#msgupdategrouppolicydecisionpolicy)
-    * [Msg/UpdateGroupPolicyMetadata](#msgupdategrouppolicymetadata)
-    * [Msg/SubmitProposal](#msgsubmitproposal)
-    * [Msg/WithdrawProposal](#msgwithdrawproposal)
-    * [Msg/Vote](#msgvote)
-    * [Msg/Exec](#msgexec)
-    * [Msg/LeaveGroup](#msgleavegroup)
+    * [Proposals](#proposals)
+    * [Parameters and base types](#parameters-and-base-types)
+    * [Deposit](#deposit-1)
+    * [ValidatorGovInfo](#validatorgovinfo)
+    * [Stores](#stores)
+    * [Proposal Processing Queue](#proposal-processing-queue)
+    * [Legacy Proposal](#legacy-proposal)
+* [Messages](#messages)
+    * [Proposal Submission](#proposal-submission-1)
+    * [Deposit](#deposit-2)
+    * [Vote](#vote-1)
 * [Events](#events)
-    * [EventCreateGroup](#eventcreategroup)
-    * [EventUpdateGroup](#eventupdategroup)
-    * [EventCreateGroupPolicy](#eventcreategrouppolicy)
-    * [EventUpdateGroupPolicy](#eventupdategrouppolicy)
-    * [EventCreateProposal](#eventcreateproposal)
-    * [EventWithdrawProposal](#eventwithdrawproposal)
-    * [EventVote](#eventvote)
-    * [EventExec](#eventexec)
-    * [EventLeaveGroup](#eventleavegroup)
-    * [EventProposalPruned](#eventproposalpruned)
+    * [EndBlocker](#endblocker)
+    * [Handlers](#handlers)
+* [Parameters](#parameters)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
     * [REST](#rest)
 * [Metadata](#metadata)
+    * [Proposal](#proposal-3)
+    * [Vote](#vote-5)
+* [Future Improvements](#future-improvements)
 
 ## Concepts
 
-### Group
+*Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
 
-A group is simply an aggregation of accounts with associated weights. It is not
-an account and doesn't have a balance. It doesn't in and of itself have any
-sort of voting or decision weight. It does have an "administrator" which has
-the ability to add, remove and update members in the group. Note that a
-group policy account could be an administrator of a group, and that the
-administrator doesn't necessarily have to be a member of the group.
+The governance process is divided in a few steps that are outlined below:
 
-### Group Policy
+* **Proposal submission:** Proposal is submitted to the blockchain with a
+  deposit.
+* **Vote:** Once deposit reaches a certain value (`MinDeposit`), proposal is
+  confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
+  transactions to vote on the proposal.
+* **Execution** After a period of time, the votes are tallied and depending
+  on the result, the messages in the proposal will be executed.
 
-A group policy is an account associated with a group and a decision policy.
-Group policies are abstracted from groups because a single group may have
-multiple decision policies for different types of actions. Managing group
-membership separately from decision policies results in the least overhead
-and keeps membership consistent across different policies. The pattern that
-is recommended is to have a single master group policy for a given group,
-and then to create separate group policies with different decision policies
-and delegate the desired permissions from the master account to
-those "sub-accounts" using the `x/authz` module.
+### Proposal submission
 
-### Decision Policy
+#### Right to submit a proposal
 
-A decision policy is the mechanism by which members of a group can vote on
-proposals, as well as the rules that dictate whether a proposal should pass
-or not based on its tally outcome.
+Every account can submit proposals by sending a `MsgSubmitProposal` transaction.
+Once a proposal is submitted, it is identified by its unique `proposalID`.
 
-All decision policies generally would have a mininum execution period and a
-maximum voting window. The minimum execution period is the minimum amount of time
-that must pass after submission in order for a proposal to potentially be executed, and it may
-be set to 0. The maximum voting window is the maximum time after submission that a proposal may
-be voted on before it is tallied.
+#### Proposal Messages
 
-The chain developer also defines an app-wide maximum execution period, which is
-the maximum amount of time after a proposal's voting period end where users are
-allowed to execute a proposal.
+A proposal includes an array of `sdk.Msg`s which are executed automatically if the
+proposal passes. The messages are executed by the governance `ModuleAccount` itself. Modules
+such as `x/upgrade`, that want to allow certain messages to be executed by governance
+only should add a whitelist within the respective msg server, granting the governance
+module the right to execute the message once a quorum has been reached. The governance
+module uses the `MsgServiceRouter` to check that these messages are correctly constructed
+and have a respective path to execute on but do not perform a full validity check.
 
-The current group module comes shipped with two decision policies: threshold
-and percentage. Any chain developer can extend upon these two, by creating
-custom decision policies, as long as they adhere to the `DecisionPolicy`
-interface:
+### Deposit
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/types.go#L27-L45
+To prevent spam, proposals must be submitted with a deposit in the coins defined by
+the `MinDeposit` param.
+
+When a proposal is submitted, it has to be accompanied with a deposit that must be
+strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need
+to pay for the entire deposit on their own. The newly created proposal is stored in
+an *inactive proposal queue* and stays there until its deposit passes the `MinDeposit`.
+Other token holders can increase the proposal's deposit by sending a `Deposit`
+transaction. If a proposal doesn't pass the `MinDeposit` before the deposit end time
+(the time when deposits are no longer accepted), the proposal will be destroyed: the
+proposal will be removed from state and the deposit will be burned (see x/gov `EndBlocker`).
+When a proposal deposit passes the `MinDeposit` threshold (even during the proposal
+submission) before the deposit end time, the proposal will be moved into the
+*active proposal queue* and the voting period will begin.
+
+The deposit is kept in escrow and held by the governance `ModuleAccount` until the
+proposal is finalized (passed or rejected).
+
+#### Deposit refund and burn
+
+When a proposal is finalized, the coins from the deposit are either refunded or burned
+according to the final tally of the proposal:
+
+* If the proposal is approved or rejected but *not* vetoed, each deposit will be
+  automatically refunded to its respective depositor (transferred from the governance
+  `ModuleAccount`).
+* When the proposal is vetoed with greater than 1/3, deposits will be burned from the
+  governance `ModuleAccount` and the proposal information along with its deposit
+  information will be removed from state.
+* All refunded or burned deposits are removed from the state. Events are issued when
+  burning or refunding a deposit.
+
+### Vote
+
+#### Participants
+
+*Participants* are users that have the right to vote on proposals. On the
+Cosmos Hub, participants are bonded Atom holders. Unbonded Atom holders and
+other users do not get the right to participate in governance. However, they
+can submit and deposit on proposals.
+
+Note that when *participants* have bonded and unbonded Atoms, their voting power is calculated from their bonded Atom holdings only.
+
+#### Voting period
+
+Once a proposal reaches `MinDeposit`, it immediately enters `Voting period`. We
+define `Voting period` as the interval between the moment the vote opens and
+the moment the vote closes. The initial value of `Voting period` is 2 weeks.
+
+#### Option set
+
+The option set of a proposal refers to the set of choices a participant can
+choose from when casting its vote.
+
+The initial option set includes the following options:
+
+* `Yes`
+* `No`
+* `NoWithVeto`
+* `Abstain`
+
+`NoWithVeto` counts as `No` but also adds a `Veto` vote. `Abstain` option
+allows voters to signal that they do not intend to vote in favor or against the
+proposal but accept the result of the vote.
+
+*Note: from the UI, for urgent proposals we should maybe add a ‘Not Urgent’ option that casts a `NoWithVeto` vote.*
+
+#### Weighted Votes
+
+[ADR-037](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
+
+Often times the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
+
+To represent weighted vote on chain, we use the following Protobuf message.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L34-L47
 ```
 
-#### Threshold decision policy
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L181-L201
+```
 
-A threshold decision policy defines a threshold of yes votes (based on a tally
-of voter weights) that must be achieved in order for a proposal to pass. For
-this decision policy, abstain and veto are simply treated as no's.
+For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
-This decision policy also has a VotingPeriod window and a MinExecutionPeriod
-window. The former defines the duration after proposal submission where members
-are allowed to vote, after which tallying is performed. The latter specifies
-the minimum duration after proposal submission where the proposal can be
-executed. If set to 0, then the proposal is allowed to be executed immediately
-on submission (using the `TRY_EXEC` option). Obviously, MinExecutionPeriod
-cannot be greater than VotingPeriod+MaxExecutionPeriod (where MaxExecution is
-the app-defined duration that specifies the window after voting ended where a
-proposal can be executed).
+### Quorum
 
-#### Percentage decision policy
+Quorum is defined as the minimum percentage of voting power that needs to be
+cast on a proposal for the result to be valid.
 
-A percentage decision policy is similar to a threshold decision policy, except
-that the threshold is not defined as a constant weight, but as a percentage.
-It's more suited for groups where the group members' weights can be updated, as
-the percentage threshold stays the same, and doesn't depend on how those member
-weights get updated.
+### Expedited Proposals
 
-Same as the Threshold decision policy, the percentage decision policy has the
-two VotingPeriod and MinExecutionPeriod parameters.
+A proposal can be expedited, making the proposal use shorter voting duration and a higher tally threshold by its default. If an expedited proposal fails to meet the threshold within the scope of shorter voting duration, the expedited proposal is then converted to a regular proposal and restarts voting under regular voting conditions.
 
-### Proposal
+#### Threshold
 
-Any member(s) of a group can submit a proposal for a group policy account to decide upon.
-A proposal consists of a set of messages that will be executed if the proposal
-passes as well as any metadata associated with the proposal.
+Threshold is defined as the minimum proportion of `Yes` votes (excluding
+`Abstain` votes) for the proposal to be accepted.
 
-#### Voting
+Initially, the threshold is set at 50% of `Yes` votes, excluding `Abstain`
+votes. A possibility to veto exists if more than 1/3rd of all votes are
+`NoWithVeto` votes.  Note, both of these values are derived from the `TallyParams`
+on-chain parameter, which is modifiable by governance.
+This means that proposals are accepted iff:
 
-There are four choices to choose while voting - yes, no, abstain and veto. Not
-all decision policies will take the four choices into account. Votes can contain some optional metadata.
-In the current implementation, the voting window begins as soon as a proposal
-is submitted, and the end is defined by the group policy's decision policy.
+* There exist bonded tokens.
+* Quorum has been achieved.
+* The proportion of `Abstain` votes is inferior to 1/1.
+* The proportion of `NoWithVeto` votes is inferior to 1/3, including
+  `Abstain` votes.
+* The proportion of `Yes` votes, excluding `Abstain` votes, at the end of
+  the voting period is superior to 1/2.
 
-#### Withdrawing Proposals
+For expedited proposals, by default, the threshold is higher than with a *normal proposal*, namely, 66.7%.
 
-Proposals can be withdrawn any time before the voting period end, either by the
-admin of the group policy or by one of the proposers. Once withdrawn, it is
-marked as `PROPOSAL_STATUS_WITHDRAWN`, and no more voting or execution is
-allowed on it.
+#### Inheritance
 
-#### Aborted Proposals
+If a delegator does not vote, it will inherit its validator vote.
 
-If the group policy is updated during the voting period of the proposal, then
-the proposal is marked as `PROPOSAL_STATUS_ABORTED`, and no more voting or
-execution is allowed on it. This is because the group policy defines the rules
-of proposal voting and execution, so if those rules change during the lifecycle
-of a proposal, then the proposal should be marked as stale.
+* If the delegator votes before its validator, it will not inherit from the
+  validator's vote.
+* If the delegator votes after its validator, it will override its validator
+  vote with its own. If the proposal is urgent, it is possible
+  that the vote will close before delegators have a chance to react and
+  override their validator's vote. This is not a problem, as proposals require more than 2/3rd of the total voting power to pass, when tallied at the end of the voting period. Because as little as 1/3 + 1 validation power could collude to censor transactions, non-collusion is already assumed for ranges exceeding this threshold.
 
-#### Tallying
+#### Validator’s punishment for non-voting
 
-Tallying is the counting of all votes on a proposal. It happens only once in
-the lifecycle of a proposal, but can be triggered by two factors, whichever
-happens first:
+At present, validators are not punished for failing to vote.
 
-* either someone tries to execute the proposal (see next section), which can
-  happen on a `Msg/Exec` transaction, or a `Msg/{SubmitProposal,Vote}`
-  transaction with the `Exec` field set. When a proposal execution is attempted,
-  a tally is done first to make sure the proposal passes.
-* or on `EndBlock` when the proposal's voting period end just passed.
+#### Governance address
 
-If the tally result passes the decision policy's rules, then the proposal is
-marked as `PROPOSAL_STATUS_ACCEPTED`, or else it is marked as
-`PROPOSAL_STATUS_REJECTED`. In any case, no more voting is allowed anymore, and the tally
-result is persisted to state in the proposal's `FinalTallyResult`.
+Later, we may add permissioned keys that could only sign txs from certain modules. For the MVP, the `Governance address` will be the main validator address generated at account creation. This address corresponds to a different PrivKey than the CometBFT PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive CometBFT PrivKey.
 
-#### Executing Proposals
+#### Burnable Params
 
-Proposals are executed only when the tallying is done, and the group account's
-decision policy allows the proposal to pass based on the tally outcome. They
-are marked by the status `PROPOSAL_STATUS_ACCEPTED`. Execution must happen
-before a duration of `MaxExecutionPeriod` (set by the chain developer) after
-each proposal's voting period end.
+There are three parameters that define if the deposit of a proposal should be burned or returned to the depositors. 
 
-Proposals will not be automatically executed by the chain in this current design,
-but rather a user must submit a `Msg/Exec` transaction to attempt to execute the
-proposal based on the current votes and decision policy. Any user (not only the
-group members) can execute proposals that have been accepted, and execution fees are
-paid by the proposal executor.
-It's also possible to try to execute a proposal immediately on creation or on
-new votes using the `Exec` field of `Msg/SubmitProposal` and `Msg/Vote` requests.
-In the former case, proposers signatures are considered as yes votes.
-In these cases, if the proposal can't be executed (i.e. it didn't pass the
-decision policy's rules), it will still be opened for new votes and
-could be tallied and executed later on.
+* `BurnVoteVeto` burns the proposal deposit if the proposal gets vetoed. 
+* `BurnVoteQuorum` burns the proposal deposit if the proposal deposit if the vote does not reach quorum.
+* `BurnProposalDepositPrevote` burns the proposal deposit if it does not enter the voting phase. 
 
-A successful proposal execution will have its `ExecutorResult` marked as
-`PROPOSAL_EXECUTOR_RESULT_SUCCESS`. The proposal will be automatically pruned
-after execution. On the other hand, a failed proposal execution will be marked
-as `PROPOSAL_EXECUTOR_RESULT_FAILURE`. Such a proposal can be re-executed
-multiple times, until it expires after `MaxExecutionPeriod` after voting period
-end.
-
-### Pruning
-
-Proposals and votes are automatically pruned to avoid state bloat.
-
-Votes are pruned:
-
-* either after a successful tally, i.e. a tally whose result passes the decision
-  policy's rules, which can be trigged by a `Msg/Exec` or a
-  `Msg/{SubmitProposal,Vote}` with the `Exec` field set,
-* or on `EndBlock` right after the proposal's voting period end. This applies to proposals with status `aborted` or `withdrawn` too.
-
-whichever happens first.
-
-Proposals are pruned:
-
-* on `EndBlock` whose proposal status is `withdrawn` or `aborted` on proposal's voting period end before tallying,
-* and either after a successful proposal execution,
-* or on `EndBlock` right after the proposal's `voting_period_end` +
-  `max_execution_period` (defined as an app-wide configuration) is passed,
-
-whichever happens first.
+> Note: These parameters are modifiable via governance. 
 
 ## State
 
-The `group` module uses the `orm` package which provides table storage with support for
-primary keys and secondary indexes. `orm` also defines `Sequence` which is a persistent unique key generator based on a counter that can be used along with `Table`s.
+### Constitution
 
-Here's the list of tables and associated sequences and indexes stored as part of the `group` module.
+`Constitution` is found in the genesis state.  It is a string field intended to be used to descibe the purpose of a particular blockchain, and its expected norms.  A few examples of how the constitution field can be used:
 
-### Group Table
+* define the purpose of the chain, laying a foundation for its future development
+* set expectations for delegators
+* set expectations for validators
+* define the chain's relationship to "meatspace" entities, like a foundation or corporation
 
-The `groupTable` stores `GroupInfo`: `0x0 | BigEndian(GroupId) -> ProtocolBuffer(GroupInfo)`.
+Since this is more of a social feature than a technical feature, we'll now get into some items that may have been useful to have in a genesis constitution:
 
-#### groupSeq
+* What limitations on governance exist, if any?
+    * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
+    * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
+    * In the event of an economic emergency, what should validators do?
+        * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
+* What is the purpose of the chain, specifically?
+    * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
 
-The value of `groupSeq` is incremented when creating a new group and corresponds to the new `GroupId`: `0x1 | 0x1 -> BigEndian`.
+This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating thier nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
-The second `0x1` corresponds to the ORM `sequenceStorageKey`.
+This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities whishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
 
-#### groupByAdminIndex
+**Ideal use scenario for a cosmos chain constitution**
 
-`groupByAdminIndex` allows to retrieve groups by admin address:
-`0x2 | len([]byte(group.Admin)) | []byte(group.Admin) | BigEndian(GroupId) -> []byte()`.
+As a chain developer, you decide that you'd like to provide clarity to your key user groups:
 
-### Group Member Table
+* validators
+* token holders
+* developers (yourself)
 
-The `groupMemberTable` stores `GroupMember`s: `0x10 | BigEndian(GroupId) | []byte(member.Address) -> ProtocolBuffer(GroupMember)`.
+You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constutituon can provide guidance to the community.
 
-The `groupMemberTable` is a primary key table and its `PrimaryKey` is given by
-`BigEndian(GroupId) | []byte(member.Address)` which is used by the following indexes.
+### Proposals
 
-#### groupMemberByGroupIndex
+`Proposal` objects are used to tally votes and generally track the proposal's state.
+They contain an array of arbitrary `sdk.Msg`'s which the governance module will attempt
+to resolve and then execute if the proposal passes. `Proposal`'s are identified by a
+unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
+`voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
-`groupMemberByGroupIndex` allows to retrieve group members by group id:
-`0x11 | BigEndian(GroupId) | PrimaryKey -> []byte()`.
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L51-L99
+```
 
-#### groupMemberByMemberIndex
+A proposal will generally require more than just a set of messages to explain its
+purpose but need some greater justification and allow a means for interested participants
+to discuss and debate the proposal.
+In most cases, **it is encouraged to have an off-chain system that supports the on-chain governance process**.
+To accommodate for this, a proposal contains a special **`metadata`** field, a string,
+which can be used to add context to the proposal. The `metadata` field allows custom use for networks,
+however, it is expected that the field contains a URL or some form of CID using a system such as
+[IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of
+interoperability across networks, the SDK recommends that the `metadata` represents
+the following `JSON` template:
 
-`groupMemberByMemberIndex` allows to retrieve group members by member address:
-`0x12 | len([]byte(member.Address)) | []byte(member.Address) | PrimaryKey -> []byte()`.
+```json
+{
+  "title": "...",
+  "description": "...",
+  "forum": "...", // a link to the discussion platform (i.e. Discord)
+  "other": "..." // any extra data that doesn't correspond to the other fields
+}
+```
 
-### Group Policy Table
-
-The `groupPolicyTable` stores `GroupPolicyInfo`: `0x20 | len([]byte(Address)) | []byte(Address) -> ProtocolBuffer(GroupPolicyInfo)`.
-
-The `groupPolicyTable` is a primary key table and its `PrimaryKey` is given by
-`len([]byte(Address)) | []byte(Address)` which is used by the following indexes.
-
-#### groupPolicySeq
-
-The value of `groupPolicySeq` is incremented when creating a new group policy and is used to generate the new group policy account `Address`:
-`0x21 | 0x1 -> BigEndian`.
-
-The second `0x1` corresponds to the ORM `sequenceStorageKey`.
-
-#### groupPolicyByGroupIndex
-
-`groupPolicyByGroupIndex` allows to retrieve group policies by group id:
-`0x22 | BigEndian(GroupId) | PrimaryKey -> []byte()`.
-
-#### groupPolicyByAdminIndex
-
-`groupPolicyByAdminIndex` allows to retrieve group policies by admin address:
-`0x23 | len([]byte(Address)) | []byte(Address) | PrimaryKey -> []byte()`.
-
-### Proposal Table
-
-The `proposalTable` stores `Proposal`s: `0x30 | BigEndian(ProposalId) -> ProtocolBuffer(Proposal)`.
-
-#### proposalSeq
-
-The value of `proposalSeq` is incremented when creating a new proposal and corresponds to the new `ProposalId`: `0x31 | 0x1 -> BigEndian`.
-
-The second `0x1` corresponds to the ORM `sequenceStorageKey`.
-
-#### proposalByGroupPolicyIndex
-
-`proposalByGroupPolicyIndex` allows to retrieve proposals by group policy account address:
-`0x32 | len([]byte(account.Address)) | []byte(account.Address) | BigEndian(ProposalId) -> []byte()`.
-
-#### ProposalsByVotingPeriodEndIndex
-
-`proposalsByVotingPeriodEndIndex` allows to retrieve proposals sorted by chronological `voting_period_end`:
-`0x33 | sdk.FormatTimeBytes(proposal.VotingPeriodEnd) | BigEndian(ProposalId) -> []byte()`.
-
-This index is used when tallying the proposal votes at the end of the voting period, and for pruning proposals at `VotingPeriodEnd + MaxExecutionPeriod`.
-
-### Vote Table
-
-The `voteTable` stores `Vote`s: `0x40 | BigEndian(ProposalId) | []byte(voter.Address) -> ProtocolBuffer(Vote)`.
-
-The `voteTable` is a primary key table and its `PrimaryKey` is given by
-`BigEndian(ProposalId) | []byte(voter.Address)` which is used by the following indexes.
-
-#### voteByProposalIndex
-
-`voteByProposalIndex` allows to retrieve votes by proposal id:
-`0x41 | BigEndian(ProposalId) | PrimaryKey -> []byte()`.
-
-#### voteByVoterIndex
-
-`voteByVoterIndex` allows to retrieve votes by voter address:
-`0x42 | len([]byte(voter.Address)) | []byte(voter.Address) | PrimaryKey -> []byte()`.
-
-## Msg Service
-
-### Msg/CreateGroup
-
-A new group can be created with the `MsgCreateGroup`, which has an admin address, a list of members and some optional metadata.
+This makes it far easier for clients to support multiple networks.
 
 The metadata has a maximum length that is chosen by the app developer, and
-passed into the group keeper as a config.
+passed into the gov keeper as a config. The default maximum length in the SDK is 255 characters.
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L67-L80
+#### Writing a module that uses governance
+
+There are many aspects of a chain, or of the individual modules that you may want to
+use governance to perform such as changing various parameters. This is very simple
+to do. First, write out your message types and `MsgServer` implementation. Add an
+`authority` field to the keeper which will be populated in the constructor with the
+governance module account: `govKeeper.GetGovernanceAccount().GetAddress()`. Then for
+the methods in the `msg_server.go`, perform a check on the message that the signer
+matches `authority`. This will prevent any user from executing that message.
+
+### Parameters and base types
+
+`Parameters` define the rules according to which votes are run. There can only
+be one active parameter set at any given time. If governance wants to change a
+parameter set, either to modify a value or add/remove a parameter field, a new
+parameter set has to be created and the previous one rendered inactive.
+
+#### DepositParams
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L152-L162
 ```
 
-It's expected to fail if
+#### VotingParams
 
-* metadata length is greater than `MaxMetadataLen` config
-* members are not correctly set (e.g. wrong address format, duplicates, or with 0 weight).
-
-### Msg/UpdateGroupMembers
-
-Group members can be updated with the `UpdateGroupMembers`.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L88-L102
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L164-L168
 ```
 
-In the list of `MemberUpdates`, an existing member can be removed by setting its weight to 0.
+#### TallyParams
 
-It's expected to fail if:
-
-* the signer is not the admin of the group.
-* for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
-
-### Msg/UpdateGroupAdmin
-
-The `UpdateGroupAdmin` can be used to update a group admin.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L107-L120
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L170-L182
 ```
 
-It's expected to fail if the signer is not the admin of the group.
+Parameters are stored in a global `GlobalParams` KVStore.
 
-### Msg/UpdateGroupMetadata
+Additionally, we introduce some basic types:
 
-The `UpdateGroupMetadata` can be used to update a group metadata.
+```go
+type Vote byte
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L125-L138
+const (
+    VoteYes         = 0x1
+    VoteNo          = 0x2
+    VoteNoWithVeto  = 0x3
+    VoteAbstain     = 0x4
+)
+
+type ProposalType  string
+
+const (
+    ProposalTypePlainText       = "Text"
+    ProposalTypeSoftwareUpgrade = "SoftwareUpgrade"
+)
+
+type ProposalStatus byte
+
+
+const (
+    StatusNil           ProposalStatus = 0x00
+    StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit on it but not vote
+    StatusVotingPeriod  ProposalStatus = 0x02  // MinDeposit is reached, participants can vote
+    StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed
+    StatusRejected      ProposalStatus = 0x04  // Proposal has been rejected
+    StatusFailed        ProposalStatus = 0x05  // Proposal passed but failed execution
+)
 ```
 
-It's expected to fail if:
+### Deposit
 
-* new metadata length is greater than `MaxMetadataLen` config.
-* the signer is not the admin of the group.
-
-### Msg/CreateGroupPolicy
-
-A new group policy can be created with the `MsgCreateGroupPolicy`, which has an admin address, a group id, a decision policy and some optional metadata.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L147-L165
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L38-L49
 ```
 
-It's expected to fail if:
+### ValidatorGovInfo
 
-* the signer is not the admin of the group.
-* metadata length is greater than `MaxMetadataLen` config.
-* the decision policy's `Validate()` method doesn't pass against the group.
+This type is used in a temp map when tallying
 
-### Msg/CreateGroupWithPolicy
-
-A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of members, a decision policy, a `group_policy_as_admin` field to optionally set group and group policy admin with group policy address and some optional metadata for group and group policy.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L191-L215
+```go
+  type ValidatorGovInfo struct {
+    Minus     sdk.Dec
+    Vote      Vote
+  }
 ```
 
-It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateGroupPolicy`.
+## Stores
 
-### Msg/UpdateGroupPolicyAdmin
+:::note
+Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list
+:::
 
-The `UpdateGroupPolicyAdmin` can be used to update a group policy admin.
+We will use one KVStore `Governance` to store four mappings:
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L173-L186
+* A mapping from `proposalID|'proposal'` to `Proposal`.
+* A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
+  us to query all addresses that voted on the proposal along with their vote by
+  doing a range query on `proposalID:addresses`.
+* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all
+  x/gov params.
+* A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
+  us to know if a proposal is in the voting period or not with very low gas cost.
+  
+For pseudocode purposes, here are the two function we will use to read or write in stores:
+
+* `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
+* `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
+
+### Proposal Processing Queue
+
+**Store:**
+
+* `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
+  `ProposalIDs` of proposals that reached `MinDeposit`. During each `EndBlock`,
+  all the proposals that have reached the end of their voting period are processed.
+  To process a finished proposal, the application tallies the votes, computes the
+  votes of each validator and checks if every validator in the validator set has
+  voted. If the proposal is accepted, deposits are refunded. Finally, the proposal
+  content `Handler` is executed.
+
+And the pseudocode for the `ProposalProcessingQueue`:
+
+```go
+  in EndBlock do
+
+    for finishedProposalID in GetAllFinishedProposalIDs(block.Time)
+      proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
+
+      validators = Keeper.getAllValidators()
+      tmpValMap := map(sdk.AccAddress)ValidatorGovInfo
+
+      // Initiate mapping at 0. This is the amount of shares of the validator's vote that will be overridden by their delegator's votes
+      for each validator in validators
+        tmpValMap(validator.OperatorAddr).Minus = 0
+
+      // Tally
+      voterIterator = rangeQuery(Governance, <proposalID|'addresses'>) //return all the addresses that voted on the proposal
+      for each (voterAddress, vote) in voterIterator
+        delegations = stakingKeeper.getDelegations(voterAddress) // get all delegations for current voter
+
+        for each delegation in delegations
+          // make sure delegation.Shares does NOT include shares being unbonded
+          tmpValMap(delegation.ValidatorAddr).Minus += delegation.Shares
+          proposal.updateTally(vote, delegation.Shares)
+
+        _, isVal = stakingKeeper.getValidator(voterAddress)
+        if (isVal)
+          tmpValMap(voterAddress).Vote = vote
+
+      tallyingParam = load(GlobalParams, 'TallyingParam')
+
+      // Update tally if validator voted
+      for each validator in validators
+        if tmpValMap(validator).HasVoted
+          proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
+
+
+
+      // Check if proposal is accepted or rejected
+      totalNonAbstain := proposal.YesVotes + proposal.NoVotes + proposal.NoWithVetoVotes
+      if (proposal.Votes.YesVotes/totalNonAbstain > tallyingParam.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < tallyingParam.Veto)
+        //  proposal was accepted at the end of the voting period
+        //  refund deposits (non-voters already punished)
+        for each (amount, depositor) in proposal.Deposits
+          depositor.AtomBalance += amount
+
+        stateWriter, err := proposal.Handler()
+        if err != nil
+            // proposal passed but failed during state execution
+            proposal.CurrentStatus = ProposalStatusFailed
+         else
+            // proposal pass and state is persisted
+            proposal.CurrentStatus = ProposalStatusAccepted
+            stateWriter.save()
+      else
+        // proposal was rejected
+        proposal.CurrentStatus = ProposalStatusRejected
+
+      store(Governance, <proposalID|'proposal'>, proposal)
 ```
 
-It's expected to fail if the signer is not the admin of the group policy.
+### Legacy Proposal
 
-### Msg/UpdateGroupPolicyDecisionPolicy
+:::warning
+Legacy proposals are deprecated. Use the new proposal flow by granting the governance module the right to execute the message.
+:::
 
-The `UpdateGroupPolicyDecisionPolicy` can be used to update a decision policy.
+A legacy proposal is the old implementation of governance proposal.
+Contrary to proposal that can contain any messages, a legacy proposal allows to submit a set of pre-defined proposals.
+These proposals are defined by their types and handled by handlers that are registered in the gov v1beta1 router.
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L226-L241
+More information on how to submit proposals in the [client section](#client).
+
+## Messages
+
+### Proposal Submission
+
+Proposals can be submitted by any account via a `MsgSubmitProposal` transaction.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L42-L69
 ```
 
-It's expected to fail if:
+All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
+must be registered in the app's `MsgServiceRouter`. Each of these messages must
+have one signer, namely the gov module account. And finally, the metadata length
+must not be larger than the `maxMetadataLen` config passed into the gov keeper.
+The `initialDeposit` must be strictly positive and conform to the accepted denom of the `MinDeposit` param.
 
-* the signer is not the admin of the group policy.
-* the new decision policy's `Validate()` method doesn't pass against the group.
+**State modifications:**
 
-### Msg/UpdateGroupPolicyMetadata
+* Generate new `proposalID`
+* Create new `Proposal`
+* Initialise `Proposal`'s attributes
+* Decrease balance of sender by `InitialDeposit`
+* If `MinDeposit` is reached:
+    * Push `proposalID` in `ProposalProcessingQueue`
+* Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
-The `UpdateGroupPolicyMetadata` can be used to update a group policy metadata.
+### Deposit
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L246-L259
+Once a proposal is submitted, if `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
+`MsgDeposit` transactions to increase the proposal's deposit.
+
+A deposit is accepted iff:
+
+* The proposal exists
+* The proposal is not in the voting period
+* The deposited coins are conform to the accepted denom from the `MinDeposit` param
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L134-L147
 ```
 
-It's expected to fail if:
+**State modifications:**
 
-* new metadata length is greater than `MaxMetadataLen` config.
-* the signer is not the admin of the group.
+* Decrease balance of sender by `deposit`
+* Add `deposit` of sender in `proposal.Deposits`
+* Increase `proposal.TotalDeposit` by sender's `deposit`
+* If `MinDeposit` is reached:
+    * Push `proposalID` in `ProposalProcessingQueueEnd`
+* Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
-### Msg/SubmitProposal
+### Vote
 
-A new proposal can be created with the `MsgSubmitProposal`, which has a group policy account address, a list of proposers addresses, a list of messages to execute if the proposal is accepted and some optional metadata.
-An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. Proposers signatures are considered as yes votes in this case.
+Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
+bonded Atom holders are able to send `MsgVote` transactions to cast their
+vote on the proposal.
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L281-L315
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L92-L108
 ```
 
-It's expected to fail if:
+**State modifications:**
 
-* metadata, title, or summary length is greater than `MaxMetadataLen` config.
-* if any of the proposers is not a group member.
+* Record `Vote` of sender
 
-### Msg/WithdrawProposal
-
-A proposal can be withdrawn using `MsgWithdrawProposal` which has an `address` (can be either a proposer or the group policy admin) and a `proposal_id` (which has to be withdrawn).
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L323-L333
-```
-
-It's expected to fail if:
-
-* the signer is neither the group policy admin nor proposer of the proposal.
-* the proposal is already closed or aborted.
-
-### Msg/Vote
-
-A new vote can be created with the `MsgVote`, given a proposal id, a voter address, a choice (yes, no, veto or abstain) and some optional metadata.
-An optional `Exec` value can be provided to try to execute the proposal immediately after voting.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L338-L358
-```
-
-It's expected to fail if:
-
-* metadata length is greater than `MaxMetadataLen` config.
-* the proposal is not in voting period anymore.
-
-### Msg/Exec
-
-A proposal can be executed with the `MsgExec`.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L363-L373
-```
-
-The messages that are part of this proposal won't be executed if:
-
-* the proposal has not been accepted by the group policy.
-* the proposal has already been successfully executed.
-
-### Msg/LeaveGroup
-
-The `MsgLeaveGroup` allows group member to leave a group.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L381-L391
-```
-
-It's expected to fail if:
-
-* the group member is not part of the group.
-* for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
+:::note
+Gas cost for this message has to take into account the future tallying of the vote in EndBlocker.
+:::
 
 ## Events
 
-The group module emits the following events:
+The governance module emits the following events:
 
-### EventCreateGroup
+### EndBlocker
 
-| Type                             | Attribute Key | Attribute Value                  |
-| -------------------------------- | ------------- | -------------------------------- |
-| message                          | action        | `/cosmos.group.v1.Msg/CreateGroup` |
-| cosmos.group.v1.EventCreateGroup | group_id      | `{groupId}` |
+| Type              | Attribute Key   | Attribute Value  |
+|-------------------|-----------------|------------------|
+| inactive_proposal | proposal_id     | `{proposalID}` |
+| inactive_proposal | proposal_result | `{proposalResult}` |
+| active_proposal   | proposal_id     | `{proposalID}` |
+| active_proposal   | proposal_result | `{proposalResult}` |
 
-### EventUpdateGroup
+### Handlers
 
-| Type                             | Attribute Key | Attribute Value                                            |
-| -------------------------------- | ------------- | ---------------------------------------------------------- |
-| message                          | action        | `/cosmos.group.v1.Msg/UpdateGroup{Admin\|Metadata\|Members}` |
-| cosmos.group.v1.EventUpdateGroup | group_id      | `{groupId}` |
+#### MsgSubmitProposal
 
-### EventCreateGroupPolicy
+| Type                | Attribute Key       | Attribute Value |
+|---------------------|---------------------|-----------------|
+| submit_proposal     | proposal_id         | `{proposalID}` |
+| submit_proposal [0] | voting_period_start | `{proposalID}` |
+| proposal_deposit    | amount              | `{depositAmount}` |
+| proposal_deposit    | proposal_id         | `{proposalID}` |
+| message             | module              | `governance`      |
+| message             | action              | `submit_proposal` |
+| message             | sender              | `{senderAddress}` |
 
-| Type                                   | Attribute Key | Attribute Value                        |
-| -------------------------------------- | ------------- | -------------------------------------- |
-| message                                | action        | `/cosmos.group.v1.Msg/CreateGroupPolicy` |
-| cosmos.group.v1.EventCreateGroupPolicy | address       | `{groupPolicyAddress}` |
+* [0] Event only emitted if the voting period starts during the submission.
 
-### EventUpdateGroupPolicy
+#### MsgVote
 
-| Type                                   | Attribute Key | Attribute Value                                                         |
-| -------------------------------------- | ------------- | ----------------------------------------------------------------------- |
-| message                                | action        | `/cosmos.group.v1.Msg/UpdateGroupPolicy{Admin\|Metadata\|DecisionPolicy}` |
-| cosmos.group.v1.EventUpdateGroupPolicy | address       | `{groupPolicyAddress}` |
+| Type          | Attribute Key | Attribute Value |
+|---------------|---------------|-----------------|
+| proposal_vote | option        | `{voteOption}` |
+| proposal_vote | proposal_id   | `{proposalID}` |
+| message       | module        | `governance`      |
+| message       | action        | `vote`            |
+| message       | sender        | `{senderAddress}` |
 
-### EventCreateProposal
+#### MsgVoteWeighted
 
-| Type                                | Attribute Key | Attribute Value                     |
-| ----------------------------------- | ------------- | ----------------------------------- |
-| message                             | action        | `/cosmos.group.v1.Msg/CreateProposal` |
-| cosmos.group.v1.EventCreateProposal | proposal_id   | `{proposalId}` |
+| Type          | Attribute Key | Attribute Value       |
+|---------------|---------------|-----------------------|
+| proposal_vote | option        | `{weightedVoteOptions}` |
+| proposal_vote | proposal_id   | `{proposalID}` |
+| message       | module        | `governance`            |
+| message       | action        | `vote`                  |
+| message       | sender        | `{senderAddress}` |
 
-### EventWithdrawProposal
+#### MsgDeposit
 
-| Type                                  | Attribute Key | Attribute Value                       |
-| ------------------------------------- | ------------- | ------------------------------------- |
-| message                               | action        | `/cosmos.group.v1.Msg/WithdrawProposal` |
-| cosmos.group.v1.EventWithdrawProposal | proposal_id   | `{proposalId}` |
+| Type                 | Attribute Key       | Attribute Value |
+|----------------------|---------------------|-----------------|
+| proposal_deposit     | amount              | `{depositAmount}` |
+| proposal_deposit     | proposal_id         | `{proposalID}` |
+| proposal_deposit [0] | voting_period_start | `{proposalID}` |
+| message              | module              | `governance`      |
+| message              | action              | `deposit`         |
+| message              | sender              | `{senderAddress}` |
 
-### EventVote
+* [0] Event only emitted if the voting period starts during the submission.
 
-| Type                      | Attribute Key | Attribute Value           |
-| ------------------------- | ------------- | ------------------------- |
-| message                   | action        | `/cosmos.group.v1.Msg/Vote` |
-| cosmos.group.v1.EventVote | proposal_id   | `{proposalId}` |
+## Parameters
 
-## EventExec
+The governance module contains the following parameters:
 
-| Type                      | Attribute Key | Attribute Value           |
-| ------------------------- | ------------- | ------------------------- |
-| message                   | action        | `/cosmos.group.v1.Msg/Exec` |
-| cosmos.group.v1.EventExec | proposal_id   | `{proposalId}` |
-| cosmos.group.v1.EventExec | logs          | `{logs_string}` |
+| Key                           | Type             | Example                                 |
+|-------------------------------|------------------|-----------------------------------------|
+| min_deposit                   | array (coins)    | `[{"denom":"uatom","amount":"10000000"}]` |
+| max_deposit_period            | string (time ns) | `"172800000000000"` (17280s)              |
+| voting_period                 | string (time ns) | `"172800000000000"` (17280s)              |
+| quorum                        | string (dec)     | `"0.334000000000000000"`                  |
+| threshold                     | string (dec)     | `"0.500000000000000000"`                  |
+| veto                          | string (dec)     | `"0.334000000000000000"`                  |
+| expedited_threshold           | string (time ns) | `"0.667000000000000000"`                  |
+| expedited_voting_period       | string (time ns) | `"86400000000000"` (8600s)                |
+| expedited_min_deposit         | array (coins)    | `[{"denom":"uatom","amount":"50000000"}]` |
+| burn_proposal_deposit_prevote | bool             | `false`                                    |
+| burn_vote_quorum              | bool             | `false`                                   |
+| burn_vote_veto                | bool             | `true`                                    |
+| min_initial_deposit_ratio                | string             | `"0.1"`                                    |
 
-### EventLeaveGroup
 
-| Type                            | Attribute Key | Attribute Value                 |
-| ------------------------------- | ------------- | ------------------------------- |
-| message                         | action        | `/cosmos.group.v1.Msg/LeaveGroup` |
-| cosmos.group.v1.EventLeaveGroup | proposal_id   | `{proposalId}` |
-| cosmos.group.v1.EventLeaveGroup | address       | `{address}` |
-
-### EventProposalPruned
-
-| Type                                | Attribute Key | Attribute Value                 |
-|-------------------------------------|---------------|---------------------------------|
-| message                             | action        | `/cosmos.group.v1.Msg/LeaveGroup` |
-| cosmos.group.v1.EventProposalPruned | proposal_id   | `{proposalId}` |
-| cosmos.group.v1.EventProposalPruned | status        | `{ProposalStatus}` |
-| cosmos.group.v1.EventProposalPruned | tally_result  | `{TallyResult}` |
-
+**NOTE**: The governance module contains parameters that are objects unlike other
+modules. If only a subset of parameters are desired to be changed, only they need
+to be included and not the entire parameter object structure.
 
 ## Client
 
 ### CLI
 
-A user can query and interact with the `group` module using the CLI.
+A user can query and interact with the `gov` module using the CLI.
 
 #### Query
 
-The `query` commands allow users to query `group` state.
+The `query` commands allow users to query `gov` state.
 
 ```bash
-simd query group --help
+simd query gov --help
 ```
 
-##### group-info
+##### deposit
 
-The `group-info` command allows users to query for group info by given group id.
-
-```bash
-simd query group group-info [id] [flags]
-```
-
-Example:
+The `deposit` command allows users to query a deposit for a given proposal from a given depositor.
 
 ```bash
-simd query group group-info 1
-```
-
-Example Output:
-
-```bash
-admin: cosmos1..
-group_id: "1"
-metadata: AQ==
-total_weight: "3"
-version: "1"
-```
-
-##### group-policy-info
-
-The `group-policy-info` command allows users to query for group policy info by account address of group policy .
-
-```bash
-simd query group group-policy-info [group-policy-account] [flags]
+simd query gov deposit [proposal-id] [depositer-addr] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group group-policy-info cosmos1..
+simd query gov deposit 1 cosmos1..
 ```
 
 Example Output:
 
 ```bash
-address: cosmos1..
-admin: cosmos1..
-decision_policy:
-  '@type': /cosmos.group.v1.ThresholdDecisionPolicy
-  threshold: "1"
-  windows:
-      min_execution_period: 0s
-      voting_period: 432000s
-group_id: "1"
-metadata: AQ==
-version: "1"
+amount:
+- amount: "100"
+  denom: stake
+depositor: cosmos1..
+proposal_id: "1"
 ```
 
-##### group-members
+##### deposits
 
-The `group-members` command allows users to query for group members by group id with pagination flags.
+The `deposits` command allows users to query all deposits for a given proposal.
 
 ```bash
-simd query group group-members [id] [flags]
+simd query gov deposits [proposal-id] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group group-members 1
+simd query gov deposits 1
 ```
 
 Example Output:
 
 ```bash
-members:
-- group_id: "1"
-  member:
-    address: cosmos1..
-    metadata: AQ==
-    weight: "2"
-- group_id: "1"
-  member:
-    address: cosmos1..
-    metadata: AQ==
-    weight: "1"
+deposits:
+- amount:
+  - amount: "100"
+    denom: stake
+  depositor: cosmos1..
+  proposal_id: "1"
 pagination:
   next_key: null
-  total: "2"
+  total: "0"
 ```
 
-##### groups-by-admin
+##### param
 
-The `groups-by-admin` command allows users to query for groups by admin account address with pagination flags.
-
-```bash
-simd query group groups-by-admin [admin] [flags]
-```
-
-Example:
+The `param` command allows users to query a given parameter for the `gov` module.
 
 ```bash
-simd query group groups-by-admin cosmos1..
-```
-
-Example Output:
-
-```bash
-groups:
-- admin: cosmos1..
-  group_id: "1"
-  metadata: AQ==
-  total_weight: "3"
-  version: "1"
-- admin: cosmos1..
-  group_id: "2"
-  metadata: AQ==
-  total_weight: "3"
-  version: "1"
-pagination:
-  next_key: null
-  total: "2"
-```
-
-##### group-policies-by-group
-
-The `group-policies-by-group` command allows users to query for group policies by group id with pagination flags.
-
-```bash
-simd query group group-policies-by-group [group-id] [flags]
+simd query gov param [param-type] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group group-policies-by-group 1
+simd query gov param voting
 ```
 
 Example Output:
 
 ```bash
-group_policies:
-- address: cosmos1..
-  admin: cosmos1..
-  decision_policy:
-    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
-    threshold: "1"
-    windows:
-      min_execution_period: 0s
-      voting_period: 432000s
-  group_id: "1"
-  metadata: AQ==
-  version: "1"
-- address: cosmos1..
-  admin: cosmos1..
-  decision_policy:
-    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
-    threshold: "1"
-    windows:
-      min_execution_period: 0s
-      voting_period: 432000s
-  group_id: "1"
-  metadata: AQ==
-  version: "1"
-pagination:
-  next_key: null
-  total: "2"
+voting_period: "172800000000000"
 ```
 
-##### group-policies-by-admin
+##### params
 
-The `group-policies-by-admin` command allows users to query for group policies by admin account address with pagination flags.
+The `params` command allows users to query all parameters for the `gov` module.
 
 ```bash
-simd query group group-policies-by-admin [admin] [flags]
+simd query gov params [flags]
 ```
 
 Example:
 
 ```bash
-simd query group group-policies-by-admin cosmos1..
+simd query gov params
 ```
 
 Example Output:
 
 ```bash
-group_policies:
-- address: cosmos1..
-  admin: cosmos1..
-  decision_policy:
-    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
-    threshold: "1"
-    windows:
-      min_execution_period: 0s
-      voting_period: 432000s
-  group_id: "1"
-  metadata: AQ==
-  version: "1"
-- address: cosmos1..
-  admin: cosmos1..
-  decision_policy:
-    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
-    threshold: "1"
-    windows:
-      min_execution_period: 0s
-      voting_period: 432000s
-  group_id: "1"
-  metadata: AQ==
-  version: "1"
-pagination:
-  next_key: null
-  total: "2"
+deposit_params:
+  max_deposit_period: 172800s
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+params:
+  expedited_min_deposit:
+  - amount: "50000000"
+    denom: stake
+  expedited_threshold: "0.670000000000000000"
+  expedited_voting_period: 86400s
+  max_deposit_period: 172800s
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+  min_initial_deposit_ratio: "0.000000000000000000"
+  proposal_cancel_burn_rate: "0.500000000000000000"
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+  voting_period: 172800s
+tally_params:
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+voting_params:
+  voting_period: 172800s
 ```
 
 ##### proposal
 
-The `proposal` command allows users to query for proposal by id.
+The `proposal` command allows users to query a given proposal.
 
 ```bash
-simd query group proposal [id] [flags]
+simd query gov proposal [proposal-id] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group proposal 1
+simd query gov proposal 1
 ```
 
 Example Output:
 
 ```bash
-proposal:
-  address: cosmos1..
-  executor_result: EXECUTOR_RESULT_NOT_RUN
-  group_policy_version: "1"
-  group_version: "1"
-  metadata: AQ==
-  msgs:
-  - '@type': /cosmos.bank.v1beta1.MsgSend
-    amount:
-    - amount: "100000000"
-      denom: stake
-    from_address: cosmos1..
-    to_address: cosmos1..
-  proposal_id: "1"
-  proposers:
-  - cosmos1..
-  result: RESULT_UNFINALIZED
-  status: STATUS_SUBMITTED
-  submitted_at: "2021-12-17T07:06:26.310638964Z"
-  windows:
-    min_execution_period: 0s
-    voting_period: 432000s
-  vote_state:
-    abstain_count: "0"
-    no_count: "0"
-    veto_count: "0"
-    yes_count: "0"
-  summary: "Summary"
-  title: "Title"
+deposit_end_time: "2022-03-30T11:50:20.819676256Z"
+final_tally_result:
+  abstain_count: "0"
+  no_count: "0"
+  no_with_veto_count: "0"
+  yes_count: "0"
+id: "1"
+messages:
+- '@type': /cosmos.bank.v1beta1.MsgSend
+  amount:
+  - amount: "10"
+    denom: stake
+  from_address: cosmos1..
+  to_address: cosmos1..
+metadata: AQ==
+status: PROPOSAL_STATUS_DEPOSIT_PERIOD
+submit_time: "2022-03-28T11:50:20.819676256Z"
+total_deposit:
+- amount: "10"
+  denom: stake
+voting_end_time: null
+voting_start_time: null
 ```
 
-##### proposals-by-group-policy
+##### proposals
 
-The `proposals-by-group-policy` command allows users to query for proposals by account address of group policy with pagination flags.
+The `proposals` command allows users to query all proposals with optional filters.
 
 ```bash
-simd query group proposals-by-group-policy [group-policy-account] [flags]
+simd query gov proposals [flags]
 ```
 
 Example:
 
 ```bash
-simd query group proposals-by-group-policy cosmos1..
+simd query gov proposals
 ```
 
 Example Output:
@@ -879,103 +851,135 @@ Example Output:
 ```bash
 pagination:
   next_key: null
-  total: "1"
+  total: "0"
 proposals:
-- address: cosmos1..
-  executor_result: EXECUTOR_RESULT_NOT_RUN
-  group_policy_version: "1"
-  group_version: "1"
-  metadata: AQ==
-  msgs:
+- deposit_end_time: "2022-03-30T11:50:20.819676256Z"
+  final_tally_result:
+    abstain_count: "0"
+    no_count: "0"
+    no_with_veto_count: "0"
+    yes_count: "0"
+  id: "1"
+  messages:
   - '@type': /cosmos.bank.v1beta1.MsgSend
     amount:
-    - amount: "100000000"
+    - amount: "10"
       denom: stake
     from_address: cosmos1..
     to_address: cosmos1..
-  proposal_id: "1"
-  proposers:
-  - cosmos1..
-  result: RESULT_UNFINALIZED
-  status: STATUS_SUBMITTED
-  submitted_at: "2021-12-17T07:06:26.310638964Z"
-  windows:
-    min_execution_period: 0s
-    voting_period: 432000s
-  vote_state:
+  metadata: AQ==
+  status: PROPOSAL_STATUS_DEPOSIT_PERIOD
+  submit_time: "2022-03-28T11:50:20.819676256Z"
+  total_deposit:
+  - amount: "10"
+    denom: stake
+  voting_end_time: null
+  voting_start_time: null
+- deposit_end_time: "2022-03-30T14:02:41.165025015Z"
+  final_tally_result:
     abstain_count: "0"
     no_count: "0"
-    veto_count: "0"
+    no_with_veto_count: "0"
     yes_count: "0"
-  summary: "Summary"
-  title: "Title"
+  id: "2"
+  messages:
+  - '@type': /cosmos.bank.v1beta1.MsgSend
+    amount:
+    - amount: "10"
+      denom: stake
+    from_address: cosmos1..
+    to_address: cosmos1..
+  metadata: AQ==
+  status: PROPOSAL_STATUS_DEPOSIT_PERIOD
+  submit_time: "2022-03-28T14:02:41.165025015Z"
+  total_deposit:
+  - amount: "10"
+    denom: stake
+  voting_end_time: null
+  voting_start_time: null
+```
+
+##### proposer
+
+The `proposer` command allows users to query the proposer for a given proposal.
+
+```bash
+simd query gov proposer [proposal-id] [flags]
+```
+
+Example:
+
+```bash
+simd query gov proposer 1
+```
+
+Example Output:
+
+```bash
+proposal_id: "1"
+proposer: cosmos1..
+```
+
+##### tally
+
+The `tally` command allows users to query the tally of a given proposal vote.
+
+```bash
+simd query gov tally [proposal-id] [flags]
+```
+
+Example:
+
+```bash
+simd query gov tally 1
+```
+
+Example Output:
+
+```bash
+abstain: "0"
+"no": "0"
+no_with_veto: "0"
+"yes": "1"
 ```
 
 ##### vote
 
-The `vote` command allows users to query for vote by proposal id and voter account address.
+The `vote` command allows users to query a vote for a given proposal.
 
 ```bash
-simd query group vote [proposal-id] [voter] [flags]
+simd query gov vote [proposal-id] [voter-addr] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group vote 1 cosmos1..
+simd query gov vote 1 cosmos1..
 ```
 
 Example Output:
 
 ```bash
-vote:
-  choice: CHOICE_YES
-  metadata: AQ==
-  proposal_id: "1"
-  submitted_at: "2021-12-17T08:05:02.490164009Z"
-  voter: cosmos1..
+option: VOTE_OPTION_YES
+options:
+- option: VOTE_OPTION_YES
+  weight: "1.000000000000000000"
+proposal_id: "1"
+voter: cosmos1..
 ```
 
-##### votes-by-proposal
+##### votes
 
-The `votes-by-proposal` command allows users to query for votes by proposal id with pagination flags.
-
-```bash
-simd query group votes-by-proposal [proposal-id] [flags]
-```
-
-Example:
+The `votes` command allows users to query all votes for a given proposal.
 
 ```bash
-simd query group votes-by-proposal 1
-```
-
-Example Output:
-
-```bash
-pagination:
-  next_key: null
-  total: "1"
-votes:
-- choice: CHOICE_YES
-  metadata: AQ==
-  proposal_id: "1"
-  submitted_at: "2021-12-17T08:05:02.490164009Z"
-  voter: cosmos1..
-```
-
-##### votes-by-voter
-
-The `votes-by-voter` command allows users to query for votes by voter account address with pagination flags.
-
-```bash
-simd query group votes-by-voter [voter] [flags]
+simd query gov votes [proposal-id] [flags]
 ```
 
 Example:
 
 ```bash
-simd query group votes-by-voter cosmos1..
+simd query gov votes 1
 ```
 
 Example Output:
@@ -983,459 +987,188 @@ Example Output:
 ```bash
 pagination:
   next_key: null
-  total: "1"
+  total: "0"
 votes:
-- choice: CHOICE_YES
-  metadata: AQ==
+- option: VOTE_OPTION_YES
+  options:
+  - option: VOTE_OPTION_YES
+    weight: "1.000000000000000000"
   proposal_id: "1"
-  submitted_at: "2021-12-17T08:05:02.490164009Z"
   voter: cosmos1..
 ```
 
-### Transactions
+#### Transactions
 
-The `tx` commands allow users to interact with the `group` module.
+The `tx` commands allow users to interact with the `gov` module.
 
 ```bash
-simd tx group --help
+simd tx gov --help
 ```
 
-#### create-group
+##### deposit
 
-The `create-group` command allows users to create a group which is an aggregation of member accounts with associated weights and
-an administrator account.
-
-```bash
-simd tx group create-group [admin] [metadata] [members-json-file]
-```
-
-Example:
+The `deposit` command allows users to deposit tokens for a given proposal.
 
 ```bash
-simd tx group create-group cosmos1.. "AQ==" members.json
-```
-
-#### update-group-admin
-
-The `update-group-admin` command allows users to update a group's admin.
-
-```bash
-simd tx group update-group-admin [admin] [group-id] [new-admin] [flags]
+simd tx gov deposit [proposal-id] [deposit] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group update-group-admin cosmos1.. 1 cosmos1..
+simd tx gov deposit 1 10000000stake --from cosmos1..
 ```
 
-#### update-group-members
+##### draft-proposal
 
-The `update-group-members` command allows users to update a group's members.
+The `draft-proposal` command allows users to draft any type of proposal.
+The command returns a `draft_proposal.json`, to be used by `submit-proposal` after being completed.
+The `draft_metadata.json` is meant to be uploaded to [IPFS](#metadata).
 
 ```bash
-simd tx group update-group-members [admin] [group-id] [members-json-file] [flags]
+simd tx gov draft-proposal
 ```
 
-Example:
+##### submit-proposal
+
+The `submit-proposal` command allows users to submit a governance proposal along with some messages and metadata.
+Messages, metadata and deposit are defined in a JSON file.
 
 ```bash
-simd tx group update-group-members cosmos1.. 1 members.json
-```
-
-#### update-group-metadata
-
-The `update-group-metadata` command allows users to update a group's metadata.
-
-```bash
-simd tx group update-group-metadata [admin] [group-id] [metadata] [flags]
+simd tx gov submit-proposal [path-to-proposal-json] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group update-group-metadata cosmos1.. 1 "AQ=="
+simd tx gov submit-proposal /path/to/proposal.json --from cosmos1..
 ```
 
-#### create-group-policy
+where `proposal.json` contains:
 
-The `create-group-policy` command allows users to create a group policy which is an account associated with a group and a decision policy.
-
-```bash
-simd tx group create-group-policy [admin] [group-id] [metadata] [decision-policy] [flags]
+```json
+{
+  "messages": [
+    {
+      "@type": "/cosmos.bank.v1beta1.MsgSend",
+      "from_address": "cosmos1...", // The gov module module address
+      "to_address": "cosmos1...",
+      "amount":[{"denom": "stake","amount": "10"}]
+    }
+  ],
+  "metadata": "AQ==",
+  "deposit": "10stake",
+  "title": "Proposal Title",
+  "summary": "Proposal Summary"
+}
 ```
 
-Example:
+:::note
+By default the metadata, summary and title are both limited by 255 characters, this can be overridden by the application developer.
+:::
+
+:::tip
+When metadata is not specified, the title is limited to 255 characters and the summary 40x the title length.
+:::
+
+##### submit-legacy-proposal
+
+The `submit-legacy-proposal` command allows users to submit a governance legacy proposal along with an initial deposit.
 
 ```bash
-simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
-```
-
-#### create-group-with-policy
-
-The `create-group-with-policy` command allows users to create a group which is an aggregation of member accounts with associated weights and an administrator account with decision policy. If the `--group-policy-as-admin` flag is set to `true`, the group policy address becomes the group and group policy admin.
-
-```bash
-simd tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy] [flags]
-```
-
-Example:
-
-```bash
-simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
-```
-
-#### update-group-policy-admin
-
-The `update-group-policy-admin` command allows users to update a group policy admin.
-
-```bash
-simd tx group update-group-policy-admin [admin] [group-policy-account] [new-admin] [flags]
-```
-
-Example:
-
-```bash
-simd tx group update-group-policy-admin cosmos1.. cosmos1.. cosmos1..
-```
-
-#### update-group-policy-metadata
-
-The `update-group-policy-metadata` command allows users to update a group policy metadata.
-
-```bash
-simd tx group update-group-policy-metadata [admin] [group-policy-account] [new-metadata] [flags]
+simd tx gov submit-legacy-proposal [command] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group update-group-policy-metadata cosmos1.. cosmos1.. "AQ=="
+simd tx gov submit-legacy-proposal --title="Test Proposal" --description="testing" --type="Text" --deposit="100000000stake" --from cosmos1..
 ```
 
-#### update-group-policy-decision-policy
-
-The `update-group-policy-decision-policy` command allows users to update a group policy's decision policy.
+Example (`param-change`):
 
 ```bash
-simd  tx group update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy] [flags]
+simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 ```
 
-Example:
-
-```bash
-simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"2", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
+```json
+{
+  "title": "Test Proposal",
+  "description": "testing, testing, 1, 2, 3",
+  "changes": [
+    {
+      "subspace": "staking",
+      "key": "MaxValidators",
+      "value": 100
+    }
+  ],
+  "deposit": "10000000stake"
+}
 ```
 
-#### submit-proposal
+#### cancel-proposal
 
-The `submit-proposal` command allows users to submit a new proposal.
-
-```bash
-simd tx group submit-proposal [group-policy-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata] [flags]
-```
-
-Example:
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
 
 ```bash
-simd tx group submit-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
-```
-
-#### withdraw-proposal
-
-The `withdraw-proposal` command allows users to withdraw a proposal.
-
-```bash
-simd tx group withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]
+simd tx gov cancel-proposal [proposal-id] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group withdraw-proposal 1 cosmos1..
+simd tx gov cancel-proposal 1 --from cosmos1...
 ```
 
-#### vote
+##### vote
 
-The `vote` command allows users to vote on a proposal.
-
-```bash
-simd tx group vote proposal-id] [voter] [choice] [metadata] [flags]
-```
-
-Example:
+The `vote` command allows users to submit a vote for a given governance proposal.
 
 ```bash
-simd tx group vote 1 cosmos1.. CHOICE_YES "AQ=="
-```
-
-#### exec
-
-The `exec` command allows users to execute a proposal.
-
-```bash
-simd tx group exec [proposal-id] [flags]
+simd tx gov vote [command] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group exec 1
+simd tx gov vote 1 yes --from cosmos1..
 ```
 
-#### leave-group
+##### weighted-vote
 
-The `leave-group` command allows group member to leave the group.
+The `weighted-vote` command allows users to submit a weighted vote for a given governance proposal.
 
 ```bash
-simd tx group leave-group [member-address] [group-id]
+simd tx gov weighted-vote [proposal-id] [weighted-options] [flags]
 ```
 
 Example:
 
 ```bash
-simd tx group leave-group cosmos1... 1
+simd tx gov weighted-vote 1 yes=0.5,no=0.5 --from cosmos1..
 ```
 
 ### gRPC
 
-A user can query the `group` module using gRPC endpoints.
-
-#### GroupInfo
-
-The `GroupInfo` endpoint allows users to query for group info by given group id.
-
-```bash
-cosmos.group.v1.Query/GroupInfo
-```
-
-Example:
-
-```bash
-grpcurl -plaintext \
-    -d '{"group_id":1}' localhost:9090 cosmos.group.v1.Query/GroupInfo
-```
-
-Example Output:
-
-```bash
-{
-  "info": {
-    "groupId": "1",
-    "admin": "cosmos1..",
-    "metadata": "AQ==",
-    "version": "1",
-    "totalWeight": "3"
-  }
-}
-```
-
-#### GroupPolicyInfo
-
-The `GroupPolicyInfo` endpoint allows users to query for group policy info by account address of group policy.
-
-```bash
-cosmos.group.v1.Query/GroupPolicyInfo
-```
-
-Example:
-
-```bash
-grpcurl -plaintext \
-    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/GroupPolicyInfo
-```
-
-Example Output:
-
-```bash
-{
-  "info": {
-    "address": "cosmos1..",
-    "groupId": "1",
-    "admin": "cosmos1..",
-    "version": "1",
-    "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows": {"voting_period": "120h", "min_execution_period": "0s"}},
-  }
-}
-```
-
-#### GroupMembers
-
-The `GroupMembers` endpoint allows users to query for group members by group id with pagination flags.
-
-```bash
-cosmos.group.v1.Query/GroupMembers
-```
-
-Example:
-
-```bash
-grpcurl -plaintext \
-    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1.Query/GroupMembers
-```
-
-Example Output:
-
-```bash
-{
-  "members": [
-    {
-      "groupId": "1",
-      "member": {
-        "address": "cosmos1..",
-        "weight": "1"
-      }
-    },
-    {
-      "groupId": "1",
-      "member": {
-        "address": "cosmos1..",
-        "weight": "2"
-      }
-    }
-  ],
-  "pagination": {
-    "total": "2"
-  }
-}
-```
-
-#### GroupsByAdmin
-
-The `GroupsByAdmin` endpoint allows users to query for groups by admin account address with pagination flags.
-
-```bash
-cosmos.group.v1.Query/GroupsByAdmin
-```
-
-Example:
-
-```bash
-grpcurl -plaintext \
-    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/GroupsByAdmin
-```
-
-Example Output:
-
-```bash
-{
-  "groups": [
-    {
-      "groupId": "1",
-      "admin": "cosmos1..",
-      "metadata": "AQ==",
-      "version": "1",
-      "totalWeight": "3"
-    },
-    {
-      "groupId": "2",
-      "admin": "cosmos1..",
-      "metadata": "AQ==",
-      "version": "1",
-      "totalWeight": "3"
-    }
-  ],
-  "pagination": {
-    "total": "2"
-  }
-}
-```
-
-#### GroupPoliciesByGroup
-
-The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
-
-```bash
-cosmos.group.v1.Query/GroupPoliciesByGroup
-```
-
-Example:
-
-```bash
-grpcurl -plaintext \
-    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1.Query/GroupPoliciesByGroup
-```
-
-Example Output:
-
-```bash
-{
-  "GroupPolicies": [
-    {
-      "address": "cosmos1..",
-      "groupId": "1",
-      "admin": "cosmos1..",
-      "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
-    },
-    {
-      "address": "cosmos1..",
-      "groupId": "1",
-      "admin": "cosmos1..",
-      "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
-    }
-  ],
-  "pagination": {
-    "total": "2"
-  }
-}
-```
-
-#### GroupPoliciesByAdmin
-
-The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
-
-```bash
-cosmos.group.v1.Query/GroupPoliciesByAdmin
-```
-
-Example:
-
-```bash
-grpcurl -plaintext \
-    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/GroupPoliciesByAdmin
-```
-
-Example Output:
-
-```bash
-{
-  "GroupPolicies": [
-    {
-      "address": "cosmos1..",
-      "groupId": "1",
-      "admin": "cosmos1..",
-      "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
-    },
-    {
-      "address": "cosmos1..",
-      "groupId": "1",
-      "admin": "cosmos1..",
-      "version": "1",
-      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
-    }
-  ],
-  "pagination": {
-    "total": "2"
-  }
-}
-```
+A user can query the `gov` module using gRPC endpoints.
 
 #### Proposal
 
-The `Proposal` endpoint allows users to query for proposal by id.
+The `Proposal` endpoint allows users to query a given proposal.
+
+Using legacy v1beta1:
 
 ```bash
-cosmos.group.v1.Query/Proposal
+cosmos.gov.v1beta1.Query/Proposal
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1.Query/Proposal
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Proposal
 ```
 
 Example Output:
@@ -1444,48 +1177,94 @@ Example Output:
 {
   "proposal": {
     "proposalId": "1",
-    "address": "cosmos1..",
-    "proposers": [
-      "cosmos1.."
-    ],
-    "submittedAt": "2021-12-17T07:06:26.310638964Z",
-    "groupVersion": "1",
-    "GroupPolicyVersion": "1",
-    "status": "STATUS_SUBMITTED",
-    "result": "RESULT_UNFINALIZED",
-    "voteState": {
-      "yesCount": "0",
-      "noCount": "0",
-      "abstainCount": "0",
-      "vetoCount": "0"
+    "content": {"@type":"/cosmos.gov.v1beta1.TextProposal","description":"testing, testing, 1, 2, 3","title":"Test Proposal"},
+    "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+    "finalTallyResult": {
+      "yes": "0",
+      "abstain": "0",
+      "no": "0",
+      "noWithVeto": "0"
     },
-    "windows": {
-      "min_execution_period": "0s",
-      "voting_period": "432000s"
-    },
-    "executorResult": "EXECUTOR_RESULT_NOT_RUN",
-    "messages": [
-      {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+    "submitTime": "2021-09-16T19:40:08.712440474Z",
+    "depositEndTime": "2021-09-18T19:40:08.712440474Z",
+    "totalDeposit": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
     ],
-    "title": "Title",
-    "summary": "Summary",
+    "votingStartTime": "2021-09-16T19:40:08.712440474Z",
+    "votingEndTime": "2021-09-18T19:40:08.712440474Z",
+    "title": "Test Proposal",
+    "summary": "testing, testing, 1, 2, 3"
   }
 }
 ```
 
-#### ProposalsByGroupPolicy
-
-The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
+Using v1:
 
 ```bash
-cosmos.group.v1.Query/ProposalsByGroupPolicy
+cosmos.gov.v1.Query/Proposal
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/ProposalsByGroupPolicy
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Proposal
+```
+
+Example Output:
+
+```bash
+{
+  "proposal": {
+    "id": "1",
+    "messages": [
+      {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"10"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+    ],
+    "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+    "finalTallyResult": {
+      "yesCount": "0",
+      "abstainCount": "0",
+      "noCount": "0",
+      "noWithVetoCount": "0"
+    },
+    "submitTime": "2022-03-28T11:50:20.819676256Z",
+    "depositEndTime": "2022-03-30T11:50:20.819676256Z",
+    "totalDeposit": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ],
+    "votingStartTime": "2022-03-28T14:25:26.644857113Z",
+    "votingEndTime": "2022-03-30T14:25:26.644857113Z",
+    "metadata": "AQ==",
+    "title": "Test Proposal",
+    "summary": "testing, testing, 1, 2, 3"
+  }
+}
+```
+
+#### Proposals
+
+The `Proposals` endpoint allows users to query all proposals with optional filters.
+
+Using legacy v1beta1:
+
+```bash
+cosmos.gov.v1beta1.Query/Proposals
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Proposals
 ```
 
 Example Output:
@@ -1495,52 +1274,145 @@ Example Output:
   "proposals": [
     {
       "proposalId": "1",
-      "address": "cosmos1..",
-      "proposers": [
-        "cosmos1.."
-      ],
-      "submittedAt": "2021-12-17T08:03:27.099649352Z",
-      "groupVersion": "1",
-      "GroupPolicyVersion": "1",
-      "status": "STATUS_CLOSED",
-      "result": "RESULT_ACCEPTED",
-      "voteState": {
-        "yesCount": "1",
-        "noCount": "0",
-        "abstainCount": "0",
-        "vetoCount": "0"
+      "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+      "finalTallyResult": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "noWithVeto": "0"
       },
-      "windows": {
-        "min_execution_period": "0s",
-        "voting_period": "432000s"
-      },
-      "executorResult": "EXECUTOR_RESULT_NOT_RUN",
-      "messages": [
-        {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+      "submitTime": "2022-03-28T11:50:20.819676256Z",
+      "depositEndTime": "2022-03-30T11:50:20.819676256Z",
+      "totalDeposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000010"
+        }
       ],
-      "title": "Title",
-      "summary": "Summary",
+      "votingStartTime": "2022-03-28T14:25:26.644857113Z",
+      "votingEndTime": "2022-03-30T14:25:26.644857113Z"
+    },
+    {
+      "proposalId": "2",
+      "status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+      "finalTallyResult": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "noWithVeto": "0"
+      },
+      "submitTime": "2022-03-28T14:02:41.165025015Z",
+      "depositEndTime": "2022-03-30T14:02:41.165025015Z",
+      "totalDeposit": [
+        {
+          "denom": "stake",
+          "amount": "10"
+        }
+      ],
+      "votingStartTime": "0001-01-01T00:00:00Z",
+      "votingEndTime": "0001-01-01T00:00:00Z"
     }
   ],
   "pagination": {
-    "total": "1"
+    "total": "2"
   }
 }
+
 ```
 
-#### VoteByProposalVoter
-
-The `VoteByProposalVoter` endpoint allows users to query for vote by proposal id and voter account address.
+Using v1:
 
 ```bash
-cosmos.group.v1.Query/VoteByProposalVoter
+cosmos.gov.v1.Query/Proposals
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"proposal_id":"1","voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/VoteByProposalVoter
+    localhost:9090 \
+    cosmos.gov.v1.Query/Proposals
+```
+
+Example Output:
+
+```bash
+{
+  "proposals": [
+    {
+      "id": "1",
+      "messages": [
+        {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"10"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+      ],
+      "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+      "finalTallyResult": {
+        "yesCount": "0",
+        "abstainCount": "0",
+        "noCount": "0",
+        "noWithVetoCount": "0"
+      },
+      "submitTime": "2022-03-28T11:50:20.819676256Z",
+      "depositEndTime": "2022-03-30T11:50:20.819676256Z",
+      "totalDeposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000010"
+        }
+      ],
+      "votingStartTime": "2022-03-28T14:25:26.644857113Z",
+      "votingEndTime": "2022-03-30T14:25:26.644857113Z",
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
+    },
+    {
+      "id": "2",
+      "messages": [
+        {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"10"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+      ],
+      "status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+      "finalTallyResult": {
+        "yesCount": "0",
+        "abstainCount": "0",
+        "noCount": "0",
+        "noWithVetoCount": "0"
+      },
+      "submitTime": "2022-03-28T14:02:41.165025015Z",
+      "depositEndTime": "2022-03-30T14:02:41.165025015Z",
+      "totalDeposit": [
+        {
+          "denom": "stake",
+          "amount": "10"
+        }
+      ],
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+#### Vote
+
+The `Vote` endpoint allows users to query a vote for a given proposal.
+
+Using legacy v1beta1:
+
+```bash
+cosmos.gov.v1beta1.Query/Vote
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1","voter":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Vote
 ```
 
 Example Output:
@@ -1550,25 +1422,67 @@ Example Output:
   "vote": {
     "proposalId": "1",
     "voter": "cosmos1..",
-    "choice": "CHOICE_YES",
-    "submittedAt": "2021-12-17T08:05:02.490164009Z"
+    "option": "VOTE_OPTION_YES",
+    "options": [
+      {
+        "option": "VOTE_OPTION_YES",
+        "weight": "1000000000000000000"
+      }
+    ]
   }
 }
 ```
 
-#### VotesByProposal
-
-The `VotesByProposal` endpoint allows users to query for votes by proposal id with pagination flags.
+Using v1:
 
 ```bash
-cosmos.group.v1.Query/VotesByProposal
+cosmos.gov.v1.Query/Vote
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1.Query/VotesByProposal
+    -d '{"proposal_id":"1","voter":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Vote
+```
+
+Example Output:
+
+```bash
+{
+  "vote": {
+    "proposalId": "1",
+    "voter": "cosmos1..",
+    "option": "VOTE_OPTION_YES",
+    "options": [
+      {
+        "option": "VOTE_OPTION_YES",
+        "weight": "1.000000000000000000"
+      }
+    ]
+  }
+}
+```
+
+#### Votes
+
+The `Votes` endpoint allows users to query all votes for a given proposal.
+
+Using legacy v1beta1:
+
+```bash
+cosmos.gov.v1beta1.Query/Votes
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Votes
 ```
 
 Example Output:
@@ -1579,8 +1493,12 @@ Example Output:
     {
       "proposalId": "1",
       "voter": "cosmos1..",
-      "choice": "CHOICE_YES",
-      "submittedAt": "2021-12-17T08:05:02.490164009Z"
+      "options": [
+        {
+          "option": "VOTE_OPTION_YES",
+          "weight": "1000000000000000000"
+        }
+      ]
     }
   ],
   "pagination": {
@@ -1589,19 +1507,19 @@ Example Output:
 }
 ```
 
-#### VotesByVoter
-
-The `VotesByVoter` endpoint allows users to query for votes by voter account address with pagination flags.
+Using v1:
 
 ```bash
-cosmos.group.v1.Query/VotesByVoter
+cosmos.gov.v1.Query/Votes
 ```
 
 Example:
 
 ```bash
 grpcurl -plaintext \
-    -d '{"voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/VotesByVoter
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Votes
 ```
 
 Example Output:
@@ -1612,292 +1530,308 @@ Example Output:
     {
       "proposalId": "1",
       "voter": "cosmos1..",
-      "choice": "CHOICE_YES",
-      "submittedAt": "2021-12-17T08:05:02.490164009Z"
+      "options": [
+        {
+          "option": "VOTE_OPTION_YES",
+          "weight": "1.000000000000000000"
+        }
+      ]
     }
   ],
   "pagination": {
     "total": "1"
+  }
+}
+```
+
+#### Params
+
+The `Params` endpoint allows users to query all parameters for the `gov` module.
+
+{/* TODO: #10197 Querying governance params outputs nil values */}
+
+Using legacy v1beta1:
+
+```bash
+cosmos.gov.v1beta1.Query/Params
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"params_type":"voting"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Params
+```
+
+Example Output:
+
+```bash
+{
+  "votingParams": {
+    "votingPeriod": "172800s"
+  },
+  "depositParams": {
+    "maxDepositPeriod": "0s"
+  },
+  "tallyParams": {
+    "quorum": "MA==",
+    "threshold": "MA==",
+    "vetoThreshold": "MA=="
+  }
+}
+```
+
+Using v1:
+
+```bash
+cosmos.gov.v1.Query/Params
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"params_type":"voting"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Params
+```
+
+Example Output:
+
+```bash
+{
+  "votingParams": {
+    "votingPeriod": "172800s"
+  }
+}
+```
+
+#### Deposit
+
+The `Deposit` endpoint allows users to query a deposit for a given proposal from a given depositor.
+
+Using legacy v1beta1:
+
+```bash
+cosmos.gov.v1beta1.Query/Deposit
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    '{"proposal_id":"1","depositor":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Deposit
+```
+
+Example Output:
+
+```bash
+{
+  "deposit": {
+    "proposalId": "1",
+    "depositor": "cosmos1..",
+    "amount": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ]
+  }
+}
+```
+
+Using v1:
+
+```bash
+cosmos.gov.v1.Query/Deposit
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    '{"proposal_id":"1","depositor":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Deposit
+```
+
+Example Output:
+
+```bash
+{
+  "deposit": {
+    "proposalId": "1",
+    "depositor": "cosmos1..",
+    "amount": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ]
+  }
+}
+```
+
+#### deposits
+
+The `Deposits` endpoint allows users to query all deposits for a given proposal.
+
+Using legacy v1beta1:
+
+```bash
+cosmos.gov.v1beta1.Query/Deposits
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Deposits
+```
+
+Example Output:
+
+```bash
+{
+  "deposits": [
+    {
+      "proposalId": "1",
+      "depositor": "cosmos1..",
+      "amount": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+Using v1:
+
+```bash
+cosmos.gov.v1.Query/Deposits
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Deposits
+```
+
+Example Output:
+
+```bash
+{
+  "deposits": [
+    {
+      "proposalId": "1",
+      "depositor": "cosmos1..",
+      "amount": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+#### TallyResult
+
+The `TallyResult` endpoint allows users to query the tally of a given proposal.
+
+Using legacy v1beta1:
+
+```bash
+cosmos.gov.v1beta1.Query/TallyResult
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/TallyResult
+```
+
+Example Output:
+
+```bash
+{
+  "tally": {
+    "yes": "1000000",
+    "abstain": "0",
+    "no": "0",
+    "noWithVeto": "0"
+  }
+}
+```
+
+Using v1:
+
+```bash
+cosmos.gov.v1.Query/TallyResult
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/TallyResult
+```
+
+Example Output:
+
+```bash
+{
+  "tally": {
+    "yes": "1000000",
+    "abstain": "0",
+    "no": "0",
+    "noWithVeto": "0"
   }
 }
 ```
 
 ### REST
 
-A user can query the `group` module using REST endpoints.
+A user can query the `gov` module using REST endpoints.
 
-#### GroupInfo
+#### proposal
 
-The `GroupInfo` endpoint allows users to query for group info by given group id.
+The `proposals` endpoint allows users to query a given proposal.
+
+Using legacy v1beta1:
 
 ```bash
-/cosmos/group/v1/group_info/{group_id}
+/cosmos/gov/v1beta1/proposals/{proposal_id}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1/group_info/1
-```
-
-Example Output:
-
-```bash
-{
-  "info": {
-    "id": "1",
-    "admin": "cosmos1..",
-    "metadata": "AQ==",
-    "version": "1",
-    "total_weight": "3"
-  }
-}
-```
-
-#### GroupPolicyInfo
-
-The `GroupPolicyInfo` endpoint allows users to query for group policy info by account address of group policy.
-
-```bash
-/cosmos/group/v1/group_policy_info/{address}
-```
-
-Example:
-
-```bash
-curl localhost:1317/cosmos/group/v1/group_policy_info/cosmos1..
-```
-
-Example Output:
-
-```bash
-{
-  "info": {
-    "address": "cosmos1..",
-    "group_id": "1",
-    "admin": "cosmos1..",
-    "metadata": "AQ==",
-    "version": "1",
-    "decision_policy": {
-      "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
-      "threshold": "1",
-      "windows": {
-        "voting_period": "120h",
-        "min_execution_period": "0s"
-      }
-    },
-  }
-}
-```
-
-#### GroupMembers
-
-The `GroupMembers` endpoint allows users to query for group members by group id with pagination flags.
-
-```bash
-/cosmos/group/v1/group_members/{group_id}
-```
-
-Example:
-
-```bash
-curl localhost:1317/cosmos/group/v1/group_members/1
-```
-
-Example Output:
-
-```bash
-{
-  "members": [
-    {
-      "group_id": "1",
-      "member": {
-        "address": "cosmos1..",
-        "weight": "1",
-        "metadata": "AQ=="
-      }
-    },
-    {
-      "group_id": "1",
-      "member": {
-        "address": "cosmos1..",
-        "weight": "2",
-        "metadata": "AQ=="
-    }
-  ],
-  "pagination": {
-    "next_key": null,
-    "total": "2"
-  }
-}
-```
-
-#### GroupsByAdmin
-
-The `GroupsByAdmin` endpoint allows users to query for groups by admin account address with pagination flags.
-
-```bash
-/cosmos/group/v1/groups_by_admin/{admin}
-```
-
-Example:
-
-```bash
-curl localhost:1317/cosmos/group/v1/groups_by_admin/cosmos1..
-```
-
-Example Output:
-
-```bash
-{
-  "groups": [
-    {
-      "id": "1",
-      "admin": "cosmos1..",
-      "metadata": "AQ==",
-      "version": "1",
-      "total_weight": "3"
-    },
-    {
-      "id": "2",
-      "admin": "cosmos1..",
-      "metadata": "AQ==",
-      "version": "1",
-      "total_weight": "3"
-    }
-  ],
-  "pagination": {
-    "next_key": null,
-    "total": "2"
-  }
-}
-```
-
-#### GroupPoliciesByGroup
-
-The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
-
-```bash
-/cosmos/group/v1/group_policies_by_group/{group_id}
-```
-
-Example:
-
-```bash
-curl localhost:1317/cosmos/group/v1/group_policies_by_group/1
-```
-
-Example Output:
-
-```bash
-{
-  "group_policies": [
-    {
-      "address": "cosmos1..",
-      "group_id": "1",
-      "admin": "cosmos1..",
-      "metadata": "AQ==",
-      "version": "1",
-      "decision_policy": {
-        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
-        "threshold": "1",
-        "windows": {
-          "voting_period": "120h",
-          "min_execution_period": "0s"
-      }
-      },
-    },
-    {
-      "address": "cosmos1..",
-      "group_id": "1",
-      "admin": "cosmos1..",
-      "metadata": "AQ==",
-      "version": "1",
-      "decision_policy": {
-        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
-        "threshold": "1",
-        "windows": {
-          "voting_period": "120h",
-          "min_execution_period": "0s"
-      }
-      },
-    }
-  ],
-  "pagination": {
-    "next_key": null,
-    "total": "2"
-  }
-}
-```
-
-#### GroupPoliciesByAdmin
-
-The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
-
-```bash
-/cosmos/group/v1/group_policies_by_admin/{admin}
-```
-
-Example:
-
-```bash
-curl localhost:1317/cosmos/group/v1/group_policies_by_admin/cosmos1..
-```
-
-Example Output:
-
-```bash
-{
-  "group_policies": [
-    {
-      "address": "cosmos1..",
-      "group_id": "1",
-      "admin": "cosmos1..",
-      "metadata": "AQ==",
-      "version": "1",
-      "decision_policy": {
-        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
-        "threshold": "1",
-        "windows": {
-          "voting_period": "120h",
-          "min_execution_period": "0s"
-      } 
-      },
-    },
-    {
-      "address": "cosmos1..",
-      "group_id": "1",
-      "admin": "cosmos1..",
-      "metadata": "AQ==",
-      "version": "1",
-      "decision_policy": {
-        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
-        "threshold": "1",
-        "windows": {
-          "voting_period": "120h",
-          "min_execution_period": "0s"
-      }
-      },
-    }
-  ],
-  "pagination": {
-    "next_key": null,
-    "total": "2"
-  }
-```
-
-#### Proposal
-
-The `Proposal` endpoint allows users to query for proposal by id.
-
-```bash
-/cosmos/group/v1/proposal/{proposal_id}
-```
-
-Example:
-
-```bash
-curl localhost:1317/cosmos/group/v1/proposal/1
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1
 ```
 
 Example Output:
@@ -1906,27 +1840,46 @@ Example Output:
 {
   "proposal": {
     "proposal_id": "1",
-    "address": "cosmos1..",
-    "metadata": "AQ==",
-    "proposers": [
-      "cosmos1.."
+    "content": null,
+    "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+    "final_tally_result": {
+      "yes": "0",
+      "abstain": "0",
+      "no": "0",
+      "no_with_veto": "0"
+    },
+    "submit_time": "2022-03-28T11:50:20.819676256Z",
+    "deposit_end_time": "2022-03-30T11:50:20.819676256Z",
+    "total_deposit": [
+      {
+        "denom": "stake",
+        "amount": "10000000010"
+      }
     ],
-    "submitted_at": "2021-12-17T07:06:26.310638964Z",
-    "group_version": "1",
-    "group_policy_version": "1",
-    "status": "STATUS_SUBMITTED",
-    "result": "RESULT_UNFINALIZED",
-    "vote_state": {
-      "yes_count": "0",
-      "no_count": "0",
-      "abstain_count": "0",
-      "veto_count": "0"
-    },
-    "windows": {
-      "min_execution_period": "0s",
-      "voting_period": "432000s"
-    },
-    "executor_result": "EXECUTOR_RESULT_NOT_RUN",
+    "voting_start_time": "2022-03-28T14:25:26.644857113Z",
+    "voting_end_time": "2022-03-30T14:25:26.644857113Z"
+  }
+}
+```
+
+Using v1:
+
+```bash
+/cosmos/gov/v1/proposals/{proposal_id}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals/1
+```
+
+Example Output:
+
+```bash
+{
+  "proposal": {
+    "id": "1",
     "messages": [
       {
         "@type": "/cosmos.bank.v1beta1.MsgSend",
@@ -1935,29 +1888,116 @@ Example Output:
         "amount": [
           {
             "denom": "stake",
-            "amount": "100000000"
+            "amount": "10"
           }
         ]
       }
     ],
-    "title": "Title",
-    "summary": "Summary",
+    "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+    "final_tally_result": {
+      "yes_count": "0",
+      "abstain_count": "0",
+      "no_count": "0",
+      "no_with_veto_count": "0"
+    },
+    "submit_time": "2022-03-28T11:50:20.819676256Z",
+    "deposit_end_time": "2022-03-30T11:50:20.819676256Z",
+    "total_deposit": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ],
+    "voting_start_time": "2022-03-28T14:25:26.644857113Z",
+    "voting_end_time": "2022-03-30T14:25:26.644857113Z",
+    "metadata": "AQ==",
+    "title": "Proposal Title",
+    "summary": "Proposal Summary"
   }
 }
 ```
 
-#### ProposalsByGroupPolicy
+#### proposals
 
-The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
+The `proposals` endpoint also allows users to query all proposals with optional filters.
+
+Using legacy v1beta1:
 
 ```bash
-/cosmos/group/v1/proposals_by_group_policy/{address}
+/cosmos/gov/v1beta1/proposals
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1/proposals_by_group_policy/cosmos1..
+curl localhost:1317/cosmos/gov/v1beta1/proposals
+```
+
+Example Output:
+
+```bash
+{
+  "proposals": [
+    {
+      "proposal_id": "1",
+      "content": null,
+      "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+      "final_tally_result": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "no_with_veto": "0"
+      },
+      "submit_time": "2022-03-28T11:50:20.819676256Z",
+      "deposit_end_time": "2022-03-30T11:50:20.819676256Z",
+      "total_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ],
+      "voting_start_time": "2022-03-28T14:25:26.644857113Z",
+      "voting_end_time": "2022-03-30T14:25:26.644857113Z"
+    },
+    {
+      "proposal_id": "2",
+      "content": null,
+      "status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+      "final_tally_result": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "no_with_veto": "0"
+      },
+      "submit_time": "2022-03-28T14:02:41.165025015Z",
+      "deposit_end_time": "2022-03-30T14:02:41.165025015Z",
+      "total_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10"
+        }
+      ],
+      "voting_start_time": "0001-01-01T00:00:00Z",
+      "voting_end_time": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+Using v1:
+
+```bash
+/cosmos/gov/v1/proposals
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals
 ```
 
 Example Output:
@@ -1967,27 +2007,6 @@ Example Output:
   "proposals": [
     {
       "id": "1",
-      "group_policy_address": "cosmos1..",
-      "metadata": "AQ==",
-      "proposers": [
-        "cosmos1.."
-      ],
-      "submit_time": "2021-12-17T08:03:27.099649352Z",
-      "group_version": "1",
-      "group_policy_version": "1",
-      "status": "STATUS_CLOSED",
-      "result": "RESULT_ACCEPTED",
-      "vote_state": {
-        "yes_count": "1",
-        "no_count": "0",
-        "abstain_count": "0",
-        "veto_count": "0"
-      },
-      "windows": {
-        "min_execution_period": "0s",
-        "voting_period": "432000s"
-      },
-      "executor_result": "EXECUTOR_RESULT_NOT_RUN",
       "messages": [
         {
           "@type": "/cosmos.bank.v1beta1.MsgSend",
@@ -1996,9 +2015,169 @@ Example Output:
           "amount": [
             {
               "denom": "stake",
-              "amount": "100000000"
+              "amount": "10"
             }
           ]
+        }
+      ],
+      "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+      "final_tally_result": {
+        "yes_count": "0",
+        "abstain_count": "0",
+        "no_count": "0",
+        "no_with_veto_count": "0"
+      },
+      "submit_time": "2022-03-28T11:50:20.819676256Z",
+      "deposit_end_time": "2022-03-30T11:50:20.819676256Z",
+      "total_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000010"
+        }
+      ],
+      "voting_start_time": "2022-03-28T14:25:26.644857113Z",
+      "voting_end_time": "2022-03-30T14:25:26.644857113Z",
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
+    },
+    {
+      "id": "2",
+      "messages": [
+        {
+          "@type": "/cosmos.bank.v1beta1.MsgSend",
+          "from_address": "cosmos1..",
+          "to_address": "cosmos1..",
+          "amount": [
+            {
+              "denom": "stake",
+              "amount": "10"
+            }
+          ]
+        }
+      ],
+      "status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+      "final_tally_result": {
+        "yes_count": "0",
+        "abstain_count": "0",
+        "no_count": "0",
+        "no_with_veto_count": "0"
+      },
+      "submit_time": "2022-03-28T14:02:41.165025015Z",
+      "deposit_end_time": "2022-03-30T14:02:41.165025015Z",
+      "total_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10"
+        }
+      ],
+      "voting_start_time": null,
+      "voting_end_time": null,
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+#### voter vote
+
+The `votes` endpoint allows users to query a vote for a given proposal.
+
+Using legacy v1beta1:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/votes/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "vote": {
+    "proposal_id": "1",
+    "voter": "cosmos1..",
+    "option": "VOTE_OPTION_YES",
+    "options": [
+      {
+        "option": "VOTE_OPTION_YES",
+        "weight": "1.000000000000000000"
+      }
+    ]
+  }
+}
+```
+
+Using v1:
+
+```bash
+/cosmos/gov/v1/proposals/{proposal_id}/votes/{voter}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals/1/votes/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "vote": {
+    "proposal_id": "1",
+    "voter": "cosmos1..",
+    "options": [
+      {
+        "option": "VOTE_OPTION_YES",
+        "weight": "1.000000000000000000"
+      }
+    ],
+    "metadata": ""
+  }
+}
+```
+
+#### votes
+
+The `votes` endpoint allows users to query all votes for a given proposal.
+
+Using legacy v1beta1:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/votes
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/votes
+```
+
+Example Output:
+
+```bash
+{
+  "votes": [
+    {
+      "proposal_id": "1",
+      "voter": "cosmos1..",
+      "option": "VOTE_OPTION_YES",
+      "options": [
+        {
+          "option": "VOTE_OPTION_YES",
+          "weight": "1.000000000000000000"
         }
       ]
     }
@@ -2010,59 +2189,204 @@ Example Output:
 }
 ```
 
-#### VoteByProposalVoter
-
-The `VoteByProposalVoter` endpoint allows users to query for vote by proposal id and voter account address.
+Using v1:
 
 ```bash
-/cosmos/group/v1/vote_by_proposal_voter/{proposal_id}/{voter}
+/cosmos/gov/v1/proposals/{proposal_id}/votes
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/vote_by_proposal_voter/1/cosmos1..
+curl localhost:1317/cosmos/gov/v1/proposals/1/votes
 ```
 
 Example Output:
 
 ```bash
 {
-  "vote": {
+  "votes": [
+    {
+      "proposal_id": "1",
+      "voter": "cosmos1..",
+      "options": [
+        {
+          "option": "VOTE_OPTION_YES",
+          "weight": "1.000000000000000000"
+        }
+      ],
+      "metadata": ""
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+#### params
+
+The `params` endpoint allows users to query all parameters for the `gov` module.
+
+{/* TODO: #10197 Querying governance params outputs nil values */}
+
+Using legacy v1beta1:
+
+```bash
+/cosmos/gov/v1beta1/params/{params_type}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/params/voting
+```
+
+Example Output:
+
+```bash
+{
+  "voting_params": {
+    "voting_period": "172800s"
+  },
+  "deposit_params": {
+    "min_deposit": [
+    ],
+    "max_deposit_period": "0s"
+  },
+  "tally_params": {
+    "quorum": "0.000000000000000000",
+    "threshold": "0.000000000000000000",
+    "veto_threshold": "0.000000000000000000"
+  }
+}
+```
+
+Using v1:
+
+```bash
+/cosmos/gov/v1/params/{params_type}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/params/voting
+```
+
+Example Output:
+
+```bash
+{
+  "voting_params": {
+    "voting_period": "172800s"
+  },
+  "deposit_params": {
+    "min_deposit": [
+    ],
+    "max_deposit_period": "0s"
+  },
+  "tally_params": {
+    "quorum": "0.000000000000000000",
+    "threshold": "0.000000000000000000",
+    "veto_threshold": "0.000000000000000000"
+  }
+}
+```
+
+#### deposits
+
+The `deposits` endpoint allows users to query a deposit for a given proposal from a given depositor.
+
+Using legacy v1beta1:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/deposits/cosmos1..
+```
+
+Example Output:
+
+```bash
+{
+  "deposit": {
     "proposal_id": "1",
-    "voter": "cosmos1..",
-    "choice": "CHOICE_YES",
-    "metadata": "AQ==",
-    "submitted_at": "2021-12-17T08:05:02.490164009Z"
+    "depositor": "cosmos1..",
+    "amount": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ]
   }
 }
 ```
 
-#### VotesByProposal
-
-The `VotesByProposal` endpoint allows users to query for votes by proposal id with pagination flags.
+Using v1:
 
 ```bash
-/cosmos/group/v1/votes_by_proposal/{proposal_id}
+/cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1/votes_by_proposal/1
+curl localhost:1317/cosmos/gov/v1/proposals/1/deposits/cosmos1..
 ```
 
 Example Output:
 
 ```bash
 {
-  "votes": [
+  "deposit": {
+    "proposal_id": "1",
+    "depositor": "cosmos1..",
+    "amount": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ]
+  }
+}
+```
+
+#### proposal deposits
+
+The `deposits` endpoint allows users to query all deposits for a given proposal.
+
+Using legacy v1beta1:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/deposits
+```
+
+Example Output:
+
+```bash
+{
+  "deposits": [
     {
       "proposal_id": "1",
-      "voter": "cosmos1..",
-      "option": "CHOICE_YES",
-      "metadata": "AQ==",
-      "submit_time": "2021-12-17T08:05:02.490164009Z"
+      "depositor": "cosmos1..",
+      "amount": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ]
     }
   ],
   "pagination": {
@@ -2072,47 +2396,102 @@ Example Output:
 }
 ```
 
-#### VotesByVoter
-
-The `VotesByVoter` endpoint allows users to query for votes by voter account address with pagination flags.
+Using v1:
 
 ```bash
-/cosmos/group/v1/votes_by_voter/{voter}
+/cosmos/gov/v1/proposals/{proposal_id}/deposits
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1/votes_by_voter/cosmos1..
+curl localhost:1317/cosmos/gov/v1/proposals/1/deposits
 ```
 
 Example Output:
 
 ```bash
 {
-  "votes": [
+  "deposits": [
     {
       "proposal_id": "1",
-      "voter": "cosmos1..",
-      "choice": "CHOICE_YES",
-      "metadata": "AQ==",
-      "submitted_at": "2021-12-17T08:05:02.490164009Z"
+      "depositor": "cosmos1..",
+      "amount": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ]
     }
   ],
   "pagination": {
     "next_key": null,
     "total": "1"
+  }
+}
+```
+
+#### tally
+
+The `tally` endpoint allows users to query the tally of a given proposal.
+
+Using legacy v1beta1:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/tally
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/tally
+```
+
+Example Output:
+
+```bash
+{
+  "tally": {
+    "yes": "1000000",
+    "abstain": "0",
+    "no": "0",
+    "no_with_veto": "0"
+  }
+}
+```
+
+Using v1:
+
+```bash
+/cosmos/gov/v1/proposals/{proposal_id}/tally
+```
+
+Example:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals/1/tally
+```
+
+Example Output:
+
+```bash
+{
+  "tally": {
+    "yes": "1000000",
+    "abstain": "0",
+    "no": "0",
+    "no_with_veto": "0"
   }
 }
 ```
 
 ## Metadata
 
-The group module has four locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the group and gov modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure across chains.
+The gov module has two locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the gov and group modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure accross chains.
 
 ### Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov/README/#metadata))
+Location: off-chain as json object stored on IPFS (mirrors [group proposal](./group/#metadata))
 
 ```json
 {
@@ -2132,7 +2511,7 @@ In v0.46, the `authors` field is a comma-separated string. Frontends are encoura
 
 ### Vote
 
-Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov/README/#metadata))
+Location: on-chain as json within 255 character limit (mirrors [group vote](./group/#metadata))
 
 ```json
 {
@@ -2140,26 +2519,29 @@ Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov
 }
 ```
 
-### Group
+## Future Improvements
 
-Location: off-chain as json object stored on IPFS
+The current documentation only describes the minimum viable product for the
+governance module. Future improvements may include:
 
-```json
-{
-  "name": "",
-  "description": "",
-  "group_website_url": "",
-  "group_forum_url": "",
-}
-```
-
-### Decision policy
-
-Location: on-chain as json within 255 character limit
-
-```json
-{
-  "name": "",
-  "description": "",
-}
-```
+* **`BountyProposals`:** If accepted, a `BountyProposal` creates an open
+  bounty. The `BountyProposal` specifies how many Atoms will be given upon
+  completion. These Atoms will be taken from the `reserve pool`. After a
+  `BountyProposal` is accepted by governance, anybody can submit a
+  `SoftwareUpgradeProposal` with the code to claim the bounty. Note that once a
+  `BountyProposal` is accepted, the corresponding funds in the `reserve pool`
+  are locked so that payment can always be honored. In order to link a
+  `SoftwareUpgradeProposal` to an open bounty, the submitter of the
+  `SoftwareUpgradeProposal` will use the `Proposal.LinkedProposal` attribute.
+  If a `SoftwareUpgradeProposal` linked to an open bounty is accepted by
+  governance, the funds that were reserved are automatically transferred to the
+  submitter.
+* **Complex delegation:** Delegators could choose other representatives than
+  their validators. Ultimately, the chain of representatives would always end
+  up to a validator, but delegators could inherit the vote of their chosen
+  representative before they inherit the vote of their validator. In other
+  words, they would only inherit the vote of their validator if their other
+  appointed representative did not vote.
+* **Better process for proposal review:** There would be two parts to
+  `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to
+  reward third party auditors.
