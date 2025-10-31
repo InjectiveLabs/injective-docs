@@ -299,7 +299,7 @@
             "expanded": false,
             "icon": "money-bill-transfer",
             "pages": [
-              "developers-defi",
+              "developers-defi/index",
               "developers-defi/calculate-min-price-tick-size",
               "developers-defi/min-quantity-tick-size",
               "developers-defi/testnet-faucet-integration",
