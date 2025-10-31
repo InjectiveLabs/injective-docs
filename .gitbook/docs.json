@@ -231,12 +231,12 @@
             "expanded": false,
             "icon": "rectangle-code",
             "pages": [
-              "developers-evm",
+              "developers-evm/index",
               "developers-evm/network-information",
               {
                 "group": "Your First EVM Smart Contract",
                 "pages": [
-                  "developers-evm/smart-contracts",
+                  "developers-evm/smart-contracts/index",
                   "developers-evm/smart-contracts/compile-hardhat",
                   "developers-evm/smart-contracts/test-hardhat",
                   "developers-evm/smart-contracts/deploy-hardhat",
@@ -252,7 +252,7 @@
               {
                 "group": "Your First EVM dApp",
                 "pages": [
-                  "developers-evm/dapps",
+                  "developers-evm/dapps/index",
                   "developers-evm/dapps/connect-with-metamask",
                   "developers-evm/dapps/connect-with-walletconnect"
                 ]
