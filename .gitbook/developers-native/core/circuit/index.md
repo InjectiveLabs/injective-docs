@@ -1,6 +1,4 @@
----
-title: '`x/circuit`'
----
+# `x/circuit`
 
 ## Concepts
 

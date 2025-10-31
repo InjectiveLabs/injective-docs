@@ -1,45 +1,49 @@
 ---
 sidebar_position: 1
-title: Evidence
 ---
 
-* [Concepts](./#concepts)
-* [State](./#state)
-* [Messages](./#messages)
-* [Events](./#events)
-* [Parameters](./#parameters)
-* [BeginBlock](./#beginblock)
-* [Client](./#client)
-  * [CLI](./#cli)
-  * [REST](./#rest)
-  * [gRPC](./#grpc)
+# `x/evidence`
+
+* [Concepts](#concepts)
+* [State](#state)
+* [Messages](#messages)
+* [Events](#events)
+* [Parameters](#parameters)
+* [BeginBlock](#beginblock)
+* [Client](#client)
+    * [CLI](#cli)
+    * [REST](#rest)
+    * [gRPC](#grpc)
 
 ## Abstract
 
-`x/evidence` is an implementation of a Cosmos SDK module, per [ADR 009](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-009-evidence-module.md),\
-that allows for the submission and handling of arbitrary evidence of misbehavior such\
+`x/evidence` is an implementation of a Cosmos SDK module, per [ADR 009](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-009-evidence-module.md),
+that allows for the submission and handling of arbitrary evidence of misbehavior such
 as equivocation and counterfactual signing.
 
-The evidence module differs from standard evidence handling which typically expects the\
-underlying consensus engine, e.g. CometBFT, to automatically submit evidence when\
-it is discovered by allowing clients and foreign chains to submit more complex evidence\
+The evidence module differs from standard evidence handling which typically expects the
+underlying consensus engine, e.g. CometBFT, to automatically submit evidence when
+it is discovered by allowing clients and foreign chains to submit more complex evidence
 directly.
 
-All concrete evidence types must implement the `Evidence` interface contract. Submitted`Evidence` is first routed through the evidence module's `Router` in which it attempts\
-to find a corresponding registered `Handler` for that specific `Evidence` type.\
-Each `Evidence` type must have a `Handler` registered with the evidence module's\
+All concrete evidence types must implement the `Evidence` interface contract. Submitted
+`Evidence` is first routed through the evidence module's `Router` in which it attempts
+to find a corresponding registered `Handler` for that specific `Evidence` type.
+Each `Evidence` type must have a `Handler` registered with the evidence module's
 keeper in order for it to be successfully routed and executed.
 
-Each corresponding handler must also fulfill the `Handler` interface contract. The`Handler` for a given `Evidence` type can perform any arbitrary state transitions\
+Each corresponding handler must also fulfill the `Handler` interface contract. The
+`Handler` for a given `Evidence` type can perform any arbitrary state transitions
 such as slashing, jailing, and tombstoning.
 
 ## Concepts
 
 ### Evidence
 
-Any concrete type of evidence submitted to the `x/evidence` module must fulfill the`Evidence` contract outlined below. Not all concrete types of evidence will fulfill\
-this contract in the same way and some data may be entirely irrelevant to certain\
-types of evidence. An additional `ValidatorEvidence`, which extends `Evidence`,\
+Any concrete type of evidence submitted to the `x/evidence` module must fulfill the
+`Evidence` contract outlined below. Not all concrete types of evidence will fulfill
+this contract in the same way and some data may be entirely irrelevant to certain
+types of evidence. An additional `ValidatorEvidence`, which extends `Evidence`,
 has also been created to define a contract for evidence against malicious validators.
 
 ```go
@@ -75,9 +79,10 @@ type ValidatorEvidence interface {
 
 ### Registration & Handling
 
-The `x/evidence` module must first know about all types of evidence it is expected\
-to handle. This is accomplished by registering the `Route` method in the `Evidence`\
-contract with what is known as a `Router` (defined below). The `Router` accepts`Evidence` and attempts to find the corresponding `Handler` for the `Evidence`\
+The `x/evidence` module must first know about all types of evidence it is expected
+to handle. This is accomplished by registering the `Route` method in the `Evidence`
+contract with what is known as a `Router` (defined below). The `Router` accepts
+`Evidence` and attempts to find the corresponding `Handler` for the `Evidence`
 via the `Route` method.
 
 ```go
@@ -90,11 +95,11 @@ type Router interface {
 }
 ```
 
-The `Handler` (defined below) is responsible for executing the entirety of the\
-business logic for handling `Evidence`. This typically includes validating the\
-evidence, both stateless checks via `ValidateBasic` and stateful checks via any\
-keepers provided to the `Handler`. In addition, the `Handler` may also perform\
-capabilities such as slashing and jailing a validator. All `Evidence` handled\
+The `Handler` (defined below) is responsible for executing the entirety of the
+business logic for handling `Evidence`. This typically includes validating the
+evidence, both stateless checks via `ValidateBasic` and stateful checks via any
+keepers provided to the `Handler`. In addition, the `Handler` may also perform
+capabilities such as slashing and jailing a validator. All `Evidence` handled
 by the `Handler` should be persisted.
 
 ```go
@@ -105,9 +110,10 @@ by the `Handler` should be persisted.
 type Handler func(context.Context, Evidence) error
 ```
 
+
 ## State
 
-Currently the `x/evidence` module only stores valid submitted `Evidence` in state.\
+Currently the `x/evidence` module only stores valid submitted `Evidence` in state.
 The evidence state is also stored and exported in the `x/evidence` module's `GenesisState`.
 
 ```protobuf
@@ -120,6 +126,7 @@ message GenesisState {
 ```
 
 All `Evidence` is retrieved and stored via a prefix `KVStore` using prefix `0x00` (`KeyPrefixEvidence`).
+
 
 ## Messages
 
@@ -136,10 +143,11 @@ message MsgSubmitEvidence {
 }
 ```
 
-Note, the `Evidence` of a `MsgSubmitEvidence` message must have a corresponding`Handler` registered with the `x/evidence` module's `Router` in order to be processed\
+Note, the `Evidence` of a `MsgSubmitEvidence` message must have a corresponding
+`Handler` registered with the `x/evidence` module's `Router` in order to be processed
 and routed correctly.
 
-Given the `Evidence` is registered with a corresponding `Handler`, it is processed\
+Given the `Evidence` is registered with a corresponding `Handler`, it is processed
 as follows:
 
 ```go
@@ -168,9 +176,10 @@ func SubmitEvidence(ctx Context, evidence Evidence) error {
 }
 ```
 
-First, there must not already exist valid submitted `Evidence` of the exact same\
-type. Secondly, the `Evidence` is routed to the `Handler` and executed. Finally,\
+First, there must not already exist valid submitted `Evidence` of the exact same
+type. Secondly, the `Evidence` is routed to the `Handler` and executed. Finally,
 if there is no error in handling the `Evidence`, an event is emitted and it is persisted to state.
+
 
 ## Events
 
@@ -180,22 +189,25 @@ The `x/evidence` module emits the following events:
 
 #### MsgSubmitEvidence
 
-| Type             | Attribute Key  | Attribute Value  |
-| ---------------- | -------------- | ---------------- |
-| submit\_evidence | evidence\_hash | {evidenceHash}   |
-| message          | module         | evidence         |
-| message          | sender         | {senderAddress}  |
-| message          | action         | submit\_evidence |
+| Type            | Attribute Key | Attribute Value |
+| --------------- | ------------- | --------------- |
+| submit_evidence | evidence_hash | {evidenceHash}  |
+| message         | module        | evidence        |
+| message         | sender        | {senderAddress} |
+| message         | action        | submit_evidence |
+
 
 ## Parameters
 
 The evidence module does not contain any parameters.
 
+
 ## BeginBlock
 
 ### Evidence Handling
 
-CometBFT blocks can include[Evidence](https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md#evidence) that indicates if a validator committed malicious behavior. The relevant information is forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that the validator can be punished accordingly.
+CometBFT blocks can include
+[Evidence](https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md#evidence) that indicates if a validator committed malicious behavior. The relevant information is forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that the validator can be punished accordingly.
 
 #### Equivocation
 
@@ -206,37 +218,37 @@ The Cosmos SDK handles two types of evidence inside the ABCI `BeginBlock`:
 
 The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the CometBFT concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
 
-```protobuf
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/evidence/v1beta1/evidence.proto#L12-L32
 ```
 
 For some `Equivocation` submitted in `block` to be valid, it must satisfy:
 
-`Evidence.Timestamp ≥ block.Timestamp - MaxEvidenceAge`
+`Evidence.Timestamp >= block.Timestamp - MaxEvidenceAge`
 
 Where:
 
 * `Evidence.Timestamp` is the timestamp in the block at height `Evidence.Height`
 * `block.Timestamp` is the current block timestamp.
 
-If valid `Equivocation` evidence is included in a block, the validator's stake is\
-reduced (slashed) by `SlashFractionDoubleSign` as defined by the `x/slashing` module\
-of what their stake was when the infraction occurred, rather than when the evidence was discovered.\
-We want to "follow the stake", i.e., the stake that contributed to the infraction\
+If valid `Equivocation` evidence is included in a block, the validator's stake is
+reduced (slashed) by `SlashFractionDoubleSign` as defined by the `x/slashing` module
+of what their stake was when the infraction occurred, rather than when the evidence was discovered.
+We want to "follow the stake", i.e., the stake that contributed to the infraction
 should be slashed, even if it has since been redelegated or started unbonding.
 
-In addition, the validator is permanently jailed and tombstoned to make it impossible for that\
+In addition, the validator is permanently jailed and tombstoned to make it impossible for that
 validator to ever re-enter the validator set.
 
 The `Equivocation` evidence is handled as follows:
 
-```go
+```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/evidence/keeper/infraction.go#L26-L140
 ```
 
-**Note:** The slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module\
-that emits informative events and finally delegates calls to the `x/staking` module. See documentation\
-on slashing and jailing in [State Transitions](./staking/#state-transitions).
+**Note:** The slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
+that emits informative events and finally delegates calls to the `x/staking` module. See documentation
+on slashing and jailing in [State Transitions](../staking/#state-transitions).
 
 ## Client
 

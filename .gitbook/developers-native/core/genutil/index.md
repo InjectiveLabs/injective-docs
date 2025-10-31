@@ -1,6 +1,4 @@
----
-title: '`x/genutil`'
----
+# `x/genutil`
 
 ## Concepts
 

@@ -1,44 +1,45 @@
 ---
 sidebar_position: 1
-title: Bank
 ---
+
+# `x/bank`
 
 ## Abstract
 
 This document specifies the bank module of the Cosmos SDK.
 
-The bank module is responsible for handling multi-asset coin transfers between\
-accounts and tracking special-case pseudo-transfers which must work differently\
-with particular kinds of accounts (notably delegating/undelegating for vesting\
-accounts). It exposes several interfaces with varying capabilities for secure\
+The bank module is responsible for handling multi-asset coin transfers between
+accounts and tracking special-case pseudo-transfers which must work differently
+with particular kinds of accounts (notably delegating/undelegating for vesting
+accounts). It exposes several interfaces with varying capabilities for secure
 interaction with other modules which must alter user balances.
 
-In addition, the bank module tracks and provides query support for the total\
+In addition, the bank module tracks and provides query support for the total
 supply of all assets used in the application.
 
 This module is used in the Cosmos Hub.
 
 ## Contents
 
-* [Supply](./#supply)
-  * [Total Supply](./#total-supply)
-* [Module Accounts](./#module-accounts)
-  * [Permissions](./#permissions)
-* [State](./#state)
-* [Params](./#params)
-* [Keepers](./#keepers)
-* [Messages](./#messages)
-* [Events](./#events)
-  * [Message Events](./#message-events)
-  * [Keeper Events](./#keeper-events)
-* [Parameters](./#parameters)
-  * [SendEnabled](./#sendenabled)
-  * [DefaultSendEnabled](./#defaultsendenabled)
-* [Client](./#client)
-  * [CLI](./#cli)
-  * [Query](./#query)
-  * [Transactions](./#transactions)
-* [gRPC](./#grpc)
+* [Supply](#supply)
+    * [Total Supply](#total-supply)
+* [Module Accounts](#module-accounts)
+    * [Permissions](#permissions)
+* [State](#state)
+* [Params](#params)
+* [Keepers](#keepers)
+* [Messages](#messages)
+* [Events](#events)
+    * [Message Events](#message-events)
+    * [Keeper Events](#keeper-events)
+* [Parameters](#parameters)
+    * [SendEnabled](#sendenabled)
+    * [DefaultSendEnabled](#defaultsendenabled)
+* [Client](#client)
+    * [CLI](#cli)
+    * [Query](#query)
+    * [Transactions](#transactions)
+* [gRPC](#grpc)
 
 ## Supply
 
@@ -50,20 +51,21 @@ The `supply` functionality:
 
 ### Total Supply
 
-The total `Supply` of the network is equal to the sum of all coins from the\
-account. The total supply is updated every time a `Coin` is minted (eg: as part\
-of the inflation mechanism) or burned (eg: due to slashing or if a governance\
+The total `Supply` of the network is equal to the sum of all coins from the
+account. The total supply is updated every time a `Coin` is minted (eg: as part
+of the inflation mechanism) or burned (eg: due to slashing or if a governance
 proposal is vetoed).
 
 ## Module Accounts
 
-The supply functionality introduces a new type of `auth.Account` which can be used by\
-modules to allocate tokens and in special cases mint or burn tokens. At a base\
-level these module accounts are capable of sending/receiving tokens to and from`auth.Account`s and other module accounts. This design replaces previous\
-alternative designs where, to hold tokens, modules would burn the incoming\
-tokens from the sender account, and then track those tokens internally. Later,\
-in order to send tokens, the module would need to effectively mint tokens\
-within a destination account. The new design removes duplicate logic between\
+The supply functionality introduces a new type of `auth.Account` which can be used by
+modules to allocate tokens and in special cases mint or burn tokens. At a base
+level these module accounts are capable of sending/receiving tokens to and from
+`auth.Account`s and other module accounts. This design replaces previous
+alternative designs where, to hold tokens, modules would burn the incoming
+tokens from the sender account, and then track those tokens internally. Later,
+in order to send tokens, the module would need to effectively mint tokens
+within a destination account. The new design removes duplicate logic between
 modules to perform this accounting.
 
 The `ModuleAccount` interface is defined as follows:
@@ -78,23 +80,24 @@ type ModuleAccount interface {
 }
 ```
 
-> **WARNING!**\
+> **WARNING!**
 > Any module or message handler that allows either direct or indirect sending of funds must explicitly guarantee those funds cannot be sent to module accounts (unless allowed).
 
-The supply `Keeper` also introduces new wrapper functions for the auth `Keeper`\
-and the bank `Keeper` that are related to `ModuleAccount`s in order to be able\
+The supply `Keeper` also introduces new wrapper functions for the auth `Keeper`
+and the bank `Keeper` that are related to `ModuleAccount`s in order to be able
 to:
 
 * Get and set `ModuleAccount`s by providing the `Name`.
-* Send coins from and to other `ModuleAccount`s or standard `Account`s\
+* Send coins from and to other `ModuleAccount`s or standard `Account`s
   (`BaseAccount` or `VestingAccount`) by passing only the `Name`.
 * `Mint` or `Burn` coins for a `ModuleAccount` (restricted to its permissions).
 
 ### Permissions
 
-Each `ModuleAccount` has a different set of permissions that provide different\
-object capabilities to perform certain actions. Permissions need to be\
-registered upon the creation of the supply `Keeper` so that every time a`ModuleAccount` calls the allowed functions, the `Keeper` can lookup the\
+Each `ModuleAccount` has a different set of permissions that provide different
+object capabilities to perform certain actions. Permissions need to be
+registered upon the creation of the supply `Keeper` so that every time a
+`ModuleAccount` calls the allowed functions, the `Keeper` can lookup the
 permissions to that specific account and perform or not perform the action.
 
 The available permissions are:
@@ -112,7 +115,7 @@ The `x/bank` module keeps state of the following primary objects:
 3. The total supply of all balances
 4. Information on which denominations are allowed to be sent.
 
-In addition, the `x/bank` module keeps the following indexes to manage the\
+In addition, the `x/bank` module keeps the following indexes to manage the
 aforementioned state:
 
 * Supply Index: `0x0 | byte(denom) -> byte(amount)`
@@ -122,32 +125,33 @@ aforementioned state:
 
 ## Params
 
-The bank module stores it's params in state with the prefix of `0x05`,\
+The bank module stores it's params in state with the prefix of `0x05`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x05 | ProtocolBuffer(Params)`
 
-```protobuf
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/bank.proto#L12-L23
 ```
 
 ## Keepers
 
-The bank module provides these exported keeper interfaces that can be\
-passed to other modules that read or update account balances. Modules\
-should use the least-permissive interface that provides the functionality they\
+The bank module provides these exported keeper interfaces that can be
+passed to other modules that read or update account balances. Modules
+should use the least-permissive interface that provides the functionality they
 require.
 
-Best practices dictate careful review of `bank` module code to ensure that\
+Best practices dictate careful review of `bank` module code to ensure that
 permissions are limited in the way that you expect.
 
 ### Denied Addresses
 
-The `x/bank` module accepts a map of addresses that are considered blocklisted\
-from directly and explicitly receiving funds through means such as `MsgSend` and`MsgMultiSend` and direct API calls like `SendCoinsFromModuleToAccount`.
+The `x/bank` module accepts a map of addresses that are considered blocklisted
+from directly and explicitly receiving funds through means such as `MsgSend` and
+`MsgMultiSend` and direct API calls like `SendCoinsFromModuleToAccount`.
 
-Typically, these addresses are module accounts. If these addresses receive funds\
-outside the expected rules of the state machine, invariants are likely to be\
+Typically, these addresses are module accounts. If these addresses receive funds
+outside the expected rules of the state machine, invariants are likely to be
 broken and could result in a halted network.
 
 By providing the `x/bank` module with a blocklisted set of addresses, an error occurs for the operation if a user or client attempts to directly or indirectly send funds to a blocklisted account, for example, by using [IBC](https://ibc.cosmos.network).
@@ -223,7 +227,7 @@ type Keeper interface {
 
 ### SendKeeper
 
-The send keeper provides access to account balances and the ability to transfer coins between\
+The send keeper provides access to account balances and the ability to transfer coins between
 accounts. The send keeper does not alter the total supply (mint or burn coins).
 
 ```go
@@ -265,18 +269,20 @@ The `SendKeeper` applies a `SendRestrictionFn` before each transfer of funds.
 type SendRestrictionFn func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (newToAddr sdk.AccAddress, err error)
 ```
 
-After the `SendKeeper` (or `BaseKeeper`) has been created, send restrictions can be added to it using the `AppendSendRestriction` or `PrependSendRestriction` functions.\
-Both functions compose the provided restriction with any previously provided restrictions.`AppendSendRestriction` adds the provided restriction to be run after any previously provided send restrictions.`PrependSendRestriction` adds the restriction to be run before any previously provided send restrictions.\
+After the `SendKeeper` (or `BaseKeeper`) has been created, send restrictions can be added to it using the `AppendSendRestriction` or `PrependSendRestriction` functions.
+Both functions compose the provided restriction with any previously provided restrictions.
+`AppendSendRestriction` adds the provided restriction to be run after any previously provided send restrictions.
+`PrependSendRestriction` adds the restriction to be run before any previously provided send restrictions.
 The composition will short-circuit when an error is encountered. I.e. if the first one returns an error, the second is not run.
 
-During `SendCoins`, the send restriction is applied after coins are removed from the from address, but before adding them to the to address.\
+During `SendCoins`, the send restriction is applied after coins are removed from the from address, but before adding them to the to address.
 During `InputOutputCoins`, the send restriction is applied after the input coins are removed and once for each output before the funds are added.
 
 A send restriction function should make use of a custom value in the context to allow bypassing that specific restriction.
 
 Send Restrictions are not placed on `ModuleToAccount` or `ModuleToModule` transfers. This is done due to modules needing to move funds to user accounts and other module accounts. This is a design decision to allow for more flexibility in the state machine. The state machine should be able to move funds between module accounts and user accounts without restrictions.
 
-Secondly this limitation would limit the usage of the state machine even for itself. users would not be able to receive rewards, not be able to move funds between module accounts. In the case that a user sends funds from a user account to the community pool and then a governance proposal is used to get those tokens into the users account this would fall under the discretion of the app chain developer to what they would like to do here. We can not make strong assumptions here.\
+Secondly this limitation would limit the usage of the state machine even for itself. users would not be able to receive rewards, not be able to move funds between module accounts. In the case that a user sends funds from a user account to the community pool and then a governance proposal is used to get those tokens into the users account this would fall under the discretion of the app chain developer to what they would like to do here. We can not make strong assumptions here.
 Thirdly, this issue could lead into a chain halt if a token is disabled and the token is moved in the begin/endblock. This is the last reason we see the current change and more damaging then beneficial for users.
 
 For example, in your module's keeper package, you'd define the send restriction function:
@@ -368,7 +374,7 @@ type ViewKeeper interface {
 
 Send coins from one address to another.
 
-```protobuf
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L38-L53
 ```
 
@@ -381,7 +387,7 @@ The message will fail under the following conditions:
 
 Send coins from one sender and to a series of different address. If any of the receiving addresses do not correspond to an existing account, a new account is created.
 
-```protobuf
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L58-L69
 ```
 
@@ -394,9 +400,9 @@ The message will fail under the following conditions:
 
 ### MsgUpdateParams
 
-The `bank` module params can be updated through `MsgUpdateParams`, which can be done using governance proposal. The signer will always be the `gov` module account address.
+The `bank` module params can be updated through `MsgUpdateParams`, which can be done using governance proposal. The signer will always be the `gov` module account address. 
 
-```protobuf
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L74-L88
 ```
 
@@ -408,7 +414,7 @@ The message handling can fail if:
 
 Used with the x/gov module to set create/edit SendEnabled entries.
 
-```protobuf
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L96-L117
 ```
 
@@ -571,13 +577,14 @@ The bank module contains the following parameters
 
 ### SendEnabled
 
-The SendEnabled parameter is now deprecated and not to be use. It is replaced\
+The SendEnabled parameter is now deprecated and not to be use. It is replaced
 with state store records.
+
 
 ### DefaultSendEnabled
 
-The default send enabled value controls send transfer capability for all\
-coin denominations unless specifically included in the array of `SendEnabled`\
+The default send enabled value controls send transfer capability for all
+coin denominations unless specifically included in the array of `SendEnabled`
 parameters.
 
 ## Client
@@ -594,7 +601,7 @@ The `query` commands allow users to query `bank` state.
 simd query bank --help
 ```
 
-**balances**
+##### balances
 
 The `balances` command allows users to query account balances by address.
 
@@ -619,7 +626,7 @@ pagination:
   total: "0"
 ```
 
-**denom-metadata**
+##### denom-metadata
 
 The `denom-metadata` command allows users to query metadata for coin denominations. A user can query metadata for a single denomination using the `--denom` flag or all denominations without it.
 
@@ -648,7 +655,7 @@ metadata:
   symbol: STK
 ```
 
-**total**
+##### total
 
 The `total` command allows users to query the total supply of coins. A user can query the total supply for a single coin using the `--denom` flag or all coins without it.
 
@@ -669,7 +676,7 @@ amount: "10000000000"
 denom: stake
 ```
 
-**send-enabled**
+##### send-enabled
 
 The `send-enabled` command allows users to query for all or some SendEnabled entries.
 
@@ -703,7 +710,7 @@ The `tx` commands allow users to interact with the `bank` module.
 simd tx bank --help
 ```
 
-**send**
+##### send
 
 The `send` command allows users to send funds from one account to another.
 

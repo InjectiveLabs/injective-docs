@@ -1,37 +1,38 @@
 ---
 sidebar_position: 1
-title: Auth
 ---
+
+# `x/auth`
 
 ## Abstract
 
 This document specifies the auth module of the Cosmos SDK.
 
-The auth module is responsible for specifying the base transaction and account types\
-for an application, since the SDK itself is agnostic to these particulars. It contains\
-the middlewares, where all basic transaction validity checks (signatures, nonces, auxiliary fields)\
+The auth module is responsible for specifying the base transaction and account types
+for an application, since the SDK itself is agnostic to these particulars. It contains
+the middlewares, where all basic transaction validity checks (signatures, nonces, auxiliary fields)
 are performed, and exposes the account keeper, which allows other modules to read, write, and modify accounts.
 
 This module is used in the Cosmos Hub.
 
 ## Contents
 
-* [Concepts](./#concepts)
-  * [Gas & Fees](./#gas--fees)
-* [State](./#state)
-  * [Accounts](./#accounts)
-* [AnteHandlers](./#antehandlers)
-* [Keepers](./#keepers)
-  * [Account Keeper](./#account-keeper)
-* [Parameters](./#parameters)
-* [Client](./#client)
-  * [CLI](./#cli)
-  * [gRPC](./#grpc)
-  * [REST](./#rest)
+* [Concepts](#concepts)
+    * [Gas & Fees](#gas--fees)
+* [State](#state)
+    * [Accounts](#accounts)
+* [AnteHandlers](#antehandlers)
+* [Keepers](#keepers)
+    * [Account Keeper](#account-keeper)
+* [Parameters](#parameters)
+* [Client](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 
 ## Concepts
 
-**Note:** The auth module is different from the [authz module](./authz/).
+**Note:** The auth module is different from the [authz module](../authz/).
 
 The differences are:
 
@@ -42,52 +43,53 @@ The differences are:
 
 Fees serve two purposes for an operator of the network.
 
-Fees limit the growth of the state stored by every full node and allow for\
-general purpose censorship of transactions of little economic value. Fees\
-are best suited as an anti-spam mechanism where validators are disinterested in\
+Fees limit the growth of the state stored by every full node and allow for
+general purpose censorship of transactions of little economic value. Fees
+are best suited as an anti-spam mechanism where validators are disinterested in
 the use of the network and identities of users.
 
-Fees are determined by the gas limits and gas prices transactions provide, where`fees = ceil(gasLimit * gasPrices)`. Txs incur gas costs for all state reads/writes,\
-signature verification, as well as costs proportional to the tx size. Operators\
-should set minimum gas prices when starting their nodes. They must set the unit\
+Fees are determined by the gas limits and gas prices transactions provide, where
+`fees = ceil(gasLimit * gasPrices)`. Txs incur gas costs for all state reads/writes,
+signature verification, as well as costs proportional to the tx size. Operators
+should set minimum gas prices when starting their nodes. They must set the unit
 costs of gas in each token denomination they wish to support:
 
 `simd start ... --minimum-gas-prices=0.00001stake;0.05photinos`
 
-When adding transactions to mempool or gossipping transactions, validators check\
-if the transaction's gas prices, which are determined by the provided fees, meet\
-any of the validator's minimum gas prices. In other words, a transaction must\
-provide a fee of at least one denomination that matches a validator's minimum\
+When adding transactions to mempool or gossipping transactions, validators check
+if the transaction's gas prices, which are determined by the provided fees, meet
+any of the validator's minimum gas prices. In other words, a transaction must
+provide a fee of at least one denomination that matches a validator's minimum
 gas price.
 
-CometBFT does not currently provide fee based mempool prioritization, and fee\
-based mempool filtering is local to node and not part of consensus. But with\
+CometBFT does not currently provide fee based mempool prioritization, and fee
+based mempool filtering is local to node and not part of consensus. But with
 minimum gas prices set, such a mechanism could be implemented by node operators.
 
-Because the market value for tokens will fluctuate, validators are expected to\
-dynamically adjust their minimum gas prices to a level that would encourage the\
-use of the network.
+Because the market value for tokens will fluctuate, validators are expected to
+dynamically adjust their minimum gas prices to a level that would encourage the
+use of the network.		
 
 ## State
 
 ### Accounts
 
-Accounts contain authentication information for a uniquely identified external user of an SDK blockchain,\
-including public key, address, and account number / sequence number for replay protection. For efficiency,\
-since account balances must also be fetched to pay fees, account structs also store the balance of a user\
+Accounts contain authentication information for a uniquely identified external user of an SDK blockchain,
+including public key, address, and account number / sequence number for replay protection. For efficiency,
+since account balances must also be fetched to pay fees, account structs also store the balance of a user
 as `sdk.Coins`.
 
-Accounts are exposed externally as an interface, and stored internally as\
-either a base account or vesting account. Module clients wishing to add more\
+Accounts are exposed externally as an interface, and stored internally as
+either a base account or vesting account. Module clients wishing to add more
 account types may do so.
 
-* `0x01 | Address → ProtocolBuffer(account)`
+* `0x01 | Address -> ProtocolBuffer(account)`
 
 #### Account Interface
 
-The account interface exposes methods to read and write standard account information.\
-Note that all of these methods operate on an account struct conforming to the\
-interface - in order to write the account to the store, the account keeper will\
+The account interface exposes methods to read and write standard account information.
+Note that all of these methods operate on an account struct conforming to the
+interface - in order to write the account to the store, the account keeper will
 need to be used.
 
 ```go
@@ -117,9 +119,9 @@ type AccountI interface {
 }
 ```
 
-**Base Account**
+##### Base Account
 
-A base account is the simplest and most common account type, which just stores all requisite\
+A base account is the simplest and most common account type, which just stores all requisite
 fields directly in a struct.
 
 ```protobuf
@@ -140,7 +142,7 @@ See [Vesting](https://docs.cosmos.network/main/modules/auth/vesting/).
 
 ## AnteHandlers
 
-The `x/auth` module presently has no transaction handlers of its own, but does expose the special `AnteHandler`, used for performing basic validity checks on a transaction, such that it could be thrown out of the mempool.\
+The `x/auth` module presently has no transaction handlers of its own, but does expose the special `AnteHandler`, used for performing basic validity checks on a transaction, such that it could be thrown out of the mempool.
 The `AnteHandler` can be seen as a set of decorators that check transactions within the current context, per [ADR 010](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-010-modular-antehandler.md).
 
 Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as CometBFT proposers presently have the ability to include in their proposed block transactions which fail `CheckTx`.
@@ -150,17 +152,29 @@ Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as Come
 The auth module provides `AnteDecorator`s that are recursively chained together into a single `AnteHandler` in the following order:
 
 * `SetUpContextDecorator`: Sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
+
 * `RejectExtensionOptionsDecorator`: Rejects all extension options which can optionally be included in protobuf transactions.
+
 * `MempoolFeeDecorator`: Checks if the `tx` fee is above local mempool `minFee` parameter during `CheckTx`.
+
 * `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
+
 * `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
+
 * `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
+
 * `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
+
 * `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it deducts fees from the fee granter account.
+
 * `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
+
 * `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
+
 * `SigGasConsumeDecorator`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+
 * `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+
 * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 
 ## Keepers
@@ -169,7 +183,7 @@ The auth module only exposes one keeper, the account keeper, which can be used t
 
 ### Account Keeper
 
-Presently only one fully-permissioned account keeper is exposed, which has the ability to both read and write\
+Presently only one fully-permissioned account keeper is exposed, which has the ability to both read and write
 all fields of all accounts, and to iterate over all stored accounts.
 
 ```go
@@ -211,13 +225,13 @@ type AccountKeeperI interface {
 
 The auth module contains the following parameters:
 
-| Key                    | Type   | Example |
-| ---------------------- | ------ | ------- |
-| MaxMemoCharacters      | uint64 | 256     |
-| TxSigLimit             | uint64 | 7       |
-| TxSizeCostPerByte      | uint64 | 10      |
-| SigVerifyCostED25519   | uint64 | 590     |
-| SigVerifyCostSecp256k1 | uint64 | 1000    |
+| Key                    | Type            | Example |
+| ---------------------- | --------------- | ------- |
+| MaxMemoCharacters      |      uint64     | 256     |
+| TxSigLimit             |      uint64     | 7       |
+| TxSizeCostPerByte      |      uint64     | 10      |
+| SigVerifyCostED25519   |      uint64     | 590     |
+| SigVerifyCostSecp256k1 |      uint64     | 1000    |
 
 ## Client
 
@@ -406,7 +420,7 @@ More information about the `sign` command can be found running `simd tx sign --h
 
 #### `sign-batch`
 
-The `sign-batch` command allows users to sign multiples offline generated transactions.\
+The `sign-batch` command allows users to sign multiples offline generated transactions.
 The transactions can be in one file, with one tx per line, or in multiple files.
 
 ```bash
@@ -415,7 +429,7 @@ simd tx sign txs.json --from $ALICE > tx.signed.json
 
 or
 
-```bash
+```bash 
 simd tx sign tx1.json tx2.json tx3.json --from $ALICE > tx.signed.json
 ```
 
@@ -433,7 +447,7 @@ simd tx multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
 
 Where `k1k2k3` is the multisig account address, `k1sig.json` is the signature of the first signer, `k2sig.json` is the signature of the second signer, and `k3sig.json` is the signature of the third signer.
 
-**Nested multisig transactions**
+##### Nested multisig transactions
 
 To allow transactions to be signed by nested multisigs, meaning that a participant of a multisig account can be another multisig account, the `--skip-signature-verification` flag must be used.
 
@@ -453,7 +467,7 @@ More information about the `multi-sign` command can be found running `simd tx mu
 
 #### `multisign-batch`
 
-The `multisign-batch` works the same way as `sign-batch`, but for multisig accounts.\
+The `multisign-batch` works the same way as `sign-batch`, but for multisig accounts.
 With the difference that the `multisign-batch` command requires all transactions to be in one file, and the `--append` flag does not exist.
 
 More information about the `multisign-batch` command can be found running `simd tx multisign-batch --help`.
@@ -482,6 +496,7 @@ simd tx broadcast tx.signed.json
 ```
 
 More information about the `broadcast` command can be found running `simd tx broadcast --help`.
+
 
 ### gRPC
 

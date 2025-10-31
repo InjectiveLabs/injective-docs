@@ -1,24 +1,25 @@
 ---
 sidebar_position: 1
-title: Mint
 ---
+
+# `x/mint`
 
 ## Contents
 
-* [State](./#state)
-  * [Minter](./#minter)
-  * [Params](./#params)
-* [Begin-Block](./#begin-block)
-  * [NextInflationRate](./#nextinflationrate)
-  * [NextAnnualProvisions](./#nextannualprovisions)
-  * [BlockProvision](./#blockprovision)
-* [Parameters](./#parameters)
-* [Events](./#events)
-  * [BeginBlocker](./#beginblocker)
-* [Client](./#client)
-  * [CLI](./#cli)
-  * [gRPC](./#grpc)
-  * [REST](./#rest)
+* [State](#state)
+    * [Minter](#minter)
+    * [Params](#params)
+* [Begin-Block](#begin-block)
+    * [NextInflationRate](#nextinflationrate)
+    * [NextAnnualProvisions](#nextannualprovisions)
+    * [BlockProvision](#blockprovision)
+* [Parameters](#parameters)
+* [Events](#events)
+    * [BeginBlocker](#beginblocker)
+* [Client](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 
 ## Concepts
 
@@ -29,21 +30,22 @@ The minting mechanism was designed to:
 * allow for a flexible inflation rate determined by market demand targeting a particular bonded-stake ratio
 * effect a balance between market liquidity and staked supply
 
-In order to best determine the appropriate market rate for inflation rewards, a\
-moving change rate is used. The moving change rate mechanism ensures that if\
-the % bonded is either over or under the goal %-bonded, the inflation rate will\
-adjust to further incentivize or disincentivize being bonded, respectively. Setting the goal\
-%-bonded at less than 100% encourages the network to maintain some non-staked tokens\
+In order to best determine the appropriate market rate for inflation rewards, a
+moving change rate is used.  The moving change rate mechanism ensures that if
+the % bonded is either over or under the goal %-bonded, the inflation rate will
+adjust to further incentivize or disincentivize being bonded, respectively. Setting the goal
+%-bonded at less than 100% encourages the network to maintain some non-staked tokens
 which should help provide some liquidity.
 
 It can be broken down in the following way:
 
-* If the actual percentage of bonded tokens is below the goal %-bonded the inflation rate will\
-  increase until a maximum value is reached
-* If the goal % bonded (67% in Cosmos-Hub) is maintained, then the inflation\
-  rate will stay constant
-* If the actual percentage of bonded tokens is above the goal %-bonded the inflation rate will\
-  decrease until a minimum value is reached
+* If the actual percentage of bonded tokens is below the goal %-bonded the inflation rate will
+   increase until a maximum value is reached
+* If the goal % bonded (67% in Cosmos-Hub) is maintained, then the inflation
+   rate will stay constant
+* If the actual percentage of bonded tokens is above the goal %-bonded the inflation rate will
+   decrease until a minimum value is reached
+
 
 ## State
 
@@ -53,18 +55,18 @@ The minter is a space for holding current inflation information.
 
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
-```protobuf
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L10-L24
 ```
 
 ### Params
 
-The mint module stores its params in state with the prefix of `0x01`,\
+The mint module stores its params in state with the prefix of `0x01`,
 it can be updated with governance or the address with authority.
 
 * Params: `mint/params -> legacy_amino(params)`
 
-```protobuf
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L26-L59
 ```
 
@@ -74,10 +76,10 @@ Minting parameters are recalculated and inflation paid at the beginning of each 
 
 ### Inflation rate calculation
 
-Inflation rate is calculated using an "inflation calculation function" that's\
-passed to the `NewAppModule` function. If no function is passed, then the SDK's\
-default inflation function will be used (`NextInflationRate`). In case a custom\
-inflation calculation logic is needed, this can be achieved by defining and\
+Inflation rate is calculated using an "inflation calculation function" that's
+passed to the `NewAppModule` function. If no function is passed, then the SDK's
+default inflation function will be used (`NextInflationRate`). In case a custom
+inflation calculation logic is needed, this can be achieved by defining and
 passing a function that matches `InflationCalculationFn`'s signature.
 
 ```go
@@ -86,10 +88,10 @@ type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, 
 
 #### NextInflationRate
 
-The target annual inflation rate is recalculated each block.\
-The inflation is also subject to a rate change (positive or negative)\
-depending on the distance from the desired ratio (67%). The maximum rate change\
-possible is defined to be 13% per year, however, the annual inflation is capped\
+The target annual inflation rate is recalculated each block.
+The inflation is also subject to a rate change (positive or negative)
+depending on the distance from the desired ratio (67%). The maximum rate change
+possible is defined to be 13% per year, however, the annual inflation is capped
 as between 7% and 20%.
 
 ```go
@@ -112,7 +114,7 @@ NextInflationRate(params Params, bondedRatio math.LegacyDec) (inflation math.Leg
 
 ### NextAnnualProvisions
 
-Calculate the annual provisions based on current total supply and inflation\
+Calculate the annual provisions based on current total supply and inflation
 rate. This parameter is calculated once per block.
 
 ```go
@@ -130,12 +132,13 @@ BlockProvision(params Params) sdk.Coin {
 	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
 ```
 
+
 ## Parameters
 
 The minting module contains the following parameters:
 
 | Key                 | Type            | Example                |
-| ------------------- | --------------- | ---------------------- |
+|---------------------|-----------------|------------------------|
 | MintDenom           | string          | "uatom"                |
 | InflationRateChange | string (dec)    | "0.130000000000000000" |
 | InflationMax        | string (dec)    | "0.200000000000000000" |
@@ -143,18 +146,20 @@ The minting module contains the following parameters:
 | GoalBonded          | string (dec)    | "0.670000000000000000" |
 | BlocksPerYear       | string (uint64) | "6311520"              |
 
+
 ## Events
 
 The minting module emits the following events:
 
 ### BeginBlocker
 
-| Type | Attribute Key      | Attribute Value    |
-| ---- | ------------------ | ------------------ |
-| mint | bonded\_ratio      | {bondedRatio}      |
-| mint | inflation          | {inflation}        |
-| mint | annual\_provisions | {annualProvisions} |
-| mint | amount             | {amount}           |
+| Type | Attribute Key     | Attribute Value    |
+|------|-------------------|--------------------|
+| mint | bonded_ratio      | {bondedRatio}      |
+| mint | inflation         | {inflation}        |
+| mint | annual_provisions | {annualProvisions} |
+| mint | amount            | {amount}           |
+
 
 ## Client
 
@@ -170,7 +175,7 @@ The `query` commands allows users to query `mint` state.
 simd query mint --help
 ```
 
-**annual-provisions**
+##### annual-provisions
 
 The `annual-provisions` command allows users to query the current minting annual provisions value
 
@@ -190,7 +195,7 @@ Example Output:
 22268504368893.612100895088410693
 ```
 
-**inflation**
+##### inflation
 
 The `inflation` command allows users to query the current minting inflation value
 
@@ -210,7 +215,7 @@ Example Output:
 0.199200302563256955
 ```
 
-**params**
+##### params
 
 The `params` command allows users to query the current minting parameters
 

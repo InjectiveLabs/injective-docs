@@ -1,7 +1,8 @@
 ---
 sidebar_position: 1
-title: '`x/feegrant`'
 ---
+
+# `x/feegrant`
 
 ## Abstract
 
@@ -123,7 +124,7 @@ Example cmd:
 
 ### Granted Fee Deductions
 
-Fees are deducted from grants in the `x/auth` ante handler. To learn more about how ante handlers work, read the [Auth Module AnteHandlers Guide](./auth/#antehandlers).
+Fees are deducted from grants in the `x/auth` ante handler. To learn more about how ante handlers work, read the [Auth Module AnteHandlers Guide](../auth/#antehandlers).
 
 ### Gas
 

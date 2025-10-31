@@ -1,7 +1,8 @@
 ---
 sidebar_position: 1
-title: '`x/crisis`'
 ---
+
+# `x/crisis`
 
 ## Overview
 

@@ -1,7 +1,8 @@
 ---
 sidebar_position: 1
-title: NFT
 ---
+
+# `x/nft`
 
 ## Contents
 
@@ -9,18 +10,18 @@ title: NFT
 
 `x/nft` is an implementation of a Cosmos SDK module, per [ADR 43](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-043-nft-module.md), that allows you to create nft classification, create nft, transfer nft, update nft, and support various queries by integrating the module. It is fully compatible with the ERC721 specification.
 
-* [Concepts](./#concepts)
-  * [Class](./#class)
-  * [NFT](./#nft)
-* [State](./#state)
-  * [Class](./#class-1)
-  * [NFT](./#nft-1)
-  * [NFTOfClassByOwner](./#nftofclassbyowner)
-  * [Owner](./#owner)
-  * [TotalSupply](./#totalsupply)
-* [Messages](./#messages)
-  * [MsgSend](./#msgsend)
-* [Events](./#events)
+* [Concepts](#concepts)
+    * [Class](#class)
+    * [NFT](#nft)
+* [State](#state)
+    * [Class](#class-1)
+    * [NFT](#nft-1)
+    * [NFTOfClassByOwner](#nftofclassbyowner)
+    * [Owner](#owner)
+    * [TotalSupply](#totalsupply)
+* [Messages](#messages)
+    * [MsgSend](#msgsend)
+* [Events](#events)
 
 ## Concepts
 
@@ -56,7 +57,7 @@ NFTOfClassByOwner is mainly to realize the function of querying all nfts using c
 
 Since there is no extra field in NFT to indicate the owner of nft, an additional key-value pair is used to save the ownership of nft. With the transfer of nft, the key-value pair is updated synchronously.
 
-* OwnerKey: `0x04 | classID | 0x00 | nftID |-> owner`
+* OwnerKey: `0x04 | classID | 0x00  | nftID |-> owner`
 
 ### TotalSupply
 
@@ -68,9 +69,9 @@ TotalSupply is responsible for tracking the number of all nfts under a certain c
 
 In this section we describe the processing of messages for the NFT module.
 
-:::warning\
-The validation of `ClassID` and `NftID` is left to the app developer.\
-The SDK does not provide any validation for these fields.\
+:::warning
+The validation of `ClassID` and `NftID` is left to the app developer.  
+The SDK does not provide any validation for these fields.
 :::
 
 ### MsgSend

@@ -1,6 +1,7 @@
 ---
 sidebar_position: 1
-title: '`x/consensus`'
 ---
+
+# `x/consensus`
 
 Functionality to modify CometBFT's ABCI consensus params.
