@@ -16,7 +16,7 @@
             "group": "Start here",
             "expanded": true,
             "pages": [
-              "README"
+              "index"
             ]
           },
           {
@@ -24,7 +24,7 @@
             "expanded": false,
             "icon": "coins",
             "pages": [
-              "defi",
+              "defi/index",
               {
                 "group": "Wallet",
                 "pages": [
@@ -106,7 +106,7 @@
             "expanded": false,
             "icon": "network-wired",
             "pages": [
-              "infra",
+              "infra/index",
               "infra/interact-node-command-line",
               "infra/interact-node-grpc",
               "infra/interact-node-go",
@@ -119,7 +119,7 @@
               {
                 "group": "Mainnet Validator",
                 "pages": [
-                  "infra/validator-mainnet",
+                  "infra/validator-mainnet/index",
                   "infra/validator-mainnet/peggo",
                   "infra/validator-mainnet/canonical-chain-upgrade",
                   "infra/validator-mainnet/canonical-chain-upgrade-1.16.4",
@@ -151,7 +151,7 @@
               {
                 "group": "Testnet Validator",
                 "pages": [
-                  "infra/validator-testnet",
+                  "infra/validator-testnet/index",
                   "infra/validator-testnet/peggo"
                 ]
               },
@@ -166,13 +166,13 @@
             "expanded": false,
             "icon": "laptop-code",
             "pages": [
-              "developers",
+              "developers/index",
               "developers/convert-addresses",
               "developers/network-information",
               {
                 "group": "injectived",
                 "pages": [
-                  "developers/injectived",
+                  "developers/injectived/index",
                   "developers/injectived/install",
                   "developers/injectived/use",
                   "developers/injectived/advanced",
@@ -182,7 +182,7 @@
               {
                 "group": "Concepts",
                 "pages": [
-                  "developers/concepts",
+                  "developers/concepts/index",
                   "developers/concepts/sentry-node",
                   "developers/concepts/indexer-api",
                   "developers/concepts/trading-account",
@@ -197,7 +197,7 @@
               {
                 "group": "Assets",
                 "pages": [
-                  "developers/assets",
+                  "developers/assets/index",
                   "developers/assets/denom",
                   "developers/assets/token-metadata",
                   "developers/assets/injective-list",
@@ -207,7 +207,7 @@
               {
                 "group": "dApps",
                 "pages": [
-                  "developers/dapps",
+                  "developers/dapps/index",
                   "developers/dapps/configure-nuxt",
                   "developers/dapps/configure-react",
                   "developers/dapps/run-examples",
