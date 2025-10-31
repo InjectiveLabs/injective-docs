@@ -273,11 +273,11 @@
             "expanded": false,
             "icon": "comet",
             "pages": [
-              "developers-cosmwasm",
+              "developers-cosmwasm/index",
               {
                 "group": "CosmWasm Smart Contracts",
                 "pages": [
-                  "developers-cosmwasm/smart-contracts",
+                  "developers-cosmwasm/smart-contracts/index",
                   "developers-cosmwasm/smart-contracts/your-first-smart-contract",
                   "developers-cosmwasm/smart-contracts/injective-name-service",
                   "developers-cosmwasm/smart-contracts/neptune-service",
