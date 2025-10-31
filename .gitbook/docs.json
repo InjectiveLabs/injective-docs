@@ -28,7 +28,7 @@
               {
                 "group": "Wallet",
                 "pages": [
-                  "defi/wallet",
+                  "defi/wallet/index",
                   "defi/wallet/create",
                   "defi/wallet/accounts"
                 ]
@@ -36,7 +36,7 @@
               {
                 "group": "Trading",
                 "pages": [
-                  "defi/trading",
+                  "defi/trading/index",
                   "defi/trading/order-types",
                   "defi/trading/fees",
                   "defi/trading/margin",
@@ -55,7 +55,7 @@
               {
                 "group": "Token Standards",
                 "pages": [
-                  "defi/tokens",
+                  "defi/tokens/index",
                   "defi/tokens/inj-coin",
                   "defi/tokens/token-factory",
                   "defi/tokens/cw20-standard"
@@ -79,7 +79,7 @@
               {
                 "group": "Open Liquidity Program",
                 "pages": [
-                  "defi/open-liquidity-program",
+                  "defi/open-liquidity-program/index",
                   "defi/open-liquidity-program/introduction",
                   "defi/open-liquidity-program/rewards",
                   "defi/open-liquidity-program/epochs",
@@ -315,11 +315,11 @@
             "expanded": false,
             "icon": "microchip",
             "pages": [
-              "developers-native",
+              "developers-native/index",
               {
                 "group": "Wallets",
                 "pages": [
-                  "developers-native/wallets",
+                  "developers-native/wallets/index",
                   "developers-native/wallets/accounts",
                   "developers-native/wallets/connections",
                   "developers-native/wallets/strategy",
@@ -329,14 +329,14 @@
               {
                 "group": "Bridges",
                 "pages": [
-                  "developers-native/bridges",
+                  "developers-native/bridges/index",
                   "developers-native/bridges/ethereum"
                 ]
               },
               {
                 "group": "Transactions",
                 "pages": [
-                  "developers-native/transactions",
+                  "developers-native/transactions/index",
                   "developers-native/transactions/cosmos",
                   "developers-native/transactions/cosmos-ledger-keplr",
                   "developers-native/transactions/ethereum",
@@ -349,7 +349,7 @@
               {
                 "group": "Transaction Examples",
                 "pages": [
-                  "developers-native/examples",
+                  "developers-native/examples/index",
                   "developers-native/examples/auction",
                   "developers-native/examples/authz",
                   "developers-native/examples/bank",
@@ -369,7 +369,7 @@
               {
                 "group": "Querying the Chain",
                 "pages": [
-                  "developers-native/query-chain",
+                  "developers-native/query-chain/index",
                   "developers-native/query-chain/auction",
                   "developers-native/query-chain/auth",
                   "developers-native/query-chain/bank",
@@ -392,7 +392,7 @@
               {
                 "group": "Querying the Indexer",
                 "pages": [
-                  "developers-native/query-indexer",
+                  "developers-native/query-indexer/index",
                   "developers-native/query-indexer/account",
                   "developers-native/query-indexer/auction",
                   "developers-native/query-indexer/derivatives",
@@ -410,7 +410,7 @@
               {
                 "group": "Streaming the Indexer",
                 "pages": [
-                  "developers-native/query-indexer-stream",
+                  "developers-native/query-indexer-stream/index",
                   "developers-native/query-indexer-stream/account",
                   "developers-native/query-indexer-stream/auction",
                   "developers-native/query-indexer-stream/derivatives",
@@ -424,11 +424,11 @@
               {
                 "group": "Injective Modules",
                 "pages": [
-                  "developers-native/injective",
+                  "developers-native/injective/index",
                   {
                     "group": "Auction",
                     "pages": [
-                      "developers-native/injective/auction",
+                      "developers-native/injective/auction/index",
                       "developers-native/injective/auction/01_state",
                       "developers-native/injective/auction/02_messages",
                       "developers-native/injective/auction/03_end_block",
@@ -440,7 +440,7 @@
                   {
                     "group": "Exchange",
                     "pages": [
-                      "developers-native/injective/exchange",
+                      "developers-native/injective/exchange/index",
                       "developers-native/injective/exchange/00_derivative_market_concepts",
                       "developers-native/injective/exchange/01_spot_market_concepts",
                       "developers-native/injective/exchange/02_binary_options_markets",
@@ -460,7 +460,7 @@
                   {
                     "group": "ERC20",
                     "pages": [
-                      "developers-native/injective/erc20",
+                      "developers-native/injective/erc20/index",
                       "developers-native/injective/erc20/01_concepts",
                       "developers-native/injective/erc20/02_state",
                       "developers-native/injective/erc20/03_messages",
@@ -470,7 +470,7 @@
                   {
                     "group": "EVM",
                     "pages": [
-                      "developers-native/injective/evm",
+                      "developers-native/injective/evm/index",
                       "developers-native/injective/evm/01_concepts",
                       "developers-native/injective/evm/02_state",
                       "developers-native/injective/evm/03_state_transitions",
@@ -485,7 +485,7 @@
                   {
                     "group": "Insurance",
                     "pages": [
-                      "developers-native/injective/insurance",
+                      "developers-native/injective/insurance/index",
                       "developers-native/injective/insurance/01_state",
                       "developers-native/injective/insurance/02_state_transitions",
                       "developers-native/injective/insurance/03_messages",
@@ -499,7 +499,7 @@
                   {
                     "group": "OCR",
                     "pages": [
-                      "developers-native/injective/ocr",
+                      "developers-native/injective/ocr/index",
                       "developers-native/injective/ocr/01_concepts",
                       "developers-native/injective/ocr/02_state",
                       "developers-native/injective/ocr/03_messages",
@@ -514,7 +514,7 @@
                   {
                     "group": "Oracle",
                     "pages": [
-                      "developers-native/injective/oracle",
+                      "developers-native/injective/oracle/index",
                       "developers-native/injective/oracle/01_state",
                       "developers-native/injective/oracle/02_keeper",
                       "developers-native/injective/oracle/03_messages",
@@ -527,7 +527,7 @@
                   {
                     "group": "Peggy",
                     "pages": [
-                      "developers-native/injective/peggy",
+                      "developers-native/injective/peggy/index",
                       "developers-native/injective/peggy/01_definitions",
                       "developers-native/injective/peggy/02_workflow",
                       "developers-native/injective/peggy/03_state",
@@ -544,7 +544,7 @@
                   {
                     "group": "Permissions",
                     "pages": [
-                      "developers-native/injective/permissions",
+                      "developers-native/injective/permissions/index",
                       "developers-native/injective/permissions/01_concepts",
                       "developers-native/injective/permissions/02_state",
                       "developers-native/injective/permissions/03_state_transitions",
@@ -554,7 +554,7 @@
                   {
                     "group": "TokenFactory",
                     "pages": [
-                      "developers-native/injective/tokenfactory",
+                      "developers-native/injective/tokenfactory/index",
                       "developers-native/injective/tokenfactory/01_concepts",
                       "developers-native/injective/tokenfactory/02_state",
                       "developers-native/injective/tokenfactory/03_messages",
@@ -566,7 +566,7 @@
                   {
                     "group": "WasmX",
                     "pages": [
-                      "developers-native/injective/wasmx",
+                      "developers-native/injective/wasmx/index",
                       "developers-native/injective/wasmx/01_concepts",
                       "developers-native/injective/wasmx/02_data",
                       "developers-native/injective/wasmx/03_proposals",
@@ -582,7 +582,7 @@
               {
                 "group": "Core Modules",
                 "pages": [
-                  "developers-native/core",
+                  "developers-native/core/index",
                   "developers-native/core/auth",
                   "developers-native/core/authz",
                   "developers-native/core/bank",
