@@ -150,6 +150,7 @@
     * [Connect with WalletConnect](developers-evm/dapps/connect-with-walletconnect.md)
   * [EVM Equivalence](developers-evm/evm-equivalence.md)
   * [MultiVM Token Standard](developers-evm/multivm-token-standard.md)
+  * [Wrapped INJ](developers-evm/wrapped-inj.md)
   * [Precompiles](developers-evm/precompiles.md)
   * [Bank Precompile](developers-evm/bank-precompile.md)
   * [Exchange Precompile](developers-evm/exchange-precompile.md)
