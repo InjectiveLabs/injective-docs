@@ -21,7 +21,7 @@ You may think of wINJ as an ERC20 token that is 1-to-1 collateralised with INJ, 
 
 For those of you familiar with Ethereum,
 you may be thinking that this sounds the same as wrapper Ether (wETH).
-You are right, so far wINJ behaves in exactly the same way as wETH.
+You are right, so far wINJ behaves in the same way as wETH.
 
 However, note that the Injective network is designed with a MultiVM technical architecture.
 This means that if wINJ were to be implemented using a *standard* ERC20 implementation,
@@ -81,21 +81,21 @@ All other functions, e.g. transfers, are the same as standard ERC20.
 To convert INJ to wINJ, invoke the `deposit` function on this smart contract:
 
 - Navigate to the "Contract" tab, then the "Read/Write contract" sub tab in the explorer page for the wINJ token.
-- Find the `deposit()` function, and expand it by clikcing on the `>` symbol
+- Find the `deposit()` function, and expand it by clicking on the `>` symbol
 - Fill in the field "Send native INJ (uint256)" with the amount of INJ you wish to convert
-    - Note that this number is automatically multiplied by `10^18`, you do not need to perform that conversion manually
+  - Note that this number is automatically multiplied by `10^18`, you do not need to perform that conversion manually
 - Press the "Write" button
 - In your wallet, confirm the transaction to sign and submit it.
 - Your wallet should reflect an INJ decrease and a wINJ increase by the amount you selected.
-    - Note that the INJ decrease will be marginally more, because it is used to pay for transaction fees.
+  - Note that the INJ decrease will be marginally more, because it is used to pay for transaction fees.
 
 To convert wINJ to INJ, invoke the `withdraw` function on this smart contract:
 
 - Navigate to the "Contract" tab, then the "Read/Write contract" sub tab in the explorer page for the wINJ token.
-- Find the `withdraw()` function, and expand it by clikcing on the `>` symbol
+- Find the `withdraw()` function, and expand it by clicking on the `>` symbol
 - Fill in the field "wad (uint256)" with the amount of wINJ you wish to convert
-    - Note that this number is automatically multiplied by `10^18`, you do not need to perform that conversion manually
+  - Note that this number is automatically multiplied by `10^18`, you do not need to perform that conversion manually
 - Press the "Write" button
 - In your wallet, confirm the transaction to sign and submit it.
 - Your wallet should reflect an INJ increase and a wINJ decrease by the amount you selected.
-    - Note that the INJ increase will be marginally less, because it is used to pay for transaction fees.
+  - Note that the INJ increase will be marginally less, because it is used to pay for transaction fees.
