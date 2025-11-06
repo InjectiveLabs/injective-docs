@@ -2,9 +2,9 @@
 
 ## What is a wrapped cryptocurrency?
 
-On Injective, INJ is the cryptocurrency, which is what is used to pay from transaction fees on the network.
+On Injective, INJ is the cryptocurrency, which is what is used to pay transaction fees on the network.
 
-However, some dApps (including DEXes), only accept ERC20 tokens in their interfaces, and thus INJ does not work with them.
+However, some dApps (including DEXes), only accept ERC20 tokens in their interfaces, and thus INJ does **not** work with them.
 
 The solution is to create an ERC20 token which wraps INJ, called "wrapped INJ".
 Its token symbol is **wINJ**.
@@ -12,8 +12,8 @@ Thus any dApp that accepts ERC20 tokens accepts wINJ.
 
 The mechanism with which the wINJ token works is straightforward:
 
-- Increase the total supply (mint) whenever depositing INJ into it.
-- Decrease the total supply (burn) whenever withdrawing INJ from it.
+- Mint: Increase the total supply whenever depositing INJ into it.
+- Burn: Decrease the total supply whenever withdrawing INJ from it.
 
 You may think of wINJ as an ERC20 token that is 1-to-1 collateralised with INJ, and therefore be treated as equal value but with a different technical interface.
 
@@ -44,14 +44,15 @@ as is typical of ERC20 implementations,
 the wINJ smart contract uses the `Bank` precompile.
 The magic happens in the
 [`_update` function of `BankERC20`](https://github.com/InjectiveLabs/solidity-contracts/blob/b152129a/src/BankERC20.sol#L50-L81),
-where `mint`, `burn`, or `transfer` functions in the `Bank` precompile are invoked.
+where `mint`, `burn`, or `transfer` functions in the `Bank` module are invoked,
+via its [EVM precompile](./bank-precompile.md "EVM precompile for Injective's native Bank module").
 
 As those balances are stored/ retrieved from the `Bank` precompile,
 they are accessible from elsewhere within Injective's MultiVM architecture.
 For example, using the Cosmos SDK you can query the wINJ balances,
 even after updating them through EVM transactions;
 and vice versa.
-We refer to this as "native chain balances"/
+We refer to this as "native chain balances".
 
 Check out a [full demo of wINJ](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/winj9) in action.
 
@@ -99,3 +100,23 @@ To convert wINJ to INJ, invoke the `withdraw` function on this smart contract:
 - In your wallet, confirm the transaction to sign and submit it.
 - Your wallet should reflect an INJ increase and a wINJ decrease by the amount you selected.
   - Note that the INJ increase will be marginally less, because it is used to pay for transaction fees.
+
+# How to use wINJ via Injective Do
+
+- Visit [Injective Do](https://do.injective.network/)
+- Press the "Connect" button in the top right corner
+- Select your wallet
+- In your wallet select "Allow" to allow it to connect ot the Injective Do dApp.
+- You should now see your wallet address apear in the top right corner (where the "Connect" button was previously)
+- In the nav bar at the top, select "EVM"
+- In the drop-down menu select "Wrap/Unwrap"
+- To convert INJ to wINJ
+  - Press the "Wrap" tab at the top
+  - In the "Amount" field, type your desired amount for conversion
+  - Press the "Wrap" button at the bottom
+  - When the transaction has completed, check your INJ and wINJ balances in your wallet
+- To convert wINJ to INJ
+  - Press the "Unwrap" tab at the top
+  - In the "Amount" field, type your desired amount for conversion
+  - Press the "Unwrap" button at the bottom
+  - When the transaction has completed, check your INJ and wINJ balances in your wallet
