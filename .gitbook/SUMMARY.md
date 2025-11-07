@@ -156,6 +156,7 @@
   * [Exchange Precompile](developers-evm/exchange-precompile.md)
   * [ERC20 Module](developers-evm/erc20-module.md)
   * [Infrastructure & Tooling](developers-evm/infrastructure-and-tooling.md)
+  * [Add Injective to Your dApp](developers-evm/add-injective-to-your-dapp.md)
   * [EVM Testnet Faucet](https://testnet.faucet.injective.network/)
   * [EVM Testnet Explorer](https://testnet.blockscout.injective.network/blocks)
 * [Cosmwasm Developers](developers-cosmwasm/README.md)
