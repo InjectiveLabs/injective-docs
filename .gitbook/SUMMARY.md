@@ -64,6 +64,7 @@
   * [Mainnet Validator](infra/validator-mainnet/README.md)
     * [Peggo](infra/validator-mainnet/peggo.md)
     * [Canonical Chain Upgrades](infra/validator-mainnet/canonical-chain-upgrade.md)
+    * [v1.16.4](infra/validator-mainnet/canonical-chain-upgrade-1.17.0.md)
     * [v1.16.4](infra/validator-mainnet/canonical-chain-upgrade-1.16.4.md)
     * [v1.16.2](infra/validator-mainnet/canonical-chain-upgrade-1.16.2.md)
     * [v1.16.1](infra/validator-mainnet/canonical-chain-upgrade-1.16.1.md)
