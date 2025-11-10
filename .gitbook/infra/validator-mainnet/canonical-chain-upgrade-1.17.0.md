@@ -1,8 +1,8 @@
 # Upgrade to 1.17.0
 
-<!-- $DATE (e.g. Tuesday, August 19th, 2025) -->
+Tuesday, November 11th, 2025=
 
-Following [IIP <!-- $PROPOSAL_NUM -->](https://injhub.com/proposal/<!-- $PROPOSAL_NUM -->/) This indicates that the upgrade procedure should be performed on block number **<!-- $BLOCK_NUM -->**
+Following [IIP 583](https://injhub.com/proposal/583/) This indicates that the upgrade procedure should be performed on block number **141150000**
 
 * [Summary](#summary)
 * [Recovery](#recovery)
@@ -11,11 +11,11 @@ Following [IIP <!-- $PROPOSAL_NUM -->](https://injhub.com/proposal/<!-- $PROPOSA
 
 ## Summary
 
-The Injective Chain will undergo a scheduled enhancement upgrade on **<!-- $DATE_TIME (e.g. Tuesday, August 19th, 2025, 14:00 UTC) -->**.
+The Injective Chain will undergo a scheduled enhancement upgrade on **Tuesday, November 11th, 2025, 14:00 UTC**.
 
 The following is a short summary of the upgrade steps:
 
-1. Vote and wait till the node panics at block height **<!-- $BLOCK_NUM -->**.
+1. Vote and wait till the node panics at block height **141150000**.
 2. Backing up configs, data, and keys used for running the Injective Chain.
 3. Install the [1.17.0](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/1.17.0-1762751536) binaries.
 4. Start your node with the new injectived binary to fulfill the upgrade.
