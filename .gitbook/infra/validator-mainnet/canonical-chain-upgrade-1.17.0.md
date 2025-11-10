@@ -1,6 +1,6 @@
 # Upgrade to 1.17.0
 
-Tuesday, November 11th, 2025=
+Tuesday, November 11th, 2025
 
 Following [IIP 583](https://injhub.com/proposal/583/) This indicates that the upgrade procedure should be performed on block number **141150000**
 
