@@ -36,10 +36,6 @@ See [network information](../developers/network-information.md) for more details
 * JSON-RPC - Quicknode [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
   * Note that you will need to create an account on quicknode to obtain an endpoint URL
   * [Quicknode JSON-RPC documentation](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
-
-{% hint style="info" %}
-After the EVM Mainnet launch, there will be an initial permissioned period. During this period, developers will need to whitelist address(es). To do so, join the [Injective discord](https://discord.com/invite/NK4qdbv), then comment in [this discussion](https://discord.com/channels/739552603322450092/1189372652561895475/threads/1399997439041077379).
-{% endhint %}
 {% endtab %}
 
 {% tab title="Testnet" %}
