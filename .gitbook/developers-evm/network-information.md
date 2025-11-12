@@ -6,7 +6,7 @@ description: Essential information about the Injective EVM networks
 
 {% tabs %}
 {% tab title="Mainnet" %}
-### Network Infos
+### Network Info
 
 * Chain ID: `1776`
 * JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
@@ -21,25 +21,35 @@ Note that the Injective Chain ID is natively `injective-1`. However, EVM uses a 
 See [network information](../developers/network-information.md) for more details.
 {% endhint %}
 
-### Token Contracts
+### Contracts
 
-* USDT(MTS USDT)  - [`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`](https://blockscout.injective.network/address/0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13)
-  * Note that this follows the [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard), meaning the same token can be used across all Injective modules (EVM and Cosmos) without a bridge.
-* wETH(wrapped ETH) - [`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`](https://blockscout.injective.network/address/0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7)
-* wINJ(wrapped INJ) - [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
-* USDC - [`0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989`](https://blockscout.injective.network/address/0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989)
-* MultiCall - [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11)
+* **USDT** USDT (MTS)  - [`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`](https://blockscout.injective.network/address/0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13)
+* **wETH** wrapped ETH (MTS) - [`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`](https://blockscout.injective.network/address/0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7)
+* **wINJ** wrapped INJ (MTS) - [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
+* **USDC** USDC (MTS) - [`0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989`](https://blockscout.injective.network/address/0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989)
+* **MultiCall** - [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11)
+
+{% hint style="info" %}
+Note that tokens that are **MTS** follow the [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard).
+
+This means the same token can be used in all Injective modules (EVM, Cosmos) without using a bridge.
+{% endhint %}
 
 ### More Providers
 
-* Explorer - Blockscout mirror: [`injective.cloud.blockscout.com`](https://injective.cloud.blockscout.com)
-* JSON-RPC - Quicknode [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
-  * Note that you will need to create an account on quicknode to obtain an endpoint URL
-  * [Quicknode JSON-RPC documentation](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
+* Explorers
+  * Blockscout mirror: [`injective.cloud.blockscout.com`](https://injective.cloud.blockscout.com)
+* JSON-RPC Providers
+  * Quicknode [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
+    * Note that you will need to create an account on quicknode to obtain an endpoint URL
+    * [Quicknode JSON-RPC documentation](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
+  * ThirdWeb [`thirdweb.com/injective`](https://thirdweb.com/injective)
+    * Note that you will need to create an account on thirdweb to obtain an endpoint URL
+    * [ThirdWeb Playground](https://playground.thirdweb.com/)
 {% endtab %}
 
 {% tab title="Testnet" %}
-### Network Infos
+### Network Info
 
 * Chain ID: `1439`
 * JSON-RPC Endpoint: `https://k8s.testnet.json-rpc.injective.network/`
@@ -54,17 +64,30 @@ Note that the Injective Chain ID is natively `injective-888`. However, EVM uses 
 See [network information](../developers/network-information.md) for more details.
 {% endhint %}
 
-### Token Contracts
+### Contracts
 
-* wINJ (wrapped INJ) - [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://testnet.blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
-* USDT (MTS USDT) - [`0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`](https://testnet.blockscout.injective.network/address/0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60)
-  * Note that this follows the [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard), which means the same token can be used in all Injective modules (EVM, Cosmos) without using a bridge.
+* **wINJ** wrapped INJ (MTS) - [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://testnet.blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
+* **USDT** USDT (MTS) - [`0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`](https://testnet.blockscout.injective.network/address/0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60)
+
+{% hint style="info" %}
+Note that tokens that are **MTS** follow the [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard).
+
+This means the same token can be used in all Injective modules (EVM, Cosmos) without using a bridge.
+{% endhint %}
 
 ### More Providers
 
-* Explorer - Blockscout mirror: [`testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)&#x20;
+* Explorers
+  * Blockscout mirror: [`testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
+* JSON-RPC Providers
+  * Quicknode [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
+    * Note that you will need to create an account on quicknode to obtain an endpoint URL
+    * [Quicknode JSON-RPC documentation](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
+  * ThirdWeb [`thirdweb.com/injective-evm-testnet`](https://thirdweb.com/injective-evm-testnet)
+    * Note that you will need to create an account on thirdweb to obtain an endpoint URL
+    * [ThirdWeb Playground](https://playground.thirdweb.com/)
 
-### More Infos
+### More Info
 
 For more information about Injective EVM Testnet see the following pages:
 
