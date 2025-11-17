@@ -1,4 +1,6 @@
-# Exchange
+---
+title: Exchange
+---
 
 The `exchange` module is the heart of the Injective Chain which enables fully decentralized spot and derivative exchange. It is the sine qua non module of the chain and integrates tightly with the `auction`, `insurance`, `oracle`, and `peggy` modules.
 
@@ -588,12 +590,12 @@ Note:
 
 How to find the subaccountId that you will be transferring from:
 
-* you can query your existing subaccountIds via the [account portfolio api](../query-indexer/portfolio.md).
+* you can query your existing subaccountIds via the [account portfolio api](../query-indexer/portfolio/).
 
 How to use funds that are currently associated with your Injective Address in bank module:
 
-* If you have existing non-default subaccounts, you'll want to do a [MsgDeposit](exchange.md#MsgDeposit) to one of your existing non-default subaccountIds and use that subaccountId as the `srcSubaccountId` below.
-* If you don't have existing non-default subaccounts, you can do a [MsgDeposit](exchange.md#MsgDeposit) to a new default subaccountId, which would be done via importing `getSubaccountId` from `sdk-ts` and setting the `subaccountId` field in [MsgDeposit](exchange.md#MsgDeposit) to `getSubaccountId(injectiveAddress, 1)`.
+* If you have existing non-default subaccounts, you'll want to do a [MsgDeposit](./exchange/#MsgDeposit) to one of your existing non-default subaccountIds and use that subaccountId as the `srcSubaccountId` below.
+* If you don't have existing non-default subaccounts, you can do a [MsgDeposit](./exchange/#MsgDeposit) to a new default subaccountId, which would be done via importing `getSubaccountId` from `sdk-ts` and setting the `subaccountId` field in [MsgDeposit](./exchange/#MsgDeposit) to `getSubaccountId(injectiveAddress, 1)`.
 
 ```ts
 import {

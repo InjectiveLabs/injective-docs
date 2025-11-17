@@ -1,4 +1,6 @@
-# Bank Precompile
+---
+title: Bank Precompile
+---
 
 The Bank precompile allows smart contracts to interact directly with the `x/bank` module, effectively bringing ERC-20 tokens on-chain. Any ERC-20 contract using the Bank precompile will be represented as `erc20:0x...` denom on-chain. Technically, this means that tokens reside only on-chain, with the EVM providing a view to the chain state rather than maintaining a separate copy. Unlike traditional bridging, where two token versions require user actions to switch, the Bank precompile offers real-time, dual-environment reflection for any transfer using either the on-chain bank denom or the ERC-20 `transfer()` method.
 

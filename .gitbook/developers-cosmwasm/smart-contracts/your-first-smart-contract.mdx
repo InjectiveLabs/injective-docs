@@ -1,4 +1,6 @@
-# Your First CosmWasm Smart Contract
+---
+title: Your First CosmWasm Smart Contract
+---
 
 Within this section, we'll explain how to setup your environment for CosmWasm Smart Contracts Development.
 
@@ -406,7 +408,7 @@ Alternatively, a Docker image has been prepared to make this tutorial easier.
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
 If you install `injectived` from the binary, ignore the docker commands.
-In the [public endpoints section](../../infra/public-endpoints.md) you can find the right --node info to interact with Mainnet and Testnet.
+In the [public endpoints section](../../infra/public-endpoints/) you can find the right --node info to interact with Mainnet and Testnet.
 </Callout>
 
 Executing this command will make the docker container execute indefinitely.
@@ -478,7 +480,7 @@ curl -X GET "https://sentry.testnet.lcd.injective.network/cosmos/bank/v1beta1/ba
 
 ## Upload the Wasm Contract
 
-Now it's time to upload the `.wasm` file that you compiled in the previous steps to the Injective Testnet. Please note that the procedure for mainnet is different and [requires a governance proposal.](../mainnet-deployment-guide.md)
+Now it's time to upload the `.wasm` file that you compiled in the previous steps to the Injective Testnet. Please note that the procedure for mainnet is different and [requires a governance proposal.](../mainnet-deployment-guide/)
 
 ```bash
 # inside the "injective-core-staging" container, or from the contract directory if running injectived locally

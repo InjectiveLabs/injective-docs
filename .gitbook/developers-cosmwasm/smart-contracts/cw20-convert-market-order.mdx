@@ -1,6 +1,8 @@
-# CW20 to Bank & Market Order in One Transaction
+---
+title: CW20 to Bank & Market Order in One Transaction
+---
 
-This example helps you create messages to convert CW20 tokens to bank tokens on the Injective blockchain. This is particularly useful when you have CW20 tokens and need to convert them to their bank equivalents to perform operations like placing market orders. Note that this flow only works for cw20 tokens and their corresponding [factory tokens](../../developers/concepts/README.md).
+This example helps you create messages to convert CW20 tokens to bank tokens on the Injective blockchain. This is particularly useful when you have CW20 tokens and need to convert them to their bank equivalents to perform operations like placing market orders. Note that this flow only works for cw20 tokens and their corresponding [factory tokens](../../developers/concepts/).
 
 This guide will walk you through:
 
@@ -10,17 +12,17 @@ This guide will walk you through:
 
 ## Get User's CW20 Balance
 
-You can perform this using [explorer indexer queries](../../developers-native/query-indexer/explorer.md#fetch-cw20-balances).
+You can perform this using [explorer indexer queries](../../developers-native/query-indexer/explorer/#fetch-cw20-balances).
 
 * Find the cw20 address and balance from the result set that you want to convert to a bank factory token
 
 ## Create CW20 to Bank Conversion Message
 
-* create the `convertMsg` using the steps detailed [here](../../developers/concepts/token-factory.md#example-on-how-to-convert-cw20-to-a-factory-denom) in order to convert your CW20 token to a bank factory token. No need to submit the tsx yet.
+* create the `convertMsg` using the steps detailed [here](../../developers/concepts/token-factory/#example-on-how-to-convert-cw20-to-a-factory-denom) in order to convert your CW20 token to a bank factory token. No need to submit the tsx yet.
 
 ## Create a `MsgCreateSpotMarketOrder` message
 
-* Create the `msg` using the steps detailed in [MsgCreateSpotMarketOrder](../../developers-native/examples/exchange.md#msgcreatespotmarketorder). No need to submit the tsx yet.
+* Create the `msg` using the steps detailed in [MsgCreateSpotMarketOrder](../../developers-native/examples/exchange/#msgcreatespotmarketorder). No need to submit the tsx yet.
 * Note that the buy order you create will have access to your converted cw20 balance + existing bank balance. Example:
 
 ```ts

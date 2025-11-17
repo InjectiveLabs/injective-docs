@@ -5,7 +5,7 @@ title: How to Launch Permissioned Assets
 
 # How to Launch Permissioned Assets
 
-Permissioned assets can be launched using [Injective APIs/SDKs](https://api.injective.exchange/#permissions) or the Injective CLI, `injectived`. See [injectived](../../../../developers/injectived/README.md) for more information on using the Injective CLI.
+Permissioned assets can be launched using [Injective APIs/SDKs](https://api.injective.exchange/#permissions) or the Injective CLI, `injectived`. See [injectived](https://docs.injective.network/developers/injectived) for more information on using the Injective CLI.
 
 ```bash
 injectived tx permissions [command]

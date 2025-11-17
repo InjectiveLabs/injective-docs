@@ -1,4 +1,6 @@
-# Interact with a node using REST Endpoints
+---
+title: Interact with a node using REST Endpoints
+---
 
 All gRPC services on the Cosmos SDK are made available for more convenient REST-based queries through gRPC-gateway. The format of the URL path is based on the Protobuf service method's full-qualified name, but may contain small customizations so that final URLs look more idiomatic. For example, the REST endpoint for the `cosmos.bank.v1beta1.Query/AllBalances` method is `GET /cosmos/bank/v1beta1/balances/{address}`. Request arguments are passed as query parameters.
 
@@ -39,4 +41,4 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 Sending transactions using gRPC and REST requires some additional steps: generating the transaction, signing it, and finally broadcasting it.
 
-You can learn more in [transactions](../defi/transactions.md "mention").
+You can learn more in [transactions](../defi/transactions/ "mention").
