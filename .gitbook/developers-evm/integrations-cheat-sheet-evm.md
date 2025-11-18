@@ -26,19 +26,19 @@ Reference: [EVM Network Information](https://docs.injective.network/developers-e
 # RPC Endpoints
 
 - **Recommended** for integrations
-	- Customisable for needs of applications
-	- Customisable rate limits, and no cut off for historical data queries
-	- Freemium or paid options
-	- How to connect:
-		- QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj)
-		- ThirdWeb: [Injective | ThirdWeb](https://thirdweb.com/injective)
+  - Customisable for needs of applications
+  - Customisable rate limits, and no cut off for historical data queries
+  - Freemium or paid options
+  - How to connect:
+    - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj)
+    - ThirdWeb: [Injective | ThirdWeb](https://thirdweb.com/injective)
 - **Not** recommended for integrations
-	- Not customisable for needs of applications
-	- Heavy rate limiting, and cut off for historical data queries
-	- Free option
-	- How to connect:
-		- JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
-		- WS Endpoint: `wss://sentry.evm-ws.injective.network`
+  - Not customisable for needs of applications
+  - Heavy rate limiting, and cut off for historical data queries
+  - Free option
+  - How to connect:
+    - JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
+    - WS Endpoint: `wss://sentry.evm-ws.injective.network`
 
 Reference: [EVM Network Information](https://docs.injective.network/developers-evm/network-information#injective-evm-mainnet-details)
 
@@ -73,7 +73,7 @@ Guides:
 
 ## `injectived`
 
-Suitable for programmatic control, e.g. application/ DApp operated accounts.
+Suitable for programmatic control, e.g. application or dApp-operated accounts.
 
 Installation quick start:
 
@@ -97,19 +97,8 @@ Installation:
 
 - Get browser extension from [https://metamask.io/en-GB](https://metamask.io/en-GB) for your specific browser.
 - Visit [https://blockscout.injective.network/](https://blockscout.injective.network/), scroll to the bottom of the page
-- Click on the “Add Injective” button: <!-- TODO img -->
-## MetaMask
-
-Suitable for retail users who need to interact with EVM DApps.
-
-Installation:
-
-- Get browser extension from [https://metamask.io/en-GB](https://metamask.io/en-GB) for your specific browser.
-- Visit [https://blockscout.injective.network/](https://blockscout.injective.network/), scroll to the bottom of the page
-- Click on the “Add Injective” button: <!-- TODO image -->
-- Follow the prompts in MetaMask’s user interface
-
-Reference: [How to Create an Injective Wallet](https://injective.com/blog/how-to-create-an-injective-wallet-2/#to-connect-to-injective-with-metamask)#metamask
+- Click on the “Add Injective” button:
+  ![](/assets/blockscout-add-injective-button.png "the add injective to metamask button in the footer of injective blockscout")
 
 ## Keplr
 
