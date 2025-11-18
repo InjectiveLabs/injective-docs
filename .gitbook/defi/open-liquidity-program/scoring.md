@@ -24,21 +24,33 @@ $$
 LS_{Epoch} =  \sum \limits_{N=1}^{40,320}  \min(LS_{N_{Bid}}, LS_{N_{Ask}})
 $$
 
-The liquidity provider’s Liquidity Score for a market in an epoch, $$LS_{Epoch}$$, is the sum of the minimum between the Bid and Ask Liquidity Scores (see below) across all order book snapshots in the epoch for the relevant market. This promotes dual-sided liquidity since single-sided liquidity will earn a Liquidity Score of 0 under the $$\min()$$ function.
+The liquidity provider’s Liquidity Score for a market in an epoch, $$LS_{Epoch}$$, is the sum of the minimum between the Bid and Ask Liquidity Scores (see below) across all order book snapshots in the epoch for the relevant market, multiplied by a bespoke volatility parameter for each market (represented by Θ). This promotes dual-sided liquidity since single-sided liquidity will earn a Liquidity Score of 0 under the $$\min()$$ function.
 
 A snapshot of the order book is taken randomly every 10-100 blocks. This is approximately every minute on average, which means there are approximately 40,320 snapshots in an epoch $$(60 \cdot 24 \cdot 28 = 40,320).$$ In practice, the upper bound of the summation will vary depending on the actual number of snapshots in the epoch. For the purposes of this guide, we will assume that there were exactly 40,320 snapshots in the epoch.
 
 $$
-LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} + \frac{BidDepth_2}{Spread_2} + … \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots
+ \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 $$
-LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} + \frac{AskDepth_2}{Spread_2} + … \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
-$$LS_{N_{Bid}}$$ is the sum of all bid order depths divided by the spread of the order for all limit orders placed by the liquidity provider in snapshot $$N$$ that exceed $$MinDepth$$ in size and are within the $$MaxSpread.$$
+$$LS_{N_{Bid}}$$ is the sum of all bid order depths divided by the spread of the order, multiplied by the volatility parameter for that snapshot, for all limit orders placed by the liquidity provider in snapshot $$N$$ that exceed $$MinDepth$$ in size and are within the $$MaxSpread.$$
 
 $$LS_{N_{Ask}}$$ follows the same logic as $$LS_{N_{Bid}}$$, but on the ask side of the order book.
+
+The volatility parameter is calculated as follows:
+
+$$
+\Theta_{\text{vol}}(S_b)\;=\;
+\min\!\bigl(\,\Theta_{\max},\;
+           \max\!\{\,1,\;
+                    e^{\alpha\,\sigma_b\,|\frac{S_b-\mu_b}{S_b}|}\}\bigr)
+$$
+
+where $$\mu_b$$ is the oracle price moving average over $$N$$ blocks (1000 blocks, or roughly 10 minutes), $$S_b$$ represents the oracle price of the current block, and $$\sigma_b$$ represents the realized volatility over $$N$$ blocks. This function has a clamp and scales well if the current oracle price deviates from the moving average, or if there is a spike in volatility over the last $$N$$ blocks. The range of $$\Theta_{\text{vol}} \in [1, \Theta_{\text{max}}]$$ - so we bound it within a finite field. We introduce two new parameters $$(\alpha, \Theta_{\text{max}})$$ which monitor the sensitivity to volatility and a clamp. Because max Θ should be approximately 10 - and is capped at that as described above - for a 3% price move within a 10-minute span, $$\alpha$$ is currently set at 2,500.
 
 $$Spread$$ is calculated from the mid-price[^1] (distance from mid-price divided by mid-price).
 
