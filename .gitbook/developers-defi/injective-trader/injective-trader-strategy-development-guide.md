@@ -31,6 +31,7 @@ Components:
     MarketTickers:             # Market tickers to track (will be converted to IDs)
       - INJ/USDT PERP
       - ETH/USDT
+    BotName: MyBot
 
   # Chain listening configuration
   ChainListener:
