@@ -6,7 +6,7 @@ It bridges the gap between algorithmic trading strategies and blockchain executi
 eliminating technical barriers.
 The framework takes care of the heavy lifting -
 real-time data streaming, order execution, reconnection/recovery, transaction batching, and analytics
-his free up traders to focus solely on **strategy development** rather than blockchain complexities.
+This frees up traders to focus solely on **strategy development** rather than blockchain complexities.
 
 You can use it to import existing strategies or create new ones that:
 

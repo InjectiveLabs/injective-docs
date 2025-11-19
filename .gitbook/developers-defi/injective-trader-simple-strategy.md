@@ -14,7 +14,7 @@ Injective Trader comes built in with a *simple strategy*.
 
 **Example Logs:**
 
-```
+```text
 [INFO] Placing BUY order: 0.1 INJ at $3.45 (spread: 0.5%)
 [INFO] Placing SELL order: 0.1 INJ at $3.47 (spread: 0.5%)
 [INFO] Order filled: BUY 0.1 INJ at $3.45

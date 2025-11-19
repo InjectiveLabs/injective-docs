@@ -28,7 +28,7 @@ The `Components` section configures framework components:
 ```yaml
 Components:
   # Chain initialization and market setup
-  Initilizer:
+  Initializer:
     Network: mainnet           # Network to connect to (mainnet or testnet)
     MarketTickers:             # Market tickers to track (will be converted to IDs)
       - INJ/USDT PERP
@@ -189,7 +189,7 @@ from src.utils.enums import UpdateType, Side
 
 class SimpleStrategy(Strategy):
     def __init__(self, logger, config):
-		    """
+		"""
         Initialize strategy with logger and configuration.
 
         Args:
