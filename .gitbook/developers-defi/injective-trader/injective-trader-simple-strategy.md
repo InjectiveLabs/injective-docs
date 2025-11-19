@@ -1,20 +1,20 @@
-# Simple Strategy - Injective Trader
+# Getting Started
 
-Injective Trader comes built in with a *simple strategy*.
+Injective Trader comes built in with a _simple strategy_, to aid with rapid prototyping and familiarizing yourself with the codebase.
 
 **What it does:**
 
-- Monitors orderbooks for INJ, BTC, ETH
-- Places **buy orders** slightly below market price
-- Places **sell orders** slightly above market price
-- Maintains a spread for profitability
-- Respects position limits for risk control
+* Monitors orderbooks for INJ, BTC, ETH
+* Places buy orders slightly below market price
+* Places sell orders slightly above market price
+* Maintains a spread for profitability
+* Respects position limits for risk control
 
-**Best for:** predictable, steady trading and familiarizing yourself with Injective Trader.
+**Best for:** predictable and steady trading while familiarizing yourself with Injective Trader. **Not recommended for production use.**
 
 **Example Logs:**
 
-```text
+```
 [INFO] Placing BUY order: 0.1 INJ at $3.45 (spread: 0.5%)
 [INFO] Placing SELL order: 0.1 INJ at $3.47 (spread: 0.5%)
 [INFO] Order filled: BUY 0.1 INJ at $3.45
@@ -90,23 +90,23 @@ grep "ERROR" logs/my_bot.log
 
 ### Key Messages
 
-- ✅ Order placed successfully
-- 💰 Order filled
-- ⚠️ Position limit reached
-- ❌ Insufficient balance
+* ✅ Order placed successfully
+* 💰 Order filled
+* ⚠️ Position limit reached
+* ❌ Insufficient balance
 
 ### Performance Metrics
 
-- Total PnL
-- Win rate
-- Fill rate
-- Average spread
+* Total PnL
+* Win rate
+* Fill rate
+* Average spread
 
 ## Risk Management
 
-- Set position limits (`MaxPosition`)
-- Monitor positions and stop out manually if needed
-- Maintain enough USDT for margin, fees, and buffer
+* Set position limits (`MaxPosition`)
+* Monitor positions and stop out manually if needed
+* Maintain enough USDT for margin, fees, and buffer
 
 ## Troubleshooting
 
@@ -116,9 +116,9 @@ grep "ERROR" logs/my_bot.log
 echo $MyBot_GRANTER_INJECTIVE_PRIVATE_KEY
 ```
 
-- **Insufficient balance** → Add USDT / reduce `OrderSize`
-- **Market not found** → Double-check tickers/IDs
-- **Bot stops working**
+* **Insufficient balance** → Add USDT / reduce `OrderSize`
+* **Market not found** → Double-check tickers/IDs
+* **Bot stops working**
 
 ```bash
 grep "ERROR" logs/my_bot.log | tail -10
@@ -127,11 +127,10 @@ python main.py MyBot config.yaml --log_path logs/my_bot.log --network mainnet
 
 ## Advanced Features
 
-- **Multiple accounts** via `AccountAddresses`
-- **Custom order types** (limit, market, reduce-only)
-- **External signals** with Redis/Valkey
+* **Multiple accounts** via `AccountAddresses`
+* **Custom order types** (limit, market, reduce-only)
+* **External signals** with Redis/Valkey
 
 ## Next
 
-Learn how to develop your own [custom strategy](./injective-trader-strategy-development-guide.md)
-for Injective Trader.
+Learn how to develop your own [custom strategy](injective-trader-strategy-development-guide.md) for Injective Trader.

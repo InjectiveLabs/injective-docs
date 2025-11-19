@@ -18,4 +18,4 @@ The settlement of a given auction round occurs when `blockTime ≥ EndingTimeSta
 
 If the round closed without any successful bids, the existing coin basket will be rolled over into the next auction and combined with the new accumulated fee basket.
 
-![img.png](../../../developers/modules/injective/auction/img.png)
+![img.png](broken-reference)

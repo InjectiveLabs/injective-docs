@@ -119,7 +119,7 @@ This completes the bootstrap of the Peggy bridge and the chain can be started. A
 
 ### **Updating Injective Chain validator set on Ethereum**
 
-![img.png](../../../developers/modules/injective/peggy/images/valsetupdate.png)
+![img.png](broken-reference)
 
 A validator set is a series of Ethereum addresses with attached normalized powers used to represent the Injective validator set (Valset) in the Peggy contract on Ethereum. The Peggy contract stays in sync with the Injective Chain validator set through the following mechanism:
 
@@ -137,7 +137,7 @@ A validator set is a series of Ethereum addresses with attached normalized power
 
 ### **Transferring ERC-20 tokens from Ethereum to Injective**
 
-![img.png](../../../developers/modules/injective/peggy/images/SendToCosmos.png)
+![img.png](broken-reference)
 
 ERC-20 tokens are transferred from Ethereum to Injective through the following mechanism:
 
@@ -153,7 +153,7 @@ ERC-20 tokens are transferred from Ethereum to Injective through the following m
 
 ### **Withdrawing tokens from Injective to Ethereum**
 
-![img.png](../../../developers/modules/injective/peggy/images/SendToEth.png)
+![img.png](broken-reference)
 
 1. **Request Withdrawal from Injective:** A user can initiate the transfer of assets from the Injective Chain to Ethereum by sending a `MsgSendToEth` transaction to the peggy module.
    * If the asset is Ethereum native, the represented tokens are burnt.

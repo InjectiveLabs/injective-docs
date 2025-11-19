@@ -1,55 +1,47 @@
 # Injective Trader
 
-The Injective Trader is a professional-grade framework that provides a high-performance,
-reliable foundation for developing and deploying **algorithmic trading** strategies on the Injective blockchain.
-It bridges the gap between algorithmic trading strategies and blockchain execution,
-eliminating technical barriers.
-The framework takes care of the heavy lifting -
-real-time data streaming, order execution, reconnection/recovery, transaction batching, and analytics
-This frees up traders to focus solely on **strategy development** rather than blockchain complexities.
+Injective Trader is a professional-grade framework that provides a high-performance, reliable foundation for developing and deploying algorithmic trading strategies on the Injective blockchain. It bridges the gap between algorithmic trading strategies and blockchain execution, eliminating technical barriers. The framework takes care of the heavy lifting - real-time data streaming, order execution, reconnection/recovery, transaction batching, and analytics This frees up traders to focus solely on strategy development rather than blockchain complexities.
 
 You can use it to import existing strategies or create new ones that:
 
-- **Place orders automatically** based on your logic
-- **Monitor markets 24/7** and react to price changes
-- **Manage risk** with built-in limits and safety features
-- **Handle multiple markets** simultaneously
-- **Provide detailed logs** of all trading activity
+* **Place orders automatically** based on your logic
+* **Monitor markets 24/7** and react to price changes
+* **Manage risk** with built-in limits and safety features
+* **Handle multiple markets** simultaneously
+* **Provide detailed logs** of all trading activity
 
-## Core Capabilities
+### Core Capabilities
 
 **Simplified Strategy Development**
 
-- No SDK expertise required - focus purely on trading logic
-- Rapid strategy deployment with minimal technical overhead
-- Event-driven architecture enabling intuitive strategy implementation
+* No SDK expertise required - focus purely on trading logic
+* Rapid strategy deployment with minimal technical overhead
+* Event-driven architecture enabling intuitive strategy implementation
 
 **Built-in Reliability**
 
-- Automated reconnection and recovery mechanisms
-- Transaction validation before execution
-- Comprehensive error handling and retry logic
+* Automated reconnection and recovery mechanisms
+* Transaction validation before execution
+* Comprehensive error handling and retry logic
 
 **Performance Optimization**
 
-- Intelligent transaction batching for cost reduction
-- Automatic fee management and optimization
-- Multi-account support for scale
+* Intelligent transaction batching for cost reduction
+* Automatic fee management and optimization
+* Multi-account support for scale
 
 **Enterprise-Ready Features**
 
-- Complete position and PnL tracking
-- Risk management capabilities
-- Detailed performance analytics
+* Complete position and PnL tracking
+* Risk management capabilities
+* Detailed performance analytics
 
 {% hint style="warning" %}
-Injective trader transacts assets with real value, as such security is paramount.
-Be sure to use the following as a security baseline,
-and also take further measures to protect your assets.
+Injective trader transacts assets with real value, as such security is paramount. Be sure to use the following as a security baseline, and also take further measures to protect your assets.
 
-- **Never share private keys** or commit them to Git.
-- Store secrets in a local **`.env` file** and load via environment variables.
-- For extra safety, consider using [**AuthZ**](https://github.com/InjectiveLabs/injective-trader/tree/master?tab=readme-ov-file#authorization-trading-authz) to grant trading rights without exposing your main account.
+* **Never share private keys** or commit them to Git.
+* Store secrets in a local **`.env` file** and load via environment variables.
+* For extra safety, consider using [**AuthZ**](https://github.com/InjectiveLabs/injective-trader/tree/master?tab=readme-ov-file#authorization-trading-authz) to grant trading rights without exposing your main account.
 {% endhint %}
 
 ## Quick Start (5 minutes)
@@ -58,9 +50,9 @@ and also take further measures to protect your assets.
 
 1. **Create an account** on Injective using Keplr or `injectived`.
 2. If using Keplr, **export your private key** for the `.env` file.
-    - *Tip: With AuthZ, you can grant limited permissions to a trading account for better security.*
+   * _Tip: With AuthZ, you can grant limited permissions to a trading account for better security._
 3. **Fund your account** with USDT by sending from another Injective address, or via [bridge.injective.network](http://bridge.injective.network/).
-    - *EVM tip: You can derive your `inj` address with the TS SDK and bridge USDT from Ethereum to Injective without even setting up an Injective account.*
+   * _EVM tip: You can derive your `inj` address with the TS SDK and bridge USDT from Ethereum to Injective without even setting up an Injective account._
 
 ### 2. Download and Setup
 
@@ -76,7 +68,7 @@ pip install -r requirements.txt
 pip install "injective-py==1.9"
 ```
 
-*Note: `injective-trader` is not compatible with `injective-py` v1.11.*
+_Note: `injective-trader` is not yet compatible with `injective-py` v1.11._
 
 ### 3. Configure Your Strategy
 
@@ -140,8 +132,7 @@ That's it - your bot is now live!
 
 ## IDE set up
 
-If you are using VS code or compatible IDEs (such as Cursor),
-consider adding the following configuration for easy debugging.
+If you are using VS code or compatible IDEs (such as Cursor), consider adding the following configuration for easy debugging.
 
 `.vscode/launch.json`:
 
@@ -175,5 +166,4 @@ You should now be able to do **Run → Start Debugging** in your IDE.
 
 ## Next
 
-Learn more about the [simple strategy](./injective-trader-simple-strategy.md)
-that ships with Injective Trader.
+Learn more about the [simple strategy](injective-trader-simple-strategy.md) that ships with Injective Trader, to get yourself comfortable with the codebase before diving in.
