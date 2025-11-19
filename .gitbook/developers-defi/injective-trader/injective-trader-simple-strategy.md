@@ -1,6 +1,6 @@
 # Getting Started
 
-Injective Trader comes built in with a _simple strategy_, to aid with rapid prototyping and familiarizing yourself with the codebase.
+Injective Trader comes built in with a "Simple Strategy" to aid with rapid prototyping and familiarizing yourself with the codebase.
 
 **What it does:**
 
