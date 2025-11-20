@@ -135,6 +135,7 @@
   * [The Graph](https://docs.substreams.dev/documentation/how-to-guides/injective)
 * [EVM Developers](developers-evm/README.md)
   * [EVM Network Information](developers-evm/network-information.md)
+  * [Exchange Integrations Cheatsheet](developers-evm/exchgange-integrations-cheat-sheet-evm.md)
   * [Your First EVM Smart Contract](developers-evm/smart-contracts/README.md)
     * [Compile with Hardhat](developers-evm/smart-contracts/compile-hardhat.md)
     * [Test with Hardhat](developers-evm/smart-contracts/test-hardhat.md)
