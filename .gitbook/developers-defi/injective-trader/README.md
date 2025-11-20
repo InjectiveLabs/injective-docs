@@ -164,6 +164,52 @@ If you are using VS code or compatible IDEs (such as Cursor), consider adding th
 
 You should now be able to do **Run → Start Debugging** in your IDE.
 
+## Architecture
+
+### System Architecture Diagram
+
+<figure><img src="../../.gitbook/assets/image (1).png" alt="Injective Trader Network Architecture Diagram" width="563"><figcaption><p>Injective Trader Network Architecture Diagram</p></figcaption></figure>
+
+### Core Design Patterns
+
+* **Mediator Pattern**: Centralizes communication between components, enabling a decoupled architecture where components interact without direct dependencies.
+* **Component Pattern**: Standardizes lifecycle management (initialize, run, terminate) for all system components, ensuring consistent behavior.
+* **State Pattern**: Manages component lifecycle through well-defined states (Idle, Running, Terminated), providing predictable transitions and error handling.
+* **Task Management Pattern**: Coordinates asynchronous tasks with automated monitoring and recovery, ensuring reliable execution in an event-driven environment.
+* **Observer Pattern**: Enables strategies to react to specific update events through specialized event handlers, creating a flexible strategy development approach.
+
+### Key Components
+
+**Exchange-Specific Agents**
+
+* **Initializer**: Sets up exchange connections, accounts, and markets
+* **ChainListener**: Streams real-time blockchain data with automatic reconnection
+* **MessageBroadcaster**: Handles transaction creation and broadcasting with retry logic
+* **Liquidator**: Monitors and executes liquidations for undercollateralized positions
+
+**Managers**
+
+* **MarketManager**: Processes market data and maintains orderbook integrity
+* **AccountManager**: Tracks balances, positions, and order state
+* **StrategyManager**: Routes market events to appropriate strategy implementations
+* **RiskManager**: Enforces position limits and risk controls
+* **TaskManager**: Orchestrates and monitors asynchronous task execution
+
+**Data-Level Domains**
+
+* **Market**: Represents trading pairs with orderbooks and metadata
+* **Account**: Manages account balances, deposits, and subaccounts
+* **Positions**: Tracks derivative positions with P\&L calculations
+* **Order**: Order state tracking with execution history
+* **Oracle Prices**: Real-time price feeds with timestamp tracking
+
+**Strategy-Level Plugins**
+
+* **Strategy Base**: Template for implementing custom strategies
+* **Update Handlers**: Event-specific processors for market data events
+* **Performance Metrics**: Statistics and P\&L tracking
+* **Risk Models**: Customizable risk management rules
+
 ## Next
 
 Learn more about the [simple strategy](injective-trader-simple-strategy.md) that ships with Injective Trader, to get yourself comfortable with the codebase before diving in.
