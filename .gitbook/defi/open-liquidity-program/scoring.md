@@ -50,9 +50,9 @@ $$
                     e^{\alpha\,\sigma_b\,|\frac{S_b-\mu_b}{S_b}|}\}\bigr)
 $$
 
-where $$\mu_b$$ is the oracle price moving average over $$N$$ blocks (1000 blocks, or roughly 10 minutes), $$S_b$$ represents the oracle price of the current block, and $$\sigma_b$$ represents the realized volatility over $$N$$ blocks. This function has a clamp and scales well if the current oracle price deviates from the moving average, or if there is a spike in volatility over the last $$N$$ blocks. The range of $$\Theta_{\text{vol}} \in [1, \Theta_{\text{max}}]$$ - so we bound it within a finite field. We introduce two new parameters $$(\alpha, \Theta_{\text{max}})$$ which monitor the sensitivity to volatility and a clamp. Because max Θ should be approximately 10 - and is capped at that as described above - for a 3% price move within a 10-minute span, $$\alpha$$ is currently set at 2,500.
+where $$\mu_b$$ is the oracle price moving average over $$N$$ blocks (1000 blocks, or roughly 10 minutes), $$S_b$$ represents the oracle price of the current block, and $$\sigma_b$$ represents the realized volatility over $$N$$ blocks. This function has a clamp and scales well if the current oracle price deviates from the moving average, or if there is a spike in volatility over the last $$N$$ blocks. The range of $$\Theta_{\text{vol}} \in [1, \Theta_{\text{max}}]$$ - so we bound it within a finite field. We introduce two new parameters $$(\alpha, \Theta_{\text{max}})$$ which monitor the sensitivity to volatility and a clamp. Because $$\Theta_{\text{max}}$$ should trend towards the cap of 10 as described above for a 3% price move within a 10-minute span, $$\alpha$$ is currently set at 2,500. A higher value $$\alpha$$ means $$\Theta$$ trends towards $$\Theta_{\text{max}}$$ faster, but as $$\Theta_{\text{max}}$$ is currently set to 10 per market (and can be modified on a per-market basis), a higher $$\alpha$$ would not bypass that maximum.
 
-$$Spread$$ is calculated from the mid-price[^1] (distance from mid-price divided by mid-price).
+$$Spread$$ is calculated from the mid-price (distance from mid-price divided by mid-price).
 
 {% hint style="info" %}
 For the current values of $$MinDepth$$ and $$MaxSpread$$, see the [Formula Parameters page](formula-parameters.md).
@@ -93,15 +93,14 @@ $$
 $$
 
 $$
-LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} + \frac{BidDepth_2}{Spread_2} + … \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots
+ \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 $$
-LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} + \frac{AskDepth_2}{Spread_2} + … \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 {% hint style="info" %}
 For information on individual reward calculations each epoch, see the [Reward Allocations page](reward-allocations.md).
 {% endhint %}
-
-[^1]: Average between best bid price and best ask price in the order book
