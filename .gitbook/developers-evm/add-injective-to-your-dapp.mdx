@@ -1,0 +1,61 @@
+# Add Injective to Your dApp
+
+Enable your users to connect to the Injective network with a single click.
+
+Use the code snippet below to add an “Add Injective Network” button to your dApp, making it easy for users to add Injective to MetaMask or any EVM-compatible wallet.
+
+1. Copy and paste the snippet into your frontend codebase.
+2. Connect the `addInjectiveNetwork` function to your preferred UI button.
+3. That’s it—your users can now add Injective to their wallet in seconds
+
+```tsx
+// Network configuration
+const INJECTIVE_MAINNET_CONFIG = {
+  chainId: '0x6f0', // 1776 in decimal
+  chainName: 'Injective',
+  rpcUrls: ['https://evm-rpc.injective.network'],
+  nativeCurrency: {
+    name: 'Injective',
+    symbol: 'INJ',
+    decimals: 18
+  },
+  blockExplorerUrls: ['https://explorer.injective.network']
+};
+
+async function addInjectiveNetwork() {
+  // Check if MetaMask or another Web3 wallet is installed
+  if (!window.ethereum) {
+    alert('Please install MetaMask or another Web3 wallet!');
+    return;
+  }
+
+  try {
+    // First, try to switch to the Injective network
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: INJECTIVE_MAINNET_CONFIG.chainId }],
+    });
+
+    console.log('Switched to Injective network successfully!');
+  } catch (switchError) {
+    // Error code 4902 means the network hasn't been added yet
+    if (switchError.code === 4902) {
+      try {
+        // Add the Injective network
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [INJECTIVE_MAINNET_CONFIG],
+        });
+
+        console.log('Injective network added successfully!');
+      } catch (addError) {
+        console.error('Failed to add Injective network:', addError);
+        alert('Failed to add Injective network. Please try again.');
+      }
+    } else {
+      console.error('Failed to switch network:', switchError);
+      alert('Failed to switch to Injective network.');
+    }
+  }
+}
+```
