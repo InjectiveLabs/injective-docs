@@ -80,7 +80,7 @@ rm -rf .injectived/wasm/wasm/cache/
 
 4.  Verify you are currently running the correct version (`{/* $VERSION */}`) of `injectived` after downloading the `{/* $VERSION */}` release:
 
-    {/* $INJECTIVED_PREV_OUTPUT */}
+    {/* $INJECTIVED_OUTPUT */}
     {/* e.g.
     ```bash
     $ injectived version
@@ -97,7 +97,7 @@ rm -rf .injectived/wasm/wasm/cache/
 
 6.  Verify you are currently running the correct version (`{/* $VERSION */}`) of `peggo` after downloading the `{/* $VERSION */}` release:
 
-    {/* $PEGGO_PREV_OUTPUT */}
+    {/* $PEGGO_OUTPUT */}
     {/* e.g.
     ```bash
     $ peggo version
