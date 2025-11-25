@@ -5,7 +5,7 @@ title: Reward Allocations
 
 ## Market Reward Allocations
 
-Rewards are allocated to [eligible markets](./eligible-markets/) in three different methods :
+Rewards are allocated to [eligible markets](eligible-markets.md) in three different methods :
 
 1. Static allocations
 2. Minimum allocation with a dynamic component
@@ -13,28 +13,23 @@ Rewards are allocated to [eligible markets](./eligible-markets/) in three differ
 
 ### Static Market Reward Allocations (Preallocations)
 
-12.5% of INJ rewards will be preallocated to each of the BTC/USDT PERP market, ETH/USDT PERP market, and INJ/USDT PERP market. The remaining INJ for the epoch will be allocated to each remaining eligible market with a minimum allocation of 100 INJ:&#x20;
+12.5% of INJ rewards will be preallocated to each of the BTC/USDT PERP market, ETH/USDT PERP market, and INJ/USDT PERP market. The remaining INJ for the epoch will be allocated to each remaining eligible market with a minimum allocation of 100 INJ.
 
-| Market                 | Total Allocation                     |
-| ---------------------- | ------------------------------------ |
-| BTC/USDT Perp          | 12.5%                                |
-| ETH/USDT Perp          | 12.5%                                |
-| INJ/USDT Perp          | 12.5%                                |
-| Other Eligible Markets | Formula based allocation (see below) |
+<table><thead><tr><th width="165.875">Market</th><th>Allocation (thru epoch 51)</th><th>Allocation (from epoch 52)</th></tr></thead><tbody><tr><td>BTC/USDT Perp</td><td>12.5%</td><td>13.33%</td></tr><tr><td>ETH/USDT Perp</td><td>12.5%</td><td>13.33%</td></tr><tr><td>INJ/USDT Perp</td><td>12.5%</td><td>13.33%</td></tr><tr><td>INJ/USDT Spot</td><td>5%</td><td>5%</td></tr><tr><td>Other Eligible Markets</td><td>Formula based allocation (see below)</td><td></td></tr></tbody></table>
 
-<Callout icon="info" color="#07C1FF" iconType="regular">
+{% hint style="info" %}
 Static allocations may change over time as more markets are added to the eligible list
-</Callout>
+{% endhint %}
 
 ### Dynamic Market Reward Allocations
 
-As of epoch 43, the remaining rewards are allocated to eligible markets (excluding BTC/ETH/INJ Perps) based on the following schematic.
+The remaining rewards are allocated to eligible markets (excluding BTC/ETH/INJ Perps) based on the following schematic.
 
 First, each epoch starts fresh, such that every pair has an equal chance of earning the maximum total available reward for that epoch, regardless of trading volume and liquidity from the prior epoch. Each pair starts day 1 of the epoch with a range of possibility, from a minimum of 100 INJ for the epoch.
 
 Prior to this change, minimum rewards were 400 INJ, maximum rewards were around 900 INJ, and there was insufficient variation in reward accrual between pairs with low volume and pairs with substantially more volume. With this change, liquidity providers are rewarded for volume in popular markets.
 
-The range for each market's rewards will progress throughout the epoch, converging on the final day of the epoch to the true reward for that market. The range $$[Rewards_{min};Rewards_{max}]$$ will be defined per market as follows :&#x20;
+The range for each market's rewards will progress throughout the epoch, converging on the final day of the epoch to the true reward for that market. The range $$[Rewards_{min};Rewards_{max}]$$ will be defined per market as follows :
 
 $$
 MinVolume=Min(Market\ traded\ volume\ since\ beginning\ of\ epoch) \\
@@ -51,9 +46,9 @@ and $$Rewards_{max}$$ is still calculated as on the bottom of this page. Ergo, t
 
 It must be noted that $$Rewards_{min}$$ is just the floor for the rewards range, it will never be equivalent to the reward except in the case of the highest traded volume market where range will be trivial $$[Rewards_{max};Rewards_{max}]$$, in which case rewards will be equal to $$Rewards_{max}$$. This is a linear function that goes from 100 INJ to $$Rewards_{max}$$.
 
-With this range defined, the steps to calculate the reward for a market are :&#x20;
+With this range defined, the steps to calculate the reward for a market are :
 
-1\) Start with $$Rewards_{Market_{i}}=Rewards_{min_{market\ i}}$$&#x20;
+1\) Start with $$Rewards_{Market_{i}}=Rewards_{min_{market\ i}}$$
 
 2\) Distribute the remaining rewards, _RR_, with $$RR=TAR-\sum_{i}Rewards_{min_{market\ i}}$$using the formulas above.
 
@@ -75,7 +70,7 @@ $$
 
 where _TPR_ is equal to the percentage (expressed as a decimal) of total preallocated rewards (currently 0.375) and _n_ is the number of non-preallocated pairs.
 
-Any reward allocations that exceed the cap will be redistributed amongst the other eligible markets according to the [dynamic allocation formula](./reward-allocations/#dynamic-market-reward-allocations).
+Any reward allocations that exceed the cap will be redistributed amongst the other eligible markets according to the [dynamic allocation formula](reward-allocations.md#dynamic-market-reward-allocations).
 
 ## Reward Allocations
 
@@ -85,10 +80,8 @@ $$
 Rewards_{MM_i} = \sum_{Market}\left(Rewards_{Market} * \frac {TS_{MM_i, \ Market}} {\sum_{MM} TS_{MM,\ Market}} \right)
 $$
 
-**Each institutional liquidity provider** **will receive rewards based on their proportional**[ $$TS$$ ](./scoring/#total-score)**within the market, subject to governance approval.**&#x20;
+**Each institutional liquidity provider** **will receive rewards based on their proportional**[ $$TS$$ ](./scoring/#total-score)**within the market, subject to governance approval.**
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
 Rewards for addresses totaling < 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process.&#x20;
 </Callout>
-
-For the reward allocation process up through epoch 42, please see [reward-allocations-legacy.md](./reward-allocations-legacy/ "mention").
