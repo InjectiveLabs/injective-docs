@@ -10,6 +10,12 @@
   "styling": {
     "eyebrows": "breadcrumbs"
   },
+  "redirects": [
+    {
+      "source": "/defi/community-burn",
+      "destination": "/defi/community-buyback"
+    }
+  ],
   "navigation": {
     "groups": [
           {
@@ -73,7 +79,7 @@
               },
               "defi/staking",
               "defi/governance",
-              "defi/community-burn",
+              "defi/community-buyback",
               "defi/transactions",
               "defi/transaction-fees",
               {
@@ -122,6 +128,7 @@
                   "infra/validator-mainnet/index",
                   "infra/validator-mainnet/peggo",
                   "infra/validator-mainnet/canonical-chain-upgrade",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.17.0",
                   "infra/validator-mainnet/canonical-chain-upgrade-1.16.4",
                   "infra/validator-mainnet/canonical-chain-upgrade-1.16.2",
                   "infra/validator-mainnet/canonical-chain-upgrade-1.16.1",
@@ -259,11 +266,13 @@
               },
               "developers-evm/evm-equivalence",
               "developers-evm/multivm-token-standard",
+              "developers-evm/wrapped-inj",
               "developers-evm/precompiles",
               "developers-evm/bank-precompile",
               "developers-evm/exchange-precompile",
               "developers-evm/erc20-module",
               "developers-evm/infrastructure-and-tooling",
+              "developers-evm/add-injective-to-your-dapp",
               "redirects/https_testnet_faucet_injective_network",
               "redirects/https_testnet_blockscout_injective_network_blocks"
             ]
@@ -307,6 +316,15 @@
               "developers-defi/market-launch",
               "developers-defi/denom-and-bank",
               "developers-defi/provider-oracle",
+              {
+                "group": "Injective Trader",
+                "expanded": false,
+                "pages": [
+                  "developers-defi/injective-trader/index",
+                  "developers-defi/injective-trader/simple-strategy",
+                  "developers-defi/injective-trader/strategy-development-guide"
+                ]
+              },
               "redirects/https_api_injective_exchange"
             ]
           },

@@ -2,21 +2,21 @@
 title: Precompiles
 ---
 
-### **What are Precompiles on Injective?**
+### What are Precompiles on Injective?
 
 On Injective, precompiles are special, highly-optimized smart contracts embedded directly into our EVM (Ethereum Virtual Machine) layer at the protocol level. Unlike standard Solidity smart contracts that are deployed by users, precompiles are part of the chain's core logic. They are written in Go instead of Solidity and are exposed to the EVM with fixed addresses, making them callable from your Solidity smart contracts just like any other smart contract.
 
 Think of them as native functions of the Injective chain that have been given an Ethereum-style interface.
 
-### **Why are they necessary? (Bridging EVM & Native Modules)**
+### Why are they necessary? (Bridging EVM & Native Modules)
 
 The Injective EVM doesn't operate in a silo. It's deeply integrated with Injective's powerful native Cosmos SDK modules, such as the Bank module (for token management), the Exchange module (for the on-chain order book), the Staking module, and more.
 
 Precompiles serve as the crucial **bridge** between the EVM world (where your Solidity contracts live) and these native Injective functionalities. Without precompiles, your EVM smart contracts would be isolated, unable to tap into the rich features and liquidity of the broader Injective ecosystem.
 
-For example, our [MultiVM Token Standard (MTS)](./multivm-token-standard/) model, which ensures unified token balances across native and EVM environments, is heavily reliant on the **Bank Precompile**.
+For example, our [MultiVM Token Standard (MTS)](./multivm-token-standard.md) model, which ensures unified token balances across native and EVM environments, is heavily reliant on the **Bank Precompile**.
 
-### **Benefits for Developers**
+### Benefits for Developers
 
 * **Access to Native Features:** Directly interact with Injective's unique modules like the on-chain order book, native staking, governance, and the bank module for MTS.
 * **Enhanced Performance:** Operations executed via precompiles can be significantly faster and more gas-efficient than trying to replicate complex native logic purely in Solidity, as they run as optimized native code.
@@ -54,6 +54,29 @@ Jumpstart your development by cloning the [Injective Solidity Contracts Reposito
 
 | Name                               | Purpose                       | EVM address |
 | ---------------------------------- | ----------------------------- | ----------- |
-| [Bank](./bank-precompile/)         | Token Management              | 0x64        |
-| [Exchange](./exchange-precompile/) | On-chain Order Book           | 0x65        |
-| Staking                            | Native staking token on-chain | 0x66        |
+| [Bank](bank-precompile.md)         | Token Management              | `0x64`      |
+| [Exchange](exchange-precompile.md) | On-chain Order Book           | `0x65`      |
+| Staking                            | Native staking token on-chain | `0x66`      |
+
+## The non-contract address error
+
+When using Foundry, and you "fork" the Injective Mainnet or Injective Testnet locally,
+and execute your smart contracts in that environment,
+you may see an error similar to the following:
+
+```text
+[Revert] call to non-contract address 0x0000000000000000000000000000000000000064
+```
+
+This occurs becuase Foundry is *simulating* Injective locally,
+rather than actually running on Injective.
+It is therefore running a *generic EVM* simulation,
+and not one that is specific to Injective.
+The difference lies in Injective's native functionality not being present,
+and therefore it being unaware of the precompiles.
+
+The fix for this is simple:
+Use a version of Foundry that has been patched to include Injective's precompiles:
+[github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases).
+
+These include pre-built binaries for x86_64 Linux and macOS ARM64.

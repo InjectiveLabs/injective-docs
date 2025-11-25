@@ -1,0 +1,136 @@
+# Getting Started
+
+Injective Trader comes built in with a "Simple Strategy" to aid with rapid prototyping and familiarizing yourself with the codebase.
+
+**What it does:**
+
+* Monitors orderbooks for INJ, BTC, ETH
+* Places buy orders slightly below market price
+* Places sell orders slightly above market price
+* Maintains a spread for profitability
+* Respects position limits for risk control
+
+**Best for:** predictable and steady trading while familiarizing yourself with Injective Trader. **Not recommended for production use.**
+
+**Example Logs:**
+
+```
+[INFO] Placing BUY order: 0.1 INJ at $3.45 (spread: 0.5%)
+[INFO] Placing SELL order: 0.1 INJ at $3.47 (spread: 0.5%)
+[INFO] Order filled: BUY 0.1 INJ at $3.45
+```
+
+## Customizing Your Strategy
+
+### Order size
+
+```yaml
+OrderSize: 0.5
+MaxPosition: 2.0
+```
+
+### More markets
+
+```yaml
+MarketTickers:
+  - INJ/USDT PERP
+  - BTC/USDT PERP
+  - ETH/USDT PERP
+  - APT/USDT PERP
+  - AVAX/USDT PERP
+  - SOL/USDT PERP
+```
+
+### Spreads
+
+```yaml
+SpreadThreshold: 0.01   # conservative
+SpreadThreshold: 0.002  # aggressive
+```
+
+## Common Configurations
+
+### Conservative Maker
+
+```yaml
+OrderSize: 0.05
+MaxPosition: 0.5
+SpreadThreshold: 0.01
+```
+
+### Aggressive Maker
+
+```yaml
+OrderSize: 0.5
+MaxPosition: 5.0
+SpreadThreshold: 0.002
+```
+
+### Multi-Market Strategy
+
+```yaml
+MarketTickers:
+  - INJ/USDT PERP
+  - BTC/USDT PERP
+  - ETH/USDT PERP
+  - APT/USDT PERP
+  - AVAX/USDT PERP
+  - SOL/USDT PERP
+  - TON/USDT PERP
+  - ATOM/USDT PERP
+```
+
+## Monitoring Your Bot
+
+```bash
+tail -f logs/my_bot.log
+grep "Order filled" logs/my_bot.log
+grep "ERROR" logs/my_bot.log
+```
+
+### Key Messages
+
+* ✅ Order placed successfully
+* 💰 Order filled
+* ⚠️ Position limit reached
+* ❌ Insufficient balance
+
+### Performance Metrics
+
+* Total PnL
+* Win rate
+* Fill rate
+* Average spread
+
+## Risk Management
+
+* Set position limits (`MaxPosition`)
+* Monitor positions and stop out manually if needed
+* Maintain enough USDT for margin, fees, and buffer
+
+## Troubleshooting
+
+**No private keys found**
+
+```bash
+echo $MyBot_GRANTER_INJECTIVE_PRIVATE_KEY
+```
+
+* **Insufficient balance** → Add USDT / reduce `OrderSize`
+* **Market not found** → Double-check tickers/IDs
+* **Bot stops working**
+
+```bash
+grep "ERROR" logs/my_bot.log | tail -10
+python main.py MyBot config.yaml --log_path logs/my_bot.log --network mainnet
+```
+
+## Advanced Features
+
+* **Multiple accounts** via `AccountAddresses`
+* **Custom order types** (limit, market, reduce-only)
+* **External signals** with Redis/Valkey
+
+## Next
+
+Learn how to develop your own [custom strategy](/developers-defi/injective-trader/strategy-development-guide) for Injective Trader.
