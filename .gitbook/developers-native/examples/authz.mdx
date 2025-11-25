@@ -61,9 +61,9 @@ console.log(txHash)
 When a grantee wants to execute a transaction on behalf of a granter, they must send MsgExec. In this example, we'll do a MsgSend to transfer assets from the granter's account address to another account address.
 
 ```ts
-import { MsgExec, MsgSend, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'
-import { BigNumberInBase } from '@injectivelabs/utils'
 import { Network } from '@injectivelabs/networks'
+import { toChainFormat } from '@injectivelabs/utils'
+import { MsgExec, MsgSend, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'
 
 const privateKeyOfGrantee = '0x...'
 const grantee = 'inj...'
@@ -72,7 +72,7 @@ const granter = 'inj...'
 const msgs = MsgSend.fromJSON({
     amount: {
         denom: 'inj',
-        amount: new BigNumberInBase(0.01).toWei().toFixed()
+        amount: toChainFormat(0.01).toFixed()
     },
     srcInjectiveAddress: granter,
     dstInjectiveAddress: 'inj1...',

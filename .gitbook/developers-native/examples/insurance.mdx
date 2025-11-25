@@ -17,12 +17,12 @@ import {
   MsgCreateInsuranceFund,
   MsgBroadcasterWithPk,
 } from "@injectivelabs/sdk-ts";
-import { BigNumberInBase } from "@injectivelabs/utils";
+import { toBigNumber } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
 
 const injectiveAddress = "inj1...";
 const privateKey = "0x...";
-const amount = new BigNumberInBase(5);
+const amount = toBigNumber(5);
 const fund = {
   ticker: "BTC/USDT",
   quoteDenom: "peggy0x...",
@@ -42,9 +42,9 @@ const msg = MsgCreateInsuranceFund.fromJSON({
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
-  network: Network.Testnet
+  network: Network.Testnet,
 }).broadcast({
-  msgs: msg
+  msgs: msg,
 });
 
 console.log(txHash);
@@ -59,29 +59,29 @@ import {
   MsgRequestRedemption,
   MsgBroadcasterWithPk,
 } from "@injectivelabs/sdk-ts";
-import { BigNumberInBase } from "@injectivelabs/utils";
+import { toChainFormat } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
 
-const injectiveAddress = "inj1...";
-const privateKey = "0x...";
-const amount = new BigNumberInBase(5);
-const denom = "share1"; // the insurance fund denom (share{id})
 const marketId = "0x....";
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const denom = "share1"; // the insurance fund denom (share{id})
+const amount = toChainFormat(5).toFixed();
 
 const msg = MsgRequestRedemption.fromJSON({
   marketId,
   injectiveAddress,
   amount: {
     denom,
-    amount: amount.toWei().toFixed(),
+    amount,
   },
 });
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
-  network: Network.Testnet
+  network: Network.Testnet,
 }).broadcast({
-  msgs: msg
+  msgs: msg,
 });
 
 console.log(txHash);
@@ -92,30 +92,31 @@ console.log(txHash);
 This Message is used to underwrite to an insurance fund.
 
 ```ts
-import { MsgUnderwrite, MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts";
-import { BigNumberInBase } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgUnderwrite, MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts";
 
-const injectiveAddress = "inj1...";
-const privateKey = "0x...";
-const amount = new BigNumberInBase(5);
-const denom = "peggy0x...";
+const usdtDecimals = 6;
 const marketId = "0x...";
+const privateKey = "0x...";
+const denom = "peggy0x...";
+const injectiveAddress = "inj1...";
+const amount = toChainFormat(5, usdtDecimals).toFixed();
 
 const msg = MsgUnderwrite.fromJSON({
   marketId,
   injectiveAddress,
   amount: {
     denom,
-    amount: amount.toWei(6 /* 6 because USDT has 6 decimals */).toFixed(),
+    amount,
   },
 });
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
-  network: Network.Testnet
+  network: Network.Testnet,
 }).broadcast({
-  msgs: msg
+  msgs: msg,
 });
 
 console.log(txHash);
