@@ -30,70 +30,70 @@ This is particularly useful when building on Injective, as the AI can help you f
 
 ## Connecting to the MCP server
 
-### Claude Desktop
-
-Add the following to your Claude Desktop configuration file:
-
 <Tabs>
-  <Tab title="macOS">
-    Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+  <Tab title="Claude Desktop">
+    Add the following to your Claude Desktop configuration file:
 
-    ```json
-    {
-      "mcpServers": {
-        "injective-docs": {
-          "command": "npx",
-          "args": [
-            "mcp-remote",
-            "https://docs2.injective.network/mcp"
-          ]
+    <Tabs>
+      <Tab title="macOS">
+        Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+        ```json
+        {
+          "mcpServers": {
+            "injective-docs": {
+              "command": "npx",
+              "args": [
+                "mcp-remote",
+                "https://docs2.injective.network/mcp"
+              ]
+            }
+          }
         }
-      }
-    }
-    ```
+        ```
+      </Tab>
+      <Tab title="Windows">
+        Edit `%APPDATA%\Claude\claude_desktop_config.json`:
+
+        ```json
+        {
+          "mcpServers": {
+            "injective-docs": {
+              "command": "npx",
+              "args": [
+                "mcp-remote",
+                "https://docs2.injective.network/mcp"
+              ]
+            }
+          }
+        }
+        ```
+      </Tab>
+    </Tabs>
+
+    After saving the configuration, restart Claude Desktop. The Injective Docs tool will appear in Claude's available tools.
   </Tab>
-  <Tab title="Windows">
-    Edit `%APPDATA%\Claude\claude_desktop_config.json`:
+  <Tab title="Cursor">
+    Add the MCP server in Cursor's settings:
 
-    ```json
-    {
-      "mcpServers": {
-        "injective-docs": {
-          "command": "npx",
-          "args": [
-            "mcp-remote",
-            "https://docs2.injective.network/mcp"
-          ]
-        }
-      }
-    }
+    1. Open Cursor Settings
+    2. Navigate to **Features** → **MCP Servers**
+    3. Click **Add new MCP server**
+    4. Enter the following:
+       - **Name**: `injective-docs`
+       - **Type**: `command`
+       - **Command**: `npx mcp-remote https://docs2.injective.network/mcp`
+  </Tab>
+  <Tab title="Other MCP clients">
+    For other MCP-compatible clients, use the endpoint URL directly:
+
     ```
+    https://docs2.injective.network/mcp
+    ```
+
+    The server uses Streamable HTTP transport, which is supported by most modern MCP clients.
   </Tab>
 </Tabs>
-
-After saving the configuration, restart Claude Desktop. The Injective Docs tool will appear in Claude's available tools.
-
-### Cursor
-
-Add the MCP server in Cursor's settings:
-
-1. Open Cursor Settings
-2. Navigate to **Features** → **MCP Servers**
-3. Click **Add new MCP server**
-4. Enter the following:
-   - **Name**: `injective-docs`
-   - **Type**: `command`
-   - **Command**: `npx mcp-remote https://docs2.injective.network/mcp`
-
-### Other MCP clients
-
-For other MCP-compatible clients, use the endpoint URL directly:
-
-```
-https://docs2.injective.network/mcp
-```
-
-The server uses Streamable HTTP transport, which is supported by most modern MCP clients.
 
 ## Using the MCP server
 
