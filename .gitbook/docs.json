@@ -177,6 +177,12 @@
               "developers/convert-addresses",
               "developers/network-information",
               {
+                "group": "AI development",
+                "pages": [
+                  "developers/ai/mcp"
+                ]
+              },
+              {
                 "group": "injectived",
                 "pages": [
                   "developers/injectived/index",
