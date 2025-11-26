@@ -2,6 +2,11 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Injective Docs",
+  "logo": {
+    "light": "/images/logo.png",
+    "dark": "/images/logo.png"
+  },
+  "favicon": "/images/logo.png",
   "colors": {
     "primary": "#004D9D",
     "light": "#29A19C",
