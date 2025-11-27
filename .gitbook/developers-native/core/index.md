@@ -1,3 +1,3 @@
-# Core
-
-## Core Modules
+---
+title: Core Modules
+---
