@@ -2,10 +2,15 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Injective Docs",
+  "logo": {
+    "light": "/img/injective-logo-192x192.png",
+    "dark": "/img/injective-logo-192x192.png"
+  },
+  "favicon": "/img/injective-logo-192x192.png",
   "colors": {
-    "primary": "#004D9D",
-    "light": "#29A19C",
-    "dark": "#0D1821"
+    "primary": "#4D3DFF",
+    "light": "#EEEFFF",
+    "dark": "#182E4B"
   },
   "styling": {
     "eyebrows": "breadcrumbs"
