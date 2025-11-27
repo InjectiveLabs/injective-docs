@@ -45,7 +45,7 @@ the wINJ smart contract uses the `Bank` precompile.
 The magic happens in the
 [`_update` function of `BankERC20`](https://github.com/InjectiveLabs/solidity-contracts/blob/b152129a/src/BankERC20.sol#L50-L81),
 where `mint`, `burn`, or `transfer` functions in the `Bank` module are invoked,
-via its [EVM precompile](./bank-precompile.md "EVM precompile for Injective's native Bank module").
+via its [EVM precompile](/developers-evm/bank-precompile "EVM precompile for Injective's native Bank module").
 
 As those balances are stored/ retrieved from the `Bank` precompile,
 they are accessible from elsewhere within Injective's MultiVM architecture.
