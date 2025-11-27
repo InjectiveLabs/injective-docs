@@ -8,9 +8,9 @@
   },
   "favicon": "/img/injective-logo-192x192.png",
   "colors": {
-    "primary": "#004D9D",
-    "light": "#29A19C",
-    "dark": "#0D1821"
+    "primary": "#4D3DFF",
+    "light": "#EEEFFF",
+    "dark": "#182E4B"
   },
   "styling": {
     "eyebrows": "breadcrumbs"
