@@ -35,6 +35,834 @@
     {
       "source": "/infra/interact-node-rest",
       "destination": "/infra/interact-node/rest"
+    },
+    {
+      "source": "/develop/public-endpoints",
+      "destination": "/infra/public-endpoints"
+    },
+    {
+      "source": "/guides",
+      "destination": "/developers/index"
+    },
+    {
+      "source": "/develop/cheat-sheet",
+      "destination": "/developers/index"
+    },
+    {
+      "source": "/develop/tech-concepts",
+      "destination": "/developers/index"
+    },
+    {
+      "source": "/nodes/RunNode/testnet",
+      "destination": "/infra/run-node"
+    },
+    {
+      "source": "/develop/tools",
+      "destination": "/developers/injectived/index"
+    },
+    {
+      "source": "/develop/guides",
+      "destination": "/developers/index"
+    },
+    {
+      "source": "/develop/modules",
+      "destination": "/developers-native/index"
+    },
+    {
+      "source": "/develop/modules/Core/auth",
+      "destination": "/developers-native/core/auth/index"
+    },
+    {
+      "source": "/develop/guides/cosmwasm-dapps",
+      "destination": "/developers-cosmwasm/create-uis-guide"
+    },
+    {
+      "source": "/getting-started",
+      "destination": "/index"
+    },
+    {
+      "source": "/getting-started/wallet",
+      "destination": "/defi/wallet/index"
+    },
+    {
+      "source": "/getting-started/wallet/create-a-wallet",
+      "destination": "/defi/wallet/create"
+    },
+    {
+      "source": "/getting-started/wallet/accounts",
+      "destination": "/defi/wallet/accounts"
+    },
+    {
+      "source": "/getting-started/wallet/staking",
+      "destination": "/defi/staking"
+    },
+    {
+      "source": "/getting-started/wallet/governance",
+      "destination": "/defi/governance"
+    },
+    {
+      "source": "/getting-started/wallet/auction",
+      "destination": "/defi/auction"
+    },
+    {
+      "source": "/guides/bridge",
+      "destination": "/defi/bridge"
+    },
+    {
+      "source": "/getting-started/token-standards",
+      "destination": "/defi/tokens/index"
+    },
+    {
+      "source": "/getting-started/token-standards/inj-coin",
+      "destination": "/defi/tokens/inj-coin"
+    },
+    {
+      "source": "/getting-started/token-standards/token-factory",
+      "destination": "/defi/tokens/token-factory"
+    },
+    {
+      "source": "/getting-started/token-standards/cw20-standard",
+      "destination": "/defi/tokens/cw20-standard"
+    },
+    {
+      "source": "/getting-started/transactions",
+      "destination": "/defi/transactions"
+    },
+    {
+      "source": "/getting-started/transactions/gas-and-fees",
+      "destination": "/defi/transaction-fees"
+    },
+    {
+      "source": "/nodes/getting-started/interact-with-a-node",
+      "destination": "/infra/interact-node/rest"
+    },
+    {
+      "source": "/nodes/getting-started/running-a-node",
+      "destination": "/infra/run-node"
+    },
+    {
+      "source": "/nodes/getting-started/running-a-node/1.-setting-up-the-keyring",
+      "destination": "/infra/set-up-keyring"
+    },
+    {
+      "source": "/nodes/getting-started/running-a-node/join-a-network",
+      "destination": "/infra/join-a-network"
+    },
+    {
+      "source": "/nodes/getting-started/running-a-node/cosmovisor",
+      "destination": "/infra/cosmovisor"
+    },
+    {
+      "source": "/nodes/getting-started/running-a-node/upgrade-your-node",
+      "destination": "/infra/upgrade-node"
+    },
+    {
+      "source": "/nodes/validators",
+      "destination": "/infra/validator-mainnet/index"
+    },
+    {
+      "source": "/nodes/validators/mainnet",
+      "destination": "/infra/validator-mainnet/index"
+    },
+    {
+      "source": "/nodes/validators/mainnet/peggo",
+      "destination": "/infra/validator-mainnet/peggo"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10002-rc1",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10002-rc1"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10002-rc2",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10002-rc2"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10003-rc1",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10003-rc1"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10004-rc1",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10004-rc1"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10004-rc1-patch",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10004-rc1-patch"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10005-rc1",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10005-rc1"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10006-rc1",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10006-rc1"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10007-rc1",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10007-rc1"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10008",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10008"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10009",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-10009"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/upgrade-to-v1.10",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.10.0"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-10011",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.11.0"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-1-12",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.12.0"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/upgrade-to-v1.12.1",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.12.1"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-1.13.0",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-1.13.0"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-1.13.2",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-1.13.2"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-1.13.3",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-1.13.3"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-1.14.0",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-1.14.0"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-1.14.1",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-1.14.1"
+    },
+    {
+      "source": "/nodes/validators/mainnet/canonical-chain-upgrades/canonical-1.15.0",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-1.15.0"
+    },
+    {
+      "source": "/nodes/validators/testnet",
+      "destination": "/infra/validator-testnet/index"
+    },
+    {
+      "source": "/nodes/validators/testnet/testnet-peggo",
+      "destination": "/infra/validator-testnet/peggo"
+    },
+    {
+      "source": "/nodes/validators/cosmosvisor",
+      "destination": "/infra/cosmovisor"
+    },
+    {
+      "source": "/nodes/public-endpoints",
+      "destination": "/infra/public-endpoints"
+    },
+    {
+      "source": "/nodes/private-nodes",
+      "destination": "/infra/premium-endpoints"
+    },
+    {
+      "source": "/developers/modules",
+      "destination": "/developers-native/index"
+    },
+    {
+      "source": "/developers/modules/injective",
+      "destination": "/developers-native/injective/index"
+    },
+    {
+      "source": "/developers/modules/injective/auction",
+      "destination": "/developers-native/injective/auction/index"
+    },
+    {
+      "source": "/developers/modules/injective/auction/01_state",
+      "destination": "/developers-native/injective/auction/01_state"
+    },
+    {
+      "source": "/developers/modules/injective/auction/02_messages",
+      "destination": "/developers-native/injective/auction/02_messages"
+    },
+    {
+      "source": "/developers/modules/injective/auction/03_end_block",
+      "destination": "/developers-native/injective/auction/03_end_block"
+    },
+    {
+      "source": "/developers/modules/injective/auction/04_events",
+      "destination": "/developers-native/injective/auction/04_events"
+    },
+    {
+      "source": "/developers/modules/injective/auction/05_params",
+      "destination": "/developers-native/injective/auction/05_params"
+    },
+    {
+      "source": "/developers/modules/injective/auction/99_errors",
+      "destination": "/developers-native/injective/auction/99_errors"
+    },
+    {
+      "source": "/developers/modules/injective/exchange",
+      "destination": "/developers-native/injective/exchange/index"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/00_derivative_market_concepts",
+      "destination": "/developers-native/injective/exchange/00_derivative_market_concepts"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/01_spot_market_concepts",
+      "destination": "/developers-native/injective/exchange/01_spot_market_concepts"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/02_binary_options_markets",
+      "destination": "/developers-native/injective/exchange/02_binary_options_markets"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/02_other_concepts",
+      "destination": "/developers-native/injective/exchange/02_other_concepts"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/03_state",
+      "destination": "/developers-native/injective/exchange/03_state"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/04_state_transitions",
+      "destination": "/developers-native/injective/exchange/04_state_transitions"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/05_messages",
+      "destination": "/developers-native/injective/exchange/05_messages"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/06_proposals",
+      "destination": "/developers-native/injective/exchange/06_proposals"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/07_begin_block",
+      "destination": "/developers-native/injective/exchange/07_begin_block"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/08_end_block",
+      "destination": "/developers-native/injective/exchange/08_end_block"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/09_events",
+      "destination": "/developers-native/injective/exchange/09_events"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/10_params",
+      "destination": "/developers-native/injective/exchange/10_params"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/11_msg_privileged_execute_contract",
+      "destination": "/developers-native/injective/exchange/11_msg_privileged_execute_contract"
+    },
+    {
+      "source": "/developers/modules/injective/exchange/99_errors",
+      "destination": "/developers-native/injective/exchange/99_errors"
+    },
+    {
+      "source": "/developers/modules/injective/insurance",
+      "destination": "/developers-native/injective/insurance/index"
+    },
+    {
+      "source": "/developers/modules/injective/insurance/01_state",
+      "destination": "/developers-native/injective/insurance/01_state"
+    },
+    {
+      "source": "/developers/modules/injective/insurance/02_state_transitions",
+      "destination": "/developers-native/injective/insurance/02_state_transitions"
+    },
+    {
+      "source": "/developers/modules/injective/insurance/03_messages",
+      "destination": "/developers-native/injective/insurance/03_messages"
+    },
+    {
+      "source": "/developers/modules/injective/insurance/04_end_block",
+      "destination": "/developers-native/injective/insurance/04_end_block"
+    },
+    {
+      "source": "/developers/modules/injective/insurance/05_events",
+      "destination": "/developers-native/injective/insurance/05_events"
+    },
+    {
+      "source": "/developers/modules/injective/insurance/06_params",
+      "destination": "/developers-native/injective/insurance/06_params"
+    },
+    {
+      "source": "/developers/modules/injective/insurance/07_future_improvements",
+      "destination": "/developers-native/injective/insurance/07_future_improvements"
+    },
+    {
+      "source": "/developers/modules/injective/insurance/99_errors",
+      "destination": "/developers-native/injective/insurance/99_errors"
+    },
+    {
+      "source": "/developers/modules/injective/ocr",
+      "destination": "/developers-native/injective/ocr/index"
+    },
+    {
+      "source": "/developers/modules/injective/ocr/01_concepts",
+      "destination": "/developers-native/injective/ocr/01_concepts"
+    },
+    {
+      "source": "/developers/modules/injective/ocr/02_state",
+      "destination": "/developers-native/injective/ocr/02_state"
+    },
+    {
+      "source": "/developers/modules/injective/ocr/03_messages",
+      "destination": "/developers-native/injective/ocr/03_messages"
+    },
+    {
+      "source": "/developers/modules/injective/ocr/04_proposals",
+      "destination": "/developers-native/injective/ocr/04_proposals"
+    },
+    {
+      "source": "/developers/modules/injective/ocr/05_begin_block",
+      "destination": "/developers-native/injective/ocr/05_begin_block"
+    },
+    {
+      "source": "/developers/modules/injective/ocr/06_hooks",
+      "destination": "/developers-native/injective/ocr/06_hooks"
+    },
+    {
+      "source": "/developers/modules/injective/ocr/07_events",
+      "destination": "/developers-native/injective/ocr/07_events"
+    },
+    {
+      "source": "/developers/modules/injective/ocr/08_params",
+      "destination": "/developers-native/injective/ocr/08_params"
+    },
+    {
+      "source": "/developers/modules/injective/ocr/99_errors",
+      "destination": "/developers-native/injective/ocr/99_errors"
+    },
+    {
+      "source": "/developers/modules/injective/oracle",
+      "destination": "/developers-native/injective/oracle/index"
+    },
+    {
+      "source": "/developers/modules/injective/oracle/01_state",
+      "destination": "/developers-native/injective/oracle/01_state"
+    },
+    {
+      "source": "/developers/modules/injective/oracle/02_keeper",
+      "destination": "/developers-native/injective/oracle/02_keeper"
+    },
+    {
+      "source": "/developers/modules/injective/oracle/03_messages",
+      "destination": "/developers-native/injective/oracle/03_messages"
+    },
+    {
+      "source": "/developers/modules/injective/oracle/04_proposals",
+      "destination": "/developers-native/injective/oracle/04_proposals"
+    },
+    {
+      "source": "/developers/modules/injective/oracle/05_events",
+      "destination": "/developers-native/injective/oracle/05_events"
+    },
+    {
+      "source": "/developers/modules/injective/oracle/06_future_improvements",
+      "destination": "/developers-native/injective/oracle/06_future_improvements"
+    },
+    {
+      "source": "/developers/modules/injective/oracle/99_errors",
+      "destination": "/developers-native/injective/oracle/99_errors"
+    },
+    {
+      "source": "/developers/modules/injective/peggy",
+      "destination": "/developers-native/injective/peggy/index"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/01_definitions",
+      "destination": "/developers-native/injective/peggy/01_definitions"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/02_workflow",
+      "destination": "/developers-native/injective/peggy/02_workflow"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/03_state",
+      "destination": "/developers-native/injective/peggy/03_state"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/04_messages",
+      "destination": "/developers-native/injective/peggy/04_messages"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/05_slashing",
+      "destination": "/developers-native/injective/peggy/05_slashing"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/06_end_block",
+      "destination": "/developers-native/injective/peggy/06_end_block"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/07_events",
+      "destination": "/developers-native/injective/peggy/07_events"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/08_params",
+      "destination": "/developers-native/injective/peggy/08_params"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/09_relay_semantics",
+      "destination": "/developers-native/injective/peggy/09_relay_semantics"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/10_future_improvements",
+      "destination": "/developers-native/injective/peggy/10_future_improvements"
+    },
+    {
+      "source": "/developers/modules/injective/peggy/99_errors",
+      "destination": "/developers-native/injective/peggy/99_errors"
+    },
+    {
+      "source": "/developers/modules/injective/permissions",
+      "destination": "/developers-native/injective/permissions/index"
+    },
+    {
+      "source": "/developers/modules/injective/permissions/01_concepts",
+      "destination": "/developers-native/injective/permissions/01_concepts"
+    },
+    {
+      "source": "/developers/modules/injective/permissions/02_state",
+      "destination": "/developers-native/injective/permissions/02_state"
+    },
+    {
+      "source": "/developers/modules/injective/permissions/03_state_transitions",
+      "destination": "/developers-native/injective/permissions/03_state_transitions"
+    },
+    {
+      "source": "/developers/modules/injective/permissions/99_errors",
+      "destination": "/developers-native/injective/permissions/99_errors"
+    },
+    {
+      "source": "/developers/modules/injective/tokenfactory",
+      "destination": "/developers-native/injective/tokenfactory/index"
+    },
+    {
+      "source": "/developers/modules/injective/tokenfactory/01_concepts",
+      "destination": "/developers-native/injective/tokenfactory/01_concepts"
+    },
+    {
+      "source": "/developers/modules/injective/tokenfactory/02_state",
+      "destination": "/developers-native/injective/tokenfactory/02_state"
+    },
+    {
+      "source": "/developers/modules/injective/tokenfactory/03_messages",
+      "destination": "/developers-native/injective/tokenfactory/03_messages"
+    },
+    {
+      "source": "/developers/modules/injective/tokenfactory/04_events",
+      "destination": "/developers-native/injective/tokenfactory/04_events"
+    },
+    {
+      "source": "/developers/modules/injective/tokenfactory/05_params",
+      "destination": "/developers-native/injective/tokenfactory/05_params"
+    },
+    {
+      "source": "/developers/modules/injective/tokenfactory/99_errors",
+      "destination": "/developers-native/injective/tokenfactory/99_errors"
+    },
+    {
+      "source": "/developers/modules/injective/wasmx",
+      "destination": "/developers-native/injective/wasmx/index"
+    },
+    {
+      "source": "/developers/modules/injective/wasmx/01_concepts",
+      "destination": "/developers-native/injective/wasmx/01_concepts"
+    },
+    {
+      "source": "/developers/modules/injective/wasmx/02_data",
+      "destination": "/developers-native/injective/wasmx/02_data"
+    },
+    {
+      "source": "/developers/modules/injective/wasmx/03_proposals",
+      "destination": "/developers-native/injective/wasmx/03_proposals"
+    },
+    {
+      "source": "/developers/modules/injective/wasmx/04_messages",
+      "destination": "/developers-native/injective/wasmx/04_messages"
+    },
+    {
+      "source": "/developers/modules/injective/wasmx/05_params",
+      "destination": "/developers-native/injective/wasmx/05_params"
+    },
+    {
+      "source": "/developers/modules/injective/wasmx/99_errors",
+      "destination": "/developers-native/injective/wasmx/99_errors"
+    },
+    {
+      "source": "/developers/modules/injective/lanes",
+      "destination": "/developers-native/injective/lanes"
+    },
+    {
+      "source": "/developers/modules/injective/txfees",
+      "destination": "/developers-native/injective/txfees"
+    },
+    {
+      "source": "/developers/modules/core",
+      "destination": "/developers-native/core/index"
+    },
+    {
+      "source": "/developers/modules/core/auth",
+      "destination": "/developers-native/core/auth"
+    },
+    {
+      "source": "/developers/modules/core/authz",
+      "destination": "/developers-native/core/authz"
+    },
+    {
+      "source": "/developers/modules/core/bank",
+      "destination": "/developers-native/core/bank"
+    },
+    {
+      "source": "/developers/modules/core/consensus",
+      "destination": "/developers-native/core/consensus"
+    },
+    {
+      "source": "/developers/modules/core/crisis",
+      "destination": "/developers-native/core/crisis"
+    },
+    {
+      "source": "/developers/modules/core/distribution",
+      "destination": "/developers-native/core/distribution"
+    },
+    {
+      "source": "/developers/modules/core/evidence",
+      "destination": "/developers-native/core/evidence"
+    },
+    {
+      "source": "/developers/modules/core/feegrant",
+      "destination": "/developers-native/core/feegrant"
+    },
+    {
+      "source": "/developers/modules/core/gov",
+      "destination": "/developers-native/core/gov"
+    },
+    {
+      "source": "/developers/modules/core/group",
+      "destination": "/developers-native/core/group"
+    },
+    {
+      "source": "/developers/modules/core/mint",
+      "destination": "/developers-native/core/mint"
+    },
+    {
+      "source": "/developers/modules/core/nft",
+      "destination": "/developers-native/core/nft"
+    },
+    {
+      "source": "/developers/modules/core/params",
+      "destination": "/developers-native/core/params"
+    },
+    {
+      "source": "/developers/modules/core/slashing",
+      "destination": "/developers-native/core/slashing"
+    },
+    {
+      "source": "/developers/modules/core/staking",
+      "destination": "/developers-native/core/staking"
+    },
+    {
+      "source": "/developers/modules/core/upgrade",
+      "destination": "/developers-native/core/upgrade"
+    },
+    {
+      "source": "/developers/modules/core/circuit",
+      "destination": "/developers-native/core/circuit"
+    },
+    {
+      "source": "/developers/modules/core/genutil",
+      "destination": "/developers-native/core/genutil"
+    },
+    {
+      "source": "/developers/exchange-developers",
+      "destination": "/developers-defi/index"
+    },
+    {
+      "source": "/developers/getting-started/guides/calculations",
+      "destination": "/developers-defi/calculate-min-price-tick-size"
+    },
+    {
+      "source": "/developers/getting-started/guides/calculations/min-price-tick-size",
+      "destination": "/developers-defi/calculate-min-price-tick-size"
+    },
+    {
+      "source": "/developers/getting-started/guides/calculations/min-quantity-tick-size",
+      "destination": "/developers-defi/min-quantity-tick-size"
+    },
+    {
+      "source": "/developers/getting-started/guides/testnet-faucet-integration",
+      "destination": "/developers-defi/testnet-faucet-integration"
+    },
+    {
+      "source": "/guides/launch-a-token",
+      "destination": "/developers-defi/token-launch"
+    },
+    {
+      "source": "/guides/launch-a-market",
+      "destination": "/developers-defi/market-launch"
+    },
+    {
+      "source": "/guides/denom-metadata",
+      "destination": "/developers-defi/denom-and-bank"
+    },
+    {
+      "source": "/developers/exchange-developers/provider-oracle",
+      "destination": "/developers-defi/provider-oracle"
+    },
+    {
+      "source": "/developers/cosmwasm-developers",
+      "destination": "/developers-cosmwasm/index"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/your-first-smart-contract",
+      "destination": "/developers-cosmwasm/smart-contracts/your-first-smart-contract"
+    },
+    {
+      "source": "/developers-cosmwasm/your-first-smart-contract-guide",
+      "destination": "/developers-cosmwasm/smart-contracts/your-first-smart-contract"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/guides",
+      "destination": "/developers-cosmwasm/local-development-guide"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/guides/local-development",
+      "destination": "/developers-cosmwasm/local-development-guide"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/guides/mainnet-deployment",
+      "destination": "/developers-cosmwasm/mainnet-deployment-guide"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/guides/whitelisting-deployment-address",
+      "destination": "/developers-cosmwasm/whitelisting-deployment-address-guide"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/guides/create-your-swap-contract",
+      "destination": "/developers-cosmwasm/create-your-swap-contract-guide"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/guides/creating-uis",
+      "destination": "/developers-cosmwasm/create-uis-guide"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/cosmwasm-any",
+      "destination": "/developers-cosmwasm/cosmwasm-any"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/page-1",
+      "destination": "/developers-cosmwasm/cw20-adapter"
+    },
+    {
+      "source": "/developers/cosmwasm-developers/injective-test-tube",
+      "destination": "/developers-cosmwasm/injective-test-tube"
+    },
+    {
+      "source": "/developers/evm-developers",
+      "destination": "/developers-evm/index"
+    },
+    {
+      "source": "/developers-evm/your-first-smart-contract",
+      "destination": "/developers-evm/smart-contracts/index"
+    },
+    {
+      "source": "/developers/evm-developers/your-first-smart-contract",
+      "destination": "/developers-evm/smart-contracts/index"
+    },
+    {
+      "source": "/developers/evm-developers/guides",
+      "destination": "/developers-evm/smart-contracts/index"
+    },
+    {
+      "source": "/developers-evm/testnet-deployment",
+      "destination": "/developers-evm/smart-contracts/index"
+    },
+    {
+      "source": "/developers/evm-developers/guides/testnet-deployment",
+      "destination": "/developers-evm/smart-contracts/index"
+    },
+    {
+      "source": "/developers/evm-developers/technical-information",
+      "destination": "/developers-evm/network-information"
+    },
+    {
+      "source": "/developers/evm-developers/technical-information/network-information",
+      "destination": "/developers-evm/network-information"
+    },
+    {
+      "source": "/developers/evm-developers/technical-information/evm-equivalence",
+      "destination": "/developers-evm/evm-equivalence"
+    },
+    {
+      "source": "/developers/evm-developers/technical-information/multivm-token-standard",
+      "destination": "/developers-evm/multivm-token-standard"
+    },
+    {
+      "source": "/developers/evm-developers/technical-information/precompiles",
+      "destination": "/developers-evm/precompiles"
+    },
+    {
+      "source": "/developers/evm-developers/technical-information/precompiles/bank-precompile",
+      "destination": "/developers-evm/bank-precompile"
+    },
+    {
+      "source": "/developers/evm-developers/technical-information/precompiles/exchange-precompile",
+      "destination": "/developers-evm/exchange-precompile"
+    },
+    {
+      "source": "/developers/evm-developers/technical-information/erc20-module",
+      "destination": "/developers-evm/erc20-module"
+    },
+    {
+      "source": "/developers/evm-developers/technical-information/infrastructure-and-tooling",
+      "destination": "/developers-evm/infrastructure-and-tooling"
+    },
+    {
+      "source": "/developers/getting-started",
+      "destination": "/developers/index"
+    },
+    {
+      "source": "/developers/getting-started/guides",
+      "destination": "/developers/testnet-proposals"
+    },
+    {
+      "source": "/developers/getting-started/guides/testnet-proposals",
+      "destination": "/developers/testnet-proposals"
+    },
+    {
+      "source": "/developers/getting-started/guides/convert-addresses",
+      "destination": "/developers/convert-addresses"
+    },
+    {
+      "source": "/toolkits",
+      "destination": "/developers/injectived/index"
+    },
+    {
+      "source": "/toolkits/injectived",
+      "destination": "/developers/injectived/index"
+    },
+    {
+      "source": "/toolkits/injectived/install-injectived",
+      "destination": "/developers/injectived/install"
+    },
+    {
+      "source": "/toolkits/injectived/using-injectived",
+      "destination": "/developers/injectived/use"
+    },
+    {
+      "source": "/toolkits/injectived/advanced",
+      "destination": "/developers/injectived/advanced"
     }
   ],
   "navigation": {
