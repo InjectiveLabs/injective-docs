@@ -19,6 +19,22 @@
     {
       "source": "/defi/community-burn",
       "destination": "/defi/community-buyback"
+    },
+    {
+      "source": "/infra/interact-node-command-line",
+      "destination": "/infra/interact-node/command-line"
+    },
+    {
+      "source": "/infra/interact-node-grpc",
+      "destination": "/infra/interact-node/grpc"
+    },
+    {
+      "source": "/infra/interact-node-go",
+      "destination": "/infra/interact-node/go"
+    },
+    {
+      "source": "/infra/interact-node-rest",
+      "destination": "/infra/interact-node/rest"
     }
   ],
   "navigation": {
@@ -118,10 +134,17 @@
             "icon": "network-wired",
             "pages": [
               "infra/index",
-              "infra/interact-node-command-line",
-              "infra/interact-node-grpc",
-              "infra/interact-node-go",
-              "infra/interact-node-rest",
+              {
+                "group": "Interact with nodes",
+                "expanded": false,
+                "pages": [
+                  "infra/interact-node/index",
+                  "infra/interact-node/command-line",
+                  "infra/interact-node/grpc",
+                  "infra/interact-node/go",
+                  "infra/interact-node/rest"
+                ]
+              },
               "infra/run-node",
               "infra/set-up-keyring",
               "infra/join-a-network",
