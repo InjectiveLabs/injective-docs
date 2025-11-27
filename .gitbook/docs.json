@@ -118,10 +118,17 @@
             "icon": "network-wired",
             "pages": [
               "infra/index",
-              "infra/interact-node-command-line",
-              "infra/interact-node-grpc",
-              "infra/interact-node-go",
-              "infra/interact-node-rest",
+              {
+                "group": "Interact with nodes",
+                "expanded": false,
+                "pages": [
+                  "infra/interact-node/index",
+                  "infra/interact-node/command-line",
+                  "infra/interact-node/grpc",
+                  "infra/interact-node/go",
+                  "infra/interact-node/rest"
+                ]
+              },
               "infra/run-node",
               "infra/set-up-keyring",
               "infra/join-a-network",
