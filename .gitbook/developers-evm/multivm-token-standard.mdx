@@ -21,7 +21,7 @@ The system comprises two main components:
 * [**Bank Precompile**](/developers-evm/bank-precompile/):
   * Developed in Go, this precompile is embedded directly in the Injective EVM.
   * It provides a Solidity interface that proxies ERC20 operations—such as mint, burn, and transfer—to the bank module.
-* [**ERC20 Module**](./erc20-module/):
+* [**ERC20 Module**](/developers-evm/erc20-module/):
   * This module maps native bank denoms (e.g., INJ, IBC tokens, Peggy assets) to an ERC20 contract within the EVM.
   * It deploys MTS-compliant ERC20 contracts that always reflect the canonical token balance as maintained by the bank module.
 
