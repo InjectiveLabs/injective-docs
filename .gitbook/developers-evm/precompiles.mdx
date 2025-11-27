@@ -14,7 +14,7 @@ The Injective EVM doesn't operate in a silo. It's deeply integrated with Injecti
 
 Precompiles serve as the crucial **bridge** between the EVM world (where your Solidity contracts live) and these native Injective functionalities. Without precompiles, your EVM smart contracts would be isolated, unable to tap into the rich features and liquidity of the broader Injective ecosystem.
 
-For example, our [MultiVM Token Standard (MTS)](./multivm-token-standard.md) model, which ensures unified token balances across native and EVM environments, is heavily reliant on the **Bank Precompile**.
+For example, our [MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard) model, which ensures unified token balances across native and EVM environments, is heavily reliant on the **Bank Precompile**.
 
 ### Benefits for Developers
 
@@ -54,8 +54,8 @@ Jumpstart your development by cloning the [Injective Solidity Contracts Reposito
 
 | Name                               | Purpose                       | EVM address |
 | ---------------------------------- | ----------------------------- | ----------- |
-| [Bank](bank-precompile.md)         | Token Management              | `0x64`      |
-| [Exchange](exchange-precompile.md) | On-chain Order Book           | `0x65`      |
+| [Bank](/developers-evm/bank-precompile)         | Token Management              | `0x64`      |
+| [Exchange](/developers-evm/exchange-precompile) | On-chain Order Book           | `0x65`      |
 | Staking                            | Native staking token on-chain | `0x66`      |
 
 ## The non-contract address error
