@@ -59,13 +59,13 @@ import { WalletStrategy } from '@injectivelabs/wallet-strategy'
 const chainId = ChainId.Testnet // The Injective Testnet Chain ID
 const evmChainId = EvmChainId.TestnetEvm // The Injective Evm Testnet Chain ID
 
-export const alchemyRpcEndpoint = `https://eth-goerli.alchemyapi.io/v2/${process.env.APP_ALCHEMY_SEPOLIA_KEY}`
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
 
 export const walletStrategy = new WalletStrategy({
   chainId,
   evmOptions: {
     evmChainId,
-    rpcUrl: alchemyRpcEndpoint,
+    rpcUrl: evmRpcEndpoint,
   },
 })
 

@@ -13,22 +13,22 @@ This MsgBroadcaster is used alongside the Wallet Strategy class for building dec
 To instantiate (and use) the `MsgBroadcaster` class, you can use the following code snippet
 
 ```ts
-import { ChainId, EthereumChainId } from '@injectivelabs/ts-types'
-import { Network, getNetworkEndpoints } from '@injectivelabs/networks'
-import { MsgBroadcaster } from '@injectivelabs/wallet-core'
-import { MsgSend } from '@injectivelabs/sdk-ts'
-import { BigNumberInBase } from '@injectivelabs/utils'
-import { WalletStrategy } from '@injectivelabs/wallet-strategy'
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { MsgBroadcaster } from "@injectivelabs/wallet-core";
+import { MsgSend } from "@injectivelabs/sdk-ts";
+import { BigNumberInBase } from "@injectivelabs/utils";
+import { WalletStrategy } from "@injectivelabs/wallet-strategy";
 
-export const alchemyRpcEndpoint = ''
+export const evmRpcEndpoint = "";
 export const walletStrategy = new WalletStrategy({
   chainId: ChainId.Mainnet,
-  ethereumOptions: {
-    rpcUrl: alchemyRpcEndpoint,
-    ethereumChainId: EthereumChainId.Mainnet,
+  evmOptions: {
+    rpcUrl: evmRpcEndpoint,
+    evmChainId: EvmChainId.Mainnet,
   },
   strategies: {},
-})
+});
 
 export const msgBroadcaster = new MsgBroadcaster({
   walletStrategy,
@@ -39,24 +39,24 @@ export const msgBroadcaster = new MsgBroadcaster({
 })(
   // Usage Example
   async () => {
-    const signer = 'inj1...'
+    const signer = "inj1...";
 
     const msg = MsgSend.fromJSON({
       amount: {
-        denom: 'inj',
+        denom: "inj",
         amount: new BigNumberInBase(0.01).toWei().toFixed(),
       },
       srcInjectiveAddress: signer,
-      dstInjectiveAddress: 'inj1...',
-    })
+      dstInjectiveAddress: "inj1...",
+    });
 
     // Prepare + Sign + Broadcast the transaction using the Wallet Strategy
     await msgBroadcastClient.broadcast({
       injectiveAddress: signer,
       msgs: msg,
-    })
-  },
-)()
+    });
+  }
+)();
 ```
 
 ### Constructor/Broadcast Options
@@ -65,7 +65,7 @@ We allow to override some of the options passed to the constructor of `MsgBroadc
 
 ````typescript
 import { Msgs } from '@injectivelabs/sdk-ts'
-import { ChainId, EthereumChainId } from '@injectivelabs/ts-types'
+import { ChainId, EvmChainId } from '@injectivelabs/ts-types'
 import { Network, NetworkEndpoints } from '@injectivelabs/networks'
 import type { WalletStrategy } from '../strategies'
 
@@ -101,7 +101,10 @@ export interface MsgBroadcasterTxOptions {
 ````
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-To override the `endpoints` and use your infrastructure (which is something we recommend), please read more on the [Networks](../../developers/concepts/networks/) page on the endpoints you need to provide and how to set them up.
+  To override the `endpoints` and use your infrastructure (which is something we
+  recommend), please read more on the
+  [Networks](../../developers/concepts/networks/) page on the endpoints you need
+  to provide and how to set them up.
 </Callout>
 
 ## MsgBroadcaster with Private Key
@@ -109,8 +112,8 @@ To override the `endpoints` and use your infrastructure (which is something we r
 This MsgBroadcaster is used with a private key (mostly used for CLI environments). Constructor/broadcast options are quite similar as for the `MsgBroadcaster`.
 
 ```ts
-import { MsgSend, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'
-import { BigNumberInBase } from '@injectivelabs/utils'
+import { MsgSend, MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts";
+import { BigNumberInBase } from "@injectivelabs/utils";
 
 export const msgBroadcasterWithPk = new MsgBroadcasterWithPk({
   privateKey: `0x...` /** private key hash or PrivateKey class from sdk-ts */,
@@ -118,22 +121,22 @@ export const msgBroadcasterWithPk = new MsgBroadcasterWithPk({
 })(
   // Usage Example
   async () => {
-    const signer = 'inj1...'
+    const signer = "inj1...";
 
     const msg = MsgSend.fromJSON({
       amount: {
-        denom: 'inj',
+        denom: "inj",
         amount: new BigNumberInBase(0.01).toWei().toFixed(),
       },
       srcInjectiveAddress: signer,
-      dstInjectiveAddress: 'inj1...',
-    })
+      dstInjectiveAddress: "inj1...",
+    });
 
     // Prepare + Sign + Broadcast the transaction using the Wallet Strategy
     await msgBroadcasterWithPk.broadcast({
       injectiveAddress: signer,
       msgs: msg,
-    })
-  },
-)()
+    });
+  }
+)();
 ```

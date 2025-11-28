@@ -68,7 +68,7 @@ const msg = MsgSend.fromJSON({
 const { txRaw, signBytes } = createTransaction({
   pubKey,
   chainId,
-  message: msgs,
+  message: msg,
   fee: getDefaultStdFee(),
   sequence: baseAccount.sequence,
   timeoutHeight: timeoutHeight.toNumber(),
@@ -98,7 +98,7 @@ Once we have the signature ready, we need to broadcast the transaction to the In
 
 ```ts
 import { ChainId } from '@injectivelabs/ts-types'
-import { TxRestClient } from '@injectivelabs/sdk-ts'
+import { TxGrpcApi } from '@injectivelabs/sdk-ts'
 import { Network, getNetworkInfo } from '@injectivelabs/networks'
 
 /** Append Signatures */
@@ -110,7 +110,7 @@ txRaw.signatures = [signature];
 /** Calculate hash of the transaction */
 console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
 
-const txService = new TxGrpcClient(network.grpc);
+const txService = new TxGrpcApi(network.grpc);
 
 /** Simulate transaction */
 const simulationResponse = await txService.simulate(txRaw);
@@ -144,7 +144,7 @@ import { getNetworkInfo, Network } from "@injectivelabs/networks";
 import {
   TxClient,
   PrivateKey,
-  TxGrpcClient,
+  TxGrpcApi,
   ChainRestAuthApi,
   createTransaction,
 } from "@injectivelabs/sdk-ts";
@@ -165,7 +165,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
     injectiveAddress
   );
 
-  /** Prepare the Message */
+  /** Prepare Message */
   const amount = {
     denom: "inj",
     amount: toChainFormat(0.01).toFixed(),
@@ -200,7 +200,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
   /** Calculate hash of the transaction */
   console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
 
-  const txService = new TxGrpcClient(network.grpc);
+  const txService = new TxGrpcApi(network.grpc);
 
   /** Simulate transaction */
   const simulationResponse = await txService.simulate(txRaw);

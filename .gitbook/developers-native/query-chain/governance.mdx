@@ -25,7 +25,7 @@ console.log(moduleParams)
 ```ts
 import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-import { ProposalStatusMap } from '@injectivelabs/chain-api'
+import { ProposalStatusMap } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)
