@@ -39,9 +39,9 @@ console.log(market)
 ### Fetch market's orders
 
 ```ts
-import { PaginationOption, IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts'
-import { OrderSide } from '@injectivelabs/ts-types'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
+import { PaginationOption, IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
@@ -64,14 +64,14 @@ console.log(orders)
 ### Fetch market's order history
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
 import {
   TradeDirection,
   PaginationOption,
   TradeExecutionType,
   IndexerGrpcSpotApi
 } from '@injectivelabs/sdk-ts'
-import { OrderSide } from '@injectivelabs/ts-types'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
@@ -98,13 +98,13 @@ console.log(orderHistory)
 ### Fetch market's trades
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   TradeDirection,
   PaginationOption,
   TradeExecutionType,
   IndexerGrpcSpotApi
 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
@@ -129,11 +129,11 @@ console.log(trades)
 ### Fetch list of subaccount orders
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   PaginationOption,
   IndexerGrpcSpotApi
 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
@@ -154,13 +154,13 @@ console.log(subaccountOrders)
 ### Fetch list of subaccount trades
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   TradeDirection,
   TradeExecutionType,
   PaginationOption,
   IndexerGrpcSpotApi
 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)

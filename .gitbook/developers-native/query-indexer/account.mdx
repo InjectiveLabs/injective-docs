@@ -102,8 +102,8 @@ console.log(subaccountBalanceList)
 ### Fetch subacount history
 
 ```ts
-import { PaginationOption, IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption, IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)

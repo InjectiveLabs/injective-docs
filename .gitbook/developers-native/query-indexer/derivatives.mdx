@@ -89,7 +89,7 @@ const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
 
 const marketId = '0x...'
 
-const orderbook = await indexerGrpcDerivativesApi.fetchOrderbook(marketId)
+const orderbook = await indexerGrpcDerivativesApi.fetchOrderbookV2(marketId)
 
 console.log(orderbook)
 ```
@@ -97,9 +97,9 @@ console.log(orderbook)
 ### Fetch a market's orders
 
 ```ts
-import { PaginationOption, IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts'
-import { OrderSide } from '@injectivelabs/ts-types'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
+import { PaginationOption, IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
@@ -122,14 +122,14 @@ console.log(orders)
 ### Fetch a market's order history
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
 import {
   TradeDirection,
   PaginationOption,
   TradeExecutionType,
   IndexerGrpcDerivativesApi
 } from '@injectivelabs/sdk-ts'
-import { OrderSide } from '@injectivelabs/ts-types'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
@@ -156,12 +156,12 @@ console.log(orderHistory)
 ### Fetch a market's positions
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   TradeDirection,
   PaginationOption,
   IndexerGrpcDerivativesApi
 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
@@ -184,13 +184,13 @@ console.log(positions)
 ### Fetch a market's trades
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   TradeDirection,
   PaginationOption,
   TradeExecutionType,
   IndexerGrpcDerivativesApi
 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
@@ -215,11 +215,11 @@ console.log(trades)
 ### Fetch funding payments for a market
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   PaginationOption,
   IndexerGrpcDerivativesApi
 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
@@ -238,11 +238,11 @@ console.log(fundingPayments)
 ### Fetch funding rates for a market
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   PaginationOption,
   IndexerGrpcDerivativesApi
 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
@@ -261,11 +261,11 @@ console.log(fundingRates)
 ### Fetch subaccount orders
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   PaginationOption,
   IndexerGrpcDerivativesApi
 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
@@ -286,13 +286,13 @@ console.log(subaccountOrders)
 ### Fetch subaccount trades
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   TradeDirection,
   TradeExecutionType,
   PaginationOption,
   IndexerGrpcDerivativesApi
 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)

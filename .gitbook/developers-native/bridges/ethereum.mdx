@@ -26,8 +26,8 @@ On a basic level, the Peggy module mints new tokens on the Injective Chain upon 
 
 To transfer from Ethereum to Injective you have to make a Web3 Transaction and interact with the Peggy contract on Ethereum. There are two steps required to make a transfer:
 
-1. As we are basically locking our ERC20 assets on the Peggy Contract which lives on Ethereum, we need to set an allowance for the assets we are transferring to the Peggy Contract. We have an [example](https://github.com/InjectiveLabs/injective-ts/blob/1fbc2577b9278a62d1676041d6e502e12f5880a8/deprecated/sdk-ui-ts/src/services/web3/Web3Composer.ts#L41-L91) here about how to make this transaction and you can use any web3 provider to sign and broadcast the transaction to the Ethereum Network.
-2. After the allowance is set, we need to call the `sendToInjective` function on the Peggy Contract with the desired amount and asset that we want to transfer to the Injective Chain, an example can be found [here](https://github.com/InjectiveLabs/injective-ts/blob/1fbc2577b9278a62d1676041d6e502e12f5880a8/deprecated/sdk-ui-ts/src/services/web3/Web3Composer.ts#L93-L156). Once we get the transaction, we can use a web3 provider to sign and broadcast the transaction to the Ethereum Network. Once the transaction is confirmed, it’ll take a couple of minutes for the assets to show on the Injective Chain.
+1. As we are basically locking our ERC20 assets on the Peggy Contract which lives on Ethereum, we need to set an allowance for the assets we are transferring to the Peggy Contract. You can use any web3 provider (such as ethers.js or web3.js) to call the ERC-20 `approve` function with the Peggy contract address as the spender.
+2. After the allowance is set, we need to call the `sendToInjective` function on the Peggy Contract with the desired amount and asset that we want to transfer to the Injective Chain, You can use the `PeggyContract` class from `@injectivelabs/contracts` (see example below) or interact with the contract directly using the ABI. Once the transaction is confirmed, it’ll take a couple of minutes for the assets to show on the Injective Chain.
 
 Couple of notes about the examples above:
 
@@ -41,7 +41,7 @@ Couple of notes about the examples above:
 
 where the Ethereum address is the corresponding Ethereum address of the destination Injective address.
 
-- `const web3 = walletStrategy.getWeb3()` `walletStrategy` is an abstraction that we’ve built which supports a lot of wallets which can be used to sign and broadcast transactions (both on Ethereum and on the Injective Chain), more details can be found in the documentation of the npm package [@injectivelabs/wallet-ts](https://github.com/InjectiveLabs/injective-ts/blob/master/packages/wallet-ts). Obviously, this is just an example and you can use the web3 package directly, or any web3 provider to handle the transaction.
+- `walletStrategy` `walletStrategy` is an abstraction that we’ve built which supports a lot of wallets which can be used to sign and broadcast transactions (both on Ethereum and on the Injective Chain), more details can be found in the documentation of the npm package [@injectivelabs/wallet-strategy](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-strategy) and [@injectivelabs/wallet-core](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-core). Obviously, this is just an example and you can use the web3 package directly, or any web3 provider to handle the transaction.
 
 ```ts
 import { PeggyContract } from "@injectivelabs/contracts";
@@ -71,14 +71,19 @@ Here is an example implementation that prepares the transaction, uses a privateK
 import { getNetworkInfo, Network } from "@injectivelabs/networks";
 import {
   TxClient,
-  PrivateKey,
-  TxRestClient,
-  MsgSendToEth,
-  getDefaultStdFee,
-  ChainRestAuthApi,
+  TxRestApi,
   createTransaction,
-} from "@injectivelabs/sdk-ts";
-import { toChainFormat } from "@injectivelabs/utils";
+} from "@injectivelabs/sdk-ts/core/tx";
+import {
+  PrivateKey,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
+  MsgSendToEth,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  ChainRestAuthApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
 
 /** MsgSendToEth Example */
 (async () => {
@@ -134,7 +139,7 @@ import { toChainFormat } from "@injectivelabs/utils";
   /** Calculate hash of the transaction */
   console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
 
-  const txService = new TxRestClient(network.rest);
+  const txService = new TxRestApi(network.rest);
 
   /** Simulate transaction */
   const simulationResponse = await txService.simulate(txRaw);

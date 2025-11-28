@@ -40,8 +40,8 @@ console.log(accountDetailsResponse)
 ### Fetch list of accounts on chain
 
 ```ts
-import { PaginationOption, ChainGrpcAuthApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption, ChainGrpcAuthApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcAuthApi = new ChainGrpcAuthApi(endpoints.grpc)

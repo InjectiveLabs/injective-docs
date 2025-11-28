@@ -2,33 +2,36 @@
 title: Account
 ---
 
-Example code snippets to stream from the indexer for subaccount related data.
+Example code snippets to stream from the indexer for account module related data using StreamManagerV2.
 
-## Using gRPC stream
+## Using gRPC Stream with StreamManagerV2
 
 ### Stream subaccount balance
 
 ```ts
-import { IndexerGrpcAccountStream } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcAccountStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAccountStream = new IndexerGrpcAccountStream(endpoints.indexer)
+const stream = new IndexerGrpcAccountStreamV2(endpoints.indexer)
 
-const subaccountId = '0x...'
+const streamManager = new StreamManagerV2({
+  id: 'subaccount-balance',
+  streamFactory: () => stream.streamSubaccountBalance({ 
+    subaccountId: '0x...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (balance) => {
+    console.log(balance)
+  },
+  retryConfig: { enabled: true }
+})
 
-const streamFn = indexerGrpcAccountStream.streamSubaccountBalance.bind(
-  indexerGrpcAccountStream,
-)
-
-const callback = (subaccountBalance) => {
-  console.log(subaccountBalance)
-}
-
-const streamFnArgs = {
-  subaccountId,
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```

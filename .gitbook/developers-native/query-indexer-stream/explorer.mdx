@@ -2,84 +2,93 @@
 title: Explorer
 ---
 
-Example code snippets to stream from the indexer for explorer module related data.
+Example code snippets to stream from the indexer for explorer module related data using StreamManagerV2.
 
-## Using gRPC Stream
+## Using gRPC Stream with StreamManagerV2
 
 ### Stream blocks
 
 ```ts
-import { IndexerGrpcExplorerStream } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcExplorerStream = new IndexerGrpcExplorerStream(
-  endpoints.indexer,
-)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.indexer)
 
-const streamFn = indexerGrpcExplorerStream.blocks.bind(
-  indexerGrpcExplorerStream,
-)
+const streamManager = new StreamManagerV2({
+  id: 'explorer-blocks',
+  streamFactory: () => stream.streamBlocks({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (blocks) => {
+    console.log(blocks)
+  },
+  retryConfig: { enabled: true }
+})
 
-const callback = (blocks) => {
-  console.log(blocks)
-}
-
-const streamFnArgs = {
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```
 
 ### Stream blocks with transactions
 
 ```ts
-import { IndexerGrpcExplorerStream } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcExplorerStream = new IndexerGrpcExplorerStream(
-  endpoints.indexer,
-)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.indexer)
 
-const streamFn = indexerGrpcExplorerStream.blocksWithTxs.bind(
-  indexerGrpcExplorerStream,
-)
+const streamManager = new StreamManagerV2({
+  id: 'explorer-blocks-with-txs',
+  streamFactory: () => stream.streamBlocksWithTxs({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (blocksWithTransactions) => {
+    console.log(blocksWithTransactions)
+  },
+  retryConfig: { enabled: true }
+})
 
-const callback = (blocksWithTransactions) => {
-  console.log(blocksWithTransactions)
-}
-
-const streamFnArgs = {
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```
 
 ### Stream transactions
 
 ```ts
-import { IndexerGrpcExplorerStream } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcExplorerStream = new IndexerGrpcExplorerStream(
-  endpoints.indexer,
-)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.indexer)
 
-const streamFn = indexerGrpcExplorerStream.streamTransactions.bind(
-  indexerGrpcExplorerStream,
-)
+const streamManager = new StreamManagerV2({
+  id: 'explorer-transactions',
+  streamFactory: () => stream.streamTransactions({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (transactions) => {
+    console.log(transactions)
+  },
+  retryConfig: { enabled: true }
+})
 
-const callback = (transactions) => {
-  console.log(transactions)
-}
-
-const streamFnArgs = {
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```

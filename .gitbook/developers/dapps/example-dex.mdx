@@ -25,79 +25,93 @@ Let's first setup some of the classes we need to query the data.
 // filename: Services.ts
 import {
   ChainGrpcBankApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import {
   IndexerGrpcSpotApi,
   IndexerGrpcDerivativesApi,
-} from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+} from "@injectivelabs/sdk-ts/client/indexer";
+import { 
+  IndexerGrpcSpotStreamV2,
+  IndexerGrpcDerivativesStreamV2
+} from "@injectivelabs/sdk-ts/client/indexer";
 
 // Getting the pre-defined endpoints for the Testnet environment
 // (using TestnetK8s here because we want to use the Kubernetes infra)
-export const NETWORK = Network.Testnet
-export const ENDPOINTS = getNetworkEndpoints(NETWORK)
+export const NETWORK = Network.Testnet;
+export const ENDPOINTS = getNetworkEndpoints(NETWORK);
 
-export const chainBankApi = new ChainGrpcBankApi(ENDPOINTS.grpc)
-export const indexerSpotApi = new IndexerGrpcSpotApi(ENDPOINTS.indexer)
+export const chainBankApi = new ChainGrpcBankApi(ENDPOINTS.grpc);
+export const indexerSpotApi = new IndexerGrpcSpotApi(ENDPOINTS.indexer);
 export const indexerDerivativesApi = new IndexerGrpcDerivativesApi(
-  ENDPOINTS.indexer,
-)
+  ENDPOINTS.indexer
+);
 
-export const indexerSpotStream = new IndexerGrpcDerivativeStream(
-  ENDPOINTS.indexer,
-)
-export const indexerDerivativeStream = new IndexerGrpcDerivativeStream(
-  ENDPOINTS.indexer,
-)
+export const indexerSpotStream = new IndexerGrpcSpotStreamV2(
+  ENDPOINTS.indexer
+);
+export const indexerDerivativeStream = new IndexerGrpcDerivativesStreamV2(
+  ENDPOINTS.indexer
+);
 ```
 
 Then, we also need to setup a wallet connection to allow the user to connect to our DEX and start signing transactions. To make this happen we are going to use our `@injectivelabs/wallet-strategy` package which allows users to connect with a various of different wallet providers and use them to sign transactions on Injective.
 
 ```ts
 // filename: Wallet.ts
-import { Wallet } from '@injectivelabs/wallet-base'
-import { WalletStrategy } from '@injectivelabs/wallet-strategy'
-import { ChainId, EthereumChainId } from '@injectivelabs/ts-types'
+import { Wallet } from "@injectivelabs/wallet-base";
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { WalletStrategy } from "@injectivelabs/wallet-strategy";
 
-const chainId = ChainId.Testnet // The Injective Chain chainId
-const ethereumChainId = EthereumChainId.Goerli // The Ethereum Chain ID
+const chainId = ChainId.Testnet; // The Injective Chain chainId
+const evmChainId = EvmChainId.Sepolia; // The EVM Chain ID
 
-export const alchemyRpcEndpoint = `https://eth-goerli.alchemyapi.io/v2/${process.env.APP_ALCHEMY_GOERLI_KEY}`
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`;
 
 export const walletStrategy = new WalletStrategy({
-  chainId: CHAIN_ID,
-  ethereumOptions: {
-    rpcUrl: alchemyRpcEndpoint,
-    ethereumChainId: ETHEREUM_CHAIN_ID,
+  chainId,
+  evmOptions: {
+    rpcUrl: evmRpcEndpoint,
+    evmChainId,
   },
-})
+});
 ```
 
-If we don't want to use Ethereum native wallets, just omit the `ethereumOptions` within the `WalletStrategy` constructor.
+If we don't want to use Ethereum native wallets, just omit the `evmOptions` within the `WalletStrategy` constructor.
 
 Finally, to do the whole transaction flow (prepare + sign + broadcast) on Injective we are going to use the MsgBroadcaster class.
 
 ```ts
 // filename: MsgBroadcaster.ts
-import { Wallet } from '@injectivelabs/wallet-base'
-import { BaseWalletStrategy, MsgBroadcaster } from '@injectivelabs/wallet-core'
-import { MetamaskStrategy } from '@injectivelabs/wallet-evm'
+import { Wallet } from "@injectivelabs/wallet-base";
+import { MetamaskStrategy } from "@injectivelabs/wallet-evm";
+import { BaseWalletStrategy, MsgBroadcaster } from "@injectivelabs/wallet-core";
 
-const strategyArgs: WalletStrategyArguments = {} /** define the args */
-const strategyEthArgs: ConcreteEthereumWalletStrategyArgs = {} /** if the wallet is an Ethereum wallet */
+const strategyArgs: WalletStrategyArguments = {}; /** define the args */
+const strategyEthArgs: ConcreteEthereumWalletStrategyArgs =
+  {}; /** if the wallet is an Ethereum wallet */
 const strategies = {
-  [Wallet.Metamask]: new MetamaskStrategy(strategyEthArgs)
-}
+  [Wallet.Metamask]: new MetamaskStrategy(strategyEthArgs),
+};
 
-export const walletStrategy = new BaseWalletStrategy({...strategyArgs, strategies})
+export const walletStrategy = new BaseWalletStrategy({
+  ...strategyArgs,
+  strategies,
+});
 
-const broadcasterArgs: MsgBroadcasterOptions = {} /** define the broadcaster args */
-export const msgBroadcaster = new MsgBroadcaster({...broadcasterArgs, walletStrategy})
+const broadcasterArgs: MsgBroadcasterOptions =
+  {}; /** define the broadcaster args */
+export const msgBroadcaster = new MsgBroadcaster({
+  ...broadcasterArgs,
+  walletStrategy,
+});
 ```
 
 ## Connect to the user's wallet
 
 Since we are using the `WalletStrategy` to handle the connection with the user's wallet, we can use its methods to handle some use cases like getting the user's addresses, sign/broadcast a transaction, etc. To find out more about the wallet strategy, you can explore the documentation interface and the method the `WalletStrategy` offers.
 
-Note: We can switch between the "active" wallet within the `WalletStrategy` using the `setWallet` method.
+Note: We can switch between the "active" wallet within the `WalletStrategy` using the `setWallet` method (which is async and requires `await`).
 
 ```ts
 // filename: WalletConnection.ts
@@ -105,39 +119,39 @@ import {
   WalletException,
   UnspecifiedErrorCode,
   ErrorType,
-} from '@injectivelabs/exceptions'
-import { Wallet } from '@injectivelabs/wallet-base'
-import { walletStrategy } from './Wallet.ts'
+} from "@injectivelabs/exceptions";
+import { Wallet } from "@injectivelabs/wallet-base";
+import { walletStrategy } from "./Wallet.ts";
 
 export const getAddresses = async (wallet: Wallet): Promise<string[]> => {
-  walletStrategy.setWallet(wallet)
+  await walletStrategy.setWallet(wallet);
 
-  const addresses = await walletStrategy.getAddresses()
+  const addresses = await walletStrategy.getAddresses();
 
   if (addresses.length === 0) {
     throw new WalletException(
-      new Error('There are no addresses linked in this wallet.'),
+      new Error("There are no addresses linked in this wallet."),
       {
         code: UnspecifiedErrorCode,
         type: ErrorType.WalletError,
-      },
-    )
+      }
+    );
   }
 
   if (!addresses.every((address) => !!address)) {
     throw new WalletException(
-      new Error('There are no addresses linked in this wallet.'),
+      new Error("There are no addresses linked in this wallet."),
       {
         code: UnspecifiedErrorCode,
         type: ErrorType.WalletError,
-      },
-    )
+      }
+    );
   }
 
   // If we are using Ethereum native wallets the 'addresses' are the hex addresses
   // If we are using Cosmos native wallets the 'addresses' are bech32 injective addresses,
-  return addresses
-}
+  return addresses;
+};
 ```
 
 ## Querying
@@ -146,13 +160,14 @@ After the initial setup is done, let's see how to query (and stream) markets fro
 
 ```ts
 // filename: Query.ts
-import  { getDefaultSubaccountId, OrderbookWithSequence } from '@injectivelabs/sdk-ts'
+import  { getDefaultSubaccountId, OrderbookWithSequence } from '@injectivelabs/sdk-ts/utils'
+import { StreamManagerV2 } from '@injectivelabs/sdk-ts/client/indexer'
 import {
   chainBankApi,
   indexerSpotApi,
   indexerSpotStream,
-  indexerDerivativesApi
-  indexerDerivativesStream,
+  indexerDerivativesApi,
+  indexerDerivativeStream,
 } from './Services.ts'
 
 export const fetchDerivativeMarkets = async () => {
@@ -166,39 +181,51 @@ export const fetchPositions = async (injectiveAddress: string) => {
 }
 
 export const fetchSpotMarkets = async () => {
-  return await indexerSpotsApi.fetchMarkets()
+  return await indexerSpotApi.fetchMarkets()
 }
 
 export const fetchBankBalances = async (injectiveAddress: string) => {
   return await chainBankApi.fetchBalances(injectiveAddress)
 }
 
-export const streamDerivativeMarketOrderbook = async (
-  marketId: string,
-  ) => {
-  const streamOrderbookUpdates = indexerDerivativesStream.streamDerivativeOrderbookUpdate.bind(indexerDerivativesStream)
-  const callback = (orderbookUpdate) => {
-    console.log(orderbookUpdate)
-  }
-
-  streamOrderbookUpdates({
-    marketIds,
-    callback
+export const streamDerivativeMarketOrderbook = (marketId: string) => {
+  const streamManager = new StreamManagerV2({
+    id: 'derivative-orderbook',
+    streamFactory: () => indexerDerivativeStream.streamOrderbookV2({
+      marketIds: [marketId],
+      callback: (response) => {
+        streamManager.emit('data', response)
+      }
+    }),
+    onData: (orderbookUpdate) => {
+      console.log(orderbookUpdate)
+    },
+    retryConfig: { enabled: true }
   })
+
+  streamManager.start()
+  
+  return streamManager
 }
 
-export const streamSpotMarketOrderbook = async (
-  marketId: string,
-  ) => {
-  const streamOrderbookUpdates = indexerSpotsStream.streamSpotOrderbookUpdate.bind(indexerSpotsStream)
-  const callback = (orderbookUpdate) => {
-    console.log(orderbookUpdate)
-  }
-
-  streamOrderbookUpdates({
-    marketIds,
-    callback
+export const streamSpotMarketOrderbook = (marketId: string) => {
+  const streamManager = new StreamManagerV2({
+    id: 'spot-orderbook',
+    streamFactory: () => indexerSpotStream.streamOrderbookV2({
+      marketIds: [marketId],
+      callback: (response) => {
+        streamManager.emit('data', response)
+      }
+    }),
+    onData: (orderbookUpdate) => {
+      console.log(orderbookUpdate)
+    },
+    retryConfig: { enabled: true }
   })
+
+  streamManager.start()
+  
+  return streamManager
 }
 ```
 
@@ -214,17 +241,28 @@ Finally, let's make some transactions. For this example, we are going to:
 
 ```ts
 // filename: Transactions.ts
-import { BigNumberInWei } from '@injectivelabs/utils'
+import { toChainFormat } from '@injectivelabs/utils'
 import {
   MsgSend,
   MsgCreateSpotLimitOrder,
-  spotPriceToChainPriceToFixed,
   MsgCreateDerivativeMarketOrder,
-  spotQuantityToChainQuantityToFixed
-} from '@injectivelabs/sdk-ts'
+} from '@injectivelabs/sdk-ts/core/modules'
+import {
+  spotPriceToChainPriceToFixed,
+  spotQuantityToChainQuantityToFixed,
+  derivativePriceToChainPriceToFixed,
+  derivativeQuantityToChainQuantityToFixed,
+  derivativeMarginToChainMarginToFixed,
+  getDefaultSubaccountId
+} from '@injectivelabs/sdk-ts/utils'
 
 // used to send assets from one address to another
 export const makeMsgSend = ({
+  sender,
+  recipient,
+  amount,
+  denom
+}: {
   sender: string,
   recipient: string,
   amount: string, // human readable amount
@@ -232,7 +270,7 @@ export const makeMsgSend = ({
 }) => {
   const amount = {
     denom,
-    amount: new BigNumberInBase(amount).toWei(/** denom's decimals */)
+    amount: toChainFormat(amount, /** denom's decimals */).toFixed()
   }
 
   return MsgSend.fromJSON({
@@ -256,8 +294,8 @@ export const makeMsgCreateSpotLimitOrder = ({
     quoteDecimals: 6,
     minPriceTickSize: '', /* fetched from the chain */
     minQuantityTickSize: '', /* fetched from the chain */
-    priceTensMultiplier: '', /** can be fetched from getDerivativeMarketTensMultiplier */
-    quantityTensMultiplier: '', /** can be fetched from getDerivativeMarketTensMultiplier */
+    priceTensMultiplier: '', /** can be fetched from getSpotMarketTensMultiplier */
+    quantityTensMultiplier: '', /** can be fetched from getSpotMarketTensMultiplier */
   }
 
   return MsgCreateSpotLimitOrder.fromJSON({
@@ -299,27 +337,27 @@ export const makeMsgCreateDerivativeMarketOrder = ({
     quantityTensMultiplier: '', /** can be fetched from getDerivativeMarketTensMultiplier */
   }
 
-  return MsgCreateDerivativeMarketOrder.fromJSON(
-    orderType: orderPrice,
+  return MsgCreateDerivativeMarketOrder.fromJSON({
+    orderType: orderType,
     triggerPrice: '0',
     injectiveAddress,
     price: derivativePriceToChainPriceToFixed({
-      value: order.price,
+      value: price,
       tensMultiplier: market.priceTensMultiplier,
       quoteDecimals: market.quoteDecimals
     }),
     quantity: derivativeQuantityToChainQuantityToFixed({
-      value: order.quantity,
+      value: quantity,
       tensMultiplier: market.quantityTensMultiplier,
     }),
     margin: derivativeMarginToChainMarginToFixed({
-      value: order.margin,
+      value: margin,
       quoteDecimals: market.quoteDecimals,
-      tensMultiplier: priceTensMultiplier,
+      tensMultiplier: market.priceTensMultiplier,
     }),
     marketId: market.marketId,
-    feeRecipient: feeRecipient,
-    subaccountId: subaccountI
+    feeRecipient: injectiveAddress,
+    subaccountId: subaccountId
   })
 
 }
@@ -328,7 +366,7 @@ export const makeMsgCreateDerivativeMarketOrder = ({
 After we have the Messages, you can use the `msgBroadcaster` client to broadcast these transactions:
 
 ```ts
-const response = await msgBroadcaster({
+const response = await msgBroadcaster.broadcast({
   msgs: /** the message here */,
   injectiveAddress: signersInjectiveAddress,
 })

@@ -10,69 +10,54 @@ This message is used to send coins from the sender's Bank module on Injective to
 Note that Injective only supports mainnet transfers across IBC for most networks.
 
 Application to application communication in IBC is conducted over channels, which route between an application module on one chain, and the corresponding application module on another one. More info on IBC channels can be found at https://tutorials.cosmos.network/academy/3-ibc/3-channels.html.
-A list of canonical channel Ids for mainnet transfers to and from Injective can be found [here](https://github.com/InjectiveLabs/injective-ts/blob/master/deprecated/token-metadata/src/ibc/canonicalChannelsToChainMap.ts).
+A list of canonical channel Ids for mainnet transfers to and from Injective can be found in the [Injective Lists repository](https://github.com/InjectiveLabs/injective-lists).
 Also noteworthy is that the application module on each chain has a portId to designate the type of module on each end.
 For example, `transfer` is the portId designating the transfer of ICS-20 tokens between bank modules.
 
 In this example, we will transfer ATOM from Injective to CosmosHub
 
+<Callout type="info">
+  For token metadata (symbols, decimals, channel mappings), please use
+  [Injective Lists](https://github.com/InjectiveLabs/injective-lists) which
+  provides up-to-date token information in JSON format.
+</Callout>
+
 ```ts
-import {
-  TokenService,
-  UiBankTransformer,
-  cosmosChainTokenMetaMap,
-} from "@injectivelabs/sdk-ui-ts";
-import {
-  MsgTransfer,
-  ChainGrpcBankApi,
-  MsgBroadcasterWithPk,
-  ChainRestTendermintApi,
-  makeTimeoutTimestampInNs,
-} from "@injectivelabs/sdk-ts";
 import { toChainFormat, toBigNumber } from "@injectivelabs/utils";
 import { ChainId, CosmosChainId } from "@injectivelabs/ts-types";
+import { MsgTransfer } from "@injectivelabs/sdk-ts/core/modules";
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
-import { IbcToken, Token } from "@injectivelabs/token-metadata";
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { makeTimeoutTimestampInNs } from "@injectivelabs/sdk-ts/utils";
+import { ChainRestTendermintApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const tokenService = new TokenService({
-  chainId: ChainId.Mainnet,
-  network: Network.Mainnet,
-});
-
-const destinationChainId = CosmosChainId["Cosmoshub"];
 const injectiveChainId = CosmosChainId["Injective"];
+const destinationChainId = CosmosChainId["Cosmoshub"];
 
 const endpointsForNetwork = getNetworkEndpoints(Network.Mainnet);
-const bankService = new ChainGrpcBankApi(endpointsForNetwork.grpc);
 
-// fetch ibc assets in bank module and format to token
-const { supply } = await bankService.fetchTotalSupply();
-const uiSupply = UiBankTransformer.supplyToUiSupply(supply);
-const ibcSupplyWithToken = (await tokenService.getIbcSupplyWithToken(
-  uiSupply.ibcBankSupply
-)) as IbcToken[];
-
-/* get metadata for canonical denoms available for transfer between chains */
-const cosmosHubBaseDenom = "uatom";
-const tokenMeta = cosmosChainTokenMetaMap[destinationChainId];
-const atomToken = (
-  Array.isArray(tokenMeta)
-    ? tokenMeta.find((token) => token.denom === cosmosHubBaseDenom)
-    : tokenMeta
-) as Token;
-
-/* find the ibd denom hash for the canonical denom */
+/**
+ * For IBC transfers, you need:
+ * 1. The IBC denom hash for the token on Injective
+ * 2. The channel ID for the destination chain
+ *
+ * You can find this information in the Injective Lists repository:
+ * https://github.com/InjectiveLabs/injective-lists
+ */
 const injectiveToCosmosHubChannelId = "channel-1";
-const atomDenomFromSupply = ibcSupplyWithToken.find(
-  ({ channelId, baseDenom }) =>
-    channelId === injectiveToCosmosHubChannelId && baseDenom === atomToken.denom
-) as IbcToken;
-const canonicalDenomHash = atomDenomFromSupply.denom;
 
-/* format amount for transfer */
+/**
+ * The IBC denom for ATOM on Injective
+ * Format: ibc/{hash} where hash is derived from the channel and base denom
+ */
+const atomIbcDenom =
+  "ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9";
+
+/* format amount for transfer (0.001 ATOM with 6 decimals) */
 const amount = {
-  denom: canonicalDenomHash,
-  amount: toChainFormat(0.001, atomDenomFromSupply.decimals).toFixed(),
+  denom: atomIbcDenom,
+  amount: toChainFormat(0.001, 6).toFixed(),
 };
 
 const injectiveAddress = "inj...";

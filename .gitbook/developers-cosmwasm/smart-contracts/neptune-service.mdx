@@ -11,8 +11,8 @@ Below are examples of how to use each method in the `NeptuneService` class.
 Before using the service, create an instance of `NeptuneService`.
 
 ```ts
-import { NeptuneService } from '@injectivelabs/sdk-ts'
 import { Network } from '@injectivelabs/networks'
+import { NeptuneService } from '@injectivelabs/sdk-ts/service'
 
 // Create a NeptuneService instance using the mainnet
 const neptuneService = new NeptuneService(Network.MainnetSentry)
@@ -145,9 +145,11 @@ console.log(`APY (continuously compounded): ${(apy * 100).toFixed(2)}%`)
 ```ts
 import {
   MsgBroadcasterWithPk,
-  MsgExecuteContractCompat,
-} from '@injectivelabs/sdk-ts'
+} from '@injectivelabs/sdk-ts/core/tx'
 import { toChainFormat } from '@injectivelabs/utils'
+import {
+  MsgExecuteContractCompat,
+} from '@injectivelabs/sdk-ts/core/modules'
 
 const privateKey = '0x...'
 const injectiveAddress = 'inj1...'
@@ -181,10 +183,14 @@ console.log(txHash)
 ```ts
 import {
   Network,
-  MsgBroadcasterWithPk,
-  MsgExecuteContractCompat,
-} from '@injectivelabs/sdk-ts'
+} from '@injectivelabs/networks'
 import { toChainFormat } from '@injectivelabs/utils'
+import {
+  MsgBroadcasterWithPk,
+} from '@injectivelabs/sdk-ts/core/tx'
+import {
+  MsgExecuteContractCompat,
+} from '@injectivelabs/sdk-ts/core/modules'
 
 const privateKey = '0x...' // Your private key
 const injectiveAddress = 'inj1...' // Your Injective address

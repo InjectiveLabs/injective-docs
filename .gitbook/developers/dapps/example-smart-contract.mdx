@@ -28,8 +28,8 @@ Example:
 
 ```js
 //filename: services.ts
-import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts";
 import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/wasm";
 
 export const NETWORK = Network.Testnet;
 export const ENDPOINTS = getNetworkEndpoints(NETWORK);
@@ -41,7 +41,7 @@ Then, we also need to setup a wallet connection to allow the user to connect to 
 
 The main purpose of the `@injectivelabs/wallet-strategy` is to offer developers a way to have different wallet implementations on Injective. All of these wallets implementations are exposing the same `ConcreteStrategy` interface which means that users can just use these methods without the need to know the underlying implementation for specific wallets as they are abstracted away.
 
-To start, you have to make an instance of the WalletStrategy class which gives you the ability to use different wallets out of the box. You can switch the current wallet that is used by using the `setWallet` method on the walletStrategy instance. The default is `Metamask`.
+To start, you have to make an instance of the WalletStrategy class which gives you the ability to use different wallets out of the box. You can switch the current wallet that is used by using the `setWallet` method on the walletStrategy instance (note: `setWallet` is async and requires `await`). The default is `Metamask`.
 
 ```ts
 // filename: wallet.ts
@@ -51,13 +51,13 @@ import { WalletStrategy } from "@injectivelabs/wallet-strategy";
 const chainId = ChainId.Testnet; // The Injective Testnet Chain ID
 const evmChainId = EvmChainId.TestnetEvm; // The Injective Evm Testnet Chain ID
 
-export const alchemyRpcEndpoint = `https://eth-goerli.alchemyapi.io/v2/${process.env.APP_ALCHEMY_SEPOLIA_KEY}`;
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`;
 
 export const walletStrategy = new WalletStrategy({
   chainId,
   evmOptions: {
     evmChainId,
-    rpcUrl: alchemyRpcEndpoint,
+    rpcUrl: evmRpcEndpoint,
   },
 });
 ```
@@ -80,7 +80,7 @@ export const msgBroadcastClient = new MsgBroadcaster({
 
 Since we are using the `WalletStrategy` to handle the connection with the user's wallet, we can use its methods to handle some use cases like getting the user's addresses, sign/broadcast a transaction, etc. To find out more about the wallet strategy, you can explore the documentation interface and the method the `WalletStrategy` offers.
 
-Note: We can switch between the "active" wallet within the `WalletStrategy` using the `setWallet` method.
+Note: We can switch between the "active" wallet within the `WalletStrategy` using the `setWallet` method (which is async and requires `await`).
 
 ```ts
 // filename: WalletConnection.ts
@@ -93,7 +93,7 @@ import { Wallet } from "@injectivelabs/wallet-base";
 import { walletStrategy } from "./Wallet.ts";
 
 export const getAddresses = async (wallet: Wallet): Promise<string[]> => {
-  walletStrategy.setWallet(wallet);
+  await walletStrategy.setWallet(wallet);
 
   const addresses = await walletStrategy.getAddresses();
 
@@ -210,13 +210,14 @@ Now lets see a full example of this in Vanilla JS (You can find examples for spe
 ```js
 import { Web3Exception } from "@injectivelabs/exceptions"
 import { WalletStrategy } from "@injectivelabs/wallet-strategy"
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/wasm"
 import { Network, getNetworkEndpoints } from "@injectivelabs/networks"
-import { ChainGrpcWasmApi, getInjectiveAddress } from "@injectivelabs/sdk-ts"
+import { getInjectiveAddress } from "@injectivelabs/sdk-ts/utils"
 
 const chainId = ChainId.Testnet // The Injective Testnet Chain ID
 const evmChainId = EvmChainId.TestnetEvm // The Injective Evm Testnet Chain ID
 
-export const alchemyRpcEndpoint = `https://eth-goerli.alchemyapi.io/v2/${process.env.APP_ALCHEMY_SEPOLIA_KEY}`
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
 
 const NETWORK = Network.Testnet
 const ENDPOINTS = getNetworkEndpoints(NETWORK)
@@ -227,7 +228,7 @@ export const walletStrategy = new WalletStrategy({
   chainId,
   evmOptions: {
     evmChainId,
-    rpcUrl: alchemyRpcEndpoint,
+    rpcUrl: evmRpcEndpoint,
   },
 })
 

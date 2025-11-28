@@ -50,15 +50,19 @@ Based on the overview above, let's now showcase a full example of how to impleme
 import {
  TxGrpcApi,
  SIGN_AMINO,
- BaseAccount,
- ChainRestAuthApi,
  createTransaction,
  createTxRawEIP712,
  getEip712TypedData
  createWeb3Extension,
- ChainRestTendermintApi,
  getGasPriceBasedOnMessage,
-} from '@injectivelabs/sdk-ts'
+} from '@injectivelabs/sdk-ts/core/tx'
+import {
+ BaseAccount,
+} from '@injectivelabs/sdk-ts/core/accounts'
+import {
+ ChainRestAuthApi,
+ ChainRestTendermintApi,
+} from '@injectivelabs/sdk-ts/client/chain'
 import { EvmChainId, ChainId } from '@injectivelabs/ts-types'
 import { getNetworkEndpoints, NetworkEndpoints, Network } from '@injectivelabs/networks'
 import { GeneralException, TransactionException } from '@injectivelabs/exceptions'

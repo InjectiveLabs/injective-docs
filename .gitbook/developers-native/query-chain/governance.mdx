@@ -23,9 +23,9 @@ console.log(moduleParams)
 ### Fetch proposals based on the status
 
 ```ts
-import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-import { ProposalStatusMap } from '@injectivelabs/chain-api'
+import { ProposalStatusMap } from '@injectivelabs/sdk-ts'
+import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)
@@ -60,8 +60,8 @@ console.log(proposalDetails)
 ### Fetch proposal deposits based on a proposal's id.
 
 ```ts
-import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)
@@ -96,8 +96,8 @@ console.log(proposalDetails)
 ### Fetch proposal deposits based on a proposal's id
 
 ```ts
-import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)
@@ -116,8 +116,8 @@ console.log(proposalDeposits)
 ### Fetch proposal votes based on a proposal's id
 
 ```ts
-import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)
@@ -135,8 +135,8 @@ console.log(proposalVotes)
 ### Fetch proposal tally based on a proposal's id
 
 ```ts
-import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption, ChainGrpcGovApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)

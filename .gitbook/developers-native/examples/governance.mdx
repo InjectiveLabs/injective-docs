@@ -15,34 +15,32 @@ Let's explore (and provide examples) the messages that the Governance module exp
 This message can be used to deposit towards an existing proposal.
 
 ```ts
-import {
-  MsgGovDeposit
-  MsgBroadcasterWithPk,
-} from "@injectivelabs/sdk-ts";
-import { toChainFormat } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgGovDeposit } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
-const denom = 'inj'
-const proposalId = 12345
+const denom = "inj";
+const proposalId = 12345;
 const privateKey = "0x...";
 const injectiveAddress = "inj...";
-const amount = toChainFormat(1).toFixed()
+const amount = toChainFormat(1).toFixed();
 
 const message = MsgGovDeposit.fromJSON({
   amount: {
     denom,
-    amount
+    amount,
   },
   proposalId,
-  depositor: injectiveAddress
-})
+  depositor: injectiveAddress,
+});
 
 /* broadcast transaction */
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
-  network: Network.Testnet
+  network: Network.Testnet,
 }).broadcast({
-  msgs: message
+  msgs: message,
 });
 ```
 
@@ -51,9 +49,10 @@ const txHash = await new MsgBroadcasterWithPk({
 After the proposal is properly funded, voting can commence. You can vote "Yes", "No", "Abstain", or "No with Veto".
 
 ```ts
-import { MsgVote, MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
-import { VoteOption } from "@injectivelabs/sdk-ts";
+import { VoteOption } from "@injectivelabs/sdk-ts/types";
+import { MsgVote } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const proposalId = 12345;
 const privateKey = "0x...";
@@ -79,12 +78,10 @@ const txHash = await new MsgBroadcasterWithPk({
 Propose any action on Injective. TextProposal defines a standard text proposal whose changes need to be manually updated in case of approval.
 
 ```ts
-import {
-  MsgSubmitTextProposal,
-  MsgBroadcasterWithPk,
-} from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
 import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgSubmitTextProposal } from "@injectivelabs/sdk-ts/core/modules";
 
 const denom = "inj";
 const privateKey = "0x...";
@@ -114,13 +111,11 @@ const txHash = await new MsgBroadcasterWithPk({
 This message allows you to propose a new spot market. Ensure that the ticker is accurate and provide the base asset denom followed by the quote asset denom. Base denom refers to the asset you would like to trade and quote denom refers to the asset by which your base asset is denominated. For instance, in the INJ/USDT market you would buy or sell INJ using USDT.
 
 ```ts
-import {
-  TokenStaticFactory,
-  MsgBroadcasterWithPk,
-  MsgSubmitProposalSpotMarketLaunch,
-} from "@injectivelabs/sdk-ts";
+import { TokenStaticFactory } from "@injectivelabs/sdk-ts/service";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 import { toChainFormat, toHumanReadable } from "@injectivelabs/utils";
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { MsgSubmitProposalSpotMarketLaunch } from "@injectivelabs/sdk-ts/core/modules";
 // refer to https://github.com/InjectiveLabs/injective-lists
 import { tokens } from "../data/tokens.json";
 
@@ -190,8 +185,10 @@ import {
   TokenStaticFactory,
   MsgBroadcasterWithPk,
   MsgSubmitProposalPerpetualMarketLaunch,
-} from "@injectivelabs/sdk-ts";
+} from "@injectivelabs/sdk-ts/core/modules";
 import { toChainFormat } from "@injectivelabs/utils";
+import { TokenStaticFactory } from "@injectivelabs/sdk-ts/service";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 // refer to https://github.com/InjectiveLabs/injective-lists
 import { tokens } from "../data/tokens.json";
@@ -261,7 +258,6 @@ import {
   TokenStaticFactory,
   MsgBroadcasterWithPk,
   MsgSubmitProposalExpiryFuturesMarketLaunch,
-} from "@injectivelabs/sdk-ts";
 import { toChainFormat } from "@injectivelabs/utils";
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 // refer to https://github.com/InjectiveLabs/injective-lists
@@ -333,10 +329,9 @@ This message can be used to update the params of a spot market.
 import {
   MsgBroadcasterWithPk,
   MsgSubmitProposalSpotMarketParamUpdate,
-} from "@injectivelabs/sdk-ts";
-import { toChainFormat } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
-import { MarketStatusMap } from "@injectivelabs/chain-api";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MarketStatusMap } from "@injectivelabs/sdk-ts";
 
 const denom = "inj";
 const privateKey = "0x...";

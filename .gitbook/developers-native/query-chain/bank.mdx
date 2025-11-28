@@ -59,8 +59,8 @@ console.log(balance)
 ### Fetching total supply on chain
 
 ```ts
-import { PaginationOption, ChainGrpcBankApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption, ChainGrpcBankApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc)

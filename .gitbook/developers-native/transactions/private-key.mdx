@@ -13,19 +13,25 @@ First of, we need to prepare the transaction for signing.
 ```ts
 import {
   MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
   PrivateKey,
   BaseAccount,
-  ChainRestAuthApi,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
   createTransaction,
+} from "@injectivelabs/sdk-ts/core/tx";
+import {
+  ChainRestAuthApi,
   ChainRestTendermintApi,
-} from "@injectivelabs/sdk-ts";
+} from "@injectivelabs/sdk-ts/client/chain";
+import { ChainId } from "@injectivelabs/ts-types";
 import {
   toBigNumber,
   toChainFormat,
   getDefaultStdFee,
   DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 } from "@injectivelabs/utils";
-import { ChainId } from "@injectivelabs/ts-types";
 import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
 
 const privateKeyHash = "";
@@ -68,7 +74,7 @@ const msg = MsgSend.fromJSON({
 const { txRaw, signBytes } = createTransaction({
   pubKey,
   chainId,
-  message: msgs,
+  message: msg,
   fee: getDefaultStdFee(),
   sequence: baseAccount.sequence,
   timeoutHeight: timeoutHeight.toNumber(),
@@ -98,7 +104,7 @@ Once we have the signature ready, we need to broadcast the transaction to the In
 
 ```ts
 import { ChainId } from '@injectivelabs/ts-types'
-import { TxRestClient } from '@injectivelabs/sdk-ts'
+import { TxGrpcApi } from '@injectivelabs/sdk-ts/client/chain'
 import { Network, getNetworkInfo } from '@injectivelabs/networks'
 
 /** Append Signatures */
@@ -110,7 +116,7 @@ txRaw.signatures = [signature];
 /** Calculate hash of the transaction */
 console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
 
-const txService = new TxGrpcClient(network.grpc);
+const txService = new TxGrpcApi(network.grpc);
 
 /** Simulate transaction */
 const simulationResponse = await txService.simulate(txRaw);
@@ -140,16 +146,20 @@ if (txResponse.code !== 0) {
 Let's have a look at the whole flow (using Keplr as a signing wallet)
 
 ```ts
+import {
+  PrivateKey,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
 import { getNetworkInfo, Network } from "@injectivelabs/networks";
 import {
-  TxClient,
-  PrivateKey,
-  TxGrpcClient,
   ChainRestAuthApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import {
+  TxClient,
+  TxGrpcApi,
   createTransaction,
-} from "@injectivelabs/sdk-ts";
-import { MsgSend } from "@injectivelabs/sdk-ts";
-import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
+} from "@injectivelabs/sdk-ts/core/tx";
 
 /** MsgSend Example */
 (async () => {
@@ -165,7 +175,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
     injectiveAddress
   );
 
-  /** Prepare the Message */
+  /** Prepare Message */
   const amount = {
     denom: "inj",
     amount: toChainFormat(0.01).toFixed(),
@@ -200,7 +210,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
   /** Calculate hash of the transaction */
   console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
 
-  const txService = new TxGrpcClient(network.grpc);
+  const txService = new TxGrpcApi(network.grpc);
 
   /** Simulate transaction */
   const simulationResponse = await txService.simulate(txRaw);
@@ -230,9 +240,10 @@ You can use the `MsgBroadcasterWithPk` class from the `@injectivelabs/sdk-ts` pa
 **This abstraction allows you to sign transactions in a Node/CLI environment.**
 
 ```ts
-import { Network } from "@injectivelabs/networks";
 import { toChainFormat } from "@injectivelabs/utils";
-import { MsgSend, MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts";
+import { Network } from "@injectivelabs/networks";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const privateKey = "0x...";
 const injectiveAddress = "inj1...";

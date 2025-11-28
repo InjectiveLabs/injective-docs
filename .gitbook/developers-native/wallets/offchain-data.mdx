@@ -33,7 +33,8 @@ You can use the `generateArbitrarySignDoc` function from `@injectivelabs/sdk-ts`
 
 ```typescript
 import { config } from "dotenv";
-import { PrivateKey, generateArbitrarySignDoc } from "@injectivelabs/sdk-ts";
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { generateArbitrarySignDoc } from "@injectivelabs/sdk-ts/core/tx";
 
 config();
 

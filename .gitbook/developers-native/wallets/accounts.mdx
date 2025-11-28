@@ -104,7 +104,8 @@ Here is an example of how to do it
 
 ```typescript
 import { config } from "dotenv";
-import { ChainRestAuthApi, PublicKey } from "@injectivelabs/sdk-ts";
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
 
 config();
 

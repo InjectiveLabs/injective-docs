@@ -2,154 +2,155 @@
 title: Mito
 ---
 
-Example code snippets to query the indexer for the Mito vault module related data.
+Example code snippets to query the indexer for Mito vault module related data.
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-Mito Documentation has been moved here visit[ Mito's Docs](https://docs.mito.fi/).
+  Mito Documentation has been moved here visit[ Mito's
+  Docs](https://docs.mito.fi/).
 </Callout>
 
 ## (Outdated) Using gRPC
 
-### Fetch a vault based off it's contract address, such as the vault's tvl or profits
+### Fetch a vault based off it's contract address, such as a vault's tvl or profits
 
 ```ts
-import { IndexerGrpcNinjaApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcNinjaApi = new IndexerGrpcNinjaApi(endpoints.ninjaApi)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
 
-const contractAddress = '0x...' /* optional param */
-const slug = 'derivative-vault' /* optional param */
+const contractAddress = "0x..."; /* optional param */
+const slug = "derivative-vault"; /* optional param */
 
-const vault = await indexerGrpcNinjaApi.fetchVault({
+const vault = await indexerGrpcMitoApi.fetchVault({
   contractAddress,
   slug,
-})
+});
 
-console.log(vault)
+console.log(vault);
 ```
 
 ### Fetch vaults and associated details
 
 ```ts
-import { IndexerGrpcNinjaApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcNinjaApi = new IndexerGrpcNinjaApi(endpoints.ninjaApi)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
 
-const vault = await indexerGrpcNinjaApi.fetchVaults()
+const vault = await indexerGrpcMitoApi.fetchVaults();
 
-console.log(vault)
+console.log(vault);
 ```
 
 ### Fetch the lp token price chart for a vault based on the vault address
 
 ```ts
-import { IndexerGrpcNinjaApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcNinjaApi = new IndexerGrpcNinjaApi(endpoints.ninjaApi)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
 
-const vaultAddress = 'inj...'
-const from = 50 /* optional pagination params */
-const to = 150 /* optional pagination params */
+const vaultAddress = "inj...";
+const from = 50; /* optional pagination params */
+const to = 150; /* optional pagination params */
 
-const lpTokenPriceChart = await indexerGrpcNinjaApi.fetchLpTokenPriceChart({
+const lpTokenPriceChart = await indexerGrpcMitoApi.fetchLpTokenPriceChart({
   vaultAddress,
   from,
   to,
-})
+});
 
-console.log(lpTokenPriceChart)
+console.log(lpTokenPriceChart);
 ```
 
 ### Fetch the tvl token chart for a vault based on the vault address
 
 ```ts
-import { IndexerGrpcNinjaApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcNinjaApi = new IndexerGrpcNinjaApi(endpoints.ninjaApi)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
 
-const vaultAddress = 'inj...'
-const from = 50 /* optional pagination params */
-const to = 150 /* optional pagination params */
+const vaultAddress = "inj...";
+const from = 50; /* optional pagination params */
+const to = 150; /* optional pagination params */
 
-const tvlChart = await indexerGrpcNinjaApi.fetchTVLChartRequest({
+const tvlChart = await indexerGrpcMitoApi.fetchTVLChartRequest({
   vaultAddress,
   from,
   to,
-})
+});
 
-console.log(tvlChart)
+console.log(tvlChart);
 ```
 
 ### Fetch the vaults associated with a holder of its lp tokens
 
 ```ts
-import { IndexerGrpcNinjaApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcNinjaApi = new IndexerGrpcNinjaApi(endpoints.ninjaApi)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
 
-const holderAddress = 'inj...'
+const holderAddress = "inj...";
 
-const vaults = await indexerGrpcNinjaApi.fetchVaultsByHolderAddress({
+const vaults = await indexerGrpcMitoApi.fetchVaultsByHolderAddress({
   holderAddress,
-})
+});
 
-console.log(vaults)
+console.log(vaults);
 ```
 
 ### Fetch the lp token holders from the vault address
 
 ```ts
-import { IndexerGrpcNinjaApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcNinjaApi = new IndexerGrpcNinjaApi(endpoints.ninjaApi)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
 
-const vaultAddress = 'inj...'
+const vaultAddress = "inj...";
 
-const holders = await indexerGrpcNinjaApi.fetchLPHolders({
+const holders = await indexerGrpcMitoApi.fetchLPHolders({
   vaultAddress,
-})
+});
 
-console.log(holders)
+console.log(holders);
 ```
 
 ### Fetch the lp holder's portfolio
 
 ```ts
-import { IndexerGrpcNinjaApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcNinjaApi = new IndexerGrpcNinjaApi(endpoints.ninjaApi)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
 
-const holderAddress = 'inj...'
+const holderAddress = "inj...";
 
-const portfolio = await indexerGrpcNinjaApi.fetchHolderPortfolio(holderAddress)
+const portfolio = await indexerGrpcMitoApi.fetchHolderPortfolio(holderAddress);
 
-console.log(portfolio)
+console.log(portfolio);
 ```
 
 ### Fetch the leaderboard to see Pnl rankings
 
 ```ts
-import { IndexerGrpcNinjaApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcNinjaApi = new IndexerGrpcNinjaApi(endpoints.ninjaApi)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
 
-const leaderboard = await indexerGrpcNinjaApi.fetchLeaderboard()
+const leaderboard = await indexerGrpcMitoApi.fetchLeaderboard();
 
-console.log(leaderboard)
+console.log(leaderboard);
 ```

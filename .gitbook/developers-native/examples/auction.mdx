@@ -9,14 +9,12 @@ The `auction` module is heart of the `buy-back-and-burn` on chain mechanism, whe
 This message is used to submit a bid on the [auction](https://hub.injective.network/auction/) held weekly to allow members to use INJ to bid for the basket of trading fees (60%) collected by Injective that week.
 
 ```ts
-import {
-  MsgBid,
-  ChainGrpcAuctionApi,
-  MsgBroadcasterWithPk,
-} from '@injectivelabs/sdk-ts'
 import { ChainId } from '@injectivelabs/ts-types'
 import { toChainFormat } from '@injectivelabs/utils'
+import { MsgBid } from '@injectivelabs/sdk-ts/core/modules'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcAuctionApi } from '@injectivelabs/sdk-ts/client/chain'
 
 const endpointsForNetwork = getNetworkEndpoints(Network.Mainnet)
 const auctionApi = new ChainGrpcAuctionApi(endpointsForNetwork.grpc)
@@ -25,7 +23,7 @@ const injectiveAddress = 'inj1...'
 /* format amount for bid, note that bid amount has to be higher than the current highest bid */
 const amount = {
   denom: 'inj',
-  amount: toChainForma(1).toFixed(),
+  amount: toChainFormat(1).toFixed(),
 }
 
 const latestAuctionModuleState = await auctionApi.fetchModuleState()
@@ -73,27 +71,23 @@ How to use funds that are currently associated with your Injective Address in ba
 For more info, check out the [burn auction pool docs](https://docs.injective.network/developers/modules/injective/auction).
 
 ```ts
-import {
-  DenomClient,
-  MsgExternalTransfer,
-  MsgBroadcasterWithPk,
-} from '@injectivelabs/sdk-ts'
-import { toChainFormat } from '@injectivelabs/utils'
 import { Network } from '@injectivelabs/networks'
-
-const denomClient = new DenomClient(Network.Mainnet)
+import { toChainFormat } from '@injectivelabs/utils'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+import { MsgExternalTransfer } from '@injectivelabs/sdk-ts/core/modules'
 
 const injectiveAddress = 'inj1...'
 const srcSubaccountId = '0x...'
 const POOL_SUBACCOUNT_ID = `0x1111111111111111111111111111111111111111111111111111111111111111`
-const USDT_TOKEN_SYMBOL = 'USDT'
-const tokenMeta = denomClient.getTokenMetaDataBySymbol(USDT_TOKEN_SYMBOL)
-const tokenDenom = `peggy${tokenMeta.erc20.address}`
+
+// USDT Peggy token details
+const USDT_DENOM = 'peggy0xdAC17F958D2ee523a2206206994597C13D831ec7'
+const USDT_DECIMALS = 6
 
 /* format amount to add to the burn auction pool */
 const amount = {
-  denom: tokenDenom,
-  amount: toChainFormat(1, tokenMeta.decimals).toFixed(),
+  denom: USDT_DENOM,
+  amount: toChainFormat(1, USDT_DECIMALS).toFixed(),
 }
 
 /* create message in proto format */

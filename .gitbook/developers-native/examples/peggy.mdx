@@ -15,8 +15,10 @@ Note that a $10 USD bridge fee will be charged for this transaction to cover for
 ```ts
 import { ChainId } from '@injectivelabs/ts-types'
 import { toBigNumber, toChainFormat } from '@injectivelabs/utils'
+import { MsgSendToEth } from '@injectivelabs/sdk-ts/core/modules'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-import { TokenPrice, MsgSendToEth, TokenStaticFactory, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'
+import { TokenPrice, TokenStaticFactory } from '@injectivelabs/sdk-ts/service'
 // refer to https://github.com/InjectiveLabs/injective-lists
 import { tokens } from '../data/tokens.json'
 

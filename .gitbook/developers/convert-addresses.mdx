@@ -30,7 +30,8 @@ As Injective has a different derivation path than the default Cosmos one, you ne
 
 ```typescript
 import { config } from "dotenv";
-import { ChainRestAuthApi, PublicKey } from "@injectivelabs/sdk-ts";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
 
 config();
 

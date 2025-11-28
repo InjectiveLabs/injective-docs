@@ -9,8 +9,8 @@ Example code snippets to query the wasm module on chain
 ### Fetch contacts' account balance Note that pagination parameters can be passed to obtain additional accounts.
 
 ```ts
-import { ChainGrpcWasmApi, PaginationOption } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi, PaginationOption } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
@@ -63,8 +63,8 @@ console.log(contractHistory)
 ### Fetch the state of a smart contract
 
 ```ts
-import { ChainGrpcWasmApi, toBase64 } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi, toBase64 } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
@@ -105,8 +105,8 @@ console.log(rawContractState)
 ### Fetch the codes associated with a contract
 
 ```ts
-import { PaginationOption, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
@@ -140,8 +140,8 @@ console.log(codeDetails)
 ### Fetch the contracts associated with a code
 
 ```ts
-import { PaginationOption, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)

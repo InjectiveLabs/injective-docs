@@ -1,33 +1,33 @@
 ---
-title: Portfolio
+title: Archiver
 ---
 
-Example code snippets to stream from the indexer for portfolio module related data using StreamManagerV2.
+Example code snippets to stream from the indexer for archiver module related data using StreamManagerV2.
 
 ## Using gRPC Stream with StreamManagerV2
 
-### Stream an account's portfolio
+### Stream spot average entries
 
 ```ts
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import { 
   StreamManagerV2,
-  IndexerGrpcAccountPortfolioStreamV2 
+  IndexerGrpcArchiverStreamV2 
 } from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const stream = new IndexerGrpcAccountPortfolioStreamV2(endpoints.indexer)
+const stream = new IndexerGrpcArchiverStreamV2(endpoints.indexer)
 
 const streamManager = new StreamManagerV2({
-  id: 'account-portfolio',
-  streamFactory: () => stream.streamAccountPortfolio({ 
-    accountAddress: 'inj...',
+  id: 'archiver-spot-average-entries',
+  streamFactory: () => stream.streamSpotAverageEntries({ 
+    account: 'inj...',
     callback: (response) => {
       streamManager.emit('data', response)
     }
   }),
-  onData: (portfolioResults) => {
-    console.log(portfolioResults)
+  onData: (averageEntries) => {
+    console.log(averageEntries)
   },
   retryConfig: { enabled: true }
 })

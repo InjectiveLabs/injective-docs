@@ -13,16 +13,14 @@ Let's explore (and provide examples) the Messages that the Insurance module expo
 This Message is used to create an Insurance Fund
 
 ```ts
-import {
-  MsgCreateInsuranceFund,
-  MsgBroadcasterWithPk,
-} from "@injectivelabs/sdk-ts";
-import { toBigNumber } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCreateInsuranceFund } from "@injectivelabs/sdk-ts/core/modules";
 
 const injectiveAddress = "inj1...";
 const privateKey = "0x...";
-const amount = toBigNumber(5);
+const amount = 5;
 const fund = {
   ticker: "BTC/USDT",
   quoteDenom: "peggy0x...",
@@ -36,7 +34,7 @@ const msg = MsgCreateInsuranceFund.fromJSON({
   injectiveAddress,
   deposit: {
     denom: fund.quoteDenom,
-    amount: amount.toWei(6 /* 6 because USDT has 6 decimals */).toFixed(),
+    amount: toChainFormat(amount, 6 /* 6 because USDT has 6 decimals */).toFixed(),
   },
 });
 
@@ -55,12 +53,10 @@ console.log(txHash);
 This Message is used to request redemption.
 
 ```ts
-import {
-  MsgRequestRedemption,
-  MsgBroadcasterWithPk,
-} from "@injectivelabs/sdk-ts";
-import { toChainFormat } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgRequestRedemption } from "@injectivelabs/sdk-ts/core/modules";
 
 const marketId = "0x....";
 const privateKey = "0x...";
@@ -94,7 +90,8 @@ This Message is used to underwrite to an insurance fund.
 ```ts
 import { Network } from "@injectivelabs/networks";
 import { toChainFormat } from "@injectivelabs/utils";
-import { MsgUnderwrite, MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts";
+import { MsgUnderwrite } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const usdtDecimals = 6;
 const marketId = "0x...";
