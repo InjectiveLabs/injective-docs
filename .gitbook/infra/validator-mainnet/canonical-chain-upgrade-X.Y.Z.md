@@ -1,4 +1,6 @@
-# Upgrade to {/* $VERSION */}
+---
+title: Upgrade to {/* $VERSION */}
+---
 
 {/* $DATE (e.g. Tuesday, August 19th, 2025) */}
 
