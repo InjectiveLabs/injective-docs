@@ -43,13 +43,7 @@
         "group": "INJECTIVE",
         "pages":
         [
-          {
-            "group": "Start here",
-            "expanded": true,
-            "pages": [
-              "index"
-            ]
-          },
+          "index",
           {
             "group": "DeFi",
             "expanded": false,
@@ -662,15 +656,9 @@
               }
             ]
           },
-          {
-            "group": "More",
-            "expanded": true,
-            "pages": [
-              "faq",
-              "glossary",
-              "references"
-            ]
-          }
+          "faq",
+          "glossary",
+          "references"
         ]
       }
     ]
