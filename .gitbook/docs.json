@@ -39,6 +39,10 @@
   ],
   "navigation": {
     "groups": [
+      {
+        "group": "INJECTIVE",
+        "pages":
+        [
           {
             "group": "Start here",
             "expanded": true,
@@ -667,6 +671,8 @@
               "references"
             ]
           }
+        ]
+      }
     ]
   }
 }
