@@ -127,75 +127,6 @@
             ]
           },
           {
-            "group": "Infrastructure",
-            "expanded": false,
-            "icon": "network-wired",
-            "pages": [
-              "infra/index",
-              {
-                "group": "Interact with nodes",
-                "expanded": false,
-                "pages": [
-                  "infra/interact-node/index",
-                  "infra/interact-node/command-line",
-                  "infra/interact-node/grpc",
-                  "infra/interact-node/go",
-                  "infra/interact-node/rest"
-                ]
-              },
-              "infra/run-node",
-              "infra/set-up-keyring",
-              "infra/join-a-network",
-              "infra/cosmovisor",
-              "infra/upgrade-node",
-              {
-                "group": "Mainnet Validator",
-                "pages": [
-                  "infra/validator-mainnet/index",
-                  "infra/validator-mainnet/peggo",
-                  "infra/validator-mainnet/canonical-chain-upgrade",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.17.1",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.17.0",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.4",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.2",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.1",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.0",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.15.0",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.14.1",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.14.0",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.13.3",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.13.2",
-                  "infra/validator-mainnet/canonical-chain-upgrade-1.13.0",
-                  "infra/validator-mainnet/canonical-chain-upgrade-v1.12.1",
-                  "infra/validator-mainnet/canonical-chain-upgrade-v1.12.0",
-                  "infra/validator-mainnet/canonical-chain-upgrade-v1.11.0",
-                  "infra/validator-mainnet/canonical-chain-upgrade-v1.10.0",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10009",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10008",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10007-rc1",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10006-rc1",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10005-rc1",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1-patch",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10003-rc1",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10002-rc2",
-                  "infra/validator-mainnet/canonical-chain-upgrade-10002-rc1"
-                ]
-              },
-              {
-                "group": "Testnet Validator",
-                "pages": [
-                  "infra/validator-testnet/index",
-                  "infra/validator-testnet/peggo"
-                ]
-              },
-              "infra/public-endpoints",
-              "infra/premium-endpoints",
-              "infra/archival-setup",
-              "redirects/https_api_injective_network_swagger"
-            ]
-          },
-          {
             "group": "Developers",
             "expanded": false,
             "icon": "laptop-code",
@@ -264,6 +195,75 @@
               "redirects/https_github_com_InjectiveLabs_cw_injective",
               "redirects/https_github_com_InjectiveLabs_injective_rust",
               "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective"
+            ]
+          },
+          {
+            "group": "Infrastructure",
+            "expanded": false,
+            "icon": "network-wired",
+            "pages": [
+              "infra/index",
+              {
+                "group": "Interact with nodes",
+                "expanded": false,
+                "pages": [
+                  "infra/interact-node/index",
+                  "infra/interact-node/command-line",
+                  "infra/interact-node/grpc",
+                  "infra/interact-node/go",
+                  "infra/interact-node/rest"
+                ]
+              },
+              "infra/run-node",
+              "infra/set-up-keyring",
+              "infra/join-a-network",
+              "infra/cosmovisor",
+              "infra/upgrade-node",
+              {
+                "group": "Mainnet Validator",
+                "pages": [
+                  "infra/validator-mainnet/index",
+                  "infra/validator-mainnet/peggo",
+                  "infra/validator-mainnet/canonical-chain-upgrade",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.17.1",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.17.0",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.4",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.2",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.1",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.16.0",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.15.0",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.14.1",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.14.0",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.13.3",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.13.2",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.13.0",
+                  "infra/validator-mainnet/canonical-chain-upgrade-v1.12.1",
+                  "infra/validator-mainnet/canonical-chain-upgrade-v1.12.0",
+                  "infra/validator-mainnet/canonical-chain-upgrade-v1.11.0",
+                  "infra/validator-mainnet/canonical-chain-upgrade-v1.10.0",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10009",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10008",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10007-rc1",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10006-rc1",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10005-rc1",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1-patch",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10003-rc1",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10002-rc2",
+                  "infra/validator-mainnet/canonical-chain-upgrade-10002-rc1"
+                ]
+              },
+              {
+                "group": "Testnet Validator",
+                "pages": [
+                  "infra/validator-testnet/index",
+                  "infra/validator-testnet/peggo"
+                ]
+              },
+              "infra/public-endpoints",
+              "infra/premium-endpoints",
+              "infra/archival-setup",
+              "redirects/https_api_injective_network_swagger"
             ]
           },
           {
