@@ -1,53 +1,113 @@
 ---
-title: Querying Ethereum with GraphQL
+title: Querying GraphQL Endpoints
 ---
 
-Example code snippets to query data from Ethereum.
+This guide shows how to query GraphQL endpoints using `HttpClient` from `@injectivelabs/utils`.
 
-## Using GraphQL
-
-### Fetch user's deposits on Ethereum chain
+## Setup
 
 ```ts
-import { ApolloConsumer } from '@injectivelabs/sdk-ts'
-import {
-  Network,
-  getNetworkEndpoints,
-  getPeggyGraphQlEndpointForNetwork,
-} from '@injectivelabs/networks'
+import { HttpClient } from '@injectivelabs/utils'
 
-const apolloConsumer = new ApolloConsumer(
-  getPeggyGraphQlEndpointForNetwork(Network.Testnet),
-)
-
-const ethereumAddress = '0x...'
-
-const userDeposits = apolloConsumer.fetchUserDeposits(ethereumAddress)
-
-console.log(userDeposits)
+const client = new HttpClient('YOUR_GRAPHQL_ENDPOINT')
 ```
 
-### Fetch user's deposits on Ethereum chain at a specific time
+## Authentication
+
+If your GraphQL endpoint requires authentication, set the headers:
 
 ```ts
-import { ApolloConsumer } from '@injectivelabs/sdk-ts'
-import {
-  Network,
-  getNetworkEndpoints,
-  getPeggyGraphQlEndpointForNetwork,
-} from '@injectivelabs/networks'
+client.setConfig({
+  headers: { 
+    authorization: 'Bearer YOUR_API_KEY' 
+}
+})
+```
 
-const apolloConsumer = new ApolloConsumer(
-  getPeggyGraphQlEndpointForNetwork(Network.Testnet),
-)
+## Making a Query
 
-const ethereumAddress = '0x...'
-const timestamp = 13434333
+Structure your GraphQL query as a JSON string with `query` and optional `variables`:
 
-const userDeposits = apolloConsumer.fetchUserBridgeDeposits(
-  ethereumAddress,
-  timestamp,
-)
+```ts
+const query = JSON.stringify({
+  query: `
+    query GetData($id: ID!) {
+      entity(id: $id) {
+        id
+        name
+        value
+      }
+    }
+  `,
+  variables: {
+    id: '123'
+  }
+})
 
-console.log(userDeposits)
+const response = await client.post<string, { data: { data: YourResponseType } }>('', query)
+
+console.log(response.data.data)
+```
+
+## Complete Example
+
+```ts
+import { HttpClient } from '@injectivelabs/utils'
+
+interface Token {
+  id: string
+  symbol: string
+  name: string
+}
+
+interface TokensResponse {
+  tokens: Token[]
+}
+
+const client = new HttpClient('YOUR_GRAPHQL_ENDPOINT')
+
+// Set auth headers if required
+client.setConfig({
+  headers: { 
+    authorization: 'Bearer YOUR_API_KEY' 
+  }
+})
+
+const query = JSON.stringify({
+  query: `
+    query GetTokens($first: Int!) {
+      tokens(first: $first, orderBy: symbol) {
+        id
+        symbol
+        name
+      }
+    }
+  `,
+  variables: {
+    first: 10
+  }
+})
+
+const response = await client.post<string, { data: { data: TokensResponse } }>('', query)
+
+console.log(response.data.data.tokens)
+```
+
+## Error Handling
+
+GraphQL responses may contain errors even with a 200 status code. Always check for errors:
+
+```ts
+interface GraphQLResponse<T> {
+  data?: T
+  errors?: Array<{ message: string }>
+}
+
+const response = await client.post<string, { data: GraphQLResponse<YourResponseType> }>('', query)
+
+if (response.data.errors && response.data.errors.length > 0) {
+  throw new Error(response.data.errors[0].message)
+}
+
+const data = response.data.data
 ```

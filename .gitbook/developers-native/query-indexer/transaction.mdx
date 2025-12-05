@@ -69,15 +69,13 @@ const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexe
 const chainId = ChainId.Testnet // The Injective Testnet Chain ID
 const evmChainId = EvmChainId.TestnetEvm // The Injective Evm Testnet Chain ID
 
-export const alchemyRpcEndpoint = `https://eth-goerli.alchemyapi.io/v2/${process.env.APP_ALCHEMY_SEPOLIA_KEY}`
-
-const alchemyKey =  process.env.APP_ALCHEMY_SEPOLIA_KEY as string
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
 
 const walletStrategy = new WalletStrategy({
   chainId,
   evmOptions: {
     evmChainId,
-    rpcUrl: alchemyRpcEndpoint,
+    rpcUrl: evmRpcEndpoint,
   },
 })
 
@@ -88,7 +86,7 @@ const response = { ... } // response from  prepareTxRequest
 const signature = await walletStrategy.signEip712TypedData(
       response.getData(),
       address,
-    ) /* see injective-ts/wallet-ts implementation of WalletStrategy. Essentially, you use the signEip712TypedData method of the wallet, if the wallet supports signing ethereum transactions */
+    ) /* see @injectivelabs/wallet-strategy implementation of WalletStrategy. Essentially, you use the signEip712TypedData method of the wallet, if the wallet supports signing ethereum transactions */
 
 const broadcastTxResponse = await indexerGrpcTransactionApi.broadcastTxRequest({
   signature,
@@ -105,7 +103,7 @@ console.log(broadcastTxResponse)
 ```ts
 import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-import { TxRaw } from '@injectivelabs/chain-api'
+import { TxRaw } from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)

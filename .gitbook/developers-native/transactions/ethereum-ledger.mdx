@@ -57,13 +57,13 @@ So, let’s see a quick code snippet of the usage of these methods and how we ca
 
 ```ts
 import {
+  MsgSend,
   getEip712TypedDataV2,
-  Eip712ConvertTxArgs,
-  Eip712ConvertFeeArgs,
-} from "@injectivelabs/sdk-ts/dist/core/eip712";
+  type Eip712ConvertTxArgs,
+  type Eip712ConvertFeeArgs,
+} from "@injectivelabs/sdk-ts";
 import { EvmChainId } from "@injectivelabs/ts-types";
-import { toChainFormat } from "@injectivelabs/utils";
-import { MsgSend, getDefaultStdFee } from "@injectivelabs/sdk-ts";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
 
 /** More details on these two interfaces later on */
 const txArgs: Eip712ConvertTxArgs = {
@@ -211,25 +211,23 @@ Let’s see an example codebase containing all of the steps above
 ```ts
 import {
   TxRestApi,
-  SIGN_AMINO
+  SIGN_AMINO,
+  MsgSend,
   BaseAccount,
-  getDefaultStdFee
   ChainRestAuthApi,
   createTransaction,
   createTxRawEIP712,
   createWeb3Extension,
   ChainRestTendermintApi,
+  getEip712TypedDataV2,
+  type Eip712ConvertTxArgs,
+  type Eip712ConvertFeeArgs
 } from '@injectivelabs/sdk-ts'
-import {
-   getEip712TypedDataV2,
-   Eip712ConvertTxArgs,
-   Eip712ConvertFeeArgs
-} from '@injectivelabs/sdk-ts/dist/core/eip712'
 import { TypedDataUtils } from 'eth-sig-util'
 import EthereumApp from '@ledgerhq/hw-app-eth'
 import { bufferToHex, addHexPrefix } from 'ethereumjs-util'
 import { EvmChainId, ChainId } from '@injectivelabs/ts-types'
-import { toChainFormat, DEFAULT_BLOCK_TIMEOUT_HEIGHT } from '@injectivelabs/utils'
+import { toChainFormat, DEFAULT_BLOCK_TIMEOUT_HEIGHT, getDefaultStdFee } from '@injectivelabs/utils'
 
 const domainHash = (message: any) =>
 TypedDataUtils.hashStruct('EIP712Domain', message.domain, message.types, true)
