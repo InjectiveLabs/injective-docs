@@ -63,7 +63,7 @@ $$
 Uptime_{Epoch} = \sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases}
 $$
 
-$$Uptime_{Epoch}$$ is the number of order book snapshots throughout the epoch in which the liquidity provider had a [positive Bid Liquidity Score _**and**_ a positive Ask Liquidity Score](scoring.md#liquidity-score) in the market of interest. This means the liquidity provider quoted on both sides of the order book with order sizes greater than or equal to $$MinDepth$$ with spreads less than or equal to $$MaxSpread$$ in the snapshot.
+$$Uptime_{Epoch}$$ is the number of order book snapshots throughout the epoch in which the liquidity provider had a [positive Bid Liquidity Score _**and**_ a positive Ask Liquidity Score](/defi/open-liquidity-program/scoring#liquidity-score) in the market of interest. This means the liquidity provider quoted on both sides of the order book with order sizes greater than or equal to $$MinDepth$$ with spreads less than or equal to $$MaxSpread$$ in the snapshot.
 
 For liquidity providers who qualify for OLP rewards (for the first time ever) partway through an epoch, $$Uptime_{Epoch}$$ is scaled based on the total number of snapshots from the moment of qualification to the end of the epoch.
 
