@@ -1,4 +1,6 @@
-# Ocr
+---
+title: OCR
+---
 
 ## Abstract
 
