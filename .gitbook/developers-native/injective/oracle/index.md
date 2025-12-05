@@ -1,4 +1,6 @@
-# `Oracle`
+---
+title: Oracle
+---
 
 ## Abstract
 
