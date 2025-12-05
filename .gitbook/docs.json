@@ -194,7 +194,8 @@
               "redirects/https_github_com_InjectiveLabs_sdk_python",
               "redirects/https_github_com_InjectiveLabs_cw_injective",
               "redirects/https_github_com_InjectiveLabs_injective_rust",
-              "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective"
+              "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
+              "redirects/https_api_injective_exchange"
             ]
           },
           {
@@ -263,6 +264,7 @@
               "infra/public-endpoints",
               "infra/premium-endpoints",
               "infra/archival-setup",
+              "redirects/https_injective_notion_site_indexer_service_setup_guide",
               "redirects/https_api_injective_network_swagger"
             ]
           },
@@ -357,8 +359,7 @@
                   "developers-defi/injective-trader/simple-strategy",
                   "developers-defi/injective-trader/strategy-development-guide"
                 ]
-              },
-              "redirects/https_api_injective_exchange"
+              }
             ]
           },
           {
