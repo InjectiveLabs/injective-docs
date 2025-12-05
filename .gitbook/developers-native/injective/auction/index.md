@@ -1,4 +1,6 @@
-# `Auction`
+---
+title: Auction
+---
 
 ## Abstract
 
