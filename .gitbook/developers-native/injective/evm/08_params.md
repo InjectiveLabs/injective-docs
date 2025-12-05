@@ -1,4 +1,6 @@
-# Parameters
+---
+title: Parameters
+---
 
 The evm module contains the following parameters:
 

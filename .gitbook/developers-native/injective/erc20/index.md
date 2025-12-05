@@ -1,4 +1,6 @@
-# ERC20
+---
+title: ERC20
+---
 
 ## Abstract
 

@@ -1,4 +1,6 @@
-# Tokenfactory
+---
+title: Tokenfactory
+---
 
 ## Abstract
 

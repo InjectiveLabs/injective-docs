@@ -1,3 +1,5 @@
-# Injective
+---
+title: Injective
+---
 
 ## Injective Modules

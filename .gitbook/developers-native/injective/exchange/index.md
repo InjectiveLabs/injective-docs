@@ -1,4 +1,6 @@
-# `Exchange`
+---
+title: Exchange
+---
 
 ## Abstract
 
