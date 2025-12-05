@@ -623,8 +623,8 @@ How to find the subaccountId that you will be transferring from:
 
 How to use funds that are currently associated with your Injective Address in bank module:
 
-- If you have existing non-default subaccounts, you'll want to do a [MsgDeposit](exchange#MsgDeposit) to one of your existing non-default subaccountIds and use that subaccountId as the `srcSubaccountId` below.
-- If you don't have existing non-default subaccounts, you can do a [MsgDeposit](exchange#MsgDeposit) to a new default subaccountId, which would be done via importing `getSubaccountId` from `sdk-ts` and setting the `subaccountId` field in [MsgDeposit](exchange#MsgDeposit) to `getSubaccountId(injectiveAddress, 1)`.
+- If you have existing non-default subaccounts, you'll want to do a [MsgDeposit](#msgdeposit) to one of your existing non-default subaccountIds and use that subaccountId as the `srcSubaccountId` below.
+- If you don't have existing non-default subaccounts, you can do a [MsgDeposit](#msgdeposit) to a new default subaccountId, which would be done via importing `getSubaccountId` from `sdk-ts` and setting the `subaccountId` field in [MsgDeposit](#msgdeposit) to `getSubaccountId(injectiveAddress, 1)`.
 
 ```ts
 import {
