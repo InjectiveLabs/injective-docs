@@ -1,4 +1,6 @@
-# `Peggy`
+---
+title: Peggy
+---
 
 ## Abstract
 

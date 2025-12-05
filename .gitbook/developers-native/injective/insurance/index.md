@@ -1,4 +1,6 @@
-# `Insurance`
+---
+title: Insurance
+---
 
 ## Abstract
 
