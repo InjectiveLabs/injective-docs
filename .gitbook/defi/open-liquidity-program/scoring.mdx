@@ -11,10 +11,10 @@ $$
 TS_{Market} = (LS_{Epoch})^a \cdot (Uptime_{Epoch})^b \cdot (Volume_{epoch})^c
 $$
 
-where $$LS_{epoch}$$ is the liquidity provider's [Liquidity Score](scoring.md#liquidity-score) in the market in the epoch, $$Uptime_{Epoch}$$is the liquidity provider's [Uptime score](scoring.md#uptime-score) in the market in the epoch, and $$Volume_{epoch}$$ is the liquidity provider's total volume (maker and taker) in the market in the epoch.
+where $$LS_{epoch}$$ is the liquidity provider's [Liquidity Score](/defi/open-liquidity-program/scoring#liquidity-score) in the market in the epoch, $$Uptime_{Epoch}$$is the liquidity provider's [Uptime score](/defi/open-liquidity-program/scoring#uptime-score) in the market in the epoch, and $$Volume_{epoch}$$ is the liquidity provider's total volume (maker and taker) in the market in the epoch.
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-$$a$$, $$b$$, and $$c$$ are exponent [parameters](./formula-parameters/) that weight the different components of the formula.
+$$a$$, $$b$$, and $$c$$ are exponent [parameters](/defi/open-liquidity-program/formula-parameters) that weight the different components of the formula.
 </Callout>
 
 ## Liquidity Score
@@ -54,7 +54,7 @@ where $$\mu_b$$ is the oracle price moving average over $$N$$ blocks (1000 block
 $$Spread$$ is calculated from the mid-price (distance from mid-price divided by mid-price).
 
 <Callout icon="warning" color="#07C1FF" iconType="regular">
-For the current values of $$MinDepth$$ and $$MaxSpread$$, see the [Formula Parameters page](formula-parameters.md).
+For the current values of $$MinDepth$$ and $$MaxSpread$$, see the [Formula Parameters page](/defi/open-liquidity-program/formula-parameters).
 </Callout>
 
 ## Uptime Score
@@ -63,7 +63,7 @@ $$
 Uptime_{Epoch} = \sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases}
 $$
 
-$$Uptime_{Epoch}$$ is the number of order book snapshots throughout the epoch in which the liquidity provider had a [positive Bid Liquidity Score _**and**_ a positive Ask Liquidity Score](scoring.md#liquidity-score) in the market of interest. This means the liquidity provider quoted on both sides of the order book with order sizes greater than or equal to $$MinDepth$$ with spreads less than or equal to $$MaxSpread$$ in the snapshot.
+$$Uptime_{Epoch}$$ is the number of order book snapshots throughout the epoch in which the liquidity provider had a [positive Bid Liquidity Score _**and**_ a positive Ask Liquidity Score](/defi/open-liquidity-program/scoring#liquidity-score) in the market of interest. This means the liquidity provider quoted on both sides of the order book with order sizes greater than or equal to $$MinDepth$$ with spreads less than or equal to $$MaxSpread$$ in the snapshot.
 
 For liquidity providers who qualify for OLP rewards (for the first time ever) partway through an epoch, $$Uptime_{Epoch}$$ is scaled based on the total number of snapshots from the moment of qualification to the end of the epoch.
 
@@ -101,7 +101,7 @@ LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2
 $$
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-For information on individual reward calculations each epoch, see the [Reward Allocations page](./reward-allocations/).
+For information on individual reward calculations each epoch, see the [Reward Allocations page](/defi/open-liquidity-program/reward-allocations).
 </Callout>
 
 [^1]: Market Maker
