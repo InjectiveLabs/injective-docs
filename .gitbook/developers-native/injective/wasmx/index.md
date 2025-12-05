@@ -1,4 +1,6 @@
-# `Wasmx`
+---
+title: Wasmx
+---
 
 ## Abstract
 
