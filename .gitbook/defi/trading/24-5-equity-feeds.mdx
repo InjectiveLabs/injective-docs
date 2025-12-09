@@ -1,0 +1,58 @@
+---
+title: "24/5 Equity Feeds"
+description: "Description of your new file."
+---
+
+Injective now supports 24/5 pricing for selected US equities by aggregating multiple Pyth session feeds into a single, unified oracle stream. This enables smooth, continuous trading for equity perpetuals, even when the underlying stock moves across pre-market, regular hours, after-hours, and overnight sessions.
+
+### Overview
+
+US equities trade across four distinct sessions. Pyth publishes a separate price feed for each:
+
+- Pre-market
+- Regular trading hours
+- After-hours
+- Overnight / off-exchange liquidity
+
+Injective uses SEDA to combine these four session feeds into one oracle price per symbol, updating every ~2 seconds. This unified stream becomes the canonical index price for Injective equity perps.
+
+Current supported symbols:
+
+- NVDA
+- PLTR
+
+More equities will migrate to this model in the coming weeks, and this list will be updated as onchain governance formalizes the upgrades.
+
+### How the Aggregation Works
+
+For each supported stock, SEDA:
+
+1. Subscribes to the four relevant Pyth feeds
+2. Selects the correct session feed based on live market phase
+3. Applies lightweight sanity and continuity checks
+4. Outputs one continuous price to Injective
+
+This ensures:
+
+- No session-to-session gaps
+- Continuous charts & oracle flow
+- Consistent mark/index pricing for 24/5 trading
+- Minimal noise during session transitions
+
+The aggregation cadence is approximately 2 seconds, giving traders near real-time responsiveness across all sessions.
+
+### Benefits for Traders & Market Makers
+
+1. **True 24/5 Equity Trading**: Equity perps on Injective can track price action across all four US equity sessions without interruption.
+
+2. **Cleaner Pricing**: No juggling multiple feeds, no abrupt jumps caused by switching sessions—SEDA standardizes everything into one continuous stream.
+
+3. **Better Risk Modeling**: Margin, liquidations, and mark-price logic use one consistent oracle, improving predictability and reducing false risk triggers.
+
+4. **Professional-grade extended hours coverage**: Thin-liquidity periods like pre-market or after-hours are still reflected accurately via Pyth’s specialized feeds.
+
+### Trading Behavior & Considerations
+
+- Volatility varies dramatically by session. Pre-market and after-hours can be more illiquid - expect wider spreads despite continuous pricing.
+- Gaps still occur when news hits between sessions. The unified feed simply ensures the chart reflects the actual first traded price, not a “feed boundary” artifact.
+- 24/5, not 24/7. The oracle pauses only on weekends, aligned with the underlying equity market structure.
