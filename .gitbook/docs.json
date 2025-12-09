@@ -1429,6 +1429,7 @@
                       "developers-native/injective/permissions/01_concepts",
                       "developers-native/injective/permissions/02_state",
                       "developers-native/injective/permissions/03_state_transitions",
+                      "developers-native/injective/permissions/04_launch_permissioned_asset",
                       "developers-native/injective/permissions/99_errors"
                     ]
                   },
