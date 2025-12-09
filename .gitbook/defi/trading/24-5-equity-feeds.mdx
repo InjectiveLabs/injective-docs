@@ -1,6 +1,6 @@
 ---
 title: "24/5 Equity Feeds"
-description: "Description of your new file."
+description: "How 24/5 pricing for iAssets works on Injective."
 ---
 
 Injective now supports 24/5 pricing for selected US equities by aggregating multiple Pyth session feeds into a single, unified oracle stream. This enables smooth, continuous trading for equity perpetuals, even when the underlying stock moves across pre-market, regular hours, after-hours, and overnight sessions.
@@ -44,11 +44,8 @@ The aggregation cadence is approximately 2 seconds, giving traders near real-tim
 ### Benefits for Traders & Market Makers
 
 1. **True 24/5 Equity Trading**: Equity perps on Injective can track price action across all four US equity sessions without interruption.
-
 2. **Cleaner Pricing**: No juggling multiple feeds, no abrupt jumps caused by switching sessions—SEDA standardizes everything into one continuous stream.
-
 3. **Better Risk Modeling**: Margin, liquidations, and mark-price logic use one consistent oracle, improving predictability and reducing false risk triggers.
-
 4. **Professional-grade extended hours coverage**: Thin-liquidity periods like pre-market or after-hours are still reflected accurately via Pyth’s specialized feeds.
 
 ### Trading Behavior & Considerations
