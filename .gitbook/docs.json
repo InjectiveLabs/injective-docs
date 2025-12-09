@@ -892,6 +892,7 @@
                   "defi/trading/index",
                   "defi/trading/order-types",
                   "defi/trading/fees",
+                  "defi/trading/24-5-equity-feeds",
                   "defi/trading/margin",
                   "defi/trading/margin-liquidation",
                   "defi/trading/margin-funding-rates",
