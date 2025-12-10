@@ -21,11 +21,19 @@ For **short position holders**, the funding dynamic flips. Positive funding rate
 
 **How is Funding Calculated**
 
-Funding is calculated as : $\mathrm{FundingRate = cap(TWAP + HourlyInterestRate)}$
+Funding is calculated as: $\mathrm{FundingRate = cap(TWAP + HourlyInterestRate)}$
 
 _where_ $\mathrm{TWAP = \frac{Cumulative\ Price}{(LastTimestamp + 3600 - NextFundingTimestamp)*24}}$
 
-_and_ cumulative price is the sum of the deltas of the last traded price and the mark price.
+and _Cumulative Price_ is the sum of the deltas of the last traded price and the mark price, as described herein. The system constantly calculates a _Premium_, which represents how far the contract is trading from the mark price. This is calculated as a percentage difference:
+
+$\text{Premium} = \frac{\text{Trade Price} - \text{Mark Price}}{\text{Mark Price}}$
+
+where _Trade Price_ is the volume-weighted average price (VWAP) of trades in a particular block.
+
+Using this figure, a _Cumulative Price_ is accumulated throughout the hour. As each trade occurs, the current _Premium_ is multiplied by the time passed since the last update:
+
+$\text{New Cumulative Price} = \text{Old Cumulative Price} + (\text{Premium} \times \Delta t)$
 
 **Example :**
 
