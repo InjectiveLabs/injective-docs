@@ -31,7 +31,7 @@ $\text{Premium} = \frac{\text{Trade Price} - \text{Mark Price}}{\text{Mark Price
 
 where _Trade Price_ is the volume-weighted average price (VWAP) of trades in a particular block.
 
-Using this figure, a _Cumulative Price_ is accumulated throughout the hour. As each trade occurs, the current _Premium_ is multiplied by the time passed since the last update:
+Using this figure, a _Cumulative Price_ is accumulated throughout the hour. As each trade occurs, the current _Premium_ is multiplied by the time passed (in seconds) since the last update:
 
 $\text{New Cumulative Price} = \text{Old Cumulative Price} + (\text{Premium} \times \Delta t)$
 
