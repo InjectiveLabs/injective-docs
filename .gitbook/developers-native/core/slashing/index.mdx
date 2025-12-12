@@ -1,8 +1,6 @@
 ---
-sidebar_position: 1
+title: "x/slashing"
 ---
-
-# `x/slashing`
 
 ## Abstract
 
@@ -121,16 +119,19 @@ number of blocks by being automatically jailed, potentially slashed, and unbonde
 Information about validator's liveness activity is tracked through `ValidatorSigningInfo`.
 It is indexed in the store as follows:
 
-* ValidatorSigningInfo: `0x01 | ConsAddrLen (1 byte) | ConsAddress -> ProtocolBuffer(ValSigningInfo)`
-* MissedBlocksBitArray: `0x02 | ConsAddrLen (1 byte) | ConsAddress | LittleEndianUint64(signArrayIndex) -> VarInt(didMiss)` (varint is a number encoding format)
+* `ValidatorSigningInfo`:
+  `0x01 | ConsAddrLen (1 byte) | ConsAddress -> ProtocolBuffer(ValSigningInfo)`
+* `MissedBlocksBitArray`:
+  `0x02 | ConsAddrLen (1 byte) | ConsAddress | LittleEndianUint64(signArrayIndex) -> VarInt(didMiss)`
+  (varint is a number encoding format)
 
 The first mapping allows us to easily lookup the recent signing info for a
 validator based on the validator's consensus address.
 
 The second mapping (`MissedBlocksBitArray`) acts
 as a bit-array of size `SignedBlocksWindow` that tells us if the validator missed
-the block for a given index in the bit-array. The index in the bit-array is given
-as little endian uint64.
+the block for a given index in the bit-array.
+The index in the bit-array is given as little endian uint64.
 The result is a `varint` that takes on `0` or `1`, where `0` indicates the
 validator did not miss (did sign) the corresponding block, and `1` indicates
 they missed the block (did not sign).
@@ -142,9 +143,33 @@ bonded validator. The `SignedBlocksWindow` parameter defines the size
 
 The information stored for tracking validator liveness is as follows:
 
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35
+```protobuf
+// ValidatorSigningInfo defines a validator's signing info for monitoring their
+// liveness activity.
+message ValidatorSigningInfo {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Height at which validator was first a candidate OR was unjailed
+  int64 start_height = 2;
+  // Index which is incremented each time the validator was a bonded
+  // in a block and may have signed a precommit or not. This in conjunction with the
+  // `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
+  int64 index_offset = 3;
+  // Timestamp until which the validator is jailed due to liveness downtime.
+  google.protobuf.Timestamp jailed_until = 4
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // Whether or not a validator has been tombstoned (killed out of validator set). It is set
+  // once the validator commits an equivocation or for any other configured misbehiavor.
+  bool tombstoned = 5;
+  // A counter kept to avoid unnecessary array reads.
+  // Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`.
+  int64 missed_blocks_counter = 6;
+}
 ```
+
+Ref: [https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35)
 
 ### Params
 
@@ -153,9 +178,33 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x00 | ProtocolBuffer(Params)`
 
-```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L59
+```protobuf
+// Params represents the parameters used for by the slashing module.
+message Params {
+  option (amino.name) = "cosmos-sdk/x/slashing/Params";
+
+  int64 signed_blocks_window  = 1;
+  bytes min_signed_per_window = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  google.protobuf.Duration downtime_jail_duration = 3
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdduration) = true];
+  bytes slash_fraction_double_sign = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  bytes slash_fraction_downtime = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+}
 ```
+
+Ref: [https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L59](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L59)
 
 ## Messages
 
@@ -352,8 +401,8 @@ The slashing module emits the following events:
 
 | Type    | Attribute Key | Attribute Value    |
 | ------- | ------------- | ------------------ |
-| message | module        | slashing           |
-| message | sender        | {validatorAddress} |
+| `message` | `module`        | `slashing`           |
+| `message` | `sender`        | `{validatorAddress}` |
 
 ### Keeper
 
@@ -361,19 +410,19 @@ The slashing module emits the following events:
 
 | Type  | Attribute Key | Attribute Value             |
 | ----- | ------------- | --------------------------- |
-| slash | address       | {validatorConsensusAddress} |
-| slash | power         | {validatorPower}            |
-| slash | reason        | {slashReason}               |
-| slash | jailed [0]    | {validatorConsensusAddress} |
-| slash | burned coins  | {math.Int}                   |
+| `slash` | `address`       | `{validatorConsensusAddress}` |
+| `slash` | `power`         | `{validatorPower}`            |
+| `slash` | `reason`        | `{slashReason}`               |
+| `slash` | `jailed [0]`    | `{validatorConsensusAddress}` |
+| `slash` | `burned coins`  | `{math.Int}`                   |
 
 * [0] Only included if the validator is jailed.
 
 | Type     | Attribute Key | Attribute Value             |
 | -------- | ------------- | --------------------------- |
-| liveness | address       | {validatorConsensusAddress} |
-| liveness | missed_blocks | {missedBlocksCounter}       |
-| liveness | height        | {blockHeight}               |
+| `liveness` | `address`       | `{validatorConsensusAddress}` |
+| `liveness` | `missed_blocks` | `{missedBlocksCounter}`       |
+| `liveness` | `height`        | `{blockHeight}`               |
 
 #### Slash
 
@@ -383,7 +432,7 @@ The slashing module emits the following events:
 
 | Type  | Attribute Key | Attribute Value    |
 | ----- | ------------- | ------------------ |
-| slash | jailed        | {validatorAddress} |
+| `slash` | `jailed`        | `{validatorAddress}` |
 
 ## Staking Tombstone
 
@@ -515,11 +564,11 @@ The slashing module contains the following parameters:
 
 | Key                     | Type           | Example                |
 | ----------------------- | -------------- | ---------------------- |
-| SignedBlocksWindow      | string (int64) | "100"                  |
-| MinSignedPerWindow      | string (dec)   | "0.500000000000000000" |
-| DowntimeJailDuration    | string (ns)    | "600000000000"         |
-| SlashFractionDoubleSign | string (dec)   | "0.050000000000000000" |
-| SlashFractionDowntime   | string (dec)   | "0.010000000000000000" |
+| `SignedBlocksWindow`      | `string (int64)` | `"100"`                  |
+| `MinSignedPerWindow`      | `string (dec)`   | `"0.500000000000000000"` |
+| `DowntimeJailDuration`    | `string (ns)`    | `"600000000000"`         |
+| `SlashFractionDoubleSign` | `string (dec)`   | `"0.050000000000000000"` |
+| `SlashFractionDowntime`   | `string (dec)`   | `"0.010000000000000000"` |
 
 ## CLI
 
