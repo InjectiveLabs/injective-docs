@@ -3,25 +3,9 @@ description: Essential information about the Injective network
 title: Network Information
 ---
 
-## Injective Testnet Details
+<Tabs>
 
-* Chain ID: `injective-888`
-* Node: `https://testnet.sentry.tm.injective.network:443`
-
-<Callout icon="info" color="#07C1FF" iconType="regular">
-Note that the Injective Chain ID for EVM is `1439`.
-However, it natively uses a chain ID of `injective-888`.
-While the chain IDs are different, they map to the **same** network.
-
-See [EVM network information](/developers-evm/network-information/) for more details.
-</Callout>
-
-## Injective Devnet Details
-
-* Chain ID: `injective-777`
-* Node: `https://devnet.sentry.tm.injective.network:443`
-
-## Injective Mainnet Details
+<Tab title="Injective Mainnet" icon="server">
 
 * Chain ID: `injective-1`
 * Node: `https://sentry.tm.injective.network:443`
@@ -33,3 +17,34 @@ While the chain IDs are different, they map to the **same** network.
 
 See [EVM network information](/developers-evm/network-information/) for more details.
 </Callout>
+
+</Tab>
+
+<Tab title="Injective Testnet" icon="flask-vial">
+
+* Chain ID: `injective-888`
+* Node: `https://testnet.sentry.tm.injective.network:443`
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Note that the Injective Chain ID for EVM is `1439`.
+However, it natively uses a chain ID of `injective-888`.
+While the chain IDs are different, they map to the **same** network.
+
+See [EVM network information](/developers-evm/network-information/) for more details.
+</Callout>]
+</Tab>
+
+<Tab title="Injective Devnet" icon="flask-vial">
+
+* Chain ID: `injective-777`
+* Node: `https://devnet.sentry.tm.injective.network:443`
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Note that the Injective EVM does not have an equivalent of Devnet
+
+See [EVM network information](/developers-evm/network-information/) for more details.
+</Callout>
+
+</Tab>
+
+</Tabs>
