@@ -9,7 +9,9 @@ description: Looking to build a production application on Injective's EVM Mainne
 
 Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
 
-Note: Do **not** use inEVM, as that has been **deprecated**.
+<Warning>
+Do **not** use inEVM, as that has been **deprecated**.
+</Warning>
 
 # Explorers
 
@@ -37,7 +39,9 @@ Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-
     
 Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
 
-Note: Do **not** use inEVM, as that has been **deprecated**.
+<Warning>
+Do **not** use inEVM, as that has been **deprecated**.
+</Warning>
 
 # Contract Addresses
 
@@ -65,12 +69,12 @@ Guides:
 
 # Data
 
-Explorers
+## Explorers
 
 - Explorer: [`blockscout.injective.network`](https://blockscout.injective.network/)
 - Explorer API: [`blockscout-api.injective.network/api`](https://blockscout-api.injective.network/api)
 
-Oracles
+## Oracles
 
 - API3: 
     - Price feeds: [Api3 Market | Injective EVM](https://market.api3.org/injective)
@@ -89,14 +93,21 @@ Suitable for programmatic control, e.g. application/ dApp operated accounts.
 Installation quickstart:
   
 ```shell
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.14.1-1740773301/linux-amd64.zip
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.17.2-1765930431/linux-amd64.zip # replace with latest version of injective
 unzip linux-amd64.zip
-sudo mv injectived /usr/bin
+sudo mv injectived peggo /usr/bin
 sudo mv libwasmvm.x86_64.so /usr/lib
-injectived version
 ```
 
-More options, including installation via Docker, or compiling from source, available in the reference page below.
+<Tip>
+In the command above, the URL for the `wget` download should be replaced with one for the latest release.
+You can find the exact commands (including the URL) under the [Mainnet Validator](/infra/validator-mainnet) section.
+</Tip>
+
+<Tip>
+More options, including installation via Docker, or compiling from source,
+available in the reference page below.
+</Tip>
 
 Reference: [injectived | Injective | Docs](/developers/injectived) 
 
