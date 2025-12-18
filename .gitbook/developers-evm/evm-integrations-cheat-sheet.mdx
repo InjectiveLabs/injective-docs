@@ -1,0 +1,120 @@
+---
+title: "EVM Integrations Cheat Sheet"
+description: Looking to build a production application on Injective's EVM Mainnet? Handy references to get your integrations up to speed. Suitable for both greenfield deployments and cross-chain deployments.
+---
+
+# Network Config
+
+- Chain ID: `1776`
+
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+
+Note: Do **not** use inEVM, as that has been **deprecated**.
+
+# Explorers
+
+- [https://blockscout.injective.network/](https://blockscout.injective.network/) → Can only see EVM transactions
+- [https://injscan.com/](https://injscan.com/) → Can see both EVM and Cosmos transactions
+
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+
+# RPC Endpoints
+
+- Recommended for integrations partners
+    - Customisable for needs of applications
+    - Customisable rate limits, and no cut off for historical data queries
+    - Freemium/ paid options
+    - How to connect:
+        - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj) 
+        - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
+- Not recommended for integrations partners
+    - Not customisable for needs of applications
+    - Heavy rate limiting, and cut off for historical data queries
+    - Free option
+    - How to connect:
+        - JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
+        - WS Endpoint: `wss://sentry.evm-ws.injective.network`
+    
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+
+Note: Do **not** use inEVM, as that has been **deprecated**.
+
+# Contract Addresses
+
+|   |   |   |
+|---|---|---|
+|USDT|MTS USDT|`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`|
+|wETH|wrapped ETH|`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`|
+|wINJ|wrapped INJ|`0x0000000088827d2d103ee2d9A6b781773AE03FfB`|
+|USDC||`0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989`|
+|MultiCall||`0xcA11bde05977b3631167028862bE2a173976CA11`|
+
+Please use the reference page below as the canonical source.
+
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+
+# Bridges
+
+[Injective Bridge](https://bridge.injective.network)
+
+Guides:
+- [How To Bridge From Ethereum To Injective Using Metamask](https://injective.com/blog/how-to-bridge-from-ethereum-to-injective-using-metamask/)
+- [How To Bridge From Solana To Injective Using Phantom](https://injective.com/blog/how-to-bridge-from-solana-to-injective-using-phantom/)
+- [How to Bridge To Injective Using Wormhole](https://injective.com/blog/how-to-bridge-to-injective-using-wormhole/)
+- [How To Bridge From Cosmos To Injective Using Keplr](https://injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/)
+
+# Data
+
+Explorers
+
+- Explorer: [`blockscout.injective.network`](https://blockscout-api.injective.network/api)
+- Explorer API: [`blockscout-api.injective.network/api`](https://blockscout-api.injective.network/api)
+
+Oracles
+
+- API3: 
+    - Price feeds: [Api3 Market | Injective EVM](https://market.api3.org/injective)
+- Pyth:
+    - Announcement: [Pyth Mainnet Launches on Injective](https://injective.com/blog/pyth-mainnet-launches-on-injective/) 
+- Chainlink: 
+    - Reference repo: [Repo with Chainlink <> Injective OCR2 integration components and oracle](https://github.com/InjectiveLabs/chainlink-injective)**
+
+# Wallets
+
+## `injectived`
+
+Suitable for programmatic control, e.g. application/ dApp operated accounts.
+
+Installation quickstart:
+  
+```shell
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.14.1-1740773301/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib
+injectived version
+```
+
+More options, including installation via Docker, or compiling from source, available in the reference page below.
+
+Reference: [injectived | Injective | Docs](/developers/injectived) 
+
+## MetaMask
+
+Suitable for retail users who need to interact with EVM DApps.
+
+Installation:
+
+- Get browser extension from [https://metamask.io/en-GB](https://metamask.io/en-GB) for your specific browser.
+- Visit [https://blockscout.injective.network/](https://blockscout.injective.network/), scroll to the bottom of the page
+- Click on the “Add Injective” button: ![](data:image/png;base64,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)
+- Follow the prompts in MetaMask’s user interface
+
+Reference: [How to Create an Injective Wallet](https://injective.com/blog/how-to-create-an-injective-wallet-2/#to-connect-to-injective-with-metamask)#metamask
+
+## Keplr
+
+- Keplr : [https://www.keplr.app](https://www.keplr.app)
+- Keplr API Docs for Integration: [https://docs.keplr.app/api/intro](https://docs.keplr.app/api/intro)
+
+Reference: [How to Create an Injective Wallet](https://injective.com/blog/how-to-create-an-injective-wallet-2#to-connect-to-injective-with-keplr)#keplr
