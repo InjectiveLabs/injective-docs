@@ -1,0 +1,132 @@
+---
+title: "EVM Integrations Cheat Sheet"
+description: Looking to build a production application on Injective's EVM Mainnet? Handy references to get your integrations up to speed. Suitable for both greenfield deployments and cross-chain deployments.
+---
+
+# Network Config
+
+- Chain ID: `1776`
+
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+
+<Warning>
+Do **not** use inEVM, as that has been **deprecated**.
+</Warning>
+
+# Explorers
+
+- [https://blockscout.injective.network/](https://blockscout.injective.network/) → Can only see EVM transactions
+- [https://injscan.com/](https://injscan.com/) → Can see both EVM and Cosmos transactions
+
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+
+# RPC Endpoints
+
+- Recommended for integrations partners
+    - Customizable for needs of applications
+    - Customizable rate limits, and no cut off for historical data queries
+    - Freemium/ paid options
+    - How to connect:
+        - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj) 
+        - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
+- Not recommended for integrations partners
+    - Not customizable for needs of applications
+    - Heavy rate limiting, and cut off for historical data queries
+    - Free option
+    - How to connect:
+        - JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
+        - WS Endpoint: `wss://sentry.evm-ws.injective.network`
+    
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+
+<Warning>
+Do **not** use inEVM, as that has been **deprecated**.
+</Warning>
+
+# Contract Addresses
+
+|   |   |   |
+|---|---|---|
+|USDT|MTS USDT|`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`|
+|wETH|wrapped ETH|`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`|
+|wINJ|wrapped INJ|`0x0000000088827d2d103ee2d9A6b781773AE03FfB`|
+|USDC||`0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989`|
+|MultiCall||`0xcA11bde05977b3631167028862bE2a173976CA11`|
+
+Please use the reference page below as the canonical source.
+
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+
+# Bridges
+
+[Injective Bridge](https://bridge.injective.network)
+
+Guides:
+- [How To Bridge From Ethereum To Injective Using Metamask](https://injective.com/blog/how-to-bridge-from-ethereum-to-injective-using-metamask/)
+- [How To Bridge From Solana To Injective Using Phantom](https://injective.com/blog/how-to-bridge-from-solana-to-injective-using-phantom/)
+- [How to Bridge To Injective Using Wormhole](https://injective.com/blog/how-to-bridge-to-injective-using-wormhole/)
+- [How To Bridge From Cosmos To Injective Using Keplr](https://injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/)
+
+# Data
+
+## Explorers
+
+- Explorer: [`blockscout.injective.network`](https://blockscout.injective.network/)
+- Explorer API: [`blockscout-api.injective.network/api`](https://blockscout-api.injective.network/api)
+
+## Oracles
+
+- API3: 
+    - Price feeds: [Api3 Market | Injective EVM](https://market.api3.org/injective)
+- Pyth:
+    - Documentation: [Pyth EVM Real Time Data Pull Integration](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/evm)
+    - Reference documentation: [Pyth EVM Smart Contract Addresses](https://docs.pyth.network/price-feeds/core/contract-addresses/evm)
+- Chainlink: 
+    - Documentation: [Chainlink Data Streams](https://docs.chain.link/data-streams)
+
+# Wallets
+
+## `injectived`
+
+Suitable for programmatic control, e.g. application/ dApp operated accounts.
+
+Installation quickstart:
+  
+```shell
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.17.2-1765930431/linux-amd64.zip # replace with latest version of injective
+unzip linux-amd64.zip
+sudo mv injectived peggo /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib
+```
+
+<Tip>
+In the command above, the URL for the `wget` download should be replaced with one for the latest release.
+You can find the exact commands (including the URL) under the [Mainnet Validator](/infra/validator-mainnet) section.
+</Tip>
+
+<Tip>
+More options, including installation via Docker, or compiling from source,
+available in the reference page below.
+</Tip>
+
+Reference: [injectived | Injective | Docs](/developers/injectived) 
+
+## MetaMask
+
+Suitable for retail users who need to interact with EVM DApps.
+
+Installation:
+
+- Get browser extension from [https://metamask.io/en-GB](https://metamask.io/en-GB) for your specific browser.
+- Visit [https://blockscout.injective.network/](https://blockscout.injective.network/), scroll to the bottom of the page
+- Click on the “Add Injective” button
+- Follow the prompts in MetaMask’s user interface
+
+Reference: [How to Create an Injective Wallet (MetaMask)](https://injective.com/blog/how-to-create-an-injective-wallet-2/#to-connect-to-injective-with-metamask)
+
+## Keplr
+
+- Keplr : [https://www.keplr.app](https://www.keplr.app)
+- Keplr API Docs for Integration: [https://docs.keplr.app/api/intro](https://docs.keplr.app/api/intro)
+
+Reference: [How to Create an Injective Wallet (Keplr)](https://injective.com/blog/how-to-create-an-injective-wallet-2#to-connect-to-injective-with-keplr)
