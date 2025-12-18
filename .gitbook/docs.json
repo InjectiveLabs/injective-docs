@@ -1055,6 +1055,7 @@
                   "infra/validator-mainnet/index",
                   "infra/validator-mainnet/peggo",
                   "infra/validator-mainnet/canonical-chain-upgrade",
+                  "infra/validator-mainnet/canonical-chain-upgrade-1.17.2",
                   "infra/validator-mainnet/canonical-chain-upgrade-1.17.1",
                   "infra/validator-mainnet/canonical-chain-upgrade-1.17.0",
                   "infra/validator-mainnet/canonical-chain-upgrade-1.16.4",
