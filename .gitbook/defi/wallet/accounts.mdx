@@ -101,3 +101,21 @@ const buf3 = Buffer.from(publicKeyByte)
 const publicKey = Buffer.concat([buf1, buf2, buf3]).toString('base64')
 const type = '/injective.crypto.v1beta1.ethsecp256k1.PubKey'
 ```
+
+## Subaccounts
+
+Injective subaccounts allow a single main wallet address to manage multiple, isolated trading accounts. This is useful for power users, especially professional traders and market makers.
+
+<Tip>
+For technical implementation details on subaccounts, see the [Trading Account](/developers/concepts/trading-account) developer documentation.
+</Tip>
+
+### Key features and explanation
+
+- **Programmatic access**: This feature is designed to be highly accessible for programmatic trading via Injective's native APIs, catering to financial application developers.
+- **Advanced account management**: The subaccounts feature provides sophisticated account management capabilities, enabling users (e.g., institutions or algorithmic traders) to segregate funds and trading strategies within a single, primary Injective address.
+- **Isolation and organization**: Funds and orders within one subaccount are isolated from others, which is critical for managing risk, running different trading bots, or applying distinct strategies simultaneously without interference.
+- **Seamless transfers**: Users can easily transfer assets between their main account balance and their various subaccounts, as well as between different subaccounts, using specific messages on the Injective network.
+- **Integration with exchange modules**: The subaccounts functionality is part of Injective's core exchange module, which includes an on-chain order book and matching engine for spot, perpetual, futures, and options markets.
+
+Subaccounts function like separate, linked "portfolios" controlled by a single user account. This provides flexibility and operational control for participants in Injective's DeFi ecosystem.
