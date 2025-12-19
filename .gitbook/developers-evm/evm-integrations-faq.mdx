@@ -1,0 +1,110 @@
+---
+title: "EVM Integrations FAQ"
+description: Frequently asked questions about integrating with Injective's EVM.
+---
+
+## Does Injective EVM Support ...?
+
+**Does Injective EVM Support (EVM feature)?**
+
+A: Generally, the answer is "yes".
+See below for more specific questions.
+
+**Does Injective EVM Support these specific opcodes?**
+
+A: Yes. We have parity with opcode implementation.
+More precisely: We have not added any custom opcodes,
+neither have we modified the behaviour of any opcodes.
+
+**Does Injective EVM Support ERC20, ERC721, ERC1155?**
+
+A: Yes, any Solidity based smart contract standards should work,
+as these *do not* require any special features beyond the standard EVM.
+
+Corollary: When implementing fungible tokens,
+ERC20 and any others that are extensions of it,
+we strongly recommend that you implement them as a MultiVM Token Standard (MTS) token.
+This allows the same token to act as a fungible token not only on Injective's EVM,
+but also on Injective native (specifically as Cosmos Denoms).
+Should Injective add other VMs in the future, MTS tokens will also work on those.
+Read more about MTS:
+[General article](https://injective.com/blog/multivm-token-standard-wrapped-inj), and
+[technical reference](/developers-evm/multivm-token-standard).
+
+**Does Injective EVM Support EIP-1559?**
+
+A: Yes.
+
+## Can I use ... on Injective EVM?
+
+A: Generally, the answer is "yes".
+See below for more specific questions.
+
+**Can I use (EVM tool/ library) on Injective EVM?**
+
+A:
+
+- viem - yes
+- ethers.js - yes
+- hardhat - yes
+- foundry - yes
+
+**Can I use Foundry on Injective EVM with Injective's EVM precompiles?**
+
+A: Injective's [EVM precompiles](/developers-evm/precompiles)
+access Injective native functions that are not available in generic EVMs.
+This means that if you use, for example Foundry and connect it to:
+
+- Injective EVM Testnet, it will work
+- `localhost` simulated EVM network, it will not work
+
+To address the latter issue, we've forked the Foundry tools to support
+Injective precompiles (starting with Bank precompile needed for `BankERC20.sol` and MTS),
+if you are using Solidity tests or deployment scripts as a Foundry project,
+you will need this so `forge`/ `cast` can do local simulations.
+
+Latest releases, with pre-built binaries for x86_64 Linux and macOS ARM64,
+can be found at [github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases).
+
+## Which EVM development infrastructure is available on Injective?
+
+Refer to the [EVM Integrations Cheat Sheet](/developers-evm/evm-integrations-cheat-sheet)
+for the answers.
+
+## How can I resolve JSON-RPC dropped responses?
+
+A: If you are using the public endpoint for RPCs,
+this is likely to happen to you due to rate limiting.
+These endpoints are designed for very light usage.
+If you have deployed a complex application,
+you should consider using a commercial grade RPC endpoint instead.
+
+You may find recommended RPC providers in the
+[EVM Integrations Cheat Sheet](/developers-evm/evm-integrations-cheat-sheet).
+
+## Are `inj...` addresses and `0x...` addresses comaptible?
+
+A: Yes. In fact they are the same, simply rendered in different formats.
+
+Refer to [Convert addresses](https://docs.injective.network/developers/convert-addresses)
+for example code to convert between these two formats.
+
+## Which EVM hardfork does Injective support?
+
+A: Here's the live configuration data for the EVM:
+[sentry.lcd.injective.network/injective/evm/v1/params](https://sentry.lcd.injective.network/injective/evm/v1/params)
+
+Under `chain_config`, there are keys that correspond to EVM hard fork names (with suffixes).
+These indicate which ones are enabled.
+The value for these keys are the block numbers at which they are enabled.
+As of the Mainnet launch, all of them are set to `0`,
+i.e. they are enabled from the "genesis" EVM block.
+For future EVM hardforks, new keys will be added that will have a non-zero block number
+at which they will be (or were) enabled.
+
+<Tip>
+Do you have more questions about EVM integrations?
+
+Join the [Injective discord](https://discord.com/invite/injective)
+community and ask them there!
+</Tip>
