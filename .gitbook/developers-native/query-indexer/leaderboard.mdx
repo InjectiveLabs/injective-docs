@@ -9,22 +9,22 @@ Example code snippets to query the indexer for leaderboard module related data.
 ### Fetch leaderboard
 
 ```ts
-import { IndexerRestLeaderboardChronosApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestLeaderboardChronosApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
+const endpoints = getNetworkEndpoints(Network.Testnet);
 const indexerGrpcExplorerApi = new IndexerRestLeaderboardChronosApi(
-  `${endpoints.chronos}/api/chronos/v1/leaderboard`,
-)
+  `${endpoints.chronos}/api/chronos/v1/leaderboard`
+);
 
 const SelectList = {
-  Day: '1d',
-  Week: '7d',
-}
+  Day: "1d",
+  Week: "7d",
+};
 
-const resolution = SelectList.Day
+const resolution = SelectList.Day;
 
-const leaderboard = await indexerGrpcExplorerApi.fetchLeaderboard(resolution)
+const leaderboard = await indexerGrpcExplorerApi.fetchLeaderboard(resolution);
 
-console.log(leaderboard)
+console.log(leaderboard);
 ```

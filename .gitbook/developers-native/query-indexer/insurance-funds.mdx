@@ -9,35 +9,35 @@ Example code snippets to query the indexer for insurance fund module related dat
 ### Fetch redemptions for an injective address
 
 ```ts
-import { IndexerGrpcInsuranceFundApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
+const endpoints = getNetworkEndpoints(Network.Testnet);
 const indexerGrpcInsuranceFundApi = new IndexerGrpcInsuranceFundApi(
-  endpoints.indexer,
-)
+  endpoints.indexer
+);
 
-const injectiveAddress = 'inj...'
+const injectiveAddress = "inj...";
 
 const redemptions = await indexerGrpcInsuranceFundApi.fetchRedemptions({
   injectiveAddress,
-})
+});
 
-console.log(redemptions)
+console.log(redemptions);
 ```
 
 ### Fetch insurance funds
 
 ```ts
-import { IndexerGrpcInsuranceFundApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
+const endpoints = getNetworkEndpoints(Network.Testnet);
 const indexerGrpcInsuranceFundApi = new IndexerGrpcInsuranceFundApi(
-  endpoints.indexer,
-)
+  endpoints.indexer
+);
 
-const insuranceFunds = await indexerGrpcInsuranceFundApi.fetchInsuranceFunds()
+const insuranceFunds = await indexerGrpcInsuranceFundApi.fetchInsuranceFunds();
 
-console.log(insuranceFunds)
+console.log(insuranceFunds);
 ```

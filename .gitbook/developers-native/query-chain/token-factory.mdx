@@ -9,33 +9,33 @@ Example code snippets to query the chain for token factory module related data.
 ### Fetch all denoms created by _creator_
 
 ```ts lines highlight={1}
-import { ChainGrpcTokenFactoryApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcTokenFactoryApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcTokenFactoryApi = new ChainGrpcTokenFactoryApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcTokenFactoryApi = new ChainGrpcTokenFactoryApi(endpoints.grpc);
 
-const creator = 'inj...'
-const denoms = await chainGrpcTokenFactoryApi.fetchDenomsFromCreator(creator)
+const creator = "inj...";
+const denoms = await chainGrpcTokenFactoryApi.fetchDenomsFromCreator(creator);
 
-console.log(denoms)
+console.log(denoms);
 ```
 
 ### Fetch denom authority metadata (i.e fetch admin of a token)
 
 ```ts
-import { ChainGrpcTokenFactoryApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcTokenFactoryApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcTokenFactoryApi = new ChainGrpcTokenFactoryApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcTokenFactoryApi = new ChainGrpcTokenFactoryApi(endpoints.grpc);
 
-const creator = 'inj...'
-const subdenom = 'NINJA'
+const creator = "inj...";
+const subdenom = "NINJA";
 const metadata = await chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
   creator,
-  subdenom,
-)
+  subdenom
+);
 
-console.log(metadata)
+console.log(metadata);
 ```

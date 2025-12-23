@@ -13,12 +13,10 @@ Let's explore (and provide examples) the Messages that the Staking module export
 This Message is used to Redelegate staked INJ from one validator to another.
 
 ```ts
-import {
-  MsgBeginRedelegate,
-  MsgBroadcasterWithPk,
-} from "@injectivelabs/sdk-ts";
-import { toChainFormat } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgBeginRedelegate } from "@injectivelabs/sdk-ts/core/modules";
 
 const denom = "inj";
 const privateKey = "0x...";
@@ -54,7 +52,8 @@ This Message is used to Delegate INJ to a validator.
 ```ts
 import { Network } from "@injectivelabs/networks";
 import { toChainFormat } from "@injectivelabs/utils";
-import { MsgDelegate, MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts";
+import { MsgDelegate } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const denom = "inj";
 const privateKey = "0x...";
@@ -86,12 +85,10 @@ console.log(txHash);
 This message is used to cancel unbonding from a validator, reset the bonding period, and delegate back to the previous validator.
 
 ```ts
-import {
-  MsgBroadcasterWithPk,
-  MsgCancelUnbondingDelegation,
-} from "@injectivelabs/sdk-ts";
-import { toChainFormat } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCancelUnbondingDelegation } from "@injectivelabs/sdk-ts/core/modules";
 
 const denom = "inj";
 const delegatorAddress = "inj1...";

@@ -9,8 +9,8 @@ Example code snippets to query the wasm module on chain
 ### Fetch contacts' account balance Note that pagination parameters can be passed to obtain additional accounts.
 
 ```ts
-import { ChainGrpcWasmApi, PaginationOption } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi, PaginationOption } from '@injectivelabs/sdk-ts/client/chain'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
@@ -29,83 +29,84 @@ console.log(contractAccountsBalance)
 ### Fetch info related to a contract
 
 ```ts
-import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
 
-const contractAddress = 'inj...'
+const contractAddress = "inj...";
 
-const contractInfo = await chainGrpcWasmApi.fetchContractInfo(contractAddress)
+const contractInfo = await chainGrpcWasmApi.fetchContractInfo(contractAddress);
 
-console.log(contractInfo)
+console.log(contractInfo);
 ```
 
 ### Fetch contract history
 
 ```ts
-import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
 
-const contractAddress = 'inj...'
+const contractAddress = "inj...";
 
 const contractHistory = await chainGrpcWasmApi.fetchContractHistory(
-  contractAddress,
-)
+  contractAddress
+);
 
-console.log(contractHistory)
+console.log(contractHistory);
 ```
 
 ### Fetch the state of a smart contract
 
 ```ts
-import { ChainGrpcWasmApi, toBase64 } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcWasmApi, toBase64 } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
 
-const contractAddress = 'inj...'
-const query = '...'
-const queryFromObject = toBase64({ get_coin: {} })
+const contractAddress = "inj...";
+const query = "...";
+const queryFromObject = toBase64({ get_coin: {} });
 
 const contractState = await chainGrpcWasmApi.fetchSmartContractState({
   contractAddress,
   query /* optional string query - HAS to be in base64 or use queryFromObject */,
-})
+});
 
-console.log(contractState)
+console.log(contractState);
 ```
 
 ### Fetch the raw state of a smart contract
 
 ```ts
-import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
 
-const contractAddress = 'inj...'
-const query = '...'
-const queryFromObject = toBase64({ get_coin: {} })
+const contractAddress = "inj...";
+const query = "...";
+const queryFromObject = toBase64({ get_coin: {} });
 
 const rawContractState = await chainGrpcWasmApi.fetchRawContractState({
   contractAddress,
   query /* optional string query - HAS to be in base64 or use queryFromObject */,
-})
+});
 
-console.log(rawContractState)
+console.log(rawContractState);
 ```
 
 ### Fetch the codes associated with a contract
 
 ```ts
-import { PaginationOption, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts/client/chain'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
@@ -124,24 +125,25 @@ console.log(rawContractState)
 ### Fetch info associated with a contract code
 
 ```ts
-import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
 
-const codeId = 1
+const codeId = 1;
 
-const codeDetails = await chainGrpcWasmApi.fetchContractCode(codeId)
+const codeDetails = await chainGrpcWasmApi.fetchContractCode(codeId);
 
-console.log(codeDetails)
+console.log(codeDetails);
 ```
 
 ### Fetch the contracts associated with a code
 
 ```ts
-import { PaginationOption, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts/client/chain'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)

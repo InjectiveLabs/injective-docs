@@ -9,27 +9,27 @@ Example code snippets to query for chain node related data.
 ### Fetch the latest block info
 
 ```ts
-import { ChainRestTendermintApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainRestTendermintApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainRestTendermintApi = new ChainRestTendermintApi(endpoints.rest)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestTendermintApi = new ChainRestTendermintApi(endpoints.rest);
 
-const latestBlock = await chainRestTendermintApi.fetchLatestBlock()
+const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
 
-console.log(latestBlock)
+console.log(latestBlock);
 ```
 
 ### Fetch chain node info
 
 ```ts
-import { ChainRestTendermintApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainRestTendermintApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainRestTendermintApi = new ChainRestTendermintApi(endpoints.rest)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestTendermintApi = new ChainRestTendermintApi(endpoints.rest);
 
-const nodeInfo = await chainRestTendermintApi.fetchNodeInfo()
+const nodeInfo = await chainRestTendermintApi.fetchNodeInfo();
 
-console.log(nodeInfo)
+console.log(nodeInfo);
 ```

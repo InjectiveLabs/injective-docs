@@ -1,0 +1,40 @@
+---
+title: Trading
+---
+
+Example code snippets to stream from the indexer for trading automation module related data using StreamManagerV2.
+
+**Note**: IndexerGrpcTradingStreamV2 returns raw protobuf responses without transformation.
+
+## Using gRPC Stream with StreamManagerV2
+
+### Stream grid strategies
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcTradingStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcTradingStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'trading-grid-strategies',
+  streamFactory: () => stream.streamGridStrategies({ 
+    marketId: '0x...', // optional, but either marketId or accountAddresses required
+    accountAddresses: ['inj...'], // optional array
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (gridStrategies) => {
+    console.log(gridStrategies)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```

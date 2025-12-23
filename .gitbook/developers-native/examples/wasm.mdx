@@ -5,7 +5,8 @@ title: Wasm
 The `wasm` module is the heart of interacting with the wasm smart contracts deployed on the injective chain, here you can find a list of [smart contracts](https://injscan.com/smart-contracts/) that are deployed on the Injective chain.
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-`MsgUpdateCode` and `MsgStoreCode` are not supported by Ethereum (ex: Metamask) wallets.
+  `MsgUpdateCode` and `MsgStoreCode` are not supported by Ethereum (ex:
+  Metamask) wallets.
 </Callout>
 
 ## Messages
@@ -15,33 +16,34 @@ The `wasm` module is the heart of interacting with the wasm smart contracts depl
 This message is used to execute contract function, below we will use the [CW20 spec](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md) transfer message as an example.
 
 ```ts
-import { Network } from '@injectivelabs/networks'
-import { MsgExecuteContract, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContract } from "@injectivelabs/sdk-ts/core/modules";
 
-const injectiveAddress = 'inj1...'
-const recipientAddress = 'inj2...'
-const contractAddress = 'cw...'
+const injectiveAddress = "inj1...";
+const recipientAddress = "inj2...";
+const contractAddress = "cw...";
 
 const msg = MsgExecuteContract.fromJSON({
   contractAddress,
   sender: injectiveAddress,
   exec: {
-    action: 'transfer',
+    action: "transfer",
     msg: {
       recipient: recipientAddress,
       amount: 100000,
     },
   },
-})
+});
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
   network: Network.Mainnet,
 }).broadcast({
   msgs: msg,
-})
+});
 
-console.log(txHash)
+console.log(txHash);
 ```
 
 ### MsgExecuteContract (funds example)
@@ -51,35 +53,36 @@ In some scenarios, depending on the smart contract's function we have to transfe
 Below is an example of how we can send the `MsgExecuteContract` using an `test` contract function.
 
 ```ts
-import { Network } from '@injectivelabs/networks'
-import { toChainFormat } from '@injectivelabs/utils'
-import { MsgExecuteContract, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContract } from "@injectivelabs/sdk-ts/core/modules";
 
-const injectiveAddress = 'inj1...'
-const contractAddress = 'cw...'
+const injectiveAddress = "inj1...";
+const contractAddress = "cw...";
 
 const msg = MsgExecuteContract.fromJSON({
   contractAddress,
   sender: injectiveAddress,
   exec: {
-    action: 'test',
+    action: "test",
     funds: [
       {
-        denom: 'inj',
+        denom: "inj",
         amount: toChainFormat(1).toFixed(),
       },
     ],
   },
-})
+});
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
   network: Network.Mainnet,
 }).broadcast({
   msgs: msg,
-})
+});
 
-console.log(txHash)
+console.log(txHash);
 ```
 
 ### MsgExecuteContractCompat
@@ -91,36 +94,34 @@ _**Note:**_ _`MsgExecuteContract` and `MsgExecuteContractCompat` underlying mess
 Below is an example of how we can send the `MsgExecuteContractCompact` using an `test` contract function.
 
 ```ts
-import {
-  MsgBroadcasterWithPk,
-  MsgExecuteContractCompat,
-} from '@injectivelabs/sdk-ts'
-import { Network } from '@injectivelabs/networks'
-import { toChainFormat } from '@injectivelabs/utils'
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
 
-const injectiveAddress = 'inj1...'
-const contractAddress = 'cw...'
+const injectiveAddress = "inj1...";
+const contractAddress = "cw...";
 
 const msg = MsgExecuteContractCompat.fromJSON({
   contractAddress,
   sender: injectiveAddress,
   exec: {
-    action: 'test',
+    action: "test",
     funds: [
       {
-        denom: 'inj',
+        denom: "inj",
         amount: toChainFormat(1).toFixed(),
       },
     ],
   },
-})
+});
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
   network: Network.Mainnet,
 }).broadcast({
   msgs: msg,
-})
+});
 
-console.log(txHash)
+console.log(txHash);
 ```

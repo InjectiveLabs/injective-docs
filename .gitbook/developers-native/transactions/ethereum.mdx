@@ -13,11 +13,17 @@ Using our custom abstraction for the Messages which allows the developer to get 
 ```ts
 import {
   MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
   BaseAccount,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
   ChainRestAuthApi,
-  getEip712TypedDataV2,
   ChainRestTendermintApi,
-} from "@injectivelabs/sdk-ts";
+} from "@injectivelabs/sdk-ts/client/chain";
+import {
+  getEip712TypedDataV2,
+} from "@injectivelabs/sdk-ts/core/tx";
 import {
   toBigNumber,
   toChainFormat,
@@ -105,7 +111,7 @@ import {
 } from "@injectivelabs/networks";
 import { getDefaultStdFee } from "@injectivelabs/utils";
 import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
-import { createTransaction, TxRestApi } from "@injectivelabs/sdk-ts";
+import { createTransaction, TxRestApi } from "@injectivelabs/sdk-ts/core/tx";
 
 const evmChainId = EvmChainId.Mainnet;
 
@@ -153,19 +159,27 @@ Let's have a look at the whole flow (using Metamask as a signing wallet)
 ```ts
 import {
   MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  BaseAccount,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
   TxRestApi,
   SIGN_AMINO,
-  BaseAccount,
   hexToBase64,
-  ChainRestAuthApi,
   createTransaction,
   createTxRawEIP712,
   getEip712TypedData,
-  getEthereumAddress,
   createWeb3Extension,
-  ChainRestTendermintApi,
   recoverTypedSignaturePubKey,
-} from "@injectivelabs/sdk-ts";
+} from "@injectivelabs/sdk-ts/core/tx";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import {
+  getEthereumAddress,
+} from "@injectivelabs/sdk-ts/utils";
 import {
   toBigNumber,
   toChainFormat,
@@ -259,4 +273,4 @@ const response = await txRestApi.fetchTxPoll(txResponse.txHash);
 
 ## Example with WalletStrategy (Prepare + Sign + Broadcast)
 
-Example can be found [here](https://github.com/InjectiveLabs/injective-ts/blob/862e7c30d96120947b056abffbd01b4f378984a1/packages/wallet-ts/src/broadcaster/MsgBroadcaster.ts#L166-L248).
+Example can be found in the [wallet-core package](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-core).

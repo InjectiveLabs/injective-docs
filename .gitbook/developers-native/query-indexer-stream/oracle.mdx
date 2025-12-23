@@ -2,57 +2,65 @@
 title: Oracle
 ---
 
-Example code snippets to query the indexer for oracle module related data.
+Example code snippets to stream from the indexer for oracle module related data using StreamManagerV2.
 
-## Using gRPC Stream
+## Using gRPC Stream with StreamManagerV2
 
 ### Stream oracle prices
 
 ```ts
-import { IndexerGrpcOracleStream } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcOracleStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcOracleStream = new IndexerGrpcOracleStream(endpoints.indexer)
+const stream = new IndexerGrpcOracleStreamV2(endpoints.indexer)
 
-const streamFn = indexerGrpcOracleStream.streamOraclePrices.bind(
-  indexerGrpcOracleStream,
-)
+const streamManager = new StreamManagerV2({
+  id: 'oracle-prices',
+  streamFactory: () => stream.streamOraclePrices({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (oraclePrices) => {
+    console.log(oraclePrices)
+  },
+  retryConfig: { enabled: true }
+})
 
-const callback = (oraclePrices) => {
-  console.log(oraclePrices)
-}
-
-const streamFnArgs = {
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```
 
-### Stream oracle prices by market
+### Stream oracle prices by markets
 
 ```ts
-import { IndexerGrpcOracleStream } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcOracleStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcOracleStream = new IndexerGrpcOracleStream(endpoints.indexer)
+const stream = new IndexerGrpcOracleStreamV2(endpoints.indexer)
 
-const marketIds = ['0x...'] /* optional param */
+const streamManager = new StreamManagerV2({
+  id: 'oracle-prices-by-markets',
+  streamFactory: () => stream.streamOraclePricesByMarkets({ 
+    marketIds: ['0x...'],
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (oraclePrices) => {
+    console.log(oraclePrices)
+  },
+  retryConfig: { enabled: true }
+})
 
-const streamFn = indexerGrpcOracleStream.streamOraclePricesByMarkets.bind(
-  indexerGrpcOracleStream,
-)
-
-const callback = (oraclePrices) => {
-  console.log(oraclePrices)
-}
-
-const streamFnArgs = {
-  marketIds,
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```

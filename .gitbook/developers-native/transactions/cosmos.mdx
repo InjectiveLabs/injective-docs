@@ -17,12 +17,18 @@ Getting a private key from cosmos wallets is usually done by taking the current 
 ```ts
 import {
   MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
   BaseAccount,
-  ChainRestAuthApi,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
   createTransaction,
-  ChainRestTendermintApi,
-} from "@injectivelabs/sdk-ts";
+} from "@injectivelabs/sdk-ts/core/tx";
 import { toBigNumber, toChainFormat } from "@injectivelabs/utils";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
 import { getStdFee, DEFAULT_BLOCK_TIMEOUT_HEIGHT } from "@injectivelabs/utils";
 
 (async () => {
@@ -113,7 +119,7 @@ import {
   BroadcastModeKeplr,
   getTxRawFromTxRawOrDirectSignResponse,
   TxRaw,
-} from '@injectivelabs/sdk-ts'
+} from '@injectivelabs/sdk-ts/core/tx'
 import { TransactionException } from '@injectivelabs/exceptions'
 
 /**
@@ -176,22 +182,28 @@ Let's have a look at the whole flow (using Keplr as a signing wallet)
 
 ```ts
 import {
-  TxRaw,
   MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
   BaseAccount,
-  TxRestApi,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import { ChainId } from "@injectivelabs/ts-types";
+import { SignDoc } from "@keplr-wallet/types";
+import { toBigNumber, toChainFormat } from "@injectivelabs/utils";
+import { TransactionException } from "@injectivelabs/exceptions";
+import {
   ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { getStdFee, DEFAULT_BLOCK_TIMEOUT_HEIGHT } from "@injectivelabs/utils";
+import {
+  TxRaw,
+  TxRestApi,
   createTransaction,
   CosmosTxV1Beta1Tx,
   BroadcastModeKeplr,
-  ChainRestTendermintApi,
   getTxRawFromTxRawOrDirectSignResponse,
-} from "@injectivelabs/sdk-ts";
-import { getStdFee, DEFAULT_BLOCK_TIMEOUT_HEIGHT } from "@injectivelabs/utils";
-import { ChainId } from "@injectivelabs/ts-types";
-import { toBigNumber, toChainFormat } from "@injectivelabs/utils";
-import { TransactionException } from "@injectivelabs/exceptions";
-import { SignDoc } from "@keplr-wallet/types";
+} from "@injectivelabs/sdk-ts/core/tx";
 
 const getKeplr = async (chainId: string) => {
   await window.keplr.enable(chainId);
@@ -280,4 +292,4 @@ const broadcastTx = async (chainId: string, txRaw: TxRaw) => {
 
 ## Example with WalletStrategy (Prepare + Sign + Broadcast)
 
-Example can be found [here](https://github.com/InjectiveLabs/injective-ts/blob/862e7c30d96120947b056abffbd01b4f378984a1/packages/wallet-ts/src/broadcaster/MsgBroadcaster.ts#L301-L365).
+Example can be found in the [wallet-core package](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-core).

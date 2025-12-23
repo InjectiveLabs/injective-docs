@@ -29,31 +29,33 @@ List of useful message types:
 "/injective.exchange.v1beta1.MsgWithdraw",
 ```
 
-Per [cosmos sdk docs](https://docs.cosmos.network/main/modules/authz), "Authorizations must be granted for a particular Msg service method one by one", so the following code snipped must be repeated for each message type that you would like for the `grantee` to have authorization on behalf of a `granter`.
+Per [cosmos sdk docs](https://docs.cosmos.network/main/modules/authz), "Authorizations must be granted for a particular Msg service method one by one", so the following code snippet must be repeated for each message type that you would like for the `grantee` to have authorization on behalf of a `granter`.
 
 ```ts
-import { MsgGrant, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'
-import { Network } from '@injectivelabs/networks'
+import { Network } from "@injectivelabs/networks";
+import { MsgGrant } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
-const privateKeyOfGranter = '0x...'
-const grantee = 'inj...'
-const granter = 'inj...'
-const messageType = '/injective.exchange.v1beta1.MsgCreateSpotLimitOrder' /* example message type */
+const privateKeyOfGranter = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+const messageType =
+  "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder"; /* example message type */
 
 const msg = MsgGrant.fromJSON({
-   messageType,
-    grantee,
-    granter
+  messageType,
+  grantee,
+  granter,
 });
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey: privateKeyOfGranter,
-  network: Network.Testnet
+  network: Network.Testnet,
 }).broadcast({
-  msgs: msg
-})
+  msgs: msg,
+});
 
-console.log(txHash)
+console.log(txHash);
 ```
 
 ### MsgExec
@@ -61,36 +63,37 @@ console.log(txHash)
 When a grantee wants to execute a transaction on behalf of a granter, they must send MsgExec. In this example, we'll do a MsgSend to transfer assets from the granter's account address to another account address.
 
 ```ts
-import { Network } from '@injectivelabs/networks'
-import { toChainFormat } from '@injectivelabs/utils'
-import { MsgExec, MsgSend, MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExec, MsgSend } from "@injectivelabs/sdk-ts/core/modules";
 
-const privateKeyOfGrantee = '0x...'
-const grantee = 'inj...'
-const granter = 'inj...'
+const privateKeyOfGrantee = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
 
 const msgs = MsgSend.fromJSON({
-    amount: {
-        denom: 'inj',
-        amount: toChainFormat(0.01).toFixed()
-    },
-    srcInjectiveAddress: granter,
-    dstInjectiveAddress: 'inj1...',
-  });
+  amount: {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  },
+  srcInjectiveAddress: granter,
+  dstInjectiveAddress: "inj1...",
+});
 
 const msg = MsgExec.fromJSON({
-    msgs,
-    grantee,
+  msgs,
+  grantee,
 });
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey: privateKeyOfGrantee,
-  network: Network.Testnet
+  network: Network.Testnet,
 }).broadcast({
-  msgs: msg
-})
+  msgs: msg,
+});
 
-console.log(txHash)
+console.log(txHash);
 ```
 
 ### MsgRevoke
@@ -98,26 +101,29 @@ console.log(txHash)
 A grant can be removed with the MsgRevoke message.
 
 ```ts
-import { MsgRevoke, MsgBroadcasterWithPk, getEthereumAddress } from '@injectivelabs/sdk-ts'
-import { Network } from '@injectivelabs/networks'
+import { Network } from "@injectivelabs/networks";
+import { MsgRevoke } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
-const privateKeyOfGranter = '0x...'
-const grantee = 'inj...'
-const granter = 'inj...'
-const messageType = '/injective.exchange.v1beta1.MsgCreateSpotLimitOrder' /* example message type */
+const privateKeyOfGranter = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+const messageType =
+  "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder"; /* example message type */
 
 const msg = MsgRevoke.fromJSON({
-   messageType,
-    grantee,
-    granter
+  messageType,
+  grantee,
+  granter,
 });
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey: privateKeyOfGranter,
-  network: Network.Testnet
+  network: Network.Testnet,
 }).broadcast({
-  msgs: msg
-})
+  msgs: msg,
+});
 
-console.log(txHash)
+console.log(txHash);
 ```

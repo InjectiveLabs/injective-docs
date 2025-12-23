@@ -2,30 +2,35 @@
 title: Auction
 ---
 
-Example code snippets to stream from the indexer for auction module related data.
+Example code snippets to stream from the indexer for auction module related data using StreamManagerV2.
 
-## Using gRPC Stream
+## Using gRPC Stream with StreamManagerV2
 
 ### Stream auction bids
 
 ```ts
-import { IndexerGrpcAuctionStream } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcAuctionStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAuctionStream = new IndexerGrpcAuctionStream(endpoints.indexer)
+const stream = new IndexerGrpcAuctionStreamV2(endpoints.indexer)
 
-const streamFn = indexerGrpcAuctionStream.streamBids.bind(
-  indexerGrpcAuctionStream,
-)
+const streamManager = new StreamManagerV2({
+  id: 'auction-bids',
+  streamFactory: () => stream.streamBids({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (bids) => {
+    console.log(bids)
+  },
+  retryConfig: { enabled: true }
+})
 
-const callback = (bids) => {
-  console.log(bids)
-}
-
-const streamFnArgs = {
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```

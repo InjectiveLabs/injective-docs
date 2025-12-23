@@ -19,18 +19,16 @@ This Message is used to send coins from the Bank module to a wallet's subaccount
 ```ts
 import { Network } from "@injectivelabs/networks";
 import { toChainFormat } from "@injectivelabs/utils";
-import {
-  MsgDeposit,
-  MsgBroadcasterWithPk,
-  getEthereumAddress,
-} from "@injectivelabs/sdk-ts";
+import { MsgDeposit } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const privateKey = "0x...";
 const injectiveAddress = "inj1...";
 
 const amount = {
   denom: "inj",
-  amount: toChainFormat(1),
+  amount: toChainFormat(1).toFixed(),
 };
 
 const ethereumAddress = getEthereumAddress(injectiveAddress);
@@ -59,13 +57,11 @@ console.log(txHash);
 This Message is used to send coins from the wallet's subaccount back to the users Bank funds
 
 ```ts
-import {
-  MsgWithdraw,
-  MsgBroadcasterWithPk,
-  getEthereumAddress,
-} from "@injectivelabs/sdk-ts";
-import { toChainFormat } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgWithdraw } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const privateKey = "0x...";
 const injectiveAddress = "inj1...";
@@ -101,17 +97,15 @@ console.log(txHash);
 This Message is used to create a spot limit order
 
 ```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgCreateSpotLimitOrder } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 import {
   getEthereumAddress,
-  MsgBroadcasterWithPk,
-  MsgCreateSpotLimitOrder,
   getSpotMarketTensMultiplier,
-} from "@injectivelabs/sdk-ts";
-import { Network } from "@injectivelabs/networks";
-import {
   spotPriceToChainPriceToFixed,
   spotQuantityToChainQuantityToFixed,
-} from "@injectivelabs/utils";
+} from "@injectivelabs/sdk-ts/utils";
 
 const privateKey = "0x...";
 const injectiveAddress = "inj1...";
@@ -172,17 +166,15 @@ console.log(txHash);
 This Message is used to create a spot market order
 
 ```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgCreateSpotMarketOrder } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 import {
-  MsgCreateSpotMarketOrder,
-  MsgBroadcasterWithPk,
   getEthereumAddress,
   getSpotMarketTensMultiplier,
-} from "@injectivelabs/sdk-ts";
-import {
   spotPriceToChainPriceToFixed,
   spotQuantityToChainQuantityToFixed,
-} from "@injectivelabs/utils";
-import { Network } from "@injectivelabs/networks";
+} from "@injectivelabs/sdk-ts/utils";
 
 const privateKey = "0x...";
 const injectiveAddress = "inj1...";
@@ -242,68 +234,68 @@ console.log(txHash);
 This Message is used to create a derivative limit order
 
 ```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCreateDerivativeLimitOrder } from "@injectivelabs/sdk-ts/core/modules";
 import {
-  MsgCreateDerivativeLimitOrder,
-  MsgBroadcasterWithPk,
   getEthereumAddress,
-  getDerivativeMarketTensMultiplier
-} from '@injectivelabs/sdk-ts'
-import {
+  getDerivativeMarketTensMultiplier,
   derivativePriceToChainPriceToFixed,
   derivativeQuantityToChainQuantityToFixed,
-  derivativeMarginToChainMarginToFixed
-} from '@injectivelabs/utils'
-import { Network } from '@injectivelabs/networks'
+  derivativeMarginToChainMarginToFixed,
+} from "@injectivelabs/sdk-ts/utils";
 
-const privateKey = '0x...'
-const injectiveAddress = 'inj1...'
-const feeRecipient = 'inj1...'
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const feeRecipient = "inj1...";
 const market = {
-  marketId: '0x...',
+  marketId: "0x...",
   baseDecimals: 18,
   quoteDecimals: 6,
-  minPriceTickSize: '', /* fetched from the chain */
-  minQuantityTickSize: '', /* fetched from the chain */
-  priceTensMultiplier: '', /** can be fetched from getDerivativeMarketTensMultiplier */
-  quantityTensMultiplier: '', /** can be fetched from getDerivativeMarketTensMultiplier */
-}
+  minPriceTickSize: "" /* fetched from the chain */,
+  minQuantityTickSize: "" /* fetched from the chain */,
+  priceTensMultiplier:
+    "" /** can be fetched from getDerivativeMarketTensMultiplier */,
+  quantityTensMultiplier:
+    "" /** can be fetched from getDerivativeMarketTensMultiplier */,
+};
 const order = {
   price: 10,
   quantity: 1,
-  margin: 10
-}
+  margin: 10,
+};
 
-const ethereumAddress = getEthereumAddress(injectiveAddress)
-const subaccountIndex = 0
-const suffix = '0'.repeat(23) + subaccountIndex
-const subaccountId = ethereumAddress + suffix
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
 
-const msg = MsgCreateDerivativeLimitOrder.fromJSON(
+const msg = MsgCreateDerivativeLimitOrder.fromJSON({
   orderType: 1 /* Buy */,
-  triggerPrice: '0',
+  triggerPrice: "0",
   injectiveAddress,
   price: derivativePriceToChainPriceToFixed({
     value: order.price,
-    quoteDecimals: market.quoteDecimals
+    quoteDecimals: market.quoteDecimals,
   }),
   quantity: derivativeQuantityToChainQuantityToFixed({ value: order.quantity }),
   margin: derivativeMarginToChainMarginToFixed({
     value: order.margin,
-    quoteDecimals: market.quoteDecimals
+    quoteDecimals: market.quoteDecimals,
   }),
   marketId: market.marketId,
   feeRecipient: feeRecipient,
-  subaccountId: subaccountI
-})
+  subaccountId: subaccountId,
+});
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
-  network: Network.Testnet
+  network: Network.Testnet,
 }).broadcast({
-  msgs: msg
-})
+  msgs: msg,
+});
 
-console.log(txHash)
+console.log(txHash);
 ```
 
 ### MsgCreateDerivativeMarketOrder
@@ -311,50 +303,50 @@ console.log(txHash)
 This Message is used to create a derivative market order
 
 ```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCreateDerivativeMarketOrder } from "@injectivelabs/sdk-ts/core/modules";
 import {
-  MsgCreateDerivativeMarketOrder,
-  MsgBroadcasterWithPk,
   getEthereumAddress,
-  getDerivativeMarketTensMultiplier
-} from '@injectivelabs/sdk-ts'
-import {
+  getDerivativeMarketTensMultiplier,
   derivativePriceToChainPriceToFixed,
   derivativeQuantityToChainQuantityToFixed,
-  derivativeMarginToChainMarginToFixed
-} from '@injectivelabs/utils'
-import { Network } from '@injectivelabs/networks'
+  derivativeMarginToChainMarginToFixed,
+} from "@injectivelabs/sdk-ts/utils";
 
-const privateKey = '0x...'
-const injectiveAddress = 'inj1...'
-const feeRecipient = 'inj1...'
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const feeRecipient = "inj1...";
 const market = {
-  marketId: '0x...',
+  marketId: "0x...",
   baseDecimals: 18,
   quoteDecimals: 6,
-  minPriceTickSize: '', /* fetched from the chain */
-  minQuantityTickSize: '', /* fetched from the chain */
-  priceTensMultiplier: '', /** can be fetched from getDerivativeMarketTensMultiplier */
-  quantityTensMultiplier: '', /** can be fetched from getDerivativeMarketTensMultiplier */
-}
+  minPriceTickSize: "" /* fetched from the chain */,
+  minQuantityTickSize: "" /* fetched from the chain */,
+  priceTensMultiplier:
+    "" /** can be fetched from getDerivativeMarketTensMultiplier */,
+  quantityTensMultiplier:
+    "" /** can be fetched from getDerivativeMarketTensMultiplier */,
+};
 const order = {
   price: 10,
   quantity: 1,
-  margin: 10
-}
+  margin: 10,
+};
 
-const ethereumAddress = getEthereumAddress(injectiveAddress)
-const subaccountIndex = 0
-const suffix = '0'.repeat(23) + subaccountIndex
-const subaccountId = ethereumAddress + suffix
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
 
-const msg = MsgCreateDerivativeMarketOrder.fromJSON(
+const msg = MsgCreateDerivativeMarketOrder.fromJSON({
   orderType: 1 /* Buy */,
-  triggerPrice: '0',
+  triggerPrice: "0",
   injectiveAddress,
   price: derivativePriceToChainPriceToFixed({
     value: order.price,
     tensMultiplier: market.priceTensMultiplier,
-    quoteDecimals: market.quoteDecimals
+    quoteDecimals: market.quoteDecimals,
   }),
   quantity: derivativeQuantityToChainQuantityToFixed({
     value: order.quantity,
@@ -363,21 +355,21 @@ const msg = MsgCreateDerivativeMarketOrder.fromJSON(
   margin: derivativeMarginToChainMarginToFixed({
     value: order.margin,
     quoteDecimals: market.quoteDecimals,
-    tensMultiplier: priceTensMultiplier,
+    tensMultiplier: market.priceTensMultiplier,
   }),
   marketId: market.marketId,
   feeRecipient: feeRecipient,
-  subaccountId: subaccountI
-})
+  subaccountId: subaccountId,
+});
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
-  network: Network.Testnet
+  network: Network.Testnet,
 }).broadcast({
-  msgs: msg
-})
+  msgs: msg,
+});
 
-console.log(txHash)
+console.log(txHash);
 ```
 
 ### MsgBatchUpdateOrders
@@ -385,18 +377,20 @@ console.log(txHash)
 This Message is used to batch update orders on the chain
 
 ```ts
+import { Network } from "@injectivelabs/networks";
+import { OrderSide } from "@injectivelabs/sdk-ts/types";
+import { MsgBatchUpdateOrders } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { GrpcOrderType } from "@injectivelabs/sdk-ts/client/chain";
 import {
-  MsgBatchUpdateOrders,
-  MsgBroadcasterWithPk,
   getEthereumAddress,
   getDerivativeMarketTensMultiplier,
-} from "@injectivelabs/sdk-ts";
-import {
   derivativePriceToChainPriceToFixed,
   derivativeQuantityToChainQuantityToFixed,
   derivativeMarginToChainMarginToFixed,
-} from "@injectivelabs/utils";
-import { Network } from "@injectivelabs/networks";
+  spotPriceToChainPriceToFixed,
+  spotQuantityToChainQuantityToFixed,
+} from "@injectivelabs/sdk-ts/utils";
 
 const privateKey = "0x...";
 const injectiveAddress = "inj1...";
@@ -416,6 +410,7 @@ const derivativeOrder = {
   price: 10,
   quantity: 1,
   margin: 10,
+  orderType: OrderSide.Buy,
 };
 const spotMarket = {
   marketId: "0x...",
@@ -424,14 +419,15 @@ const spotMarket = {
   minPriceTickSize: "" /* fetched from the chain */,
   minQuantityTickSize: "" /* fetched from the chain */,
   priceTensMultiplier:
-    "" /** can be fetched from getDerivativeMarketTensMultiplier */,
+    "" /** can be fetched from getSpotMarketTensMultiplier */,
   quantityTensMultiplier:
-    "" /** can be fetched from getDerivativeMarketTensMultiplier */,
+    "" /** can be fetched from getSpotMarketTensMultiplier */,
 };
 const spotOrder = {
   price: 10,
   quantity: 1,
   margin: 10,
+  orderType: OrderSide.Buy,
 };
 
 const ethereumAddress = getEthereumAddress(injectiveAddress);
@@ -453,7 +449,7 @@ const msg = MsgBatchUpdateOrders.fromJSON({
         value: derivativeOrder.quantity,
       }),
       margin: derivativeMarginToChainMarginToFixed({
-        value: margin,
+        value: derivativeOrder.margin,
         quoteDecimals: 6 /* USDT has 6 decimals */,
       }),
       marketId: derivativeMarket.marketId,
@@ -493,11 +489,9 @@ console.log(txHash);
 This Message is used to batch cancel spot orders on the chain
 
 ```ts
-import {
-  MsgBatchCancelSpotOrders,
-  MsgBroadcasterWithPk,
-} from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgBatchCancelSpotOrders } from "@injectivelabs/sdk-ts/core/modules";
 
 const privateKey = "0x...";
 const injectiveAddress = "inj1...";
@@ -542,11 +536,9 @@ This Message is used to batch cancel spot orders on the chain
 ### MsgBatchCancelDerivativeOrders
 
 ```ts
-import {
-  MsgBatchCancelDerivativeOrders,
-  MsgBroadcasterWithPk,
-} from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgBatchCancelDerivativeOrders } from "@injectivelabs/sdk-ts/core/modules";
 
 const privateKey = "0x...";
 const injectiveAddress = "inj1...";
@@ -591,8 +583,9 @@ console.log(txHash);
 This Message is used to opt out of the Trade & Earn program.
 
 ```ts
-import { MsgRewardsOptOut, MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
+import { MsgRewardsOptOut } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const privateKey = "0x...";
 const injectiveAddress = "inj...";
@@ -627,27 +620,23 @@ How to use funds that are currently associated with your Injective Address in ba
 - If you don't have existing non-default subaccounts, you can do a [MsgDeposit](/developers-native/examples/exchange#msgdeposit) to a new default subaccountId, which would be done via importing `getSubaccountId` from `sdk-ts` and setting the `subaccountId` field in [MsgDeposit](/developers-native/examples/exchange#msgdeposit) to `getSubaccountId(injectiveAddress, 1)`.
 
 ```ts
-import {
-  DenomClient,
-  MsgExternalTransfer,
-  MsgBroadcasterWithPk,
-} from "@injectivelabs/sdk-ts";
 import { toChainFormat } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
-
-const denomClient = new DenomClient(Network.Testnet);
+import { MsgExternalTransfer } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const injectiveAddress = "inj...";
 const srcSubaccountId = "0x...";
 const dstSubaccountId = `0x...`;
-const INJ_TOKEN_SYMBOL = "INJ";
-const tokenMeta = denomClient.getTokenMetaDataBySymbol(INJ_TOKEN_SYMBOL);
-const tokenDenom = `inj`;
+
+// INJ token details
+const INJ_DENOM = "inj";
+const INJ_DECIMALS = 18;
 
 /* format amount to add to the burn auction pool */
 const amount = {
-  denom: tokenDenom,
-  amount: toChainFormat(1, tokenMeta.decimals).toFixed(),
+  denom: INJ_DENOM,
+  amount: toChainFormat(1, INJ_DECIMALS).toFixed(),
 };
 
 /* create message in proto format */

@@ -20,7 +20,8 @@ Keep in mind that that the `admin` of the token can change the supply (mint or b
 
 ```ts
 import { Network } from "@injectivelabs/networks";
-import { MsgCreateDenom } from "@injectivelabs/sdk-ts";
+import { MsgCreateDenom } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const injectiveAddress = "inj1...";
 const privateKey = "0x...";
@@ -48,8 +49,9 @@ console.log(txHash);
 Minting of a specific denom is only allowed for the current admin. Note, the current admin is defaulted to the creator of the denom.
 
 ```ts
-import { MsgMint } from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
+import { MsgMint } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const injectiveAddress = "inj1...";
 const privateKey = "0x...";
@@ -79,8 +81,9 @@ console.log(txHash);
 The admin can burn the supply of the token factory. Everyone else can use this message to burn their funds only.
 
 ```ts
-import { MsgBurn } from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
+import { MsgBurn } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const injectiveAddress = "inj1...";
 const privateKey = "0x...";
@@ -110,10 +113,9 @@ console.log(txHash);
 Setting of metadata for a specific denom is only allowed for the admin of the denom. It allows the overwriting of the denom metadata in the bank module.
 
 ```ts
-import {
-  MsgSetDenomMetadata,
-} from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
+import { MsgSetDenomMetadata } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const injectiveAddress = "inj1...";
 const privateKey = "0x...";
@@ -170,7 +172,8 @@ The admin of the denom can mint new supply or burn existing one. It's recommende
 
 ```ts
 import { Network } from "@injectivelabs/networks";
-import { MsgChangeAdmin } from "@injectivelabs/sdk-ts";
+import { MsgChangeAdmin } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 
 const injectiveAddress = "inj1...";
 const privateKey = "0x...";
@@ -199,10 +202,9 @@ console.log(txHash);
 Here is a full example on how to create a new token, mint new tokens and set token metadata on Injective.
 
 ```ts
-import {
-  MsgSetDenomMetadata,
-} from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgSetDenomMetadata, MsgCreateDenom, MsgMint, MsgChangeAdmin } from "@injectivelabs/sdk-ts/core/modules";
 
 const injectiveAddress = "inj1...";
 const privateKey = "0x...";

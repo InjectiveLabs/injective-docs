@@ -11,11 +11,9 @@ Distribution -> MsgWithdrawValidatorCommission
 This message is used to withdraw all available delegator staking rewards from the validator.
 
 ```ts
-import {
-  MsgBroadcasterWithPk,
-  MsgWithdrawDelegatorReward,
-} from "@injectivelabs/sdk-ts";
 import {  Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgWithdrawDelegatorReward } from "@injectivelabs/sdk-ts/core/modules";
 
 const injectiveAddress = "inj1...";
 const validatorAddress = "inj1...";
@@ -44,11 +42,9 @@ console.log(txHash);
 This message is used by the validator to withdraw the commission earned.
 
 ```ts
-import {
-  MsgBroadcasterWithPk,
-  MsgWithdrawValidatorCommission,
-} from "@injectivelabs/sdk-ts";
 import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgWithdrawValidatorCommission } from "@injectivelabs/sdk-ts/core/modules";
 
 const injectiveAddress = "inj1...";
 const validatorAddress = "inj1...";

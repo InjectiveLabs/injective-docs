@@ -2,195 +2,139 @@
 title: Spot
 ---
 
-Example code snippets to stream from the indexer for spot market module related data.
+Example code snippets to stream from the indexer for spot market module related data using StreamManagerV2.
 
-## Using gRPC Stream
+## Using gRPC Stream with StreamManagerV2
 
-### Stream the spot orderbook
+### Stream orderbook updates
 
 ```ts
-import { IndexerGrpcSpotStream } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotStream = new IndexerGrpcSpotStream(endpoints.indexer)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
 
-const marketIds = ['0x...']
+const streamManager = new StreamManagerV2({
+  id: 'spot-orderbook-updates',
+  streamFactory: () => stream.streamOrderbookUpdates({ 
+    marketIds: ['0x...'],
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orderbookUpdates) => {
+    console.log(orderbookUpdates)
+  },
+  retryConfig: { enabled: true }
+})
 
-const streamFn = indexerGrpcSpotStream.streamSpotOrderbookV2.bind(
-  indexerGrpcSpotStream,
-)
-
-const callback = (orderbooks) => {
-  console.log(orderbooks)
-}
-
-const streamFnArgs = {
-  marketIds,
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```
 
 ### Stream spot orders
 
 ```ts
-import { IndexerGrpcSpotsStream } from '@injectivelabs/sdk-ts'
-import { OrderSide } from '@injectivelabs/ts-types'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotStream = new IndexerGrpcSpotsStream(endpoints.indexer)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
 
-const marketId = '0x...'
-const subaccountId = '0x...' /* optional param */
-const orderSide = OrderSide.Buy /* optional param */
+const streamManager = new StreamManagerV2({
+  id: 'spot-orders',
+  streamFactory: () => stream.streamOrders({
+    marketId: '0x...',
+    subaccountId: '0x...', // optional
+    orderSide: OrderSide.Buy, // optional
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orders) => {
+    console.log(orders)
+  },
+  retryConfig: { enabled: true }
+})
 
-const streamFn = indexerGrpcSpotStream.streamSpotOrders.bind(
-  indexerGrpcSpotStream,
-)
-
-const callback = (orders) => {
-  console.log(orders)
-}
-
-const streamFnArgs = {
-  marketId,
-  subaccountId,
-  orderside,
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```
 
 ### Stream spot order history
 
 ```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import {
   TradeDirection,
   TradeExecutionType,
-  IndexerGrpcSpotStream,
-} from '@injectivelabs/sdk-ts'
-import { OrderSide } from '@injectivelabs/ts-types'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+} from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotStream = new IndexerGrpcSpotStream(endpoints.indexer)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
 
-const marketId = '0x...' /* optional param */
-const subaccountId = '0x...' /* optional param */
-const orderTypes = [OrderSide.Buy] /* optional param */
-const executionTypes = [TradeExecutionType.Market] /* optional param */
-const direction = TradeDirection.Buy /* optional param*/
+const streamManager = new StreamManagerV2({
+  id: 'spot-order-history',
+  streamFactory: () => stream.streamOrderHistory({
+    marketId: '0x...', // optional
+    subaccountId: '0x...', // optional
+    direction: TradeDirection.Buy, // optional
+    executionTypes: [TradeExecutionType.Market], // optional
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orderHistory) => {
+    console.log(orderHistory)
+  },
+  retryConfig: { enabled: true }
+})
 
-const streamFn = indexerGrpcSpotStream.streamSpotOrderHistory.bind(
-  indexerGrpcSpotStream,
-)
-
-const callback = (orderHistory) => {
-  console.log(orderHistory)
-}
-
-const streamFnArgs = {
-  marketId,
-  subaccountId,
-  orderTypes,
-  executionTypes,
-  direction,
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```
 
 ### Stream spot trades
 
 ```ts
-import {
-  PaginationOption,
-  TradeDirection,
-  IndexerGrpcSpotStream
-} from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TradeDirection } from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotStream = new IndexerGrpcSpotStream(endpoints.indexer)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
 
-const marketIds = ['0x...'] /* optional param */
-const subaccountId = '0x...' /* optional param */
-const direction = TradeDirection.Buy /* optional param */
-const pagination = {...} as PaginationOption /* optional param */
+const streamManager = new StreamManagerV2({
+  id: 'spot-trades',
+  streamFactory: () => stream.streamTrades({
+    marketIds: ['0x...'], // optional
+    subaccountId: '0x...', // optional
+    direction: TradeDirection.Buy, // optional
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (trades) => {
+    console.log(trades)
+  },
+  retryConfig: { enabled: true }
+})
 
-const streamFn = indexerGrpcSpotStream.streamSpotTrades.bind(indexerGrpcSpotStream)
-
-const callback = (trades) => {
-  console.log(trades)
-}
-
-const streamFnArgs = {
-  marketIds,
-  subaccountId,
-  orderTypes,
-  direction,
-  pagination,
-  callback
-}
-
-streamFn(streamFnArgs)
-```
-
-### Stream markets
-
-```ts
-import { IndexerGrpcSpotStream } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotStream = new IndexerGrpcSpotStream(endpoints.indexer)
-
-const marketIds = ['0x...'] /* optional param */
-
-const streamFn = indexerGrpcSpotStream.streamSpotMarket.bind(
-  indexerGrpcSpotStream,
-)
-
-const callback = (markets) => {
-  console.log(markets)
-}
-
-const streamFnArgs = {
-  marketIds,
-  callback,
-}
-
-streamFn(streamFnArgs)
-```
-
-### Stream orderbook updates
-
-```ts
-import { IndexerGrpcSpotStream } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotStream = new IndexerGrpcSpotStream(endpoints.indexer)
-
-const marketIds = ['0x...']
-
-const streamFn = indexerGrpcSpotStream.streamDerivativeOrderbookUpdate.bind(
-  indexerGrpcSpotStream,
-)
-
-const callback = (orderbookUpdates) => {
-  console.log(orderbookUpdates)
-}
-
-const streamFnArgs = {
-  marketIds,
-  callback,
-}
-
-streamFn(streamFnArgs)
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
 ```

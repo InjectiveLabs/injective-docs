@@ -9,19 +9,17 @@ Example code snippets to query the indexer for portfolio module related data.
 ### Fetch portfolio based on injective address, such as bank balances and subaccount balances
 
 ```ts lines highlight={1}
-import { IndexerGrpcAccountPortfolioApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcPortfolioApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAccountPortfolioApi = new IndexerGrpcAccountPortfolioApi(
-  endpoints.indexer,
-)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcPortfolioApi = new IndexerGrpcPortfolioApi(endpoints.indexer);
 
-const injectiveAddress = 'inj...'
+const injectiveAddress = "inj...";
 
-const portfolio = await indexerGrpcAccountPortfolioApi.fetchAccountPortfolioBalances(
-  injectiveAddress,
-)
+const portfolio = await indexerGrpcPortfolioApi.fetchAccountPortfolioBalances(
+  injectiveAddress
+);
 
-console.log(portfolio)
+console.log(portfolio);
 ```

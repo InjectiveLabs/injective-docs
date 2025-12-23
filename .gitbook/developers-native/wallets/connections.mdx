@@ -16,58 +16,60 @@ In case you still want to use some wallet natively (without the WalletStrategy c
 
 Metamask is an Ethereum native wallet and can be used to connect and interact with your dApp built on Injective.
 
-* **Get Injective addresses from Metamask**
+- **Get Injective addresses from Metamask**
 
 ```ts lines highlight={4-6,11-13}
-import { getInjectiveAddress } from '@injectivelabs/sdk-ts'
+import { getInjectiveAddress } from "@injectivelabs/sdk-ts/utils";
 
 const getEthereum = () => {
   if (!window.ethereum) {
-    throw new Error('Metamask extension not installed')
+    throw new Error("Metamask extension not installed");
   }
-  return window.ethereum
-}
+  return window.ethereum;
+};
 
-const ethereum = getEthereum()
+const ethereum = getEthereum();
 const addresses = await ethereum.request({
-  method: 'eth_requestAccounts',
-}) /** these are evm addresses */
+  method: "eth_requestAccounts",
+}); /** these are evm addresses */
 
-const injectiveAddresses = addresses.map(getInjectiveAddress)
-console.log(injectiveAddresses)
+const injectiveAddresses = addresses.map(getInjectiveAddress);
+console.log(injectiveAddresses);
 ```
 
-* **Sign transactions using Metamask**
+- **Sign transactions using Metamask**
 
 An example of how to prepare + sign + broadcast a transaction on Injective using Metamask can be found [here](../transactions/ethereum/).
 
 ### Keplr
 
-Keplr is an Cosmos native wallet and can be used to connect and interact with your dApp built on Injective.
+Keplr is a Cosmos native wallet and can be used to connect and interact with your dApp built on Injective.
 
-* **Get Injective addresses from Keplr**
+- **Get Injective addresses from Keplr**
 
 ```ts lines
-import { getInjectiveAddress } from '@injectivelabs/sdk-ts'
-import { ChainId } from '@injectivelabs/ts-types'
+import { ChainId } from "@injectivelabs/ts-types";
 
 const getKeplr = () => {
   if (!window.keplr) {
-    throw new Error('Keplr extension not installed')
+    throw new Error("Keplr extension not installed");
   }
-  
-  return window.keplr
-}
 
-(async() => {
-  const keplr = getKeplr()
-  const chainId = ChainId.Mainnet
-  await keplr.enable(chainId)
-  const injectiveAddresses = await keplr.getOfflineSigner(chainId).getAccounts()
+  return window.keplr;
+};
 
-  console.log(injectiveAddresses)
-})()
+(async () => {
+  const keplr = getKeplr();
+  const chainId = ChainId.Mainnet;
+  await keplr.enable(chainId);
+  const injectiveAddresses = await keplr
+    .getOfflineSigner(chainId)
+    .getAccounts();
+
+  console.log(injectiveAddresses);
+})();
 ```
-* **Sign transactions using Keplr**
+
+- **Sign transactions using Keplr**
 
 An example of how to prepare + sign + broadcast a transaction on Injective using Keplr can be found in [Cosmos Transactions](../transactions/cosmos/).

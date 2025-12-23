@@ -10,7 +10,7 @@ This guide shows how to fetch `denom` metadata directly from the `injective-list
 
 ## Injective Lists
 
-`injective-lists` is a public repository that holds metadata information for all tokens on Injective. It's the most up-to-date and reliable source of this particular information. You can submit your token information by creating a PR for this repo. Be sure to correctly specify the fields. In particular,  `"denom"` field (read about [token standards](/defi/tokens/)) should have respective `ibc`, `peggy` and `factory` prefixes depending on the token standard.
+`injective-lists` is a public repository that holds metadata information for all tokens on Injective. It's the most up-to-date and reliable source of this particular information. You can submit your token information by creating a PR for this repo. Be sure to correctly specify the fields. In particular, `"denom"` field (read about [token standards](/defi/tokens/)) should have respective `ibc`, `peggy` and `factory` prefixes depending on the token standard.
 
 The metadata is fetched automatically for new `denoms` on chain every 30 minutes and the `json` files are regenerated.
 
@@ -25,15 +25,15 @@ The interface that this metadata information has is
 
 ```typescript
 export interface Token {
-  name: string
-  logo: string
-  symbol: string
-  decimals: number
-  coinGeckoId: string
-  denom: string
-  address: string
-  tokenType: string
-  tokenVerification: string
+  name: string;
+  logo: string;
+  symbol: string;
+  decimals: number;
+  coinGeckoId: string;
+  denom: string;
+  address: string;
+  tokenType: string;
+  tokenVerification: string;
 }
 ```
 
@@ -43,11 +43,9 @@ Let's say you fetch the bank balance of a particular address (as shown on the ex
 
 ```typescript
 import { config } from "dotenv";
-import {
-  ChainGrpcBankApi,
-  IndexerGrpcAccountPortfolioApi,
-} from "@injectivelabs/sdk-ts";
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { IndexerGrpcPortfolioApi } from "@injectivelabs/sdk-ts/client/indexer";
 
 config();
 
@@ -78,7 +76,7 @@ config();
       ...meta,
     };
   }
-  
+
   console.log(balances)
 })();
 ```
@@ -91,9 +89,9 @@ Similar to the Bank balances, you can use the same approach to map the `denoms` 
 
 ```typescript
 import { config } from "dotenv";
-import { IndexerGrpcSpotApi } from "@injectivelabs/sdk-ts";
-import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 import { readFile } from "fs/promises";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcSpotApi } from "@injectivelabs/sdk-ts/client/indexer";
 
 config();
 
@@ -140,16 +138,18 @@ Similar to the Bank balances, you can use the same approach to map the `denom` w
 
 ```typescript
 import { config } from "dotenv";
-import { IndexerGrpcDerivativeApi } from "@injectivelabs/sdk-ts";
-import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 import { readFile } from "fs/promises";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
 
 config();
 
 /** Querying Example */
 (async () => {
   const endpoints = getNetworkEndpoints(Network.Testnet);
-  const indexerGrpcDerivativeApi = new IndexerGrpcDerivativeApi(endpoints.indexer);
+  const indexerGrpcDerivativeApi = new IndexerGrpcDerivativesApi(
+    endpoints.indexer
+  );
 
   const markets = await indexerGrpcDerivativeApi.fetchMarkets();
 

@@ -197,8 +197,8 @@ Sample code for counter contract ABI:
 
 ```javascript
 import { ethers } from 'ethers'
-import { INJECTIVE_EVM_PARAMS } from './config' // From separate file
 import { counterAbi } from './abi/counterAbi'
+import { INJECTIVE_EVM_PARAMS } from './config' // From separate file
 
 // Replace with your deployed contract address
 const contractAddress = '0xYourContractAddressHere'
@@ -248,10 +248,10 @@ connectAndInteract().catch(console.error)
 Sample code
 
 ```javascript
-import { createWalletClient, custom, defineChain, formatEther } from 'viem'
-import { INJECTIVE_EVM_PARAMS } from './config'
 import { counterAbi } from './abi/counterAbi'
+import { INJECTIVE_EVM_PARAMS } from './config'
 import { createPublicClient, http } from 'viem'
+import { createWalletClient, custom, defineChain, formatEther } from 'viem'
 
 // Replace with your deployed contract address
 const contractAddress = '0xYourContractAddressHere'

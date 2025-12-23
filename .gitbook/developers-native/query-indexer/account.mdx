@@ -11,99 +11,100 @@ Example code snippets to query the indexer for subaccount related data.
 This includes available balance, unrealized Pnl, and portfolio value. Note: **deprecated** → use [Portfolio](../query-indexer/portfolio/#using-grpc) instead
 
 ```ts
-import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
 
-const injectiveAddress = 'inj...'
+const injectiveAddress = "inj...";
 
-const portfolio = await indexerGrpcAccountApi.fetchPortfolio(injectiveAddress)
+const portfolio = await indexerGrpcAccountApi.fetchPortfolio(injectiveAddress);
 
-console.log(portfolio)
+console.log(portfolio);
 ```
 
 ### Fetch user's trading rewards per epoch
 
 ```ts
-import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
 
-const injectiveAddress = 'inj...'
-const epoch = -1 // current epoch
+const injectiveAddress = "inj...";
+const epoch = -1; // current epoch
 
 const tradingRewards = await indexerGrpcAccountApi.fetchRewards({
   address: injectiveAddress,
   epoch,
-})
+});
 
-console.log(tradingRewards)
+console.log(tradingRewards);
 ```
 
 ### Fetch subaccounts associated with an injective address
 
 ```ts
-import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
 
-const injectiveAddress = 'inj...'
+const injectiveAddress = "inj...";
 
 const subaccountsList = await indexerGrpcAccountApi.fetchSubaccountsList(
-  injectiveAddress,
-)
+  injectiveAddress
+);
 
-console.log(subaccountsList)
+console.log(subaccountsList);
 ```
 
 ### Fetch balance of a subaccount for a specific denom
 
 ```ts
-import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
 
-const subaccountId = '0x...'
-const denom = 'inj'
+const subaccountId = "0x...";
+const denom = "inj";
 
 const subaccountBalance = await indexerGrpcAccountApi.fetchSubaccountBalance(
   subaccountId,
-  denom,
-)
+  denom
+);
 
-console.log(subaccountBalance)
+console.log(subaccountBalance);
 ```
 
 ### Fetch of balances for a subaccount
 
 ```ts
-import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
 
-const subaccountId = '0x...'
+const subaccountId = "0x...";
 
 const subaccountBalanceList =
-  await indexerGrpcAccountApi.fetchSubaccountBalancesList(subaccountId)
+  await indexerGrpcAccountApi.fetchSubaccountBalancesList(subaccountId);
 
-console.log(subaccountBalanceList)
+console.log(subaccountBalanceList);
 ```
 
-### Fetch subacount history
+### Fetch subaccount history
 
 ```ts
-import { PaginationOption, IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
@@ -124,41 +125,41 @@ console.log(subaccountHistory)
 ### Fetch a summary of a subaccount's orders
 
 ```ts
-import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
 
-const subaccountId = '0x...'
-const marketId = '0x'
-const orderDirection = 'buy'
+const subaccountId = "0x...";
+const marketId = "0x";
+const orderDirection = "buy";
 
 const orderSummary = await indexerGrpcAccountApi.fetchSubaccountOrderSummary({
   subaccountId,
   marketId,
   orderDirection,
-})
+});
 
-console.log(orderSummary)
+console.log(orderSummary);
 ```
 
 ### Fetch states of spot or (and) derivatives orders
 
 ```ts
-import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
 
-const spotOrderHashes = ['0x...']
-const derivativeOrderHashes = ['0x...']
+const spotOrderHashes = ["0x..."];
+const derivativeOrderHashes = ["0x..."];
 
 const orderStates = await indexerGrpcAccountApi.fetchOrderStates({
   spotOrderHashes,
   derivativeOrderHashes,
-})
+});
 
-console.log(orderStates)
+console.log(orderStates);
 ```

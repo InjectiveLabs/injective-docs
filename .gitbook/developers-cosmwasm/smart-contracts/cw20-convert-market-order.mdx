@@ -39,8 +39,8 @@ const order = {
 Now that you have both messages formatted, you can convert your cw20 tokens to bank factory tokens and then place a market order using the combined balance, all in one transaction
 
 ```ts
-import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts'
 import { Network } from '@injectivelabs/networks'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
 
 const privateKey = '0x...'
 const injectiveAddress = 'inj1...'

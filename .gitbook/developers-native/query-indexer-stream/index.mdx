@@ -2,12 +2,109 @@
 title: Streaming the Indexer
 ---
 
-This section covers how to stream real-time data from the Injective Indexer API.
+This section covers how to stream real-time data from the Injective Indexer API using StreamManagerV2.
+
+## StreamManagerV2
+
+StreamManagerV2 provides an event-based architecture for managing gRPC streams with automatic retry, exponential backoff, and comprehensive error handling.
+
+### Key Features
+
+- **Event-based lifecycle** - Listen to connect, disconnect, error, and data events
+- **Automatic retry** - Configurable exponential backoff with retry limits
+- **Error handling** - Distinguishes retryable vs non-retryable errors
+- **Persistent mode** - Continue retrying indefinitely after max attempts
+- **Fine-grained control** - Start, stop, and manage stream lifecycle
+
+### Basic Usage
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'my-stream',
+  streamFactory: () => stream.streamOrders({ 
+    marketId: '0x...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (data) => {
+    console.log(data)
+  },
+  retryConfig: {
+    enabled: true,
+    maxAttempts: 5,
+    initialDelayMs: 1000,
+    maxDelayMs: 30000,
+    backoffMultiplier: 2,
+    persistent: true
+  }
+})
+
+// Event listeners
+streamManager.on('connect', () => console.log('Connected'))
+streamManager.on('disconnect', (reason) => console.log('Disconnected:', reason))
+streamManager.on('error', (error) => console.error('Error:', error))
+streamManager.on('stateChange', ({ from, to }) => console.log(`State: ${from} -> ${to}`))
+
+// Start/stop
+streamManager.start()
+streamManager.stop()
+```
+
+### Available Stream Classes
+
+- `IndexerGrpcAccountStreamV2` - Account balance and transaction streams
+- `IndexerGrpcAccountPortfolioStreamV2` - Portfolio value streams
+- `IndexerGrpcArchiverStreamV2` - Archiver data streams
+- `IndexerGrpcAuctionStreamV2` - Auction bid streams
+- `IndexerGrpcDerivativesStreamV2` - Derivatives market streams
+- `IndexerGrpcExplorerStreamV2` - Blockchain explorer streams
+- `IndexerGrpcMitoStreamV2` - Mito vault streams
+- `IndexerGrpcOracleStreamV2` - Oracle price feed streams
+- `IndexerGrpcSpotStreamV2` - Spot market streams
+- `IndexerGrpcTradingStreamV2` - Trading automation streams
+
+### Retry Configuration
+
+```ts
+retryConfig: {
+  enabled: true,           // Enable/disable retry
+  maxAttempts: 5,          // Max retry attempts (0 = unlimited)
+  initialDelayMs: 1000,    // Initial backoff delay
+  maxDelayMs: 30000,       // Maximum backoff delay
+  backoffMultiplier: 2,    // Exponential backoff multiplier
+  persistent: true         // Continue with max delay after maxAttempts
+}
+```
+
+### Event Types
+
+- `connect` - Stream successfully connected
+- `disconnect` - Stream disconnected with reason
+- `error` - Stream error occurred
+- `data` - New data received
+- `stateChange` - Stream state changed
+- `retry` - Retry attempt started
+- `warn` - Warning message
+
+## Stream Examples
 
 - [Account](/developers-native/query-indexer-stream/account/) - Stream account updates
+- [Archiver](/developers-native/query-indexer-stream/archiver/) - Stream archiver data
 - [Auction](/developers-native/query-indexer-stream/auction/) - Stream auction updates
 - [Derivatives](/developers-native/query-indexer-stream/derivatives/) - Stream derivatives market updates
+- [Explorer](/developers-native/query-indexer-stream/explorer/) - Stream explorer updates
+- [Mito](/developers-native/query-indexer-stream/mito/) - Stream Mito vault updates
 - [Oracle](/developers-native/query-indexer-stream/oracle/) - Stream oracle price updates
 - [Portfolio](/developers-native/query-indexer-stream/portfolio/) - Stream portfolio updates
 - [Spot](/developers-native/query-indexer-stream/spot/) - Stream spot market updates
-- [Explorer](/developers-native/query-indexer-stream/explorer/) - Stream explorer updates
+- [Trading](/developers-native/query-indexer-stream/trading/) - Stream trading automation updates
