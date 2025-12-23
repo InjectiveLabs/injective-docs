@@ -12,27 +12,20 @@ First of, we need to prepare the transaction for signing.
 
 ```ts
 import {
-  MsgSend,
-} from "@injectivelabs/sdk-ts/core/modules";
-import {
-  PrivateKey,
-  BaseAccount,
-} from "@injectivelabs/sdk-ts/core/accounts";
-import {
-  createTransaction,
-} from "@injectivelabs/sdk-ts/core/tx";
-import {
-  ChainRestAuthApi,
-  ChainRestTendermintApi,
-} from "@injectivelabs/sdk-ts/client/chain";
-import { ChainId } from "@injectivelabs/ts-types";
-import {
   toBigNumber,
   toChainFormat,
   getDefaultStdFee,
   DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 } from "@injectivelabs/utils";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { ChainId } from "@injectivelabs/ts-types";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { createTransaction } from "@injectivelabs/sdk-ts/core/tx";
 import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { PrivateKey, BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
 
 const privateKeyHash = "";
 const privateKey = PrivateKey.fromHex(privateKeyHash);
@@ -104,6 +97,7 @@ Once we have the signature ready, we need to broadcast the transaction to the In
 
 ```ts
 import { ChainId } from '@injectivelabs/ts-types'
+import { TxClient } from '@injectivelabs/sdk-ts/core/tx'
 import { TxGrpcApi } from '@injectivelabs/sdk-ts/client/chain'
 import { Network, getNetworkInfo } from '@injectivelabs/networks'
 
@@ -147,19 +141,15 @@ Let's have a look at the whole flow (using Keplr as a signing wallet)
 
 ```ts
 import {
-  PrivateKey,
-} from "@injectivelabs/sdk-ts/core/accounts";
-import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
-import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
-import { getNetworkInfo, Network } from "@injectivelabs/networks";
-import {
-  ChainRestAuthApi,
-} from "@injectivelabs/sdk-ts/client/chain";
-import {
   TxClient,
   TxGrpcApi,
   createTransaction,
 } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { getNetworkInfo, Network } from "@injectivelabs/networks";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
 
 /** MsgSend Example */
 (async () => {
@@ -240,8 +230,8 @@ You can use the `MsgBroadcasterWithPk` class from the `@injectivelabs/sdk-ts` pa
 **This abstraction allows you to sign transactions in a Node/CLI environment.**
 
 ```ts
-import { toChainFormat } from "@injectivelabs/utils";
 import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
 import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
 import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
 

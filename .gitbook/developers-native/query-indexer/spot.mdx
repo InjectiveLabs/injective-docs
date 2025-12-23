@@ -9,39 +9,40 @@ Example code snippets to query the indexer for spot market module related data.
 ### Fetch markets
 
 ```ts
-import { IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcSpotApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer);
 
-const markets = await indexerGrpcSpotApi.fetchMarkets()
+const markets = await indexerGrpcSpotApi.fetchMarkets();
 
-console.log(markets)
+console.log(markets);
 ```
 
 ### Fetch market based on market id
 
 ```ts
-import { IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcSpotApi } from "@injectivelabs/sdk-ts/client/indexer";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer);
 
-const marketId = '0x...'
+const marketId = "0x...";
 
-const market = await indexerGrpcSpotApi.fetchMarket(marketId)
+const market = await indexerGrpcSpotApi.fetchMarket(marketId);
 
-console.log(market)
+console.log(market);
 ```
 
 ### Fetch market's orders
 
 ```ts
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
 import { OrderSide } from '@injectivelabs/sdk-ts/types'
-import { PaginationOption, IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
@@ -64,14 +65,9 @@ console.log(orders)
 ### Fetch market's order history
 
 ```ts
+import { TradeDirection, PaginationOption, TradeExecutionType, OrderSide } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts/client/indexer'
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-import { OrderSide } from '@injectivelabs/sdk-ts/types'
-import {
-  TradeDirection,
-  PaginationOption,
-  TradeExecutionType,
-  IndexerGrpcSpotApi
-} from '@injectivelabs/sdk-ts'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
@@ -99,12 +95,8 @@ console.log(orderHistory)
 
 ```ts
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-import {
-  TradeDirection,
-  PaginationOption,
-  TradeExecutionType,
-  IndexerGrpcSpotApi
-} from '@injectivelabs/sdk-ts'
+import { TradeDirection, PaginationOption, TradeExecutionType } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
@@ -130,10 +122,8 @@ console.log(trades)
 
 ```ts
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-import {
-  PaginationOption,
-  IndexerGrpcSpotApi
-} from '@injectivelabs/sdk-ts'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
@@ -155,12 +145,8 @@ console.log(subaccountOrders)
 
 ```ts
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
-import {
-  TradeDirection,
-  TradeExecutionType,
-  PaginationOption,
-  IndexerGrpcSpotApi
-} from '@injectivelabs/sdk-ts'
+import { TradeDirection, TradeExecutionType, PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts/client/indexer'
 
 const endpoints = getNetworkEndpoints(Network.Testnet)
 const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
@@ -185,33 +171,33 @@ console.log(subaccountTrades)
 ### Fetch orderbooks for multiple markets
 
 ```ts
-import { IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcSpotApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer);
 
-const marketIds = ['0x...']
+const marketIds = ["0x..."];
 
-const orderbooks = await indexerGrpcSpotApi.fetchOrderbooksV2(marketIds)
+const orderbooks = await indexerGrpcSpotApi.fetchOrderbooksV2(marketIds);
 
-console.log(orderbooks)
+console.log(orderbooks);
 ```
 
 ### Fetch orderbook for a market
 
 ```ts
-import { IndexerGrpcSpotApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcSpotApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer);
 
-const marketId = '0x...'
+const marketId = "0x...";
 
-const orderbook = await indexerGrpcSpotApi.fetchOrderbookV2(marketId)
+const orderbook = await indexerGrpcSpotApi.fetchOrderbookV2(marketId);
 
-console.log(orderbook)
+console.log(orderbook);
 ```
 
 ## Using HTTP REST
@@ -219,37 +205,37 @@ console.log(orderbook)
 ### Fetch market summary, such as a history of prices and 24 hr volume
 
 ```ts
-import { IndexerRestSpotChronosApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerRestSpotChronosApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
+const endpoints = getNetworkEndpoints(Network.Testnet);
 const indexerRestSpotChronosApi = new IndexerRestSpotChronosApi(
-  `${endpoints.chronos}/api/chronos/v1/spot`,
-)
+  `${endpoints.chronos}/api/chronos/v1/spot`
+);
 
-const marketId = '0x...'
+const marketId = "0x...";
 
 const marketSummary = await indexerRestSpotChronosApi.fetchMarketSummary(
-  marketId,
-)
+  marketId
+);
 
-console.log(marketSummary)
+console.log(marketSummary);
 ```
 
 ### Fetch all markets summaries, such as a history of prices and 24 hr volume
 
 ```ts
-import { IndexerRestSpotChronosApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerRestSpotChronosApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
+const endpoints = getNetworkEndpoints(Network.Testnet);
 const indexerRestSpotChronosApi = new IndexerRestSpotChronosApi(
-  `${endpoints.chronos}/api/chronos/v1/spot`,
-)
+  `${endpoints.chronos}/api/chronos/v1/spot`
+);
 
 const marketSummaries = await indexerRestSpotChronosApi.fetchMarketsSummary(
-  marketId,
-)
+  marketId
+);
 
-console.log(marketSummaries)
+console.log(marketSummaries);
 ```

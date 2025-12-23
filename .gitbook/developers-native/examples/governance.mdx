@@ -329,9 +329,10 @@ This message can be used to update the params of a spot market.
 import {
   MsgBroadcasterWithPk,
   MsgSubmitProposalSpotMarketParamUpdate,
+} from "@injectivelabs/sdk-ts/core/modules";
 import { Network } from "@injectivelabs/networks";
 import { toChainFormat } from "@injectivelabs/utils";
-import { MarketStatusMap } from "@injectivelabs/sdk-ts";
+import { GrpcMarketStatusMap } from "@injectivelabs/sdk-ts/client/chain";
 
 const denom = "inj";
 const privateKey = "0x...";
@@ -348,7 +349,7 @@ const market = {
   relayerFeeShareRate: "0.4", // 40%, the percent of tsx fees that go to the relayers
   minPriceTickSize: "0.002",
   minQuantityTickSize: "0.002",
-  status: MarketStatusMap.Active,
+  status: GrpcMarketStatusMap.Active,
 };
 
 const message = MsgSubmitProposalSpotMarketParamUpdate.fromJSON({

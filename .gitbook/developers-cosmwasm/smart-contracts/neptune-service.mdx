@@ -11,11 +11,11 @@ Below are examples of how to use each method in the `NeptuneService` class.
 Before using the service, create an instance of `NeptuneService`.
 
 ```ts
-import { Network } from '@injectivelabs/networks'
-import { NeptuneService } from '@injectivelabs/sdk-ts/service'
+import { Network } from "@injectivelabs/networks";
+import { NeptuneService } from "@injectivelabs/sdk-ts/client/wasm";
 
 // Create a NeptuneService instance using the mainnet
-const neptuneService = new NeptuneService(Network.MainnetSentry)
+const neptuneService = new NeptuneService(Network.MainnetSentry);
 ```
 
 ## Fetch Prices
@@ -26,19 +26,19 @@ const neptuneService = new NeptuneService(Network.MainnetSentry)
 const assets = [
   {
     native_token: {
-      denom: 'peggy0xdAC17F958D2ee523a2206206994597C13D831ec7', // peggy USDT bank denom
+      denom: "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7", // peggy USDT bank denom
     },
   },
   {
     token: {
-      contract_addr: 'inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s', // nUSDT contract address
+      contract_addr: "inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s", // nUSDT contract address
     },
   },
-]
+];
 
-const prices = await neptuneService.fetchPrices(assets)
+const prices = await neptuneService.fetchPrices(assets);
 
-console.log(prices)
+console.log(prices);
 ```
 
 ## Fetch Redemption Ratio
@@ -48,22 +48,22 @@ console.log(prices)
 ```ts
 const cw20Asset = {
   token: {
-    contract_addr: 'inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s', // nUSDT
+    contract_addr: "inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s", // nUSDT
   },
-}
+};
 
 const nativeAsset = {
   native_token: {
-    denom: 'peggy0xdAC17F958D2ee523a2206206994597C13D831ec7', // USDT
+    denom: "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
   },
-}
+};
 
 const redemptionRatio = await neptuneService.fetchRedemptionRatio({
   cw20Asset,
   nativeAsset,
-})
+});
 
-console.log(`Redemption Ratio: ${redemptionRatio}`)
+console.log(`Redemption Ratio: ${redemptionRatio}`);
 ```
 
 ## Convert CW20 nUSDT to Bank USDT
@@ -71,15 +71,15 @@ console.log(`Redemption Ratio: ${redemptionRatio}`)
 - Calculate the amount in bank USDT from a given amount of CW20 nUSDT using the redemption ratio.
 
 ```ts
-const amountCW20 = 1000 // Amount in nUSDT
-const redemptionRatio = 0.95 // Obtained from fetchRedemptionRatio
+const amountCW20 = 1000; // Amount in nUSDT
+const redemptionRatio = 0.95; // Obtained from fetchRedemptionRatio
 
 const bankAmount = neptuneService.calculateBankAmount(
   amountCW20,
-  redemptionRatio,
-)
+  redemptionRatio
+);
 
-console.log(`Bank USDT Amount: ${bankAmount}`)
+console.log(`Bank USDT Amount: ${bankAmount}`);
 ```
 
 ## Convert Bank USDT to CW20 nUSDT
@@ -87,15 +87,15 @@ console.log(`Bank USDT Amount: ${bankAmount}`)
 - Calculate the amount in CW20 nUSDT from a given amount of bank USDT using the redemption ratio.
 
 ```ts
-const amountBank = 950 // Amount in USDT
-const redemptionRatio = 0.95 // Obtained from fetchRedemptionRatio
+const amountBank = 950; // Amount in USDT
+const redemptionRatio = 0.95; // Obtained from fetchRedemptionRatio
 
 const cw20Amount = neptuneService.calculateCw20Amount(
   amountBank,
-  redemptionRatio,
-)
+  redemptionRatio
+);
 
-console.log(`CW20 nUSDT Amount: ${cw20Amount}`)
+console.log(`CW20 nUSDT Amount: ${cw20Amount}`);
 ```
 
 ## Fetch Lending Rates
@@ -105,9 +105,9 @@ console.log(`CW20 nUSDT Amount: ${cw20Amount}`)
 ```ts
 const lendingRates = await neptuneService.getLendingRates({
   limit: 10, // Optional: number of rates to fetch
-})
+});
 
-console.log(lendingRates)
+console.log(lendingRates);
 ```
 
 ## Fetch Lending Rate by Denomination
@@ -115,14 +115,14 @@ console.log(lendingRates)
 - Get the lending rate for USDT for example
 
 ```ts
-const denom = 'peggy0xdAC17F958D2ee523a2206206994597C13D831ec7' // USDT denom
+const denom = "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT denom
 
-const lendingRate = await neptuneService.getLendingRateByDenom({ denom })
+const lendingRate = await neptuneService.getLendingRateByDenom({ denom });
 
 if (lendingRate) {
-  console.log(`Lending Rate for USDT: ${lendingRate}`)
+  console.log(`Lending Rate for USDT: ${lendingRate}`);
 } else {
-  console.log('Lending Rate for USDT not found')
+  console.log("Lending Rate for USDT not found");
 }
 ```
 
@@ -131,11 +131,11 @@ if (lendingRate) {
 - Convert the annual percentage rate (APR) to the continuously compounded annual percentage yield (APY). Make sure to use the lending rate retried from neptuneService.getLendingRateByDenom to use as the apr.
 
 ```ts
-const apr = 0.1 // 10% APR
+const apr = 0.1; // 10% APR
 
-const apy = neptuneService.calculateAPY(apr)
+const apy = neptuneService.calculateAPY(apr);
 
-console.log(`APY (continuously compounded): ${(apy * 100).toFixed(2)}%`)
+console.log(`APY (continuously compounded): ${(apy * 100).toFixed(2)}%`);
 ```
 
 ## Create and Broadcast a Deposit Message
@@ -143,37 +143,33 @@ console.log(`APY (continuously compounded): ${(apy * 100).toFixed(2)}%`)
 - Create a message to deposit USDT into the Neptune USDT lending market and broadcast it to the network.
 
 ```ts
-import {
-  MsgBroadcasterWithPk,
-} from '@injectivelabs/sdk-ts/core/tx'
-import { toChainFormat } from '@injectivelabs/utils'
-import {
-  MsgExecuteContractCompat,
-} from '@injectivelabs/sdk-ts/core/modules'
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
 
-const privateKey = '0x...'
-const injectiveAddress = 'inj1...'
-const denom = 'peggy0xdAC17F958D2ee523a2206206994597C13D831ec7' // USDT denom
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const denom = "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT denom
 
-const amountInUsdt = '100'
+const amountInUsdt = "100";
 
 // Convert the amount to the smallest unit (USDT has 6 decimals)
-const amount = toChainFormat(amountInUsdt, 6).toFixed()
+const amount = toChainFormat(amountInUsdt, 6).toFixed();
 
 const depositMsg = neptuneService.createDepositMsg({
   denom,
   amount,
   sender: injectiveAddress,
-})
+});
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
   network: Network.MainnetSentry,
 }).broadcast({
   msgs: depositMsg,
-})
+});
 
-console.log(txHash)
+console.log(txHash);
 ```
 
 ## Create and Broadcast a Withdraw Message
@@ -181,37 +177,31 @@ console.log(txHash)
 - Create a message to withdraw USDT from the Neptune USDT lending market and broadcast it to the network
 
 ```ts
-import {
-  Network,
-} from '@injectivelabs/networks'
-import { toChainFormat } from '@injectivelabs/utils'
-import {
-  MsgBroadcasterWithPk,
-} from '@injectivelabs/sdk-ts/core/tx'
-import {
-  MsgExecuteContractCompat,
-} from '@injectivelabs/sdk-ts/core/modules'
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
 
-const privateKey = '0x...' // Your private key
-const injectiveAddress = 'inj1...' // Your Injective address
+const privateKey = "0x..."; // Your private key
+const injectiveAddress = "inj1..."; // Your Injective address
 
 // Define the amount to withdraw (e.g., 100 nUSDT)
-const amountInNusdt = '100'
+const amountInNusdt = "100";
 
 // Convert the amount to the smallest unit (nUSDT has 6 decimals)
-const amount = toChainFormat(amountInNusdt, 6).toFixed()
+const amount = toChainFormat(amountInNusdt, 6).toFixed();
 
 const withdrawMsg = neptuneService.createWithdrawMsg({
   amount,
   sender: injectiveAddress,
-})
+});
 
 const txHash = await new MsgBroadcasterWithPk({
   privateKey,
   network: Network.MainnetSentry,
 }).broadcast({
   msgs: withdrawMsg,
-})
+});
 
-console.log(`Transaction Hash: ${txHash}`)
+console.log(`Transaction Hash: ${txHash}`);
 ```

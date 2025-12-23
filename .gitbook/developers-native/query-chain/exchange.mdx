@@ -9,126 +9,129 @@ Example code snippets to query the exchange module on the chain.
 ### Fetch parameters such as the default spot and derivatives fees/trading rewards
 
 ```ts
-import { ChainGrpcExchangeApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
 
-const moduleParams = await chainGrpcExchangeApi.fetchModuleParams()
+const moduleParams = await chainGrpcExchangeApi.fetchModuleParams();
 
-console.log(moduleParams)
+console.log(moduleParams);
 ```
 
 ### Fetch the fee discount schedules
 
 ```ts
-import { ChainGrpcExchangeApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
 
 const feeDiscountSchedule =
-  await chainGrpcExchangeApi.fetchFeeDiscountSchedule()
+  await chainGrpcExchangeApi.fetchFeeDiscountSchedule();
 
-console.log(feeDiscountSchedule)
+console.log(feeDiscountSchedule);
 ```
 
 ### Fetch the fee discounts associated with an injective address
 
 ```ts
-import { ChainGrpcExchangeApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
 
-const injectiveAddress = 'inj...'
+const injectiveAddress = "inj...";
 
 const feeDiscountAccountInfo =
-  await chainGrpcExchangeApi.fetchFeeDiscountAccountInfo(injectiveAddress)
+  await chainGrpcExchangeApi.fetchFeeDiscountAccountInfo(injectiveAddress);
 
-console.log(feeDiscountAccountInfo)
+console.log(feeDiscountAccountInfo);
 ```
 
 ### Fetch the details regarding the trading reward campaign, such as the total reward points
 
 ```ts
-import { ChainGrpcExchangeApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
 
 const tradingRewardsCampaign =
-  await chainGrpcExchangeApi.fetchTradingRewardsCampaign()
+  await chainGrpcExchangeApi.fetchTradingRewardsCampaign();
 
-console.log(tradingRewardsCampaign)
+console.log(tradingRewardsCampaign);
 ```
 
 ### Fetch the trading rewards points for an injective address
 
 ```ts
-import { ChainGrpcExchangeApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
 
-const injectiveAddress = 'inj...'
+const injectiveAddress = "inj...";
 
 const tradeRewardsPoints = await chainGrpcExchangeApi.fetchTradeRewardsPoints(
-  injectiveAddress,
-)
+  injectiveAddress
+);
 
-console.log(tradeRewardsPoints)
+console.log(tradeRewardsPoints);
 ```
 
 ### Fetch the pending trading rewards points for injective addresses
 
 ```ts
-import { ChainGrpcExchangeApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
 
-const injectiveAddresses = ['inj...']
+const injectiveAddresses = ["inj..."];
 
 const pendingTradeRewardsPoints =
-  await chainGrpcExchangeApi.fetchPendingTradeRewardPoints(injectiveAddresses)
+  await chainGrpcExchangeApi.fetchPendingTradeRewardPoints(injectiveAddresses);
 
-console.log(pendingTradeRewardsPoints)
+console.log(pendingTradeRewardsPoints);
 ```
 
 #### Fetch the current positions, such as subaccountId, marketId, and position
 
 ```ts
-import { ChainGrpcExchangeApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
 
-const positions = await chainGrpcExchangeApi.fetchPositions(injectiveAddresses)
+// Replace with your own Injective address(es)
+const injectiveAddresses = ["inj1..."];
 
-console.log(positions)
+const positions = await chainGrpcExchangeApi.fetchPositions(injectiveAddresses);
+
+console.log(positions);
 ```
 
 ### Fetch the subaccount trade nonce
 
 ```ts
-import { ChainGrpcExchangeApi } from '@injectivelabs/sdk-ts'
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc)
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
 
-const subaccountId = '0x...'
+const subaccountId = "0x...";
 
 const subaccountTradeNonce =
-  await chainGrpcExchangeApi.fetchSubaccountTradeNonce(subaccountId)
+  await chainGrpcExchangeApi.fetchSubaccountTradeNonce(subaccountId);
 
-console.log(subaccountTradeNonce)
+console.log(subaccountTradeNonce);
 ```

@@ -32,16 +32,24 @@ import {
 } from "@injectivelabs/sdk-ts/client/indexer";
 
 const endpoints = getNetworkEndpoints(Network.Testnet);
-const markets = new IndexerGrpcDerivativesApi(endpoints.indexer);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer);
 const indexerGrpcOracleApi = new IndexerGrpcOracleApi(endpoints.indexer);
 
+// Fetch the list of derivative markets
+const markets = await indexerGrpcDerivativesApi.fetchMarkets();
+
+// Find the specific market by ticker
 const market = markets.find((market) => market.ticker === "INJ/USDT PERP");
 
+if (!market) {
+  throw new Error("Market not found");
+}
+
 // These values are a part of the market object
-// fetched from the chain i.e `oracle_base` and `oracle_quote`
-const baseSymbol = market.oracle_base;
-const quoteSymbol = market.oracle_quote;
-const oracleType = market.oracle_type;
+// fetched from the indexer i.e `oracleBase` and `oracleQuote`
+const baseSymbol = market.oracleBase;
+const quoteSymbol = market.oracleQuote;
+const oracleType = market.oracleType;
 
 const oraclePrice = await indexerGrpcOracleApi.fetchOraclePriceNoThrow({
   baseSymbol,
