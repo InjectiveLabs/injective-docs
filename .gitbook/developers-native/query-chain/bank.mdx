@@ -8,7 +8,7 @@ Example code snippets to query the chain for bank module related data.
 
 ### Fetch bank module params
 
-```ts line hihglight={2}
+```ts line highlight={2}
 import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 
@@ -45,11 +45,11 @@ import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
 const endpoints = getNetworkEndpoints(Network.Testnet);
 const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc);
 
-const injectiveAddress = "inj1"; /* example is using Cosmos Hub */
-const denom = "inj";
+const cosmosAddress = "cosmos1..."; /* example is using Cosmos Hub */
+const denom = "uatom";
 
 const balance = await chainGrpcBankApi.fetchBalance({
-  accountAddress: injectiveAddress,
+  accountAddress: cosmosAddress,
   denom,
 });
 

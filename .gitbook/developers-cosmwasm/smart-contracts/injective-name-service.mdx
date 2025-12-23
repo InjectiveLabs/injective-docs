@@ -280,12 +280,13 @@ console.log("INS Name:", name);
 **Important:** Always verify reverse resolution by checking that the name resolves back to the original address. Here's how to perform the verification using forward resolution:
 
 ```ts
+import { Network, getInjNameRegistryContractForNetwork } from "@injectivelabs/networks";
 import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
 import {
   QueryResolverAddress,
   QueryInjectiveAddress,
+  InjNameServiceQueryTransformer,
 } from "@injectivelabs/sdk-ts/client/wasm";
-import { getInjNameRegistryContractForNetwork } from "@injectivelabs/networks";
 
 // After getting the name from reverse resolution, verify it resolves back
 const normalizedName = normalizeName(name);
