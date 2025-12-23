@@ -280,13 +280,18 @@ console.log("INS Name:", name);
 **Important:** Always verify reverse resolution by checking that the name resolves back to the original address. Here's how to perform the verification using forward resolution:
 
 ```ts
-import { Network, getInjNameRegistryContractForNetwork } from "@injectivelabs/networks";
+import { Network, getNetworkEndpoints, getInjNameRegistryContractForNetwork } from "@injectivelabs/networks";
 import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
 import {
+  ChainGrpcWasmApi,
   QueryResolverAddress,
   QueryInjectiveAddress,
   InjNameServiceQueryTransformer,
 } from "@injectivelabs/sdk-ts/client/wasm";
+
+// Initialize the gRPC client
+const endpoints = getNetworkEndpoints(Network.Mainnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
 
 // After getting the name from reverse resolution, verify it resolves back
 const normalizedName = normalizeName(name);
