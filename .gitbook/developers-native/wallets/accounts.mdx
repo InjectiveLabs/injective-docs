@@ -51,7 +51,7 @@ console.log({
 });
 ```
 
-- Example code snipped on how to derive a public address from a public key:
+- Example code snippet on how to derive a public address from a public key:
 
 ```ts
 import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
@@ -62,7 +62,7 @@ const publicKey = PublicKey.fromBase64(pubKey);
 console.log(publicKey.toAddress().toBech32());
 ```
 
-- Example code snipped on how to derive an address from a private key:
+- Example code snippet on how to derive an address from a private key:
 
 ```ts
 import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
@@ -104,7 +104,7 @@ const injectiveAddress = bech32.encode(
 );
 ```
 
-- Example code snipped on how to derive a public key from a private key:
+- Example code snippet on how to derive a public key from a private key:
 
 ```ts
 import secp256k1 from "secp256k1";

@@ -29,7 +29,7 @@ List of useful message types:
 "/injective.exchange.v1beta1.MsgWithdraw",
 ```
 
-Per [cosmos sdk docs](https://docs.cosmos.network/main/modules/authz), "Authorizations must be granted for a particular Msg service method one by one", so the following code snipped must be repeated for each message type that you would like for the `grantee` to have authorization on behalf of a `granter`.
+Per [cosmos sdk docs](https://docs.cosmos.network/main/modules/authz), "Authorizations must be granted for a particular Msg service method one by one", so the following code snippet must be repeated for each message type that you would like for the `grantee` to have authorization on behalf of a `granter`.
 
 ```ts
 import { Network } from "@injectivelabs/networks";

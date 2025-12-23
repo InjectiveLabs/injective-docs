@@ -277,18 +277,54 @@ if (!name) {
 console.log("INS Name:", name);
 ```
 
-**Important:** Always verify reverse resolution by checking that the name resolves back to the original address:
+**Important:** Always verify reverse resolution by checking that the name resolves back to the original address. Here's how to perform the verification using forward resolution:
 
 ```ts
-// After getting the name from reverse resolution
-const addressFromName = await fetchInjAddress(name); // Use forward resolution
+import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+import {
+  QueryResolverAddress,
+  QueryInjectiveAddress,
+} from "@injectivelabs/sdk-ts/client/wasm";
+import { getInjNameRegistryContractForNetwork } from "@injectivelabs/networks";
 
+// After getting the name from reverse resolution, verify it resolves back
+const normalizedName = normalizeName(name);
+const node = nameToNode(normalizedName);
+
+// Get resolver address
+const registryContractAddress = getInjNameRegistryContractForNetwork(
+  Network.Mainnet
+);
+const resolverQuery = new QueryResolverAddress({ node }).toPayload();
+const resolverResponse = await chainGrpcWasmApi.fetchSmartContractState(
+  registryContractAddress,
+  resolverQuery
+);
+const resolverAddress =
+  InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(
+    resolverResponse
+  );
+
+// Get address from name
+const addressQuery = new QueryInjectiveAddress({ node }).toPayload();
+const addressResponse = await chainGrpcWasmApi.fetchSmartContractState(
+  resolverAddress,
+  addressQuery
+);
+const addressFromName =
+  InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(
+    addressResponse
+  );
+
+// Verify the name resolves back to the original address
 if (addressFromName.toLowerCase() !== injectiveAddress.toLowerCase()) {
   throw new Error(
     `Verification failed: ${name} does not resolve back to ${injectiveAddress}`
   );
 }
 ```
+
+> **Note:** If you're using the `InjNameService` class shown earlier, you can simplify this verification to: `await injNameService.fetchInjAddress(name)`
 
 ## Best Practices
 

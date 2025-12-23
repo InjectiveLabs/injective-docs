@@ -88,7 +88,7 @@ const chainRestBankApi = new ChainRestBankApi(endpoints.rest);
 
 const injectiveAddress = "inj...";
 
-const balances = await chainGrpcBankApi.fetchBalances(injectiveAddress);
+const balances = await chainRestBankApi.fetchBalances(injectiveAddress);
 
 console.log(balances);
 ```
