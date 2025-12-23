@@ -2,160 +2,296 @@
 title: Injective Name Service
 ---
 
-Within this section, we will look at how to query the Injective name service contracts.
+Within this section, we will look at how to query the Injective Name Service contracts to resolve .inj domain names and perform reverse lookups.
 
-## Abstraction Service (deprecated)
+## InjNameService Class Implementation
 
-~~You can use our `InjNameService` abstraction to query the smart contracts with a single method call. Below this example, you can also find the raw implementation on how to query the smart contracts in case you need more flexibility.~~
+The recommended approach is to create your own `InjNameService` class that encapsulates the name service functionality. This provides a clean, reusable interface for domain resolution and reverse lookups.
 
-```ts lines highlight={5}
-import { InjNameService } from "@injectivelabs/sdk-ui-ts";
-import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+### Creating the InjNameService Class
 
-const injNameService = new InjNameService(Network.Testnet);
-const name = "ninja.inj";
+Here's a complete implementation you can use in your application:
 
-// Fetch the address for the particular name
-const addressForName = await injNameService.fetchInjAddress(name);
-
-// Fetch the name for the particular address
-const nameFromAddress = await injNameService.fetchInjName(addressForName);
-```
-
-## Raw Smart Contract Querying
-
-Example code snippets to resolve .inj domain name.
-
-## Domain Resolution
-
-- Get resolver address
-
-```ts lines
+```ts
 import {
   Network,
   getNetworkEndpoints,
   getInjNameRegistryContractForNetwork,
-} from "@injectivelabs/networks";
-import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+  getInjNameReverseResolverContractForNetwork
+} from '@injectivelabs/networks'
+import {
+  ChainGrpcWasmApi,
+  QueryInjName,
+  QueryResolverAddress,
+  QueryInjectiveAddress,
+  InjNameServiceQueryTransformer
+} from '@injectivelabs/sdk-ts'
+import { nameToNode, normalizeName } from '@injectivelabs/sdk-ts/utils'
+
+export class InjNameService {
+  private reverseResolverAddress: string
+  private registryAddress: string
+  private chainGrpcWasmApi: ChainGrpcWasmApi
+
+  constructor(network: Network = Network.Mainnet) {
+    const endpoints = getNetworkEndpoints(network)
+    this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+    this.registryAddress = getInjNameRegistryContractForNetwork(network)
+    this.reverseResolverAddress = getInjNameReverseResolverContractForNetwork(network)
+  }
+
+  /**
+   * Fetch the .inj name for a given Injective address (reverse resolution)
+   * @param address - The Injective address to resolve
+   * @returns The .inj domain name
+   */
+  async fetchInjName(address: string): Promise<string> {
+    const query = new QueryInjName({ address }).toPayload()
+
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      this.reverseResolverAddress,
+      query
+    )
+
+    const name = InjNameServiceQueryTransformer.injectiveNameResponseToInjectiveName(response)
+
+    if (!name) {
+      throw new Error(`.inj name not found for ${address}`)
+    }
+
+    // Verify the reverse resolution by checking if the name resolves back to the same address
+    const addressFromName = await this.fetchInjAddress(name)
+
+    if (addressFromName.toLowerCase() !== address.toLowerCase()) {
+      throw new Error(`.inj name not found for ${address}`)
+    }
+
+    return name
+  }
+
+  /**
+   * Fetch the Injective address for a given .inj domain name (forward resolution)
+   * @param name - The .inj domain name to resolve
+   * @returns The Injective address
+   */
+  async fetchInjAddress(name: string): Promise<string> {
+    const normalizedName = normalizeName(name)
+    const node = nameToNode(normalizedName)
+
+    if (!node || node.length === 0) {
+      throw new Error(`The ${name} can't be normalized`)
+    }
+
+    const resolverAddress = await this.fetchResolverAddress(node)
+
+    if (!resolverAddress) {
+      throw new Error(`Resolver address not found for ${name}`)
+    }
+
+    const query = new QueryInjectiveAddress({ node }).toPayload()
+
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      resolverAddress,
+      query
+    )
+
+    const address = InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(response)
+
+    if (!address) {
+      throw new Error(`Address not found for ${name}`)
+    }
+
+    return address
+  }
+
+  /**
+   * Fetch the resolver address for a given node
+   * @private
+   */
+  private async fetchResolverAddress(node: number[]): Promise<string> {
+    const query = new QueryResolverAddress({ node }).toPayload()
+
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      this.registryAddress,
+      query
+    )
+
+    return InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(response)
+  }
+}
+```
+
+### Using the InjNameService Class
+
+```ts
+import { Network } from '@injectivelabs/networks'
+
+// Initialize the service
+const injNameService = new InjNameService(Network.Mainnet)
+
+// Resolve a .inj domain to an address
+const address = await injNameService.fetchInjAddress('ninja.inj')
+console.log('Address:', address)
+
+// Reverse resolve an address to a .inj domain
+const name = await injNameService.fetchInjName('inj1...')
+console.log('Name:', name)
+```
+
+## Raw Smart Contract Querying
+
+If you need more control or want to query the contracts directly without the abstraction layer, here are the individual methods:
+
+### Domain Resolution (Forward Lookup)
+
+Resolve a .inj domain name to an Injective address.
+
+#### Step 1: Get the Resolver Address
+
+```ts
+import {
+  Network,
+  getNetworkEndpoints,
+  getInjNameRegistryContractForNetwork,
+} from '@injectivelabs/networks'
+import { nameToNode, normalizeName } from '@injectivelabs/sdk-ts/utils'
 import {
   ChainGrpcWasmApi,
   QueryResolverAddress,
   InjNameServiceQueryTransformer,
-} from "@injectivelabs/sdk-ts/client/wasm";
+} from '@injectivelabs/sdk-ts'
 
-const endpoints = getNetworkEndpoints(Network.Testnet);
-const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+const endpoints = getNetworkEndpoints(Network.Mainnet)
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
 
-const registryContractAddress = getInjNameRegistryContractForNetwork(
-  Network.Testnet
-);
+const registryContractAddress = getInjNameRegistryContractForNetwork(Network.Mainnet)
 
-const node = "";
+const name = 'ninja.inj'
+const normalizedName = normalizeName(name)
+const node = nameToNode(normalizedName)
 
-const query = new QueryResolverAddress({ node }).toPayload();
+const query = new QueryResolverAddress({ node }).toPayload()
 
 const response = await chainGrpcWasmApi.fetchSmartContractState(
   registryContractAddress,
   query
-);
+)
 
 const resolverAddress =
-  InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(
-    response
-  );
+  InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(response)
 
-console.log(resolverAddress);
+console.log('Resolver Address:', resolverAddress)
 ```
 
-- Get address for .inj domain name.
+#### Step 2: Get the Address for the Domain
 
-```ts lines
+```ts
 import {
   Network,
   getNetworkEndpoints,
-  getInjNameReverseResolverContractForNetwork,
-} from "@injectivelabs/networks";
-import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+} from '@injectivelabs/networks'
+import { nameToNode, normalizeName } from '@injectivelabs/sdk-ts/utils'
 import {
   ChainGrpcWasmApi,
   QueryInjectiveAddress,
   InjNameServiceQueryTransformer,
-} from "@injectivelabs/sdk-ts/client/wasm";
-import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/client/wasm";
-import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+} from '@injectivelabs/sdk-ts'
 
-const endpoints = getNetworkEndpoints(Network.Testnet);
-const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+const endpoints = getNetworkEndpoints(Network.Mainnet)
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
 
-const reverseResolverContractAddress =
-  getInjNameReverseResolverContractForNetwork(Network.Testnet);
+const name = 'ninja.inj'
+const normalizedName = normalizeName(name)
+const node = nameToNode(normalizedName)
 
-const name = "allen.inj";
+// Use the resolver address from Step 1
+const resolverAddress = '...'
 
-const normalizedName = normalizeName(name);
-const node = nameToNode(normalizedName);
-
-const query = new QueryInjectiveAddress({ node }).toPayload();
+const query = new QueryInjectiveAddress({ node }).toPayload()
 
 const response = await chainGrpcWasmApi.fetchSmartContractState(
-  reverseResolverContractAddress,
+  resolverAddress,
   query
-);
+)
 
 const injectiveAddress =
-  InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(
-    response
-  );
+  InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(response)
 
 if (!injectiveAddress) {
-  throw new Error(`address not found for ${name}`);
+  throw new Error(`Address not found for ${name}`)
 }
 
-console.log(injectiveAddress);
+console.log('Injective Address:', injectiveAddress)
 ```
 
-## Reverse Resolution
+### Reverse Resolution (Address to Domain)
 
-- Get the primary name for injective address.
+Resolve an Injective address to its primary .inj domain name.
 
-```ts lines
+```ts
 import {
-  QueryInjName,
-  ChainGrpcWasmApi,
-
-  InjNameServiceQueryTransformer
-} from '@injectivelabs/sdk-ts'
-  import {
   Network,
   getNetworkEndpoints,
-  getInjNameReverseResolverContractForNetwork
+  getInjNameReverseResolverContractForNetwork,
 } from '@injectivelabs/networks'
+import {
+  ChainGrpcWasmApi,
+  QueryInjName,
+  InjNameServiceQueryTransformer,
+} from '@injectivelabs/sdk-ts'
 
-const endpoints = getNetworkEndpoints(Network.Testnet)
+const endpoints = getNetworkEndpoints(Network.Mainnet)
 const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
 
 const reverseResolverContractAddress =
-  getInjNameReverseResolverContractForNetwork(Network.Testnet)
-const injectiveAddress = ''
+  getInjNameReverseResolverContractForNetwork(Network.Mainnet)
+
+const injectiveAddress = 'inj1...'
 
 const query = new QueryInjName({ address: injectiveAddress }).toPayload()
 
 const response = await chainGrpcWasmApi.fetchSmartContractState(
   reverseResolverContractAddress,
-  query,
+  query
 )
 
 const name = InjNameServiceQueryTransformer.injectiveNameResponseToInjectiveName(response)
 
 if (!name) {
-  throw new Error(`.inj not found for ${injectiveAddress}`)
+  throw new Error(`.inj name not found for ${injectiveAddress}`)
 }
 
-const addressForName = /** fetch as above example */
+console.log('INS Name:', name)
+```
 
-if (addressForName.toLowerCase() !== address.toLowerCase()) {
-  throw new Error(`.inj not found for ${injectiveAddress}`)
+**Important:** Always verify reverse resolution by checking that the name resolves back to the original address:
+
+```ts
+// After getting the name from reverse resolution
+const addressFromName = await fetchInjAddress(name) // Use forward resolution
+
+if (addressFromName.toLowerCase() !== injectiveAddress.toLowerCase()) {
+  throw new Error(`Verification failed: ${name} does not resolve back to ${injectiveAddress}`)
 }
+```
 
-console.log(name)
+## Best Practices
+
+1. **Always normalize domain names** before processing them to ensure consistency
+2. **Verify reverse resolutions** by performing a forward lookup to ensure the name actually points back to the address
+3. **Handle errors gracefully** - not all addresses have .inj names, and not all names are registered
+4. **Use proper network configuration** - ensure you're querying the correct network (Mainnet vs Testnet)
+5. **Cache results** when appropriate to reduce unnecessary contract queries
+
+## Dependencies
+
+To use the Injective Name Service, you'll need the following packages:
+
+```json
+{
+  "dependencies": {
+    "@injectivelabs/sdk-ts": "latest",
+    "@injectivelabs/networks": "latest"
+  }
+}
 ```
