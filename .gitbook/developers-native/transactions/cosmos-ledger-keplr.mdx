@@ -115,8 +115,6 @@ export const createEip712StdSignDoc = ({
   memo: memo || '',
 })
 
-```
-
 /**
  * We use this method only when we want to broadcast a transaction using Ledger on Keplr for Injective
  *
@@ -188,7 +186,7 @@ export const experimentalBroadcastKeplrWithLedger = async (
       chainId,
       gas: gas || tx.gas?.gas?.toString(),
       timeoutHeight: timeoutHeight.toFixed(),
-    }
+    })
   )
 
   /**
