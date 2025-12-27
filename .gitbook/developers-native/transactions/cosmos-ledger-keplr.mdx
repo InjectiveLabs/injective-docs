@@ -46,7 +46,7 @@ What we need to do now is generate the `eip712` and the `signDoc`, pass them to 
 
 Based on the overview above, let's now showcase a full example of how to implement signing transactions on Injective using Ledger + Keplr. Keep in mind that the example below takes into consideration that you are using the [Msgs](https://github.com/InjectiveLabs/injective-ts/blob/master/packages/sdk-ts/src/core/modules/msgs.ts#L60) interface exported from the `@injectivelabs/sdk-ts` package.
 
-````typescript
+```typescript
 import {
  TxGrpcApi,
  SIGN_AMINO,
@@ -237,4 +237,4 @@ export const experimentalBroadcastKeplrWithLedger = async (
 
   return response
 }
-````
+```
