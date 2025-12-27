@@ -61,7 +61,7 @@ await msgBroadcaster.broadcast({
 
 We allow to override some of the options passed to the constructor of `MsgBroadcaster` as well as when broadcasting the transaction. Here is the interface and the meaning of each field
 
-````typescript
+```typescript
 import { Msgs } from '@injectivelabs/sdk-ts/core/modules'
 import { ChainId, EvmChainId } from '@injectivelabs/ts-types'
 import { Network, NetworkEndpoints } from '@injectivelabs/networks'
@@ -96,7 +96,7 @@ export interface MsgBroadcasterTxOptions {
 }
 
 ```
-````
+```
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
   To override the `endpoints` and use your infrastructure (which is something we
