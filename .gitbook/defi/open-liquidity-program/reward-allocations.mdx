@@ -13,22 +13,69 @@ Rewards are allocated to [eligible markets](/defi/open-liquidity-program/eligibl
 
 ### Static Market Reward Allocations (Preallocations)
 
-12.5% of INJ rewards will be preallocated to each of the BTC/USDT PERP market, ETH/USDT PERP market, and INJ/USDT PERP market. The remaining INJ for the epoch will be allocated to each remaining eligible market with a minimum allocation of 100 INJ.
+13.33% of INJ rewards will be preallocated to each of the BTC/USDT PERP market, ETH/USDT PERP market, and INJ/USDT PERP market, and 5% will be preallocated to the INJ/USDT spot market. The remaining INJ for each epoch will be allocated to each remaining eligible market with a minimum allocation of 100 INJ.
 
 <table>
-  <thead>
-    <tr>
-      <th align="left">Market</th>
-      <th align="right">Allocation</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td>BTC/USDT Perp</td><td align="right">13.33%</td></tr>
-    <tr><td>ETH/USDT Perp</td><td align="right">13.33%</td></tr>
-    <tr><td>INJ/USDT Perp</td><td align="right">13.33%</td></tr>
-    <tr><td>INJ/USDT Spot</td><td align="right">5%</td></tr>
-    <tr><td>Other Eligible Markets</td><td align="right">Formula-based allocation</td></tr>
-  </tbody>
+<thead>
+<tr>
+<th align="left">
+Market</th>
+
+ <th align="right">
+Allocation</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+<tr>
+<td>
+BTC/USDT Perp</td>
+
+<td align="right">
+13.33%</td>
+
+</tr>
+
+ <tr>
+<td>
+ETH/USDT Perp</td>
+
+<td align="right">
+13.33%</td>
+
+</tr>
+
+ <tr>
+<td>
+INJ/USDT Perp</td>
+
+<td align="right">
+13.33%</td>
+
+</tr>
+
+ <tr>
+<td>
+INJ/USDT Spot</td>
+
+<td align="right">
+5%</td>
+
+</tr>
+
+ <tr>
+<td>
+Other Eligible Markets</td>
+
+<td align="right">
+Formula-based allocation</td>
+
+</tr>
+
+</tbody>
+
 </table>
 
 <Info>
@@ -62,13 +109,10 @@ It must be noted that $Rewards_{min}$ is just the floor for the rewards range, i
 
 With this range defined, the steps to calculate the reward for a market are :
 
-1) Start with $Rewards_{Market_{i}}=Rewards_{min_{market\ i}}$
-
-2) Distribute the remaining rewards, _RR_, with $RR=TAR-\sum_{i}Rewards_{min_{market\ i}}$using the formulas above.
-
-3) For any calculated rewards that exceed $Rewards_{max}$, redistribute this across all markets again following the formula above.
-
-4) Iterate until there are no remaining rewards.
+1. Start with $Rewards_{Market_{i}}=Rewards_{min_{market\ i}}$
+2. Distribute the remaining rewards, _RR_, with $RR=TAR-\sum_{i}Rewards_{min_{market\ i}}$using the formulas above.
+3. For any calculated rewards that exceed $Rewards_{max}$, redistribute this across all markets again following the formula above.
+4. Iterate until there are no remaining rewards.
 
 **Markets Added Partway Through an Epoch**
 
@@ -97,5 +141,5 @@ $$
 **Each institutional liquidity provider** **will receive rewards based on their proportional**[  ](/defi/open-liquidity-program/scoring#total-score)**within the market, subject to governance approval.**
 
 <Info>
-  Rewards for addresses totaling \< 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process. 
+  Rewards for addresses totaling \< 1 INJ at the end of each epoch will be disregarded to reduce the overhead of the disbursement process.
 </Info>
