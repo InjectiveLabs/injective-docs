@@ -80,10 +80,8 @@
                 "group": "Open Liquidity Program",
                 "pages": [
                   "defi/open-liquidity-program/introduction",
-                  "defi/open-liquidity-program/rewards",
                   "defi/open-liquidity-program/epochs",
                   "defi/open-liquidity-program/eligibility",
-                  "defi/open-liquidity-program/program-details",
                   "defi/open-liquidity-program/scoring",
                   "defi/open-liquidity-program/formula-parameters",
                   "defi/open-liquidity-program/reward-allocations",
