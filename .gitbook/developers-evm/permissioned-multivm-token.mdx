@@ -5,13 +5,76 @@ description: Leverage Injective's permissions module in MultiVM Token Standard (
 
 ## Injective's Permissions Module
 
-TODO
+The [`permissions` module](https://docs.injective.network/developers-native/injective/permissions)
+is native to Injective, and allows custom management (e.g. roles) for Denoms.
+This capability is extended to MultiVM Token Standard (MTS) tokens,
+where you can implement those custom management rules within your EVM smart contract code.
 
 ## Why Uses Permissions on MTS Tokens?
 
-TODO
+If you are tokenizing real world assets (RWAs) using MTS on Injective,
+and that underlying asset inherently requires permissions,
+that is a great use case for tapping into Injective's `permissions` module.
+
+The EVM smart contract of your MTS token simply needs to implement
+an additional Solidity interface to leverage the power of the `permissions` module.
 
 ## Implementation
 
-TODO
+In your smart contract, import `IPermissionsHook` from `PermissionsHook.sol` and extend it.
 
+```solidity
+interface IPermissionsHook
+```
+
+This will involve implementing the `isTransferRestricted` function,
+with the following signature:
+
+```solidity
+function isTransferRestricted(
+  address from,
+  address to,
+  Cosmos.Coin calldata amount
+)
+```
+
+You may find the full file on Github:
+[`PermissionsHook.sol`](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/PermissionsHook.sol)
+
+## Example
+
+Create a smart contract that extends `PermissionsHook`:
+
+```solidity
+import { Cosmos } from "../src/CosmosTypes.sol";
+import { PermissionsHook } from "../src/PermissionsHook.sol";
+contract RestrictedAddressTransferHook is PermissionsHook {
+  /*
+  ...
+  */
+}
+```
+
+Add a custom implementation of the `isTransferRestricted` function.
+For example, this function will allow all transfers,
+exepct for ones involving a specific address:
+
+```solidity
+  function isTransferRestricted(
+    address from,
+    address to,
+    Cosmos.Coin calldata amount
+  ) external pure override returns (bool) {
+    address restrictedAddress = '0x...';
+    if (from == restrictedAddress || to == restrictedAddress) {
+      // this particular address is not allowed to transfer
+      return true;
+    }
+
+    // All other transfers are allowed
+    return false;
+  }
+```
+
+You may find a more detailed example of this on Github:
+[`PermissionsHookExamples.sol`](https://github.com/InjectiveLabs/solidity-contracts/blob/master/examples/PermissionsHookExamples.sol)
