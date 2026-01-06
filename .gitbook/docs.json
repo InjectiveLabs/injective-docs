@@ -1435,6 +1435,10 @@
       "destination": "/developers-evm/multivm-token-standard"
     },
     {
+      "source": "/developers/evm-developers/technical-information/permissioned-multivm-token",
+      "destination": "/developers-evm/permissioned-multivm-token"
+    },
+    {
       "source": "/developers/evm-developers/technical-information/precompiles",
       "destination": "/developers-evm/precompiles"
     },
