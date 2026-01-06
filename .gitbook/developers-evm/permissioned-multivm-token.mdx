@@ -19,7 +19,7 @@ that is a great use case for tapping into Injective's `permissions` module.
 The EVM smart contract of your MTS token simply needs to implement
 an additional Solidity interface to leverage the power of the `permissions` module.
 
-## Implementation
+## Smart Contract Implementation
 
 In your smart contract, import `IPermissionsHook` from `PermissionsHook.sol` and extend it.
 
@@ -41,7 +41,7 @@ function isTransferRestricted(
 You may find the full file on Github:
 [`PermissionsHook.sol`](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/PermissionsHook.sol)
 
-## Example
+### Smart Contract Example
 
 Create a smart contract that extends `PermissionsHook`:
 
@@ -78,3 +78,70 @@ exepct for ones involving a specific address:
 
 You may find a more detailed example of this on Github:
 [`PermissionsHookExamples.sol`](https://github.com/InjectiveLabs/solidity-contracts/blob/master/examples/PermissionsHookExamples.sol)
+
+## Registering Hook
+
+In order to register the hook for the permissions,
+you will need the following:
+
+- Control of the same account that deployed the MTS token.
+- The deployed address of the MTS token
+- The deployed address of the Permissions Hook
+- The address of the account which should have an *admin* role on the MTS token.
+
+With the above, you can create
+[a JSON file similar to this one](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/scripts/demo/namespace.json).
+
+Then run `injectived` for the registration,
+using the same account that deployed the MTS token.
+
+```shell
+injectived tx permissions create-namespace ...
+```
+
+<Info>
+Note that the MTS token and the Permissions Hook can have the same address.
+That is an architectrual decision that is up to you.
+</Info>
+
+### Registering Hook Example
+
+Create a file named `register-hooks.json`, with the following content:
+
+```jsonc
+{
+  "denom": "erc20:0x...", // <-- EVM address of the MTS token
+  "evm_hook": "0x...", // <-- EVM address of the permissions hook
+  "role_permissions": [
+    {
+      "name": "EVERYONE",
+      "role_id": 0,
+      "permissions": 10
+    },
+    {
+      "name": "admin",
+      "role_id": 1,
+      "permissions": 2013265920
+    }
+  ],
+  "actor_roles": [
+    {
+      "actor": "inj...", // <-- Injective address of the admin account
+      "roles": ["admin"]
+    }
+  ]
+}
+```
+
+Be sure to replace the value of the
+`denom`, `evm_hook`, and `actor_roles[].actor` fields with the appropriate values.
+Delete all comments as well, so that the file is valid JSON.
+
+Then run the following command:
+
+```shell
+injectived tx permissions create-namespace register-hooks.json [flags]
+```
+
+For additional details on this step, refer to
+[How to Launch Permissioned Assets](https://docs.injective.network/developers-native/injective/permissions/04_launch_permissioned_asset).
