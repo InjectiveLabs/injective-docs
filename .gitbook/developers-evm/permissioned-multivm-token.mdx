@@ -87,7 +87,6 @@ you will need the following:
 - Control of the same account that deployed the MTS token.
 - The deployed address of the MTS token
 - The deployed address of the Permissions Hook
-- The address of the account which should have an *admin* role on the MTS token.
 
 With the above, you can create
 [a JSON file similar to this one](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/scripts/demo/namespace.json).
@@ -117,25 +116,19 @@ Create a file named `register-hooks.json`, with the following content:
       "name": "EVERYONE",
       "role_id": 0,
       "permissions": 10
-    },
-    {
-      "name": "admin",
-      "role_id": 1,
-      "permissions": 2013265920
     }
   ],
   "actor_roles": [
-    {
-      "actor": "inj...", // <-- Injective address of the admin account
-      "roles": ["admin"]
-    }
   ]
 }
 ```
 
 Be sure to replace the value of the
-`denom`, `evm_hook`, and `actor_roles[].actor` fields with the appropriate values.
+`denom` and `evm_hook` fields with the appropriate values.
+
+<Info>
 Delete all comments as well, so that the file is valid JSON.
+</Info>
 
 Then run the following command:
 
@@ -143,7 +136,9 @@ Then run the following command:
 injectived tx permissions create-namespace register-hooks.json [flags]
 ```
 
-For additional details on this step, refer to
+Note that this is merely one specific way to define permissions hooks on an MTS token.
+There are multiple variations.
+For additional details on this step, including other variations, refer to
 [How to Launch Permissioned Assets](https://docs.injective.network/developers-native/injective/permissions/04_launch_permissioned_asset).
 
 ## Reference Implementation
@@ -169,4 +164,5 @@ function isTransferRestricted(
   return false;
 }
 ```
+
 See [`PermissionsHook_Inj.sol`](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol).
