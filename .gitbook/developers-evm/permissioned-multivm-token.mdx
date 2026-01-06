@@ -145,3 +145,28 @@ injectived tx permissions create-namespace register-hooks.json [flags]
 
 For additional details on this step, refer to
 [How to Launch Permissioned Assets](https://docs.injective.network/developers-native/injective/permissions/04_launch_permissioned_asset).
+
+## Reference Implementation
+
+A more complete example theat demonstrates the use of permissioned MTS tokens
+for a stable coin is also available.
+
+This example involves a permissions hook which prevents transfers
+when the token is paused, and also maintains a blacklist of addresses.
+
+```solidity
+function isTransferRestricted(
+  address _from,
+  address _to,
+  Cosmos.Coin calldata /* _amount */
+) external view returns (bool) {
+  if (fiatToken.paused()) {
+    return true;
+  } else if (fiatToken.isBlacklisted(_from) || fiatToken.isBlacklisted(_to)) {
+    return true;
+  }
+
+  return false;
+}
+```
+See [`PermissionsHook_Inj.sol`](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol).
