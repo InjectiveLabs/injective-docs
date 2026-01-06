@@ -272,6 +272,7 @@
               },
               "developers-evm/evm-equivalence",
               "developers-evm/multivm-token-standard",
+              "developers-evm/permissioned-multivm-token",
               "developers-evm/wrapped-inj",
               "developers-evm/precompiles",
               "developers-evm/bank-precompile",
@@ -1433,10 +1434,6 @@
     {
       "source": "/developers/evm-developers/technical-information/multivm-token-standard",
       "destination": "/developers-evm/multivm-token-standard"
-    },
-    {
-      "source": "/developers/evm-developers/technical-information/permissioned-multivm-token",
-      "destination": "/developers-evm/permissioned-multivm-token"
     },
     {
       "source": "/developers/evm-developers/technical-information/precompiles",
