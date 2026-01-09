@@ -1,0 +1,166 @@
+---
+title: Exchange Precompile
+---
+
+Exchange Precompile 是一个位于固定地址 `0x0000000000000000000000000000000000000065` 的系统智能合约。它为 Solidity 开发者提供了一种高效且原生的方式来直接与 Injective 链的 exchange 模块交互。通过利用此 precompile，你的智能合约可以无缝执行各种与交易所相关的操作，包括：
+
+* 向/从子账户存入和提取资金。
+* 下单或取消现货和衍生品订单。
+* 查询子账户余额和持仓。
+* 管理对其他账户或合约的授权。
+
+#### 调用 Precompile：直接访问 vs. 代理访问
+
+与 Exchange Precompile 交互可以通过两种主要方式：
+
+**1. 直接访问（自调用合约）**
+
+在此模式下，你的智能合约代表自己与 precompile 交互。合约本身是在 exchange 模块上执行操作的参与者，使用自己的资金并管理自己的持仓。
+
+_示例：_
+
+```
+exchange.deposit(address(this), subaccountID, denom, amount);  
+```
+
+此方法简单直接，**不需要显式授权**，因为合约本身有权管理自己的资源。
+
+**2. 代理访问（代表其他用户调用）**
+
+智能合约也可以设计为中介，代表外部用户账户执行交易所操作。在这种情况下，合约调用 precompile，指定第三方的地址作为发送者或要操作的账户。
+
+_示例：_
+
+```
+exchange.deposit(userAddress, subaccountID, denom, amount);  
+```
+
+为使此操作成功，智能合约（`grantee`）**必须被用户**（`userAddress`，即 `granter`）**显式授权**执行指定的操作。此授权使用 precompile 提供的 `approve` 和 `revoke` 方法管理。**谨慎处理这些授权以确保用户资金安全至关重要。**
+
+要授权合约代表你执行特定操作：
+
+```
+exchange.approve(grantee, msgTypes, spendLimit, duration);  
+```
+
+* `grantee`：被授权的合约地址。
+* `msgTypes`：`grantee` 被授权执行的消息类型数组（例如 `MsgCreateDerivativeLimitOrder`、`MsgDeposit`）。请参阅 `ExchangeTypes.sol` 或 Injective Protocol protobuf 定义获取完整列表。
+* `spendLimit`：定义 `grantee` 可以使用的指定 token 的最大金额的 `Cosmos.Coin` 结构数组，按消息类型或整体授权。
+* `duration`：授权保持有效的时间段，以秒为单位。
+
+要撤销之前授予的授权：
+
+```
+exchange.revoke(grantee, msgTypes);  
+```
+
+要检查授权当前是否存在：
+
+```
+exchange.allowance(grantee, granter, msgType);  
+```
+
+#### 示例：直接方法
+
+下面的 `ExchangeDemo` 合约说明了智能合约如何使用直接访问方法。它执行基本的交易所操作，如存入资金、提取资金、创建衍生品限价订单和查询子账户持仓，所有这些都使用自己的子账户和资金。
+
+`Exchange.sol` 和 `ExchangeTypes.sol` 文件包含与 precompile 交互所需的接口定义和数据结构。这些通常可在官方 Injective Solidity 合约仓库中找到，或可作为项目中的依赖项包含。
+
+```solidity
+// SPDX-License-Identifier: MIT  
+pragma solidity ^0.8.4;  
+  
+import "../src/Exchange.sol"; // 包含 IExchangeModule 接口  
+import "../src/ExchangeTypes.sol"; // 包含必要的结构如 DerivativeOrder  
+  
+contract ExchangeDemo {  
+    address constant exchangeContract = 0x0000000000000000000000000000000000000065;  
+    IExchangeModule exchange = IExchangeModule(exchangeContract);  
+  
+    /***************************************************************************  
+     * 直接调用 precompile（合约代表自己操作）  
+    ****************************************************************************/  
+  
+    /**  
+     * @notice 将资金从合约余额存入其交易所子账户之一。  
+     * @param subaccountID 目标子账户 ID（从合约地址派生）。  
+     * @param denom 要存入的资产面额（例如 "inj"）。  
+     * @param amount 要存入的资产数量。  
+     * @return success 表示存款是否成功的布尔值。  
+     */  
+    function deposit(  
+        string calldata subaccountID,  
+        string calldata denom,  
+        uint256 amount  
+    ) external returns (bool) {  
+        try exchange.deposit(address(this), subaccountID, denom, amount) returns (bool success) {  
+            return success;  
+        } catch Error(string memory reason) {  
+            revert(string(abi.encodePacked("Deposit error: ", reason)));  
+        } catch {  
+            revert("Unknown error during deposit");  
+        }  
+    }  
+  
+    /**  
+     * @notice 从合约的交易所子账户之一提取资金到其主余额。  
+     * @param subaccountID 源子账户 ID。  
+     * @param denom 要提取的资产面额。  
+     * @param amount 要提取的资产数量。  
+     * @return success 表示提款是否成功的布尔值。  
+     */  
+    function withdraw(  
+        string calldata subaccountID,  
+        string calldata denom,  
+        uint256 amount  
+    ) external returns (bool) {  
+        try exchange.withdraw(address(this), subaccountID, denom, amount) returns (bool success) {  
+            return success;  
+        } catch Error(string memory reason) {  
+            revert(string(abi.encodePacked("Withdraw error: ", reason)));  
+        } catch {  
+            revert("Unknown error during withdraw");  
+        }  
+    }  
+  
+    /**  
+     * @notice 查询此合约给定子账户的衍生品持仓。  
+     * @param subaccountID 要查询的子账户 ID。  
+     * @return positions DerivativePosition 结构数组。  
+     */  
+    function subaccountPositions(  
+        string calldata subaccountID  
+    ) external view returns (IExchangeModule.DerivativePosition[] memory positions) {  
+        // 注意：调用 precompiles 的 view 函数可能根据节点配置表现不同  
+        // 对于链上状态，这没问题。对于链下查询，通常首选直接 gRPC/API 查询。  
+        return exchange.subaccountPositions(subaccountID);  
+    }  
+  
+    /**  
+     * @notice 从合约的子账户创建新的衍生品限价订单。  
+     * @param order 包含订单详情的 DerivativeOrder 结构。  
+     * @return response 包含订单哈希等详情的响应结构。  
+     */  
+    function createDerivativeLimitOrder(  
+        IExchangeModule.DerivativeOrder calldata order  
+    ) external returns (IExchangeModule.CreateDerivativeLimitOrderResponse memory response) {  
+        try exchange.createDerivativeLimitOrder(address(this), order) returns (IExchangeModule.CreateDerivativeLimitOrderResponse memory resp) {  
+            return resp;  
+        } catch Error(string memory reason) {  
+            revert(string(abi.encodePacked("CreateDerivativeLimitOrder error: ", reason)));  
+        } catch {  
+            revert("Unknown error during createDerivativeLimitOrder");  
+        }  
+    }  
+}  
+```
+
+#### 开始构建
+
+有关如何构建、部署和与此 `ExchangeDemo` 智能合约交互的详细说明，包括设置子账户和充值，请参阅我们 [solidity-contracts](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange) 仓库中提供的综合演示。
+
+#### 结论
+
+Exchange Precompile 是一个强大的工具，使复杂的、协议集成的交易逻辑能够直接嵌入你在 Injective 上的智能合约中。无论你的合约是管理自己的投资组合还是作为其他用户的多功能交易接口（通过带有 `approve` 和 `revoke` 的代理模式），此 precompile 都提供了一种干净、安全且高效的方法来使用 Solidity 与核心 exchange 模块交互。
+
+请记住，对于自包含的合约逻辑优先使用直接调用，并在为更广泛的 Injective 生态系统构建可重用合约接口时谨慎实现带有强大授权的代理模式。
