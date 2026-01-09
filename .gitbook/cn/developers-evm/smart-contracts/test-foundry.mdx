@@ -1,0 +1,84 @@
+---
+title: 使用 Foundry 测试智能合约
+---
+
+## 前置条件
+
+你应该已经设置好 Foundry 项目，并成功编译了智能合约。
+请参阅[设置 Foundry 并编译智能合约](./compile-foundry/)教程了解如何操作。
+
+## 编辑测试规范
+
+由于我们测试的智能合约很简单，所需的测试用例也很简单。
+
+在测试之前，我们需要部署智能合约。
+这发生在 `setUp` 块中。
+这是因为智能合约不能独立执行，它们必须在 EVM 中才能执行。
+在 Foundry 中，默认情况下，测试将在模拟的内存 EVM 实例中执行，该实例是临时的，因此部署是例行的。
+
+打开文件：`test/Counter.t.sol`
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import { Test } from "forge-std/Test.sol";
+import { Counter } from "../src/Counter.sol";
+
+contract CounterTest is Test {
+    Counter public counter;
+
+    function setUp() public {
+        counter = new Counter();
+    }
+
+    function testInitialValue() public view {
+        assertEq(counter.value(), 0);
+    }
+
+    function testIncrementValueFromZero() public {
+        counter.increment(100);
+        assertEq(counter.value(), 100);
+    }
+
+    function testIncrementValueFromNonZero() public {
+        counter.increment(100);
+        counter.increment(23);
+        assertEq(counter.value(), 123);
+    }
+}
+
+```
+
+我们看到有 3 个测试用例：
+
+- 检查初始 `value()`。
+- 调用 `increment(num)` 然后检查 `value()` 是否已更新。
+- 再次调用 `increment(num)`，然后检查 `value()` 是否再次更新。
+
+## 对智能合约执行测试
+
+以下命令运行我们刚才查看的测试。
+
+```shell
+forge test
+```
+
+## 检查测试输出
+
+如果所有测试都按计划工作，你应该看到类似以下的输出：
+
+```text
+Ran 3 tests for test/Counter.t.sol:CounterTest
+[PASS] testIncrementValueFromNonZero() (gas: 32298)
+[PASS] testIncrementValueFromZero() (gas: 31329)
+[PASS] testInitialValue() (gas: 10392)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 5.35ms (3.16ms CPU time)
+
+Ran 1 test suite in 171.04ms (5.35ms CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)
+```
+
+## 下一步
+
+现在你已经测试了智能合约，你可以开始部署该智能合约了！
+接下来请查看[使用 Foundry 部署智能合约](./deploy-foundry/)教程。
