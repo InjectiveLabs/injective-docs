@@ -1,0 +1,100 @@
+---
+title: 使用 Hardhat 验证智能合约
+---
+
+## 前置条件
+
+你应该已经设置好 Hardhat 项目，并成功部署了智能合约。
+请参阅[使用 Hardhat 部署智能合约](./deploy-hardhat/)教程了解如何操作。
+
+## 什么是智能合约验证？
+
+验证过程不会对智能合约本身或网络的任何其他状态产生任何影响。
+
+相反，它是一个标准化的过程，通过该过程向网络浏览器提供部署在特定地址的智能合约的原始源代码。网络浏览器**独立编译**该源代码，并验证生成的 bytecode 确实与智能合约部署交易中存在的 bytecode **匹配**。
+
+如果验证通过（存在匹配），区块浏览器会为该特定智能合约的页面"解锁"增强模式。
+现在会显示更多智能合约详情，包括：
+* 完整源代码（Solidity）
+* ABI（JSON）
+* 交易和事件以更高的详细程度显示（使用 ABI 解析）
+
+此外，如果用户连接他们的钱包，他们可以直接在网络浏览器中调用函数来查询智能合约，甚至发送交易来更新其状态。
+
+{/* TODO consider moving this section to FAQs */}
+
+## 编辑智能合约验证配置
+
+打开 `hardhat.config.js`，查看 `etherscan` 和 `sourcify` 元素。
+
+```js
+  etherscan: {
+    apiKey: {
+      inj_testnet: 'nil',
+    },
+    customChains: [
+      {
+        network: 'inj_testnet',
+        chainId: 1439,
+        urls: {
+          apiURL: 'https://testnet.blockscout-api.injective.network/api',
+          browserURL: 'https://testnet.blockscout.injective.network/',
+        },
+      },
+    ],
+  },
+  sourcify: {
+    enabled: false,
+  },
+```
+
+Sourcify 和 Etherscan 是两个流行的区块浏览器，每个都有不同的验证 API。
+Injective 使用 Blockscout，它与 Etherscan API 兼容。
+因此，配置中禁用了 Sourcify。
+在 Etherscan 配置中，不需要 `apiKey` 值，所以任何非空值都可以。
+`customChains` 中的 `inj_testnet` 网络已配置了适用于 Injective Testnet 的适当值。
+
+## 运行验证命令
+
+输入以下命令：
+
+```shell
+npx hardhat verify --network inj_testnet ${SC_ADDRESS}
+```
+
+将 `${SC_ADDRESS}` 替换为你部署智能合约的地址。
+
+例如，如果智能合约地址是 `0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b`，命令是：
+
+```shell
+npx hardhat verify --network inj_testnet 0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b
+```
+
+## 检查验证结果
+
+你应该在终端中看到类似以下的输出：
+
+```text
+Successfully submitted source code for contract
+contracts/Counter.sol:Counter at 0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b
+for verification on the block explorer. Waiting for verification result...
+
+Successfully verified contract Counter on the block explorer.
+https://testnet.blockscout.injective.network/address/0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b#code
+```
+
+更有趣的结果是访问网络浏览器。
+访问验证输出中的网络浏览器 URL。
+然后选择 "Contract" 标签。
+然后选择 "Code" 子标签。
+之前只有 "ByteCode" 可用，现在 "Code"、"Compiler" 和 "ABI" 也可用了。
+
+仍然在 "Contract" 标签中，
+选择 "Read/Write contract" 子标签。
+之前这不存在，
+但现在你可以直接从区块浏览器与每个智能合约函数交互。
+
+## 下一步
+
+现在你已经部署并验证了智能合约，你可以开始与该智能合约交互了！
+接下来请查看[使用 Hardhat 与智能合约交互](./interact-hardhat/)教程。
