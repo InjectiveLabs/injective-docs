@@ -12,12 +12,13 @@
     "dark": "/img/injective-logo-192x192.png"
   },
   "favicon": "/img/injective-logo-192x192.png",
-  "languages": [
-    {
-      "language": "en",
-      "groups": [
+  "navigation": {
+    "languages": [
       {
-        "group": "INJECTIVE",
+        "language": "en",
+        "groups": [
+          {
+            "group": "INJECTIVE",
         "pages": [
           "index",
           {
