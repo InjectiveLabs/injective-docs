@@ -639,10 +639,10 @@
           "references"
         ]
       }
-    ]
-    },
-    {
-      "language": "cn",
+        ]
+      },
+      {
+        "language": "cn",
       "groups": [
         {
           "group": "EVM 开发者",
