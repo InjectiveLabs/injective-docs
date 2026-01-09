@@ -1,0 +1,89 @@
+---
+title: 使用 Hardhat 测试智能合约
+---
+
+## 前置条件
+
+你应该已经设置好 Hardhat 项目，并成功编译了智能合约。
+请参阅[设置 Hardhat 并编译智能合约](./compile-hardhat/)教程了解如何操作。
+
+## 编辑测试规范
+
+由于我们测试的智能合约很简单，所需的测试用例也很简单。
+
+在测试之前，我们需要部署智能合约。
+这发生在 `before` 块中。
+这是因为智能合约不能独立执行，它们必须在 EVM 中才能执行。
+在 Hardhat 中，默认情况下，测试将在模拟的内存 EVM 实例中执行，该实例是临时的，因此部署是例行的。
+
+打开文件：`test/Counter.test.js`
+
+```js
+const { expect } = require('chai');
+
+describe('Counter', function () {
+  let counter;
+
+  before(async function () {
+    Counter = await ethers.getContractFactory('Counter');
+    counter = await Counter.deploy();
+    await counter.waitForDeployment();
+  });
+
+  it('should start with a count of 0', async function () {
+    expect(await counter.value()).to.equal(0);
+  });
+
+  it('should increment the count starting from zero', async function () {
+    await counter.increment(100);
+    expect(await counter.value()).to.equal(100);
+  });
+
+  it('should increment the count starting from non-zero', async function () {
+    await counter.increment(23);
+    expect(await counter.value()).to.equal(123);
+  });
+});
+
+```
+
+我们看到有 3 个测试用例：
+
+- 检查初始 `value()`。
+- 调用 `increment(num)` 然后检查 `value()` 是否已更新。
+- 再次调用 `increment(num)`，然后检查 `value()` 是否再次更新。
+
+## 对智能合约执行测试
+
+以下命令运行我们刚才查看的测试。
+
+```shell
+npx hardhat test
+```
+
+以下命令运行测试，但**不是**在模拟的 EVM 实例中。
+相反，智能合约被部署到 Injective Testnet（公共网络），然后针对它运行测试。
+在大多数情况下**不推荐**这样做，仅在特定/高级用例中需要。
+
+```shell
+npx hardhat test --network inj_testnet
+```
+
+## 检查测试输出
+
+如果所有测试都按计划工作，你应该看到类似以下的输出：
+
+```text
+  Counter
+    ✔ should start with a count of 0
+    ✔ should increment the count starting from zero
+    ✔ should increment the count starting from non-zero
+  3 passing (41ms)
+```
+
+之后是一个表格，其中包含有关 gas 的额外报告，这是复杂性和交易成本的衡量标准。
+
+## 下一步
+
+现在你已经测试了智能合约，你可以开始部署该智能合约了！
+接下来请查看[使用 Hardhat 部署智能合约](./deploy-hardhat/)教程。
