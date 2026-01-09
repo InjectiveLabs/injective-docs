@@ -1,0 +1,118 @@
+---
+title: 使用 WalletConnect 连接
+---
+
+WalletConnect 是一个开源、链无关的协议，可安全地连接钱包和 Web3 应用。它使用桥接服务器中继加密消息，允许用户通过扫描二维码或深度链接进行连接，而无需暴露私钥。
+
+### WalletConnect 集成步骤
+
+#### 前置条件
+
+在 [WalletConnect Cloud](https://cloud.walletconnect.com) 注册并获取 **project ID**。
+
+***
+
+#### 安装依赖
+
+```bash
+npm install ethers wagmi viem @walletconnect/ethereum-provider
+```
+
+设置 Injective EVM 网络配置
+
+```javascript
+// lib/injectiveChain.ts
+import { defineChain } from 'viem'
+
+export const injectiveEvm = defineChain({
+  id: 1439,
+  name: 'Injective EVM',
+  nativeCurrency: {
+    name: 'INJ',
+    symbol: 'INJ',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: { http: ['https://k8s.testnet.json-rpc.injective.network'] },
+  },
+  blockExplorers: {
+    default: { name: 'InjectiveScan', url: 'https://testnet.blockscout.injective.network/blocks' },
+  },
+})
+```
+
+设置 Wagmi + WalletConnect
+
+```javascript
+ // lib/wagmi.ts
+import { walletConnect } from '@wagmi/connectors'
+import { createConfig, http } from '@wagmi/core'
+import { injectiveEvm } from './injectiveChain'
+
+export const wagmiConfig = createConfig({
+  chains: [injectiveEvm],
+  connectors: [
+    walletConnect({
+      projectId: 'your-walletconnect-project-id', // 来自 WalletConnect Cloud
+      showQrModal: true,
+    }),
+  ],
+  transports: {
+    [injectiveEvm.id]: http(injectiveEvm.rpcUrls.default.http[0]),
+  },
+})
+
+```
+
+集成到你的项目
+
+```javascript
+'use client'
+
+import Image from 'next/image'
+import { wagmiConfig } from './providers'
+import { useConnect, useAccount, WagmiProvider } from 'wagmi'
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
+
+export const queryClient = new QueryClient()
+
+function WalletConnector() {
+  const { connectors, connect, isPending } = useConnect()
+  const { address, isConnected } = useAccount()
+  const wcConnector = connectors.find(c => c.id === 'walletConnect')
+
+  return (
+    <div style={{ textAlign: 'center', marginTop: '100px' }}>
+      {isConnected ? (
+        <p>Connected to {address}</p>
+      ) : (
+        <button
+          onClick={() => wcConnector && connect({ connector: wcConnector })}
+          disabled={isPending || !wcConnector}
+          style={{ padding: '12px 24px', fontSize: '16px' }}
+        >
+          Connect Wallet (WalletConnect)
+        </button>
+      )}
+    </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <WalletConnector />
+      </QueryClientProvider>
+    </WagmiProvider>
+  )
+}
+
+```
+
+***
+
+更多信息
+
+* WalletConnect 文档: [https://docs.walletconnect.com](https://docs.walletconnect.com)
+* WalletConnect 官方示例: [https://github.com/WalletConnect/web-examples](https://github.com/WalletConnect/web-examples)
