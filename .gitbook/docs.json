@@ -690,7 +690,8 @@
         }
       ]
     }
-  ],
+    ]
+  },
   "styling": {
     "eyebrows": "breadcrumbs"
   },
