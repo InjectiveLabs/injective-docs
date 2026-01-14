@@ -12,23 +12,23 @@ OLP data for current and previous epochs can also be queried programmatically:
 > Epochs and Markets:
 
 ```
-curl -s -X POST https://glp.rest.injective.network/injective_dmm_v2.InjectiveDmmV2/GetEpochs
+curl -s -X POST -H "Content-Type: application/json" -d '{}' https://glp.rest.injective.network/api/olp/v1/epochs
 ```
 
 > Rewards per Address:
 
 ```
-curl -s -d '{"epochId":"epoch_231128_231225"}' -X POST https://glp.rest.injective.network/injective_dmm_v2.InjectiveDmmV2/GetEpochScores
+curl -s -X POST -H "Content-Type: application/json" -d '{"epoch_id":"epoch_231128_231225"}' https://glp.rest.injective.network/api/olp/v1/epoch-scores
 ```
 
 > Rewards in a Market:
 
 ```
-curl -X POST -d '{"epochId": "epoch_240123_240219", "marketId":"0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce", "page": {"perPage": 200}}' https://glp.rest.injective.network/injective_dmm_v2.InjectiveDmmV2/GetTotalScores
+curl -X POST -H "Content-Type: application/json" -d '{"epoch_id": "epoch_240123_240219", "market_id":"0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce", "page": {"per_page": 200}}' https://glp.rest.injective.network/api/olp/v1/total-scores
 ```
 
 > Snapshots for Address:
 
 ```
-curl -X POST -d '{"epochId": "epoch_240123_240219", "accountAddress": "<INSERT ADDRESS>", "marketId":"0x4ca0f92fc28be0c9761326016b5a1a2177dd6375558365116b5bdda9abc229ce", "page": {"perPage": 200}}' https://glp.rest.injective.network/injective_dmm_v2.InjectiveDmmV2/GetTotalScoresHistory
+curl -X POST -H "Content-Type: application/json" -d '{"epoch_id": "epoch_240123_240219", "account_address": "<INSERT ADDR>"}' https://glp.rest.injective.network/api/olp/v1/epoch-scores/history
 ```
