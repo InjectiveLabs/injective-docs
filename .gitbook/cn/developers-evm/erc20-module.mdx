@@ -1,0 +1,21 @@
+---
+title: ERC20 Module
+---
+
+### ERC20 Module
+
+ERC20 模块使**现有的** bank denom（例如 IBC 桥接的 token、USDC、tokenfactory 和 Peggy）能够与 Injective EVM 集成。它在其存储中维护 token 对之间的映射，创建 ERC20 token 与其对应 bank denom 之间的关联。当为现有 bank denom 生成新的 token 对时，该模块部署一个与 Bank precompile 交互的 ERC20 合约，然后引用存储映射以将 ERC20 地址与相应的 bank denom 对齐。此模块有几个基本用途：
+
+1. **存储**：在 bank denom ↔ ERC20 地址之间映射
+2. **新消息类型**：使用户能够通过发出链消息来建立新的 token 对映射
+
+#### 创建新的 Token 对
+
+目前，三种类型的 bank denom 可以有关联的 token 对，每种都有特定的规则：
+
+* **Tokenfactory (`factory/...`)**\
+  只有 denom 管理员或治理可以创建 token 对。发送者可以指定现有的 ERC20 合约地址作为自定义实现。如果省略，将部署 `MintBurnBankERC20.sol` 的新实例，以 `msg.sender` 作为所有者，允许通过合约铸造和销毁。
+* **IBC (`ibc/...`)**\
+  任何用户都可以通过创建 token 对将 IBC denom 集成到 EVM 中，但没有自定义 ERC20 地址的选项。这些将始终部署一个新的、无所有者的 `FixedSupplyBankERC20.sol` 实例。
+* **Peggy (`peggy0x...`)**\
+  任何用户都可以通过创建 token 对将 Peggy denom 集成到 EVM 中，但没有自定义 ERC20 地址的选项。这些将始终部署一个新的、无所有者的 `FixedSupplyBankERC20.sol` 实例。

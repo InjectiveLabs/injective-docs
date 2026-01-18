@@ -1,0 +1,65 @@
+---
+title: 将 Injective 添加到你的 dApp
+---
+
+# 将 Injective 添加到你的 dApp
+
+让你的用户只需一键即可连接到 Injective 网络。
+
+使用下面的代码片段向你的 dApp 添加"添加 Injective 网络"按钮，让用户可以轻松地将 Injective 添加到 MetaMask 或任何 EVM 兼容钱包。
+
+1. 将代码片段复制并粘贴到你的前端代码库中。
+2. 将 `addInjectiveNetwork` 函数连接到你首选的 UI 按钮。
+3. 就是这样——你的用户现在可以在几秒钟内将 Injective 添加到他们的钱包
+
+```tsx
+// 网络配置
+const INJECTIVE_MAINNET_CONFIG = {
+  chainId: '0x6f0', // 十进制 1776
+  chainName: 'Injective',
+  rpcUrls: ['https://evm-rpc.injective.network'],
+  nativeCurrency: {
+    name: 'Injective',
+    symbol: 'INJ',
+    decimals: 18
+  },
+  blockExplorerUrls: ['https://explorer.injective.network']
+};
+
+async function addInjectiveNetwork() {
+  // 检查是否安装了 MetaMask 或其他 Web3 钱包
+  if (!window.ethereum) {
+    alert('Please install MetaMask or another Web3 wallet!');
+    return;
+  }
+
+  try {
+    // 首先，尝试切换到 Injective 网络
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: INJECTIVE_MAINNET_CONFIG.chainId }],
+    });
+
+    console.log('Switched to Injective network successfully!');
+  } catch (switchError) {
+    // 错误代码 4902 表示网络尚未添加
+    if (switchError.code === 4902) {
+      try {
+        // 添加 Injective 网络
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [INJECTIVE_MAINNET_CONFIG],
+        });
+
+        console.log('Injective network added successfully!');
+      } catch (addError) {
+        console.error('Failed to add Injective network:', addError);
+        alert('Failed to add Injective network. Please try again.');
+      }
+    } else {
+      console.error('Failed to switch network:', switchError);
+      alert('Failed to switch to Injective network.');
+    }
+  }
+}
+```

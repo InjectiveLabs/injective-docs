@@ -1,0 +1,118 @@
+---
+title: 使用 Hardhat 与智能合约交互
+---
+
+## 前置条件
+
+你应该已经设置好 Hardhat 项目，并成功部署了智能合约。
+请参阅[使用 Hardhat 部署智能合约](./deploy-hardhat/)教程了解如何操作。
+
+可选但强烈推荐：你还应该已经成功验证了智能合约。
+请参阅[使用 Hardhat 验证智能合约](./verify-hardhat/)教程了解如何操作。
+
+## 启动 Hardhat 控制台
+
+使用以下命令启动交互式 Javascript REPL。
+
+```shell
+npx hardhat console --network inj_testnet
+```
+
+现在 shell 将是 NodeJs REPL 而不是你的常规 shell（bash、zsh 等）。
+在这个 REPL 中，我们将创建 `Counter` 智能合约的实例。
+为此，使用 `ethers.getContractFactory(...)` 和 `contract.attach('0x...');`。
+例如，如果智能合约部署到 `0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b`，命令应该如下所示：
+
+```js
+const Counter = await ethers.getContractFactory('Counter');
+const counter = await Counter.attach('0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b');
+```
+
+请注意，在这个 REPL 中，你会看到 `> ` 作为 shell 提示符。
+每个提示的结果输出没有这个前缀。
+因此，你的终端内容将类似于：
+
+```js
+> const Counter = await ethers.getContractFactory('Counter');
+undefined
+> const counter = await Counter.attach('0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b');
+undefined
+```
+
+现在你可以使用 `counter` 与智能合约交互。
+
+## 调用函数 - 查询
+
+查询是只读操作。
+因此智能合约状态**不会更新**。
+由于*不需要状态更改*，不需要钱包、签名或交易费用（gas）。
+
+使用以下命令查询 `value()` 函数。
+
+```js
+await counter.value();
+```
+
+这应该输出以下内容。
+
+```js
+0n
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+请注意，`0n` 表示 `0`，`n` 后缀表示它是
+[`BigInt`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
+而不是 [`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)。
+
+这是因为 Solidity 的 `uint256`（智能合约中 `value()` 函数的返回类型）
+无法用 `Number` 表示，
+因为其最大可能的整数值是 `2^53 - 1`。
+因此需要使用 `BigInt`。
+</Callout>
+
+## 调用函数 - 交易
+
+交易是写操作。
+因此智能合约**状态会更新**。
+由于*可能发生状态更改*，交易必须由钱包签名，并且需要支付交易费用（gas）。
+
+使用以下命令执行 `increment(num)` 函数的交易。
+
+```js
+await counter.increment(1, { gasPrice: 160e6, gasLimit: 2e6 });
+```
+<Callout icon="info" color="#07C1FF" iconType="regular">
+请注意，gas price 以 *wei* 为单位。
+1 wei = 10^-18 INJ。
+</Callout>
+
+如果成功，这应该产生类似以下的结果：
+
+```js
+ContractTransactionResponse { ...
+```
+
+更新状态后，你可以查询新状态。
+结果将反映状态更改。
+
+```js
+await counter.value();
+```
+
+这次结果应该是 `1n`，因为 `0 + 1 = 1`。
+
+```js
+1n
+```
+
+## 停止 Hardhat 控制台
+
+连续按两次 `Ctrl+C`，或输入 `.exit` 命令。
+
+## 下一步
+
+恭喜，你已经完成了使用 Hardhat 在 Injective 上开发 EVM 智能合约的整个指南！
+
+智能合约不能为非技术用户提供用户体验。
+为了服务他们，你需要构建一个去中心化应用。
+请查看[你的第一个 dApp](../dapps/) 指南！
