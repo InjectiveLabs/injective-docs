@@ -1,0 +1,72 @@
+---
+description: 了解 Injective 多 VM 架构中的 token 表示
+title: MultiVM Token Standard
+---
+
+## 什么是 MultiVM Token Standard (MTS)？
+
+MTS（MultiVM Token Standard）确保 Injective 上的每个 token，无论是使用 Cosmos 模块还是通过 Ethereum Virtual Machine (EVM) 部署的，都有一个规范的余额和身份。这种统一的方法防止了碎片化，消除了桥接或包装 token 的需要，从而实现了去中心化金融（DeFi）和 dApp 交互的无缝互操作性和统一流动性。
+
+## 为什么 MTS 很重要？
+
+* **无缝互操作性：** Token 在 Cosmos 和 EVM 环境中保持一致。
+* **统一流动性：** 单一的真实来源避免了流动性碎片化。
+* **增强的开发者体验：** Hardhat、Foundry 和 MetaMask 等标准工具开箱即用。
+* **安全性和效率：** 所有 token 状态都集中维护在 bank 模块中，确保强大的安全性。
+
+## 架构
+
+系统由两个主要组件组成：
+
+* [**Bank Precompile**](/cn/developers-evm/bank-precompile/)：
+  * 用 Go 开发，此 precompile 直接嵌入 Injective EVM 中。
+  * 它提供了一个 Solidity 接口，将 ERC20 操作（如 mint、burn 和 transfer）代理到 bank 模块。
+* [**ERC20 Module**](/cn/developers-evm/erc20-module/)：
+  * 此模块将原生 bank denom（例如 INJ、IBC token、Peggy 资产）映射到 EVM 中的 ERC20 合约。
+  * 它部署符合 MTS 的 ERC20 合约，始终反映 bank 模块维护的规范 token 余额。
+
+<figure><img src="/img/multivm-token-single-token-representation-architecture.png" alt="" /><figcaption><p>单一 Token 表示架构</p></figcaption></figure>
+
+### **创建符合 MTS 的 Token**
+
+1. [**使用我们的预构建模板**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src)：
+   * 从提供的 Solidity 模板开始，如 `BankERC20.sol`、`MintBurnBankERC20.sol` 或 `FixedSupplyBankERC20.sol`。
+2. [**部署合约**](/cn/developers-evm/smart-contracts/)：
+   * 在 Injective EVM 网络上部署你的 MTS token 合约。
+   * 合约自动与 Bank Precompile 交互以更新规范状态。
+
+### **互操作性和跨链集成**
+
+#### **原生互操作性**
+
+Injective 的 EVM 直接集成到基于 Cosmos 的链中。
+
+* 使用 MTS 的 EVM 智能合约执行的操作会立即反映在原生模块（如 exchange、staking 和 governance 模块）上。
+* Injective 二进制文件中提供的 [JSON-RPC endpoints](/cn/developers-evm/network-information/) 与 Ethereum 兼容，确保开发者集成顺畅。
+
+#### **跨链操作**
+
+* **IBC 兼容性：** 现有的原生 token（例如通过 [Token Factory](/developers-native/injective/tokenfactory/) 创建或通过 Peggy 锚定的）一旦建立 MTS 配对，就可以从 EVM 访问。
+* **桥接替代方案：** 虽然许多区块链需要单独的桥接操作（锁定、铸造、解锁），但 MTS 通过原生同步状态避免了这些步骤。
+
+#### **Allowances 和扩展 ERC20 功能**
+
+* MTS 合约维护标准 ERC20 功能，如 allowances（approve/transferFrom）。
+* 请注意，虽然 allowance 机制在 EVM 合约中维护以方便使用，但最终余额由 bank 模块管理，保持完整性。
+
+### **性能、Gas 和安全考虑**
+
+#### **Gas 成本和效率**
+
+* Gas 费用以 INJ 支付。虽然通过 EVM 的 MTS 操作引入了一个抽象层，可能会略微增加 gas 使用量，但与 Ethereum 上的类似操作相比，总体成本仍然较低。
+* Gas 模型旨在平衡 EVM 风格的 opcode 成本和原生模块交互。
+
+#### **安全性**
+
+* [bank 模块](/developers-native/core/)作为单一真实来源，通过确保 token 余额一致且可验证来支撑 MTS 的安全性。
+* 使用 [precompiles](/cn/developers-evm/precompiles/) 可防止状态不同步等常见陷阱，确保所有操作（无论从何处发起）都更新同一个规范账本。
+* 智能合约开发的高级安全指南和最佳实践在我们的安全部分和外部资源中提供。
+
+**ℹ️ 注意：**
+
+为防止 denom 垃圾信息，通过 ERC20 模块部署 ERC20 合约是**付费操作**，需要 **1 INJ** 的部署费用。确保你的 ERC20 合约部署交易包含此金额，否则操作将被拒绝。

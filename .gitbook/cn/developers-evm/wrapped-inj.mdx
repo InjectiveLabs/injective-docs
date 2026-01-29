@@ -1,0 +1,124 @@
+---
+title: Wrapped INJ (wINJ)
+---
+
+# Wrapped INJ (wINJ)
+
+## 什么是 wrapped 加密货币？
+
+在 Injective 上，INJ 是加密货币，用于支付网络上的交易费用。
+
+然而，一些 dApp（包括 DEX）在其界面中只接受 ERC20 token，因此 INJ **不能**与它们一起使用。
+
+解决方案是创建一个包装 INJ 的 ERC20 token，称为 "wrapped INJ"。
+其 token 符号是 **wINJ**。
+因此，任何接受 ERC20 token 的 dApp 都接受 wINJ。
+
+wINJ token 的工作机制很简单：
+
+- Mint：每当向其存入 INJ 时增加总供应量。
+- Burn：每当从中提取 INJ 时减少总供应量。
+
+你可以将 wINJ 视为与 INJ 1:1 抵押的 ERC20 token，因此可以被视为等值但具有不同的技术接口。
+
+## wINJ 与 wETH 相同吗？
+
+对于熟悉 Ethereum 的人来说，
+你可能会认为这听起来与 wrapped Ether (wETH) 相同。
+你是对的，到目前为止 wINJ 的行为方式与 wETH 相同。
+
+然而，请注意 Injective 网络采用 MultiVM 技术架构设计。
+这意味着如果 wINJ 使用*标准* ERC20 实现，
+就像 wETH 那样，wINJ 在与
+Injective 网络的非 EVM 部分（例如 Cosmos 交易）交互时将**无法**访问。
+
+这正是 Injective 的
+[MultiVM Token Standard (MTS)](/cn/developers-evm/multivm-token-standard)
+设计的目的。
+
+具体来说，请注意
+[这一行](https://github.com/InjectiveLabs/solidity-contracts/blob/b152129a/src/WINJ9.sol#L9C10-L9C15)：
+
+```solidity
+contract WINJ9 is BankERC20, IWINJ9 {
+```
+
+wINJ 智能合约不是像典型的 ERC20 实现那样将余额存储为智能合约中的 `uint256` 值，
+而是使用 `Bank` precompile。
+魔法发生在
+[`BankERC20` 的 `_update` 函数](https://github.com/InjectiveLabs/solidity-contracts/blob/b152129a/src/BankERC20.sol#L50-L81)中，
+其中通过其 [EVM precompile](/cn/developers-evm/bank-precompile "Injective 原生 Bank 模块的 EVM precompile") 调用 `Bank` 模块中的 `mint`、`burn` 或 `transfer` 函数。
+
+由于这些余额从 `Bank` precompile 存储/检索，
+它们可以从 Injective 的 MultiVM 架构中的其他地方访问。
+例如，使用 Cosmos SDK 你可以查询 wINJ 余额，
+即使在通过 EVM 交易更新它们之后；
+反之亦然。
+我们将此称为"原生链余额"。
+
+查看 [wINJ 的完整演示](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/winj9)。
+
+## 如何以编程方式使用 wINJ
+
+- Injective Mainnet 上的地址: `0x0000000088827d2d103ee2d9A6b781773AE03FfB`
+- Injective Testnet 上的地址: `0x0000000088827d2d103ee2d9A6b781773AE03FfB`
+
+要将 INJ 转换为 wINJ，在此智能合约上调用 `deposit` 函数：
+
+- 函数签名是: `deposit() public payable`
+- 请注意，你不需要将金额指定为参数，
+  而是在交易上设置 `value`，`payable` 将其作为 `msg.value` 获取。
+
+要将 wINJ 转换为 INJ，在此智能合约上调用 `withdraw` 函数：
+
+- 函数签名是: `withdraw(uint256 wad) public`
+- 将你打算接收的 INJ 金额设置为 `wad` 参数。
+
+所有其他函数，例如转账，与标准 ERC20 相同。
+
+## 如何通过网络浏览器使用 wINJ
+
+- Injective Mainnet 的 Explorer URL: [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB?tab=contract)
+- Injective Testnet 的 Explorer URL: [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://testnet.blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB?tab=contract)
+
+要将 INJ 转换为 wINJ，在此智能合约上调用 `deposit` 函数：
+
+- 在 wINJ token 的浏览器页面中导航到 "Contract" 标签，然后是 "Read/Write contract" 子标签。
+- 找到 `deposit()` 函数，点击 `>` 符号展开它
+- 在 "Send native INJ (uint256)" 字段中填写你希望转换的 INJ 金额
+  - 请注意，此数字会自动乘以 `10^18`，你不需要手动执行该转换
+- 按 "Write" 按钮
+- 在你的钱包中，确认交易以签名并提交。
+- 你的钱包应该反映 INJ 减少和 wINJ 增加你选择的金额。
+  - 请注意，INJ 减少会略多一些，因为它用于支付交易费用。
+
+要将 wINJ 转换为 INJ，在此智能合约上调用 `withdraw` 函数：
+
+- 在 wINJ token 的浏览器页面中导航到 "Contract" 标签，然后是 "Read/Write contract" 子标签。
+- 找到 `withdraw()` 函数，点击 `>` 符号展开它
+- 在 "wad (uint256)" 字段中填写你希望转换的 wINJ 金额
+  - 请注意，此数字会自动乘以 `10^18`，你不需要手动执行该转换
+- 按 "Write" 按钮
+- 在你的钱包中，确认交易以签名并提交。
+- 你的钱包应该反映 INJ 增加和 wINJ 减少你选择的金额。
+  - 请注意，INJ 增加会略少一些，因为它用于支付交易费用。
+
+# 如何通过 Injective Do 使用 wINJ
+
+- 访问 [Injective Do](https://do.injective.network/)
+- 按右上角的 "Connect" 按钮
+- 选择你的钱包
+- 在你的钱包中选择 "Allow" 以允许它连接到 Injective Do dApp。
+- 你现在应该看到你的钱包地址出现在右上角（之前 "Connect" 按钮的位置）
+- 在顶部的导航栏中，选择 "EVM"
+- 在下拉菜单中选择 "Wrap/Unwrap"
+- 要将 INJ 转换为 wINJ
+  - 按顶部的 "Wrap" 标签
+  - 在 "Amount" 字段中，输入你想要转换的金额
+  - 按底部的 "Wrap" 按钮
+  - 交易完成后，在你的钱包中检查你的 INJ 和 wINJ 余额
+- 要将 wINJ 转换为 INJ
+  - 按顶部的 "Unwrap" 标签
+  - 在 "Amount" 字段中，输入你想要转换的金额
+  - 按底部的 "Unwrap" 按钮
+  - 交易完成后，在你的钱包中检查你的 INJ 和 wINJ 余额

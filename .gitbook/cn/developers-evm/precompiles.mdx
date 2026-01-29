@@ -1,0 +1,82 @@
+---
+title: Precompiles
+---
+
+### 什么是 Injective 上的 Precompiles？
+
+在 Injective 上，precompiles 是直接嵌入我们 EVM（Ethereum Virtual Machine）层协议级别的特殊、高度优化的智能合约。与用户部署的标准 Solidity 智能合约不同，precompiles 是链核心逻辑的一部分。它们用 Go 而不是 Solidity 编写，并以固定地址暴露给 EVM，使它们可以像任何其他智能合约一样从你的 Solidity 智能合约中调用。
+
+可以将它们视为 Injective 链的原生功能，被赋予了 Ethereum 风格的接口。
+
+### 为什么它们是必要的？（桥接 EVM 和原生模块）
+
+Injective EVM 不是孤立运行的。它与 Injective 强大的原生 Cosmos SDK 模块深度集成，如 Bank 模块（用于 token 管理）、Exchange 模块（用于链上订单簿）、Staking 模块等。
+
+Precompiles 作为 EVM 世界（你的 Solidity 合约所在的地方）和这些原生 Injective 功能之间的关键**桥梁**。没有 precompiles，你的 EVM 智能合约将被隔离，无法利用更广泛的 Injective 生态系统的丰富功能和流动性。
+
+例如，我们的 [MultiVM Token Standard (MTS)](/cn/developers-evm/multivm-token-standard) 模型，确保原生和 EVM 环境之间统一的 token 余额，严重依赖于 **Bank Precompile**。
+
+### 对开发者的好处
+
+* **访问原生功能：** 直接与 Injective 的独特模块交互，如链上订单簿、原生 staking、governance 和用于 MTS 的 bank 模块。
+* **增强的性能：** 通过 precompiles 执行的操作可以比纯粹在 Solidity 中复制复杂原生逻辑更快、更节省 gas，因为它们作为优化的原生代码运行。
+* **无缝互操作性：** 构建真正集成的应用，利用 EVM 和 Injective 的 Cosmos 原生能力的优势。
+* **简化开发：** 通过熟悉的 Solidity 接口与复杂的原生功能交互，抽象掉大部分底层 Cosmos 复杂性。
+
+一系列由 Bank precompile 支持的 ERC-20 实现，以及 precompile 接口和抽象合约，可在 [Injective 的 Solidity 合约仓库](https://github.com/InjectiveLabs/solidity-contracts) 中找到。关键合约包括：
+
+* [**Bank.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/Bank.sol) – precompile 接口
+* [**BankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/BankERC20.sol) – 由 Bank precompile 支持的抽象 ERC20 实现
+* [**FixedSupplyBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/FixedSupplyBankERC20.sol) – 固定供应量的去中心化 ERC20（无所有者，无铸造或销毁）
+* [**MintBurnBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/MintBurnBankERC20.sol) – 具有授权铸造和销毁 token 的所有者的 ERC20
+
+这些实现基于 OpenZeppelin 的 ERC20 合约。开发者可以自由创建使用 Bank precompile 的自定义 ERC20 合约。
+
+### 入门演示
+
+我们准备了一些演示，展示如何使用 Bank、Exchange 和 Staking precompiles 构建合约。这些示例还演示了如何使用最常见的 Ethereum 开发框架 **Foundry** 与 Injective EVM 交互。
+
+通过利用 Foundry 的 `cast` 工具，你可以轻松地直接从终端部署合约并与 Injective 链交互。这使构建者能够快速实验、测试和部署利用 Injective 原生模块的强大应用。
+
+探索以下演示以了解：
+
+- 如何编写调用 precompiles 进行 token 管理、交易和 staking 的 Solidity 合约。
+- 如何使用 Foundry 脚本和 `cast` 命令在 Injective EVM 上部署和与这些合约交互。
+- 桥接 EVM 逻辑与 Injective 原生功能的最佳实践。
+
+通过克隆 [Injective Solidity 合约仓库](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos) 并按照每个演示目录中的分步指南开始你的开发。
+
+* [Bank Precompile 演示](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/erc20)
+* [Exchange Precompile 演示](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange)
+* [Staking Precompile 演示](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/staking)
+
+### Precompile 地址
+
+| 名称                               | 用途                       | EVM 地址 |
+| ---------------------------------- | ----------------------------- | ----------- |
+| [Bank](/cn/developers-evm/bank-precompile)         | Token 管理              | `0x64`      |
+| [Exchange](/cn/developers-evm/exchange-precompile) | 链上订单簿           | `0x65`      |
+| Staking                            | 原生 staking token 链上 | `0x66`      |
+
+## 非合约地址错误
+
+使用 Foundry 时，如果你在本地 "fork" Injective Mainnet 或 Injective Testnet，
+并在该环境中执行你的智能合约，
+你可能会看到类似以下的错误：
+
+```text
+[Revert] call to non-contract address 0x0000000000000000000000000000000000000064
+```
+
+这是因为 Foundry 在本地*模拟* Injective，
+而不是实际在 Injective 上运行。
+因此它运行的是*通用 EVM* 模拟，
+而不是特定于 Injective 的模拟。
+区别在于 Injective 的原生功能不存在，
+因此它不知道 precompiles。
+
+解决方法很简单：
+使用已修补以包含 Injective precompiles 的 Foundry 版本：
+[github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)。
+
+这些包括 x86_64 Linux 和 macOS ARM64 的预构建二进制文件。
