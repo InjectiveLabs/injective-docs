@@ -639,11 +639,11 @@
           "references"
         ]
       }
-        ]
-      },
-      {
-        "language": "cn",
-      "groups": [
+    ]
+  },
+  {
+    "language": "cn",
+    "groups": [
         {
           "group": "EVM 开发者",
           "icon": "rectangle-code",
