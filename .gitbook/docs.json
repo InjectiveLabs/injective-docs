@@ -13,10 +13,13 @@
   },
   "favicon": "/img/injective-logo-192x192.png",
   "navigation": {
-    "groups": [
+    "languages": [
       {
-        "group": "INJECTIVE",
-        "pages": [
+        "language": "en",
+        "groups": [
+          {
+            "group": "INJECTIVE",
+            "pages": [
           "index",
           {
             "group": "DeFi",
@@ -634,6 +637,57 @@
           "faq",
           "glossary",
           "references"
+        ]
+      }
+        ]
+      },
+      {
+        "language": "cn",
+        "groups": [
+          {
+            "group": "EVM 开发者",
+            "icon": "rectangle-code",
+            "expanded": false,
+            "pages": [
+              "cn/developers-evm/index",
+              "cn/developers-evm/network-information",
+              {
+                "group": "你的第一个 EVM 智能合约",
+                "pages": [
+                  "cn/developers-evm/smart-contracts/index",
+                  "cn/developers-evm/smart-contracts/compile-hardhat",
+                  "cn/developers-evm/smart-contracts/test-hardhat",
+                  "cn/developers-evm/smart-contracts/deploy-hardhat",
+                  "cn/developers-evm/smart-contracts/verify-hardhat",
+                  "cn/developers-evm/smart-contracts/interact-hardhat",
+                  "cn/developers-evm/smart-contracts/compile-foundry",
+                  "cn/developers-evm/smart-contracts/test-foundry",
+                  "cn/developers-evm/smart-contracts/deploy-foundry",
+                  "cn/developers-evm/smart-contracts/verify-foundry",
+                  "cn/developers-evm/smart-contracts/interact-foundry"
+                ]
+              },
+              {
+                "group": "你的第一个 EVM dApp",
+                "pages": [
+                  "cn/developers-evm/dapps/index",
+                  "cn/developers-evm/dapps/connect-with-metamask",
+                  "cn/developers-evm/dapps/connect-with-walletconnect"
+                ]
+              },
+              "cn/developers-evm/evm-equivalence",
+              "cn/developers-evm/multivm-token-standard",
+              "cn/developers-evm/wrapped-inj",
+              "cn/developers-evm/precompiles",
+              "cn/developers-evm/bank-precompile",
+              "cn/developers-evm/exchange-precompile",
+              "cn/developers-evm/erc20-module",
+              "cn/developers-evm/infrastructure-and-tooling",
+              "cn/developers-evm/add-injective-to-your-dapp",
+              "cn/developers-evm/evm-integrations-cheat-sheet",
+              "cn/developers-evm/evm-integrations-faq"
+            ]
+          }
         ]
       }
     ]

@@ -1,0 +1,58 @@
+---
+title: 使用 Hardhat 部署智能合约
+---
+
+## 前置条件
+
+你应该已经设置好 Hardhat 项目，并成功编译了智能合约。
+请参阅[设置 Hardhat 并编译智能合约](./compile-hardhat/)教程了解如何操作。
+
+可选但强烈推荐：你还应该已经成功测试了智能合约。
+请参阅[使用 Hardhat 测试智能合约](./test-hardhat/)教程了解如何操作。
+
+## 编辑部署脚本
+
+为了让你在计算机上编译的智能合约存在于 Injective Testnet 上，需要将其部署到网络上。
+
+为此，我们将使用一个脚本，该脚本使用由 Hardhat 预配置的 `ethers` 实例，使用 `hardhat.config.js` 中指定的值。
+
+打开文件：`script/deploy.js`
+
+```js
+async function main() {
+    const Counter = await ethers.getContractFactory('Counter');
+    const counter = await Counter.deploy({
+        gasPrice: 160e6,
+        gasLimit: 2e6,
+    });
+    await counter.waitForDeployment();
+    const address = await counter.getAddress();
+
+    console.log('Counter smart contract deployed to:', address);
+}
+```
+
+还记得编译智能合约后，我们查看了 `artifacts/contracts/Counter.sol/Counter.json` 吗？在这个脚本中，`ethers.getContractFactory('Counter')` 检索该文件，并从中提取 ABI 和 EVM bytecode。
+接下来的几行使用该信息构造部署交易并将其提交到网络。
+如果成功，将输出你的智能合约部署的地址，例如：
+[`0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b`](https://testnet.blockscout.injective.network/address/0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b)
+
+请注意，在其他 EVM 网络上，交易（包括部署交易）不需要指定 gas price 和 gas limit。但是，目前在 Injective 上这是必要的。
+
+## 运行部署脚本
+
+运行以下命令来部署智能合约：
+
+```shell
+npx hardhat run script/deploy.js --network inj_testnet
+```
+
+复制部署的地址，访问 [`https://testnet.blockscout.injective.network`](https://testnet.blockscout.injective.network/)，并在搜索字段中粘贴地址。
+你将访问区块浏览器中你刚刚部署的智能合约页面。
+
+如果你点击 "Contract" 标签，你应该看到该合约的 EVM bytecode，它将与编译后在 artifacts 目录中找到的 EVM bytecode 匹配。
+
+## 下一步
+
+现在你已经部署了智能合约，你可以开始验证该智能合约了！
+接下来请查看[使用 Hardhat 验证智能合约](./verify-hardhat/)教程。

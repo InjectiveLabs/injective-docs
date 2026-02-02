@@ -1,0 +1,110 @@
+---
+title: "EVM 集成常见问题"
+description: 关于与 Injective EVM 集成的常见问题。
+---
+
+## Injective EVM 是否支持...？
+
+**Injective EVM 是否支持（EVM 功能）？**
+
+答：通常，答案是"是"。
+请参阅下面更具体的问题。
+
+**Injective EVM 是否支持这些特定的 opcodes？**
+
+答：是的。我们与 opcode 实现保持一致。
+更准确地说：我们没有添加任何自定义 opcodes，
+也没有修改任何 opcodes 的行为。
+
+**Injective EVM 是否支持 ERC20、ERC721、ERC1155？**
+
+答：是的，任何基于 Solidity 的智能合约标准都应该可以工作，
+因为这些*不需要*标准 EVM 之外的任何特殊功能。
+
+推论：在实现同质化 token 时，
+ERC20 和任何其扩展，
+我们强烈建议你将它们实现为 MultiVM Token Standard (MTS) token。
+这允许同一个 token 不仅在 Injective 的 EVM 上作为同质化 token，
+还可以在 Injective 原生（特别是作为 Cosmos Denoms）上使用。
+如果 Injective 将来添加其他 VM，MTS token 也将在这些 VM 上工作。
+阅读更多关于 MTS 的信息：
+[一般文章](https://injective.com/blog/multivm-token-standard-wrapped-inj)，和
+[技术参考](/cn/developers-evm/multivm-token-standard)。
+
+**Injective EVM 是否支持 EIP-1559？**
+
+答：是的。
+
+## 我可以在 Injective EVM 上使用...吗？
+
+答：通常，答案是"是"。
+请参阅下面更具体的问题。
+
+**我可以在 Injective EVM 上使用（EVM 工具/库）吗？**
+
+答：
+
+- viem - 是
+- ethers.js - 是
+- hardhat - 是
+- foundry - 是
+
+**我可以在 Injective EVM 上使用 Foundry 与 Injective 的 EVM precompiles 吗？**
+
+答：Injective 的 [EVM precompiles](/cn/developers-evm/precompiles)
+访问通用 EVM 中不可用的 Injective 原生功能。
+这意味着如果你使用 Foundry 并连接到：
+
+- Injective EVM Testnet，它将工作
+- `localhost` 模拟 EVM 网络，它将不工作
+
+为解决后者的问题，我们 fork 了 Foundry 工具以支持
+Injective precompiles（从 `BankERC20.sol` 和 MTS 所需的 Bank precompile 开始），
+如果你使用 Solidity 测试或部署脚本作为 Foundry 项目，
+你将需要这个，以便 `forge`/`cast` 可以进行本地模拟。
+
+最新版本，包含 x86_64 Linux 和 macOS ARM64 的预构建二进制文件，
+可在 [github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases) 找到。
+
+## Injective 上有哪些 EVM 开发基础设施？
+
+请参阅 [EVM 集成速查表](/cn/developers-evm/evm-integrations-cheat-sheet)
+获取答案。
+
+## 如何解决 JSON-RPC 丢弃响应？
+
+答：如果你使用公共 endpoint 进行 RPC，
+由于速率限制，这很可能会发生在你身上。
+这些 endpoints 设计用于非常轻量的使用。
+如果你部署了复杂的应用，
+你应该考虑使用商业级 RPC endpoint。
+
+你可以在
+[EVM 集成速查表](/cn/developers-evm/evm-integrations-cheat-sheet) 中找到推荐的 RPC 提供商。
+
+## `inj...` 地址和 `0x...` 地址兼容吗？
+
+答：是的。实际上它们是相同的，只是以不同的格式呈现。
+
+请参阅 [转换地址](https://docs.injective.network/developers/convert-addresses)
+获取在这两种格式之间转换的示例代码。
+
+## Injective 支持哪个 EVM 硬分叉？
+
+答：这是 EVM 的实时配置数据：
+[sentry.lcd.injective.network/injective/evm/v1/params](https://sentry.lcd.injective.network/injective/evm/v1/params)
+
+在 `chain_config` 下，有对应 EVM 硬分叉名称（带后缀）的键。
+这些表示哪些已启用。
+这些键的值是它们启用的区块号。
+截至 Mainnet 启动，所有这些都设置为 `0`，
+即它们从"创世" EVM 区块启用。
+对于未来的 EVM 硬分叉，将添加新的键，其非零区块号
+表示它们将（或已经）启用的时间。
+
+<Tip>
+你有更多关于 EVM 集成的问题吗？
+
+加入 [Injective discord](https://discord.com/invite/injective)
+社区并在那里提问！
+</Tip>

@@ -1,0 +1,50 @@
+---
+title: Bank Precompile
+---
+
+# Bank Precompile
+
+Bank Precompile 是一个位于固定地址 `0x0000000000000000000000000000000000000064` 的系统智能合约。
+
+它为 EVM 开发者提供了一种高效且原生的方式来直接与 Injective 的 **bank 模块**（`x/bank`）交互。这有效地将 ERC-20 token 带到链上。任何使用 Bank precompile 的 ERC-20 合约将在链上表示为 `erc20:0x...` denom。从技术上讲，这意味着 token 仅存在于链上，EVM 提供链状态的视图而不是维护单独的副本。与传统桥接不同，传统桥接需要用户操作来切换两个 token 版本，Bank precompile 为使用链上 bank denom 或 ERC-20 `transfer()` 方法的任何转账提供实时、双环境反映。
+
+一系列由 Bank precompile 支持的 ERC-20 实现，以及 precompile 接口和抽象合约，可在 [Injective 的 Solidity 合约仓库](https://github.com/InjectiveLabs/solidity-contracts) 中找到。关键合约包括：
+
+* **Bank.sol** – precompile 接口
+* **BankERC20.sol** – 由 Bank precompile 支持的抽象 ERC20 实现
+* **FixedSupplyBankERC20.sol** – 固定供应量的去中心化 ERC20（无所有者，无铸造或销毁）
+* **MintBurnBankERC20.sol** – 具有授权铸造和销毁 token 的所有者的 ERC20
+
+这些实现基于 OpenZeppelin 的 ERC20 合约。开发者可以自由创建使用 Bank precompile 的自定义 ERC20 合约。
+
+## ERC20 合约部署
+
+**ℹ️ 注意：**
+
+为防止 denom 垃圾信息，通过 ERC20 模块部署 ERC20 合约是**付费操作**，需要 **1 INJ** 的部署费用。确保你的 ERC20 合约部署交易包含此金额，否则操作将被拒绝。
+
+## Bank Precompile 接口
+
+```solidity
+interface IBankModule {
+    function mint(address,uint256) external payable returns (bool);
+    function balanceOf(address,address) external view returns (uint256);
+    function burn(address,uint256) external payable returns (bool);
+    function transfer(address,address,uint256) external payable returns (bool);
+    function totalSupply(address) external view returns (uint256);
+    function metadata(address) external view returns (string memory,string memory,uint8);
+    function setMetadata(string memory,string memory,uint8) external payable returns (bool);
+}
+```
+
+## 示例
+
+[Wrapped INJ (wINJ)](/cn/developers-evm/wrapped-inj#is-winj-the-same-as-weth "wINJ 与 wETH 相同吗？") 
+使用 Bank EVM precompile 来实现
+[MultiVM Token Standard (MTS)](/cn/developers-evm/multivm-token-standard)。
+
+## 开始构建
+
+我们准备了一些演示，展示如何使用 Bank、Exchange 和 Staking precompiles 构建合约。这些示例还演示了如何使用最常见的 Ethereum 开发框架 **Foundry** 与 Injective EVM 交互。
+
+在[这里](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/erc20)查看 bank precompile 演示并按照相应的 README 操作。
