@@ -1,0 +1,21 @@
+---
+title: Token 标准
+---
+
+Injective 提供了多种不同的 token 标准，可在创建 dApp 时使用。在本文档中，我们将介绍不同类型的 token，以及使用每种 token 的建议和指导。
+
+## Denom
+
+Denom 是资产在 Injective 的 Bank 模块中的表示方式。这些资产可用于交易、在 exchange 模块上创建新市场、参与拍卖、转账到另一个地址等。
+
+根据 denom 的来源以及它在 Injective 上的创建方式，我们有不同类型的 denom：
+
+* **原生 denom** - 这种类型只有一个 denom，即 `inj` denom，代表 Injective 的原生代币，
+* **Peggy denom** - 这些 denom 代表使用 Peggy 桥从 Ethereum 桥接到 Injective 的资产。它们的格式为 `peggy{ERC20_CONTRACT_ADDRESS}`
+* **IBC denom** - 这些 denom 代表通过 IBC 从其他 IBC 兼容链桥接过来的资产。它们的格式为 `ibc/{hash}`。
+* **保险基金 Denom** - 这些 denom 代表在 Injective 上创建的保险基金的 token 份额。它们的格式为 `share{id}`
+* **Factory Denom** - 这些 `tokenfactory` denom 允许任何账户创建名为 `factory/{creator address}/{subdenom}` 的新 token。因为 token 按创建者地址命名空间，这允许 token 铸造是无需许可的，因为不需要解决名称冲突。这些 denom 的一个特殊用例是在 Injective 原生 bank 模块上表示来自 Cosmwasm 的 CW20 token。它们的格式为 `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`，其中 `CW20_ADAPTER_CONTRACT` 是转换 CW20 和原生 Bank 模块的适配器合约地址。
+
+我们将在本文档后面分享更多关于这些 denom 类型的详细信息。
+
+了解如何获取 [denom 元数据](/developers/assets/token-metadata/)。
