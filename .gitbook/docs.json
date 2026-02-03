@@ -645,6 +645,48 @@
         "language": "cn",
         "groups": [
           {
+            "group": "INJECTIVE",
+            "pages": [
+              "cn/index",
+              {
+                "group": "DeFi",
+                "icon": "coins",
+                "expanded": false,
+                "pages": [
+                  "cn/defi/index",
+                  {
+                    "group": "钱包",
+                    "pages": [
+                      "cn/defi/wallet/index",
+                      "cn/defi/wallet/create",
+                      "cn/defi/wallet/accounts"
+                    ]
+                  },
+                  {
+                    "group": "交易",
+                    "pages": [
+                      "cn/defi/trading/index",
+                      "cn/defi/trading/order-types",
+                      "cn/defi/trading/fees"
+                    ]
+                  },
+                  {
+                    "group": "Token 标准",
+                    "pages": [
+                      "cn/defi/tokens/index",
+                      "cn/defi/tokens/inj-coin",
+                      "cn/defi/tokens/token-factory",
+                      "cn/defi/tokens/cw20-standard"
+                    ]
+                  },
+                  "cn/defi/bridge",
+                  "cn/defi/staking",
+                  "cn/defi/governance"
+                ]
+              }
+            ]
+          },
+          {
             "group": "EVM 开发者",
             "icon": "rectangle-code",
             "expanded": false,
