@@ -4,8 +4,8 @@ title: Token Factory
 
 TokenFactory token 是原生集成到 Cosmos SDK bank 模块中的 token。它们的名称采用 `factory/{creatorAddress}/{subdenom}` 格式。因为 token 按创建者地址命名空间，这允许无需许可的 token 铸造，因为不需要解决名称冲突。
 
-这种集成提供了对所有资产总供应量的跟踪和查询支持，与 CW20 标准不同，后者需要直接查询智能合约。因此，建议使用 TokenFactory 标准。例如，Helix 或 Mito 等产品都是建立在 Injective exchange 模块上的，该模块专门使用 bank token。TokenFactory token 可以通过 injectived CLI 以及智能合约创建。通过 Wormhole 桥接到 Injective 的 token 也是 TokenFactory token。
+这种集成提供了对所有资产总供应量的跟踪和查询支持，与 CW20 标准不同，后者需要直接查询智能合约。因此，建议使用 TokenFactory 标准。例如，Helix 或 Mito 等产品是建立在 Injective exchange 模块上的，该模块专门使用 bank token。TokenFactory token 可以通过 injectived CLI 以及智能合约创建。通过 Wormhole 桥接到 Injective 的 token 也是 TokenFactory token。
 
-要了解更多关于在 Injective 上创建 token 的信息，请参阅 [token 发行](../../developers-defi/token-launch/)。
+要了解更多关于在 Injective 上创建 token 的信息，请参阅 [token launch](../../developers-defi/token-launch/)。
 
-要阅读更多关于 TokenFactory 标准的信息，请参阅 [token factory 模块](../../developers-native/injective/tokenfactory/)。
+要阅读更多关于 TokenFactory 标准的信息，请参阅 [token factory module](../../developers-native/injective/tokenfactory/)。
