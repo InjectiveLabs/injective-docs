@@ -1,0 +1,25 @@
+---
+title: 测试网提案
+---
+
+假设你想在 `testnet` 上提交提案。由于提案的投票时间很短，我们建议降低提案的押金，以免提案直接进入投票阶段。基本上，它应该略低于 `min_deposit` 值。
+
+提交提案后，你应该联系团队：
+
+1. 加入 [Injective Discord 服务器](https://discord.gg/injective) 并找到相关频道。
+2. 加入 [Injective 开发者 Telegram 频道](https://t.me/+8Y_0HOFLhnRlZDU9)。
+
+以下是 `GrantProviderPrivilegeProposal` 的示例
+
+```bash
+injectived tx oracle grant-provider-privilege-proposal YOUR_PROVIDER \
+  YOUR_ADDRESS_HERE \
+  --title="TITLE OF THE PROPOSAL" \
+  --description="Registering PROVIDER as an oracle provider" \
+  --chain-id=injective-888 \
+  --from=local_key \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas-prices=160000000inj \
+  --gas=20000000 \
+  --deposit="40000000000000000000inj" <-- 使用此金额
+```
