@@ -1,0 +1,21 @@
+---
+title: 创建代币
+---
+
+在 Injective 上创建自己代币的最简单方法是使用 `tokenfactory` 模块。`tokenfactory` 模块允许任何账户创建名为 `factory/{creator address}/{subdenom}` 的新代币。由于代币按创建者地址命名空间，这使得代币铸造可以无需许可，因为不需要解决名称冲突。
+
+单个账户可以通过为每个创建的 denom 提供唯一的 subdenom 来创建多个 denom。一旦创建了 denom，原始创建者将获得该资产的"管理员"权限。这允许他们：
+
+* 将其 denom 铸造到任何账户
+* 从任何账户销毁其 denom
+* 在任意两个账户之间创建其 denom 的转账
+* 更改管理员。将来可能会添加更多管理员功能。管理员可以选择使用 authz 模块与其他账户共享管理员权限。ChangeAdmin 功能允许更改主管理员账户，甚至将其设置为零地址 `inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49`，这意味着没有账户对该资产拥有管理员权限。
+* 在链上设置其代币元数据
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+factory denom 的一个特殊用例是 `CW20_ADAPTER`。使用此适配器，以 CW20 表示的资产可以转换为 bank denom，然后可用于启动市场、在链上轻松发送等。
+
+CW20 资产的 denom 始终为 `factory/{CW20_ADAPTER_CONTRACT_ADDRESS}/{CW20_ASSET_ADDRESS}` 格式，其中主网的 `CW20_ADAPTER_CONTRACT_ADDRESS=inj14ejqjyq8um4p3xfqj74yld5waqljf88f9eneuk`。
+</Callout>
+
+要开始创建你的 denom，请前往我们的 [TokenFactory 核心模块页面](/developers-native/examples/token-factory/)查看示例。
