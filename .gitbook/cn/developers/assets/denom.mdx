@@ -1,0 +1,24 @@
+---
+title: Denom
+---
+
+Denom 是资产在 Injective 的 Bank 模块中的表示方式。这些资产可用于交易、在 exchange 模块上创建新市场、参与拍卖、转账到另一个地址等。
+
+根据 denom 的来源以及它在 Injective 上的创建方式，我们有不同类型的 denom：
+
+* **原生 denom** - 这种类型只有一个 denom，即 `inj` denom，代表 Injective 的原生代币，
+* **Peggy denom** - 这些 denom 代表使用 Peggy 桥从 Ethereum 桥接到 Injective 的资产。它们的格式为 `peggy{ERC20_CONTRACT_ADDRESS}`
+* **IBC denom** - 这些 denom 代表通过 IBC 从其他 Cosmos 链桥接过来的资产。它们的格式为 `ibc/{hash}`。
+* **保险基金 Denom** - 这些 denom 代表在 Injective 上创建的保险基金的代币份额。它们的格式为 `share{id}`
+* **Factory Denom** - 这些 denom 是 Cosmwasm 上 CW20 代币在 Injective 原生 bank 模块上的表示。它们的格式为 `factory/{OWNER}/{SUBDENOM}`，其中 `OWNER` 是创建 factory denom 的所有者。一个例子是 CW20 代币 factory denom `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`，其中 `CW20_ADAPTER_CONTRACT` 是执行 CW20 和原生 Bank 模块之间转换的适配器合约地址。
+
+## Token
+
+Token 只是 Injective 链上带有一些元信息的 denom。元数据包括特定 denom 的符号、名称、小数位数、logo 等信息。denom 的元数据对于 dApp 开发者来说非常重要，因为链上的信息以原始形式存储（例如链上的 `1inj` 表示为 `1*10^18inj`），所以我们需要有一种方式向用户显示人类可读的信息（数字、logo、符号等）。
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+**弃用通知**
+
+请注意，Injective SDK 中曾有一个"Denom Client"可用。
+它已被弃用，取而代之的是 [Injective List](/cn/developers/assets/injective-list)。
+</Callout>
