@@ -1,0 +1,145 @@
+---
+description: "OLP 奖励分配（第 43 周期起）"
+title: "奖励分配"
+---
+
+## 市场奖励分配
+
+奖励通过三种不同的方法分配给[符合条件的市场](/cn/defi/open-liquidity-program/eligible-markets)：
+
+1. 静态分配
+2. 带动态组件的最低分配
+3. 灵活奖励分配
+
+### 静态市场奖励分配（预分配）
+
+13.33% 的 INJ 奖励将预分配给 BTC/USDT PERP 市场、ETH/USDT PERP 市场和 INJ/USDT PERP 市场，5% 将预分配给 INJ/USDT 现货市场。每个周期剩余的 INJ 将分配给每个剩余的符合条件市场，最低分配为 100 INJ。
+
+<table>
+<thead>
+<tr>
+<th align="left">
+市场</th>
+
+<th align="right">
+分配</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+<tr>
+<td>
+BTC/USDT 永续</td>
+
+<td align="right">
+13.33%</td>
+
+</tr>
+
+ <tr>
+<td>
+ETH/USDT 永续</td>
+
+<td align="right">
+13.33%</td>
+
+</tr>
+
+ <tr>
+<td>
+INJ/USDT 永续</td>
+
+<td align="right">
+13.33%</td>
+
+</tr>
+
+ <tr>
+<td>
+INJ/USDT 现货</td>
+
+<td align="right">
+5%</td>
+
+</tr>
+
+ <tr>
+<td>
+其他符合条件的市场</td>
+
+<td align="right">
+基于公式的分配</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<Info>
+  随着更多市场被添加到符合条件列表中，静态分配可能会随时间变化
+</Info>
+
+### 动态市场奖励分配
+
+剩余奖励根据以下方案分配给符合条件的市场（不包括 BTC/ETH/INJ 永续）。
+
+首先，每个周期从头开始，每个交易对都有平等的机会获得该周期的最大可用总奖励，无论前一周期的交易量和流动性如何。每个交易对在周期第 1 天以一个可能性范围开始，最低为该周期 100 INJ。
+
+在此更改之前，最低奖励为 400 INJ，最高奖励约为 900 INJ，低交易量交易对和交易量大得多的交易对之间的奖励累积变化不足。通过此更改，流动性提供者因热门市场的交易量而获得奖励。
+
+每个市场奖励的范围将在整个周期内进展，在周期最后一天收敛到该市场的真实奖励。范围 $[Rewards_{min};Rewards_{max}]$ 将按市场定义如下：
+
+$$
+MinVolume=Min(自周期开始以来的市场交易量) \\
+MaxVolume=Max(自周期开始以来的市场交易量)
+$$
+
+其中
+
+$$
+Rewards_{min_{market\ i}}=100+\frac{Volume_{market_{i}}-MinVolume}{MaxVolume-MinVolume}(Rewards_{max}-100)
+$$
+
+$Rewards_{max}$ 仍按本页底部计算。因此，交易量最高的市场将获得 $Rewards_{max}$，交易量最低的市场将有 100 INJ 的最低奖励。
+
+必须注意，$Rewards_{min}$ 只是奖励范围的下限，它永远不会等于奖励，除非是交易量最高的市场，其范围将是微不足道的 $[Rewards_{max};Rewards_{max}]$，在这种情况下奖励将等于 $Rewards_{max}$。这是一个从 100 INJ 到 $Rewards_{max}$ 的线性函数。
+
+定义此范围后，计算市场奖励的步骤是：
+
+1. 从 $Rewards_{Market_{i}}=Rewards_{min_{market\ i}}$ 开始
+2. 使用上述公式分配剩余奖励 _RR_，其中 $RR=TAR-\sum_{i}Rewards_{min_{market\ i}}$。
+3. 对于任何超过 $Rewards_{max}$ 的计算奖励，按照上述公式再次在所有市场之间重新分配。
+4. 迭代直到没有剩余奖励。
+
+**周期中途添加的市场**
+
+对于在周期中途添加到符合条件列表的市场，预分配将按比例计算。例如，如果 ARB/USDT 在周期第 15 天添加，则该市场将获得该周期一半的奖励（因为 28 天中还剩 14 个完整天）。
+
+### 市场分配上限
+
+对于每个具有动态奖励分配的市场，将根据以下公式应用硬上限，其中 $n$ 是不包括 BTC、ETH 和 INJ 永续的符合条件市场数量：
+
+$$
+Rewards_{max} = TAR\ *\ \frac{1 - TPR}{n}*2
+$$
+
+其中 _TPR_ 等于预分配奖励总额的百分比（以小数表示）（目前为 0.375），_n_ 是非预分配交易对的数量。
+
+任何超过上限的奖励分配将根据[动态分配公式](/cn/defi/open-liquidity-program/reward-allocations#dynamic-market-reward-allocations)在其他符合条件的市场之间重新分配。
+
+## 奖励分配
+
+个人机构流动性提供者的奖励将根据以下等式分配：
+
+$$
+Rewards_{MM_i} = \sum_{Market}\left(Rewards_{Market} * \frac {TS_{MM_i, \ Market}} {\sum_{MM} TS_{MM,\ Market}} \right)
+$$
+
+**每个机构流动性提供者将根据其在市场内的比例[总分](/cn/defi/open-liquidity-program/scoring#total-score)获得奖励，需经治理批准。**
+
+<Info>
+  每个周期结束时总计 < 1 INJ 的地址奖励将被忽略，以减少发放流程的开销。
+</Info>

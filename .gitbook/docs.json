@@ -668,13 +668,18 @@
                       "cn/defi/trading/index",
                       "cn/defi/trading/order-types",
                       "cn/defi/trading/fees",
+                      "cn/defi/trading/24-5-equity-feeds",
                       "cn/defi/trading/margin",
                       "cn/defi/trading/margin-liquidation",
                       "cn/defi/trading/margin-funding-rates",
+                      "cn/defi/trading/margin-performing-liquidations",
                       "cn/defi/trading/derivatives",
                       "cn/defi/trading/derivatives-perpetuals",
                       "cn/defi/trading/derivatives-expiry-futures",
-                      "cn/defi/trading/derivatives-pre-launch-futures"
+                      "cn/defi/trading/derivatives-election-perpetual",
+                      "cn/defi/trading/derivatives-pre-launch-futures",
+                      "cn/defi/trading/derivatives-index-perpetual-futures",
+                      "cn/defi/trading/derivatives-iassets"
                     ]
                   },
                   {
@@ -689,8 +694,25 @@
                   "cn/defi/bridge",
                   "cn/defi/staking",
                   "cn/defi/governance",
+                  "cn/defi/community-buyback",
                   "cn/defi/transactions",
-                  "cn/defi/transaction-fees"
+                  "cn/defi/transaction-fees",
+                  {
+                    "group": "开放流动性计划",
+                    "pages": [
+                      "cn/defi/open-liquidity-program/introduction",
+                      "cn/defi/open-liquidity-program/epochs",
+                      "cn/defi/open-liquidity-program/eligibility",
+                      "cn/defi/open-liquidity-program/scoring",
+                      "cn/defi/open-liquidity-program/formula-parameters",
+                      "cn/defi/open-liquidity-program/reward-allocations",
+                      "cn/defi/open-liquidity-program/flexible-reward-allocations",
+                      "cn/defi/open-liquidity-program/reward-disbursements",
+                      "cn/defi/open-liquidity-program/performance-tracking",
+                      "cn/defi/open-liquidity-program/volatility-response-modifications",
+                      "cn/defi/open-liquidity-program/fee-tiers"
+                    ]
+                  }
                 ]
               },
               {
