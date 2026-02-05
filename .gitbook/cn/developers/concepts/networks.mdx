@@ -1,0 +1,52 @@
+---
+title: 网络
+---
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+最新的公共端点可以在[这里](https://docs.injective.network/develop/public-endpoints/#mainnet)找到。我们<mark style="color:red;">**不建议**</mark>在高使用量/流量的生产应用程序中使用它们。有数千名开发者使用公共基础设施，我们无法承诺 100% 的正常运行时间和可靠性。\
+\
+如果你仍然选择使用**公共**网络，你可以使用 `@injectivelabs/networks` 包中的 `Network.{Mainnet|Testnet}Sentry`。
+</Callout>
+
+在 Injective 上构建 dApps 需要接入不同的环境和网络，你可以在其中轻松测试你的 dApp。作为 `injective-ts` monorepo 的一部分，我们有 `@injectivelabs/networks` 包，允许开发者轻松访问预定义的环境以连接到 Injective 的不同部分。
+
+此包导出了两个关键函数：
+
+* `export function getNetworkEndpoints(network: Network): NetworkEndpoints`
+* `export function getEndpointsForNetwork(network: Network): OldNetworkEndpoints`
+* `export function getNetworkInfo(network: Network): ChainInfo`
+
+第一个 `getNetworkEndpoints` 返回一组预定义的端点，开发者可以根据需要使用。以下是此函数返回的接口：
+
+```ts
+export type NetworkEndpoints = {
+  indexer: string // indexer API 服务的 grpc-web 端口
+  grpc: string // 哨兵节点的 grpc-web 端口
+  rest: string // 哨兵节点的 REST 端点
+  rpc?: string // Tendermint RPC 的 REST 端点
+}
+
+/** @deprecated */
+export type OldNetworkEndpoints = {
+  exchangeApi: string // @deprecated - exchange API 服务的 grpc-web 端口
+  indexerApi: string // indexer API 服务的 grpc-web 端口
+  sentryGrpcApi: string // 哨兵节点的 grpc-web 端口
+  sentryHttpApi: string // 哨兵节点的 REST 端点
+  tendermintApi?: string // Tendermint RPC 的 REST 端点
+  chronosApi?: string // chronos API 服务的 REST 端点
+  exchangeWeb3GatewayApi?: string // web3-gateway 服务 API 的 grpc-web 端口
+}
+```
+
+让我们解释这些端点及其含义：
+
+* `indexer` 是我们可以用来连接到 `exchange/indexer` 服务的 [**grpc-web**](https://github.com/grpc/grpc-web) 端点，该服务监听链上的事件，处理事件，并将数据存储到 MongoDB 中，因此提供该数据比直接从链上查询更容易且性能更高，
+* `grpc` 是我们可以用来连接到哨兵节点的 [**grpc-web**](https://github.com/grpc/grpc-web) 端点。哨兵节点是链的只读（和轻量级）版本，我们可以用它直接从链上查询数据。
+* `rest` 是我们可以用来连接到哨兵节点的 REST 端点。
+* `rpc` 是我们可以用来连接到 Tendermint RPC 的 REST 端点，
+
+`getNetworkInfo` 导出这些端点以及我们想要的 `Network` 的 `chainId` 和默认 `fee`。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+使用 TypeScript SDK 与你的基础设施（端点）意味着你必须在服务器中设置 `grpc-web` 代理。要了解更多信息，请参考[此文档](https://github.com/grpc/grpc-web?tab=readme-ov-file#2-run-the-server-and-proxy)。
+</Callout>
