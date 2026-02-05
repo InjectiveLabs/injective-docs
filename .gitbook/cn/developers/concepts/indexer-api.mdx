@@ -1,0 +1,13 @@
+---
+title: Indexer API
+---
+
+Indexer API 是一组微服务，用于提供从 Injective 链索引的数据。Injective 链在交易被包含时发出事件，Indexer API 中有一个事件监听器监听这些事件，处理它们，并将数据存储在 MongoDB 中。直接查询链是一个昂贵的（且性能较低的）API 调用，而查询从 MongoDB 提供数据的 API 则更高效，这就是 Indexer API 存在的原因。
+
+使用 Indexer API 的另一个好处是流式传输。MongoDB 可以流式传输集合/文档中的更新，这对于良好的用户体验非常有益。这样我们不需要轮询数据，而是可以订阅流并在流中广播的更新上更新我们 dApp 的状态。
+
+最后，Indexer API 可以提供历史数据或一段时间内的处理数据（例如：用于绘制图表等）。
+
+## 运行你自己的 indexer
+
+如果你想运行自己的 Injective Indexer 服务，请参阅 [Indexer 服务设置指南](https://injective.notion.site/Injective-Indexer-Service-Setup-Guide-7e59980634d54991862300670583d46a)。
