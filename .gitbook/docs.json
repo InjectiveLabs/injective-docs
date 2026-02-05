@@ -736,6 +736,22 @@
                   "cn/developers-evm/evm-integrations-cheat-sheet",
                   "cn/developers-evm/evm-integrations-faq"
                 ]
+              },
+              {
+                "group": "开发者",
+                "icon": "laptop-code",
+                "expanded": false,
+                "pages": [
+                  "cn/developers/index"
+                ]
+              },
+              {
+                "group": "基础设施",
+                "icon": "network-wired",
+                "expanded": false,
+                "pages": [
+                  "cn/infra/index"
+                ]
               }
             ]
           }
