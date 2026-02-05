@@ -1,0 +1,296 @@
+---
+title: Peggo
+---
+
+如果你在此页面，那么你可能已经成为 Injective 的验证者。恭喜！配置 `peggo` 是设置的最后一步。
+
+`.env` 示例配置：
+
+```bash
+PEGGO_ENV="local"         # 指标的环境名称 (dev/test/staging/prod/local)
+PEGGO_LOG_LEVEL="debug"   # 日志级别深度
+
+PEGGO_COSMOS_CHAIN_ID="injective-1"           # Injective 网络的 chain ID
+PEGGO_COSMOS_GRPC="tcp://localhost:9090"      # 你的 injectived 进程的 gRPC
+PEGGO_TENDERMINT_RPC="http://localhost:26657" # 你的 injectived 进程的 Tendermint RPC
+
+# 注意：省略 PEGGO_COSMOS_GRPC 和 PEGGO_TENDERMINT_RPC 可启用独立 peggo 模式。在此模式下，
+# peggo 连接到 Injective 网络提供的负载均衡端点。这将 peggo 的连接与你的 injectived 进程解耦。
+
+# Injective 配置
+PEGGO_COSMOS_FEE_DENOM="inj"            # 用于在 Injective 上支付费用的代币
+PEGGO_COSMOS_GAS_PRICES="160000000inj"  # 向 Injective 发送消息的默认 --gas-prices 标志值
+PEGGO_COSMOS_KEYRING="file"             # 密钥环后端 ("os", "file", "kwallet", "memory", "pass", "test")
+PEGGO_COSMOS_KEYRING_DIR=               # 密钥环目录路径
+PEGGO_COSMOS_KEYRING_APP="peggo"        # 密钥环应用程序的任意名称
+PEGGO_COSMOS_FROM=                      # 你的验证者（或委托的 Orchestrator）的账户地址
+PEGGO_COSMOS_FROM_PASSPHRASE=           # 密钥环密码
+PEGGO_COSMOS_PK=                        # 你的验证者（或委托的 Orchestrator）的私钥
+PEGGO_COSMOS_USE_LEDGER=false
+
+# 以太坊配置
+PEGGO_ETH_KEYSTORE_DIR=               # 以太坊密钥库路径
+PEGGO_ETH_FROM=                       # 你的以太坊地址（如果你是验证者，必须是委托的以太坊地址）
+PEGGO_ETH_PASSPHRASE=                 # 以太坊密钥库密码
+PEGGO_ETH_PK=                         # 你的以太坊地址私钥
+PEGGO_ETH_GAS_PRICE_ADJUSTMENT=1.3    # 建议的以太坊 gas 价格将按此因子调整（中继器）
+PEGGO_ETH_MAX_GAS_PRICE="500gwei"     # 发送以太坊交易允许的最大 gas 价格（中继器）
+PEGGO_ETH_CHAIN_ID=1                  # 以太坊网络的 chain ID
+PEGGO_ETH_RPC="http://localhost:8545" # 你的以太坊节点的 RPC
+PEGGO_ETH_ALCHEMY_WS=""               # 可选的 websocket 端点，用于监听 Peggy.sol 上的待处理交易
+PEGGO_ETH_USE_LEDGER=false 
+
+# 代币资产的价格源提供者（批量创建者）
+PEGGO_COINGECKO_API="https://api.coingecko.com/api/v3"
+
+# 中继器配置
+PEGGO_RELAY_VALSETS=true                      # 设置为 `true` 以中继验证者集
+PEGGO_RELAY_VALSET_OFFSET_DUR="5m"            # 验证者集有资格中继前需要过期的持续时间 
+PEGGO_RELAY_BATCHES=true                      # 设置为 `true` 以中继代币批次
+PEGGO_RELAY_BATCH_OFFSET_DUR="5m"             # 代币批次有资格中继前需要过期的持续时间
+PEGGO_RELAY_PENDING_TX_WAIT_DURATION="20m"    # 等待待处理交易处理的时间
+
+# 批量创建者配置
+PEGGO_MIN_BATCH_FEE_USD=23.2  # 创建代币批次必须满足的最低费用金额
+
+# 指标配置
+PEGGO_STATSD_PREFIX="peggo."
+PEGGO_STATSD_ADDR="localhost:8125"
+PEGGO_STATSD_STUCK_DUR="5m"
+PEGGO_STATSD_MOCKING=false
+PEGGO_STATSD_DISABLED=true
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**重要提示：** 如果你运行自己的 `injectived`（Injective 节点）和 `geth`（以太坊节点）进程，请确保它们与最新状态同步。过时的节点可能会使 `peggo` 的业务逻辑偏差，有时会显示"误报"日志。
+</Callout>
+
+## 步骤 1：配置 .env
+
+```bash
+# 官方 Injective 主网 .env 配置 
+mkdir ~/.peggo
+cp mainnet-config/10001/peggo-config.env ~/.peggo/.env
+cd ~/.peggo
+```
+
+以太坊配置
+
+首先，使用有效的以太坊 EVM RPC 端点更新 `.env` 文件中的 `PEGGO_ETH_RPC`。
+
+要设置自己的以太坊全节点，请按照[此处](https://ethereum.org/en/developers/docs/nodes-and-clients/run-a-node/)的说明操作。可以使用外部以太坊 RPC 提供商（如 Alchemy 或 Infura），但请记住，Peggo 桥接中继器大量使用 `eth_getLogs` 调用，这可能会增加你的成本负担，具体取决于你的提供商。
+
+## **管理 `peggo` 的以太坊密钥**
+
+Peggo 支持两种提供签名密钥凭据的选项 - 使用 Geth 密钥库（推荐）或提供明文以太坊私钥。
+
+#### **选项 1. Geth 密钥库**
+
+你可以在 Geth 文档[此处](https://geth.ethereum.org/docs/interface/managing-your-accounts)找到使用密钥库安全创建新以太坊账户的说明。
+
+为方便起见，下面提供了一个示例。
+
+```bash
+geth account new --datadir=/home/ec2-user/.peggo/data/
+
+INFO [03-23|18:18:36.407] Maximum peer count                       ETH=50 LES=0 total=50
+Your new account is locked with a password. Please give a password. Do not forget this password.
+Password:
+Repeat password:
+
+Your new key was generated
+
+Public address of the key:   0x9782dc957DaE6aDc394294954B27e2118D05176C
+Path of the secret key file: /home/ec2-user/.peggo/data/keystore/UTC--2021-03-23T15-18-44.284118000Z--9782dc957dae6adc394294954b27e2118d05176c
+
+- You can share your public address with anyone. Others need it to interact with you.
+- You must NEVER share the secret key with anyone! The key controls access to your funds!
+- You must BACKUP your key file! Without the key, it's impossible to access account funds!
+- You must REMEMBER your password! Without the password, it's impossible to decrypt the key!
+```
+
+确保注意 geth 提供的警告，特别是备份密钥文件，以免意外丢失密钥。我们还建议不要在密码中使用任何引号或反引号字符，以确保 peggo 兼容性。
+
+你现在应该设置以下环境变量：
+
+```bash
+# 示例值，替换为你自己的
+PEGGO_ETH_KEYSTORE_DIR=/home/ec2-user/.peggo/data/keystore
+PEGGO_ETH_FROM=0x9782dc957DaE6aDc394294954B27e2118D05176C
+PEGGO_ETH_PASSPHRASE=12345678
+```
+
+然后确保你的以太坊地址有足够的 ETH。
+
+#### **选项 2. 以太坊私钥（不安全）**
+
+只需使用新账户的新以太坊私钥更新 `PEGGO_ETH_PK`。
+
+然后确保你的以太坊地址有足够的 ETH。
+
+## Injective 配置
+
+### **创建用于发送 Injective 交易的委托 Cosmos 密钥**
+
+你的 peggo orchestrator 可以：
+
+* 使用专门用于发送验证者特定 Peggy 交易（即 `ValsetConfirm`、`BatchConfirm` 和 `SendToCosmos` 交易）的显式委托账户密钥，或
+* 简单地使用你的验证者账户密钥（"你的验证者就是你的 Orchestrator"）
+
+出于隔离目的，我们建议创建委托 Cosmos 密钥来发送 Injective 交易，而不是使用你的验证者账户密钥。
+
+要创建新密钥，运行
+
+```bash
+injectived keys add $ORCHESTRATOR_KEY_NAME
+```
+
+然后确保你的 orchestrator inj 地址有 INJ 余额，以便 peggo orchestrator 可以向 Injective 发送消息。
+
+要获取 orchestrator 的 inj 地址，运行
+
+```bash
+injectived keys list $ORCHESTRATOR_KEY_NAME
+```
+
+你可以使用此命令将 INJ 从验证者账户转移到 orchestrator 地址
+
+```bash
+injectived tx bank send $VALIDATOR_KEY_NAME  $ORCHESTRATOR_INJ_ADDRESS <amount-in-inj> --chain-id=injective-1 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
+```
+
+示例
+
+```bash
+injectived tx bank send genesis inj1u3eyz8nkvym0p42h79aqgf37gckf7szreacy9e 20000000000000000000inj --chain-id=injective-1  --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
+```
+
+然后你可以通过运行以下命令验证 orchestrator 账户是否有 INJ 余额
+
+```bash
+injectived q bank balances $ORCHESTRATOR_INJ_ADDRESS
+```
+
+### **管理 `peggo` 的 Cosmos 账户密钥**
+
+Peggo 支持两种提供 Cosmos 签名密钥凭据的选项 - 使用 Cosmos 密钥环（推荐）或提供明文私钥。
+
+#### **选项 1. Cosmos 密钥环**
+
+在 `.env` 文件中，首先指定与你的 peggo 账户签名密钥对应的 `PEGGO_COSMOS_FROM` 和 `PEGGO_COSMOS_FROM_PASSPHRASE`。
+
+如果你按照上面推荐的方式使用委托账户密钥配置，这将是你的 `$ORCHESTRATOR_KEY_NAME` 和密码。否则，这应该是你的 `$VALIDATOR_KEY_NAME` 和相关的验证者密码。
+
+请注意，默认密钥环后端是 `file`，因此 peggo 默认会尝试在磁盘上定位密钥。
+
+要使用默认的 injectived 密钥配置，你应该将密钥环路径设置为 injectived 节点的主目录，例如 `~/.injectived`。
+
+你还可以在[此处](https://docs.cosmos.network/v0.46/run-node/keyring.html)阅读更多关于 Cosmos 密钥环设置的信息。
+
+#### **选项 2. Cosmos 私钥（不安全）**
+
+在 `.env` 文件中，指定与你的 peggo 账户签名密钥对应的 `PEGGO_COSMOS_PK`。
+
+如果你按照上面推荐的方式使用委托账户密钥配置，这将是你的 orchestrator 账户的私钥。否则，这应该是你的验证者账户私钥。
+
+要获取 orchestrator 的 Cosmos 私钥（如适用），运行
+
+```bash
+injectived keys unsafe-export-eth-key $ORCHESTRATOR_KEY_NAME
+```
+
+要获取验证者的 Cosmos 私钥（如适用），运行
+
+```bash
+injectived keys unsafe-export-eth-key $VALIDATOR_KEY_NAME
+```
+
+同样，此方法不太安全，不推荐使用。
+
+### 步骤 2：注册你的 Orchestrator 和以太坊地址
+
+你只能注册一次 orchestrator 和以太坊地址。之后**无法**更新。因此在运行以下命令之前请仔细检查。
+
+```bash
+injectived tx peggy set-orchestrator-address $VALIDATOR_INJ_ADDRESS $ORCHESTRATOR_INJ_ADDRESS $ETHEREUM_ADDRESS --from $VALIDATOR_KEY_NAME --chain-id=injective-1 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
+
+```
+
+* 要获取验证者的 inj 地址，运行 `injectived keys list $VALIDATOR_KEY_NAME`
+* 要获取 orchestrator 的 inj 地址，运行 `injectived keys list $ORCHESTRATOR_KEY_NAME`
+
+示例：
+
+```bash
+injectived tx peggy set-orchestrator-address inj10m247khat0esnl0x66vu9mhlanfftnvww67j9n inj1x7kvxlz2epqx3hpq6v8j8w859t29pgca4z92l2 0xf79D16a79130a07e77eE36e8067AeA783aBdA3b6 --from validator-key-name --chain-id=injective-1 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
+```
+
+你可以通过在 https://lcd.injective.network/peggy/v1/valset/current 检查验证者映射的以太坊地址来验证注册是否成功。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**注意：** 一旦你使用 `set-orchestrator-address` 消息注册了 Orchestrator，你就**无法**再次注册。完成此步骤后，你的 `Validator` 将绑定到提供的以太坊地址（以及你可能提供的委托地址）。换句话说，你的 peggo 必须始终使用你注册时提供的地址运行。
+</Callout>
+
+### 步骤 3：启动中继器
+
+```bash
+cd ~/.peggo
+peggo orchestrator
+```
+
+这将启动 Peggo 桥接（中继器/orchestrator）。
+
+### 步骤 4：创建 Peggo systemd 服务
+
+在 `/etc/systemd/system/peggo.service` 下添加包含以下内容的 `peggo.service` 文件
+
+```ini
+[Unit]
+  Description=peggo
+
+[Service]
+  WorkingDirectory=/home/ec2-user/.peggo
+  ExecStart=/bin/bash -c 'peggo orchestrator '
+  Type=simple
+  Restart=always
+  RestartSec=1
+  User=ec2-user
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+然后使用以下命令配置环境变量、启动和停止 peggo 中继器。
+
+```bash
+sudo systemctl start peggo
+sudo systemctl stop peggo
+sudo systemctl restart peggo
+sudo systemctl status peggo
+
+# 启用开机自启
+sudo systemctl enable peggo
+
+# 查看日志
+journalctl -f -u peggo
+```
+
+### 步骤 5：（可选）保护 Cosmos 密钥环免受未授权访问
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+这是一个高级 DevOps 主题，请咨询你的系统管理员。
+</Callout>
+
+在[此处](https://docs.cosmos.network/v0.46/run-node/keyring.html)了解更多关于 Cosmos 密钥环设置的信息。启动节点后，默认密钥环将以加密形式将验证者操作员密钥存储在磁盘上。通常密钥环位于节点的主目录中，即 `~/.injectived/keyring-file`。
+
+Injective 质押文档的某些部分将指导你使用此密钥进行治理目的，即提交交易和设置以太坊桥接。为了保护密钥免受未授权访问，即使密钥环密码通过配置泄露，你也可以设置操作系统权限，仅允许 `injectived` / `peggo` 进程访问磁盘。
+
+在 Debian、Ubuntu 和 RHEL 等 Linux 系统中，可以使用 POSIX 访问控制列表 (ACL) 实现。在开始使用 ACL 之前，必须在启用 ACL 的情况下挂载文件系统。每个发行版都有一些官方指南：
+
+* [Ubuntu](https://help.ubuntu.com/community/FilePermissionsACLs)
+* [Debian](https://wiki.debian.org/Permissions)
+* [Amazon Linux (RHEL)](https://www.redhat.com/sysadmin/linux-access-control-lists)
+
+### 贡献
+
+如果你想检查 Peggo orchestrator 源代码并做出贡献，可以在 [https://github.com/InjectiveLabs/peggo](https://github.com/InjectiveLabs/peggo) 进行。
