@@ -1,0 +1,360 @@
+---
+title: 命令
+---
+
+本节描述了 `injectived` 可用的命令，这是连接到正在运行的 `injectived` 进程（节点）的命令行界面。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+一些 `injectived` 命令需要子命令、参数或标志才能运行。要查看此信息，请使用 `--help` 或 `-h` 标志运行 `injectived` 命令。有关帮助标志的使用示例，请参阅 `query` 或 `tx`。
+
+对于 `chain-id` 参数，主网应使用 `injective-1`，测试网应使用 `injective-888`。
+</Callout>
+
+### `add-genesis-account`
+
+将创世账户添加到 `genesis.json`。有关 `genesis.json` 的更多信息，请参阅加入测试网或加入主网指南。
+
+**语法**
+
+```bash
+injectived add-genesis-account <address-or-key-name> <amount><coin-denominator>
+```
+
+**示例**
+
+```bash
+injectived add-genesis-account acc1 100000000000inj
+```
+
+### `collect-gentxs`
+
+收集创世交易并将其输出到 `genesis.json`。有关 `genesis.json` 的更多信息，请参阅[此处](../../infra/join-a-network/)的加入测试网或加入主网指南。
+
+**语法**
+
+```bash
+injectived collect-gentxs
+```
+
+### `debug`
+
+帮助调试应用程序。有关语法和子命令的列表，请使用 `--help` 或 `-h` 标志运行 `debug` 命令：
+
+```bash
+injectived debug -h
+```
+
+**子命令**：
+
+```bash
+injectived debug [subcommand]
+```
+
+* **`addr`**：在 hex 和 bech32 之间转换地址
+* **`pubkey`**：从 proto JSON 解码公钥
+* **`raw-bytes`**：将原始字节输出（例如 \[72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]）转换为 hex
+
+### `export`
+
+将状态导出为 JSON。
+
+**语法**
+
+```bash
+injectived export
+```
+
+### `gentx`
+
+将创世交易添加到 `genesis.json`。有关 `genesis.json` 的更多信息，请参阅加入测试网或加入主网指南。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**注意：** `gentx` 命令有许多可用的标志。使用 `--help` 或 `-h` 运行 `gentx` 命令以查看所有标志。
+</Callout>
+
+**语法**
+
+```bash
+injectived gentx <key-name> <amount><coin-denominator>
+```
+
+**示例**
+
+```bash
+injectived gentx myKey 100000000000inj --home=/path/to/home/dir --keyring-backend=os --chain-id=injective-1 \
+    --moniker="myValidator" \
+    --commission-max-change-rate=0.01 \
+    --commission-max-rate=1.0 \
+    --commission-rate=0.07 \
+    --details="..." \
+    --security-contact="..." \
+    --website="..."
+```
+
+### `help`
+
+显示可用命令的概述。
+
+**语法**
+
+```bash
+injectived help
+```
+
+### `init`
+
+初始化节点的配置文件。
+
+**语法**
+
+```bash
+injectived init <moniker>
+```
+
+**示例**
+
+```bash
+injectived init myNode
+```
+
+### `keys`
+
+管理 Keyring 命令。这些密钥可以是 Tendermint 加密库支持的任何格式，可供轻客户端、全节点或任何其他需要使用私钥签名的应用程序使用。
+
+有关语法和子命令的列表，请使用 `--help` 或 `-h` 标志运行 `keys` 命令：
+
+```bash
+injectived keys -h
+```
+
+**子命令**：
+
+```bash
+injectived keys [subcommand]
+```
+
+* **`add`**：添加加密的私钥（新生成或恢复的），加密并保存到提供的文件名
+* **`delete`**：删除给定的密钥
+* **`export`**：导出私钥
+* **`import`**：将私钥导入本地 keybase
+* **`list`**：列出所有密钥
+* **`migrate`**：从旧版（基于数据库的）Keybase 迁移密钥
+* **`mnemonic`**：为某些输入熵计算 bip39 助记词
+* **`parse`**：在 hex 和 bech32 之间解析地址
+* **`show`**：按名称或地址检索密钥信息
+* **`unsafe-export-eth-key`**：以纯文本形式导出 Ethereum 私钥
+* **`unsafe-import-eth-key`**：将 Ethereum 私钥导入本地 keybase
+
+
+\
+`migrate`
+
+将源创世迁移到目标版本并打印到 STDOUT。有关 `genesis.json` 的更多信息，请参阅加入测试网或加入主网指南。
+
+**语法**
+
+```bash
+injectived migrate <target version> <path-to-genesis-file>
+```
+
+**示例**
+
+```bash
+injectived migrate v1.9.0 /path/to/genesis.json --chain-id=injective-888 --genesis-time=2023-03-07T17:00:00Z 
+```
+
+### `query`
+
+管理查询。有关语法和子命令的列表，请使用 `--help` 或 `-h` 标志运行 `query` 子命令：
+
+```bash
+injectived query -h
+```
+
+**子命令**：
+
+```bash
+injectived query [subcommand]
+```
+
+* **`account`**：按地址查询账户
+* **`auction`**：`auction` 模块的查询命令
+* **`auth`**：`auth` 模块的查询命令
+* **`authz`**：`authz` 模块的查询命令
+* **`bank`**：`bank` 模块的查询命令
+* **`block`**：获取给定高度的区块的已验证数据
+* **`chainlink`**：`oracle` 模块的查询命令
+* **`distribution`**：`distribution` 模块的查询命令
+* **`evidence`**：按哈希查询证据或查询所有（分页）提交的证据
+* **`exchange`**：`exchange` 模块的查询命令
+* **`feegrant`**：`feegrant` 模块的查询命令
+* **`gov`**：`governance` 模块的查询命令
+* **`ibc`**：`ibc` 模块的查询命令
+* **`ibc-fee`**：IBC 中继器激励查询子命令
+* **`ibc-transfer`**：IBC 可替代代币转移查询子命令
+* **`insurance`**：`insurance` 模块的查询命令
+* **`interchain-accounts`**：跨链账户子命令
+* **`mint`**：铸币模块的查询命令
+* **`oracle`**：`oracle` 模块的查询命令
+* **`params`**：`params` 模块的查询命令
+* **`peggy`**：`peggy` 模块的查询命令
+* **`slashing`**：`slashing` 模块的查询命令
+* **`staking`**：`staking` 模块的查询命令
+* **`tendermint-validator-set`**：获取给定高度的完整 Tendermint 验证者集
+* **`tokenfactory`**：`tokenfactory` 模块的查询命令
+* **`tx`**：按哈希、账户序列或已提交区块中逗号分隔签名的组合查询交易
+* **`txs`**：查询匹配一组事件的分页交易
+* **`upgrade`**：`upgrade` 模块的查询命令
+* **`wasm`**：`wasm` 模块的查询命令
+* **`xwasm`**：`wasmx` 模块的查询命令
+
+### `rollback`
+
+执行状态回滚以从不正确的应用程序状态转换中恢复，当 Tendermint 持久化了不正确的 app hash 并因此无法继续时。回滚将高度 _n_ 的状态覆盖为高度 _n - 1_ 的状态。应用程序也回滚到高度 _n - 1_。不会删除任何区块，因此在重新启动 Tendermint 时，区块 _n_ 中的交易将针对应用程序重新执行。
+
+**语法**
+
+```bash
+injectived rollback
+```
+
+### `rosetta`
+
+创建 Rosetta 服务器。
+
+**语法**
+
+```bash
+injectived rosetta [flags]
+```
+
+### `start`
+
+使用 Tendermint 在进程内或进程外运行全节点应用程序。默认情况下，应用程序在进程内运行 Tendermint。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`start` 命令有许多可用的标志。使用 `--help` 或 `-h` 运行 `start` 命令以查看所有标志。
+</Callout>
+
+**语法**
+
+```bash
+injectived start [flags]
+```
+
+### `status`
+
+显示远程节点的状态。使用 `--node` 或 `-n` 标志指定节点端点。
+
+**语法**
+
+```bash
+injectived status
+```
+
+### `tendermint`
+
+管理 Tendermint 协议。有关语法和子命令的列表，请使用 `--help` 或 `-h` 标志运行 `query` 子命令：
+
+```bash
+injectived tendermint -h
+```
+
+**子命令**：
+
+```bash
+injectived tendermint [subcommand]
+```
+
+* **`reset-state`**：删除所有数据和 WAL
+* **`show-address`**：显示此节点的 Tendermint 验证者共识地址
+* **`show-node-id`**：显示此节点的 ID
+* **`show-validator`**：显示此节点的 Tendermint 验证者信息
+* **`unsafe-reset-all`**：删除所有数据和 WAL，将此节点的验证者重置为创世状态
+* **`version`** 显示 Tendermint 库版本
+
+### `testnet`
+
+创建具有指定目录数量的测试网，并使用必要的文件填充每个目录。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`testnet` 命令有许多可用的标志。使用 `--help` 或 `-h` 运行 `testnet` 命令以查看所有标志。
+</Callout>
+
+**语法**
+
+```bash
+injectived testnet [flags]
+```
+
+**示例**
+
+```bash
+injectived testnet --v 4 --keyring-backend test --output-dir ./output --ip-addresses 192.168.10.2
+```
+
+### `tx`
+
+管理交易的生成、签名和广播。有关示例，请参阅使用 Injectived。
+
+有关语法和可用子命令的更多信息，请使用 `--help` 或 `-h` 标志运行 `tx` 命令：
+
+```bash
+injectived tx -h
+```
+
+**子命令**：
+
+```bash
+injectived tx [subcommand]
+```
+
+* **`auction`**：拍卖交易子命令
+* **`authz`**：授权交易子命令
+* **`bank`**：银行交易子命令
+* **`broadcast`**：广播离线生成的交易
+* **`chainlink`**：链下报告 (OCR) 子命令
+* **`crisis`**：危机交易子命令
+* **`decode`**：解码二进制编码的交易字符串
+* **`distribution`**：分配交易子命令
+* **`encode`**：编码离线生成的交易
+* **`evidence`**：证据交易子命令
+* **`exchange`**：交易所交易子命令
+* **`feegrant`**：费用授权交易子命令
+* **`gov`**：治理交易子命令
+* **`ibc`**：IBC 交易子命令
+* **`ibc-fee`**：IBC 中继器激励交易子命令
+* **`ibc-transfer`**：IBC 可替代代币转移交易子命令
+* **`insurance`**：保险交易子命令
+* **`multisign`**：为离线生成的交易生成多重签名
+* **`oracle`**：预言机交易子命令
+* **`peggy`**：Peggy 交易子命令
+* **`sign`**：签署离线生成的交易
+* **`sign-batch`**：签署交易批处理文件
+* **`slashing`**：惩罚交易子命令
+* **`staking`**：质押交易子命令
+* **`tokenfactory`**：代币工厂交易子命令
+* **`validate-signatures`**：验证交易签名
+* **`vesting`**：归属交易子命令
+* **`wasm`**：Wasm 交易子命令
+* **`xwasm`**：Wasmx 交易子命令
+
+### `validate-genesis`
+
+验证默认位置或指定位置的创世文件。有关创世文件的更多信息，请参阅加入测试网或加入主网指南。
+
+**语法**
+
+```bash
+injectived validate-genesis </path-to-file>
+```
+
+### `version`
+
+返回你正在运行的 Injective 版本。
+
+**语法**
+
+```bash
+injectived version
+```
