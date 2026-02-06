@@ -1,0 +1,62 @@
+---
+title: 使用 gRPC 与节点交互
+---
+
+Protobuf 生态系统为不同的用例开发了工具，包括从 `*.proto` 文件生成各种语言的代码。这些工具使客户端可以轻松构建。通常，客户端连接（即传输）可以轻松插入和替换。让我们探索一种流行的传输方法——gRPC。
+
+由于代码生成库在很大程度上取决于你自己的技术栈，我们只介绍两种替代方案：
+
+* `grpcurl` 用于通用调试和测试
+* 通过 Go、Python 或 TS 进行编程
+
+## grpcurl
+
+[grpcurl](https://github.com/fullstorydev/grpcurl) 类似于 `curl`，但用于 gRPC。它也可以作为 Go 库使用，但我们只将其用作 CLI 命令进行调试和测试。按照上述链接中的说明进行安装。
+
+假设你有一个本地节点正在运行（无论是本地网络还是连接到实时网络），你应该能够运行以下命令来列出可用的 Protobuf 服务。你可以将 `localhost:9090` 替换为另一个节点的 gRPC 服务器端点，该端点在 `app.toml` 中的 `grpc.address` 字段下配置：
+
+```bash
+grpcurl -plaintext localhost:9090 list
+```
+
+你应该会看到 gRPC 服务列表，如 `cosmos.bank.v1beta1.Query`。这称为反射，它是一个 Protobuf 端点，返回所有可用端点的描述。每个服务代表一个不同的 Protobuf 服务，每个服务公开多个可以查询的 RPC 方法。
+
+要获取服务的描述，你可以运行以下命令：
+
+```bash
+# 我们要检查的服务
+grpcurl \
+    localhost:9090 \
+    describe cosmos.bank.v1beta1.Query                  
+```
+
+也可以执行 RPC 调用来查询节点信息：
+
+```bash
+grpcurl \
+    -plaintext
+    -d '{"address":"$MY_VALIDATOR"}' \
+    localhost:9090 \
+    cosmos.bank.v1beta1.Query/AllBalances
+```
+
+## 使用 grpcurl 查询历史状态
+
+你还可以通过向查询传递一些 [gRPC 元数据](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md)来查询历史数据：`x-cosmos-block-height` 元数据应包含要查询的区块。使用上述 grpcurl，命令如下：
+
+```bash
+grpcurl \
+    -plaintext \
+    -H "x-cosmos-block-height: 279256" \
+    -d '{"address":"$MY_VALIDATOR"}' \
+    localhost:9090 \
+    cosmos.bank.v1beta1.Query/AllBalances
+```
+
+假设该区块的状态尚未被节点修剪，此查询应返回非空响应。
+
+## 发送交易
+
+使用 gRPC 和 REST 发送交易需要一些额外的步骤：生成交易、签名，最后广播。
+
+你可以在[交易](/defi/transactions/ "mention")中了解更多信息。

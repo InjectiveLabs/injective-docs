@@ -1,0 +1,376 @@
+---
+title: 加入网络
+---
+
+本指南将引导你完成在本地设置独立网络的过程，以及在主网或测试网上运行节点。
+
+你还可以在相应的选项卡中找到每个网络的硬件要求。
+
+<Tabs>
+<Tab title="本地网络">
+要轻松设置本地节点，请下载并运行 `setup.sh` 脚本。这将初始化你的本地 Injective 网络。
+
+```bash
+wget https://raw.githubusercontent.com/InjectiveLabs/injective-chain-releases/master/scripts/setup.sh
+chmod +x ./setup.sh # 使脚本可执行
+./setup.sh
+```
+
+通过运行以下命令启动节点：
+
+```bash
+injectived start # 运行此命令后应该开始出现区块
+```
+
+有关脚本功能的进一步说明以及对设置过程的更精细控制，请继续阅读下文。
+
+#### 初始化链
+
+在运行 Injective 节点之前，我们需要初始化链以及节点的创世文件：
+
+```bash
+# <moniker> 参数是你节点的自定义用户名。它应该是人类可读的。
+injectived init <moniker> --chain-id=injective-1
+```
+
+上述命令创建了节点运行所需的所有配置文件以及默认的创世文件，该文件定义了网络的初始状态。所有这些配置文件默认位于 `~/.injectived` 中，但你可以通过传递 `--home` 标志来覆盖此文件夹的位置。请注意，如果你选择使用 `~/.injectived` 以外的目录，则每次运行 `injectived` 命令时都必须使用 `--home` 标志指定位置。如果你已经有创世文件，可以使用 `--overwrite` 或 `-o` 标志覆盖它。
+
+`~/.injectived` 文件夹具有以下结构：
+
+```bash
+.                                   # ~/.injectived
+  |- data                           # 包含节点使用的数据库。
+  |- config/
+      |- app.toml                   # 应用程序相关的配置文件。
+      |- config.toml                # Tendermint 相关的配置文件。
+      |- genesis.json               # 创世文件。
+      |- node_key.json              # 用于 p2p 协议中节点身份验证的私钥。
+      |- priv_validator_key.json    # 用于共识协议中作为验证者的私钥。
+```
+
+#### 修改 `genesis.json` 文件
+
+此时，需要对 `genesis.json` 文件进行修改：
+
+* 将 staking `bond_denom`、crisis `denom`、gov `denom` 和 mint `denom` 值更改为 `"inj"`，因为这是 Injective 的原生代币。
+
+这可以通过运行以下命令轻松完成：
+
+```bash
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+上述命令仅在使用默认 `.injectived` 目录时有效。对于特定目录，请修改上述命令或手动编辑 `genesis.json` 文件以反映更改。
+</Callout>
+
+#### 为验证者账户创建密钥
+
+在启动链之前，你需要用至少一个账户填充状态。为此，首先在 `test` 密钥环后端下创建一个名为 `my_validator` 的新账户（可以随意选择其他名称和其他后端）：
+
+```bash
+injectived keys add my_validator --keyring-backend=test
+
+# 将生成的地址放入变量中以供后续使用。
+MY_VALIDATOR_ADDRESS=$(injectived keys show my_validator -a --keyring-backend=test)
+```
+
+现在你已经创建了一个本地账户，继续在链的创世文件中授予它一些 `inj` 代币。这样做还将确保你的链从创世开始就知道此账户的存在：
+
+```bash
+injectived add-genesis-account $MY_VALIDATOR_ADDRESS 100000000000000000000000000inj --chain-id=injective-1
+```
+
+`$MY_VALIDATOR_ADDRESS` 是保存密钥环中 `my_validator` 密钥地址的变量。Injective 中的代币具有 `{amount}{denom}` 格式：`amount` 是 18 位精度的十进制数，`denom` 是带有面额键的唯一代币标识符（例如 `inj`）。这里，我们授予 `inj` 代币，因为 `inj` 是 `injectived` 中用于质押的代币标识符。
+
+#### 将验证者添加到链
+
+现在你的账户有了一些代币，你需要向链添加一个验证者。验证者是参与共识过程以向链添加新区块的特殊全节点。任何账户都可以声明其成为验证者运营商的意图，但只有那些拥有足够委托的账户才能进入活跃集。在本指南中，你将把本地节点（通过上述 `init` 命令创建）添加为链的验证者。验证者可以在链首次启动之前通过创世文件中包含的特殊交易（称为 `gentx`）声明：
+
+```bash
+# 创建 gentx。
+injectived genesis gentx my_validator 1000000000000000000000inj --chain-id=injective-1 --keyring-backend=test
+
+# 将 gentx 添加到创世文件。
+injectived genesis collect-gentxs
+```
+
+`gentx` 做三件事：
+
+1. 将你创建的 `validator` 账户注册为验证者运营商账户（即控制验证者的账户）。
+2. 自委托提供的质押代币 `amount`。
+3. 将运营商账户与用于签署区块的 Tendermint 节点公钥链接。如果未提供 `--pubkey` 标志，则默认为通过上述 `injectived init` 命令创建的本地节点公钥。
+
+有关 `gentx` 的更多信息，请使用以下命令：
+
+```bash
+injectived genesis gentx --help
+```
+
+#### 使用 `app.toml` 和 `config.toml` 配置节点
+
+两个配置文件会自动生成在 `~/.injectived/config` 中：
+
+* `config.toml`：用于配置 Tendermint（在 [Tendermint 文档](https://docs.tendermint.com/v0.34/tendermint-core/configuration.html)中了解更多），以及
+* `app.toml`：由 Cosmos SDK（Injective 基于此构建）生成，用于状态修剪策略、遥测、gRPC 和 REST 服务器配置、状态同步等配置。
+
+这两个文件都有大量注释——请直接参考它们来调整你的节点。
+
+一个需要调整的示例配置是 `app.toml` 中的 `minimum-gas-prices` 字段，它定义了验证者节点愿意接受的处理交易的最低 gas 价格。如果为空，请确保编辑该字段并设置一些值，例如 `10inj`，否则节点将在启动时停止。在本教程中，让我们将最低 gas 价格设置为 0：
+
+```toml
+ # 验证者愿意接受的处理交易的最低 gas 价格。
+ # 交易的费用必须满足此配置中指定的任何面额的最低要求
+ # （例如 0.25token1;0.0001token2）。
+ minimum-gas-prices = "0inj"
+```
+
+#### 运行本地网络
+
+现在一切都设置好了，你终于可以启动节点了：
+
+```bash
+injectived start # 运行此命令后应该开始出现区块
+```
+
+此命令允许你运行单个节点，这足以通过节点与链交互，但你可能希望同时运行多个节点以查看它们之间如何达成共识。
+</Tab>
+
+<Tab title="测试网络">
+#### 硬件规格
+
+节点运营商应部署裸机服务器以实现最佳性能。此外，验证者节点必须满足推荐的硬件规格，特别是 CPU 要求，以确保高正常运行时间。
+
+|       _最低要求_       |    _推荐配置_   |
+| :-------------------: | :-------------------: |
+|    内存 128GB   |    内存 128GB   |
+|      CPU 12 核     |      CPU 16 核     |
+| CPU 基础频率 3.7GHz | CPU 基础频率 4.2GHz |
+|    存储 2TB NVMe   |    存储 2TB NVMe   |
+|     网络 1Gbps+    |     网络 1Gbps+    |
+
+#### 安装 `injectived` 和 `peggo`
+
+请参阅 [Injective 发布仓库](https://github.com/InjectiveLabs/testnet/releases)获取最新版本。非验证者节点运营商不需要安装 `peggo`。
+
+```bash
+wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv peggo /usr/bin
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib 
+```
+
+#### 初始化新的 Injective 链节点
+
+在运行 Injective 节点之前，我们需要初始化链以及节点的创世文件：
+
+```bash
+# <moniker> 参数是你节点的自定义用户名，它应该是人类可读的。
+export MONIKER=<moniker>
+# Injective 测试网的 chain-id 是 "injective-888"
+injectived init $MONIKER --chain-id injective-888
+```
+
+运行 `init` 命令将在 `~/.injectived` 创建 `injectived` 默认配置文件。
+
+#### 准备配置以加入测试网
+
+你现在应该使用测试网的创世文件和应用程序配置文件更新默认配置，并使用种子节点配置你的持久对等节点。
+
+```bash
+git clone https://github.com/InjectiveLabs/testnet.git
+
+# 将创世文件复制到配置目录
+aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
+mv genesis.json ~/.injectived/config/
+
+# 将配置文件复制到配置目录
+cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
+cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
+```
+
+你还可以验证创世文件的校验和 - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+```
+
+#### 为 `injectived` 配置 `systemd` 服务
+
+编辑 `/etc/systemd/system/injectived.service` 的配置：
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+启动和重启 systemd 服务
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# 启用开机自启
+sudo systemctl enable injectived
+
+# 查看日志
+journalctl -u injectived -f
+```
+
+#### 与网络同步
+
+请参阅 [Polkachu Injective 测试网节点快照](https://polkachu.com/testnets/injective/snapshots)下载快照并与网络同步。
+
+**支持**
+
+如有任何其他问题，你可以随时通过 [Discord](https://discord.gg/injective)、[Telegram](https://t.me/joininjective) 或[电子邮件](mailto:contact@injectivelabs.org)与 Injective 团队联系。
+</Tab>
+
+<Tab title="主网网络">
+#### 硬件规格
+
+节点运营商应部署裸机服务器以实现最佳性能。此外，验证者节点必须满足推荐的硬件规格，特别是 CPU 要求，以确保高正常运行时间。
+
+|       _最低要求_       |    _推荐配置_   |
+| :-------------------: | :-------------------: |
+|    内存 128GB   |    内存 128GB   |
+|      CPU 12 核     |      CPU 16 核     |
+| CPU 基础频率 3.7GHz | CPU 基础频率 4.2GHz |
+|    存储 2TB NVMe   |    存储 2TB NVMe   |
+|     网络 1Gbps+    |     网络 1Gbps+    |
+
+#### 安装 `injectived` 和 `peggo`
+
+请参阅 [Injective 链发布仓库](https://github.com/InjectiveLabs/injective-chain-releases/releases/)获取最新版本。非验证者节点运营商不需要安装 `peggo`。
+
+```bash
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv peggo /usr/bin
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib 
+```
+
+#### 初始化新的 Injective 节点
+
+在运行 Injective 节点之前，我们需要初始化链以及节点的创世文件：
+
+```bash
+# <moniker> 参数是你节点的自定义用户名。它应该是人类可读的。
+export MONIKER=<moniker>
+# Injective 主网的 chain-id 是 "injective-1"
+injectived init $MONIKER --chain-id injective-1
+```
+
+运行 `init` 命令将在 `~/.injectived` 创建 `injectived` 默认配置文件。
+
+#### 准备配置以加入主网
+
+你现在应该使用主网的创世文件和应用程序配置文件更新默认配置，并使用种子节点配置你的持久对等节点。
+
+```bash
+git clone https://github.com/InjectiveLabs/mainnet-config
+
+# 将创世文件复制到配置目录
+cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
+
+# 将配置文件复制到配置目录
+cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
+```
+
+你还可以验证创世文件的校验和 - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+```
+
+然后使用 `mainnet-config/10001/seeds.txt` 的内容更新 `~/.injectived/config/config.toml` 中的 `seeds` 字段，并将 `timeout_commit` 更新为 `300ms`。
+
+```bash
+cat mainnet-config/10001/seeds.txt
+nano ~/.injectived/config/config.toml
+```
+
+#### 为 `injectived` 配置 `systemd` 服务
+
+编辑 `/etc/systemd/system/injectived.service` 的配置：
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+启动和重启 systemd 服务：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# 启用开机自启
+sudo systemctl enable injectived
+
+# 查看日志
+journalctl -u injectived -f
+```
+
+在将快照数据加载到正确目录之前应停止服务，加载后再启动。
+
+```bash
+# 停止节点
+sudo systemctl stop injectived
+
+# 启动节点
+sudo systemctl start injectived
+```
+
+#### 与网络同步
+
+**选项 1. 状态同步**
+
+_即将添加_
+
+**选项 2. 快照**
+
+**已修剪**
+
+1. [Polkachu](https://polkachu.com/tendermint_snapshots/injective)。
+2. [HighStakes](https://tools.highstakes.ch/files/injective.tar.gz)。
+3. [Imperator](https://www.imperator.co/services/chain-services/mainnets/injective)。
+4. [Bware Labs](https://bwarelabs.com/snapshots)。
+5. [AutoStake](https://autostake.com/networks/injective/#validator)。
+
+如果 Injective `mainnet-config seeds.txt` 列表不起作用（节点无法同步区块），ChainLayer、Polkachu 和 Autostake 维护对等节点列表（可在 `config.toml` 的 `persistent_peers` 字段中使用）或地址簿（用于更快的对等节点发现）。
+
+**支持**
+
+如有任何其他问题，你可以随时通过 [Discord](https://discord.gg/injective)、[Telegram](https://t.me/joininjective) 或[电子邮件](mailto:contact@injectivelabs.org)与 Injective 团队联系。
+</Tab>
+</Tabs>
