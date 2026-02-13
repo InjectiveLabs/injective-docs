@@ -831,7 +831,25 @@
                   "cn/infra/set-up-keyring",
                   "cn/infra/join-a-network",
                   "cn/infra/cosmovisor",
-                  "cn/infra/upgrade-node"
+                  "cn/infra/upgrade-node",
+                  {
+                    "group": "主网验证者",
+                    "pages": [
+                      "cn/infra/validator-mainnet/index",
+                      "cn/infra/validator-mainnet/peggo",
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade"
+                    ]
+                  },
+                  {
+                    "group": "测试网验证者",
+                    "pages": [
+                      "cn/infra/validator-testnet/index",
+                      "cn/infra/validator-testnet/peggo"
+                    ]
+                  },
+                  "cn/infra/public-endpoints",
+                  "cn/infra/premium-endpoints",
+                  "cn/infra/archival-setup"
                 ]
               },
               {
