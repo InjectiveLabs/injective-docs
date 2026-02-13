@@ -789,6 +789,50 @@
                 ]
               },
               {
+                "group": "基础设施",
+                "icon": "network-wired",
+                "expanded": false,
+                "pages": [
+                  "cn/infra/index",
+                  {
+                    "group": "与节点交互",
+                    "expanded": false,
+                    "pages": [
+                      "cn/infra/interact-node/index",
+                      "cn/infra/interact-node/command-line",
+                      "cn/infra/interact-node/grpc",
+                      "cn/infra/interact-node/go",
+                      "cn/infra/interact-node/rest"
+                    ]
+                  },
+                  "cn/infra/run-node",
+                  "cn/infra/set-up-keyring",
+                  "cn/infra/join-a-network",
+                  "cn/infra/cosmovisor",
+                  "cn/infra/upgrade-node",
+                  {
+                    "group": "主网验证者",
+                    "pages": [
+                      "cn/infra/validator-mainnet/index",
+                      "cn/infra/validator-mainnet/peggo",
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade"
+                    ]
+                  },
+                  {
+                    "group": "测试网验证者",
+                    "pages": [
+                      "cn/infra/validator-testnet/index",
+                      "cn/infra/validator-testnet/peggo"
+                    ]
+                  },
+                  "cn/infra/public-endpoints",
+                  "cn/infra/premium-endpoints",
+                  "cn/infra/archival-setup",
+                  "redirects/https_injective_notion_site_indexer_service_setup_guide",
+                  "redirects/https_api_injective_network_swagger"
+                ]
+              },
+              {
                 "group": "EVM 开发者",
                 "icon": "rectangle-code",
                 "expanded": false,
