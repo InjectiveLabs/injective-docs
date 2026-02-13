@@ -1,0 +1,103 @@
+---
+title: Spot
+---
+
+使用 StreamManagerV2 从 indexer 流式获取现货市场模块相关数据的示例代码片段。
+
+## 使用 StreamManagerV2 的 gRPC Stream
+
+### 流式订单簿更新
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-orderbook-updates',
+  streamFactory: () => stream.streamOrderbookUpdates({ 
+    marketIds: ['0x...'],
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orderbookUpdates) => {
+    console.log(orderbookUpdates)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### 流式现货订单
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-orders',
+  streamFactory: () => stream.streamOrders({
+    marketId: '0x...',
+    subaccountId: '0x...', // 可选
+    orderSide: OrderSide.Buy, // 可选
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orders) => {
+    console.log(orders)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### 流式现货交易
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TradeDirection } from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-trades',
+  streamFactory: () => stream.streamTrades({
+    marketIds: ['0x...'], // 可选
+    subaccountId: '0x...', // 可选
+    direction: TradeDirection.Buy, // 可选
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (trades) => {
+    console.log(trades)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
