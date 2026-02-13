@@ -821,9 +821,48 @@
                       "cn/developers-native/wallets/index",
                       "cn/developers-native/wallets/accounts",
                       "cn/developers-native/wallets/connections",
-                      "cn/developers-native/wallets/strategy"
+                      "cn/developers-native/wallets/strategy",
+                      "cn/developers-native/wallets/offchain-data"
                     ]
-                  }
+                  },
+                  {
+                    "group": "跨链桥",
+                    "pages": [
+                      "cn/developers-native/bridges/index",
+                      "cn/developers-native/bridges/ethereum"
+                    ]
+                  },
+                  {
+                    "group": "交易",
+                    "pages": [
+                      "cn/developers-native/transactions/index",
+                      "cn/developers-native/transactions/cosmos",
+                      "cn/developers-native/transactions/cosmos-ledger-keplr",
+                      "cn/developers-native/transactions/ethereum",
+                      "cn/developers-native/transactions/ethereum-ledger",
+                      "cn/developers-native/transactions/msgbroadcaster",
+                      "cn/developers-native/transactions/private-key",
+                      "cn/developers-native/transactions/web3-gateway"
+                    ]
+                  },
+                  {
+                    "group": "交易示例",
+                    "pages": [
+                      "cn/developers-native/examples/index",
+                      "cn/developers-native/examples/auction",
+                      "cn/developers-native/examples/bank",
+                      "cn/developers-native/examples/exchange"
+                    ]
+                  },
+                  {
+                    "group": "流式查询 Indexer",
+                    "pages": [
+                      "cn/developers-native/query-indexer-stream/index",
+                      "cn/developers-native/query-indexer-stream/account",
+                      "cn/developers-native/query-indexer-stream/spot"
+                    ]
+                  },
+                  "cn/developers-native/query-ethereum"
                 ]
               }
             ]
