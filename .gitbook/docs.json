@@ -808,6 +808,23 @@
                     ]
                   }
                 ]
+              },
+              {
+                "group": "Native 开发者",
+                "icon": "microchip",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-native/index",
+                  {
+                    "group": "钱包",
+                    "pages": [
+                      "cn/developers-native/wallets/index",
+                      "cn/developers-native/wallets/accounts",
+                      "cn/developers-native/wallets/connections",
+                      "cn/developers-native/wallets/strategy"
+                    ]
+                  }
+                ]
               }
             ]
           }
