@@ -1,0 +1,59 @@
+---
+title: Token Factory
+---
+
+Injective 上的 Token Factory 模块允许用户和合约创建新的原生代币，并使用 Mint + Burn 模型将原生代币与 CW20 代币交换。这是链上的一个重要功能，因为将来自不同来源的资产表示为原生 bank denom 对于允许用户访问其他链上模块（如 exchange、auction、insurance funds 等）至关重要。Token factory denom 的格式为 `factory/{creator address}/{subdenom}`。
+
+结合作为创建者的 `CW20AdapterContract`，我们允许 CW20 资产在 Injective 上原生表示为 Token Factory denom。其工作方式是 CW20 资产由 `CW20AdapterContract` 持有，并作为 factory denom 为 injective 地址铸造，当我们想要将它们赎回为 CW20 时，它们从 bank 模块销毁并从 `CW20AdapterContract` 解锁回所有者地址。
+
+## 如何将 factory denom 赎回为 CW20 的示例
+
+```ts
+import {
+  MsgExecuteContractCompat,
+  ExecArgCW20AdapterRedeemAndTransfer,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+
+const message = MsgExecuteContractCompat.fromJSON({
+  sender: injectiveAddress,
+  contractAddress: CW20_ADAPTER_CONTRACT,
+  funds: {
+    denom: `factory/${CW20_ADAPTER_CONTRACT}/${contractCw20Address}`,
+    amount: actualAmount.toFixed(),
+  },
+  execArgs: ExecArgCW20AdapterRedeemAndTransfer.fromJSON({
+    recipient: injectiveAddress,
+  }),
+})
+
+// 然后将消息打包到交易中，签名并广播到链上
+```
+
+## 如何将 CW20 转换为 factory denom 的示例
+
+```ts
+import {
+  ExecArgCW20Send,
+  MsgExecuteContractCompat,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+const amount = '1000000' // 1 USDT 在链上的表示，因为它有 6 位小数
+
+const message = MsgExecuteContractCompat.fromJSON({
+  contractAddress: contractCw20Address,
+  sender: injectiveAddress,
+  execArgs: ExecArgCW20Send.fromJSON({
+    amount,
+    contractAddress: CW20_ADAPTER_CONTRACT,
+  }),
+})
+
+// 然后将消息打包到交易中，签名并广播到链上
+```
