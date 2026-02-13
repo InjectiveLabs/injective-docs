@@ -1,0 +1,177 @@
+---
+title: 配置 Nuxt
+---
+
+## Nuxt3 - 直观的 Web 框架
+
+在 @InjectiveLabs 构建 Injective 去中心化应用的首选 UI 框架是 Nuxt3。我们将帮助你配置 Nuxt3 + Vite 构建器与 `@injectivelabs` 包以及一些 polyfill，因为你需要它们来与加密钱包交互。
+
+### 1. 安装 Nuxt 3
+
+按照 [Nuxt3 文档](https://nuxt.com/docs/getting-started/installation)中的入门指南设置你的应用。
+
+### 2. 安装 @injectivelabs 包
+
+你可以使用 yarn 安装 @injectivelabs 包。
+
+```bash
+$ yarn add @injectivelabs/sdk-ts @injectivelabs/networks @injectivelabs/ts-types @injectivelabs/utils
+
+## 如果你需要钱包连接
+$ yarn add @injectivelabs/wallet-strategy
+```
+
+这些是 `injective-ts` monorepo 中最常用的包。
+
+### 3. 配置 Nuxt 并添加 polyfill
+
+首先，添加所需的 polyfill 包
+
+```bash
+$ yarn add @bangjelkoski/node-stdlib-browser
+$ yarn add -D @bangjelkoski/vite-plugin-node-polyfills
+```
+
+确保你使用的是 `vue-tsc@1.8.8`、`nuxt@^3.8.1`、`typescript@^5.0.4` 版本。
+
+**Buffer**
+
+任何加密相关去中心化应用的主要依赖之一是 Buffer。为了确保我们将 Buffer 添加到项目中，我们可以将其作为依赖项安装，然后创建一个 Nuxt 插件将其导入到 global/window 对象：
+
+```bash
+$ yarn add buffer
+```
+
+```ts
+// filename - plugins/buffer.client.ts
+export default defineNuxtPlugin(() => {
+  import('buffer/').then((Buffer) => {
+    window.Buffer = window.Buffer || Buffer.default.Buffer
+    globalThis.Buffer = window.Buffer || Buffer.default.Buffer
+  })
+})
+```
+
+### 4. 使用状态管理
+
+如果你要使用 `pinia` 作为状态管理，将其添加到你的包中：
+
+```bash
+$ yarn add @pinia/nuxt@^0.4.9
+```
+
+### 5. 使用 `vueuse`
+
+我们建议添加 `@vueuse/nuxt` 作为依赖项，因为它提供了许多开箱即用的实用函数。
+
+然后，如果你使用 TypeScript（推荐），我们需要配置 `tsconfig.json`。你可以参考以下 `tsconfig.json` 作为基础。
+
+```json
+{
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["@vueuse/nuxt", "@pinia/nuxt"]
+  },
+  "exclude": ["node_modules", "dist", ".output"]
+}
+```
+
+### 6. nuxt.config.ts / packages.json
+
+在启动应用之前，我们需要在 `nuxt.config.ts` 中设置所有内容，这是每个 Nuxt 3 应用的主要配置点。让我们看一个参考 `nuxt.config.ts` 并使用注释解释每一行，以便开发者更容易理解。
+
+```ts
+// filename - nuxt.config.ts
+import tsconfigPaths from 'vite-tsconfig-paths'
+import { nodePolyfills } from '@bangjelkoski/vite-plugin-node-polyfills'
+
+export default defineNuxtConfig({
+  ssr: false, // 是否预渲染你的应用
+  modules: [
+    // nuxtjs 模块
+    '@pinia/nuxt',
+    '@vueuse/nuxt',
+  ],
+
+  typescript: {
+    typeCheck: 'build', // 我们建议使用 build，这样你只在构建时进行 typescript 检查
+  },
+
+  imports: {
+    // 自动导入 store 定义（如果你使用 pinia）
+    dirs: ['store/**'],
+  },
+
+  pinia: {
+    // 导入 pinia 定义
+    autoImports: ['defineStore'],
+  },
+
+  plugins: [
+    {
+      // 导入我们创建的 buffer 插件
+      src: './plugins/buffer.client.ts',
+      ssr: false,
+    },
+  ],
+
+  // 我们只为客户端生成 sitemap，因为我们不需要服务器
+  // 注意：Vite + Nuxt3 的 sitemap 存在问题
+  // 通常生成 sitemap 需要太多时间/内存
+  // 构建过程可能会在 Github Actions/Netlify/Vercel 等上失败
+  // 所以我们必须使用另一种策略，如在本地生成它们并推送到
+  // busgnag 等服务
+  sourcemap: {
+    server: false,
+    client: true,
+  },
+
+  // Vite 相关配置
+  vite: {
+    plugins: [
+      // 设置 node + crypto polyfill + vite TS 路径解析
+      tsconfigPaths(),
+      nodePolyfills({ protocolImports: false }),
+    ],
+
+    build: {
+      sourcemap: false, // 我们不生成
+
+      // 默认 rollup 选项
+      rollupOptions: {
+        cache: false,
+        output: {
+          manualChunks: (id: string) => {
+            //
+          },
+        },
+      },
+    },
+
+    // @bangjelkoski/vite-plugin-node-polyfills 插件的
+    // 某些 Vite 相关问题需要此配置
+    optimizeDeps: {
+      exclude: ['fsevents'],
+    },
+  },
+})
+```
+
+有一个优化可以减少包大小 - 在 `packages.json` 中添加这些 resolutions
+
+```
+"resolutions": {
+  "@ethereumjs/tx": "^4.1.1",
+  "**/libsodium": "npm:@bangjelkoski/noop",
+  "**/libsodium-wrappers": "npm:@bangjelkoski/noop"
+}
+```
+
+### 7. 启动我们的应用
+
+最后，你可以使用 `yarn dev` 在本地启动应用，或使用 `yarn generate` 生成静态页面，然后可以部署到任何静态页面托管服务，如 Netlify、Vercel 等。
