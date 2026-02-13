@@ -1,0 +1,54 @@
+---
+title: 构建 dApp
+---
+
+Injective 是专为金融而生的 Layer-1 区块链。Injective 为开发者提供开箱即用的原语来构建去中心化金融应用，此外还有一个开放且无需许可的智能合约层，提供构建强大 Web3 应用的高级功能。
+
+Injective 与多个知名区块链网络原生互操作，包括 Ethereum、Solana 和所有支持 IBC 的 cosmos 链，如 CosmosHub、Osmosis 等。这种互操作性不仅允许 Injective 使用户能够从多个链桥接资产，还允许传输任意数据 - 如 oracle 价格等。
+
+在本节中，我们将探索配置不同的 UI 框架以与 `@injectivelabs` 包配合使用，以便你可以开始在 Injective 上构建去中心化应用。我们还将展示在 Injective 上构建的示例（简单）dApp。
+
+出于安全原因，我们建议使用 NPM 包的稳定版本。
+
+**稳定包版本**
+
+![](https://img.shields.io/npm/v/%40injectivelabs/sdk-ts/latest?label=%40injectivelabs%2Fsdk-ts) ![](https://img.shields.io/npm/v/%40injectivelabs/wallet-strategy/latest?label=%40injectivelabs%2Fwallet-strategy) ![](https://img.shields.io/npm/v/%40injectivelabs/networks/latest?label=%40injectivelabs%2Fnetworks) ![](https://img.shields.io/npm/v/%40injectivelabs/ts-types/latest?label=%40injectivelabs%2Fts-types) ![](https://img.shields.io/npm/v/%40injectivelabs/utils/latest?label=%40injectivelabs%2Futils)
+
+**最新包版本：**
+
+![](https://img.shields.io/npm/v/%40injectivelabs/sdk-ts/next?label=%40injectivelabs%2Fsdk-ts) ![](https://img.shields.io/npm/v/%40injectivelabs/wallet-strategy/next?label=%40injectivelabs%2Fwallet-strategy) ![](https://img.shields.io/npm/v/%40injectivelabs/networks/next?label=%40injectivelabs%2Fnetworks) ![](https://img.shields.io/npm/v/%40injectivelabs/ts-types/next?label=%40injectivelabs%2Fts-types) ![](https://img.shields.io/npm/v/%40injectivelabs/utils/next?label=%40injectivelabs%2Futils)
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  最新版本使用 `next` 标签发布。对于稳定版本，请使用 `latest` 标签或检查 npm registry 获取最新稳定版本。
+</Callout>
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  如果你正在寻找如何在 Injective EVM 上构建 dApp，你应该查看[你的第一个 EVM dApp](/developers-evm/dapps/)中的指南。
+</Callout>
+
+### Create Injective dApp CLI 工具
+
+在 Injective 上开始你的旅程的最简单方法是使用我们的 CLI 工具。只需在终端中输入此命令并按照说明操作！
+
+```bash
+$ npx @injectivelabs/create-injective-app
+```
+
+### 配置
+
+| 主题                                                   | 描述                 |
+| ------------------------------------------------------- | --------------------------- |
+| [配置 Nuxt](/cn/developers/dapps/configure-nuxt/)   | 配置 Nuxt 3.x + Vite |
+| [配置 React](/cn/developers/dapps/configure-react/) | 配置 React 18 + Vite |
+
+### dApp
+
+| 主题                                                              | 描述                                              |
+| ------------------------------------------------------------------ | -------------------------------------------------------- |
+| [DEX](/cn/developers/dapps/example-dex/)                              | 在 Injective 上构建去中心化交易所    |
+| [简单智能合约](/cn/developers/dapps/example-smart-contract/) | 在 Injective 上构建简单的智能合约应用 |
+| [Webpack](/cn/developers/dapps/example-webpack/)                      | 使用 Webpack 和 Injective 的简单 HTML 示例           |
+
+{/*
+| [Bridge](/developers/dapps/example-bridge/) | 在 Injective 和 Ethereum 之间构建简单的桥接 |
+*/}
