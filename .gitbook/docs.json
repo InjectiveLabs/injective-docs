@@ -923,7 +923,9 @@
                   },
                   "cn/infra/public-endpoints",
                   "cn/infra/premium-endpoints",
-                  "cn/infra/archival-setup"
+                  "cn/infra/archival-setup",
+                  "redirects/https_injective_notion_site_indexer_service_setup_guide",
+                  "redirects/https_api_injective_network_swagger"
                 ]
               },
               {
