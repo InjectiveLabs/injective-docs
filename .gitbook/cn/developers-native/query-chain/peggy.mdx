@@ -1,0 +1,21 @@
+---
+title: Peggy
+---
+
+通过 peggy API 查询链的示例代码片段。
+
+## 使用 gRPC
+
+### 获取 peggy 相关参数
+
+```ts
+import { ChainGrpcPeggyApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPeggyApi = new ChainGrpcPeggyApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcPeggyApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
