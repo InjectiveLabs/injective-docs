@@ -1,0 +1,126 @@
+---
+title: Wasm
+---
+
+`wasm` 模块是与部署在 injective 链上的 wasm 智能合约交互的核心，您可以在这里找到部署在 Injective 链上的[智能合约](https://injscan.com/smart-contracts/)列表。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  `MsgUpdateCode` 和 `MsgStoreCode` 不被以太坊（如 Metamask）钱包支持。
+</Callout>
+
+## 消息
+
+### MsgExecuteContract (Transfer)
+
+此消息用于执行合约函数，下面我们将使用 [CW20 规范](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md) 的 transfer 消息作为示例。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContract } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const recipientAddress = "inj2...";
+const contractAddress = "cw...";
+
+const msg = MsgExecuteContract.fromJSON({
+  contractAddress,
+  sender: injectiveAddress,
+  exec: {
+    action: "transfer",
+    msg: {
+      recipient: recipientAddress,
+      amount: 100000,
+    },
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgExecuteContract (funds 示例)
+
+在某些场景中，根据智能合约的函数，我们必须将代币转移到智能合约，按照 cosmwasm 惯例，我们使用 funds 字段将代币从用户的 bank 模块转移到智能合约。
+
+以下是使用 `test` 合约函数发送 `MsgExecuteContract` 的示例。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContract } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const contractAddress = "cw...";
+
+const msg = MsgExecuteContract.fromJSON({
+  contractAddress,
+  sender: injectiveAddress,
+  exec: {
+    action: "test",
+    funds: [
+      {
+        denom: "inj",
+        amount: toChainFormat(1).toFixed(),
+      },
+    ],
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgExecuteContractCompat
+
+在前面的示例中，使用 EIP712 解析 `funds` 数组和 `msgs` 对象存在一些兼容性问题。由于 `MsgExecuteContract` 无法正确转换为 EIP712 然后由以太坊钱包签名，我们引入了完全兼容 EIP712 的 `MsgExecuteContractCompat`。
+
+_**注意：**_ _`MsgExecuteContract` 和 `MsgExecuteContractCompat` 的底层消息是相同的。`MsgExecuteContractCompat` 只是兼容 EIP712。_
+
+以下是使用 `test` 合约函数发送 `MsgExecuteContractCompact` 的示例。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const contractAddress = "cw...";
+
+const msg = MsgExecuteContractCompat.fromJSON({
+  contractAddress,
+  sender: injectiveAddress,
+  exec: {
+    action: "test",
+    funds: [
+      {
+        denom: "inj",
+        amount: toChainFormat(1).toFixed(),
+      },
+    ],
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
