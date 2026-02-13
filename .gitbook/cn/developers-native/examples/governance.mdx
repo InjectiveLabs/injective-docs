@@ -1,0 +1,370 @@
+---
+title: Governance
+---
+
+Injective 是一个社区运营的区块链，质押 INJ 的用户可以参与与区块链相关的治理。可以提交提案来修订 Injective 程序、技术升级或任何其他影响整个 Injective 生态系统的 Injective 相关变更。
+
+对于您创建的每个提案，我们要求您至少存入 1 INJ。这是为了确保您是 Injective 社区的活跃参与者，并且有资格提出提案并参与协议治理。提案要进入投票阶段，必须存入 500 INJ。您可以自己存入 500 INJ，也可以与社区合作共同存入。
+
+## 消息
+
+让我们探索（并提供示例）Governance 模块导出的消息，我们可以使用这些消息与 Injective 链交互。例如，您可以使用这些消息提议新的现货、永续或期货市场。
+
+### MsgGovDeposit
+
+此消息可用于向现有提案存款。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgGovDeposit } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const denom = "inj";
+const proposalId = 12345;
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const amount = toChainFormat(1).toFixed();
+
+const message = MsgGovDeposit.fromJSON({
+  amount: {
+    denom,
+    amount,
+  },
+  proposalId,
+  depositor: injectiveAddress,
+});
+
+/* 广播交易 */
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgVote
+
+提案获得足够资金后，可以开始投票。您可以投票 "Yes"、"No"、"Abstain" 或 "No with Veto"。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { VoteOption } from "@injectivelabs/sdk-ts/types";
+import { MsgVote } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const proposalId = 12345;
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const vote = VoteOption.VOTE_OPTION_YES;
+
+const message = MsgVote.fromJSON({
+  vote,
+  proposalId,
+  voter: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgSubmitTextProposal
+
+在 Injective 上提议任何操作。TextProposal 定义了一个标准文本提案，如果获得批准，其更改需要手动更新。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgSubmitTextProposal } from "@injectivelabs/sdk-ts/core/modules";
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const amount = toChainFormat(1).toFixed();
+
+const message = MsgSubmitTextProposal.fromJSON({
+  title: "提案标题",
+  description: "提案描述",
+  proposer: injectiveAddress,
+  deposit: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgSubmitProposalSpotMarketLaunch
+
+此消息允许您提议新的现货市场。确保 ticker 准确，并提供基础资产 denom 和报价资产 denom。Base denom 指您想要交易的资产，quote denom 指您的基础资产计价的资产。例如，在 INJ/USDT 市场中，您将使用 USDT 买卖 INJ。
+
+```ts
+import { TokenStaticFactory } from "@injectivelabs/sdk-ts/service";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { toChainFormat, toHumanReadable } from "@injectivelabs/utils";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { MsgSubmitProposalSpotMarketLaunch } from "@injectivelabs/sdk-ts/core/modules";
+// 参考 https://github.com/InjectiveLabs/injective-lists
+import { tokens } from "../data/tokens.json";
+
+const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[]);
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const amount = toChainFormat(1).toFixed();
+
+const market = {
+  baseDenom: "inj", // 示例
+  quoteDenom: "peggy0x...",
+  makerFeeRate: "0.001",
+  takerFeeRate: "0.002",
+  title: "INJ/USDT 现货市场上线",
+  description:
+    "此提案将上线 INJ/USDT 现货市场，maker 和 taker 费率分别为 0.001% 和 0.002%",
+  ticker: "INJ/USDT",
+  minPriceTickSize: "0.001",
+  minQuantityTickSize: "0.001",
+};
+
+const baseDenom = tokenStaticFactory.toToken(market.baseDenom);
+const quoteDenom = tokenStaticFactory.toToken(market.quoteDenom);
+const marketWithDecimals: SpotMarketLaunchProposal = {
+  ...market,
+  baseTokenDecimals: baseDenom ? baseDenom.decimals : 18,
+  quoteTokenDecimals: quoteDenom ? quoteDenom.decimals : 6,
+};
+
+const marketWithTickSizes = {
+  ...market,
+  minPriceTickSize: toHumanReadable(
+    marketWithDecimals.minPriceTickSize,
+    marketWithDecimals.baseTokenDecimals - marketWithDecimals.quoteTokenDecimals
+  ).toFixed(),
+  minQuantityTickSize: toChainFormat(
+    marketWithDecimals.minQuantityTickSize,
+    marketWithDecimals.baseTokenDecimals
+  ).toFixed(),
+};
+
+const message = MsgSubmitProposalSpotMarketLaunch.fromJSON({
+  market: marketWithTickSizes,
+  proposer: injectiveAddress,
+  deposit: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgSubmitProposalPerpetualMarketLaunch
+
+此消息允许您提议新的永续市场。永续期货合约（perps）是衍生期货合约，允许用户买卖标的基础资产的价值而无需实际拥有它。这是您可以用来为指定代币对创建永续市场的消息。
+
+```ts
+import {
+  TokenStaticFactory,
+  MsgBroadcasterWithPk,
+  MsgSubmitProposalPerpetualMarketLaunch,
+} from "@injectivelabs/sdk-ts/core/modules";
+import { toChainFormat } from "@injectivelabs/utils";
+import { TokenStaticFactory } from "@injectivelabs/sdk-ts/service";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+// 参考 https://github.com/InjectiveLabs/injective-lists
+import { tokens } from "../data/tokens.json";
+
+const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[]);
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const amount = toChainFormat(1).toFixed();
+
+const market = {
+  title: "INJ/USDT 永续市场上线",
+  description:
+    "此提案将上线 INJ/USDT 现货市场，maker 和 taker 费率分别为 0.001% 和 0.002%",
+  ticker: "INJ/USDT PERP",
+  quoteDenom: "peggy0x...",
+  oracleBase: "INJ",
+  oracleQuote: "USDT",
+  oracleScaleFactor: 6,
+  oracleType: 10, // BAND IBC
+  initialMarginRatio: "0.05",
+  maintenanceMarginRatio: "0.02",
+  makerFeeRate: "0.01",
+  takerFeeRate: "0.02",
+  minPriceTickSize: "0.01",
+  minQuantityTickSize: "0.01",
+};
+
+const quoteDenom = await tokenStaticFactory.toToken(market.quoteDenom);
+const marketWithDecimals = {
+  ...market,
+  quoteTokenDecimals: quoteDenom ? quoteDenom.decimals : 6,
+};
+
+const marketWithTickSizes = {
+  ...market,
+  minPriceTickSize: toChainFormat(
+    marketWithDecimals.minPriceTickSize,
+    marketWithDecimals.quoteTokenDecimals
+  ).toFixed(),
+};
+
+const message = MsgSubmitProposalPerpetualMarketLaunch.fromJSON({
+  market: marketWithTickSizes,
+  proposer: injectiveAddress,
+  deposit: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgSubmitProposalExpiryFuturesMarketLaunch
+
+到期期货合约是两个交易对手之间的协议，以特定的未来价格买卖特定数量的标的基础资产，该合约设定在未来特定日期到期。这是您可以用来为指定代币对创建期货市场的消息。
+
+```ts
+import {
+  TokenStaticFactory,
+  MsgBroadcasterWithPk,
+  MsgSubmitProposalExpiryFuturesMarketLaunch,
+import { toChainFormat } from "@injectivelabs/utils";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+// 参考 https://github.com/InjectiveLabs/injective-lists
+import { tokens } from "../data/tokens.json";
+
+const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[]);
+
+const denom = "inj";
+const injectiveAddress = "inj...";
+const privateKey = "0x...";
+const amount = toChainFormat(1).toFixed();
+
+const market = {
+  title: "INJ/USDT 期货市场上线",
+  description:
+    "此提案将上线 INJ/USDT 现货市场，maker 和 taker 费率分别为 0.001% 和 0.002%",
+  ticker: "INJ/USDT 24-MAR-2023",
+  quoteDenom: "peggy0x...",
+  oracleBase: "INJ",
+  oracleQuote: "USDT",
+  expiry: 1000000, // 市场到期时间，以毫秒为单位
+  oracleScaleFactor: 6,
+  oracleType: 10, // BAND IBC
+  initialMarginRatio: "0.05",
+  maintenanceMarginRatio: "0.02",
+  makerFeeRate: "0.01",
+  takerFeeRate: "0.02",
+  minPriceTickSize: "0.01",
+  minQuantityTickSize: "0.01",
+};
+
+const quoteDenom = await tokenStaticFactory.toToken(market.quoteDenom);
+
+const marketWithDecimals = {
+  ...market,
+  quoteTokenDecimals: quoteDenom ? quoteDenom.decimals : 6,
+};
+
+const marketWithTickSizes = {
+  ...market,
+  minPriceTickSize: toChainFormat(
+    marketWithDecimals.minPriceTickSize,
+    marketWithDecimals.quoteTokenDecimals
+  ).toFixed(),
+};
+
+const message = MsgSubmitProposalExpiryFuturesMarketLaunch.fromJSON({
+  market: marketWithTickSizes,
+  proposer: injectiveAddress,
+  deposit: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgSubmitProposalSpotMarketParamUpdate
+
+此消息可用于更新现货市场的参数。
+
+```ts
+import {
+  MsgBroadcasterWithPk,
+  MsgSubmitProposalSpotMarketParamUpdate,
+} from "@injectivelabs/sdk-ts/core/modules";
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { GrpcMarketStatusMap } from "@injectivelabs/sdk-ts/client/chain";
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const amount = toChainFormat(1).toFixed();
+
+const market = {
+  title: "INJ/USDT 现货市场上线",
+  description:
+    "此提案将上线 INJ/USDT 现货市场，maker 和 taker 费率分别为 0.001% 和 0.002%",
+  marketId: "0x...",
+  makerFeeRate: "0.02",
+  takerFeeRate: "0.03",
+  relayerFeeShareRate: "0.4", // 40%，交易费用中分配给中继者的百分比
+  minPriceTickSize: "0.002",
+  minQuantityTickSize: "0.002",
+  status: GrpcMarketStatusMap.Active,
+};
+
+const message = MsgSubmitProposalSpotMarketParamUpdate.fromJSON({
+  market,
+  proposer: injectiveAddress,
+  deposit: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```

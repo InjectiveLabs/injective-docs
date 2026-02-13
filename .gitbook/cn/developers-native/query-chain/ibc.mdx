@@ -1,0 +1,36 @@
+---
+title: IBC
+---
+
+查询链上 IBC 相关数据的示例代码片段。
+
+## 使用 gRPC
+
+### 从 IBC 哈希获取 denom trace
+
+```ts
+import { ChainGrpcIbcApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcIbcApi = new ChainGrpcIbcApi(endpoints.grpc);
+const hash = "...";
+
+const denomTrace = await chainGrpcIbcApi.fetchDenomTrace(hash);
+
+console.log(denomTrace);
+```
+
+### 获取 denom trace 列表
+
+```ts
+import { ChainGrpcIbcApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcIbcApi = new ChainGrpcIbcApi(endpoints.grpc);
+
+const denomTraces = await chainGrpcIbcApi.fetchDenomsTrace();
+
+console.log(denomTraces);
+```

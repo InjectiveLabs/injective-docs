@@ -1,0 +1,103 @@
+---
+title: IBC
+---
+
+## 消息
+
+## MsgTransfer
+
+此消息用于通过 IBC（Cosmos 的跨链通信协议）将代币从 Injective 上发送者的 Bank 模块发送到另一个 Cosmos 链上接收者的 Bank 模块。
+请注意，Injective 仅支持大多数网络的主网 IBC 转账。
+
+IBC 中的应用程序间通信通过通道进行，通道在一条链上的应用程序模块和另一条链上的相应应用程序模块之间路由。有关 IBC 通道的更多信息，请参阅 https://tutorials.cosmos.network/academy/3-ibc/3-channels.html。
+可以在 [Injective Lists 仓库](https://github.com/InjectiveLabs/injective-lists) 中找到与 Injective 之间主网转账的规范通道 ID 列表。
+另外值得注意的是，每条链上的应用程序模块都有一个 portId 来指定每端模块的类型。
+例如，`transfer` 是指定 bank 模块之间 ICS-20 代币转移的 portId。
+
+在此示例中，我们将把 ATOM 从 Injective 转移到 CosmosHub
+
+<Callout type="info">
+  有关代币元数据（符号、小数位、通道映射），请使用
+  [Injective Lists](https://github.com/InjectiveLabs/injective-lists)，它以 JSON 格式提供最新的代币信息。
+</Callout>
+
+```ts
+import { toChainFormat, toBigNumber } from "@injectivelabs/utils";
+import { ChainId, CosmosChainId } from "@injectivelabs/ts-types";
+import { MsgTransfer } from "@injectivelabs/sdk-ts/core/modules";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { makeTimeoutTimestampInNs } from "@injectivelabs/sdk-ts/utils";
+import { ChainRestTendermintApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const injectiveChainId = CosmosChainId["Injective"];
+const destinationChainId = CosmosChainId["Cosmoshub"];
+
+const endpointsForNetwork = getNetworkEndpoints(Network.Mainnet);
+
+/**
+ * 对于 IBC 转账，您需要：
+ * 1. Injective 上代币的 IBC denom 哈希
+ * 2. 目标链的通道 ID
+ *
+ * 您可以在 Injective Lists 仓库中找到此信息：
+ * https://github.com/InjectiveLabs/injective-lists
+ */
+const injectiveToCosmosHubChannelId = "channel-1";
+
+/**
+ * Injective 上 ATOM 的 IBC denom
+ * 格式：ibc/{hash}，其中 hash 由通道和基础 denom 派生
+ */
+const atomIbcDenom =
+  "ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9";
+
+/* 格式化转账金额（0.001 ATOM，6 位小数） */
+const amount = {
+  denom: atomIbcDenom,
+  amount: toChainFormat(0.001, 6).toFixed(),
+};
+
+const injectiveAddress = "inj...";
+const destinationAddress = "cosmos...";
+const port = "transfer";
+const timeoutTimestamp = makeTimeoutTimestampInNs();
+
+/* 从源链获取最新区块 */
+const tendermintRestApi = new ChainRestTendermintApi(endpointsForNetwork.rest);
+
+/* 源链的区块详情 */
+const latestBlock = await tendermintRestApi.fetchLatestBlock();
+const latestHeight = latestBlock.header.height;
+const timeoutHeight = toBigNumber(latestHeight).plus(
+  30 // 默认区块超时高度
+);
+
+/* 以 proto 格式创建消息 */
+const msg = MsgTransfer.fromJSON({
+  port,
+  memo: `从 ${injectiveChainId} 到 ${destinationChainId} 的 IBC 转账`,
+  sender: injectiveAddress,
+  receiver: destinationAddress,
+  channelId: injectiveToCosmosHubChannelId,
+  timeout: timeoutTimestamp,
+  height: {
+    revisionHeight: timeoutHeight.toNumber(),
+    revisionNumber: parseInt(latestBlock.header.version.block, 10),
+  },
+  amount,
+});
+
+const privateKey = "0x...";
+
+/* 广播交易 */
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

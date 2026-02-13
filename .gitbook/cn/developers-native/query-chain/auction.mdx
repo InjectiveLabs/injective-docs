@@ -1,0 +1,49 @@
+---
+title: Auction
+---
+
+查询链上 auction 模块的示例代码片段。
+
+## 使用 gRPC
+
+### 获取模块参数，如拍卖周期
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuctionApi = new ChainGrpcAuctionApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcAuctionApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 获取当前拍卖状态，如最新轮次
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuctionApi = new ChainGrpcAuctionApi(endpoints.grpc);
+
+const latestAuctionModuleState = await chainGrpcAuctionApi.fetchModuleState();
+
+console.log(latestAuctionModuleState);
+```
+
+### 获取当前拍卖篮子并获取最高出价者和金额等信息
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuctionApi = new ChainGrpcAuctionApi(endpoints.grpc);
+
+const currentBasket = await chainGrpcAuctionApi.fetchCurrentBasket();
+
+console.log(currentBasket);
+```

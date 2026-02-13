@@ -1,0 +1,41 @@
+---
+title: Token Factory
+---
+
+查询链上 token factory 模块相关数据的示例代码片段。
+
+## 使用 gRPC
+
+### 获取 _creator_ 创建的所有 denom
+
+```ts lines highlight={1}
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcTokenFactoryApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcTokenFactoryApi = new ChainGrpcTokenFactoryApi(endpoints.grpc);
+
+const creator = "inj...";
+const denoms = await chainGrpcTokenFactoryApi.fetchDenomsFromCreator(creator);
+
+console.log(denoms);
+```
+
+### 获取 denom 权限元数据（即获取代币的 admin）
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcTokenFactoryApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcTokenFactoryApi = new ChainGrpcTokenFactoryApi(endpoints.grpc);
+
+const creator = "inj...";
+const subdenom = "NINJA";
+const metadata = await chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
+  creator,
+  subdenom
+);
+
+console.log(metadata);
+```

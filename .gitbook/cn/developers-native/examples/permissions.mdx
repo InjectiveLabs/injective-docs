@@ -1,0 +1,230 @@
+---
+title: Permissions
+---
+
+Permissions 模块促进 Injective 生态系统中命名空间、角色和权限的管理。本文档概述了与权限相关数据交互的关键消息类型及其用法。
+
+## 消息
+
+让我们探索（并提供示例）Permissions 模块导出的消息，我们可以使用这些消息与 Injective 链交互。
+
+### `MsgClaimVoucher`
+
+此消息用于领取与命名空间中特定地址绑定的凭证。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgClaimVoucher } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const denom = "inj";
+
+const msg = MsgClaimVoucher.fromJSON({
+  injectiveAddress,
+  denom,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### `MsgCreateNamespace`
+
+此消息用于创建具有权限和角色的新命名空间。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCreateNamespace } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const secondAddress = "inj2.....";
+const privateKey = "0x...";
+const denom = "inj";
+const wasmHook = "inj3....";
+const mintsPausedValue = false;
+const sendsPausedValue = false;
+const burnsPausedValue = false;
+const role1 = "Everyone";
+const permissions1 = 1;
+
+const msg = MsgCreateNamespace.fromJSON({
+  injectiveAddress,
+  namespace: {
+    denom,
+    wasmHook,
+    mintsPausedValue,
+    sendsPausedValue,
+    burnsPausedValue,
+    rolePermissions: {
+      role: role1,
+      permissions: permissions1,
+    },
+    addressRoles: {
+      address: injectiveAddress,
+      roles: [role1],
+    },
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### `MsgDeleteNamespace`
+
+此消息用于删除现有命名空间。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgDeleteNamespace } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const denom = "inj";
+
+const msg = MsgDeleteNamespace.fromJSON({
+  injectiveAddress,
+  denom,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### `MsgRevokeNamespaceRoles`
+
+此消息用于撤销命名空间中指定地址的角色。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgRevokeNamespaceRoles } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const denom = "inj";
+const roles = ["role1", "role2"];
+
+const msg = MsgRevokeNamespaceRoles.fromJSON({
+  injectiveAddress,
+  denom,
+  addressRolesToRevoke: {
+    injectiveAddress,
+    roles: roles,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### `MsgUpdateNamespace`
+
+此消息用于更新命名空间属性，如 mints、sends 和 burns。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgUpdateNamespace } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1..."
+const privateKey = "0x...";
+const denom = "inj";
+const wasmHookValue = "inj2...";
+const mintsPausedValue = false;
+const sendsPausedValue = false;
+const burnsPausedValue = true;
+
+const msg = await new MsgUpdateNamespace.fromJSON({
+  injectiveAddress,
+  denom,
+  wasmHook: {
+    newValue: wasmHookValue
+  },
+  mintsPaused: {
+    newValue: mintsPausedValue;
+  },
+  sendsPaused: {
+    newValue: sendsPausedValue;
+  },
+  burnsPaused: {
+    newValue: burnsPausedValue;
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet
+}).broadcast({
+  msgs: msg
+});
+
+console.log(txHash);
+
+```
+
+### `MsgUpdateNamespaceRoles`
+
+此消息用于修改命名空间中地址的角色和权限。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgUpdateNamespaceRoles } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const denom = "inj";
+const role = "role1";
+const permissions = 4;
+
+const msg = MsgUpdateNamespaceRoles.fromJSON({
+  injectiveAddress,
+  denom,
+  rolePermissions: {
+    role,
+    permissions: permissions,
+  },
+  addressRoles: {
+    injectiveAddress,
+    roles: [role],
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

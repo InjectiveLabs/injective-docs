@@ -1,0 +1,211 @@
+---
+title: Staking
+---
+
+查询链上 staking 模块的示例代码片段。
+
+## 使用 gRPC
+
+### 获取 staking 模块相关参数，如解绑时间或绑定 denom
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcStakingApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 获取池的未绑定和已绑定代币
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const pool = await chainGrpcStakingApi.fetchPool();
+
+console.log(pool);
+```
+
+### 获取验证者及相关元数据
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const validators = await chainGrpcStakingApi.fetchValidators();
+
+console.log(validators);
+```
+
+### 根据验证者地址获取验证者及相关元数据
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const validatorAddress = "injvaloper...";
+
+const validator = await chainGrpcStakingApi.fetchValidator(validatorAddress);
+
+console.log(validator);
+```
+
+### 获取与验证者关联的委托
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const validatorAddress = 'injvaloper...'
+const pagination = {...} as PaginationOption
+
+const delegations = await chainGrpcStakingApi.fetchValidatorDelegationsNoThrow({
+  validatorAddress,
+  pagination /* 可选分页选项 */
+})
+
+console.log(delegations)
+```
+
+### 获取与验证者关联的解绑委托
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const validatorAddress = 'injvaloper...'
+const pagination = {...} as PaginationOption
+
+const unbondingDelegations = await chainGrpcStakingApi.fetchValidatorUnbondingDelegationsNoThrow({
+  validatorAddress,
+  pagination /* 可选分页选项 */
+})
+
+console.log(unbondingDelegations)
+```
+
+### 获取 injective 地址对特定验证者的委托
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+const validatorAddress = "injvaloper...";
+
+const delegation = await chainGrpcStakingApi.fetchDelegation({
+  injectiveAddress,
+  validatorAddress,
+});
+
+console.log(delegation);
+```
+
+### 获取 injective 地址的委托
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const delegations = await chainGrpcStakingApi.fetchDelegationsNoThrow({
+  injectiveAddress,
+  pagination /* 可选分页选项 */
+})
+
+console.log(delegations)
+```
+
+### 获取验证者的委托人
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const validatorAddress = 'injvaloper...'
+const pagination = {...} as PaginationOption
+
+const delegators = await chainGrpcStakingApi.fetchDelegatorsNoThrow({
+  validatorAddress,
+  pagination /* 可选分页选项 */
+})
+
+console.log(delegators)
+```
+
+### 获取 injective 地址的解绑委托
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const unbondingDelegations = await chainGrpcStakingApi.fetchUnbondingDelegationsNoThrow({
+  injectiveAddress,
+  pagination /* 可选分页选项 */
+})
+
+console.log(unbondingDelegations)
+```
+
+### 获取 injective 地址的重新委托
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const unbondingDelegations = await chainGrpcStakingApi.fetchReDelegationsNoThrow({
+  injectiveAddress,
+  pagination /* 可选分页选项 */
+})
+
+console.log(unbondingDelegations)
+```

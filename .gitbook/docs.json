@@ -850,8 +850,48 @@
                     "pages": [
                       "cn/developers-native/examples/index",
                       "cn/developers-native/examples/auction",
+                      "cn/developers-native/examples/authz",
                       "cn/developers-native/examples/bank",
-                      "cn/developers-native/examples/exchange"
+                      "cn/developers-native/examples/distribution",
+                      "cn/developers-native/examples/exchange",
+                      "cn/developers-native/examples/feegrant",
+                      "cn/developers-native/examples/governance",
+                      "cn/developers-native/examples/ibc",
+                      "cn/developers-native/examples/insurance",
+                      "cn/developers-native/examples/peggy",
+                      "cn/developers-native/examples/permissions",
+                      "cn/developers-native/examples/staking",
+                      "cn/developers-native/examples/token-factory",
+                      "cn/developers-native/examples/wasm"
+                    ]
+                  },
+                  {
+                    "group": "查询链",
+                    "pages": [
+                      "cn/developers-native/query-chain/index",
+                      "cn/developers-native/query-chain/auction",
+                      "cn/developers-native/query-chain/auth",
+                      "cn/developers-native/query-chain/bank",
+                      "cn/developers-native/query-chain/distribution",
+                      "cn/developers-native/query-chain/exchange",
+                      "cn/developers-native/query-chain/governance",
+                      "cn/developers-native/query-chain/ibc",
+                      "cn/developers-native/query-chain/mint",
+                      "cn/developers-native/query-chain/insurance-funds",
+                      "cn/developers-native/query-chain/oracle",
+                      "cn/developers-native/query-chain/peggy",
+                      "cn/developers-native/query-chain/permissions",
+                      "cn/developers-native/query-chain/staking",
+                      "cn/developers-native/query-chain/tendermint",
+                      "cn/developers-native/query-chain/wasm",
+                      "cn/developers-native/query-chain/wasmx",
+                      "cn/developers-native/query-chain/token-factory"
+                    ]
+                  },
+                  {
+                    "group": "查询 Indexer",
+                    "pages": [
+                      "cn/developers-native/query-indexer/index"
                     ]
                   },
                   {
@@ -862,7 +902,19 @@
                       "cn/developers-native/query-indexer-stream/spot"
                     ]
                   },
-                  "cn/developers-native/query-ethereum"
+                  "cn/developers-native/query-ethereum",
+                  {
+                    "group": "Injective Modules",
+                    "pages": [
+                      "cn/developers-native/injective/index"
+                    ]
+                  },
+                  {
+                    "group": "Core Modules",
+                    "pages": [
+                      "cn/developers-native/core/index"
+                    ]
+                  }
                 ]
               }
             ]

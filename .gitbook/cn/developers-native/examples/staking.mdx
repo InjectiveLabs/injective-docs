@@ -1,0 +1,118 @@
+---
+title: Staking
+---
+
+该模块使基于 Cosmos SDK 的区块链能够支持高级权益证明（PoS）系统。在此系统中，链的原生质押代币持有者可以成为验证者，并可以将代币委托给验证者，最终确定系统的有效验证者集。
+
+## 消息
+
+让我们探索（并提供示例）Staking 模块导出的消息，我们可以使用这些消息与 Injective 链交互。
+
+### MsgBeginRedelegate
+
+此消息用于将已质押的 INJ 从一个验证者重新委托到另一个验证者。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgBeginRedelegate } from "@injectivelabs/sdk-ts/core/modules";
+
+const denom = "inj";
+const privateKey = "0x...";
+const amount = toChainFormat(5);
+const injectiveAddress = "inj1...";
+const sourceValidatorAddress = "inj1...";
+const destinationValidatorAddress = "inj1...";
+
+const msg = MsgBeginRedelegate.fromJSON({
+  injectiveAddress,
+  dstValidatorAddress: destinationValidatorAddress,
+  srcValidatorAddress: sourceValidatorAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgDelegate
+
+此消息用于将 INJ 委托给验证者。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgDelegate } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const validatorAddress = "inj1...";
+const amount = toChainFormat(5).toFixed();
+
+const msg = MsgDelegate.fromJSON({
+  injectiveAddress,
+  validatorAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgCancelUnbondingDelegation
+
+此消息用于取消从验证者解绑，重置绑定期，并重新委托给之前的验证者。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCancelUnbondingDelegation } from "@injectivelabs/sdk-ts/core/modules";
+
+const denom = "inj";
+const delegatorAddress = "inj1...";
+const privateKey = "0x...";
+const amount = toChainFormat(5).toFixed();
+const validatorAddress = "inj1...";
+const creationHeight = "123456"; // 发起解绑时的区块高度
+
+const msg = MsgCancelUnbondingDelegation.fromJSON({
+  delegatorAddress,
+  validatorAddress,
+  amount: {
+    denom,
+    amount,
+  },
+  creationHeight,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

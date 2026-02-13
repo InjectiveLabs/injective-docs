@@ -1,0 +1,137 @@
+---
+title: Exchange
+---
+
+查询链上 exchange 模块的示例代码片段。
+
+## 使用 gRPC
+
+### 获取参数，如默认现货和衍生品费用/交易奖励
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcExchangeApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 获取费用折扣计划
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const feeDiscountSchedule =
+  await chainGrpcExchangeApi.fetchFeeDiscountSchedule();
+
+console.log(feeDiscountSchedule);
+```
+
+### 获取与 injective 地址关联的费用折扣
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const feeDiscountAccountInfo =
+  await chainGrpcExchangeApi.fetchFeeDiscountAccountInfo(injectiveAddress);
+
+console.log(feeDiscountAccountInfo);
+```
+
+### 获取交易奖励活动详情，如总奖励积分
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const tradingRewardsCampaign =
+  await chainGrpcExchangeApi.fetchTradingRewardsCampaign();
+
+console.log(tradingRewardsCampaign);
+```
+
+### 获取 injective 地址的交易奖励积分
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const tradeRewardsPoints = await chainGrpcExchangeApi.fetchTradeRewardsPoints(
+  injectiveAddress
+);
+
+console.log(tradeRewardsPoints);
+```
+
+### 获取 injective 地址的待处理交易奖励积分
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const injectiveAddresses = ["inj..."];
+
+const pendingTradeRewardsPoints =
+  await chainGrpcExchangeApi.fetchPendingTradeRewardPoints(injectiveAddresses);
+
+console.log(pendingTradeRewardsPoints);
+```
+
+#### 获取当前仓位，如 subaccountId、marketId 和 position
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+// 替换为您自己的 Injective 地址
+const injectiveAddresses = ["inj1..."];
+
+const positions = await chainGrpcExchangeApi.fetchPositions(injectiveAddresses);
+
+console.log(positions);
+```
+
+### 获取子账户交易 nonce
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const subaccountId = "0x...";
+
+const subaccountTradeNonce =
+  await chainGrpcExchangeApi.fetchSubaccountTradeNonce(subaccountId);
+
+console.log(subaccountTradeNonce);
+```

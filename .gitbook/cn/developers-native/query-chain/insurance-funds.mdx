@@ -1,0 +1,94 @@
+---
+title: Insurance Funds
+---
+
+查询链上保险基金相关数据的示例代码片段。
+
+## 使用 gRPC
+
+### 获取默认赎回通知期限
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcInsuranceFundApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 获取保险基金及相关元数据
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const insuranceFunds = await chainGrpcInsuranceFundApi.fetchInsuranceFunds();
+
+console.log(insuranceFunds);
+```
+
+### 根据市场 ID 获取保险基金及相关元数据
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const marketId = "0x...";
+const insuranceFund = await chainGrpcInsuranceFundApi.fetchInsuranceFund(
+  marketId
+);
+
+console.log(insuranceFund);
+```
+
+### 获取给定 injective 地址在某市场的预估赎回
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const marketId = "0x...";
+const injectiveAddress = "inj...";
+
+const estimatedRedemptions =
+  await chainGrpcInsuranceFundApi.fetchEstimatedRedemptions({
+    marketId,
+    address: injectiveAddress,
+  });
+
+console.log(estimatedRedemptions);
+```
+
+### 获取给定 injective 地址在某市场的待处理赎回
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const marketId = "0x...";
+const injectiveAddress = "inj...";
+
+const pendingRedemptions =
+  await chainGrpcInsuranceFundApi.fetchPendingRedemptions({
+    marketId,
+    address: injectiveAddress,
+  });
+
+console.log(pendingRedemptions);
+```

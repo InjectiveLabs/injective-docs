@@ -1,0 +1,78 @@
+---
+title: Fee Grant
+---
+
+`feegrant` 模块允许账户（授权者）向其他账户（被授权者）授予费用配额。这允许被授权者使用授权者的资金支付交易费用。
+
+## 消息
+
+### MsgGrantAllowance
+
+使用 `MsgGrantAllowance` 消息创建费用配额授权。如果 (granter, grantee) 对已存在授权，则新授权将覆盖之前的授权。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgGrantAllowance } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKeyOfGranter = "0x...";
+
+const date = new Date("2023-10-02T00:00:00Z");
+const expiration = date.getTime() / 1000;
+const granter = "inj...";
+const grantee = "inj...";
+const allowance = {
+  spendLimit: [
+    {
+      denom: "inj",
+      amount: "10000",
+    },
+  ],
+  expiration,
+};
+
+const msg = MsgGrantAllowance.fromJSON({
+  granter,
+  grantee,
+  allowance,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGranter,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgRevokeAllowance
+
+可以使用 MsgRevokeAllowance 消息撤销授权。被授权者将无法再使用授权者的资金支付交易费用。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgRevokeAllowance } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x...";
+const granteeAddress = "inj...";
+const granterAddress = "inj...";
+
+const params = {
+  grantee: granteeAddress,
+  granter: granterAddress,
+};
+
+const msg = MsgRevokeAllowance.fromJSON(params);
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
