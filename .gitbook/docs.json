@@ -829,7 +829,9 @@
                   "cn/developers-evm/infrastructure-and-tooling",
                   "cn/developers-evm/add-injective-to-your-dapp",
                   "cn/developers-evm/evm-integrations-cheat-sheet",
-                  "cn/developers-evm/evm-integrations-faq"
+                  "cn/developers-evm/evm-integrations-faq",
+                  "redirects/https_testnet_faucet_injective_network",
+                  "redirects/https_testnet_blockscout_injective_network_blocks"
                 ]
               },
               {
