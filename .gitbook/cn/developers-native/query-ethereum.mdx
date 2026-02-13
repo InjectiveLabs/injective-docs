@@ -1,0 +1,113 @@
+---
+title: 查询 GraphQL 端点
+---
+
+本指南展示如何使用 `@injectivelabs/utils` 中的 `HttpClient` 查询 GraphQL 端点。
+
+## 设置
+
+```ts
+import { HttpClient } from '@injectivelabs/utils'
+
+const client = new HttpClient('YOUR_GRAPHQL_ENDPOINT')
+```
+
+## 认证
+
+如果你的 GraphQL 端点需要认证，设置 headers：
+
+```ts
+client.setConfig({
+  headers: { 
+    authorization: 'Bearer YOUR_API_KEY' 
+  }
+})
+```
+
+## 发起查询
+
+将你的 GraphQL 查询构造为包含 `query` 和可选 `variables` 的 JSON 字符串：
+
+```ts
+const query = JSON.stringify({
+  query: `
+    query GetData($id: ID!) {
+      entity(id: $id) {
+        id
+        name
+        value
+      }
+    }
+  `,
+  variables: {
+    id: '123'
+  }
+})
+
+const response = await client.post<string, { data: { data: YourResponseType } }>('', query)
+
+console.log(response.data.data)
+```
+
+## 完整示例
+
+```ts
+import { HttpClient } from '@injectivelabs/utils'
+
+interface Token {
+  id: string
+  symbol: string
+  name: string
+}
+
+interface TokensResponse {
+  tokens: Token[]
+}
+
+const client = new HttpClient('YOUR_GRAPHQL_ENDPOINT')
+
+// 如果需要，设置认证 headers
+client.setConfig({
+  headers: { 
+    authorization: 'Bearer YOUR_API_KEY' 
+  }
+})
+
+const query = JSON.stringify({
+  query: `
+    query GetTokens($first: Int!) {
+      tokens(first: $first, orderBy: symbol) {
+        id
+        symbol
+        name
+      }
+    }
+  `,
+  variables: {
+    first: 10
+  }
+})
+
+const response = await client.post<string, { data: { data: TokensResponse } }>('', query)
+
+console.log(response.data.data.tokens)
+```
+
+## 错误处理
+
+GraphQL 响应即使状态码为 200 也可能包含错误。始终检查错误：
+
+```ts
+interface GraphQLResponse<T> {
+  data?: T
+  errors?: Array<{ message: string }>
+}
+
+const response = await client.post<string, { data: GraphQLResponse<YourResponseType> }>('', query)
+
+if (response.data.errors && response.data.errors.length > 0) {
+  throw new Error(response.data.errors[0].message)
+}
+
+const data = response.data.data
+```
