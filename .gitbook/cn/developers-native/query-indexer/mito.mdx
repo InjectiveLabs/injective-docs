@@ -1,0 +1,155 @@
+---
+title: Mito
+---
+
+查询 Indexer 获取 Mito 金库模块相关数据的示例代码。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  Mito 文档已迁移，请访问 [Mito 文档](https://docs.mito.fi/)。
+</Callout>
+
+## （已过时）使用 gRPC
+
+### 根据合约地址获取金库，如金库的 TVL 或收益
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const contractAddress = "0x..."; /* 可选参数 */
+const slug = "derivative-vault"; /* 可选参数 */
+
+const vault = await indexerGrpcMitoApi.fetchVault({
+  contractAddress,
+  slug,
+});
+
+console.log(vault);
+```
+
+### 获取金库列表及相关详情
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vault = await indexerGrpcMitoApi.fetchVaults();
+
+console.log(vault);
+```
+
+### 根据金库地址获取 LP 代币价格图表
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vaultAddress = "inj...";
+const from = 50; /* 可选分页参数 */
+const to = 150; /* 可选分页参数 */
+
+const lpTokenPriceChart = await indexerGrpcMitoApi.fetchLpTokenPriceChart({
+  vaultAddress,
+  from,
+  to,
+});
+
+console.log(lpTokenPriceChart);
+```
+
+### 根据金库地址获取 TVL 图表
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vaultAddress = "inj...";
+const from = 50; /* 可选分页参数 */
+const to = 150; /* 可选分页参数 */
+
+const tvlChart = await indexerGrpcMitoApi.fetchTVLChartRequest({
+  vaultAddress,
+  from,
+  to,
+});
+
+console.log(tvlChart);
+```
+
+### 获取与 LP 代币持有者关联的金库
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const holderAddress = "inj...";
+
+const vaults = await indexerGrpcMitoApi.fetchVaultsByHolderAddress({
+  holderAddress,
+});
+
+console.log(vaults);
+```
+
+### 根据金库地址获取 LP 代币持有者
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vaultAddress = "inj...";
+
+const holders = await indexerGrpcMitoApi.fetchLPHolders({
+  vaultAddress,
+});
+
+console.log(holders);
+```
+
+### 获取 LP 持有者的投资组合
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const holderAddress = "inj...";
+
+const portfolio = await indexerGrpcMitoApi.fetchHolderPortfolio(holderAddress);
+
+console.log(portfolio);
+```
+
+### 获取排行榜查看盈亏排名
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const leaderboard = await indexerGrpcMitoApi.fetchLeaderboard();
+
+console.log(leaderboard);
+```
