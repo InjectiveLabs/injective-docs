@@ -1,0 +1,21 @@
+---
+title: 创建用户界面
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  有关创建用户界面以及引导选项的更全面文档可以在 [dApps 文档](/developers/dapps/)中找到。
+</Callout>
+
+我们已经通过 Injective CLI 与合约进行了交互，但这对大多数 dApp 用户来说并不理想。Web UI 可以提供更好的体验！我们可以抽象掉复杂性，为用户提供两个按钮——一个用于增加计数，一个用于重置计数，而不是通过 `injectived` 发送交易消息。
+
+![](https://docs.injective.network/img/Counter_website.png)
+
+例如，请参阅[计数器网站](https://injective-simple-cosmwasm-sc.netlify.app/)。使用 Vue 和 [Injective TS SDK](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/sdk-ts) 开发前端的高级指南可以在[网站仓库这里](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui/tree/master/nuxt)找到。对于 React 实现，请参阅[这里](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui/tree/master/next)。
+
+现在，与合约交互就像点击按钮并使用 MetaMask 签名一样简单（确保账户设置为 Ethereum Sepolia 测试网，否则你将收到链 ID 不匹配错误）。
+
+![](https://docs.injective.network/img/metamask_select_testnet.png)
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  你可能会注意到，当尝试重置计数时，你会收到"Unauthorized"错误消息。这是预期的行为！回想一下[重置的合约逻辑](/cn/developers-cosmwasm/smart-contracts/your-first-smart-contract/#reset)，只有合约所有者才被允许重置计数。由于你没有实例化前端正在交互的确切合约，因此你没有重置计数所需的权限。
+</Callout>
