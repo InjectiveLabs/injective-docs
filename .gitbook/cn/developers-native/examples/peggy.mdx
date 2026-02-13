@@ -1,0 +1,71 @@
+---
+title: Peggy
+---
+
+`peggy` 模块是 injective ↔ 以太坊桥的核心，存入的资金将被锁定在以太坊 [peggy 合约](https://etherscan.io/address/0xF955C57f9EA9Dc8781965FEaE0b6A2acE2BAD6f3#code) 上，并在 Injective 链上铸造。同样，提取的资金将在 injective 链上销毁，并在以太坊 peggy 合约上解锁。
+
+## 消息
+
+### MsgSendToEth
+
+此消息用于通过 [peggy 合约](https://etherscan.io/address/0xF955C57f9EA9Dc8781965FEaE0b6A2acE2BAD6f3#code) 从 Injective 链提取资金，在此过程中，资金将在 injective 链上销毁，并从 peggy 合约分发到以太坊地址。
+
+请注意，此交易将收取 10 美元的桥接费用，以支付以太坊 gas 费用，这是在标准 INJ 交易费用之上的。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import { toBigNumber, toChainFormat } from '@injectivelabs/utils'
+import { MsgSendToEth } from '@injectivelabs/sdk-ts/core/modules'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TokenPrice, TokenStaticFactory } from '@injectivelabs/sdk-ts/service'
+// 参考 https://github.com/InjectiveLabs/injective-lists
+import { tokens } from '../data/tokens.json'
+
+export const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[])
+
+const tokenPriceMap = new TokenPrice(Network.Mainnet)
+const tokenService = new TokenService({
+  chainId: ChainId.Mainnet,
+  network: Network.Mainnet,
+})
+
+const ETH_BRIDGE_FEE_IN_USD = 10
+const endpointsForNetwork = getNetworkEndpoints(Network.Mainnet)
+
+const tokenSymbol = 'INJ'
+const tokenMeta = tokenStaticFactory.toToken(tokenSymbol)
+
+const amount = 1
+const injectiveAddress = 'inj1...'
+const destinationAddress = '0x...' // 以太坊地址
+const tokenDenom = `peggy${tokenMeta.erc20.address}`
+
+if (!tokenMeta) {
+  return
+}
+
+const tokenUsdPrice = tokenPriceMap[tokenMeta.coinGeckoId]
+const amountToFixed = toChainFormat(amount, tokenMeta.decimals).toFixed()
+const bridgeFeeInToken = toBigNumber(ETH_BRIDGE_FEE_IN_USD).dividedBy(tokenUsdPrice).toFixed()
+
+const msg = MsgSendToEth.fromJSON({
+  injectiveAddress,
+  address: destinationAddress,
+  amount: {
+    denom: tokenDenom,
+    amount: amountToFixed,
+  },
+  bridgeFee: {
+    denom: tokenDenom,
+    amount: bridgeFeeInToken,
+  },
+})
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+})
+```
