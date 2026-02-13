@@ -1,0 +1,30 @@
+---
+title: 市场最小数量刻度计算
+---
+
+订单价格的最小市场数量刻度 - 如果市场的 minQuantityTickSize 为 `0.001`，数量为 `0.0011` 的订单提交将被拒绝。
+
+请注意，衍生品市场在 UI 和链之间共享相同的 minQuantityTickSize 格式，因此不需要格式化。
+
+## 现货市场
+
+1.  UI 人类可读格式转换为链格式：
+    以 INJ/USDT 市场为例，该市场有 18 位基础小数和 6 位报价小数，以下是我们如何将值转换为链格式：
+
+```js
+import { toChainFormat } from "@injectivelabs/utils";
+
+const chainFormat = toChainFormat(value, baseDecimals).toFixed();
+```
+
+2. 链格式转换为 UI 人类可读格式：
+   以 INJ/USDT 市场为例，该市场有 18 位基础小数和 6 位报价小数，以下是我们如何将值转换为 UI 人类可读格式：
+
+```js
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const humanReadableFormat = toHumanReadable(
+  minQuantityTickSize,
+  baseDecimals
+).toFixed();
+```
