@@ -776,7 +776,16 @@
                       "cn/developers/dapps/example-dex",
                       "cn/developers/dapps/example-webpack"
                     ]
-                  }
+                  },
+                  "redirects/https_testnet_faucet_injective_network",
+                  "redirects/https_sentry_lcd_injective_network_swagger",
+                  "redirects/https_docs_ts_injective_network",
+                  "redirects/https_github_com_InjectiveLabs_sdk_go",
+                  "redirects/https_github_com_InjectiveLabs_sdk_python",
+                  "redirects/https_github_com_InjectiveLabs_cw_injective",
+                  "redirects/https_github_com_InjectiveLabs_injective_rust",
+                  "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
+                  "redirects/https_api_injective_exchange"
                 ]
               },
               {
