@@ -1,0 +1,44 @@
+---
+title: Injective 常见问题
+icon: question
+---
+
+## 基础知识
+
+问：Injective 支持哪些账户地址类型？
+
+答：支持 2 种地址类型：
+- Bech32（`inj...`），主要用于通过 Cosmos 钱包/工具进行交互
+- 十六进制（`0x...`），主要用于通过 EVM 钱包/工具进行交互
+
+----
+
+问：有没有办法找到哪个 Injective Cosmos 地址映射到哪个 Injective EVM 地址？
+
+答：这些地址类型之间的映射是通过数学运算完成的，是一对一的双向映射。
+- 在线示例：[Injective 测试网水龙头](https://testnet.faucet.injective.network/)
+- 文档：[TS 代码示例](https://docs.injective.network/developers/convert-addresses)
+
+----
+
+## 基础设施
+
+问：维护私有节点时：
+
+- 我们应该存储 2.5 Ti 的归档数据（事件提供者）吗？
+- 我们可以跳过这部分并让索引器工作吗？
+
+答：事件提供者可以被修剪。可以使用公共事件提供者端点进行初始同步。然后使用本地部署，但仅从最新高度开始。因此，是的，可以跳过。
+
+----
+
+## EVM
+
+问：Injective 是否部署了 [`multicall3`](https://www.multicall3.com/) 智能合约？
+
+答：是的。
+
+- Injective 主网 `multicall3`：[`0xcA11bde05977b3631167028862bE2a173976CA11`](https://blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
+- Injective 测试网 `multicall3`：[`0xcA11bde05977b3631167028862bE2a173976CA11`](https://testnet.blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
+
+----
