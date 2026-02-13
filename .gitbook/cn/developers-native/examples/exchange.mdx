@@ -1,0 +1,224 @@
+---
+title: Exchange
+---
+
+`exchange` 模块是 Injective Chain 的核心，支持完全去中心化的现货和衍生品交易所。
+它是链的核心模块，与 `auction`、`insurance`、`oracle` 和 `peggy` 模块紧密集成。
+
+exchange 协议使交易者能够在任意现货和衍生品市场上创建和交易。
+订单簿管理、交易执行、订单匹配和结算的整个过程都通过 exchange 模块编码的逻辑在链上进行。
+
+## 消息
+
+让我们探索（并提供示例）Exchange 模块导出的消息，我们可以使用这些消息与 Injective 链交互。
+
+### MsgDeposit
+
+此消息用于将代币从 Bank 模块发送到钱包的 subaccount
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgDeposit } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(1).toFixed(),
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgDeposit.fromJSON({
+  amount,
+  subaccountId,
+  injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgWithdraw
+
+此消息用于将代币从钱包的 subaccount 发送回用户的 Bank 资金
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgWithdraw } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(1).toFixed(),
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgWithdraw.fromJSON({
+  amount,
+  subaccountId,
+  injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgCreateSpotLimitOrder
+
+此消息用于创建现货限价订单
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgCreateSpotLimitOrder } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import {
+  getEthereumAddress,
+  spotPriceToChainPriceToFixed,
+  spotQuantityToChainQuantityToFixed,
+} from "@injectivelabs/sdk-ts/utils";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const feeRecipient = "inj1...";
+const market = {
+  marketId: "0x...",
+  baseDecimals: 18,
+  quoteDecimals: 6,
+  minPriceTickSize: "" /* 从链上获取 */,
+  minQuantityTickSize: "" /* 从链上获取 */,
+  priceTensMultiplier: "" /** 可以从 getSpotMarketTensMultiplier 获取 */,
+  quantityTensMultiplier: "" /** 可以从 getSpotMarketTensMultiplier 获取 */,
+};
+
+const order = {
+  price: 1,
+  quantity: 1,
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgCreateSpotLimitOrder.fromJSON({
+  subaccountId,
+  injectiveAddress,
+  orderType: 1 /* Buy */,
+  price: spotPriceToChainPriceToFixed({
+    value: order.price,
+    tensMultiplier: market.priceTensMultiplier,
+    baseDecimals: market.baseDecimals,
+    quoteDecimals: market.quoteDecimals,
+  }),
+  quantity: spotQuantityToChainQuantityToFixed({
+    value: order.quantity,
+    tensMultiplier: market.quantityTensMultiplier,
+    baseDecimals: market.baseDecimals,
+  }),
+  marketId: market.marketId,
+  feeRecipient: feeRecipient,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgCreateSpotMarketOrder
+
+此消息用于创建现货市价订单
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgCreateSpotMarketOrder } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import {
+  getEthereumAddress,
+  spotPriceToChainPriceToFixed,
+  spotQuantityToChainQuantityToFixed,
+} from "@injectivelabs/sdk-ts/utils";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const feeRecipient = "inj1...";
+const market = {
+  marketId: "0x...",
+  baseDecimals: 18,
+  quoteDecimals: 6,
+  minPriceTickSize: "" /* 从链上获取 */,
+  minQuantityTickSize: "" /* 从链上获取 */,
+  priceTensMultiplier: "" /** 可以从 getSpotMarketTensMultiplier 获取 */,
+  quantityTensMultiplier: "" /** 可以从 getSpotMarketTensMultiplier 获取 */,
+};
+const order = {
+  price: 10,
+  quantity: 1,
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgCreateSpotMarketOrder.fromJSON({
+  subaccountId,
+  injectiveAddress,
+  orderType: 1 /* Buy */,
+  price: spotPriceToChainPriceToFixed({
+    value: order.price,
+    tensMultiplier: market.priceTensMultiplier,
+    baseDecimals: market.baseDecimals,
+    quoteDecimals: market.quoteDecimals,
+  }),
+  quantity: spotQuantityToChainQuantityToFixed({
+    value: order.quantity,
+    tensMultiplier: market.quantityTensMultiplier,
+    baseDecimals: market.baseDecimals,
+  }),
+  marketId: market.marketId,
+  feeRecipient: feeRecipient,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

@@ -1,0 +1,134 @@
+---
+title: MsgBroadcaster 交易
+---
+
+`MsgBroadcaster` 抽象类是一种在 Injective 上轻松广播交易的方式。使用它，你可以传递一个想要打包到交易中的消息和签名者的地址，交易将被准备、签名和广播。
+
+使用示例可以在我们的 [Helix demo 仓库](https://github.com/InjectiveLabs/injective-helix-demo)中找到。至于可以传递给 `broadcast` 方法的消息，你可以在文档的[核心模块](../examples/)部分找到示例。
+
+## MsgBroadcaster + Wallet Strategy
+
+此 MsgBroadcaster 与 Wallet Strategy 类一起用于构建去中心化应用程序。
+
+要实例化（和使用）`MsgBroadcaster` 类，你可以使用以下代码片段
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcaster } from "@injectivelabs/wallet-core";
+import { WalletStrategy } from "@injectivelabs/wallet-strategy";
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+
+export const evmRpcEndpoint = "";
+export const walletStrategy = new WalletStrategy({
+  chainId: ChainId.Mainnet,
+  evmOptions: {
+    rpcUrl: evmRpcEndpoint,
+    evmChainId: EvmChainId.Mainnet,
+  },
+  strategies: {},
+});
+
+export const msgBroadcaster = new MsgBroadcaster({
+  walletStrategy,
+  simulateTx: true,
+  network: Network.Mainnet,
+  endpoints: getNetworkEndpoints(Network.Mainnet),
+  gasBufferCoefficient: 1.1,
+});
+
+// 使用示例
+const signer = "inj1...";
+
+const msg = MsgSend.fromJSON({
+  amount: {
+    denom: "inj",
+    amount: toChainFormat(0.01, 18).toFixed(),
+  },
+  srcInjectiveAddress: signer,
+  dstInjectiveAddress: "inj1...",
+});
+
+// 使用 Wallet Strategy 准备 + 签名 + 广播交易
+await msgBroadcaster.broadcast({
+  injectiveAddress: signer,
+  msgs: msg,
+});
+```
+
+### 构造函数/广播选项
+
+我们允许覆盖传递给 `MsgBroadcaster` 构造函数的一些选项以及广播交易时的选项。以下是接口和每个字段的含义
+
+```typescript
+import { Msgs } from '@injectivelabs/sdk-ts/core/modules'
+import { ChainId, EvmChainId } from '@injectivelabs/ts-types'
+import { Network, NetworkEndpoints } from '@injectivelabs/networks'
+import type { WalletStrategy } from '../strategies'
+
+export interface MsgBroadcasterOptions {
+  network: Network /** 网络配置（chainId、费用等）- 主网使用 Network.MainnetSentry 或测试网使用 Network.TestnetSentry */
+  endpoints?: NetworkEndpoints /** 可选 - 覆盖从 `network` 参数获取的端点 **/
+  feePayerPubKey?: string /** 可选 - 如果你使用费用委托服务，可以设置费用支付者，这样就不需要额外查询 Web3Gateway */
+  simulateTx?: boolean /** 在广播前模拟交易 + 获取交易所需的 gas 费用 */
+  txTimeout?: number /** 可选 - 等待 tx 包含在区块中的区块数 **/
+  walletStrategy: WalletStrategy
+  gasBufferCoefficient?: number /** 可选 - 作为 gas 缓冲添加到模拟/硬编码的 gas 以确保交易包含在区块中 */
+}
+
+export interface MsgBroadcasterTxOptions {
+  memo?: string /** 添加到交易的 MEMO **/
+  injectiveAddress: string /** 交易的签名者 **/
+  msgs: Msgs | Msgs[] /** 要打包到交易中的消息 **/
+
+  /*
+  *** 覆盖硬编码的 gas/模拟 -
+  *** 取决于 MsgBroadcaster 构造函数中的 simulateTx 参数
+  */
+  gas?: {
+    gasPrice?: string
+    gas?: number /** gas limit */
+    feePayer?: string
+    granter?: string
+  }
+}
+
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  要覆盖 `endpoints` 并使用你的基础设施（这是我们推荐的），请在[网络](../../developers/concepts/networks/)页面上阅读更多关于你需要提供的端点以及如何设置它们的信息。
+</Callout>
+
+## 使用 Private Key 的 MsgBroadcaster
+
+此 MsgBroadcaster 与私钥一起使用（主要用于 CLI 环境）。构造函数/广播选项与 `MsgBroadcaster` 非常相似。
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+export const msgBroadcasterWithPk = new MsgBroadcasterWithPk({
+  privateKey: `0x...` /** 私钥哈希或 sdk-ts 中的 PrivateKey 类 */,
+  network: NETWORK,
+});
+
+// 使用示例
+const signer = "inj1...";
+
+const msg = MsgSend.fromJSON({
+  amount: {
+    denom: "inj",
+    amount: toChainFormat(0.01, 18).toFixed(),
+  },
+  srcInjectiveAddress: signer,
+  dstInjectiveAddress: "inj1...",
+});
+
+// 使用 Private Key 准备 + 签名 + 广播交易
+await msgBroadcasterWithPk.broadcast({
+  injectiveAddress: signer,
+  msgs: msg,
+});
+```

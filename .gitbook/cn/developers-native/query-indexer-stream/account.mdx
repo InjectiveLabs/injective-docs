@@ -1,0 +1,37 @@
+---
+title: Account
+---
+
+使用 StreamManagerV2 从 indexer 流式获取账户模块相关数据的示例代码片段。
+
+## 使用 StreamManagerV2 的 gRPC Stream
+
+### 流式 subaccount 余额
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcAccountStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcAccountStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'subaccount-balance',
+  streamFactory: () => stream.streamSubaccountBalance({ 
+    subaccountId: '0x...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (balance) => {
+    console.log(balance)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```

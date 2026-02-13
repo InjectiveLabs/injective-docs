@@ -1,0 +1,258 @@
+---
+title: Private Key 交易
+---
+
+在本文档中，我们将展示如何使用 PrivateKey 在 Injective 上签名交易。
+
+Injective 上的每笔交易都遵循相同的流程。该流程包含三个步骤：准备、签名和广播交易。让我们分别深入每个步骤，详细解释整个过程（包括示例），以便理解完整的交易流程。
+
+## 准备交易
+
+首先，我们需要准备交易以进行签名。
+
+```ts
+import {
+  toBigNumber,
+  toChainFormat,
+  getDefaultStdFee,
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
+} from "@injectivelabs/utils";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { ChainId } from "@injectivelabs/ts-types";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { createTransaction } from "@injectivelabs/sdk-ts/core/tx";
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { PrivateKey, BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
+
+const privateKeyHash = "";
+const privateKey = PrivateKey.fromHex(privateKeyHash);
+const injectiveAddress = privateKey.toBech32();
+const address = privateKey.toAddress();
+const pubKey = privateKey.toPublicKey().toBase64();
+const chainId = "injective-1"; /* ChainId.Mainnet */
+const restEndpoint =
+  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(0.01).toFixed(),
+};
+
+/** 账户详情 **/
+const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
+const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+  injectiveAddress
+);
+const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+const accountDetails = baseAccount.toAccountDetails();
+
+/** 区块详情 */
+const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
+const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+const latestHeight = latestBlock.header.height;
+const timeoutHeight = toBigNumber(latestHeight).plus(
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+);
+
+/** 准备交易 */
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+/** 准备交易 **/
+const { txRaw, signBytes } = createTransaction({
+  pubKey,
+  chainId,
+  message: msg,
+  fee: getDefaultStdFee(),
+  sequence: baseAccount.sequence,
+  timeoutHeight: timeoutHeight.toNumber(),
+  accountNumber: baseAccount.accountNumber,
+});
+```
+
+## 签名交易
+
+准备好交易后，我们继续进行签名。从上一步获取 `txRaw` 交易后，使用任何 Cosmos 原生钱包进行签名（例如：Keplr）。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+
+/* 签名交易 */
+const privateKeyHash = ''
+const privateKey = PrivateKey.fromHex(privateKeyHash);
+const signBytes = /* 来自上一步 */
+
+/** 签名交易 */
+const signature = await privateKey.sign(Buffer.from(signBytes));
+```
+
+## 广播交易
+
+签名准备好后，我们需要将交易广播到 Injective 链本身。从第二步获取签名后，我们需要将该签名包含在已签名的交易中并广播到链上。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import { TxClient } from '@injectivelabs/sdk-ts/core/tx'
+import { TxGrpcApi } from '@injectivelabs/sdk-ts/client/chain'
+import { Network, getNetworkInfo } from '@injectivelabs/networks'
+
+/** 附加签名 */
+const network = getNetworkInfo(Network.Testnet);
+const txRaw = /* 来自第一步 */
+const signature = /* 来自第二步 */
+txRaw.signatures = [signature];
+
+/** 计算交易哈希 */
+console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
+
+const txService = new TxGrpcApi(network.grpc);
+
+/** 模拟交易 */
+const simulationResponse = await txService.simulate(txRaw);
+
+console.log(
+  `Transaction simulation response: ${JSON.stringify(
+    simulationResponse.gasInfo
+  )}`
+);
+
+/** 广播交易 */
+const txResponse = await txService.broadcast(txRaw);
+
+console.log(txResponse);
+
+if (txResponse.code !== 0) {
+  console.log(`Transaction failed: ${txResponse.rawLog}`);
+} else {
+  console.log(
+    `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`
+  );
+}
+```
+
+## 示例（准备 + 签名 + 广播）
+
+让我们看看完整的流程（使用 Keplr 作为签名钱包）
+
+```ts
+import {
+  TxClient,
+  TxGrpcApi,
+  createTransaction,
+} from "@injectivelabs/sdk-ts/core/tx";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { getNetworkInfo, Network } from "@injectivelabs/networks";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
+
+/** MsgSend 示例 */
+(async () => {
+  const network = getNetworkInfo(Network.Testnet);
+  const privateKeyHash =
+    "f9db9bf330e23cb7839039e944adef6e9df447b90b503d5b4464c90bea9022f3";
+  const privateKey = PrivateKey.fromHex(privateKeyHash);
+  const injectiveAddress = privateKey.toBech32();
+  const publicKey = privateKey.toPublicKey().toBase64();
+
+  /** 账户详情 **/
+  const accountDetails = await new ChainRestAuthApi(network.rest).fetchAccount(
+    injectiveAddress
+  );
+
+  /** 准备消息 */
+  const amount = {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  };
+
+  const msg = MsgSend.fromJSON({
+    amount,
+    srcInjectiveAddress: injectiveAddress,
+    dstInjectiveAddress: injectiveAddress,
+  });
+
+  /** 准备交易 **/
+  const { signBytes, txRaw } = createTransaction({
+    message: msg,
+    memo: "",
+    pubKey: publicKey,
+    fee: getDefaultStdFee(),
+    sequence: parseInt(accountDetails.account.base_account.sequence, 10),
+    accountNumber: parseInt(
+      accountDetails.account.base_account.account_number,
+      10
+    ),
+    chainId: network.chainId,
+  });
+
+  /** 签名交易 */
+  const signature = await privateKey.sign(Buffer.from(signBytes));
+
+  /** 附加签名 */
+  txRaw.signatures = [signature];
+
+  /** 计算交易哈希 */
+  console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
+
+  const txService = new TxGrpcApi(network.grpc);
+
+  /** 模拟交易 */
+  const simulationResponse = await txService.simulate(txRaw);
+  console.log(
+    `Transaction simulation response: ${JSON.stringify(
+      simulationResponse.gasInfo
+    )}`
+  );
+
+  /** 广播交易 */
+  const txResponse = await txService.broadcast(txRaw);
+
+  if (txResponse.code !== 0) {
+    console.log(`Transaction failed: ${txResponse.rawLog}`);
+  } else {
+    console.log(
+      `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`
+    );
+  }
+})();
+```
+
+## 使用 MsgBroadcasterWithPk 的示例
+
+你可以使用 `@injectivelabs/sdk-ts` 包中的 `MsgBroadcasterWithPk` 类，它将上面编写的大部分逻辑抽象到一个类中。
+
+**此抽象允许你在 Node/CLI 环境中签名交易。**
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(1).toFixed(),
+};
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
