@@ -1,0 +1,75 @@
+---
+title: 钱包连接
+---
+
+Injective 支持以太坊和 Cosmos 原生钱包。你可以使用 Metamask、Ledger、Keplr、Leap 等流行钱包在 Injective 上签署交易。
+
+### 钱包策略
+
+支持所有这些钱包的推荐方式是使用我们构建的 [WalletStrategy](./strategy/) 抽象。这种方法将使你的 dApp 用户能够连接和使用不同的钱包进行交互。
+
+将其与 [MsgBroadcaster](../transactions/msgbroadcaster/) 抽象结合使用，可以让你通过一个函数调用来签署交易。这是 Helix、Hub、Explorer 等所有产品中使用的方法，我们强烈建议在你的 dApp 中使用这种方法。
+
+如果你仍然想原生使用某些钱包（不使用 WalletStrategy 类），我们将在本文档中提供如何通过 Metamask 和 Keplr 连接到基于 Injective 构建的 dApp 的示例。
+
+### Metamask
+
+Metamask 是以太坊原生钱包，可用于连接和与基于 Injective 构建的 dApp 进行交互。
+
+- **从 Metamask 获取 Injective 地址**
+
+```ts lines highlight={4-6,11-13}
+import { getInjectiveAddress } from "@injectivelabs/sdk-ts/utils";
+
+const getEthereum = () => {
+  if (!window.ethereum) {
+    throw new Error("未安装 Metamask 扩展");
+  }
+  return window.ethereum;
+};
+
+const ethereum = getEthereum();
+const addresses = await ethereum.request({
+  method: "eth_requestAccounts",
+}); /** 这些是 EVM 地址 */
+
+const injectiveAddresses = addresses.map(getInjectiveAddress);
+console.log(injectiveAddresses);
+```
+
+- **使用 Metamask 签署交易**
+
+如何使用 Metamask 在 Injective 上准备 + 签署 + 广播交易的示例可以在[这里](../transactions/ethereum/)找到。
+
+### Keplr
+
+Keplr 是 Cosmos 原生钱包，可用于连接和与基于 Injective 构建的 dApp 进行交互。
+
+- **从 Keplr 获取 Injective 地址**
+
+```ts lines
+import { ChainId } from "@injectivelabs/ts-types";
+
+const getKeplr = () => {
+  if (!window.keplr) {
+    throw new Error("未安装 Keplr 扩展");
+  }
+
+  return window.keplr;
+};
+
+(async () => {
+  const keplr = getKeplr();
+  const chainId = ChainId.Mainnet;
+  await keplr.enable(chainId);
+  const injectiveAddresses = await keplr
+    .getOfflineSigner(chainId)
+    .getAccounts();
+
+  console.log(injectiveAddresses);
+})();
+```
+
+- **使用 Keplr 签署交易**
+
+如何使用 Keplr 在 Injective 上准备 + 签署 + 广播交易的示例可以在 [Cosmos 交易](../transactions/cosmos/)中找到。
