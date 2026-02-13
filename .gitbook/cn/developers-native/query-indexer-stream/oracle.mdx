@@ -1,0 +1,66 @@
+---
+title: 预言机
+---
+
+使用 StreamManagerV2 从 Indexer 流式获取预言机模块相关数据的示例代码。
+
+## 使用 gRPC Stream 与 StreamManagerV2
+
+### 流式获取预言机价格
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcOracleStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcOracleStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'oracle-prices',
+  streamFactory: () => stream.streamOraclePrices({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (oraclePrices) => {
+    console.log(oraclePrices)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### 按市场流式获取预言机价格
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcOracleStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcOracleStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'oracle-prices-by-markets',
+  streamFactory: () => stream.streamOraclePricesByMarkets({ 
+    marketIds: ['0x...'],
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (oraclePrices) => {
+    console.log(oraclePrices)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
