@@ -1,0 +1,63 @@
+---
+title: 链下（任意）数据
+---
+
+在本页面，我们将提供一个示例，说明如何根据 Cosmos 上的 [ADR-036](https://docs.cosmos.network/main/build/architecture/adr-036-arbitrary-signature) 规范签署和验证任意数据。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+你可以使用 `@injectivelabs/sdk-ts` 中的 `generateArbitrarySignDoc` 函数生成与 ADR-36 兼容的 `signDoc`。然后你可以使用它在浏览器钱包或 CLI 环境中进行签名/验证。请确保使用最新的包版本。
+</Callout>
+
+#### 使用 Keplr 等浏览器钱包签名和验证
+
+```typescript
+
+(async () => {
+  const message = "离线签名消息示例";
+  const signer = 'inj1...'
+  const chainId = 'injective-1'
+  
+  // 签署任意数据
+  const signature = await window.keplr.signArbitrary(chainId, signer, message)
+  
+  // 验证任意数据
+  const result = await window.keplr.verifyArbitrary(chainId, signer, message, signature)
+  
+  if (result) {
+    console.log("签名有效");
+  }
+})();
+```
+
+#### 在 CLI 环境中使用 PrivateKey 签名和验证
+
+```typescript
+import { config } from "dotenv";
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { generateArbitrarySignDoc } from "@injectivelabs/sdk-ts/core/tx";
+
+config();
+
+(async () => {
+  const { privateKey } = PrivateKey.generate();
+  const injectiveAddress = privateKey.toBech32();
+  const publicKey = privateKey.toPublicKey();
+  
+  const message = "离线签名消息示例";
+  const { signDocBuff } = generateArbitrarySignDoc(message, injectiveAddress);
+
+  const signature = await privateKey.sign(signDocBuff);
+  const signatureInHex = Buffer.from(signature).toString("hex");
+
+  if (
+    PrivateKey.verifyArbitrarySignature({
+      signature: signatureInHex,
+      signDoc: signDocBuff,
+      publicKey: publicKey.toHex(),
+    })
+  ) {
+    console.log("签名有效");
+  }
+})();
+
+```
