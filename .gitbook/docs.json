@@ -827,7 +827,9 @@
                       "cn/infra/interact-node/rest"
                     ]
                   },
-                  "cn/infra/run-node"
+                  "cn/infra/run-node",
+                  "cn/infra/set-up-keyring",
+                  "cn/infra/join-a-network"
                 ]
               },
               {
