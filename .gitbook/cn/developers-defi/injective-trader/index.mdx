@@ -1,0 +1,224 @@
+---
+title: Injective Trader
+---
+
+# Injective Trader
+
+Injective Trader 是一个专业级框架，为在 Injective 区块链上开发和部署算法交易策略提供高性能、可靠的基础。它弥合了算法交易策略和区块链执行之间的差距，消除了技术障碍。该框架负责繁重的工作——实时数据流、订单执行、重连/恢复、交易批处理和分析。这使交易者可以专注于策略开发，而不是区块链的复杂性。
+
+你可以使用它来导入现有策略或创建新策略：
+
+* **根据你的逻辑自动下单**
+* **24/7 监控市场**并对价格变化做出反应
+* **管理风险**，具有内置限制和安全功能
+* **同时处理多个市场**
+* **提供所有交易活动的详细日志**
+
+### 核心能力
+
+**简化的策略开发**
+
+* 无需 SDK 专业知识——专注于交易逻辑
+* 以最小的技术开销快速部署策略
+* 事件驱动架构实现直观的策略实现
+
+**内置可靠性**
+
+* 自动重连和恢复机制
+* 执行前的交易验证
+* 全面的错误处理和重试逻辑
+
+**性能优化**
+
+* 智能交易批处理以降低成本
+* 自动费用管理和优化
+* 多账户支持以实现规模化
+
+**企业级功能**
+
+* 完整的仓位和盈亏跟踪
+* 风险管理能力
+* 详细的性能分析
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+Injective trader 交易具有真实价值的资产，因此安全性至关重要。请确保使用以下作为安全基线，并采取进一步措施保护你的资产。
+
+* **永远不要分享私钥**或将其提交到 Git。
+* 将密钥存储在本地 **`.env` 文件**中，并通过环境变量加载。
+* 为了额外的安全性，考虑使用
+  [**AuthZ**](https://github.com/InjectiveLabs/injective-trader/tree/master?tab=readme-ov-file#authorization-trading-authz)
+  授予交易权限而不暴露你的主账户。
+</Callout>
+
+## 快速入门（5 分钟）
+
+### 1. 准备好你的 Injective 账户（并充值）
+
+1. 使用 Keplr 或 `injectived` 在 Injective 上**创建账户**。
+2. 如果使用 Keplr，**导出你的私钥**用于 `.env` 文件。
+   * _提示：使用 AuthZ，你可以向交易账户授予有限权限以获得更好的安全性。_
+3. 通过从另一个 Injective 地址发送或通过 [bridge.injective.network](http://bridge.injective.network/) **为你的账户充值** USDT。
+   * _EVM 提示：你可以使用 TS SDK 派生你的 `inj` 地址，并将 USDT 从以太坊桥接到 Injective，甚至无需设置 Injective 账户。_
+
+### 2. 下载和设置
+
+```bash
+git clone https://github.com/InjectiveLabs/injective-trader.git
+cd injective-trader
+
+# 创建虚拟环境（推荐）
+python3 -m venv .venv
+source .venv/bin/activate    # Windows: .venv\Scripts\Activate.ps1
+
+pip install -r requirements.txt
+pip install "injective-py==1.9"
+```
+
+_注意：`injective-trader` 尚未与 `injective-py` v1.11 兼容。_
+
+### 3. 配置你的策略
+
+编辑预先存在的 `config.yaml`：
+
+```yaml
+Exchange: Helix
+ConsoleLevel: INFO
+FileLevel: DEBUG
+
+Components:
+  Initializer:
+    Network: mainnet
+    BotName: MyBot
+    MarketTickers:
+      - INJ/USDT PERP
+      - BTC/USDT PERP
+      - ETH/USDT PERP
+
+Strategies:
+  MyMarketMaker:
+    Name: "MyMarketMaker"
+    Class: "SimpleStrategy"
+    MarketIds:
+      - "0x17ef48032..."  # INJ/USDT PERP
+      - "0x4ca0f92f..."  # BTC/USDT PERP
+      - "0x9b998016..."  # ETH/USDT PERP
+    AccountAddresses:
+      - "inj1your_account_address_here"
+    TradingAccount: "inj1your_account_address_here"
+    CIDPrefix: "my_mm"
+    Parameters:
+      OrderSize: 0.1
+      MaxPosition: 1.0
+      SpreadThreshold: 0.005
+```
+
+### 4. 设置你的私钥
+
+不使用单个 `INJECTIVE_PRIVATE_KEY`，而是在 `.env` 中使用**机器人范围的环境变量**（与框架默认值匹配）：
+
+```
+# 对于名为 "MyBot" 的机器人
+MyBot_GRANTER_INJECTIVE_PRIVATE_KEY=your_granter_private_key_here
+MyBot_GRANTEE_0_INJECTIVE_PRIVATE_KEY=your_first_grantee_private_key_here
+```
+
+将它们加载到你的会话中：
+
+```bash
+export $(grep -v '^#' .env | xargs)
+```
+
+### 5. 运行你的策略
+
+```bash
+python main.py MyBot config.yaml --log_path logs/my_bot.log --network mainnet
+```
+
+就是这样——你的机器人现在已上线！
+
+## IDE 设置
+
+如果你使用 VS Code 或兼容的 IDE（如 Cursor），考虑添加以下配置以便于调试。
+
+`.vscode/launch.json`：
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run MyBot (mainnet)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "args": ["MyBot", "config.yaml", "--log_path", "logs/strategy.log", "--network", "mainnet"],
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "Run MyBot (testnet, debug)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "args": ["MyBot", "config.yaml", "--log_path", "logs/debug.log", "--network", "testnet", "--debug"],
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
+```
+
+你现在应该能够在 IDE 中执行 **Run → Start Debugging**。
+
+## 架构
+
+### 系统架构图
+
+<figure>
+<img src="/img/injective-trader-network-architecture-diagram.png" alt="Injective Trader 网络架构图" width="563"></img>
+<figcaption><p>Injective Trader 网络架构图</p></figcaption>
+</figure>
+
+### 核心设计模式
+
+* **中介者模式**：集中组件之间的通信，实现解耦架构，组件无需直接依赖即可交互。
+* **组件模式**：标准化所有系统组件的生命周期管理（初始化、运行、终止），确保一致的行为。
+* **状态模式**：通过明确定义的状态（空闲、运行、终止）管理组件生命周期，提供可预测的转换和错误处理。
+* **任务管理模式**：协调异步任务，具有自动监控和恢复功能，确保在事件驱动环境中可靠执行。
+* **观察者模式**：使策略能够通过专门的事件处理程序对特定更新事件做出反应，创建灵活的策略开发方法。
+
+### 关键组件
+
+**交易所特定代理**
+
+* **Initializer**：设置交易所连接、账户和市场
+* **ChainListener**：流式传输实时区块链数据，具有自动重连功能
+* **MessageBroadcaster**：处理交易创建和广播，具有重试逻辑
+* **Liquidator**：监控并执行抵押不足仓位的清算
+
+**管理器**
+
+* **MarketManager**：处理市场数据并维护订单簿完整性
+* **AccountManager**：跟踪余额、仓位和订单状态
+* **StrategyManager**：将市场事件路由到适当的策略实现
+* **RiskManager**：执行仓位限制和风险控制
+* **TaskManager**：编排和监控异步任务执行
+
+**数据级域**
+
+* **Market**：表示具有订单簿和元数据的交易对
+* **Account**：管理账户余额、存款和子账户
+* **Positions**：跟踪衍生品仓位及盈亏计算
+* **Order**：订单状态跟踪及执行历史
+* **Oracle Prices**：带时间戳跟踪的实时价格馈送
+
+**策略级插件**
+
+* **Strategy Base**：实现自定义策略的模板
+* **Update Handlers**：市场数据事件的特定事件处理器
+* **Performance Metrics**：统计和盈亏跟踪
+* **Risk Models**：可定制的风险管理规则
+
+## 下一步
+
+了解更多关于 Injective Trader 附带的[简单策略](/cn/developers-defi/injective-trader/simple-strategy)，在深入之前熟悉代码库。
