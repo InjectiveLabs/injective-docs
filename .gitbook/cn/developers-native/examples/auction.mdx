@@ -1,0 +1,112 @@
+---
+title: 拍卖
+---
+
+`auction` 模块是链上"回购销毁"机制的核心，每周 60% 的交易费用被收集并拍卖给出价最高的 INJ 竞标者，最高竞标者提交的 INJ 在此过程中被销毁。
+
+## MsgBid
+
+此消息用于在每周举行的[拍卖](https://hub.injective.network/auction/)中提交出价，允许成员使用 INJ 竞标 Injective 当周收集的交易费用篮子（60%）。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import { toChainFormat } from '@injectivelabs/utils'
+import { MsgBid } from '@injectivelabs/sdk-ts/core/modules'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcAuctionApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpointsForNetwork = getNetworkEndpoints(Network.Mainnet)
+const auctionApi = new ChainGrpcAuctionApi(endpointsForNetwork.grpc)
+
+const injectiveAddress = 'inj1...'
+/* 格式化出价金额，注意出价金额必须高于当前最高出价 */
+const amount = {
+  denom: 'inj',
+  amount: toChainFormat(1).toFixed(),
+}
+
+const latestAuctionModuleState = await auctionApi.fetchModuleState()
+const latestRound = latestAuctionModuleState.auctionRound
+
+/* 以 proto 格式创建消息 */
+const msg = MsgBid.fromJSON({
+  amount,
+  injectiveAddress,
+  round: latestRound,
+})
+
+const privateKey = '0x...'
+
+/* 广播交易 */
+const txHash = await new MsgBroadcasterWithPk({
+  network: Network.Mainnet,
+  privateKey,
+}).broadcast({
+  msgs: msg,
+})
+
+console.log(txHash)
+```
+
+## 通过 MsgExternalTransfer 向销毁拍卖存款
+
+如果您想增加销毁拍卖池的规模，可以直接向拍卖子账户发送资金。
+
+注意：
+
+- 您需要将资金发送到池的子账户 `0x1111111111111111111111111111111111111111111111111111111111111111`。
+- 请注意，您发送的任何资金将反映在下一次拍卖中，而不是当前拍卖。
+- 您不能从默认子账户 ID 转账，因为该余额现在与银行模块中的 Injective 地址关联。因此，为了使 `MsgExternalTransfer` 工作，您需要从非默认子账户 ID 转账。
+
+如何找到您将要转账的子账户 ID：
+
+- 您可以通过[账户投资组合 API](../query-indexer/portfolio/) 查询您现有的子账户 ID。
+
+如何使用当前与银行模块中 Injective 地址关联的资金：
+
+- 如果您有现有的非默认子账户，您需要执行 [MsgDeposit](/developers-native/examples/exchange#msgdeposit) 到您现有的非默认子账户 ID 之一，并使用该子账户 ID 作为下面的 `srcSubaccountId`。
+- 如果您没有现有的非默认子账户，您可以执行 [MsgDeposit](/developers-native/examples/exchange#msgdeposit) 到新的默认子账户 ID，这可以通过从 `sdk-ts` 导入 `getSubaccountId` 并将 [MsgDeposit](/developers-native/examples/exchange#msgdeposit) 中的 `subaccountId` 字段设置为 `getSubaccountId(injectiveAddress, 1)` 来完成。
+
+更多信息，请查看[销毁拍卖池文档](https://docs.injective.network/developers/modules/injective/auction)。
+
+```ts
+import { Network } from '@injectivelabs/networks'
+import { toChainFormat } from '@injectivelabs/utils'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+import { MsgExternalTransfer } from '@injectivelabs/sdk-ts/core/modules'
+
+const injectiveAddress = 'inj1...'
+const srcSubaccountId = '0x...'
+const POOL_SUBACCOUNT_ID = `0x1111111111111111111111111111111111111111111111111111111111111111`
+
+// USDT Peggy 代币详情
+const USDT_DENOM = 'peggy0xdAC17F958D2ee523a2206206994597C13D831ec7'
+const USDT_DECIMALS = 6
+
+/* 格式化要添加到销毁拍卖池的金额 */
+const amount = {
+  denom: USDT_DENOM,
+  amount: toChainFormat(1, USDT_DECIMALS).toFixed(),
+}
+
+/* 以 proto 格式创建消息 */
+const msg = MsgExternalTransfer.fromJSON({
+  amount,
+  srcSubaccountId,
+  injectiveAddress,
+  dstSubaccountId: POOL_SUBACCOUNT_ID,
+})
+
+const privateKey = '0x...'
+
+/* 广播交易 */
+const txHash = await new MsgBroadcasterWithPk({
+  network: Network.Mainnet,
+  privateKey,
+}).broadcast({
+  msgs: msg,
+})
+
+console.log(txHash)
+```
