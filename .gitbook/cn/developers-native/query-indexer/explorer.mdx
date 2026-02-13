@@ -1,0 +1,502 @@
+---
+title: 浏览器
+---
+
+查询 Indexer 获取浏览器模块相关数据的示例代码。
+
+## 使用 gRPC
+
+### 根据哈希获取交易
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const txsHash = "...";
+
+const transaction = await indexerGrpcExplorerApi.fetchTxByHash(txsHash);
+
+console.log(transaction);
+```
+
+### 根据地址获取账户交易
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const injectiveAddress = "inj...";
+
+const account = await indexerGrpcExplorerApi.fetchAccountTx({
+  injectiveAddress,
+});
+
+console.log(account);
+```
+
+### 根据地址获取验证者
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const validatorAddress = "injvaloper...";
+
+const validator = await indexerGrpcExplorerApi.fetchValidator(validatorAddress);
+
+console.log(validator);
+```
+
+### 根据地址获取验证者在线时间
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const validatorAddress = "injvaloper...";
+
+const validatorUptime = await indexerGrpcExplorerApi.fetchValidatorUptime(
+  validatorAddress
+);
+
+console.log(validatorUptime);
+```
+
+### 获取从以太坊的 Peggy 存款交易
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const sender = "0x..."; /* 可选参数 */
+const receiver = "inj..."; /* 可选参数 */
+const limit = 100; /* 可选分页参数 */
+const skip = 20; /* 可选分页参数 */
+
+const peggyDeposits = await indexerGrpcExplorerApi.fetchPeggyDepositTxs({
+  sender,
+  receiver,
+  limit,
+  skip,
+});
+
+console.log(peggyDeposits);
+```
+
+### 获取到以太坊的 Peggy 提款交易
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const receiver = "0x..."; /* 可选参数 */
+const sender = "inj..."; /* 可选参数 */
+const limit = 100; /* 可选分页参数 */
+const skip = 20; /* 可选分页参数 */
+
+const peggyWithdrawals = await indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs({
+  sender,
+  receiver,
+  limit,
+  skip,
+});
+
+console.log(peggyWithdrawals);
+```
+
+### 获取区块列表
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const after = 30; /* 可选分页参数 */
+const limit = 100; /* 可选分页参数 */
+
+const blocks = await indexerGrpcExplorerApi.fetchBlocks({
+  after,
+  limit,
+});
+
+console.log(blocks);
+```
+
+### 根据高度获取区块
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const height = 123456;
+const block = await indexerGrpcExplorerApi.fetchBlock(height);
+
+console.log(block);
+```
+
+### 获取交易列表
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const after = 20; /* 可选分页参数 */
+const limit = 100; /* 可选分页参数 */
+
+const transactions = await indexerGrpcExplorerApi.fetchTxs({
+  after,
+  limit,
+});
+
+console.log(transactions);
+```
+
+### 获取 IBC 转账交易
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const sender = "osmo...";
+const receiver = "inj...";
+
+const ibcTransactions = await indexerGrpcExplorerApi.fetchIBCTransferTxs({
+  sender,
+  receiver,
+});
+
+console.log(ibcTransactions);
+```
+
+## 使用 HTTP REST
+
+### 获取区块及详情
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const blockHashHeight = 1;
+
+const block = await indexerRestExplorerApi.fetchBlock(blockHashHeight);
+
+console.log(block);
+```
+
+### 获取区块列表及详情
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const before = 200; /* 可选分页参数 */
+const limit = 100; /* 可选分页参数 */
+
+const blocks = await indexerRestExplorerApi.fetchBlocks({
+  before,
+  limit,
+});
+
+console.log(blocks);
+```
+
+### 获取包含交易详情的区块
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const before = 200; /* 可选分页参数 */
+const limit = 100; /* 可选分页参数 */
+
+const blocks = await indexerRestExplorerApi.fetchBlocksWithTx({
+  before,
+  limit,
+});
+
+console.log(blocks);
+```
+
+### 获取交易列表
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const after = 200; /* 可选分页参数 */
+const limit = 100; /* 可选分页参数 */
+const fromNumber = 1; /* 可选参数 */
+const toNumber = 100; /* 可选参数 */
+
+const transactions = await indexerRestExplorerApi.fetchTransactions({
+  after,
+  limit,
+  fromNumber,
+  toNumber,
+});
+
+console.log(transactions);
+```
+
+### 获取地址的交易
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const account = "inj...";
+const after = 200; /* 可选分页参数 */
+const limit = 100; /* 可选分页参数 */
+const fromNumber = 1; /* 可选参数 */
+const toNumber = 100; /* 可选参数 */
+
+const accountTransactions =
+  await indexerRestExplorerApi.fetchAccountTransactions({
+    account,
+    params: {
+      account,
+      after,
+      limit,
+      fromNumber,
+      toNumber,
+    },
+  });
+
+console.log(accountTransactions);
+```
+
+### 根据交易哈希获取交易
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const txsHash = "...";
+
+const transaction = await indexerRestExplorerApi.fetchTransaction(txsHash);
+
+console.log(transaction);
+```
+
+### 获取验证者列表
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const validators = await indexerRestExplorerApi.fetchValidators();
+
+console.log(validators);
+```
+
+### 获取验证者在线时间
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const validatorAddress = "injvalcons";
+
+const validatorUptime = await indexerRestExplorerApi.fetchValidatorUptime(
+  validatorAddress
+);
+
+console.log(validatorUptime);
+```
+
+### 根据合约地址获取合约
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const contractAddress = "inj...";
+
+const contract = await indexerRestExplorerApi.fetchContract(contractAddress);
+
+console.log(contract);
+```
+
+### 获取合约列表
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const limit = 100; /* 可选分页参数 */
+const skip = 50; /* 可选分页参数 */
+
+const contracts = await indexerRestExplorerApi.fetchContracts({
+  limit,
+  skip,
+});
+
+console.log(contracts);
+```
+
+### 获取合约交易
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const contractAddress = "inj...";
+const limit = 100; /* 可选分页参数 */
+const skip = 50; /* 可选分页参数 */
+
+const transactions = await indexerRestExplorerApi.fetchContractTransactions({
+  contractAddress,
+  params: {
+    limit,
+    skip,
+  },
+});
+
+console.log(transactions);
+```
+
+### 获取 CosmWasm 代码详情
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const codeId = 1;
+
+const codeDetails = await indexerRestExplorerApi.fetchWasmCode(codeId);
+
+console.log(codeDetails);
+```
+
+### 获取 Wasm 代码列表及详情
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const limit = 100; /* 可选分页参数 */
+const fromNumber = 50; /* 可选分页参数 */
+const toNumber = 150; /* 可选分页参数 */
+
+const codes = await indexerRestExplorerApi.fetchWasmCodes({
+  limit,
+  fromNumber,
+  toNumber,
+});
+
+console.log(codes);
+```
+
+### 获取 CW20 余额
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const address = "inj...";
+
+const cw20Balances = await indexerRestExplorerApi.fetchCW20BalancesNoThrow(
+  address
+);
+
+console.log(cw20Balances);
+```
