@@ -1,0 +1,55 @@
+---
+title: 公共端点
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+我们**不建议**在高使用量/流量的生产应用程序中使用这些端点。有数千名开发者使用公共基础设施，我们无法保证 100% 的正常运行时间和可靠性。
+</Callout>
+
+## 主网
+
+| 服务          		| 地址                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| Chain Swagger          | https://sentry.lcd.injective.network/swagger/#/               		 |
+| Chain LCD              | https://sentry.lcd.injective.network:443                      |
+| Chain RPC              | https://sentry.tm.injective.network:443                       |
+| Chain WebSocket        | wss://sentry.tm.injective.network:443/websocket               |
+| Chain Streamer     | sentry.chain.stream.injective.network:443                     		 |
+| Chain gRPC             | sentry.chain.grpc.injective.network:443                       |
+| Chain gRPC-Web         | https://sentry.chain.grpc-web.injective.network:443           |
+| EVM JSON-RPC           | https://sentry.evm-rpc.injective.network/                     |
+| EVM WebSocket          | wss://sentry.evm-ws.injective.network                         |
+| Indexer Swagger  | https://sentry.exchange.grpc-web.injective.network/swagger/#/ 		 |
+| Indexer gRPC     | sentry.exchange.grpc.injective.network:443                 |
+| Indexer gRPC-Web | https://sentry.exchange.grpc-web.injective.network:443     |
+| Indexer EventProvider | k8s.global.mainnet.events.grpc.injective.network:443     |
+| Hub              | https://injhub.com/                                |
+| Explorer         | https://explorer.injective.network/                           |
+| Faucet           | https://inj.supply/                                           |
+| Status           | https://uptime.com/statuspage/status.injective.network                                           |
+
+<Info>
+有关更多 EVM 网络详细信息，包括链 ID、合约和其他提供商，请参阅 [EVM 网络信息](/cn/developers-evm/network-information)。
+</Info>
+
+## 测试网
+
+| 服务          | 地址                                                               |
+| ---------------- | --------------------------------------------------------------------- |
+| Chain Swagger          | https://testnet.sentry.lcd.injective.network/swagger/                 |
+| Chain RPC              | https://testnet.sentry.tm.injective.network:443                       |
+| Chain LCD              | https://testnet.sentry.lcd.injective.network:443                      |
+| Chain WebSocket        | wss://testnet.sentry.tm.injective.network:443/websocket               |
+| Chain Streamer     | testnet.sentry.chain.stream.injective.network:443                     |
+| Chain gRPC             | testnet.sentry.chain.grpc.injective.network:443                       |
+| Chain gRPC-Web         | https://testnet.sentry.chain.grpc-web.injective.network:443           |
+| EVM JSON-RPC           | https://k8s.testnet.json-rpc.injective.network/                       |
+| EVM WebSocket          | wss://k8s.testnet.ws.injective.network/                               |
+| Indexer Swagger  | https://testnet.sentry.exchange.grpc-web.injective.network/swagger/#/ |
+| Indexer gRPC     | testnet.sentry.exchange.grpc.injective.network:443                    |
+| Indexer gRPC-Web | https://testnet.sentry.exchange.grpc-web.injective.network:443        |
+| Indexer EventProvider | k8s.global.testnet.events.grpc.injective.network:443     |
+| Hub              | https://testnet.hub.injective.network/                                |
+| Explorer         | https://testnet.explorer.injective.network/                           |
+| Faucet           | https://testnet.faucet.injective.network/                             |
+| Status           | https://uptime.com/statuspage/testnet.status.injective.network                            |

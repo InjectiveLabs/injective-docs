@@ -1,0 +1,66 @@
+---
+title: 规范链升级
+---
+
+## 验证发布版本
+
+### Github 上的发布
+
+如果你想通过 Docker 验证 `injectived` 或 `peggo` 版本号，
+请按照 [`verify-injective-release`](https://github.com/injective-dev/snippets-inj/tree/main/verify-injective-release) 代码片段中的说明操作。
+
+如果你使用的操作系统不是 Linux，
+并且想独立验证每个发布版本中的二进制文件，这将非常有用。
+
+例如，对于 `v1.16.1`，它应该产生以下输出：
+
+```text
+injectived version
+Version v1.16.1 (8be67e82d)
+Compiled at 20250802-1910 using Go go1.23.9 (amd64)
+peggo version
+Version v1.16.1 (8be67e82d)
+Compiled at 20250802-1913 using Go go1.23.9 (amd64)
+```
+
+### Docker 上的发布
+
+这些更直接，因为每个二进制文件只需要一个命令。
+
+对于 `injectived`，使用以下命令：
+
+```shell
+docker run -it --rm injectivelabs/injective-core:v1.16.1 injectived version
+```
+
+这应该产生类似的输出：
+
+```text
+Version v1.16.1 (8be67e8)
+Compiled at 20250802-1909 using Go go1.23.9 (arm64)
+```
+
+对于 `peggo`，使用以下命令：
+
+```shell
+docker run -it --rm injectivelabs/injective-core:v1.16.1 peggo version
+```
+
+这应该产生类似的输出：
+
+```text
+Version v1.16.1 (8be67e8)
+Compiled at 20250802-1911 using Go go1.23.9 (arm64)
+```
+
+请注意，你应该将上述命令中的 `v1.16.1` 替换为你预期的 Injective 发布版本号。
+
+### 检查匹配
+
+请注意，上述命令的输出除了版本号（例如 `v1.16.1`）外，还包含以下内容：
+
+- 二进制发布哈希（例如 `8be67e82d`）
+- 编译时间戳（例如 `20250802-1910`）
+- 编译器（例如 `Go go1.23.9 (amd64)`）
+
+你可以验证这些值是否与 Github 上 [Injective 链发布](https://github.com/InjectiveLabs/injective-chain-releases/releases) 页面中声明的值**匹配**。
