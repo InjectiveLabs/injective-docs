@@ -1,0 +1,23 @@
+---
+title: Provider Oracle
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+前置阅读 [Injective Oracle 模块](/developers-native/injective/oracle/)
+</Callout>
+
+本节的目标是为用户提供如何在 Injective 上启动和维护 oracle provider 的指南。这些 oracle 可用于各种目的，如永续市场、到期期货市场、[二元期权市场](/developers-native/injective/exchange/02_binary_options_markets/)等。
+
+首先，什么是 oracle provider？它是一种 oracle **类型**，允许外部方向 Injective 链中继价格馈送。这些外部方称为 provider。provider 标识每个外部方，所有在链上提供的价格馈送都存储在该特定 provider 下。这允许在 Injective 上创建自定义价格馈送，可以为在 Injective 上启动的创意和高级市场（如[二元期权市场](/developers-native/injective/exchange/02_binary_options_markets/)）提供支持。
+
+开发者需要做的第一件事是在 Oracle Provider 类型下注册他们的 provider。你可以通过提交 `GrantProviderPrivilegeProposal` 治理提案来做到这一点。一旦提案通过，你的 provider 将被注册，你可以中继价格馈送。你可以在 CLI 环境中使用 `injectived`（`grant-provider-privilege-proposal [providerName] [relayers] --title [title] --description [desc] [flags]`）或使用我们的任何 SDK 创建消息并将其广播到链上。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+你可以在 Oracle 模块提案部分查看如何提交此提案的示例
+</Callout>
+
+_注意：`GrantProviderPrivilegeProposal` 的 `relayers` 是将被列入白名单以向 Injective 提交价格馈送的地址。_
+
+一旦提案通过，`relayers` 可以使用 `MsgRelayProviderPrices` 在 Injective 上的 Oracle Provider 类型 oracle 的 provider 命名空间内为基础/报价对提交价格。你可以在 CLI 环境中使用 `injectived`（`relay-provider-prices [providerName] [symbol:prices] [flags]`）或使用我们的任何 SDK 创建消息并将其广播到链上。
+
+最后，你可以使用这些价格馈送来创建你的衍生品市场。
