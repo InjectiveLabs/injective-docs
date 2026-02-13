@@ -916,7 +916,10 @@
                     ]
                   }
                 ]
-              }
+              },
+              "cn/faq",
+              "cn/glossary",
+              "cn/references"
             ]
           }
         ]
