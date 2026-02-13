@@ -829,7 +829,9 @@
                   },
                   "cn/infra/run-node",
                   "cn/infra/set-up-keyring",
-                  "cn/infra/join-a-network"
+                  "cn/infra/join-a-network",
+                  "cn/infra/cosmovisor",
+                  "cn/infra/upgrade-node"
                 ]
               },
               {
