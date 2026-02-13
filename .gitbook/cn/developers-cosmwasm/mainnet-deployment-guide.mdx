@@ -1,0 +1,102 @@
+---
+title: 主网部署
+---
+
+本指南将帮助你开始在 Injective 主网上部署和实例化 CosmWasm 智能合约的治理流程。
+
+### 提交代码上传提案
+
+在本节中，你将学习如何提交智能合约代码提案并为其投票。
+
+Injective 网络参与者可以提议智能合约部署并通过治理投票来启用它们。`wasmd` 授权设置由链上治理决定，这意味着合约的部署完全由治理决定。因此，治理提案是将合约上传到 Injective 主网的第一步。
+
+使用 `injectived` 启动治理提案以将代码上传到链上的示例用法：
+
+```bash
+injectived tx wasm submit-proposal wasm-store artifacts/cw_controller.wasm
+--title="Proposal Title" \
+--summary="Proposal Summary" \
+--instantiate-everybody true \
+--broadcast-mode=sync \
+--chain-id=injective-1 \
+--node=https://sentry.tm.injective.network:443 \
+--deposit=100000000000000000000inj \
+--gas=20000000 \
+--gas-prices=160000000inj \
+--from [YOUR_KEY] \
+--yes \
+--output json
+```
+
+命令 `injectived tx gov submit-proposal wasm-store` 提交一个 wasm 二进制提案。如果提案获得治理批准，代码将被部署。
+
+让我们来看两个关键标志 `instantiate-everybody` 和 `instantiate-only-address`，它们设置上传代码的实例化权限。默认情况下，每个人都可以实例化合约。
+
+```bash
+--instantiate-everybody boolean # 每个人都可以从代码实例化合约，可选
+--instantiate-only-address string # 只有此地址可以从代码实例化合约实例
+```
+
+### 合约实例化（无需治理）
+
+在大多数情况下，你不需要推送另一个治理提案来实例化。只需使用 `injectived tx wasm instantiate` 实例化即可。你只需要治理提案来_上传_合约。除非合约的 `--instantiate-everybody` 标志设置为 `false`，并且 `--instantiate-only-address` 标志设置为治理模块，否则你不需要通过治理来实例化。`--instantiate-everybody` 的默认值为 `true`，在这种情况下，你可以通过 `injectived tx wasm instantiate` 无需许可地实例化。
+
+```bash
+injectived tx wasm instantiate [code_id_int64] [json_encoded_init_args] --label [text] --admin [address,optional] --amount [coins,optional]  [flags]
+```
+
+一个 `injectived tx wasm instantiate` 示例可能如下所示：
+
+```bash
+injectived tx wasm instantiate \
+150 \
+'{"bank": "inj1egl894wme0d4d029hlv3kuqs0mc9atep2s89h8"}' \
+--label="LABEL" \
+--from=inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c \
+--chain-id=injective-1 \
+--yes \
+--gas-prices 160000000inj \
+--gas=10000000 \
+--no-admin \
+--node=https://sentry.tm.injective.network:443 \
+```
+
+### 合约实例化（治理）
+
+如上所述，主网上的合约实例化权限取决于上传代码时使用的标志。默认情况下，它设置为无需许可，正如我们可以在 genesis `wasmd` Injective 设置中验证的那样：
+
+```json
+"wasm": {
+            "codes": [],
+            "contracts": [],
+            "gen_msgs": [],
+            "params": {
+                "code_upload_access": {
+                    "address": "",
+                    "permission": "Everybody"
+                },
+                "instantiate_default_permission": "Everybody"
+            },
+            "sequences": []
+        }
+```
+
+但是，如果 `--instantiate-everybody` 标志设置为 `false`，则合约实例化必须通过治理。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Injective 测试网默认是无需许可的，以便开发者可以轻松部署合约。
+</Callout>
+
+#### 合约实例化提案
+
+```bash
+ injectived tx gov submit-proposal instantiate-contract [code_id_int64] [json_encoded_init_args] --label [text] --title [text] --description [text] --run-as [address] --admin [address,optional] --amount [coins,optional] [flags]
+```
+
+### 合约迁移
+
+迁移是可以交换或"升级"给定智能合约代码的过程。
+
+实例化合约时，有一个可选的 admin 字段可以设置。如果留空，合约是不可变的。如果设置了 admin（到外部账户或治理合约），该账户可以触发迁移。admin 还可以重新分配 admin 角色，甚至可以根据需要使合约完全不可变。但是，请记住，从旧合约迁移到新合约时，新合约需要知道状态之前是如何编码的。
+
+有关迁移技术方面的更详细描述，请参阅 [CosmWasm 迁移文档](https://docs.cosmwasm.com/docs/smart-contracts/migration)。
