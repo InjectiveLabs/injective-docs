@@ -717,6 +717,69 @@
                 ]
               },
               {
+                "group": "开发者",
+                "icon": "laptop-code",
+                "expanded": false,
+                "pages": [
+                  "cn/developers/index",
+                  "cn/developers/convert-addresses",
+                  "cn/developers/network-information",
+                  {
+                    "group": "AI 开发",
+                    "pages": [
+                      "cn/developers/ai/mcp"
+                    ]
+                  },
+                  {
+                    "group": "injectived",
+                    "pages": [
+                      "cn/developers/injectived/index",
+                      "cn/developers/injectived/install",
+                      "cn/developers/injectived/use",
+                      "cn/developers/injectived/advanced",
+                      "cn/developers/testnet-proposals"
+                    ]
+                  },
+                  {
+                    "group": "概念",
+                    "pages": [
+                      "cn/developers/concepts/index",
+                      "cn/developers/concepts/sentry-node",
+                      "cn/developers/concepts/indexer-api",
+                      "cn/developers/concepts/trading-account",
+                      "cn/developers/concepts/grpc-protobuf",
+                      "cn/developers/concepts/token-factory",
+                      "cn/developers/concepts/calculation-min-price-tick-size",
+                      "cn/developers/concepts/calculation-min-quantity-tick-size",
+                      "cn/developers/concepts/cosmjs-support",
+                      "cn/developers/concepts/networks"
+                    ]
+                  },
+                  {
+                    "group": "资产",
+                    "pages": [
+                      "cn/developers/assets/index",
+                      "cn/developers/assets/denom",
+                      "cn/developers/assets/token-metadata",
+                      "cn/developers/assets/injective-list",
+                      "cn/developers/assets/token-create"
+                    ]
+                  },
+                  {
+                    "group": "dApp",
+                    "pages": [
+                      "cn/developers/dapps/index",
+                      "cn/developers/dapps/configure-nuxt",
+                      "cn/developers/dapps/configure-react",
+                      "cn/developers/dapps/run-examples",
+                      "cn/developers/dapps/example-smart-contract",
+                      "cn/developers/dapps/example-dex",
+                      "cn/developers/dapps/example-webpack"
+                    ]
+                  }
+                ]
+              },
+              {
                 "group": "EVM 开发者",
                 "icon": "rectangle-code",
                 "expanded": false,
