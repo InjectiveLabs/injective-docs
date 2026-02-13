@@ -1,0 +1,99 @@
+---
+title: Permissions
+---
+
+查询链上 permissions 模块相关数据的示例代码片段。
+
+## 使用 gRPC
+
+### 获取所有命名空间
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const allNamespaces = await chainGrpcPermissionsApi.fetchAllNamespaces();
+
+console.log(allNamespaces);
+```
+
+### 根据 denom 获取命名空间
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const subdenom = "NINJA";
+const includeRoles = true;
+
+const namespace = await chainGrpcPermissionsApi.fetchNamespaceByDenom({
+  subdenom,
+  includeRoles: includeRoles,
+});
+
+console.log(namespace);
+```
+
+### 根据 denom 获取与地址关联的所有角色
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+const subdenom = "NINJA";
+
+const addressRoles = await chainGrpcPermissionsApi.fetchAddressRoles({
+  injectiveAddress,
+  denom: subdenom,
+});
+
+console.log(addressRoles);
+```
+
+### 获取与给定 denom 角色关联的所有地址
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const subdenom = "NINJA";
+const role = "role";
+
+const addressesByRole = await chainGrpcPermissionsApi.fetchAddressesByRole({
+  subdenom,
+  role: role,
+});
+
+console.log(addressesByRole);
+```
+
+### 获取给定 injective 地址的凭证
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const vouchers = await chainGrpcPermissionsApi.fetchVouchersForAddress(
+  injectiveAddress
+);
+
+console.log(vouchers);
+```
