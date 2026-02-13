@@ -1,0 +1,36 @@
+---
+title: 拍卖
+---
+
+使用 StreamManagerV2 从 Indexer 流式获取拍卖模块相关数据的示例代码。
+
+## 使用 gRPC Stream 与 StreamManagerV2
+
+### 流式获取拍卖出价
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcAuctionStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcAuctionStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'auction-bids',
+  streamFactory: () => stream.streamBids({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (bids) => {
+    console.log(bids)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
