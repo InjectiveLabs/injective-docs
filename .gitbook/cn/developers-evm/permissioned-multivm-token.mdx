@@ -1,0 +1,167 @@
+---
+title: 权限化 MTS 代币
+description: 在 MultiVM Token Standard (MTS) 代币中使用 Injective 的 permissions 模块
+---
+
+## Injective 的 Permissions 模块
+
+[`permissions` 模块](https://docs.injective.network/developers-native/injective/permissions)
+是 Injective 的原生模块，允许对 Denom 进行自定义管理（例如角色）。
+此功能扩展到 MultiVM Token Standard (MTS) 代币，
+你可以在 EVM 智能合约代码中实现这些自定义管理规则。
+
+## 为什么在 MTS 代币上使用 Permissions？
+
+如果你正在使用 MTS 在 Injective 上对现实世界资产 (RWA) 进行代币化，
+而该底层资产本身需要权限控制，
+这是使用 Injective `permissions` 模块的绝佳用例。
+
+你的 MTS 代币的 EVM 智能合约只需实现
+一个额外的 Solidity 接口即可利用 `permissions` 模块的功能。
+
+## 智能合约实现
+
+在你的智能合约中，从 `PermissionsHook.sol` 导入 `IPermissionsHook` 并扩展它。
+
+```solidity
+interface IPermissionsHook
+```
+
+这将涉及实现 `isTransferRestricted` 函数，
+签名如下：
+
+```solidity
+function isTransferRestricted(
+  address from,
+  address to,
+  Cosmos.Coin calldata amount
+)
+```
+
+你可以在 Github 上找到完整文件：
+[`PermissionsHook.sol`](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/PermissionsHook.sol)
+
+### 智能合约示例
+
+创建一个扩展 `PermissionsHook` 的智能合约：
+
+```solidity
+import { Cosmos } from "../src/CosmosTypes.sol";
+import { PermissionsHook } from "../src/PermissionsHook.sol";
+contract RestrictedAddressTransferHook is PermissionsHook {
+  /*
+  ...
+  */
+}
+```
+
+添加 `isTransferRestricted` 函数的自定义实现。
+例如，此函数将允许所有转账，
+除了涉及特定地址的转账：
+
+```solidity
+  function isTransferRestricted(
+    address from,
+    address to,
+    Cosmos.Coin calldata amount
+  ) external pure override returns (bool) {
+    address restrictedAddress = "0x...";
+    if (from == restrictedAddress || to == restrictedAddress) {
+      // 此特定地址不允许转账
+      return true;
+    }
+
+    // 所有其他转账都允许
+    return false;
+  }
+```
+
+你可以在 Github 上找到更详细的示例：
+[`PermissionsHookExamples.sol`](https://github.com/InjectiveLabs/solidity-contracts/blob/master/examples/PermissionsHookExamples.sol)
+
+## 注册 Hook
+
+要为 permissions 注册 hook，
+你需要以下内容：
+
+- 控制部署 MTS 代币的同一账户。
+- MTS 代币的部署地址
+- Permissions Hook 的部署地址
+
+有了以上内容，你可以创建
+[类似此文件的 JSON 文件](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/scripts/demo/namespace.json)。
+
+然后运行 `injectived` 进行注册，
+使用部署 MTS 代币的同一账户。
+
+```shell
+injectived tx permissions create-namespace ...
+```
+
+<Info>
+注意 MTS 代币和 Permissions Hook 可以具有相同的地址。
+这是一个由你决定的架构决策。
+</Info>
+
+### 注册 Hook 示例
+
+创建一个名为 `register-hooks.json` 的文件，内容如下：
+
+```jsonc
+{
+  "denom": "erc20:0x...", // <-- MTS 代币的 EVM 地址
+  "evm_hook": "0x...", // <-- permissions hook 的 EVM 地址
+  "role_permissions": [
+    {
+      "name": "EVERYONE",
+      "role_id": 0,
+      "permissions": 10
+    }
+  ],
+  "actor_roles": [
+  ]
+}
+```
+
+确保将 `denom` 和 `evm_hook` 字段的值替换为适当的值。
+
+<Info>
+同时删除所有注释，使文件成为有效的 JSON。
+</Info>
+
+然后运行以下命令：
+
+```shell
+injectived tx permissions create-namespace register-hooks.json [flags]
+```
+
+注意这只是在 MTS 代币上定义 permissions hook 的一种特定方式。
+还有多种变体。
+有关此步骤的更多详细信息，包括其他变体，请参阅
+[如何启动权限化资产](https://docs.injective.network/developers-native/injective/permissions/04_launch_permissioned_asset)。
+
+## 参考实现
+
+还提供了一个更完整的示例，演示了权限化 MTS 代币
+在稳定币中的使用。
+
+此示例涉及一个 permissions hook，当代币暂停时阻止转账，
+并维护一个地址黑名单。
+
+```solidity
+function isTransferRestricted(
+  address _from,
+  address _to,
+  Cosmos.Coin calldata /* _amount */
+) external view returns (bool) {
+  if (fiatToken.paused()) {
+    return true;
+  } else if (fiatToken.isBlacklisted(_from) || fiatToken.isBlacklisted(_to)) {
+    return true;
+  }
+
+  return false;
+}
+```
+
+参见 [`PermissionsHook_Inj.sol`](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol)。
