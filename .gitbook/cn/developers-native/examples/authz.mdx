@@ -1,0 +1,129 @@
+---
+title: 授权
+---
+
+`authz` 模块是 Cosmos SDK 模块的实现，根据 ADR 30，允许从一个账户（授权者）向另一个账户（被授权者）授予任意权限。
+
+## 消息
+
+### MsgGrant
+
+使用 MsgGrant 消息创建授权。如果已存在（授权者、被授权者、授权）三元组的授权，则新授权将覆盖之前的授权。要更新或延长现有授权，应创建具有相同（授权者、被授权者、授权）三元组的新授权。
+
+有用的消息类型列表：
+
+```
+"/injective.exchange.v1beta1.MsgCreateSpotLimitOrder",
+"/injective.exchange.v1beta1.MsgCreateSpotMarketOrder",
+"/injective.exchange.v1beta1.MsgCancelSpotOrder",
+"/injective.exchange.v1beta1.MsgBatchUpdateOrders",
+"/injective.exchange.v1beta1.MsgBatchCancelSpotOrders",
+"/injective.exchange.v1beta1.MsgDeposit",
+"/injective.exchange.v1beta1.MsgWithdraw",
+"/injective.exchange.v1beta1.MsgCreateDerivativeLimitOrder",
+"/injective.exchange.v1beta1.MsgCreateDerivativeMarketOrder",
+"/injective.exchange.v1beta1.MsgCancelDerivativeOrder",
+"/injective.exchange.v1beta1.MsgBatchUpdateOrders",
+"/injective.exchange.v1beta1.MsgBatchCancelDerivativeOrders",
+"/injective.exchange.v1beta1.MsgDeposit",
+"/injective.exchange.v1beta1.MsgWithdraw",
+```
+
+根据 [cosmos sdk 文档](https://docs.cosmos.network/main/modules/authz)，"授权必须为特定的 Msg 服务方法逐一授予"，因此以下代码片段必须为您希望 `grantee` 代表 `granter` 拥有授权的每种消息类型重复执行。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgGrant } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKeyOfGranter = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+const messageType =
+  "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder"; /* 示例消息类型 */
+
+const msg = MsgGrant.fromJSON({
+  messageType,
+  grantee,
+  granter,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGranter,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgExec
+
+当被授权者想要代表授权者执行交易时，他们必须发送 MsgExec。在此示例中，我们将执行 MsgSend 将资产从授权者的账户地址转移到另一个账户地址。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExec, MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKeyOfGrantee = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+
+const msgs = MsgSend.fromJSON({
+  amount: {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  },
+  srcInjectiveAddress: granter,
+  dstInjectiveAddress: "inj1...",
+});
+
+const msg = MsgExec.fromJSON({
+  msgs,
+  grantee,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGrantee,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgRevoke
+
+可以使用 MsgRevoke 消息撤销授权。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgRevoke } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKeyOfGranter = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+const messageType =
+  "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder"; /* 示例消息类型 */
+
+const msg = MsgRevoke.fromJSON({
+  messageType,
+  grantee,
+  granter,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGranter,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
