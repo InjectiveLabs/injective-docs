@@ -1,0 +1,120 @@
+---
+title: 保险
+---
+
+此模块为 Injective 链交易所模块中的衍生品市场提供保险基金，以支持更高杠杆交易。在高层次上，每个衍生品市场的保险基金由一组无需许可的承保人资助，每个承保人拥有对保险基金中基础资产的按比例索赔权（通过保险基金份额代币表示）。
+
+## 消息
+
+让我们探索（并提供示例）保险模块导出的消息，我们可以使用这些消息与 Injective 链交互。
+
+### MsgCreateInsuranceFund
+
+此消息用于创建保险基金
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCreateInsuranceFund } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const amount = 5;
+const fund = {
+  ticker: "BTC/USDT",
+  quoteDenom: "peggy0x...",
+  oracleBase: "BTC",
+  oracleQuote: "USDT",
+  oracleType: 10, // BANDIBC
+};
+
+const msg = MsgCreateInsuranceFund.fromJSON({
+  fund,
+  injectiveAddress,
+  deposit: {
+    denom: fund.quoteDenom,
+    amount: toChainFormat(amount, 6 /* 6 因为 USDT 有 6 位小数 */).toFixed(),
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgRequestRedemption
+
+此消息用于请求赎回。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgRequestRedemption } from "@injectivelabs/sdk-ts/core/modules";
+
+const marketId = "0x....";
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const denom = "share1"; // 保险基金 denom (share{id})
+const amount = toChainFormat(5).toFixed();
+
+const msg = MsgRequestRedemption.fromJSON({
+  marketId,
+  injectiveAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgUnderwrite
+
+此消息用于向保险基金承保。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgUnderwrite } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const usdtDecimals = 6;
+const marketId = "0x...";
+const privateKey = "0x...";
+const denom = "peggy0x...";
+const injectiveAddress = "inj1...";
+const amount = toChainFormat(5, usdtDecimals).toFixed();
+
+const msg = MsgUnderwrite.fromJSON({
+  marketId,
+  injectiveAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
