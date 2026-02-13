@@ -1,0 +1,103 @@
+---
+title: 钱包策略
+---
+
+`@injectivelabs/wallet-strategy` 的主要目的是为开发者提供一种在 Injective 上使用不同钱包实现的方式。所有这些钱包实现都暴露相同的 `ConcreteStrategy` 接口，这意味着用户可以直接使用这些方法，而无需了解特定钱包的底层实现，因为它们已被抽象化。
+
+首先，你需要创建一个 `WalletStrategy` 类的实例，这使你能够开箱即用地使用不同的钱包。你可以使用 `walletStrategy` 实例上的 `setWallet` 方法来切换当前使用的钱包（注意：`setWallet` 是异步的，需要 `await`）。
+
+让我们看看 `WalletStrategy` 策略暴露的方法及其含义：
+
+**以太坊和 Cosmos 原生钱包通用：**
+
+- `getAddresses` 从连接的钱包策略获取地址。此方法为以太坊原生钱包（策略）返回以太坊地址，为 Cosmos 原生钱包（策略）返回 Injective 地址。
+- `signTransaction` 使用相应的钱包类型方法签署交易（Cosmos 原生钱包使用 `signCosmosTransaction`，以太坊原生钱包使用 `signEip712TypedData`）
+- `sendTransaction` 使用相应的钱包类型方法签署交易（如果我们想在以太坊原生钱包上使用它，需要在选项中传递 `sentryEndpoint` - 解释见下文）
+- `getWalletDeviceType` 返回钱包连接类型（移动端、浏览器、硬件）
+
+**Cosmos 原生钱包：**
+
+- `signCosmosTransaction` 使用连接的钱包策略签署 Injective 交易
+- `getPublicKey` 获取 Cosmos 原生钱包策略的公钥
+
+**以太坊原生钱包：**
+
+- `getEthereumChainId` 获取以太坊原生钱包策略的链 ID
+- `signEip712TypedData` 使用连接的钱包策略签署 EIP712 类型数据
+- `sendEvmTransaction` 使用连接的钱包策略发送以太坊 Web3 交易
+- `signEvmTransaction` 使用连接的钱包策略签署以太坊 Web3 交易
+- `getEvmTransactionReceipt` 获取钱包策略的以太坊原生交易收据
+
+### 参数
+
+传递给 WalletStrategy 的参数具有以下接口：
+
+```ts
+export interface WalletStrategyEvmOptions {
+  rpcUrl: string; // **仅**策略上的以太坊原生方法需要的 RPC URL
+  evmChainId: EvmChainId; // 如果你使用钱包策略签署 EIP712 类型数据则需要
+}
+
+export interface EthereumWalletStrategyArgs {
+  chainId: ChainId; // Injective 链 ID
+  evmOptions?: WalletStrategyEvmOptions; // 可选，仅在使用以太坊原生钱包时需要
+  disabledWallets?: Wallet[]; // 可选，如果你想禁用某些钱包的实例化则需要
+  wallet?: Wallet; // 可选，初始选择的钱包（如果传递了 `evmOptions` 则默认为 Metamask，否则默认为 Keplr）
+}
+```
+
+_注意：_ 当我们想在以太坊原生钱包上使用 `sendTransaction` 时，除了其他选项（chainId 和 address）外，我们还需要传递一个 gRPC 端点到 sentry 来广播交易。这是必需的，因为从以太坊原生钱包中，我们无法像在 Keplr 或 Leap 上那样访问 `broadcastTx` 方法来使用钱包的抽象广播交易，所以我们必须在客户端直接向链广播。
+
+### 使用示例
+
+```ts
+import { TxRaw } from '@injectivelabs/sdk-ts/types'
+import { Web3Exception } from '@injectivelabs/exceptions'
+import { ChainId, EvmChainId } from '@injectivelabs/ts-types'
+import { WalletStrategy } from '@injectivelabs/wallet-strategy'
+
+const chainId = ChainId.Testnet // Injective 测试网链 ID
+const evmChainId = EvmChainId.TestnetEvm // Injective EVM 测试网链 ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
+
+export const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    evmChainId,
+    rpcUrl: evmRpcEndpoint,
+  },
+})
+
+// 获取钱包地址
+export const getAddresses = async (): Promise<string[]> => {
+  const addresses = await walletStrategy.getAddresses()
+
+  if (addresses.length === 0) {
+    throw new Web3Exception(new Error('此钱包中没有关联的地址。'))
+  }
+
+  return addresses
+}
+
+// 签署 Injective 交易
+export const signTransaction = async (tx: TxRaw): Promise<string[]> => {
+  const response = await walletStrategy.signCosmosTransaction(
+    /*transaction:*/ { txRaw: tx, accountNumber: /* */, chainId: 'injective-1' },
+    /*address: */ 'inj1...',
+  )
+
+  return response
+}
+
+// 发送 Injective 交易
+export const sendTransaction = async (tx: TxRaw): Promise<string[]> => {
+  const response = await walletStrategy.sendTransaction(
+    tx,
+    // 如果使用以太坊钱包则需要 `sentryEndpoint`
+    {address: 'inj1...', chainId: 'injective-1', sentryEndpoint: 'https://grpc.injective.network' }
+  )
+
+  return response
+}
+```
