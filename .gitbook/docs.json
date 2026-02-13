@@ -1011,7 +1011,19 @@
                   {
                     "group": "查询 Indexer",
                     "pages": [
-                      "cn/developers-native/query-indexer/index"
+                      "cn/developers-native/query-indexer/index",
+                      "cn/developers-native/query-indexer/account",
+                      "cn/developers-native/query-indexer/auction",
+                      "cn/developers-native/query-indexer/derivatives",
+                      "cn/developers-native/query-indexer/explorer",
+                      "cn/developers-native/query-indexer/insurance-funds",
+                      "cn/developers-native/query-indexer/markets",
+                      "cn/developers-native/query-indexer/leaderboard",
+                      "cn/developers-native/query-indexer/mito",
+                      "cn/developers-native/query-indexer/oracle",
+                      "cn/developers-native/query-indexer/portfolio",
+                      "cn/developers-native/query-indexer/spot",
+                      "cn/developers-native/query-indexer/transaction"
                     ]
                   },
                   {
@@ -1019,7 +1031,12 @@
                     "pages": [
                       "cn/developers-native/query-indexer-stream/index",
                       "cn/developers-native/query-indexer-stream/account",
-                      "cn/developers-native/query-indexer-stream/spot"
+                      "cn/developers-native/query-indexer-stream/auction",
+                      "cn/developers-native/query-indexer-stream/derivatives",
+                      "cn/developers-native/query-indexer-stream/oracle",
+                      "cn/developers-native/query-indexer-stream/portfolio",
+                      "cn/developers-native/query-indexer-stream/spot",
+                      "cn/developers-native/query-indexer-stream/explorer"
                     ]
                   },
                   "cn/developers-native/query-ethereum",
