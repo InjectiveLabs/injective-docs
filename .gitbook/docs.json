@@ -845,43 +845,13 @@
                       "cn/developers-native/transactions/web3-gateway"
                     ]
                   },
-                  {
-                    "group": "交易示例",
-                    "pages": [
-                      "cn/developers-native/examples/index"
-                    ]
-                  },
-                  {
-                    "group": "查询链",
-                    "pages": [
-                      "cn/developers-native/query-chain/index"
-                    ]
-                  },
-                  {
-                    "group": "查询索引器",
-                    "pages": [
-                      "cn/developers-native/query-indexer/index"
-                    ]
-                  },
-                  {
-                    "group": "流式索引器",
-                    "pages": [
-                      "cn/developers-native/query-indexer-stream/index"
-                    ]
-                  },
+                  "cn/developers-native/examples/index",
+                  "cn/developers-native/query-chain/index",
+                  "cn/developers-native/query-indexer/index",
+                  "cn/developers-native/query-indexer-stream/index",
                   "cn/developers-native/query-ethereum",
-                  {
-                    "group": "Injective 模块",
-                    "pages": [
-                      "cn/developers-native/injective/index"
-                    ]
-                  },
-                  {
-                    "group": "核心模块",
-                    "pages": [
-                      "cn/developers-native/core/index"
-                    ]
-                  }
+                  "cn/developers-native/injective/index",
+                  "cn/developers-native/core/index"
                 ]
               },
               "cn/faq"
