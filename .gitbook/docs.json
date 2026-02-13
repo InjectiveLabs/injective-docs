@@ -811,6 +811,30 @@
                 ]
               },
               {
+                "group": "基础设施",
+                "icon": "network-wired",
+                "expanded": false,
+                "pages": [
+                  "cn/infra/index",
+                  {
+                    "group": "与节点交互",
+                    "expanded": false,
+                    "pages": [
+                      "cn/infra/interact-node/index",
+                      "cn/infra/interact-node/command-line",
+                      "cn/infra/interact-node/grpc",
+                      "cn/infra/interact-node/go",
+                      "cn/infra/interact-node/rest"
+                    ]
+                  },
+                  "cn/infra/run-node",
+                  "cn/infra/set-up-keyring",
+                  "cn/infra/join-a-network",
+                  "cn/infra/cosmovisor",
+                  "cn/infra/upgrade-node"
+                ]
+              },
+              {
                 "group": "Native 开发者",
                 "icon": "microchip",
                 "expanded": false,

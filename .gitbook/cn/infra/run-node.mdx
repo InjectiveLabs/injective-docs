@@ -1,0 +1,56 @@
+---
+title: 运行节点
+---
+
+强烈建议在加入公共网络之前先设置本地私有网络。这将帮助你熟悉设置过程，并提供测试环境。
+
+### **私有网络**
+
+* 通过在本地设置独立网络来加入
+
+### **公共网络**
+
+* 通过公共端点使用网络；或
+* 通过运行节点加入
+
+任何人都可以设置自己的节点，通过端点与 Injective 区块链通信。为方便起见，还有一些公共端点可用于查询链。这些端点推荐用于开发和测试目的。为了获得最大的控制和可靠性，建议运行自己的节点。
+
+## 运行节点的准备工作
+
+如果你选择运行节点（无论是设置私有网络还是加入公共网络），你必须设置 keyring。你还可以选择安装 Cosmovisor，它可以帮助进行链升级以最大限度地减少停机时间。
+
+## 与节点交互
+
+节点启动并运行后，有几种方式可以与节点交互，即使用 gRPC 端点、REST 端点或 `injectived` CLI。你可以在[与节点交互](/cn/infra/interact-node/)部分了解更多信息。
+
+## 运行节点指南
+
+<Columns cols={3}>
+  <Card
+    title="设置 Keyring"
+    href="/infra/set-up-keyring/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/user-hero.png">
+    了解如何设置你的 keyring
+  </Card>
+  <Card
+    title="加入网络"
+    href="/infra/join-a-network/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/bridge-hero.png">
+    了解如何加入网络
+  </Card>
+  <Card
+    title="升级你的节点"
+    href="/infra/upgrade-node/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/validator-hero.png">
+    了解如何升级你的节点
+  </Card>
+</Columns>
