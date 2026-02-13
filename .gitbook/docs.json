@@ -821,6 +821,7 @@
                   },
                   "cn/developers-evm/evm-equivalence",
                   "cn/developers-evm/multivm-token-standard",
+                  "cn/developers-evm/permissioned-multivm-token",
                   "cn/developers-evm/wrapped-inj",
                   "cn/developers-evm/precompiles",
                   "cn/developers-evm/bank-precompile",
