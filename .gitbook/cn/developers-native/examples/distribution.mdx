@@ -1,0 +1,68 @@
+---
+title: 分配
+---
+
+`distribution` 模块是从 cosmos sdk [distribution 模块](https://github.com/InjectiveLabs/cosmos-sdk/tree/master/x/distribution) 扩展而来，委托人可以从验证者那里提取其质押奖励。
+
+Distribution -> MsgWithdrawValidatorCommission
+
+## MsgWithdrawDelegatorReward
+
+此消息用于从验证者提取所有可用的委托人质押奖励。
+
+```ts
+import {  Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgWithdrawDelegatorReward } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const validatorAddress = "inj1...";
+
+/* 以 proto 格式创建消息 */
+const msg = MsgWithdrawDelegatorReward.fromJSON({
+  validatorAddress,
+  delegatorAddress: injectiveAddress,
+});
+
+const privateKey = "0x...";
+
+/* 广播交易 */
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet
+}).broadcast({
+  msgs: msg
+});
+
+console.log(txHash);
+```
+
+## MsgWithdrawValidatorCommission
+
+此消息由验证者用于提取赚取的佣金。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgWithdrawValidatorCommission } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const validatorAddress = "inj1...";
+
+/* 以 proto 格式创建消息 */
+const msg = MsgWithdrawValidatorCommission.fromJSON({
+  validatorAddress,
+});
+
+const privateKey = "0x...";
+
+/* 广播交易 */
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet
+}).broadcast({
+  msgs: msg
+});
+
+console.log(txHash);
+```
