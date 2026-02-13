@@ -1,0 +1,94 @@
+---
+title: 浏览器
+---
+
+使用 StreamManagerV2 从 Indexer 流式获取浏览器模块相关数据的示例代码。
+
+## 使用 gRPC Stream 与 StreamManagerV2
+
+### 流式获取区块
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'explorer-blocks',
+  streamFactory: () => stream.streamBlocks({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (blocks) => {
+    console.log(blocks)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### 流式获取包含交易的区块
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'explorer-blocks-with-txs',
+  streamFactory: () => stream.streamBlocksWithTxs({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (blocksWithTransactions) => {
+    console.log(blocksWithTransactions)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### 流式获取交易
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'explorer-transactions',
+  streamFactory: () => stream.streamTransactions({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (transactions) => {
+    console.log(transactions)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
