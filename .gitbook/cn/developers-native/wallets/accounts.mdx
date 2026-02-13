@@ -1,0 +1,158 @@
+---
+title: 账户
+---
+
+Injective 定义了自己的自定义 Account 类型，使用 Ethereum 的 ECDSA secp256k1 曲线作为密钥。这满足了 [EIP84](https://github.com/ethereum/EIPs/issues/84) 对完整 [BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) 路径的要求。Injective 账户的根 HD 路径是 `m/44'/60'/0'/0`。
+
+### 地址转换
+
+你可以使用 `@injectivelabs/sdk-ts` 包中的工具函数轻松地在 Injective 地址和 Ethereum 地址之间进行转换：
+
+```ts
+import {
+  getInjectiveAddress,
+  getEthereumAddress,
+} from "@injectivelabs/sdk-ts/utils";
+
+const injectiveAddress = "inj1...";
+const ethereumAddress = "0x..";
+
+console.log(
+  "Injective address from Ethereum address => ",
+  getInjectiveAddress(ethereumAddress)
+);
+console.log(
+  "Ethereum address from Injective address => ",
+  getEthereumAddress(injectiveAddress)
+);
+```
+
+### 派生钱包
+
+**使用 Injective 工具类**
+
+- 从 private key 和/或 mnemonic phrase 派生 Injective Account 的示例代码：
+
+```ts
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+
+const mnemonic =
+  "indoor dish desk flag debris potato excuse depart ticket judge file exit";
+const privateKey =
+  "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890";
+const privateKeyFromMnemonic = PrivateKey.fromMnemonic(mnemonic);
+const privateKeyFromHex = PrivateKey.fromPrivateKey(privateKey);
+
+const address =
+  privateKeyFromMnemonic.toAddress(); /* or privateKeyFromHex.toAddress() */
+console.log({
+  injectiveAddress: address.toBech32(),
+  ethereumAddress: address.toHex(),
+});
+```
+
+- 从 public key 派生 public address 的示例代码：
+
+```ts
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
+
+const pubKey = "AuY3ASbyRHfgKNkg7rumWCXzSGCvvgtpR6KKWlpuuQ9Y";
+const publicKey = PublicKey.fromBase64(pubKey);
+
+console.log(publicKey.toAddress().toBech32());
+```
+
+- 从 private key 派生地址的示例代码：
+
+```ts
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
+
+const privateKey =
+  "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890";
+const publicKey = PublicKey.fromPrivateKeyHex(privateKey);
+const type = "/injective.crypto.v1beta1.ethsecp256k1.PubKey";
+
+console.log(publicKey.toBase64());
+```
+
+**不使用 Injective 工具类**
+
+- 从 private key 和/或 mnemonic phrase 派生 Injective Account 的示例代码：
+
+```ts
+import { Wallet } from "ethers";
+import { Address as EthereumUtilsAddress } from "ethereumjs-util";
+
+const mnemonic =
+  "indoor dish desk flag debris potato excuse depart ticket judge file exit";
+const privateKey =
+  "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890";
+const defaultDerivationPath = "m/44'/60'/0'/0/0";
+const defaultBech32Prefix = "inj";
+const isPrivateKey: boolean = true; /* just for the example */
+
+const wallet = isPrivateKey
+  ? Wallet.fromMnemonic(mnemonic, defaultDerivationPath)
+  : new Wallet(privateKey);
+const ethereumAddress = wallet.address;
+const addressBuffer = EthereumUtilsAddress.fromString(
+  ethereumAddress.toString()
+).toBuffer();
+const injectiveAddress = bech32.encode(
+  defaultBech32Prefix,
+  bech32.toWords(addressBuffer)
+);
+```
+
+- 从 private key 派生 public key 的示例代码：
+
+```ts
+import secp256k1 from "secp256k1";
+
+const privateKey =
+  "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890";
+const privateKeyHex = Buffer.from(privateKey.toString(), "hex");
+const publicKeyByte = secp256k1.publicKeyCreate(privateKeyHex);
+
+const buf1 = Buffer.from([10]);
+const buf2 = Buffer.from([publicKeyByte.length]);
+const buf3 = Buffer.from(publicKeyByte);
+
+const publicKey = Buffer.concat([buf1, buf2, buf3]).toString("base64");
+const type = "/injective.crypto.v1beta1.ethsecp256k1.PubKey";
+```
+
+#### 将 Cosmos 地址转换为 Injective 地址
+
+由于 Injective 的派生路径与默认的 Cosmos 派生路径不同，你需要账户的 `publicKey` 才能将 Cosmos `publicAddress` 转换为 Injective 地址。
+
+以下是操作示例：
+
+```typescript
+import { config } from "dotenv";
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+
+config();
+
+(async () => {
+  const chainApi = new ChainRestAuthApi(
+    "https://rest.cosmos.directory/cosmoshub"
+  );
+
+  const cosmosAddress = "cosmos1..";
+  const account = await chainApi.fetchCosmosAccount(cosmosAddress);
+
+  if (!account.pub_key?.key) {
+    console.log("No public key found");
+    return;
+  }
+
+  console.log(
+    "injectiveAddress",
+    PublicKey.fromBase64(account.pub_key.key || "")
+      .toAddress()
+      .toBech32()
+  );
+})();
+```
