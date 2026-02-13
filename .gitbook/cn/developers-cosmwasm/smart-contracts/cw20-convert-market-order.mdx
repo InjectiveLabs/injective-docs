@@ -1,0 +1,56 @@
+---
+title: CW20 转换为 Bank 并在一笔交易中执行市价单
+---
+
+此示例帮助你创建消息以在 Injective 区块链上将 CW20 代币转换为 bank 代币。当你有 CW20 代币并需要将它们转换为 bank 等价物以执行下市价单等操作时，这特别有用。请注意，此流程仅适用于 cw20 代币及其对应的 [factory 代币](../../developers/concepts/)。
+
+本指南将引导你完成：
+
+* 获取用户的 CW20 代币余额。
+* 使用 ConvertCw20ToBankService 创建将 CW20 代币转换为 bank 代币的消息
+* 使用转换后的 bank 余额和现有 bank 余额执行市价单
+
+## 获取用户的 CW20 余额
+
+你可以使用 [explorer indexer 查询](../../developers-native/query-indexer/explorer/#fetch-cw20-balances) 执行此操作。
+
+* 从结果集中找到你想要转换为 bank factory 代币的 cw20 地址和余额
+
+## 创建 CW20 到 Bank 转换消息
+
+* 使用[此处](../../developers/concepts/token-factory/#example-on-how-to-convert-cw20-to-a-factory-denom)详细说明的步骤创建 `convertMsg`，以将你的 CW20 代币转换为 bank factory 代币。暂时不需要提交交易。
+
+## 创建 `MsgCreateSpotMarketOrder` 消息
+
+* 使用 [MsgCreateSpotMarketOrder](../../developers-native/examples/exchange/#msgcreatespotmarketorder) 中详细说明的步骤创建 `msg`。暂时不需要提交交易。
+* 请注意，你创建的买单将可以访问你转换后的 cw20 余额 + 现有 bank 余额。示例：
+
+```ts
+const order = {
+  price: 1,
+  quantity: 10,
+}
+```
+
+* 如果你有 5 个 Cw20 代币和 5 个 bank 代币，每个价格为 1 美元，那么上面的订单将会成功，因为我们会在链执行此市价单之前将 cw20 转换为 bank。这在下一步中会更清楚。
+
+## 使用转换后的 CW20 余额和现有 bank 余额下市价单
+
+现在你已经格式化了两条消息，你可以将 cw20 代币转换为 bank factory 代币，然后使用合并余额下市价单，所有这些都在一笔交易中完成
+
+```ts
+import { Network } from '@injectivelabs/networks'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+
+const privateKey = '0x...'
+const injectiveAddress = 'inj1...'
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.MainnetSentry,
+}).broadcast({
+  msgs: [convertMsg, msg], // 转换为 bank 的消息首先执行，然后你将拥有额外的余额来完成后续 msg 中的市价单
+})
+
+console.log(txHash)
+```
