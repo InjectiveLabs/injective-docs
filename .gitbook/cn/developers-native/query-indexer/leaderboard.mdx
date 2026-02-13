@@ -1,0 +1,30 @@
+---
+title: 排行榜
+---
+
+查询 Indexer 获取排行榜模块相关数据的示例代码。
+
+## 使用 HTTP REST
+
+### 获取排行榜
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestLeaderboardChronosApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerRestLeaderboardChronosApi(
+  `${endpoints.chronos}/api/chronos/v1/leaderboard`
+);
+
+const SelectList = {
+  Day: "1d",
+  Week: "7d",
+};
+
+const resolution = SelectList.Day;
+
+const leaderboard = await indexerGrpcExplorerApi.fetchLeaderboard(resolution);
+
+console.log(leaderboard);
+```

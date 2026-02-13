@@ -1,0 +1,61 @@
+---
+title: 预言机
+---
+
+查询 Indexer 获取预言机模块相关数据的示例代码。
+
+## 使用 gRPC
+
+### 获取预言机列表
+
+```ts
+import { IndexerGrpcOracleApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcOracleApi = new IndexerGrpcOracleApi(endpoints.indexer);
+
+const oracleList = await indexerGrpcOracleApi.fetchOracleList();
+
+console.log(oracleList);
+```
+
+### 从预言机获取价格
+
+基础和报价预言机符号始终从市场本身获取。它们可能以不同于普通符号的表示形式存在（例如 `pyth` 预言机的哈希值）。
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import {
+  IndexerGrpcOracleApi,
+  IndexerGrpcDerivativesApi,
+} from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer);
+const indexerGrpcOracleApi = new IndexerGrpcOracleApi(endpoints.indexer);
+
+// 获取衍生品市场列表
+const markets = await indexerGrpcDerivativesApi.fetchMarkets();
+
+// 根据交易对查找特定市场
+const market = markets.find((market) => market.ticker === "INJ/USDT PERP");
+
+if (!market) {
+  throw new Error("Market not found");
+}
+
+// 这些值是从 indexer 获取的市场对象的一部分
+// 即 `oracleBase` 和 `oracleQuote`
+const baseSymbol = market.oracleBase;
+const quoteSymbol = market.oracleQuote;
+const oracleType = market.oracleType;
+
+const oraclePrice = await indexerGrpcOracleApi.fetchOraclePriceNoThrow({
+  baseSymbol,
+  quoteSymbol,
+  oracleType,
+});
+
+console.log(oraclePrice);
+```

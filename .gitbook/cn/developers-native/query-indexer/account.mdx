@@ -1,0 +1,165 @@
+---
+title: 账户
+---
+
+查询 Indexer 获取子账户相关数据的示例代码。
+
+## 使用 gRPC
+
+### 获取用户的投资组合详情
+
+包括可用余额、未实现盈亏和投资组合价值。注意：**已弃用** → 请使用 [Portfolio](../query-indexer/portfolio/#using-grpc) 代替
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const injectiveAddress = "inj...";
+
+const portfolio = await indexerGrpcAccountApi.fetchPortfolio(injectiveAddress);
+
+console.log(portfolio);
+```
+
+### 获取用户每个 epoch 的交易奖励
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const injectiveAddress = "inj...";
+const epoch = -1; // 当前 epoch
+
+const tradingRewards = await indexerGrpcAccountApi.fetchRewards({
+  address: injectiveAddress,
+  epoch,
+});
+
+console.log(tradingRewards);
+```
+
+### 获取与 Injective 地址关联的子账户
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const injectiveAddress = "inj...";
+
+const subaccountsList = await indexerGrpcAccountApi.fetchSubaccountsList(
+  injectiveAddress
+);
+
+console.log(subaccountsList);
+```
+
+### 获取子账户特定代币的余额
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const subaccountId = "0x...";
+const denom = "inj";
+
+const subaccountBalance = await indexerGrpcAccountApi.fetchSubaccountBalance(
+  subaccountId,
+  denom
+);
+
+console.log(subaccountBalance);
+```
+
+### 获取子账户的所有余额
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const subaccountId = "0x...";
+
+const subaccountBalanceList =
+  await indexerGrpcAccountApi.fetchSubaccountBalancesList(subaccountId);
+
+console.log(subaccountBalanceList);
+```
+
+### 获取子账户历史记录
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
+
+const subaccountId = '0x...'
+const denom = 'inj'
+const pagination = {...} as PaginationOption
+
+const subaccountHistory = await indexerGrpcAccountApi.fetchSubaccountHistory({
+  subaccountId,
+  denom,
+  pagination /* 可选参数 */
+})
+
+console.log(subaccountHistory)
+```
+
+### 获取子账户订单摘要
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const subaccountId = "0x...";
+const marketId = "0x";
+const orderDirection = "buy";
+
+const orderSummary = await indexerGrpcAccountApi.fetchSubaccountOrderSummary({
+  subaccountId,
+  marketId,
+  orderDirection,
+});
+
+console.log(orderSummary);
+```
+
+### 获取现货或（和）衍生品订单状态
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const spotOrderHashes = ["0x..."];
+const derivativeOrderHashes = ["0x..."];
+
+const orderStates = await indexerGrpcAccountApi.fetchOrderStates({
+  spotOrderHashes,
+  derivativeOrderHashes,
+});
+
+console.log(orderStates);
+```

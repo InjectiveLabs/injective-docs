@@ -1,0 +1,37 @@
+---
+title: 投资组合
+---
+
+使用 StreamManagerV2 从 Indexer 流式获取投资组合模块相关数据的示例代码。
+
+## 使用 gRPC Stream 与 StreamManagerV2
+
+### 流式获取账户投资组合
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcAccountPortfolioStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcAccountPortfolioStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'account-portfolio',
+  streamFactory: () => stream.streamAccountPortfolio({ 
+    accountAddress: 'inj...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (portfolioResults) => {
+    console.log(portfolioResults)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```

@@ -1,0 +1,145 @@
+---
+title: Web3 Gateway 交易
+---
+
+查询 Indexer 获取交易模块相关数据的示例代码。仅在与 [Web3Gateway](../transactions/web3-gateway/) 交互时使用。
+
+## 使用 gRPC
+
+### 获取准备交易的响应
+
+```ts
+import { EvmChainId } from '@injectivelabs/ts-types'
+import { Msgs } from '@injectivelabs/sdk-ts/core/modules'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const address = '0x...' // 以太坊地址
+const chainId = EvmChainId.Sepolia
+const message = { ... } as Msgs
+const memo = '...'
+
+const prepareTxResponse = await indexerGrpcTransactionApi.prepareTxRequest({
+  address,
+  chainId,
+  message,
+  memo
+})
+
+console.log(prepareTxResponse)
+```
+
+### 获取准备 Cosmos 交易的响应
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const address = 'inj...'
+const message = { ... }
+
+const prepareCosmosTxResponse = await indexerGrpcTransactionApi.prepareCosmosTxRequest({
+  address,
+  message
+})
+
+console.log(prepareCosmosTxResponse)
+```
+
+### 获取使用 Web3Gateway 广播交易的响应
+
+在 node/CLI 环境中使用 `MsgBroadcasterWithPk` 广播交易，可在 `@injectivelabs/sdk-ts` 中找到。
+
+在浏览器环境中广播交易的更多详情，请使用 `@injectivelabs/wallet-core` 的 `MsgBroadcaster` 类。
+
+```ts
+import { Msgs } from '@injectivelabs/sdk-ts/core/modules'
+import { ChainId, EvmChainId } from '@injectivelabs/ts-types'
+import { WalletStrategy } from '@injectivelabs/wallet-strategy'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const chainId = ChainId.Testnet // Injective 测试网 Chain ID
+const evmChainId = EvmChainId.TestnetEvm // Injective Evm 测试网 Chain ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
+
+const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    evmChainId,
+    rpcUrl: evmRpcEndpoint,
+  },
+})
+
+const address = '0x...' // 以太坊地址
+const message = { ... } as Msgs
+const memo = '...'
+const response = { ... } // prepareTxRequest 的响应
+const signature = await walletStrategy.signEip712TypedData(
+      response.getData(),
+      address,
+    ) /* 参见 @injectivelabs/wallet-strategy 的 WalletStrategy 实现。本质上，如果钱包支持签署以太坊交易，则使用钱包的 signEip712TypedData 方法 */
+
+const broadcastTxResponse = await indexerGrpcTransactionApi.broadcastTxRequest({
+  signature,
+  chainId,
+  message,
+  txResponse: response
+})
+
+console.log(broadcastTxResponse)
+```
+
+### 获取广播 Cosmos 交易的响应
+
+```ts
+import { TxRaw } from '@injectivelabs/sdk-ts/types'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const address = 'inj...' // 以太坊地址
+const signature = '...' // base64
+const txRaw = { ... } as TxRaw
+const pubKey = {
+  type: string,
+  value: string // base64
+}
+
+const broadcastCosmosTxResponse = await indexerGrpcTransactionApi.broadcastCosmosTxRequest({
+  address,
+  signature,
+  txRaw,
+  pubKey
+})
+
+console.log(broadcastCosmosTxResponse)
+```
+
+### 获取 Web3Gateway 费用支付者
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcTransactionApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(
+  endpoints.indexer
+);
+
+const feePayer = await indexerGrpcTransactionApi.fetchFeePayer();
+
+console.log(feePayer);
+```

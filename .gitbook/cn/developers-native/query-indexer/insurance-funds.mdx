@@ -1,0 +1,43 @@
+---
+title: 保险基金
+---
+
+查询 Indexer 获取保险基金模块相关数据的示例代码。
+
+## 使用 gRPC
+
+### 获取 Injective 地址的赎回记录
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcInsuranceFundApi = new IndexerGrpcInsuranceFundApi(
+  endpoints.indexer
+);
+
+const injectiveAddress = "inj...";
+
+const redemptions = await indexerGrpcInsuranceFundApi.fetchRedemptions({
+  injectiveAddress,
+});
+
+console.log(redemptions);
+```
+
+### 获取保险基金列表
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcInsuranceFundApi = new IndexerGrpcInsuranceFundApi(
+  endpoints.indexer
+);
+
+const insuranceFunds = await indexerGrpcInsuranceFundApi.fetchInsuranceFunds();
+
+console.log(insuranceFunds);
+```
