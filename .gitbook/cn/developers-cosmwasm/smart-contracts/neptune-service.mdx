@@ -1,0 +1,207 @@
+---
+title: Neptune 服务
+---
+
+`NeptuneService` 是一个简单的工具，用于与 Injective 上的 Neptune CosmWasm 智能合约交互。它允许你获取资产价格、计算兑换比率、创建存款和取款消息，以及检索借贷利率。
+
+以下是如何使用 `NeptuneService` 类中每个方法的示例。
+
+## 初始化 NeptuneService
+
+在使用服务之前，创建一个 `NeptuneService` 实例。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { NeptuneService } from "@injectivelabs/sdk-ts/client/wasm";
+
+// 使用主网创建 NeptuneService 实例
+const neptuneService = new NeptuneService(Network.MainnetSentry);
+```
+
+## 获取价格
+
+- 从 Neptune 价格预言机合约获取特定资产的价格。对于 bank denom 使用 native_token，对于 CW20 代币使用带有 contract_addr 的 token。
+
+```ts
+const assets = [
+  {
+    native_token: {
+      denom: "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7", // peggy USDT bank denom
+    },
+  },
+  {
+    token: {
+      contract_addr: "inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s", // nUSDT 合约地址
+    },
+  },
+];
+
+const prices = await neptuneService.fetchPrices(assets);
+
+console.log(prices);
+```
+
+## 获取赎回比率
+
+- 计算 nUSDT（CW20 代币）和 USDT（bank 代币）之间的赎回比率。
+
+```ts
+const cw20Asset = {
+  token: {
+    contract_addr: "inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s", // nUSDT
+  },
+};
+
+const nativeAsset = {
+  native_token: {
+    denom: "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
+  },
+};
+
+const redemptionRatio = await neptuneService.fetchRedemptionRatio({
+  cw20Asset,
+  nativeAsset,
+});
+
+console.log(`Redemption Ratio: ${redemptionRatio}`);
+```
+
+## 将 CW20 nUSDT 转换为 Bank USDT
+
+- 使用赎回比率从给定数量的 CW20 nUSDT 计算 bank USDT 的数量。
+
+```ts
+const amountCW20 = 1000; // nUSDT 数量
+const redemptionRatio = 0.95; // 从 fetchRedemptionRatio 获取
+
+const bankAmount = neptuneService.calculateBankAmount(
+  amountCW20,
+  redemptionRatio
+);
+
+console.log(`Bank USDT Amount: ${bankAmount}`);
+```
+
+## 将 Bank USDT 转换为 CW20 nUSDT
+
+- 使用赎回比率从给定数量的 bank USDT 计算 CW20 nUSDT 的数量。
+
+```ts
+const amountBank = 950; // USDT 数量
+const redemptionRatio = 0.95; // 从 fetchRedemptionRatio 获取
+
+const cw20Amount = neptuneService.calculateCw20Amount(
+  amountBank,
+  redemptionRatio
+);
+
+console.log(`CW20 nUSDT Amount: ${cw20Amount}`);
+```
+
+## 获取借贷利率
+
+- 检索 Neptune 借贷市场智能合约中不同借贷市场的借贷利率
+
+```ts
+const lendingRates = await neptuneService.getLendingRates({
+  limit: 10, // 可选：要获取的利率数量
+});
+
+console.log(lendingRates);
+```
+
+## 按 Denom 获取借贷利率
+
+- 例如获取 USDT 的借贷利率
+
+```ts
+const denom = "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT denom
+
+const lendingRate = await neptuneService.getLendingRateByDenom({ denom });
+
+if (lendingRate) {
+  console.log(`Lending Rate for USDT: ${lendingRate}`);
+} else {
+  console.log("Lending Rate for USDT not found");
+}
+```
+
+## 计算年化收益率 (APY)
+
+- 将年化利率 (APR) 转换为连续复利的年化收益率 (APY)。确保使用从 neptuneService.getLendingRateByDenom 检索的借贷利率作为 apr。
+
+```ts
+const apr = 0.1; // 10% APR
+
+const apy = neptuneService.calculateAPY(apr);
+
+console.log(`APY (continuously compounded): ${(apy * 100).toFixed(2)}%`);
+```
+
+## 创建并广播存款消息
+
+- 创建一条消息将 USDT 存入 Neptune USDT 借贷市场并将其广播到网络。
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const denom = "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT denom
+
+const amountInUsdt = "100";
+
+// 将金额转换为最小单位（USDT 有 6 位小数）
+const amount = toChainFormat(amountInUsdt, 6).toFixed();
+
+const depositMsg = neptuneService.createDepositMsg({
+  denom,
+  amount,
+  sender: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.MainnetSentry,
+}).broadcast({
+  msgs: depositMsg,
+});
+
+console.log(txHash);
+```
+
+## 创建并广播取款消息
+
+- 创建一条消息从 Neptune USDT 借贷市场取出 USDT 并将其广播到网络
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x..."; // 你的私钥
+const injectiveAddress = "inj1..."; // 你的 Injective 地址
+
+// 定义要取出的金额（例如 100 nUSDT）
+const amountInNusdt = "100";
+
+// 将金额转换为最小单位（nUSDT 有 6 位小数）
+const amount = toChainFormat(amountInNusdt, 6).toFixed();
+
+const withdrawMsg = neptuneService.createWithdrawMsg({
+  amount,
+  sender: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.MainnetSentry,
+}).broadcast({
+  msgs: withdrawMsg,
+});
+
+console.log(`Transaction Hash: ${txHash}`);
+```
