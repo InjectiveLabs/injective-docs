@@ -1,0 +1,792 @@
+---
+title: 你的第一个 CosmWasm 智能合约
+---
+
+在本节中，我们将解释如何设置 CosmWasm 智能合约开发环境。
+
+## 前置条件
+
+在开始之前，请确保你已安装 [`rustup`](https://rustup.rs/) 以及最新版本的 `rustc` 和 `cargo`。目前，我们在 Rust v1.58.1+ 上进行测试。
+
+你还需要安装 `wasm32-unknown-unknown` 目标以及 `cargo-generate` Rust crate。
+
+你可以通过以下命令检查版本：
+
+```bash
+rustc --version
+cargo --version
+rustup target list --installed
+# 如果上面没有列出 wasm32，运行这个命令
+rustup target add wasm32-unknown-unknown
+# 安装 cargo-generate，运行这个命令
+cargo install cargo-generate
+```
+
+## 目标
+
+* 创建并与一个智能合约交互，该合约可以增加计数器并将其重置为给定值
+* 了解 CosmWasm 智能合约的基础知识，学习如何在 Injective 上部署它，并使用 Injective 工具与之交互
+
+## CosmWasm 合约基础
+
+智能合约可以被视为一个[单例对象](https://en.wikipedia.org/wiki/Singleton_pattern)的实例，其内部状态持久化在区块链上。用户可以通过发送 JSON 消息来触发状态更改，也可以通过发送格式化为 JSON 消息的请求来查询其状态。这些 JSON 消息与 Injective 区块链消息（如 `MsgSend` 和 `MsgExecuteContract`）不同。
+
+作为智能合约开发者，你的工作是定义组成智能合约接口的 3 个函数：
+
+* `instantiate()`：在合约实例化期间调用的构造函数，用于提供初始状态
+* `execute()`：当用户想要调用智能合约上的方法时被调用
+* `query()`：当用户想要从智能合约获取数据时被调用
+
+在我们的[示例计数器合约](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/msg.rs)中，我们将实现一个 `instantiate`、一个 `query` 和两个 `execute` 方法。
+
+## 从模板开始
+
+在你的工作目录中，通过运行以下命令快速启动具有推荐文件夹结构和构建选项的智能合约：
+
+```bash
+cargo generate --git https://github.com/CosmWasm/cw-template.git --branch 1.0 --name my-first-contract
+cd my-first-contract
+```
+
+这有助于你快速入门，提供智能合约的基本样板和结构。在 [`src/contract.rs`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs) 文件中，你会发现标准的 CosmWasm 入口点 [`instantiate()`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L15)、[`execute()`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L35) 和 [`query()`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L72) 已正确暴露和连接。
+
+## 状态
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+你可以在 CosmWasm 的[文档](https://book.cosmwasm.com/basics/state.html)中了解更多关于 CosmWasm 状态的信息。
+</Callout>
+
+`State` 处理数据库的状态，智能合约数据在其中存储和访问。
+
+[起始模板](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/state.rs)具有以下基本状态，一个单例结构体 `State` 包含：
+
+* `count`，一个 32 位整数，`execute()` 消息将通过增加或重置它来与之交互。
+* `owner`，`MsgInstantiateContract` 的发送者 `address`，它将决定某些执行消息是否被允许。
+
+```c
+// src/state.rs
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+use cosmwasm_std::Addr;
+use cw_storage_plus::Item;
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct State {
+    pub count: i32,
+    pub owner: Addr,
+}
+
+pub const STATE: Item<State> = Item::new("state");
+```
+
+Injective 智能合约能够通过 Injective 的原生 LevelDB（一个基于字节的键值存储）保持持久状态。因此，你希望持久化的任何数据都应该分配一个唯一的键，该键可用于索引和检索数据。
+
+数据只能作为原始字节持久化，因此任何结构或数据类型的概念都必须表示为一对序列化和反序列化函数。例如，对象必须存储为字节，因此你必须提供将对象编码为字节以保存在区块链上的函数，以及将字节解码回你的合约逻辑可以理解的数据类型的函数。字节表示的选择由你决定，只要它提供清晰的双向映射即可。
+
+幸运的是，CosmWasm 提供了实用 crate，如 [`cosmwasm-storage`](https://crates.io/crates/cosmwasm-storage)，它为数据容器（如"singleton"和"bucket"）提供了方便的高级抽象，自动为常用类型（如结构体和 Rust 数字）提供序列化和反序列化。此外，[`cw-storage-plus`](https://cosmwasm.cosmos.network/smart-contracts/state/cw-plus/) crate 可用于更高效的存储机制。
+
+注意 `State` 结构体如何同时持有 `count` 和 `owner`。此外，`derive` 属性用于自动实现一些有用的 trait：
+
+* `Serialize`：提供序列化
+* `Deserialize`：提供反序列化
+* `Clone`：使结构体可复制
+* `Debug`：使结构体能够打印为字符串
+* `PartialEq`：提供相等性比较
+* `JsonSchema`：自动生成 JSON schema
+
+`Addr` 指的是以 `inj` 为前缀的人类可读的 Injective 地址，例如 `inj1clw20s2uxeyxtam6f7m84vgae92s9eh7vygagt`。
+
+## InstantiateMsg
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+你可以在 CosmWasm 的[文档](https://github.com/CosmWasm/docs/blob/archive/dev-academy/develop-smart-contract/01-intro.md#instantiatemsg)中了解更多关于 InstantiateMsg 的信息。
+</Callout>
+
+当用户通过 `MsgInstantiateContract` 在区块链上实例化合约时，`InstantiateMsg` 会提供给合约。这为合约提供了其配置以及初始状态。
+
+在 Injective 区块链上，合约代码的上传和合约的实例化被视为独立的事件，这与以太坊不同。这是为了允许一小组经过审查的合约原型作为多个实例存在，共享相同的基础代码，但使用不同的参数进行配置（想象一个规范的 ERC20，以及使用其代码的多个代币）。
+
+### 示例
+
+对于你的合约，合约创建者需要在 JSON 消息中提供初始状态。我们可以在下面的消息定义中看到，消息持有一个参数 `count`，表示初始计数。
+
+```json
+{
+  "count": 100
+}
+```
+
+### 消息定义
+
+```c
+// src/msg.rs
+
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct InstantiateMsg {
+    pub count: i32,
+}
+
+```
+
+### 合约逻辑
+
+在 `contract.rs` 中，你将定义你的第一个入口点 `instantiate()`，即合约被实例化并传递其 `InstantiateMsg` 的地方。从消息中提取计数并设置初始状态，其中：
+
+* `count` 被分配为消息中的计数
+* `owner` 被分配为 `MsgInstantiateContract` 的发送者
+
+```c
+// src/contract.rs
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn instantiate(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
+) -> Result<Response, ContractError> {
+    let state = State {
+        count: msg.count,
+        owner: info.sender.clone(),
+    };
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    STATE.save(deps.storage, &state)?;
+
+    Ok(Response::new()
+        .add_attribute("method", "instantiate")
+        .add_attribute("owner", info.sender)
+        .add_attribute("count", msg.count.to_string()))
+}
+```
+
+## ExecuteMsg
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+你可以在 CosmWasm 的[文档](https://book.cosmwasm.com/basics/execute.html)中了解更多关于 ExecuteMsg 的信息。
+</Callout>
+
+`ExecuteMsg` 是通过 `MsgExecuteContract` 传递给 `execute()` 函数的 JSON 消息。与 `InstantiateMsg` 不同，`ExecuteMsg` 可以作为几种不同类型的消息存在，以适应智能合约可以向用户公开的不同类型的函数。[`execute()` 函数](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L35)将这些不同类型的消息多路复用到其适当的消息处理逻辑。
+
+我们有[两个 ExecuteMsg](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/msg.rs#L9)：`Increment` 和 `Reset`。
+
+* `Increment` 没有输入参数，将 count 的值增加 1。
+* `Reset` 接受一个 32 位整数作为参数，并将 `count` 的值重置为输入参数。
+
+### 示例
+
+**Increment**
+
+任何用户都可以将当前计数增加 1。
+
+```json
+{
+  "increment": {}
+}
+```
+
+#### Reset
+
+只有所有者可以将计数重置为特定数字。有关实现细节，请参阅下面的逻辑。
+
+```json
+{
+  "reset": {
+    "count": 5
+  }
+}
+```
+
+### 消息定义
+
+对于 `ExecuteMsg`，可以使用 `enum` 来多路复用你的合约可以理解的不同类型的消息。`serde` 属性将你的属性键重写为蛇形命名法和小写，因此在序列化和反序列化 JSON 时，你将得到 `increment` 和 `reset` 而不是 `Increment` 和 `Reset`。
+
+```c
+// src/msg.rs
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecuteMsg {
+    Increment {},
+    Reset { count: i32 },
+}
+```
+
+### 逻辑
+
+```c
+// src/contract.rs
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn execute(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response, ContractError> {
+    match msg {
+        ExecuteMsg::Increment {} => try_increment(deps),
+        ExecuteMsg::Reset { count } => try_reset(deps, info, count),
+    }
+}
+```
+
+这是你的 `execute()` 方法，它使用 Rust 的模式匹配将接收到的 `ExecuteMsg` 路由到适当的处理逻辑，根据接收到的消息分派 `try_increment()` 或 `try_reset()` 调用。
+
+```c
+pub fn try_increment(deps: DepsMut) -> Result<Response, ContractError> {
+    STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
+        state.count += 1;
+        Ok(state)
+    })?;
+
+    Ok(Response::new().add_attribute("method", "try_increment"))
+}
+```
+
+首先，它获取存储的可变引用以更新位于键 `state` 的项目。然后通过返回带有新状态的 `Ok` 结果来更新状态的计数。最后，它通过返回带有 `Response` 的 `Ok` 结果来终止合约的执行，确认成功。
+
+```c
+// src/contract.rs
+
+pub fn try_reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
+    STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
+        if info.sender != state.owner {
+            return Err(ContractError::Unauthorized {});
+        }
+        state.count = count;
+        Ok(state)
+    })?;
+    Ok(Response::new().add_attribute("method", "reset"))
+}
+```
+
+reset 的逻辑与 increment 非常相似——只是这次，它首先检查消息发送者是否被允许调用 reset 函数（在这种情况下，它必须是合约所有者）。
+
+## QueryMsg
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+你可以在 CosmWasm 的[文档](https://docs.cosmwasm.com/docs/smart-contracts/query)中了解更多关于 QueryMsg 的信息。
+</Callout>
+
+`GetCount` [查询消息](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/msg.rs#L16)没有参数，返回 `count` 值。
+
+有关实现细节，请参阅下面的逻辑。
+
+### 示例
+
+模板合约只支持一种类型的 `QueryMsg`：
+
+**GetCount**
+
+请求：
+
+```json
+{
+  "get_count": {}
+}
+```
+
+应该返回：
+
+```json
+{
+  "count": 5
+}
+```
+
+### 消息定义
+
+为了支持合约中的数据查询，你必须定义 `QueryMsg` 格式（表示请求）以及提供查询输出的结构——在这种情况下是 `CountResponse`。你必须这样做，因为 `query()` 将通过结构化 JSON 将信息发送回用户，所以你必须让响应的形状为人所知。有关更多信息，请参阅生成 JSON Schema。
+
+将以下内容添加到你的 `src/msg.rs`：
+
+```c
+// src/msg.rs
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum QueryMsg {
+    // GetCount 将当前计数作为 json 编码的数字返回
+    GetCount {},
+}
+
+// 为每个查询响应定义自定义结构体
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct CountResponse {
+    pub count: i32,
+}
+```
+
+### 逻辑
+
+`query()` 的逻辑与 `execute()` 类似；但是，由于 `query()` 在最终用户不进行交易的情况下被调用，因此省略了 `env` 参数，因为不需要任何信息。
+
+```c
+// src/contract.rs
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetCount {} => to_binary(&query_count(deps)?),
+    }
+}
+
+fn query_count(deps: Deps) -> StdResult<CountResponse> {
+    let state = STATE.load(deps.storage)?;
+    Ok(CountResponse { count: state.count })
+}
+```
+
+## 单元测试
+
+单元测试应该作为在链上部署代码之前的第一道保障。它们执行速度快，并且可以使用 `RUST_BACKTRACE=1` 标志在失败时提供有用的回溯：
+
+```c
+cargo unit-test // 使用 RUST_BACKTRACE=1 运行以获得有用的回溯
+```
+
+你可以在 `src/contract.rs` 找到[单元测试实现](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/contract.rs#L88)。
+
+## 构建合约
+
+现在我们理解并测试了合约，我们可以运行以下命令来构建合约。这将在我们在下一步优化合约之前检查任何初步错误。
+
+```bash
+cargo wasm
+```
+
+接下来，我们必须优化合约以准备将代码上传到链上。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+阅读更多关于[为生产准备 Wasm 字节码](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/Developing.md#preparing-the-wasm-bytecode-for-production)的详细信息。
+</Callout>
+
+CosmWasm 有 [rust-optimizer](https://github.com/CosmWasm/rust-optimizer)，一个优化编译器，可以产生小而一致的构建输出。使用该工具最简单的方法是使用已发布的 Docker 镜像——查看[这里](https://hub.docker.com/r/cosmwasm/rust-optimizer/tags)获取最新的 x86 版本，或[这里](https://hub.docker.com/r/cosmwasm/rust-optimizer-arm64/tags)获取最新的 ARM 版本。在 Docker 运行的情况下，运行以下命令将合约代码挂载到 `/code` 并优化输出（如果你不想先 `cd` 到目录，可以使用绝对路径代替 `$(pwd)`）：
+
+```bash
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/rust-optimizer:0.12.12
+```
+
+如果你使用的是 ARM64 机器，你应该使用为 ARM64 构建的 docker 镜像：
+
+```bash
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/rust-optimizer-arm64:0.12.12
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+CosmWasm 不建议使用 ARM64 版本的编译器，因为它产生的 Wasm 工件与 Intel/AMD 版本不同。对于发布/生产，只建议使用 Intel/AMD 优化器构建的合约。有关 CosmWasm 的说明，请参阅[这里](https://github.com/CosmWasm/rust-optimizer#notice)。
+</Callout>
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+运行命令时你可能会收到 `` Unable to update registry `crates-io` `` 错误。尝试将以下行添加到合约目录中的 `Cargo.toml` 文件并再次运行命令：
+
+```toml
+[net]
+git-fetch-with-cli = true
+```
+
+有关更多信息，请参阅 [The Cargo Book](https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli)。
+</Callout>
+
+这会生成一个 `artifacts` 目录，其中包含 `PROJECT_NAME.wasm` 以及 `checksums.txt`，其中包含 Wasm 文件的 Sha256 哈希。Wasm 文件是确定性编译的（任何在相同 git 提交上运行相同 docker 的人都应该获得具有相同 Sha256 哈希的相同文件）。
+
+## 安装 `injectived`
+
+`injectived` 是连接到 Injective 并使你能够与 Injective 区块链交互的命令行界面和守护进程。
+
+如果你想使用 CLI 在本地与智能合约交互，你必须安装 `injectived`。为此，你可以按照 [injectived 安装指南](/developers/injectived/install)中的安装指南进行操作。
+
+或者，已准备好 Docker 镜像以使本教程更容易。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+如果你从二进制文件安装 `injectived`，请忽略 docker 命令。
+在[公共端点部分](/infra/public-endpoints)，你可以找到正确的 --node 信息以与主网和测试网交互。
+</Callout>
+
+执行此命令将使 docker 容器无限期执行。
+
+```bash
+docker run --name="injective-core-staging" \
+-v=<directory_to_which_you_cloned_cw-template>/artifacts:/var/artifacts \
+--entrypoint=sh public.ecr.aws/l9h3g6c6/injective-core:staging \
+-c "tail -F anything"
+```
+
+注意：`directory_to_which_you_cloned_cw-template` 必须是绝对路径。可以通过在 CosmWasm/cw-counter 目录内运行 `pwd` 命令轻松找到绝对路径。
+
+打开一个新终端并进入 Docker 容器以初始化链：
+
+```bash
+docker exec -it injective-core-staging sh
+```
+
+让我们首先添加 `jq` 依赖项，稍后会用到：
+
+```bash
+# 在 "injective-core-staging" 容器内
+apk add jq
+```
+
+现在我们可以继续进行本地链初始化并添加一个名为 `testuser` 的测试用户（提示时使用 12345678 作为密码）。我们只会使用测试用户来生成一个新的私钥，稍后将用于在测试网上签署消息：
+
+```sh
+# 在 "injective-core-staging" 容器内
+injectived keys add testuser
+```
+
+**输出**
+
+```
+- name: testuser
+  type: local
+  address: inj1exjcp8pkvzqzsnwkzte87fmzhfftr99kd36jat
+  pubkey: '{"@type":"/injective.crypto.v1beta1.ethsecp256k1.PubKey","key":"Aqi010PsKkFe9KwA45ajvrr53vfPy+5vgc3aHWWGdW6X"}'
+  mnemonic: ""
+
+**重要** 将此助记词短语写在安全的地方。
+如果你忘记密码，这是恢复账户的唯一方法。
+
+wash wise evil buffalo fiction quantum planet dial grape slam title salt dry and some more words that should be here
+```
+
+花点时间记下地址或将其导出为环境变量，因为你需要它来继续：
+
+```bash
+# 在 "injective-core-staging" 容器内
+export INJ_ADDRESS= <your inj address>
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+你可以使用 [Injective 测试水龙头](https://faucet.injective.network/) 为你最近生成的测试地址请求测试网资金。
+</Callout>
+
+现在你已成功创建 `testuser` 一个 Injective 测试网。在从水龙头请求 `testnet` 资金后，它应该也持有一些资金。
+
+要确认，请在 [Injective 测试网浏览器](https://testnet.explorer.injective.network/) 上搜索你的地址以检查你的余额。
+
+或者，你可以通过[查询银行余额](https://sentry.testnet.lcd.injective.network/swagger/#/Query/AllBalances)或使用 curl 来验证：
+
+```bash
+curl -X GET "https://sentry.testnet.lcd.injective.network/cosmos/bank/v1beta1/balances/<your_INJ_address>" -H "accept: application/json"
+```
+
+## 上传 Wasm 合约
+
+现在是时候将你在前面步骤中编译的 `.wasm` 文件上传到 Injective 测试网了。请注意，主网的程序不同，[需要治理提案。](../mainnet-deployment-guide/)
+
+```bash
+# 在 "injective-core-staging" 容器内，或者如果在本地运行 injectived，则从合约目录
+yes 12345678 | injectived tx wasm store artifacts/my_first_contract.wasm \
+--from=$(echo $INJ_ADDRESS) \
+--chain-id="injective-888" \
+--yes --fees=1000000000000000inj --gas=2000000 \
+--node=https://testnet.sentry.tm.injective.network:443
+```
+
+**输出：**
+
+```bash
+code: 0
+codespace: ""
+data: ""
+events: []
+gas_used: "0"
+gas_wanted: "0"
+height: "0"
+info: ""
+logs: []
+raw_log: '[]'
+timestamp: ""
+tx: null
+txhash: 912458AA8E0D50A479C8CF0DD26196C49A65FCFBEEB67DF8A2EA22317B130E2C
+```
+
+在 [Injective 测试网浏览器](https://testnet.explorer.injective.network) 上检查你的地址，并查找具有从存储代码到链上返回的 `txhash` 的交易。交易类型应该是 `MsgStoreCode`。
+
+你可以在 [Code](https://testnet.explorer.injective.network/smart-contracts/code/) 下查看 Injective 测试网上所有存储的代码。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+有不同的方法可以找到你刚刚存储的代码：
+
+* 在 Injective 浏览器[代码列表](https://testnet.explorer.injective.network/smart-contracts/code/)上查找 TxHash；它很可能是最新的。
+* 使用 `injectived` 查询交易信息。
+</Callout>
+
+要查询交易，使用 `txhash` 并验证合约已部署。
+
+```sh
+injectived query tx 912458AA8E0D50A479C8CF0DD26196C49A65FCFBEEB67DF8A2EA22317B130E2C --node=https://testnet.sentry.tm.injective.network:443
+```
+
+更仔细地检查输出，我们可以看到上传合约的 `code_id` 为 `290`：
+
+```bash
+- events:
+  - attributes:
+    - key: access_config
+      value: '{"permission":"Everybody","address":""}'
+    - key: checksum
+      value: '"+OdoniOsDJ1T9EqP2YxobCCwFAqNdtYA4sVGv7undY0="'
+    - key: code_id
+      value: '"290"'
+    - key: creator
+      value: '"inj1h3gepa4tszh66ee67he53jzmprsqc2l9npq3ty"'
+    type: cosmwasm.wasm.v1.EventCodeStored
+  - attributes:
+    - key: action
+      value: /cosmwasm.wasm.v1.MsgStoreCode
+    - key: module
+      value: wasm
+    - key: sender
+      value: inj1h3gepa4tszh66ee67he53jzmprsqc2l9npq3ty
+    type: message
+  - attributes:
+    - key: code_id
+      value: "290"
+    type: store_code
+```
+
+让我们将你的 `code_id` 导出为环境变量——我们需要它来实例化合约。你可以跳过此步骤并稍后手动添加，但请记下 ID。
+
+```bash
+export CODE_ID= <code_id of your stored contract>
+```
+
+## 生成 JSON Schema
+
+虽然 Wasm 调用 `instantiate`、`execute` 和 `query` 接受 JSON，但这不足以使用它们。我们需要向客户端公开预期消息的 schema。
+
+为了利用 JSON-schema 自动生成，你应该注册每个需要 schema 的数据结构。
+
+```c
+// examples/schema.rs
+
+use std::env::current_dir;
+use std::fs::create_dir_all;
+
+use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
+
+use my_first_contract::msg::{CountResponse, HandleMsg, InitMsg, QueryMsg};
+use my_first_contract::state::State;
+
+fn main() {
+    let mut out_dir = current_dir().unwrap();
+    out_dir.push("schema");
+    create_dir_all(&out_dir).unwrap();
+    remove_schemas(&out_dir).unwrap();
+
+    export_schema(&schema_for!(InstantiateMsg), &out_dir);
+    export_schema(&schema_for!(ExecuteMsg), &out_dir);
+    export_schema(&schema_for!(QueryMsg), &out_dir);
+    export_schema(&schema_for!(State), &out_dir);
+    export_schema(&schema_for!(CountResponse), &out_dir);
+}
+```
+
+然后可以使用以下命令生成 schema
+
+```bash
+cargo schema
+```
+
+这将在 `./schema` 中输出 5 个文件，对应于合约接受的 3 种消息类型、查询响应消息和内部 `State`。
+
+这些文件采用标准 JSON Schema 格式，应该可以被各种客户端工具使用，无论是自动生成编解码器，还是只是根据定义的 schema 验证传入的 JSON。
+
+花一分钟生成 schema（[在这里查看](https://github.com/InjectiveLabs/cw-counter/blob/master/schema/cw-counter.json)）并熟悉它，因为你将在下一步中需要它。
+
+## 实例化合约
+
+现在我们在 Injective 上有了代码，是时候实例化合约以与之交互了。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+提醒：在 CosmWasm 上，合约代码的上传和合约的实例化被视为独立的事件
+</Callout>
+
+要实例化合约，运行以下 CLI 命令，使用你在上一步中获得的 code_id，以及 [JSON 编码的初始化参数](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/schema/cw-counter.json#L7)和一个标签（此合约在列表中的人类可读名称）。
+
+```bash
+INIT='{"count":99}'
+yes 12345678 | injectived tx wasm instantiate $CODE_ID $INIT \
+--label="CounterTestInstance" \
+--from=$(echo $INJ_ADDRESS) \
+--chain-id="injective-888" \
+--yes --fees=1000000000000000inj \
+--gas=2000000 \
+--no-admin \
+--node=https://testnet.sentry.tm.injective.network:443
+```
+
+**输出：**
+
+```bash
+code: 0
+codespace: ""
+data: ""
+events: []
+gas_used: "0"
+gas_wanted: "0"
+height: "0"
+info: ""
+logs: []
+raw_log: '[]'
+timestamp: ""
+tx: null
+txhash: 01804F525FE336A5502E3C84C7AE00269C7E0B3DC9AA1AB0DDE3BA62CF93BE1D
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+你可以通过以下方式找到合约地址和元数据：
+
+* 在[测试网浏览器](https://www.injscan.com/smart-contracts/)上查看
+* 查询 [ContractsByCode](https://k8s.testnet.lcd.injective.network/swagger/#/Query/ContractsByCode) 和 [ContractInfo](https://k8s.testnet.lcd.injective.network/swagger/#/Query/ContractInfo) API
+* 通过 CLI 查询
+
+```bash
+injectived query wasm contract inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 --node=https://testnet.sentry.tm.injective.network:443
+```
+</Callout>
+
+## 查询合约
+
+正如我们之前所知，我们唯一的 QueryMsg 是 `get_count`。
+
+```bash
+GET_COUNT_QUERY='{"get_count":{}}'
+injectived query wasm contract-state smart inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 "$GET_COUNT_QUERY" \
+--node=https://testnet.sentry.tm.injective.network:443 \
+--output json
+```
+
+**输出：**
+
+```bash
+{"data":{"count":99}}
+```
+
+我们看到 `count` 是 99，正如我们实例化合约时设置的那样。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+如果你查询同一个合约，你可能会收到不同的响应，因为其他人可能已经与合约交互并增加或重置了计数。
+</Callout>
+
+## 执行合约
+
+现在让我们通过增加计数器来与合约交互。
+
+```bash
+INCREMENT='{"increment":{}}'
+yes 12345678 | injectived tx wasm execute inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 "$INCREMENT" --from=$(echo $INJ_ADDRESS) \
+--chain-id="injective-888" \
+--yes --fees=1000000000000000inj --gas=2000000 \
+--node=https://testnet.sentry.tm.injective.network:443 \
+--output json
+```
+
+如果我们查询合约的计数，我们会看到：
+
+```bash
+{"data":{"count":100}}
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**yes 12345678 |** 自动将密码传递（管道）到 **injectived tx wasm execute** 的输入，这样你就不需要手动输入。
+</Callout>
+
+要重置计数器：
+
+```bash
+RESET='{"reset":{"count":999}}'
+yes 12345678 | injectived tx wasm execute inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 "$RESET" \
+--from=$(echo $INJ_ADDRESS) \
+--chain-id="injective-888" \
+--yes --fees=1000000000000000inj --gas=2000000 \
+--node=https://testnet.sentry.tm.injective.network:443 \
+--output json
+```
+
+现在，如果我们再次查询合约，我们会看到计数已重置为提供的值：
+
+```bash
+{"data":{"count":999}}
+```
+
+## Cosmos 消息
+
+除了定义自定义智能合约逻辑外，CosmWasm 还允许合约与底层 Cosmos SDK 功能交互。一个常见的用例是使用 Cosmos SDK 的 bank 模块将代币从合约发送到指定地址。
+
+### 示例：Bank Send
+
+`BankMsg::Send` 消息允许合约将代币转移到另一个地址。这在各种场景中都很有用，例如分发奖励或向用户返还资金。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**注意：** 如果你想同时发送资金并在另一个合约上执行函数，不要使用 BankMsg::Send。相反，使用 WasmMsg::Execute 并设置相应的 funds 字段。
+</Callout>
+
+### 构造消息
+
+你可以在合约的 `execute` 函数中构造 `BankMsg::Send` 消息。此消息需要指定接收者地址和要发送的金额。以下是如何构造此消息的示例：
+
+```rust
+use cosmwasm_std::{BankMsg, Coin, Response, MessageInfo};
+
+pub fn try_send(
+    info: MessageInfo,
+    recipient_address: String,
+    amount: Vec<Coin>,
+) -> Result<Response, ContractError> {
+    let send_message = BankMsg::Send {
+        to_address: recipient_address,
+        amount,
+    };
+
+    let response = Response::new().add_message(send_message);
+    Ok(response)
+}
+```
+
+### 在智能合约中使用
+
+在你的合约中，你可以向 ExecuteMsg 枚举添加一个新变体来处理此 bank send 功能。例如：
+
+```rust
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecuteMsg {
+    // ... 其他消息 ...
+    SendTokens { recipient: String, amount: Vec<Coin> },
+}
+```
+
+然后，在 `execute` 函数中，你可以添加一个 case 来处理此消息：
+
+```rust
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn execute(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response, ContractError> {
+    match msg {
+        // ... 其他消息处理 ...
+        ExecuteMsg::SendTokens { recipient, amount } => try_send(info, recipient, amount),
+    }
+}
+```
+
+## 测试
+
+与其他智能合约函数一样，你应该添加单元测试以确保你的 bank send 功能按预期工作。这包括测试不同的场景，例如发送各种代币金额和正确处理错误。
+
+你可以使用 [test-tube](https://github.com/InjectiveLabs/test-tube) 运行包含本地 Injective 链的集成测试。
+
+恭喜！你已经创建并与你的第一个 Injective 智能合约交互，现在知道如何在 Injective 上开始 CosmWasm 开发。继续阅读"为你的合约创建前端"以获取创建 Web UI 的指南。
