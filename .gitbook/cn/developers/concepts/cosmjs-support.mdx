@@ -1,0 +1,105 @@
+---
+title: CosmJs 支持
+---
+Injective 在 `@cosmjs` 包中没有原生支持。强烈建议使用我们的 `@injectivelabs` 包与 Injective 交互。
+如果你熟悉 `@cosmjs` 包，我们导出了类似的接口/类，它们的工作方式与 `@cosmjs` 上的类相同，但也支持 Injective。
+再次提醒，推荐的方法是使用 Injective 的标准方法，你可以在 [Cosmos 交易](../../developers-native/transactions/cosmos/)中了解更多。
+## 使用 Keplr
+以下是如何使用 `@injectivelabs` 替代 `@cosmjs` 包与 Keplr 配合使用的示例：
+```ts
+import {
+  PrivateKey,
+  InjectiveStargate,
+} from "@injectivelabs/sdk-ts/cosmjs";
+import { OfflineDirectSigner } from "@cosmjs/proto-signing";
+import { assertIsBroadcastTxSuccess } from '@cosmjs/stargate'
+(async () => {
+  // 启用 Keplr
+  await window.keplr.enable(chainId);
+  // 获取离线签名者
+  const offlineSigner = window.getOfflineSigner(chainId);
+  const [account] = await offlineSigner.getAccounts();
+  // 初始化 stargate 客户端
+  const client =
+    await InjectiveStargate.InjectiveSigningStargateClient.connectWithSigner(
+      "https://lcd-cosmoshub.keplr.app/rest",
+      offlineSigner,
+    );
+  })
+  const amount = {
+    denom: "inj",
+    amount: amount.toString(),
+  };
+  const fee = {
+    amount: [
+      {
+        denom: "inj",
+        amount: "5000000000000000",
+      },
+    ],
+    gas: "200000",
+  };
+  const result = await client.sendTokens(
+    account.address,
+    recipient,
+    [amount],
+    fee,
+    ""
+  );
+  assertIsBroadcastTxSuccess(result);
+  if (result.code !== undefined && result.code !== 0) {
+    alert("发送 tx 失败: " + result.log || result.rawLog);
+  } else {
+    alert("成功发送 tx:" + result.transactionHash);
+  }
+})()
+```
+## 在 CLI/Node 环境中使用
+以下是如何在 node 或 CLI 环境中使用 `@injectivelabs` 替代 `@cosmjs` 包的示例。
+再次提醒，推荐的方法是使用 [MsgBroadcasterWithPk](../../developers-native/transactions/private-key/#example-with-msgbroadcasterwithpk) 抽象来遵循 Injective 的标准方法。
+```ts
+import {
+  PrivateKey,
+  InjectiveStargate,
+  InjectiveDirectEthSecp256k1Wallet,
+} from "@injectivelabs/sdk-ts/cosmjs";
+import { getStdFee } from "@injectivelabs/utils";
+import { OfflineDirectSigner } from "@cosmjs/proto-signing";
+import { Network, getNetworkInfo } from "@injectivelabs/networks";
+(async () => {
+  const network = getNetworkInfo(Network.Testnet);
+  const privateKeyHash = process.env.PRIVATE_KEY as string;
+  const privateKey = PrivateKey.fromHex(privateKeyHash);
+  const injectiveAddress = privateKey.toBech32();
+  const wallet = (await InjectiveDirectEthSecp256k1Wallet.fromKey(
+    Buffer.from(privateKeyHash, "hex")
+  )) as OfflineDirectSigner;
+  const [account] = await wallet.getAccounts();
+  const client =
+    await InjectiveStargate.InjectiveSigningStargateClient.connectWithSigner(
+      network.rpc as string,
+      wallet
+    );
+  const recipient = injectiveAddress;
+  const amount = {
+    denom: "inj",
+    amount: "1000000000",
+  };
+  const txResponse = await client.sendTokens(
+    account.address,
+    recipient,
+    [amount],
+    getStdFee(),
+    "祝你的星币玩得开心"
+  );
+  if (txResponse.code !== 0) {
+    console.log(`交易失败: ${txResponse.rawLog}`);
+  } else {
+    console.log(
+      `广播的交易哈希: ${JSON.stringify(
+        txResponse.transactionHash
+      )}`
+    );
+  }
+})();
+```
