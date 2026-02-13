@@ -275,6 +275,7 @@
               },
               "developers-evm/evm-equivalence",
               "developers-evm/multivm-token-standard",
+              "developers-evm/permissioned-multivm-token",
               "developers-evm/wrapped-inj",
               "developers-evm/precompiles",
               "developers-evm/bank-precompile",

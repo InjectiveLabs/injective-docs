@@ -1,11 +1,15 @@
 ---
-description: Understanding token representation in Injective's multi-VM architecture
 title: MultiVM Token Standard
+description: Understanding token representation in Injective's multi-VM architecture
 ---
 
 ## What is MultiVM Token Standard (MTS)?
 
-MTS (MultiVM Token Standard) ensures that every token on Injective—whether deployed using Cosmos modules or via the Ethereum Virtual Machine (EVM)—has one canonical balance and identity. This unified approach prevents fragmentation and eliminates the need for bridging or wrapping tokens, thereby enabling seamless interoperability and unified liquidity for decentralized finance (DeFi) and dApp interactions.
+MTS (MultiVM Token Standard) ensures that every token on Injective -
+whether deployed using Cosmos modules or via the Ethereum Virtual Machine (EVM) —
+has one canonical balance and identity.
+This unified approach prevents fragmentation and eliminates the need for bridging or wrapping tokens,
+thereby enabling seamless interoperability and unified liquidity for decentralized finance (DeFi) and dApp interactions.
 
 ## Why is MTS Important?
 
@@ -27,7 +31,7 @@ The system comprises two main components:
 
 <figure><img src="/img/multivm-token-single-token-representation-architecture.png" alt="" /><figcaption><p>Single Token Representation Architecture</p></figcaption></figure>
 
-### **Creating an** MT&#x53;**-Compliant Token**
+### Creating an MTS-Compliant Token
 
 1. [**Using Our Prebuilt Templates**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
    * Start with the provided Solidity templates, such as `BankERC20.sol`, `MintBurnBankERC20.sol`, or `FixedSupplyBankERC20.sol`.
@@ -35,38 +39,56 @@ The system comprises two main components:
    * Deploy your MTS token contract on the Injective EVM network.
    * The contract automatically interacts with the Bank Precompile to update the canonical state.
 
-### **Interoperability and Cross-Chain Integration**
+### Interoperability and Cross-Chain Integration
 
-#### **Native Interoperability**
+#### Native Interoperability*
 
 Injective’s EVM is integrated directly into the Cosmos-based chain.
 
-* EVM smart contracts, when using MTS, perform operations that reflect immediately on native modules (such as the exchange, staking, and governance modules).
-* [JSON-RPC endpoints](/developers-evm/network-information/) provided within the Injective binary are compatible with Ethereum, ensuring smooth developer integration.
+* EVM smart contracts, when using MTS, perform operations that reflect immediately
+  on native modules (such as the exchange, staking, and governance modules).
+* [JSON-RPC endpoints](/developers-evm/network-information/)
+  provided within the Injective binary are compatible with Ethereum,
+  ensuring smooth developer integration.
 
-#### **Cross-Chain Operations**
+#### Cross-Chain Operations
 
-* **IBC Compatibility:** Existing native tokens (e.g., those created via a [Token Factory](/developers-native/injective/tokenfactory/) or pegged via Peggy) are accessible from the EVM once an MTS pairing is established.
-* **Bridging Alternatives:** While many blockchains require separate bridge operations (lock, mint, unlock), MTS avoids these steps by natively synchronizing states.
+* **IBC Compatibility:** Existing native tokens
+  (e.g., those created via a
+  [Token Factory](/developers-native/injective/tokenfactory/) or pegged via Peggy)
+  are accessible from the EVM once an MTS pairing is established.
+* **Bridging Alternatives:** While many blockchains require separate bridge operations (lock, mint, unlock),
+  MTS avoids these steps by natively synchronizing states.
 
-#### **Allowances & Extended ERC20 Functions**
+#### Allowances & Extended ERC20 Functions
 
-* MTS contracts maintain standard ERC20 functionalities such as allowances (approve/transferFrom).
-* Note that while the allowance mechanism is maintained within the EVM contract for convenience, the ultimate balance is managed by the bank module, preserving integrity.
+* MTS contracts maintain standard ERC20 functionalities such as allowances
+  (approve/transferFrom).
+* Note that while the allowance mechanism is maintained within the EVM contract for convenience,
+  the ultimate balance is managed by the bank module, preserving integrity.
 
-### **Performance, Gas, and Security Considerations**
+### Performance, Gas, and Security Considerations
 
-#### **Gas Costs and Efficiency**
+#### Gas Costs and Efficiency
 
-* Gas fees are paid in INJ. While MTS operations via the EVM introduce an abstraction layer that may slightly increase gas usage compared to native transactions, the overall cost remains lower than comparable operations on Ethereum.
+* Gas fees are paid in INJ.
+  While MTS operations via the EVM introduce an abstraction layer that may slightly increase gas usage compared to native transactions, 
+  the overall cost remains lower than comparable operations on Ethereum.
 * The gas model is designed to reflect a balance between EVM-style opcode costs and native module interactions.
 
-#### **Security**
+#### Security
 
-* The [bank module](/developers-native/core/), as the single source of truth, underpins MTS’s security by ensuring that token balances are consistent and verifiable.
-* The use of [precompiles](/developers-evm/precompiles/) prevents common pitfalls like state desynchronization, ensuring that all operations—no matter where initiated—update the same canonical ledger.
-* Advanced security guidelines and best practices for smart contract development are provided in our security section and external resources.
+* The [bank module](/developers-native/core/), as the single source of truth,
+  underpins MTS’s security by ensuring that token balances are consistent and verifiable.
+* The use of [precompiles](/developers-evm/precompiles/) prevents common pitfalls
+  like state desynchronization, ensuring that all operations -
+  no matter where initiated—update the same canonical ledger.
+* Advanced security guidelines and best practices for smart contract development
+  are provided in our security section and external resources.
 
 **ℹ️ Note:**
 
-To prevent denom spam, deploying an ERC20 contract via the ERC20 module is a **payable operation** and requires a deployment fee of **1 INJ**. Make sure your ERC20 contract deployment transaction includes this amount, or the operation will be rejected.
+To prevent denom spam, deploying an ERC20 contract via the ERC20 module
+is a **payable operation** and requires a deployment fee of **1 INJ**.
+Make sure your ERC20 contract deployment transaction includes this amount,
+or the operation will be rejected.

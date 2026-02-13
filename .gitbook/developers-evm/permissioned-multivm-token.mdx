@@ -1,0 +1,168 @@
+---
+title: Permissioned MTS Tokens
+description: Leverage Injective's permissions module in MultiVM Token Standard (MTS) tokens
+---
+
+## Injective's Permissions Module
+
+The [`permissions` module](https://docs.injective.network/developers-native/injective/permissions)
+is native to Injective, and allows custom management (e.g. roles) for Denoms.
+This capability is extended to MultiVM Token Standard (MTS) tokens,
+where you can implement those custom management rules within your EVM smart contract code.
+
+## Why Use Permissions on MTS Tokens?
+
+If you are tokenizing real-world assets (RWAs) using MTS on Injective,
+and that underlying asset inherently requires permissions,
+that is a great use case for tapping into Injective's `permissions` module.
+
+The EVM smart contract of your MTS token simply needs to implement
+an additional Solidity interface to leverage the power of the `permissions` module.
+
+## Smart Contract Implementation
+
+In your smart contract, import `IPermissionsHook` from `PermissionsHook.sol` and extend it.
+
+```solidity
+interface IPermissionsHook
+```
+
+This will involve implementing the `isTransferRestricted` function,
+with the following signature:
+
+```solidity
+function isTransferRestricted(
+  address from,
+  address to,
+  Cosmos.Coin calldata amount
+)
+```
+
+You may find the full file on Github:
+[`PermissionsHook.sol`](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/PermissionsHook.sol)
+
+### Smart Contract Example
+
+Create a smart contract that extends `PermissionsHook`:
+
+```solidity
+import { Cosmos } from "../src/CosmosTypes.sol";
+import { PermissionsHook } from "../src/PermissionsHook.sol";
+contract RestrictedAddressTransferHook is PermissionsHook {
+  /*
+  ...
+  */
+}
+```
+
+Add a custom implementation of the `isTransferRestricted` function.
+For example, this function will allow all transfers,
+except for ones involving a specific address:
+
+```solidity
+  function isTransferRestricted(
+    address from,
+    address to,
+    Cosmos.Coin calldata amount
+  ) external pure override returns (bool) {
+    address restrictedAddress = "0x...";
+    if (from == restrictedAddress || to == restrictedAddress) {
+      // this particular address is not allowed to transfer
+      return true;
+    }
+
+    // All other transfers are allowed
+    return false;
+  }
+```
+
+You may find a more detailed example of this on Github:
+[`PermissionsHookExamples.sol`](https://github.com/InjectiveLabs/solidity-contracts/blob/master/examples/PermissionsHookExamples.sol)
+
+## Registering Hook
+
+To register the hook for the permissions,
+you will need the following:
+
+- Control of the same account that deployed the MTS token.
+- The deployed address of the MTS token
+- The deployed address of the Permissions Hook
+
+With the above, you can create
+[a JSON file similar to this one](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/scripts/demo/namespace.json).
+
+Then run `injectived` for the registration,
+using the same account that deployed the MTS token.
+
+```shell
+injectived tx permissions create-namespace ...
+```
+
+<Info>
+Note that the MTS token and the Permissions Hook can have the same address.
+That is an architectural decision that is up to you.
+</Info>
+
+### Registering Hook Example
+
+Create a file named `register-hooks.json`, with the following content:
+
+```jsonc
+{
+  "denom": "erc20:0x...", // <-- EVM address of the MTS token
+  "evm_hook": "0x...", // <-- EVM address of the permissions hook
+  "role_permissions": [
+    {
+      "name": "EVERYONE",
+      "role_id": 0,
+      "permissions": 10
+    }
+  ],
+  "actor_roles": [
+  ]
+}
+```
+
+Be sure to replace the value of the
+`denom` and `evm_hook` fields with the appropriate values.
+
+<Info>
+Delete all comments as well, so that the file is valid JSON.
+</Info>
+
+Then run the following command:
+
+```shell
+injectived tx permissions create-namespace register-hooks.json [flags]
+```
+
+Note that this is merely one specific way to define permissions hooks on an MTS token.
+There are multiple variations.
+For additional details on this step, including other variations, refer to
+[How to Launch Permissioned Assets](https://docs.injective.network/developers-native/injective/permissions/04_launch_permissioned_asset).
+
+## Reference Implementation
+
+A more complete example that demonstrates the use of permissioned MTS tokens
+for a stable coin is also available.
+
+This example involves a permissions hook which prevents transfers
+when the token is paused, and also maintains a blacklist of addresses.
+
+```solidity
+function isTransferRestricted(
+  address _from,
+  address _to,
+  Cosmos.Coin calldata /* _amount */
+) external view returns (bool) {
+  if (fiatToken.paused()) {
+    return true;
+  } else if (fiatToken.isBlacklisted(_from) || fiatToken.isBlacklisted(_to)) {
+    return true;
+  }
+
+  return false;
+}
+```
+
+See [`PermissionsHook_Inj.sol`](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol).
