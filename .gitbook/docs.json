@@ -758,6 +758,56 @@
                   "cn/developers-evm/evm-integrations-cheat-sheet",
                   "cn/developers-evm/evm-integrations-faq"
                 ]
+              },
+              {
+                "group": "CosmWasm 开发者",
+                "icon": "comet",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-cosmwasm/index",
+                  {
+                    "group": "CosmWasm 智能合约",
+                    "pages": [
+                      "cn/developers-cosmwasm/smart-contracts/index",
+                      "cn/developers-cosmwasm/smart-contracts/your-first-smart-contract",
+                      "cn/developers-cosmwasm/smart-contracts/injective-name-service",
+                      "cn/developers-cosmwasm/smart-contracts/neptune-service",
+                      "cn/developers-cosmwasm/smart-contracts/cw20-convert-market-order"
+                    ]
+                  },
+                  "cn/developers-cosmwasm/local-development-guide",
+                  "cn/developers-cosmwasm/mainnet-deployment-guide",
+                  "cn/developers-cosmwasm/whitelisting-deployment-address-guide",
+                  "cn/developers-cosmwasm/create-your-swap-contract-guide",
+                  "cn/developers-cosmwasm/create-uis-guide",
+                  "cn/developers-cosmwasm/cosmwasm-any",
+                  "cn/developers-cosmwasm/cw20-adapter",
+                  "cn/developers-cosmwasm/injective-test-tube"
+                ]
+              },
+              {
+                "group": "DeFi 开发者",
+                "icon": "money-bill-transfer",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-defi/index",
+                  "cn/developers-defi/calculate-min-price-tick-size",
+                  "cn/developers-defi/min-quantity-tick-size",
+                  "cn/developers-defi/testnet-faucet-integration",
+                  "cn/developers-defi/token-launch",
+                  "cn/developers-defi/market-launch",
+                  "cn/developers-defi/denom-and-bank",
+                  "cn/developers-defi/provider-oracle",
+                  {
+                    "group": "Injective Trader",
+                    "expanded": false,
+                    "pages": [
+                      "cn/developers-defi/injective-trader/index",
+                      "cn/developers-defi/injective-trader/simple-strategy",
+                      "cn/developers-defi/injective-trader/strategy-development-guide"
+                    ]
+                  }
+                ]
               }
             ]
           }
