@@ -1,0 +1,192 @@
+---
+title: 使用 injectived
+---
+
+以下页面解释了通过 `injectived`（连接到 Injective 的命令行界面）可以执行的操作。你可以使用 `injectived` 与 Injective 区块链交互，包括上传智能合约、查询数据、管理质押活动、处理治理提案等。
+
+## 前提条件
+
+### 确保已安装 injectived
+
+有关更多信息，请参阅[安装 injectived](/cn/developers/injectived/install/)。如果你已成功安装 `injectived`，应该能够运行以下命令：
+
+```bash
+injectived version
+```
+
+请调整你的命令以正确使用 home 目录。
+
+```bash
+injectived keys list --home ~/.injective
+```
+
+### 使用 Docker 化的 CLI
+
+如果从 Docker 运行，你需要将 home 目录挂载到容器。
+
+```bash
+docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys list --home /root/.injective
+```
+
+使用 Docker 化的 CLI 添加密钥很简单。
+
+```bash
+docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys add my_key --home /root/.injective
+```
+
+以下是该命令的分解：
+
+* docker 运行镜像 `injectivelabs/injective-core:v1.14.1`
+* `injectived` 是从容器内运行 CLI 的命令
+* `keys add` 是添加密钥的命令
+* `my_key` 是密钥的名称
+* `--home /root/.injective` 是容器内 CLI 的 home 目录
+* `-v ~/.injective:/root/.injective` 简单地将主机的 `~/.injective` 目录挂载到容器的 `/root/.injective` 目录。
+
+它将创建一个密钥对并保存到容器的 `/root/.injective/keyring-file` 目录，这与你主机的 `~/.injective/keyring-file` 目录相同。
+
+你可以通过运行以下命令列出所有密钥：
+
+```bash
+docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys list --home /root/.injective
+```
+
+### 使用 RPC 端点
+
+在访问 Injective 区块链之前，你需要有一个正在运行的节点。你可以运行自己的全节点或连接到其他人的节点。
+
+要查询状态和发送交易，你必须连接到一个节点，该节点是整个对等连接网络的访问点。你可以运行自己的全节点或连接到其他人的节点。
+
+[运行自己的节点](/infra/join-a-network/)仅适用于高级用户。对于大多数用户，建议连接到公共节点。
+
+要设置 RPC 端点，你可以使用以下命令：
+
+```bash
+injectived config set client node https://sentry.tm.injective.network:443
+injectived config set client chain-id injective-1
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+仅对于测试网，你可以使用：`https://k8s.testnet.tm.injective.network:443`（chain-id `injective-888`）
+</Callout>
+
+现在尝试查询状态：
+
+```bash
+injectived q bank balances inj1yu75ch9u6twffwp94gdtf4sa7hqm6n7egsu09s
+
+balances:
+- amount: "28748617927330656"
+  denom: inj
+```
+
+### 通用帮助
+
+有关 `injectived` 的更多通用信息，运行：
+
+```bash
+injectived --help
+```
+
+有关特定 `injectived` 命令的更多信息，在命令后附加 `-h` 或 `--help` 标志。例如：
+
+```bash
+injectived query --help
+```
+
+### 配置 `injectived` 客户端
+
+要配置更多 `injectived` 选项，编辑 `~/.injective/config/` 目录中的 `config.toml` 文件。当 keyring-backend 设置为 `file` 时，Keyring 文件位于 `~/.injective/keyring-file` 目录。也可以将 keyring-backend 设置为 `test` 或 `os`。如果是 test，它也将作为文件存储在 `~/.injective/keyring-test`，但不受密码保护。
+
+文件中的所有选项都可以使用 CLI 设置：`injectived config set client <option> <value>`。
+
+## 生成、签名和广播交易
+
+运行以下命令将 INJ 代币从发送者账户发送到接收者账户。`1000inj` 是要发送的 INJ 代币数量，其中 `1 INJ = 10^18 inj`，所以 `1000inj` 是一个非常小的数量。
+
+```bash
+injectived tx bank send MY_WALLET RECEIVER_WALLET 1000inj --from MY_WALLET
+```
+
+执行以下步骤：
+
+* 生成一个包含一个 `Msg`（`x/bank` 的 `MsgSend`）的交易，并将生成的交易打印到控制台。
+* 要求用户确认从 `$MY_WALLET` 账户发送交易。
+* 从 keyring 获取 `$MY_WALLET`。这是可能的，因为我们在之前的步骤中设置了 CLI 的 keyring。
+* 使用 keyring 的账户签名生成的交易。
+* 将签名的交易广播到网络。这是可能的，因为 CLI 连接到公共 Injective 节点的 RPC 端点。
+
+CLI 将所有必要的步骤捆绑成一个简单易用的用户体验。但是，也可以单独运行所有步骤。
+
+### （仅）生成交易
+
+生成交易可以通过在任何 `tx` 命令上附加 `--generate-only` 标志来完成，例如：
+
+```bash
+injectived tx bank send MY_WALLET RECEIVER_WALLET 1000inj --from MY_WALLET --generate-only
+```
+
+这将在控制台中以 JSON 格式输出未签名的交易。我们还可以通过在上述命令后附加 `> unsigned_tx.json` 将未签名的交易保存到文件（以便在签名者之间更容易传递）。
+
+### 签名预生成的交易
+
+使用 CLI 签名交易需要将未签名的交易保存在文件中。假设未签名的交易在当前目录中名为 `unsigned_tx.json` 的文件中（参见上一段了解如何操作）。然后，只需运行以下命令：
+
+```bash
+injectived tx sign unsigned_tx.json --from=MY_WALLET
+```
+
+此命令将解码未签名的交易并使用 `SIGN_MODE_DIRECT` 和 `MY_WALLET` 的密钥签名，我们已经在 keyring 中设置了该密钥。签名的交易将以 JSON 格式输出到控制台，如上所述，我们可以通过在命令行后附加 `> signed_tx.json` 将其保存到文件。
+
+```bash
+injectived tx sign unsigned_tx.json --from=MY_WALLET > signed_tx.json
+```
+
+`tx sign` 命令中一些有用的标志：
+
+* `--sign-mode`：你可以使用 `amino-json` 使用 `SIGN_MODE_LEGACY_AMINO_JSON` 签名交易，
+* `--offline`：离线模式签名。这意味着 `tx sign` 命令不会连接到节点来检索签名者的账户号和序列号，这两者都是签名所需的。在这种情况下，你必须手动提供 `--account-number` 和 `--sequence` 标志。这对于离线签名很有用，即在没有互联网访问的安全环境中签名。
+
+### 多签名者签名（Multi Sig）
+
+多签名者签名使用 `tx multi-sign` 命令完成。此命令假设所有签名者使用 `SIGN_MODE_LEGACY_AMINO_JSON`。流程类似于 `tx sign` 命令流程，但不是签名未签名的交易文件，而是每个签名者签名前一个签名者签名的文件。`tx multi-sign` 命令将签名附加到现有交易。重要的是签名者按照交易给出的**相同顺序**签名交易，可以使用 `GetSigners()` 方法检索该顺序。
+
+例如，从 `unsigned_tx.json` 开始，假设交易有 4 个签名者，我们将运行：
+
+```bash
+# 让 signer1 签名未签名的 tx。
+injectived tx multi-sign unsigned_tx.json signer_key_1 > partial_tx_1.json
+# 现在 signer1 将 partial_tx_1.json 发送给 signer2。
+# Signer2 附加他们的签名：
+injectived tx multi-sign partial_tx_1.json signer_key_2 > partial_tx_2.json
+# Signer2 将 partial_tx_2.json 文件发送给 signer3，signer3 可以附加他的签名：
+injectived tx multi-sign partial_tx_2.json signer_key_3 > partial_tx_3.json
+```
+
+### 广播交易
+
+广播交易使用以下命令完成：
+
+```bash
+injectived tx broadcast tx_signed.json
+```
+
+你可以选择传递 `--broadcast-mode` 标志来指定从节点接收哪种响应：
+
+* `block`：CLI 等待 tx 被包含在区块中。
+* `sync`：CLI 仅等待 CheckTx 执行响应，手动查询交易结果以确保它被包含。
+* `async`：CLI 立即返回（交易可能失败）- 不要使用。
+
+要查询交易结果，你可以使用以下命令：
+
+```bash
+injectived tx query TX_HASH
+```
+
+## 其他故障排除
+
+有时配置设置不正确。你可以通过在命令行中添加以下内容来强制使用正确的节点 RPC 端点。与他人共享命令时，建议在命令行中明确设置所有标志。（chain-id、node、keyring-backend 等）
+
+```bash
+injectived --node https://sentry.tm.injective.network:443
+```

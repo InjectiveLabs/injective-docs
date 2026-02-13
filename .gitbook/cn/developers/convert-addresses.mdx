@@ -1,0 +1,71 @@
+---
+title: 地址转换
+---
+
+本文档将概述一些在不同格式和派生路径之间转换地址的示例。
+
+### Hex ↔ Bech32 地址转换
+
+正如我们在[钱包](../defi/wallet)部分提到的，Injective 地址与 Ethereum 地址兼容。你可以轻松地在两种格式之间进行转换。
+
+### 使用 TypeScript
+
+你可以使用 `@injectivelabs/sdk-ts` 包中的实用函数轻松地在 Injective 地址和 Ethereum 地址之间进行转换：
+
+```typescript
+import {
+  getEthereumAddress,
+  getInjectiveAddress,
+} from "@injectivelabs/sdk-ts/utils";
+
+const injectiveAddress = "inj1...";
+const ethereumAddress = "0x..";
+
+console.log(
+  "从 Ethereum 地址获取 Injective 地址 => ",
+  getInjectiveAddress(ethereumAddress)
+);
+console.log(
+  "从 Injective 地址获取 Ethereum 地址 => ",
+  getEthereumAddress(injectiveAddress)
+);
+```
+
+### **将 Cosmos 地址转换为 Injective 地址**
+
+由于 Injective 的派生路径与默认的 Cosmos 派生路径不同，你需要账户的 `publicKey` 才能将 Cosmos `publicAddress` 转换为 Injective 地址。
+
+### 使用 TypeScript
+
+```typescript
+import { config } from "dotenv";
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+
+config();
+
+(async () => {
+  const chainApi = new ChainRestAuthApi(
+    "https://rest.cosmos.directory/cosmoshub"
+  );
+
+  const cosmosAddress = "cosmos1..";
+  const account = await chainApi.fetchCosmosAccount(cosmosAddress);
+
+  if (!account.pub_key?.key) {
+    console.log("未找到公钥");
+    return;
+  }
+
+  console.log(
+    "injectiveAddress",
+    PublicKey.fromBase64(account.pub_key.key || "")
+      .toAddress()
+      .toBech32()
+  );
+})();
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  更多示例可以在[钱包账户](../defi/wallet/accounts/)中找到。
+</Callout>

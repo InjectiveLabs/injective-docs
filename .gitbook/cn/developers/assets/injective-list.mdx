@@ -1,0 +1,31 @@
+---
+title: Injective List
+---
+
+我们已将链上 denom 代币元数据移至 [injective-list](https://github.com/InjectiveLabs/injective-lists) 仓库。该仓库将聚合来自多个来源的数据并生成全面的代币元数据主列表。
+
+以下是如何将 injective-list 与 TokenFactoryStatic 类集成的示例：
+
+1. 从 GitHub 下载 [Injective list JSON 文件](https://github.com/InjectiveLabs/injective-lists?tab=readme-ov-file#-usage)
+
+2. 使用 `sdk-ts` 包中的 `TokenFactoryStatic` 类
+
+```ts
+import { TokenFactoryStatic } from "@injectivelabs/sdk-ts/service";
+import { TokenType, TokenStatic } from "@injectivelabs/sdk-ts/types";
+import { tokens } from "../data/tokens.json"; // 从步骤 1 下载的 json 文件
+
+export const tokenFactoryStatic = new TokenFactoryStatic(
+  tokens as TokenStatic[]
+);
+
+// 实例化后，我们可以在 dApp 中开始使用它
+const denom = "peggy0x...";
+const token = tokenFactoryStatic.toToken(denom);
+
+console.log(token);
+```
+
+使用 `TokenFactoryStatic` 时需要考虑一些边缘情况：
+
+- 如果你尝试查询[代币列表](https://github.com/InjectiveLabs/injective-lists)中不存在的 denom 的代币元数据，`TokenFactoryStatic` 将返回 undefined。如果是这样，你应该按照我们的[贡献指南](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)在包中添加代币元数据信息。

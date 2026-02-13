@@ -1,0 +1,24 @@
+---
+title: Token 元数据
+---
+
+Injective 上的资产以 denom 表示。Denom（及其数量）不是人类可读的，这就是为什么我们需要有一种方式为特定 denom "附加"代币元数据信息。
+
+让我们回顾一下入门部分中的 denom 类型：
+
+* **原生 denom** - 这种类型只有一个 denom，即 `inj` denom，代表 Injective 的原生代币，
+* **Peggy denom** - 这些 denom 代表通过 Peggy 桥从 Ethereum 桥接到 Injective 的资产。它们的格式为 `peggy{ERC20_CONTRACT_ADDRESS}`
+* **IBC denom** - 这些 denom 代表通过 IBC 从其他 Cosmos 链桥接过来的资产。它们的格式为 `ibc/{hash}`。
+* **保险基金 Denom** - 这些 denom 代表在 Injective 上创建的保险基金的代币份额。它们的格式为 `share{id}`
+* **Factory Denom** - 这些 denom 代表 Cosmwasm 上 CW20 代币在 Injective 原生 bank 模块上的表示。它们的格式为 `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`，其中 `CW20_ADAPTER_CONTRACT` 是执行 CW20 和原生 Bank 模块之间转换的适配器合约地址。
+
+我们在 [injective-lists](https://github.com/InjectiveLabs/injective-lists/tree/master/tokens) 仓库中维护链下代币元数据列表以便更快访问。
+
+## Token 验证
+
+验证你的代币元数据可以通过几种方式完成。以下是验证级别及其含义：
+
+* **Verified** → 你的资产元数据已**提交并验证**到 `@injectivelabs/token-metadata` 包。你可以在[这里](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)找到如何将代币元数据添加到包的教程。
+* **Internal** → 你的资产元数据已使用 `MsgSetDenomMetadata` 消息在链上验证，如[这里](/developers-native/examples/token-factory)所述。
+* **External** → 你的资产元数据已在某些外部来源（如 Ethereum 的合约详情等）上验证。
+* **Unverified** → 你的资产元数据尚未在任何地方提供。

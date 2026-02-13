@@ -717,6 +717,78 @@
                 ]
               },
               {
+                "group": "开发者",
+                "icon": "laptop-code",
+                "expanded": false,
+                "pages": [
+                  "cn/developers/index",
+                  "cn/developers/convert-addresses",
+                  "cn/developers/network-information",
+                  {
+                    "group": "AI 开发",
+                    "pages": [
+                      "cn/developers/ai/mcp"
+                    ]
+                  },
+                  {
+                    "group": "injectived",
+                    "pages": [
+                      "cn/developers/injectived/index",
+                      "cn/developers/injectived/install",
+                      "cn/developers/injectived/use",
+                      "cn/developers/injectived/advanced",
+                      "cn/developers/testnet-proposals"
+                    ]
+                  },
+                  {
+                    "group": "概念",
+                    "pages": [
+                      "cn/developers/concepts/index",
+                      "cn/developers/concepts/sentry-node",
+                      "cn/developers/concepts/indexer-api",
+                      "cn/developers/concepts/trading-account",
+                      "cn/developers/concepts/grpc-protobuf",
+                      "cn/developers/concepts/token-factory",
+                      "cn/developers/concepts/calculation-min-price-tick-size",
+                      "cn/developers/concepts/calculation-min-quantity-tick-size",
+                      "cn/developers/concepts/cosmjs-support",
+                      "cn/developers/concepts/networks"
+                    ]
+                  },
+                  {
+                    "group": "资产",
+                    "pages": [
+                      "cn/developers/assets/index",
+                      "cn/developers/assets/denom",
+                      "cn/developers/assets/token-metadata",
+                      "cn/developers/assets/injective-list",
+                      "cn/developers/assets/token-create"
+                    ]
+                  },
+                  {
+                    "group": "dApp",
+                    "pages": [
+                      "cn/developers/dapps/index",
+                      "cn/developers/dapps/configure-nuxt",
+                      "cn/developers/dapps/configure-react",
+                      "cn/developers/dapps/run-examples",
+                      "cn/developers/dapps/example-smart-contract",
+                      "cn/developers/dapps/example-dex",
+                      "cn/developers/dapps/example-webpack"
+                    ]
+                  },
+                  "redirects/https_testnet_faucet_injective_network",
+                  "redirects/https_sentry_lcd_injective_network_swagger",
+                  "redirects/https_docs_ts_injective_network",
+                  "redirects/https_github_com_InjectiveLabs_sdk_go",
+                  "redirects/https_github_com_InjectiveLabs_sdk_python",
+                  "redirects/https_github_com_InjectiveLabs_cw_injective",
+                  "redirects/https_github_com_InjectiveLabs_injective_rust",
+                  "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
+                  "redirects/https_api_injective_exchange"
+                ]
+              },
+              {
                 "group": "EVM 开发者",
                 "icon": "rectangle-code",
                 "expanded": false,
@@ -749,6 +821,7 @@
                   },
                   "cn/developers-evm/evm-equivalence",
                   "cn/developers-evm/multivm-token-standard",
+                  "cn/developers-evm/permissioned-multivm-token",
                   "cn/developers-evm/wrapped-inj",
                   "cn/developers-evm/precompiles",
                   "cn/developers-evm/bank-precompile",
@@ -757,7 +830,9 @@
                   "cn/developers-evm/infrastructure-and-tooling",
                   "cn/developers-evm/add-injective-to-your-dapp",
                   "cn/developers-evm/evm-integrations-cheat-sheet",
-                  "cn/developers-evm/evm-integrations-faq"
+                  "cn/developers-evm/evm-integrations-faq",
+                  "redirects/https_testnet_faucet_injective_network",
+                  "redirects/https_testnet_blockscout_injective_network_blocks"
                 ]
               },
               {
@@ -849,7 +924,9 @@
                   },
                   "cn/infra/public-endpoints",
                   "cn/infra/premium-endpoints",
-                  "cn/infra/archival-setup"
+                  "cn/infra/archival-setup",
+                  "redirects/https_injective_notion_site_indexer_service_setup_guide",
+                  "redirects/https_api_injective_network_swagger"
                 ]
               },
               {

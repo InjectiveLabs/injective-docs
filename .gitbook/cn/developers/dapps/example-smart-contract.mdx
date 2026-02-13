@@ -1,0 +1,295 @@
+---
+title: 智能合约
+---
+
+在这个简短的系列中，我们将展示在 Injective 上构建 dApp 是多么容易。有一个开源的 [dApp](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui)，每个人都可以参考并用于在 Injective 上构建。有 Next、Nuxt 和 Vanilla Js 的示例。对于那些想从头开始的人，这是正确的起点。
+
+在这个示例中，我们将使用 injective-ts 模块实现连接并与部署在 Injective 链上的示例智能合约交互。
+
+该系列将包括：
+
+- 设置 API 客户端和环境，
+- 连接到链和 Indexer API，
+- 连接到用户钱包并获取其地址，
+- 查询智能合约（在本例中获取智能合约的当前计数），
+- 修改合约状态（在本例中将计数增加 1，或将其设置为特定值），
+
+## 设置
+
+首先，配置你想要的 UI 框架。你可以在这里找到有关配置的更多详细信息。
+
+要开始使用 dex，我们需要设置 API 客户端和环境。要构建我们的 DEX，我们将从 Injective 链和 Indexer API 查询数据。在这个示例中，我们将使用现有的 **Testnet** 环境。
+
+让我们首先设置一些我们需要查询数据的类。
+
+对于与智能合约交互，我们将使用 `@injectivelabs/sdk-ts` 中的 `ChainGrpcWasmApi`。我们还需要我们将使用的网络端点（Mainnet 或 Testnet），可以在 `@injectivelabs/networks` 中找到
+
+示例：
+
+```js
+//filename: services.ts
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/wasm";
+
+export const NETWORK = Network.Testnet;
+export const ENDPOINTS = getNetworkEndpoints(NETWORK);
+
+export const chainGrpcWasmApi = new ChainGrpcWasmApi(ENDPOINTS.grpc);
+```
+
+然后，我们还需要设置钱包连接，以允许用户连接到我们的 DEX 并开始签名交易。为此，我们将使用 `@injectivelabs/wallet-strategy` 包，它允许用户使用各种不同的钱包提供商连接并使用它们在 Injective 上签名交易。
+
+`@injectivelabs/wallet-strategy` 的主要目的是为开发者提供一种在 Injective 上使用不同钱包实现的方式。所有这些钱包实现都暴露相同的 `ConcreteStrategy` 接口，这意味着用户可以直接使用这些方法，而无需了解特定钱包的底层实现，因为它们已被抽象化。
+
+首先，你必须创建一个 WalletStrategy 类的实例，它使你能够开箱即用地使用不同的钱包。你可以通过在 walletStrategy 实例上使用 `setWallet` 方法来切换当前使用的钱包（注意：`setWallet` 是异步的，需要 `await`）。默认是 `Metamask`。
+
+```ts
+// filename: wallet.ts
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { WalletStrategy } from "@injectivelabs/wallet-strategy";
+
+const chainId = ChainId.Testnet; // Injective 测试网 Chain ID
+const evmChainId = EvmChainId.TestnetEvm; // Injective Evm 测试网 Chain ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`;
+
+export const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    evmChainId,
+    rpcUrl: evmRpcEndpoint,
+  },
+});
+```
+
+如果我们不想使用 Ethereum 原生钱包，只需在 `WalletStrategy` 构造函数中省略 `evmOptions`。
+
+最后，要在 Injective 上执行整个交易流程（准备 + 签名 + 广播），我们将使用 MsgBroadcaster 类。
+
+```js
+import { Network } from "@injectivelabs/networks";
+export const NETWORK = Network.Testnet;
+
+export const msgBroadcastClient = new MsgBroadcaster({
+  walletStrategy,
+  network: NETWORK,
+});
+```
+
+## 连接到用户钱包
+
+由于我们使用 `WalletStrategy` 来处理与用户钱包的连接，我们可以使用其方法来处理一些用例，如获取用户地址、签名/广播交易等。要了解更多关于钱包策略的信息，你可以探索文档接口和 `WalletStrategy` 提供的方法。
+
+注意：我们可以使用 `setWallet` 方法在 `WalletStrategy` 中切换"活动"钱包（这是异步的，需要 `await`）。
+
+```ts
+// filename: WalletConnection.ts
+import {
+  WalletException,
+  UnspecifiedErrorCode,
+  ErrorType,
+} from "@injectivelabs/exceptions";
+import { Wallet } from "@injectivelabs/wallet-base";
+import { walletStrategy } from "./Wallet.ts";
+
+export const getAddresses = async (wallet: Wallet): Promise<string[]> => {
+  await walletStrategy.setWallet(wallet);
+
+  const addresses = await walletStrategy.getAddresses();
+
+  if (addresses.length === 0) {
+    throw new WalletException(
+      new Error("此钱包中没有链接的地址。"),
+      {
+        code: UnspecifiedErrorCode,
+        type: ErrorType.WalletError,
+      }
+    );
+  }
+
+  if (!addresses.every((address) => !!address)) {
+    throw new WalletException(
+      new Error("此钱包中没有链接的地址。"),
+      {
+        code: UnspecifiedErrorCode,
+        type: ErrorType.WalletError,
+      }
+    );
+  }
+
+  // 如果我们使用 Ethereum 原生钱包，'addresses' 是 hex 地址
+  // 如果我们使用 Cosmos 原生钱包，'addresses' 是 bech32 injective 地址，
+  return addresses;
+};
+```
+
+## 查询
+
+初始设置完成后，让我们看看如何使用我们之前创建的 chainGrpcWasmApi 服务查询智能合约以获取当前计数，并在智能合约上调用 get_count。
+
+```ts
+function getCount() {
+  const response = (await chainGrpcWasmApi.fetchSmartContractState(
+    COUNTER_CONTRACT_ADDRESS, // 合约地址
+    toBase64({ get_count: {} }) // 我们需要将查询转换为 Base64
+  )) as { data: string };
+
+  const { count } = fromBase64(response.data) as { count: number }; // 我们需要将响应从 Base64 转换
+
+  return count; // 返回当前计数器值。
+}
+```
+
+一旦我们有了这些函数（`getCount` 或我们创建的其他函数），我们可以在应用程序的任何地方调用它们（通常是集中式状态管理服务，如 Nuxt 中的 Pinia，或 React 中的 Context providers 等）。
+
+## 修改状态
+
+接下来我们将修改 `count` 状态。我们可以通过使用我们之前创建的 `Broadcast Client` 和 `@injectivelabs/sdk-ts` 中的 `MsgExecuteContractCompat` 向链发送消息来实现。
+
+我们在这个示例中使用的智能合约有 2 个修改状态的方法：
+
+- `increment`
+- `reset`
+
+`increment` 将计数增加 1，`reset` 将计数设置为给定值。注意，`reset` 只能在你是智能合约的创建者时调用。
+
+当我们调用这些函数时，我们的钱包会打开以签名消息/交易并广播它。
+
+让我们首先看看如何增加计数。
+
+```js
+// 准备消息
+
+const msg = MsgExecuteContractCompat.fromJSON({
+  contractAddress: COUNTER_CONTRACT_ADDRESS,
+  sender: injectiveAddress,
+  msg: {
+    increment: {}, // 如果方法没有参数，我们传递一个空对象
+  },
+});
+
+// 签名和广播消息
+
+const response = await msgBroadcastClient.broadcast({
+  msgs: msg, // 我们可以使用数组在这里传递多个消息。例如：[msg1,msg2]
+  injectiveAddress: injectiveAddress,
+});
+
+console.log(response);
+```
+
+现在，让我们看一个如何将计数器设置为特定值的示例。注意，在这个智能合约中，计数只能由智能合约的创建者设置为特定值。
+
+```js
+// 准备消息
+
+const msg = MsgExecuteContractCompat.fromJSON({
+  contractAddress: COUNTER_CONTRACT_ADDRESS,
+  sender: injectiveAddress,
+  msg: {
+    reset: {
+      count: parseInt(number, 10), // 我们在这里解析 number 变量，因为它通常来自输入，输入总是给出字符串，而我们需要传递一个数字。
+    },
+  },
+});
+
+// 签名和广播消息
+
+const response = await msgBroadcastClient.broadcast({
+  msgs: msg,
+  injectiveAddress: injectiveAddress,
+});
+
+console.log(response);
+```
+
+### 完整示例
+
+现在让我们看一个 Vanilla JS 的完整示例（你可以在[这里](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui)找到 Nuxt 和 Next 等特定框架的示例）
+
+```js
+import { Web3Exception } from "@injectivelabs/exceptions"
+import { WalletStrategy } from "@injectivelabs/wallet-strategy"
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/wasm"
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks"
+import { getInjectiveAddress } from "@injectivelabs/sdk-ts/utils"
+
+const chainId = ChainId.Testnet // Injective 测试网 Chain ID
+const evmChainId = EvmChainId.TestnetEvm // Injective Evm 测试网 Chain ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
+
+const NETWORK = Network.Testnet
+const ENDPOINTS = getNetworkEndpoints(NETWORK)
+
+const chainGrpcWasmApi = new ChainGrpcWasmApi(ENDPOINTS.grpc)
+
+export const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    evmChainId,
+    rpcUrl: evmRpcEndpoint,
+  },
+})
+
+export const getAddresses = async (): Promise<string[]> => {
+  const addresses = await walletStrategy.getAddresses()
+
+  if (addresses.length === 0) {
+    throw new Web3Exception(
+      new Error("此钱包中没有链接的地址。")
+    )
+  }
+
+  return addresses
+}
+
+const msgBroadcastClient = new MsgBroadcaster({
+  walletStrategy,
+  network: NETWORK,
+})
+
+const [address] = await getAddresses()
+const injectiveAddress = getInjectiveAddress(getInjectiveAddress)
+
+async function fetchCount() {
+  const response = (await chainGrpcWasmApi.fetchSmartContractState(
+    COUNTER_CONTRACT_ADDRESS, // 合约地址
+      toBase64({ get_count: {} }) // 我们需要将查询转换为 Base64
+    )) as { data: string }
+
+  const { count } = fromBase64(response.data) as { count: number } // 我们需要将响应从 Base64 转换
+
+  console.log(count)
+}
+
+async function increment(){
+    const msg = MsgExecuteContractCompat.fromJSON({
+    contractAddress: COUNTER_CONTRACT_ADDRESS,
+    sender: injectiveAddress,
+    msg: {
+        increment: {},
+        },
+    })
+
+    // 签名和广播消息
+
+    await msgBroadcastClient.broadcast({
+        msgs: msg,
+        injectiveAddress: injectiveAddress,
+    })
+}
+
+async function main() {
+    await fetchCount() // 这将记录: {count: 5}
+    await increment() // 这会打开你的钱包以签名交易并广播它
+    await fetchCount() // 计数现在是 6。记录: {count: 6}
+}
+
+main()
+
+```
+
+## 最后的想法
+
+剩下的就是围绕上面解释的业务逻辑构建一个漂亮的 UI :)

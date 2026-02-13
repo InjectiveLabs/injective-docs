@@ -1,0 +1,49 @@
+---
+title: 市场最小价格刻度计算
+---
+
+# 市场最小价格刻度
+
+订单价格的最小市场价格刻度 - 如果市场的 minPriceTickSize 为 `0.001`，价格为 `0.0011` 的订单提交将被拒绝。
+
+请注意，计算现货和报价市场价格刻度的公式是不同的。
+
+### 现货市场
+
+1.  UI 人类可读格式转换为链格式：
+    以 INJ/USDT 市场为例，该市场有 18 位基础小数和 6 位报价小数，以下是我们如何将值转换为链格式：
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+
+const value = toChainFormat(value, quoteDecimals - baseDecimals).toFixed();
+```
+
+2. 链格式转换为 UI 人类可读格式：
+   以 INJ/USDT 市场为例，该市场有 18 位基础小数和 6 位报价小数，以下是我们如何将值转换为 UI 人类可读格式：
+
+```ts
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const value = toHumanReadable(value, quoteDecimals - baseDecimals).toFixed();
+```
+
+### 衍生品市场
+
+1.  UI 人类可读格式转换为链格式：
+    以 INJ/USDT perp 市场为例，该市场有 6 位报价小数，以下是我们如何将值转换为链格式：
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+
+const value = toChainFormat(value, -quoteDecimals).toFixed();
+```
+
+2. 链格式转换为 UI 人类可读格式：
+   以 INJ/USDT perp 市场为例，该市场有 6 位报价小数，以下是我们如何将值转换为 UI 人类可读格式：
+
+```ts
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const value = toHumanReadable(value, quoteDecimals).toFixed();
+```
