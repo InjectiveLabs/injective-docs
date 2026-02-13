@@ -1,0 +1,379 @@
+---
+title: DEX
+---
+
+在这个简短的系列中，我们将展示在 Injective 上构建 DEX 是多么容易。有一个开源的 [DEX](https://github.com/InjectiveLabs/injective-dex)，每个人都可以参考并用于在 Injective 上构建。对于那些想从头开始的人，这是正确的起点。
+
+该系列将包括：
+
+- 设置 API 客户端和环境，
+- 连接到链和 Indexer API，
+- 连接到用户钱包并获取其地址，
+- 获取现货和衍生品市场及其订单簿，
+- 在现货和衍生品市场上下市价单，
+- 查看 Injective 地址的所有仓位。
+
+## 设置
+
+首先，配置你想要的 UI 框架。你可以在这里找到有关配置的更多详细信息。
+
+要开始使用 dex，我们需要设置 API 客户端和环境。要构建我们的 DEX，我们将从 Injective 链和 Indexer API 查询数据。在这个示例中，我们将使用现有的 **Testnet** 环境。
+
+让我们首先设置一些我们需要查询数据的类。
+
+```ts
+// filename: Services.ts
+import {
+  ChainGrpcBankApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import {
+  IndexerGrpcSpotApi,
+  IndexerGrpcDerivativesApi,
+} from "@injectivelabs/sdk-ts/client/indexer";
+import { 
+  IndexerGrpcSpotStreamV2,
+  IndexerGrpcDerivativesStreamV2
+} from "@injectivelabs/sdk-ts/client/indexer";
+
+// 获取测试网环境的预定义端点
+// （这里使用 TestnetK8s 因为我们想使用 Kubernetes 基础设施）
+export const NETWORK = Network.Testnet;
+export const ENDPOINTS = getNetworkEndpoints(NETWORK);
+
+export const chainBankApi = new ChainGrpcBankApi(ENDPOINTS.grpc);
+export const indexerSpotApi = new IndexerGrpcSpotApi(ENDPOINTS.indexer);
+export const indexerDerivativesApi = new IndexerGrpcDerivativesApi(
+  ENDPOINTS.indexer
+);
+
+export const indexerSpotStream = new IndexerGrpcSpotStreamV2(
+  ENDPOINTS.indexer
+);
+export const indexerDerivativeStream = new IndexerGrpcDerivativesStreamV2(
+  ENDPOINTS.indexer
+);
+```
+
+然后，我们还需要设置钱包连接，以允许用户连接到我们的 DEX 并开始签名交易。为此，我们将使用 `@injectivelabs/wallet-strategy` 包，它允许用户使用各种不同的钱包提供商连接并使用它们在 Injective 上签名交易。
+
+```ts
+// filename: Wallet.ts
+import { Wallet } from "@injectivelabs/wallet-base";
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { WalletStrategy } from "@injectivelabs/wallet-strategy";
+
+const chainId = ChainId.Testnet; // Injective Chain chainId
+const evmChainId = EvmChainId.Sepolia; // EVM Chain ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`;
+
+export const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    rpcUrl: evmRpcEndpoint,
+    evmChainId,
+  },
+});
+```
+
+如果我们不想使用 Ethereum 原生钱包，只需在 `WalletStrategy` 构造函数中省略 `evmOptions`。
+
+最后，要在 Injective 上执行整个交易流程（准备 + 签名 + 广播），我们将使用 MsgBroadcaster 类。
+
+```ts
+// filename: MsgBroadcaster.ts
+import { Wallet } from "@injectivelabs/wallet-base";
+import { MetamaskStrategy } from "@injectivelabs/wallet-evm";
+import { BaseWalletStrategy, MsgBroadcaster } from "@injectivelabs/wallet-core";
+
+const strategyArgs: WalletStrategyArguments = {}; /** 定义参数 */
+const strategyEthArgs: ConcreteEthereumWalletStrategyArgs =
+  {}; /** 如果钱包是 Ethereum 钱包 */
+const strategies = {
+  [Wallet.Metamask]: new MetamaskStrategy(strategyEthArgs),
+};
+
+export const walletStrategy = new BaseWalletStrategy({
+  ...strategyArgs,
+  strategies,
+});
+
+const broadcasterArgs: MsgBroadcasterOptions =
+  {}; /** 定义广播器参数 */
+export const msgBroadcaster = new MsgBroadcaster({
+  ...broadcasterArgs,
+  walletStrategy,
+});
+```
+
+## 连接到用户钱包
+
+由于我们使用 `WalletStrategy` 来处理与用户钱包的连接，我们可以使用其方法来处理一些用例，如获取用户地址、签名/广播交易等。要了解更多关于钱包策略的信息，你可以探索文档接口和 `WalletStrategy` 提供的方法。
+
+注意：我们可以使用 `setWallet` 方法在 `WalletStrategy` 中切换"活动"钱包（这是异步的，需要 `await`）。
+
+```ts
+// filename: WalletConnection.ts
+import {
+  WalletException,
+  UnspecifiedErrorCode,
+  ErrorType,
+} from "@injectivelabs/exceptions";
+import { Wallet } from "@injectivelabs/wallet-base";
+import { walletStrategy } from "./Wallet.ts";
+
+export const getAddresses = async (wallet: Wallet): Promise<string[]> => {
+  await walletStrategy.setWallet(wallet);
+
+  const addresses = await walletStrategy.getAddresses();
+
+  if (addresses.length === 0) {
+    throw new WalletException(
+      new Error("此钱包中没有链接的地址。"),
+      {
+        code: UnspecifiedErrorCode,
+        type: ErrorType.WalletError,
+      }
+    );
+  }
+
+  if (!addresses.every((address) => !!address)) {
+    throw new WalletException(
+      new Error("此钱包中没有链接的地址。"),
+      {
+        code: UnspecifiedErrorCode,
+        type: ErrorType.WalletError,
+      }
+    );
+  }
+
+  // 如果我们使用 Ethereum 原生钱包，'addresses' 是 hex 地址
+  // 如果我们使用 Cosmos 原生钱包，'addresses' 是 bech32 injective 地址，
+  return addresses;
+};
+```
+
+## 查询
+
+初始设置完成后，让我们看看如何从 IndexerAPI 查询（和流式传输）市场，以及直接从链上查询用户余额。
+
+```ts
+// filename: Query.ts
+import  { getDefaultSubaccountId, OrderbookWithSequence } from '@injectivelabs/sdk-ts/utils'
+import { StreamManagerV2 } from '@injectivelabs/sdk-ts/client/indexer'
+import {
+  chainBankApi,
+  indexerSpotApi,
+  indexerSpotStream,
+  indexerDerivativesApi,
+  indexerDerivativeStream,
+} from './Services.ts'
+
+export const fetchDerivativeMarkets = async () => {
+  return await indexerDerivativesApi.fetchMarkets()
+}
+
+export const fetchPositions = async (injectiveAddress: string) => {
+  const subaccountId = getDefaultSubaccountId(injectiveAddress)
+
+  return await indexerDerivativesApi.fetchPositions({ subaccountId })
+}
+
+export const fetchSpotMarkets = async () => {
+  return await indexerSpotApi.fetchMarkets()
+}
+
+export const fetchBankBalances = async (injectiveAddress: string) => {
+  return await chainBankApi.fetchBalances(injectiveAddress)
+}
+
+export const streamDerivativeMarketOrderbook = (marketId: string) => {
+  const streamManager = new StreamManagerV2({
+    id: 'derivative-orderbook',
+    streamFactory: () => indexerDerivativeStream.streamOrderbookV2({
+      marketIds: [marketId],
+      callback: (response) => {
+        streamManager.emit('data', response)
+      }
+    }),
+    onData: (orderbookUpdate) => {
+      console.log(orderbookUpdate)
+    },
+    retryConfig: { enabled: true }
+  })
+
+  streamManager.start()
+  
+  return streamManager
+}
+
+export const streamSpotMarketOrderbook = (marketId: string) => {
+  const streamManager = new StreamManagerV2({
+    id: 'spot-orderbook',
+    streamFactory: () => indexerSpotStream.streamOrderbookV2({
+      marketIds: [marketId],
+      callback: (response) => {
+        streamManager.emit('data', response)
+      }
+    }),
+    onData: (orderbookUpdate) => {
+      console.log(orderbookUpdate)
+    },
+    retryConfig: { enabled: true }
+  })
+
+  streamManager.start()
+  
+  return streamManager
+}
+```
+
+一旦我们有了这些函数，我们可以在应用程序的任何地方调用它们（通常是集中式状态管理服务，如 Nuxt 中的 Pinia，或 React 中的 Context providers 等）。
+
+## 交易
+
+最后，让我们进行一些交易。在这个示例中，我们将：
+
+1. 从一个地址向另一个地址发送资产，
+2. 下现货限价单，
+3. 下衍生品市价单。
+
+```ts
+// filename: Transactions.ts
+import { toChainFormat } from '@injectivelabs/utils'
+import {
+  MsgSend,
+  MsgCreateSpotLimitOrder,
+  MsgCreateDerivativeMarketOrder,
+} from '@injectivelabs/sdk-ts/core/modules'
+import {
+  spotPriceToChainPriceToFixed,
+  spotQuantityToChainQuantityToFixed,
+  derivativePriceToChainPriceToFixed,
+  derivativeQuantityToChainQuantityToFixed,
+  derivativeMarginToChainMarginToFixed,
+  getDefaultSubaccountId
+} from '@injectivelabs/sdk-ts/utils'
+
+// 用于从一个地址向另一个地址发送资产
+export const makeMsgSend = ({
+  sender,
+  recipient,
+  amount,
+  denom
+}: {
+  sender: string,
+  recipient: string,
+  amount: string, // 人类可读的数量
+  denom: string
+}) => {
+  const amount = {
+    denom,
+    amount: toChainFormat(amount, /** denom 的小数位数 */).toFixed()
+  }
+
+  return MsgSend.fromJSON({
+    amount,
+    srcInjectiveAddress: sender,
+    dstInjectiveAddress: recipient,
+  })
+}
+
+// 用于创建现货限价单
+export const makeMsgCreateSpotLimitOrder = ({
+  price, // 人类可读的数字
+  quantity, // 人类可读的数字
+  orderType, // OrderType 枚举
+  injectiveAddress,
+}) => {
+  const subaccountId = getDefaultSubaccountId(injectiveAddress)
+  const market = {
+    marketId: '0x...',
+    baseDecimals: 18,
+    quoteDecimals: 6,
+    minPriceTickSize: '', /* 从链上获取 */
+    minQuantityTickSize: '', /* 从链上获取 */
+    priceTensMultiplier: '', /** 可以从 getSpotMarketTensMultiplier 获取 */
+    quantityTensMultiplier: '', /** 可以从 getSpotMarketTensMultiplier 获取 */
+  }
+
+  return MsgCreateSpotLimitOrder.fromJSON({
+    subaccountId,
+    injectiveAddress,
+    orderType: orderType,
+    price: spotPriceToChainPriceToFixed({
+      value: price,
+      tensMultiplier: market.priceTensMultiplier,
+      baseDecimals: market.baseDecimals,
+      quoteDecimals: market.quoteDecimals
+    }),
+    quantity: spotQuantityToChainQuantityToFixed({
+      value: quantity,
+      tensMultiplier: market.quantityTensMultiplier,
+      baseDecimals: market.baseDecimals
+    }),
+    marketId: market.marketId,
+    feeRecipient: injectiveAddress,
+  })
+}
+
+// 用于创建衍生品市价单
+export const makeMsgCreateDerivativeMarketOrder = ({
+  price, // 人类可读的数字
+  margin, // 人类可读的数字
+  quantity, // 人类可读的数字
+  orderType, // OrderType 枚举
+  injectiveAddress,
+}) => {
+  const subaccountId = getDefaultSubaccountId(injectiveAddress)
+  const market = {
+    marketId: '0x...',
+    baseDecimals: 18,
+    quoteDecimals: 6,
+    minPriceTickSize: '', /* 从链上获取 */
+    minQuantityTickSize: '', /* 从链上获取 */
+    priceTensMultiplier: '', /** 可以从 getDerivativeMarketTensMultiplier 获取 */
+    quantityTensMultiplier: '', /** 可以从 getDerivativeMarketTensMultiplier 获取 */
+  }
+
+  return MsgCreateDerivativeMarketOrder.fromJSON({
+    orderType: orderType,
+    triggerPrice: '0',
+    injectiveAddress,
+    price: derivativePriceToChainPriceToFixed({
+      value: price,
+      tensMultiplier: market.priceTensMultiplier,
+      quoteDecimals: market.quoteDecimals
+    }),
+    quantity: derivativeQuantityToChainQuantityToFixed({
+      value: quantity,
+      tensMultiplier: market.quantityTensMultiplier,
+    }),
+    margin: derivativeMarginToChainMarginToFixed({
+      value: margin,
+      quoteDecimals: market.quoteDecimals,
+      tensMultiplier: market.priceTensMultiplier,
+    }),
+    marketId: market.marketId,
+    feeRecipient: injectiveAddress,
+    subaccountId: subaccountId
+  })
+
+}
+```
+
+有了消息后，你可以使用 `msgBroadcaster` 客户端广播这些交易：
+
+```ts
+const response = await msgBroadcaster.broadcast({
+  msgs: /** 这里是消息 */,
+  injectiveAddress: signersInjectiveAddress,
+})
+
+console.log(response)
+```
+
+## 最后的想法
+
+剩下的就是围绕上面解释的业务逻辑构建一个漂亮的 UI :)
