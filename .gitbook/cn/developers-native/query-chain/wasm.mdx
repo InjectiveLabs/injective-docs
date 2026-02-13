@@ -1,0 +1,160 @@
+---
+title: Wasm
+---
+
+查询链上 wasm 模块的示例代码片段。
+
+## 使用 gRPC
+
+### 获取合约账户余额。注意可以传递分页参数以获取更多账户。
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi, PaginationOption } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+
+const contractAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const contractAccountsBalance = await chainGrpcWasmApi.fetchContractAccountsBalance({
+    contractAddress,
+    pagination /* 可选分页选项 */
+})
+
+console.log(contractAccountsBalance)
+```
+
+### 获取合约相关信息
+
+```ts
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const contractAddress = "inj...";
+
+const contractInfo = await chainGrpcWasmApi.fetchContractInfo(contractAddress);
+
+console.log(contractInfo);
+```
+
+### 获取合约历史
+
+```ts
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const contractAddress = "inj...";
+
+const contractHistory = await chainGrpcWasmApi.fetchContractHistory(
+  contractAddress
+);
+
+console.log(contractHistory);
+```
+
+### 获取智能合约状态
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcWasmApi, toBase64 } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const contractAddress = "inj...";
+const query = "...";
+const queryFromObject = toBase64({ get_coin: {} });
+
+const contractState = await chainGrpcWasmApi.fetchSmartContractState({
+  contractAddress,
+  query /* 可选字符串查询 - 必须是 base64 格式或使用 queryFromObject */,
+});
+
+console.log(contractState);
+```
+
+### 获取智能合约原始状态
+
+```ts
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const contractAddress = "inj...";
+const query = "...";
+const queryFromObject = toBase64({ get_coin: {} });
+
+const rawContractState = await chainGrpcWasmApi.fetchRawContractState({
+  contractAddress,
+  query /* 可选字符串查询 - 必须是 base64 格式或使用 queryFromObject */,
+});
+
+console.log(rawContractState);
+```
+
+### 获取与合约关联的代码
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts/client/chain'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+
+const pagination = {...} as PaginationOption
+
+
+const rawContractState = await chainGrpcWasmApi.fetchRawContractState(
+pagination /* 可选分页选项 */
+)
+
+console.log(rawContractState)
+```
+
+### 获取与合约代码关联的信息
+
+```ts
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const codeId = 1;
+
+const codeDetails = await chainGrpcWasmApi.fetchContractCode(codeId);
+
+console.log(codeDetails);
+```
+
+### 获取与代码关联的合约
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+
+const codeId = 1
+const pagination = {...} as PaginationOption
+
+const contracts = await chainGrpcWasmApi.fetchContractCodeContracts({
+  codeId,
+  pagination /* 可选分页选项 */
+})
+
+console.log(contracts)
+```
