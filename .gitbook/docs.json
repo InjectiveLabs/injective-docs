@@ -837,13 +837,32 @@
                     "pages": [
                       "cn/developers-native/transactions/index",
                       "cn/developers-native/transactions/cosmos",
-                      "cn/developers-native/transactions/msgbroadcaster"
+                      "cn/developers-native/transactions/cosmos-ledger-keplr",
+                      "cn/developers-native/transactions/ethereum",
+                      "cn/developers-native/transactions/ethereum-ledger",
+                      "cn/developers-native/transactions/msgbroadcaster",
+                      "cn/developers-native/transactions/private-key",
+                      "cn/developers-native/transactions/web3-gateway"
                     ]
                   },
                   {
                     "group": "交易示例",
                     "pages": [
-                      "cn/developers-native/examples/index"
+                      "cn/developers-native/examples/index",
+                      "cn/developers-native/examples/auction",
+                      "cn/developers-native/examples/authz",
+                      "cn/developers-native/examples/bank",
+                      "cn/developers-native/examples/distribution",
+                      "cn/developers-native/examples/exchange",
+                      "cn/developers-native/examples/feegrant",
+                      "cn/developers-native/examples/governance",
+                      "cn/developers-native/examples/ibc",
+                      "cn/developers-native/examples/insurance",
+                      "cn/developers-native/examples/peggy",
+                      "cn/developers-native/examples/permissions",
+                      "cn/developers-native/examples/staking",
+                      "cn/developers-native/examples/token-factory",
+                      "cn/developers-native/examples/wasm"
                     ]
                   },
                   {
