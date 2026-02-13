@@ -1,0 +1,25 @@
+---
+title: 投资组合
+---
+
+查询 Indexer 获取投资组合模块相关数据的示例代码。
+
+## 使用 gRPC
+
+### 根据 Injective 地址获取投资组合，如银行余额和子账户余额
+
+```ts lines highlight={1}
+import { IndexerGrpcPortfolioApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcPortfolioApi = new IndexerGrpcPortfolioApi(endpoints.indexer);
+
+const injectiveAddress = "inj...";
+
+const portfolio = await indexerGrpcPortfolioApi.fetchAccountPortfolioBalances(
+  injectiveAddress
+);
+
+console.log(portfolio);
+```
