@@ -1,0 +1,11 @@
+---
+title: 交易账户
+---
+
+子账户或交易账户是一个概念，允许你将原生 Injective Bank 模块中的资金（可用于质押、竞拍、参与治理、创建市场等）解耦到一个隔离的交易账户中，你可以从该账户执行交易。一个 Injective 地址可以拥有无限数量的交易账户。它们的表示方式是 `${ethereumAddress}${subaccountNonce}`，其中 `ethereumAddress` 是 `bech32` Injective 地址的 `hex` 版本，`subaccountNonce` 是用 12 字节表示的 nonce。nonce 为 1 的交易账户示例是 `0xc7dca7c15c364865f77a4fb67ab11dc95502e6fe000000000000000000000001`。
+
+<Tip>
+有关子账户及其主要功能的一般概述，请参阅[账户](/defi/wallet/accounts#subaccounts)页面。
+</Tip>
+
+从 v1.10.0 链升级开始，Bank 余额和默认交易账户（nonce = 0）将被合并，Bank 资金将在执行来自默认交易账户的交易时直接使用。
