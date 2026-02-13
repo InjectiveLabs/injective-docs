@@ -1,0 +1,59 @@
+---
+title: Distribution
+---
+
+查询链上与委托给验证者相关数据的示例代码片段。
+
+## 使用 gRPC
+
+### 获取参数，如基础和奖励提议者奖励
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcDistributionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcDistributionApi = new ChainGrpcDistributionApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcDistributionApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 获取委托人委托给特定验证者的奖励金额和 denom
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcDistributionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcDistributionApi = new ChainGrpcDistributionApi(endpoints.grpc);
+
+const delegatorAddress = "inj...";
+const validatorAddress = "injvaloper...";
+
+const delegatorRewardsFromValidator =
+  await chainGrpcDistributionApi.fetchDelegatorRewardsForValidatorNoThrow({
+    delegatorAddress,
+    validatorAddress,
+  });
+
+console.log(delegatorRewardsFromValidator);
+```
+
+### 获取委托人的所有奖励金额和 denom
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcDistributionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcDistributionApi = new ChainGrpcDistributionApi(endpoints.grpc);
+
+const delegatorAddress = "inj...";
+
+const totalDelegatorRewards =
+  await chainGrpcDistributionApi.fetchDelegatorRewardsNoThrow(delegatorAddress);
+
+console.log(totalDelegatorRewards);
+```
