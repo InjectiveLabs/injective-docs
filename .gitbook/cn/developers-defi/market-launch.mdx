@@ -1,0 +1,45 @@
+---
+title: 发行市场
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+发行市场的前提条件是[发行代币](/cn/developers-defi/token-launch/)。
+</Callout>
+
+在 Injective 上发行交易对快速、简单，最重要的是无需许可！
+
+以下教程假设该交易对以从以太坊桥接的 ERC-20 代币作为基础资产，与 INJ 作为报价资产配对上市。
+
+对于 Injective 原生代币，跳过桥接部分，直接进入步骤 6。
+
+1. 导航到 [Injective Bridge](http://bridge.injective.network/) 开始使用 Peggy 桥将你选择的 ERC-20 代币从以太坊桥接到 Injective 的过程。
+
+![Injective Bridge](</img/Docs - Deposit Peggy.png>)
+
+2. 点击下拉菜单，滚动到底部，然后点击高级工具旁边的"add"，使用代币地址添加自定义 ERC-20 代币，你可能需要在 CoinGecko 等可信来源上验证该地址。
+
+![Add Custom ERC-20 Token](</img/Docs - Deposit From.png>)
+
+3. 复制并粘贴正确的合约地址，然后点击"add"。
+
+![Add Smart Contract Address](</img/Docs - Add and Bridge ERC20.png>)
+
+4. 现在输入你希望桥接的 ERC-20 代币的所需数量，点击"approve"，确认交易，然后点击"review"，确认交易，然后等待。
+
+![Launch trading Pair](https://docs.injective.network/assets/images/ltp4-f8f97c3328c04389962ac3deb9b137a9.png) ![Launch trading Pair](https://docs.injective.network/assets/images/ltp6-7812b6fe19b088c68b8d2a9bda8df05c.png) ![Launch trading Pair](https://docs.injective.network/assets/images/ltp7-d83a52c9fc794a2934ea8f2a5371595a.png) ![Launch trading Pair](https://docs.injective.network/assets/images/ltp8-da76aaaa5ee9f233ea47bbcb1f5b53bf.png)
+
+5. 一旦批准支出和存款交易在以太坊区块链上确认，你将看到桥接交易的进度。一旦交易在 Injective 上确认，你桥接的 ERC-20 代币将在你的 Injective 钱包中可用。（注意，如果你使用 MetaMask 作为源链，默认情况下你桥接的代币将发送到与你的 MetaMask 关联的 inj 地址。这可以通过在步骤 4 开始时点击接收者地址旁边的锁定图标来更改。）
+
+![Bridging Completion](</img/Docs - Transaction Submitted.png>)
+
+6. 桥接交易完成后，你可以通过导航到 [Injective Hub](https://injhub.com/proposal/create/) 在 Injective 上无需许可地上架代币。
+
+![List on Injective](</img/Docs - New Proposal.png>)
+
+7. 从第一个下拉菜单中选择"instant spot market launch"，并指定一个交易对。在此示例中，让我们使用 PEPE/INJ。现在从下拉菜单中选择基础代币。但是，请注意，同一交易对下可能存在多个代币。始终匹配正确的代币地址。在这种情况下，由于代币是使用 Peggy 桥桥接的，地址将是 peggy 后跟 ERC-20 合约地址。
+
+![Specify Ticker](</img/Docs - Select Ticker.png>)
+
+8. 现在选择正确的报价 denom，在这种情况下是 inj。（注意，如果你希望将代币与 USDT 配对，请确保选择"正确的"USDT 地址，即 peggy 后跟 USDT 的 ERC-20 合约地址。）最后，指定最小价格刻度和最小数量刻度。因为 PEPE/INJ 将以一分钱的一小部分进行交易，所以最小刻度相应设置。
+
+![Select Quote Denom](</img/Docs - Quote Denom.png>)
