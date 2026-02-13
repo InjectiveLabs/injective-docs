@@ -1,0 +1,21 @@
+---
+title: Oracle
+---
+
+通过 oracle API 查询链的示例代码片段。
+
+## 使用 gRPC
+
+### 获取 oracle 相关参数
+
+```ts
+import { ChainGrpcOracleApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcOracleApi = new ChainGrpcOracleApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcOracleApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
