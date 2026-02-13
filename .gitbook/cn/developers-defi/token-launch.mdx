@@ -1,0 +1,239 @@
+---
+title: 发行代币
+---
+
+在本文档中，我们将解释如何在 Injective 上发行代币。
+
+在 Injective 上发行代币有两种选择：桥接现有代币或创建新代币。
+
+## 桥接 <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+
+在 Injective 上发行代币最简单的方法是从 Injective 可互操作的支持网络之一桥接你现有的资产。你可以参考[桥接](/defi/bridge/ "mention")部分的指南，将资产从其他网络桥接到 Injective。
+
+桥接过程完成后，将在 Injective 上创建一个代币，然后你可以使用它来[发行市场](/cn/developers-defi/market-launch/ "mention")。
+
+## 创建新代币
+
+你也可以使用 `TokenFactory` 模块在 Injective 上创建新代币。有多种方法可以实现这一点。
+
+### 使用 Injective Hub <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+
+[Injective Hub](https://injhub.com/token-factory/) Web 应用程序使你能够无缝创建和管理代币，在 Injective 的[原生订单簿](/developers-native/injective/exchange)上创建市场等。
+
+### 使用 TokenStation[​](/developers-defi/token-launch) <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+
+[TokenStation](https://www.tokenstation.app/) Web 应用程序使你能够无缝创建和管理代币，在 Injective 的[原生订单簿](/developers-native/injective/exchange/)上创建市场，发起空投等。
+
+### 使用 DojoSwap[​](/developers-defi/token-launch/#4-via-dojoswap) <a href="#id-4-via-dojoswap" id="id-4-via-dojoswap"></a>
+
+与上述类似，你可以利用 [DojoSwap 的市场创建模块](https://docs.dojo.trading/introduction/market-creation)来创建、管理和上架你的代币，以及其他几个有用的功能。
+
+### 编程方式
+
+#### 使用 TypeScript
+
+了解更多关于[发行代币](/developers/assets/token-create)的信息。
+
+#### 使用 Injective CLI
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+在继续本教程之前，你必须在本地安装 `injectived`。你可以在 [injectived](/developers/injectived/ "mention") 页面了解更多信息。
+</Callout>
+
+安装 `injectived` 并添加密钥后，你可以使用 CLI 发行代币：
+
+1. **创建 `TokenFactory` denom**
+
+创建 factory denom 的费用为 `0.1 INJ`。
+
+```bash
+injectived tx tokenfactory create-denom [subdenom] [name] [symbol] [decimals] --from=YOUR_KEY --chain-id=injective-888 --node=https://testnet.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+代币按创建者地址命名空间，以实现无需许可并避免名称冲突。在上面的示例中，subdenom 是 `ak`，但 denom 命名将是 `factory/{creator address}/{subdenom}`。
+
+2. **提交代币元数据**
+
+要使你的代币在 Injective dApp 上可见，你必须提交其元数据。
+
+```bash
+injectived tx tokenfactory set-denom-metadata "My Token Description" 'factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak' AKK AKCoin AK '' '' '[
+{"denom":"factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak","exponent":0,"aliases":[]},
+{"denom":"AKK","exponent":6,"aliases":[]}
+]' 6 --from=YOUR_KEY --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+此命令需要以下参数：
+
+```bash
+injectived tx tokenfactory set-denom-metadata [description] [base] [display] [name] [symbol] [uri] [uri-hash] [denom-unit (json)] [decimals]
+```
+
+3. **铸造代币**
+
+创建代币并提交代币元数据后，就可以铸造代币了。
+
+```bash
+injectived tx tokenfactory mint 1000000factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+假设你的代币有 6 位小数，此命令将铸造 1 个代币。
+
+4. **销毁代币**
+
+代币的管理员也可以销毁代币。
+
+```bash
+injectived tx tokenfactory burn 1000000factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+5. **更改管理员**
+
+建议在铸造初始供应量后将管理员更改为 `null` 地址，以确保代币的供应量不能被操纵。再次强调，代币的管理员可以随时铸造和销毁供应量。如上所述，`NEW_ADDRESS` 在大多数情况下应设置为 `inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49`。
+
+```bash
+injectived tx tokenfactory change-admin factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak NEW_ADDRESS --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+上述示例适用于测试网。如果你想在主网上运行它们，请进行以下更改：
+
+`injective-888` > `injective-1`
+
+`https://testnet.sentry.tm.injective.network:443` > `http://sentry.tm.injective.network:443`
+</Callout>
+
+#### 使用 CosmWasm
+
+要通过智能合约以编程方式创建和管理 bank 代币，可以使用 [`injective-cosmwasm`](https://github.com/InjectiveLabs/cw-injective/blob/6b2d549ff99912b9b16dbf91a06c83db99b5dace/packages/injective-cosmwasm/src/msg.rs#L399-L434) 包中的以下消息：
+
+`create_new_denom_msg`
+
+```rust
+pub fn create_new_denom_msg(sender: String, subdenom: String) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::CreateDenom { sender, subdenom },
+    }
+    .into()
+}
+```
+
+用途：创建一条消息，使用 tokenfactory 模块创建新的代币面额。
+
+参数：
+
+* `sender`：发起创建的账户地址。
+* `subdenom`：新代币的子面额标识符。
+
+返回：包装在 `InjectiveMsgWrapper` 中的 `CosmosMsg`，准备发送到 Injective 区块链。
+
+示例：
+
+```rust
+let new_denom_message = create_new_denom_msg(
+    env.contract.address,  // 发送者地址
+    "mytoken".to_string(), // 子面额标识符
+);
+```
+
+#### `create_set_token_metadata_msg`
+
+```rust
+pub fn create_set_token_metadata_msg(denom: String, name: String, symbol: String, decimals: u8) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::SetTokenMetadata {
+            denom,
+            name,
+            symbol,
+            decimals,
+        },
+    }
+    .into()
+}
+```
+
+用途：创建一条消息来设置或更新代币的元数据。
+
+参数：
+
+* `denom`：代币的面额标识符。
+* `name`：代币的全名。
+* `symbol`：代币的符号。
+* `decimals`：代币使用的小数位数。
+
+返回：包装在 `InjectiveMsgWrapper` 中的 `CosmosMsg`，准备发送到 Injective 区块链。
+
+示例：
+
+```rust
+let metadata_message = create_set_token_metadata_msg(
+    "mytoken".to_string(),         // 面额标识符
+    "My Custom Token".to_string(), // 全名
+    "MYT".to_string(),             // 符号
+    18,                            // 小数位数
+);
+```
+
+#### `create_mint_tokens_msg`
+
+```rust
+pub fn create_mint_tokens_msg(sender: Addr, amount: Coin, mint_to: String) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::Mint { sender, amount, mint_to },
+    }
+    .into()
+}
+```
+
+用途：创建一条消息来铸造新代币。代币必须是 tokenfactory 代币，发送者必须是代币管理员。
+
+参数：
+
+* `sender`：发起铸造操作的账户地址。
+* `amount`：要铸造的代币数量。
+* `mint_to`：新铸造代币应发送到的接收者地址。
+
+返回：包装在 `InjectiveMsgWrapper` 中的 `CosmosMsg`，准备发送到 Injective 区块链。
+
+示例：
+
+```rust
+let mint_message = create_mint_tokens_msg(
+    env.contract.address,                                   // 发送者地址
+    Coin::new(1000, "factory/<creator-address>/mytoken"),   // 要铸造的数量
+    "inj1...".to_string(),                                  // 接收者地址
+);
+```
+
+#### `create_burn_tokens_msg`
+
+```rust
+pub fn create_burn_tokens_msg(sender: Addr, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::Burn { sender, amount },
+    }
+    .into()
+}
+```
+
+用途：创建一条消息来销毁代币。代币必须是 tokenfactory 代币，发送者必须是代币管理员。
+
+参数：
+
+* `sender`：发起销毁操作的账户地址。
+* `amount`：要销毁的代币数量。
+
+返回：包装在 `InjectiveMsgWrapper` 中的 `CosmosMsg`，准备发送到 Injective 区块链。
+
+示例：
+
+```rust
+let burn_message = create_burn_tokens_msg(
+    env.contract.address,                                    // 发送者地址
+    Coin::new(500, "factory/<creator-address>/mytoken"),     // 要销毁的数量
+);
+```

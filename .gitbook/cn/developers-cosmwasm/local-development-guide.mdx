@@ -1,0 +1,300 @@
+---
+title: 本地开发
+---
+
+本指南将帮助你开始在本地计算机上运行的本地 Injective 网络上部署 `cw20` 智能合约。
+
+我们将使用来自 [CosmWasm 规范和合约集合](https://github.com/CosmWasm/cw-plus) 的 `cw20-base` 合约，这些合约专为在真实网络上的生产使用而设计。`cw20-base` 是 `cw20` 兼容合约的基本实现，可以在你想要构建的任何自定义合约中导入。它包含 cw20 规范及所有扩展的简单但完整的实现。`cw20-base` 可以按原样部署或由其他合约导入。
+
+### 前置条件
+
+按照以下说明安装 Go、Rust 和其他 CosmWasm 依赖项：
+
+1. [Go](https://docs.cosmwasm.com/docs/getting-started/installation#go)
+2. [Rust](https://docs.cosmwasm.com/docs/getting-started/installation#rust)
+
+在开始之前，请确保你已安装 [`rustup`](https://rustup.rs/) 以及最新版本的 `rustc` 和 `cargo`。目前，我们在 Rust v1.58.1+ 上进行测试。
+
+你还需要安装 `wasm32-unknown-unknown` 目标以及 `cargo-generate` Rust crate。
+
+你可以通过以下命令检查版本：
+
+```bash
+rustc --version
+cargo --version
+rustup target list --installed
+# 如果上面没有列出 wasm32，运行这个命令
+rustup target add wasm32-unknown-unknown
+# 安装 cargo-generate，运行这个命令
+cargo install cargo-generate
+```
+
+### injectived
+
+确保你已在本地安装 `injectived`。你可以按照[安装 injectived](/developers/injectived/install/) 指南在本地运行 `injectived` 和其他前置条件。
+
+安装 `injectived` 后，你还应该[启动本地链实例。](/developers/injectived/install/#start-injectived)
+
+### 编译 CosmWasm 合约
+
+在此步骤中，我们将获取所有 CW 生产模板合约，并使用 [CosmWasm Rust Optimizer](https://github.com/CosmWasm/rust-optimizer) Docker 镜像进行编译，用于编译多个合约（称为 `workspace-optimizer`）——查看[这里](https://hub.docker.com/r/cosmwasm/workspace-optimizer/tags)（x86）或[这里](https://hub.docker.com/r/cosmwasm/workspace-optimizer-arm64/tags)（ARM）获取最新版本。此过程可能需要一些时间和 CPU 资源。
+
+```bash
+git clone https://github.com/CosmWasm/cw-plus
+cd cw-plus
+```
+
+非 ARM（非 Apple silicon）设备：
+
+```bash
+docker run --rm -v "$(pwd)":/code \
+--mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+cosmwasm/workspace-optimizer:0.12.12
+```
+
+或者对于 Apple Silicon 设备（M1、M2 等）请使用：
+
+```bash
+docker run --rm -v "$(pwd)":/code \
+--mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+cosmwasm/workspace-optimizer-arm64:0.12.12
+```
+
+docker 脚本构建并优化仓库中的所有 CW 合约，编译后的合约位于 `artifacts` 目录下。现在我们可以部署 `cw20_base.wasm` 合约（如果在 ARM 设备上编译则为 `cw20_base-aarch64.wasm`）。
+
+### 将 CosmWasm 合约上传到链上
+
+```bash
+# 在 CosmWasm/cw-plus 仓库内
+yes 12345678 | injectived tx wasm store artifacts/cw20_base.wasm --from=genesis --chain-id="injective-1" --yes --gas-prices=500000000inj --gas=20000000
+```
+
+**输出：**
+
+```
+code: 0
+codespace: ""
+data: ""
+events: []
+gas_used: "0"
+gas_wanted: "0"
+height: "0"
+info: ""
+logs: []
+raw_log: '[]'
+timestamp: ""
+tx: null
+txhash: 4CFB63A47570C4CFBE8E669273B26BEF6EAFF922C07480CA42180C52219CE784
+```
+
+然后通过 `txhash` 查询交易以验证合约确实已部署。
+
+```bash
+injectived query tx 4CFB63A47570C4CFBE8E669273B26BEF6EAFF922C07480CA42180C52219CE784
+```
+
+更仔细地检查输出，我们可以看到合约的 `code_id` 为 1
+
+```bash
+logs:
+- events:
+  - attributes:
+    - key: access_config
+      value: '{"permission":"Everybody","address":"","addresses":[]}'
+    - key: checksum
+      value: '"X4IBz14tfmwV2xGt8D1i3d3JK41PrpjE88HDfzeOFdk="'
+    - key: code_id
+      value: '"1"'
+    - key: creator
+      value: '"inj10rdsxdgr8l8s0gvu8rynhu22nnxkfytg58cwm8"'
+    type: cosmwasm.wasm.v1.EventCodeStored
+  - attributes:
+    - key: action
+      value: /cosmwasm.wasm.v1.MsgStoreCode
+    - key: module
+      value: wasm
+    - key: sender
+      value: inj10rdsxdgr8l8s0gvu8rynhu22nnxkfytg58cwm8
+    type: message
+  - attributes:
+    - key: code_checksum
+      value: 5f8201cf5e2d7e6c15db11adf03d62ddddc92b8d4fae98c4f3c1c37f378e15d9
+    - key: code_id
+      value: "1"
+    type: store_code
+  log: ""
+  msg_index: 0
+```
+
+我们已经上传了合约代码，但我们仍然需要实例化合约。
+
+### 实例化合约
+
+在实例化合约之前，让我们看一下 CW-20 合约 `instantiate` 的函数签名。
+
+```rust
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn instantiate(
+    mut deps: DepsMut,
+    _env: Env,
+    _info: MessageInfo,
+    msg: InstantiateMsg,
+) -> Result<Response, ContractError> {
+```
+
+值得注意的是，它包含 `InstantiateMsg` 参数，其中包含代币名称、符号、小数位数和其他详细信息。
+
+```rust
+#[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq)]
+pub struct InstantiateMsg {
+    pub name: String,
+    pub symbol: String,
+    pub decimals: u8,
+    pub initial_balances: Vec<Cw20Coin>,
+    pub mint: Option<MinterResponse>,
+    pub marketing: Option<InstantiateMarketingInfo>,
+}
+```
+
+实例化合约的第一步是选择一个地址来提供我们的初始 CW20 代币分配。在我们的例子中，我们可以直接使用 genesis 地址，因为我们已经设置了密钥，但你也可以随意生成新的地址和密钥。
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+确保你拥有所选地址的私钥——否则你将无法测试从该地址进行的代币转账。此外，所选地址必须是链上的有效地址（该地址必须在过去某个时间点收到过资金），并且必须有余额来支付执行合约时的 gas 费用。
+</Callout>
+
+要找到 genesis 地址，运行：
+
+```bash
+yes 12345678 | injectived keys show genesis
+```
+
+**输出：**
+
+```bash
+- name: genesis
+  type: local
+  address: inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3
+  pubkey: '{"@type":"/injective.crypto.v1beta1.ethsecp256k1.PubKey","key":"ArtVkg9feLXjD4p6XRtWxVpvJUDhrcqk/5XYLsQI4slb"}'
+  mnemonic: ""
+```
+
+运行带有 `code_id` `1` 的 CLI 命令，以及 JSON 编码的初始化参数（使用你选择的地址）和一个标签（此合约在列表中的人类可读名称）来实例化合约：
+
+```bash
+CODE_ID=1
+INIT='{"name":"Albcoin","symbol":"ALB","decimals":6,"initial_balances":[{"address":"inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3","amount":"69420"}],"mint":{"minter":"inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3"},"marketing":{}}'
+yes 12345678 | injectived tx wasm instantiate $CODE_ID $INIT --label="Albcoin Token" --from=genesis --chain-id="injective-1" --yes --gas-prices=500000000inj --gas=20000000 --no-admin
+```
+
+现在可以在 `http://localhost:10337/swagger/#/Query/ContractsByCode` 获取实例化合约的地址
+
+合约信息元数据可以在 `http://localhost:10337/swagger/#/Query/ContractInfo` 获取，或通过 CLI 查询
+
+```bash
+CONTRACT=$(injectived query wasm list-contract-by-code $CODE_ID --output json | jq -r '.contracts[-1]')
+injectived query wasm contract $CONTRACT
+```
+
+**输出：**
+
+```bash
+injectived query wasm contract $CONTRACT
+address: inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz
+contract_info:
+  admin: ""
+  code_id: "1"
+  created:
+    block_height: "95"
+    tx_index: "0"
+  creator: inj10rdsxdgr8l8s0gvu8rynhu22nnxkfytg58cwm8
+  extension: null
+  ibc_port_id: ""
+  label: Albcoin Token
+```
+
+### 查询合约
+
+可以使用以下命令查询整个合约状态：
+
+```bash
+injectived query wasm contract-state all $CONTRACT
+```
+
+**输出：**
+
+```bash
+models:
+- key: 000762616C616E6365696E6A31306366793565367174327A793535713277327578327675713836327A63796634666D66706A33
+  value: IjY5NDIwIg==
+- key: 636F6E74726163745F696E666F
+  value: eyJjb250cmFjdCI6ImNyYXRlcy5pbzpjdzIwLWJhc2UiLCJ2ZXJzaW9uIjoiMS4wLjEifQ==
+- key: 6D61726B6574696E675F696E666F
+  value: eyJwcm9qZWN0IjpudWxsLCJkZXNjcmlwdGlvbiI6bnVsbCwibG9nbyI6bnVsbCwibWFya2V0aW5nIjpudWxsfQ==
+- key: 746F6B656E5F696E666F
+  value: eyJuYW1lIjoiQWxiY29pbiIsInN5bWJvbCI6IkFMQiIsImRlY2ltYWxzIjo2LCJ0b3RhbF9zdXBwbHkiOiI2OTQyMCIsIm1pbnQiOnsibWludGVyIjoiaW5qMTBjZnk1ZTZxdDJ6eTU1cTJ3MnV4MnZ1cTg2MnpjeWY0Zm1mcGozIiwiY2FwIjpudWxsfX0=
+pagination:
+  next_key: null
+  total: "0"
+```
+
+也可以查询单个用户的代币余额：
+
+```bash
+BALANCE_QUERY='{"balance": {"address": "inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3"}}'
+injectived query wasm contract-state smart $CONTRACT "$BALANCE_QUERY" --output json
+```
+
+**输出：**
+
+```bash
+{"data":{"balance":"69420"}}
+```
+
+### 转账代币
+
+```bash
+TRANSFER='{"transfer":{"recipient":"inj1dzqd00lfd4y4qy2pxa0dsdwzfnmsu27hgttswz","amount":"420"}}'
+yes 12345678 | injectived tx wasm execute $CONTRACT "$TRANSFER" --from genesis --chain-id="injective-1" --yes --gas-prices=500000000inj --gas=20000000
+```
+
+然后确认余额转账成功：
+
+```bash
+# 第一个地址余额查询
+BALANCE_QUERY='{"balance": {"address": "inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3"}}'
+injectived query wasm contract-state smart $CONTRACT "$BALANCE_QUERY" --output json
+```
+
+**输出：**
+
+```bash
+{"data":{"balance":"69000"}}
+```
+
+并确认接收者收到了资金：
+
+```bash
+# 接收者地址余额查询
+BALANCE_QUERY='{"balance": {"address": "inj1dzqd00lfd4y4qy2pxa0dsdwzfnmsu27hgttswz"}}'
+injectived query wasm contract-state smart $CONTRACT "$BALANCE_QUERY" --output json
+```
+
+**输出：**
+
+```bash
+{"data":{"balance":"420"}}
+```
+
+## 测试网开发
+
+以下是 `local` 和 `testnet` 开发/部署之间的主要区别
+
+* 你可以使用我们的 [Injective 测试网水龙头](https://testnet.faucet.injective.network) 为你的地址获取测试网资金，
+* 你可以使用 [Injective 测试网浏览器](https://testnet.explorer.injective.network/smart-contracts/code/) 查询你的交易并获取更多详细信息，
+* 当你使用 `injectived` 时，你必须使用 `node` 标志指定 `testnet` rpc `--node=https://testnet.sentry.tm.injective.network:443`
+* 不使用 `injective-1` 作为 `chainId`，你应该使用 `injective-888`，即 `chain-id` 标志现在应该是 `--chain-id="injective-888"`
+* 你可以使用 [Injective 测试网浏览器](https://testnet.explorer.injective.network/smart-contracts/code/) 查找有关上传的智能合约的 `codeId` 信息，或找到你实例化的智能合约
+
+你可以在[使用 injectived](/developers/injectived/use/) 指南中阅读更多关于 `injectived` 以及如何使用它对 `testnet` 进行查询/发送交易的信息。

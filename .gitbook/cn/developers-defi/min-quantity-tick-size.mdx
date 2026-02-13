@@ -1,0 +1,27 @@
+---
+title: 最小数量刻度
+---
+
+## 最小市场数量刻度
+
+最小市场数量刻度规定了订单数量可以增加或减少的最小增量。例如，如果市场的最小数量刻度为 **0.001**，则提交数量为 **0.0011** 的订单将被拒绝，因为它不符合允许的增量。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**注意：** 衍生品市场在用户界面和链之间共享相同的 `minQuantityTickSize` 格式，因此不需要格式化。
+</Callout>
+
+### 现货市场
+
+#### 从人类可读格式转换为链格式
+
+以 INJ/USDT 市场为例，该市场有 **18 个基础小数位** 和 **6 个报价小数位**，转换为链格式如下：
+
+$$\text{chainFormat} = \text{value} \times 10^{\text{baseDecimals}}$$
+
+#### 从链格式转换为人类可读格式
+
+转换回人类可读格式：
+
+$$\text{humanReadableFormat} = \text{value} \times 10^{-\text{baseDecimals}}$$
+
+另外，请务必查看我们的[概念](../developers/concepts/calculation-min-price-tick-size/)。

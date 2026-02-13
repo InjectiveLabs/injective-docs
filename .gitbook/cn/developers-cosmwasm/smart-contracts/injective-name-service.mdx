@@ -1,0 +1,354 @@
+---
+title: Injective 域名服务
+---
+
+在本节中，我们将了解如何查询 Injective 域名服务合约以解析 .inj 域名并执行反向查找。
+
+## InjNameService 类实现
+
+推荐的方法是创建你自己的 `InjNameService` 类来封装域名服务功能。这为域名解析和反向查找提供了一个干净、可重用的接口。
+
+### 创建 InjNameService 类
+
+以下是你可以在应用程序中使用的完整实现：
+
+```ts
+import {
+  Network,
+  getNetworkEndpoints,
+  getInjNameRegistryContractForNetwork,
+  getInjNameReverseResolverContractForNetwork,
+} from "@injectivelabs/networks";
+import {
+  QueryInjName,
+  ChainGrpcWasmApi,
+  QueryResolverAddress,
+  QueryInjectiveAddress,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+
+export class InjNameService {
+  private reverseResolverAddress: string;
+  private registryAddress: string;
+  private chainGrpcWasmApi: ChainGrpcWasmApi;
+
+  constructor(network: Network = Network.Mainnet) {
+    const endpoints = getNetworkEndpoints(network);
+    this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+    this.registryAddress = getInjNameRegistryContractForNetwork(network);
+    this.reverseResolverAddress =
+      getInjNameReverseResolverContractForNetwork(network);
+  }
+
+  /**
+   * 获取给定 Injective 地址的 .inj 名称（反向解析）
+   * @param address - 要解析的 Injective 地址
+   * @returns .inj 域名
+   */
+  async fetchInjName(address: string): Promise<string> {
+    const query = new QueryInjName({ address }).toPayload();
+
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      this.reverseResolverAddress,
+      query
+    );
+
+    const name =
+      InjNameServiceQueryTransformer.injectiveNameResponseToInjectiveName(
+        response
+      );
+
+    if (!name) {
+      throw new Error(`.inj name not found for ${address}`);
+    }
+
+    // 通过检查名称是否解析回相同的地址来验证反向解析
+    const addressFromName = await this.fetchInjAddress(name);
+
+    if (addressFromName.toLowerCase() !== address.toLowerCase()) {
+      throw new Error(`.inj name not found for ${address}`);
+    }
+
+    return name;
+  }
+
+  /**
+   * 获取给定 .inj 域名的 Injective 地址（正向解析）
+   * @param name - 要解析的 .inj 域名
+   * @returns Injective 地址
+   */
+  async fetchInjAddress(name: string): Promise<string> {
+    const normalizedName = normalizeName(name);
+    const node = nameToNode(normalizedName);
+
+    if (!node || node.length === 0) {
+      throw new Error(`The ${name} can't be normalized`);
+    }
+
+    const resolverAddress = await this.fetchResolverAddress(node);
+
+    if (!resolverAddress) {
+      throw new Error(`Resolver address not found for ${name}`);
+    }
+
+    const query = new QueryInjectiveAddress({ node }).toPayload();
+
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      resolverAddress,
+      query
+    );
+
+    const address =
+      InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(
+        response
+      );
+
+    if (!address) {
+      throw new Error(`Address not found for ${name}`);
+    }
+
+    return address;
+  }
+
+  /**
+   * 获取给定节点的解析器地址
+   * @private
+   */
+  private async fetchResolverAddress(node: number[]): Promise<string> {
+    const query = new QueryResolverAddress({ node }).toPayload();
+
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      this.registryAddress,
+      query
+    );
+
+    return InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(
+      response
+    );
+  }
+}
+```
+
+### 使用 InjNameService 类
+
+```ts
+import { Network } from "@injectivelabs/networks";
+
+// 初始化服务
+const injNameService = new InjNameService(Network.Mainnet);
+
+// 将 .inj 域名解析为地址
+const address = await injNameService.fetchInjAddress("ninja.inj");
+console.log("Address:", address);
+
+// 将地址反向解析为 .inj 域名
+const name = await injNameService.fetchInjName("inj1...");
+console.log("Name:", name);
+```
+
+## 原始智能合约查询
+
+如果你需要更多控制或想直接查询合约而不使用抽象层，以下是各个方法：
+
+### 域名解析（正向查找）
+
+将 .inj 域名解析为 Injective 地址。
+
+#### 步骤 1：获取解析器地址
+
+```ts
+import {
+  Network,
+  getNetworkEndpoints,
+  getInjNameRegistryContractForNetwork,
+} from "@injectivelabs/networks";
+import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+import {
+  ChainGrpcWasmApi,
+  QueryResolverAddress,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+
+const endpoints = getNetworkEndpoints(Network.Mainnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const registryContractAddress = getInjNameRegistryContractForNetwork(
+  Network.Mainnet
+);
+
+const name = "ninja.inj";
+const normalizedName = normalizeName(name);
+const node = nameToNode(normalizedName);
+
+const query = new QueryResolverAddress({ node }).toPayload();
+
+const response = await chainGrpcWasmApi.fetchSmartContractState(
+  registryContractAddress,
+  query
+);
+
+const resolverAddress =
+  InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(
+    response
+  );
+
+console.log("Resolver Address:", resolverAddress);
+```
+
+#### 步骤 2：获取域名的地址
+
+```ts
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+import {
+  ChainGrpcWasmApi,
+  QueryInjectiveAddress,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+
+const endpoints = getNetworkEndpoints(Network.Mainnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const name = "ninja.inj";
+const normalizedName = normalizeName(name);
+const node = nameToNode(normalizedName);
+
+// 使用步骤 1 中的解析器地址
+const resolverAddress = "...";
+
+const query = new QueryInjectiveAddress({ node }).toPayload();
+
+const response = await chainGrpcWasmApi.fetchSmartContractState(
+  resolverAddress,
+  query
+);
+
+const injectiveAddress =
+  InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(
+    response
+  );
+
+if (!injectiveAddress) {
+  throw new Error(`Address not found for ${name}`);
+}
+
+console.log("Injective Address:", injectiveAddress);
+```
+
+### 反向解析（地址到域名）
+
+将 Injective 地址解析为其主要 .inj 域名。
+
+```ts
+import {
+  Network,
+  getNetworkEndpoints,
+  getInjNameReverseResolverContractForNetwork,
+} from "@injectivelabs/networks";
+import {
+  QueryInjName,
+  ChainGrpcWasmApi,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+
+const endpoints = getNetworkEndpoints(Network.Mainnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const reverseResolverContractAddress =
+  getInjNameReverseResolverContractForNetwork(Network.Mainnet);
+
+const injectiveAddress = "inj1...";
+
+const query = new QueryInjName({ address: injectiveAddress }).toPayload();
+
+const response = await chainGrpcWasmApi.fetchSmartContractState(
+  reverseResolverContractAddress,
+  query
+);
+
+const name =
+  InjNameServiceQueryTransformer.injectiveNameResponseToInjectiveName(response);
+
+if (!name) {
+  throw new Error(`.inj name not found for ${injectiveAddress}`);
+}
+
+console.log("INS Name:", name);
+```
+
+**重要：** 始终通过检查名称是否解析回原始地址来验证反向解析。以下是如何使用正向解析执行验证：
+
+```ts
+import { Network, getNetworkEndpoints, getInjNameRegistryContractForNetwork } from "@injectivelabs/networks";
+import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+import {
+  ChainGrpcWasmApi,
+  QueryResolverAddress,
+  QueryInjectiveAddress,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+
+// 初始化 gRPC 客户端
+const endpoints = getNetworkEndpoints(Network.Mainnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+// 从反向解析获取名称后，验证它是否解析回来
+const normalizedName = normalizeName(name);
+const node = nameToNode(normalizedName);
+
+// 获取解析器地址
+const registryContractAddress = getInjNameRegistryContractForNetwork(
+  Network.Mainnet
+);
+const resolverQuery = new QueryResolverAddress({ node }).toPayload();
+const resolverResponse = await chainGrpcWasmApi.fetchSmartContractState(
+  registryContractAddress,
+  resolverQuery
+);
+const resolverAddress =
+  InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(
+    resolverResponse
+  );
+
+// 从名称获取地址
+const addressQuery = new QueryInjectiveAddress({ node }).toPayload();
+const addressResponse = await chainGrpcWasmApi.fetchSmartContractState(
+  resolverAddress,
+  addressQuery
+);
+const addressFromName =
+  InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(
+    addressResponse
+  );
+
+// 验证名称是否解析回原始地址
+if (addressFromName.toLowerCase() !== injectiveAddress.toLowerCase()) {
+  throw new Error(
+    `Verification failed: ${name} does not resolve back to ${injectiveAddress}`
+  );
+}
+```
+
+> **注意：** 如果你使用前面显示的 `InjNameService` 类，你可以将此验证简化为：`await injNameService.fetchInjAddress(name)`
+
+## 最佳实践
+
+1. **始终规范化域名** 在处理之前以确保一致性
+2. **验证反向解析** 通过执行正向查找以确保名称实际指向该地址
+3. **优雅地处理错误** - 并非所有地址都有 .inj 名称，并非所有名称都已注册
+4. **使用正确的网络配置** - 确保你查询的是正确的网络（主网 vs 测试网）
+5. **适当时缓存结果** 以减少不必要的合约查询
+
+## 依赖项
+
+要使用 Injective 域名服务，你需要以下包：
+
+```json
+{
+  "dependencies": {
+    "@injectivelabs/sdk-ts": "latest",
+    "@injectivelabs/networks": "latest"
+  }
+}
+```

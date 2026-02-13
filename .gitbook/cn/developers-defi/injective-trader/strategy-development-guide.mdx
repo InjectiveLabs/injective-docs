@@ -1,0 +1,236 @@
+---
+title: 策略开发指南
+---
+
+# 策略开发指南
+
+## 配置指南
+
+Injective Trader 使用 YAML 配置文件来定义行为、组件和策略参数。
+
+需要关注的最重要配置部分是：
+
+* `LogLevel`
+* `Components` 部分下 `Initializer` 中的 `Network` 和 `MarketTickers`
+* `Strategies` 部分
+
+以下是配置结构的详细分解：
+
+### 顶级参数
+
+```yaml
+Exchange: Helix                # 使用的交易所
+LogLevel: INFO                 # 日志级别 (DEBUG, INFO, WARNING, ERROR)
+```
+
+### Components 部分
+
+`Components` 部分配置框架组件：
+
+```yaml
+Components:
+  # 链初始化和市场设置
+  Initializer:
+    Network: mainnet           # 要连接的网络 (mainnet 或 testnet)
+    MarketTickers:             # 要跟踪的市场交易对（将转换为 ID）
+      - INJ/USDT PERP
+      - ETH/USDT
+    BotName: MyBot
+
+  # 链监听配置
+  ChainListener:
+    ReconnectionDelay: 5       # 重连尝试前等待的秒数
+    LargeGapThreshold: 50      # 订单簿快照请求的序列间隙阈值
+
+  # 交易广播配置
+  MessageBroadcaster:
+    ErrorCodesJson: config/error_codes.json   # 交易验证的错误代码查找
+    GranteePool:               # 用于 authz 交易模式
+      MaxPendingTxs: 5         # 每个 grantee 的最大待处理交易数
+      ErrorThreshold: 3        # 阻止 grantee 前的连续错误数
+      BlockDuration: 300       # 错误后阻止 grantee 的秒数
+      RotationInterval: 1      # grantee 轮换之间的秒数
+    RefreshInterval: 300       # 授权刷新检查之间的秒数
+    Batch:                     # 交易批处理设置
+      MaxBatchSize: 15         # 每批最大消息数
+      MinBatchSize: 3          # 触发立即发送的最小消息数
+      MaxGasLimit: 5000000     # 每批最大 gas
+      MaxBatchDelay: 0.5       # 等待批处理完成的最大秒数
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**注意**：大多数用户只需要关注 `Network` 并在 `MarketTickers` 中包含他们想要监听的所有市场。
+他们不需要修改这些高级组件设置。默认值适用于大多数用例。
+</Callout>
+
+### Strategies 部分
+
+`Strategies` 部分定义每个交易策略：
+
+```yaml
+Strategies:
+  SimpleStrategy:                                    # 策略标识符（你的选择）
+    # 必需参数
+    Name: "SimpleStrategy"                           # 策略名称（用于日志）
+    Class: "SimpleStrategy"                          # [必需] 要实例化的 Python 类名
+    MarketIds:                                       # [必需] 要交易的市场
+      - "0x9b9980167ecc3645ff1a5517886652d94a0825e54a77d2057cbbe3ebee015963"  # INJ/USDT PERP
+    AccountAddresses:                                # [必需] 要使用的账户
+      - "inj1youractualaccount..."                   # （必须与 env 中的私钥匹配）
+    TradingAccount: "inj1youractualaccount..."       # [必需] 用于下单的账户（必须与 env 中的私钥匹配）
+
+    # 可选参数
+    FeeRecipient: "inj1feerecipient..."   # 接收交易费用的地址（如适用）
+    CIDPrefix: "simple_strat"              # 客户端订单 ID 前缀
+    SubaccountIds: ["0x123..."]            # 要使用的特定子账户（否则使用所有可用的）
+
+    # 风险管理配置 [可选]
+    # 如果你没有特定的风险模型，不必包含它们
+    Risk: "BasicRiskModel"                 # 要应用的风险模型（如果使用风险管理）
+    RiskConfig:                            # 风险阈值
+      DrawdownWarning: 0.1                 # 10% 回撤警告阈值
+      DrawdownCritical: 0.2                # 20% 回撤临界阈值
+      MarginWarning: 0.7                   # 70% 保证金使用警告
+      MarginCritical: 0.8                  # 80% 保证金使用临界
+```
+
+**必需的策略参数：**
+
+* `Class`：必须与你的 Python 类名完全匹配
+* `MarketIds`：此策略要交易的市场 ID 列表（使用十六进制格式）
+* `AccountAddresses`：此策略要使用的交易账户列表
+* `TradingAccount`：用于订单执行的账户（必须在 `AccountAddresses` 中）
+
+**推荐参数：**
+
+* `CIDPrefix`：客户端订单 ID 前缀（帮助识别你的订单）
+* `Name`：用于日志和监控的人类可读名称
+
+**自定义参数：**
+
+* 你可以添加策略需要的任何自定义参数
+* 策略名称下的所有参数都将在 `self.config` 中可用
+* 将相关参数分组在 `Parameters` 部分下以保持清晰
+
+### 交易模式配置
+
+框架支持两种交易模式：
+
+#### 直接执行模式
+
+```yaml
+Strategies:
+  SimpleStrategy:
+    # 其他参数...
+    TradingAccount: "inj1youraccount..."   # 将签名和广播交易的账户
+```
+
+#### 授权 (Authz) 模式
+
+```yaml
+Strategies:
+  SimpleStrategy:
+    # 其他参数...
+    Granter: "inj1granteraccount..."   # 授予执行交易权限的账户
+    Grantees:                          # 可以代表 granter 执行交易的账户
+      - "inj1grantee1..."
+      - "inj1grantee2..."
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**注意**：你必须指定 `TradingAccount` 用于直接执行，或者指定 `Granter` 和 `Grantees` 用于授权模式。
+框架在初始化期间强制执行此要求。
+</Callout>
+
+## 策略开发指南
+
+Injective Trader 中的策略遵循基于 `Strategy` 基类的一致结构。本节解释如何构建有效的策略。
+
+### 策略类结构
+
+你的策略类继承自基础 `Strategy` 类：
+
+```python
+from src.core.strategy import Strategy, StrategyResult
+from src.utils.enums import UpdateType, Side
+
+class SimpleStrategy(Strategy):
+    def __init__(self, logger, config):
+        """
+        使用 logger 和配置初始化策略。
+
+        Args:
+            logger: 用于策略日志记录的 Logger 实例
+            config: 策略配置字典
+                必需键：
+                - MarketIds: 要交易的市场 ID 列表
+                - AccountAddresses: 要使用的账户地址列表
+                可选键：
+                - Name: 策略名称
+                - Parameters: 策略特定参数
+                - RiskConfig: 风险管理参数
+        """
+        super().__init__(logger, config)
+
+    def on_initialize(self, accounts, markets):
+        """
+        初始化策略特定的状态和参数。
+        在策略开始处理更新之前调用一次。
+
+        Args:
+            accounts: account_address -> Account 的字典
+            markets: market_id -> Market 的字典
+        """
+        pass
+
+    async def _execute_strategy(self, update_type, processed_data):
+        """
+        策略特定的执行逻辑。
+
+        Args:
+            update_type: 正在处理的更新类型
+            processed_data: 处理程序处理后的更新特定数据字典
+                常见字段：
+                - market_id: 市场标识符
+                - account_address: 账户地址（用于账户更新）
+                - subaccount_id: 子账户标识符（用于仓位/交易更新）
+
+        Returns:
+            StrategyResult:
+            - orders
+            - cancellations
+            - margin updates
+        """
+        pass
+```
+
+#### 最佳实践
+
+1. **在 `on_initialize` 中初始化所有参数**
+   * 从 `self.config` 获取参数
+   * 为缺失的参数设置默认值
+   * 初始化内部状态变量
+2. **过滤更新类型**
+   * 只处理你的策略关心的更新类型
+   * 始终检查 processed_data 中的必需字段
+3. **验证市场数据**
+   * 在使用前检查 bid/ask 是否存在
+   * 在基于仓位做出决策之前验证仓位是否存在
+4. **遵守市场约束**
+   * 将价格和数量四舍五入到市场刻度大小
+   * 检查最小订单大小和名义要求
+5. **正确处理交易账户**
+   * 确保交易账户在 AccountAddresses 中
+   * 为订单指定正确的 subaccount_id
+6. **实现适当的日志记录**
+   * 记录策略决策和重要事件
+   * 使用适当的日志级别（info、warning、error）
+7. **设置自定义参数**
+   * 使用 `Parameters` 部分存储策略特定值
+   * 记录预期参数
+
+本指南应该为你使用框架创建和配置有效的交易策略提供坚实的基础。
+
+## 下一步
+
+了解更多关于[自定义处理程序](/cn/developers-defi/injective-trader/strategy-development-guide)和关键数据结构的信息。

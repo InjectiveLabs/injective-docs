@@ -1,0 +1,26 @@
+---
+title: 测试网水龙头集成
+---
+
+如果你想在 dApp 中集成测试网水龙头，你只需要向 `` `https://jsbqfdd4yk.execute-api.us-east-1.amazonaws.com/v1/faucet` `` 发送 `POST` 请求，并将 `{ address: inj1...}` 作为 `POST` 请求的正文传递。然后地址将存储在队列中，每 5 到 10 分钟处理一次。
+
+以下是示例代码片段：
+
+```typescript
+import { HttpClient } from "@injectivelabs/utils"
+
+const LAMBDA_API = "https://jsbqfdd4yk.execute-api.us-east-1.amazonaws.com/v1"
+const client = new HttpClient(LAMBDA_API);
+
+client
+  .post("faucet", { address: "inj1...." })
+  .then((response: any) => {
+    alert("success, your address is in the queue");
+  })
+  .catch((e: any) => {
+    alert("Something happened - " + e.message);
+  })
+  .finally(() => {
+    //
+  });
+```
