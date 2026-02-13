@@ -1,0 +1,294 @@
+---
+title: Cosmos 交易
+---
+
+Injective 上的每笔交易都遵循相同的流程。该流程包括三个步骤：准备、签署和广播交易。让我们分别深入每个步骤，详细解释流程（包括示例），以便我们理解整个交易流程。
+
+## 准备交易
+
+首先，我们需要准备交易以供签署。
+
+此时你**不能**使用一些在线抽象，这些抽象提供了一种基于提供的消息和签名者快速准备交易的方式（例如使用 `@cosmjs/stargate` 包）。原因是这些包不支持 Injective 的 publicKey typeUrl，所以我们必须在客户端进行地址准备。
+
+为了解决这个问题，我们在 `@injectivelabs/sdk-ts` 包中提供了可以准备 `txRaw` 交易的函数。`txRaw` 是 Cosmos 中使用的交易接口，包含有关交易和签名者本身的详细信息。
+
+从 cosmos 钱包获取私钥通常是通过获取 chainId 的当前密钥并从那里访问 pubKey 来完成的（例如：`const key = await window.keplr.getKey(chainId)` => `const pubKey = key.publicKey`）。
+
+```ts
+import {
+  MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  BaseAccount,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
+  createTransaction,
+} from "@injectivelabs/sdk-ts/core/tx";
+import { toBigNumber, toChainFormat } from "@injectivelabs/utils";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { getStdFee, DEFAULT_BLOCK_TIMEOUT_HEIGHT } from "@injectivelabs/utils";
+
+(async () => {
+  const injectiveAddress = "inj1";
+  const chainId = "injective-1"; /* ChainId.Mainnet */
+  const restEndpoint =
+    "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.MainnetSentry).rest */
+  const amount = {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  };
+
+  /** 账户详情 **/
+  const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
+  const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+    injectiveAddress
+  );
+  const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+
+  /** 区块详情 */
+  const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
+  const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+  const latestHeight = latestBlock.header.height;
+  const timeoutHeight = toBigNumber(latestHeight).plus(
+    DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  );
+
+  /** 准备交易 */
+  const msg = MsgSend.fromJSON({
+    amount,
+    srcInjectiveAddress: injectiveAddress,
+    dstInjectiveAddress: injectiveAddress,
+  });
+
+  /** 从钱包/私钥获取签名者的公钥 */
+  const pubKey = await getPubKey();
+
+  /** 准备交易 **/
+  const { txRaw, signDoc } = createTransaction({
+    pubKey,
+    chainId,
+    fee: getStdFee({}),
+    message: msg,
+    sequence: baseAccount.sequence,
+    timeoutHeight: timeoutHeight.toNumber(),
+    accountNumber: baseAccount.accountNumber,
+  });
+})();
+```
+
+## 签署交易
+
+准备好交易后，我们继续签署。从上一步获取 `txRaw` 交易后，使用任何 Cosmos 原生钱包进行签署（例如：Keplr）。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import { SignDoc } from '@keplr-wallet/types'
+
+const getKeplr = async (chainId: string) => {
+  await window.keplr.enable(chainId);
+
+  const offlineSigner = window.keplr.getOfflineSigner(chainId);
+  const accounts = await offlineSigner.getAccounts();
+  const key = await window.keplr.getKey(chainId);
+
+  return { offlineSigner, accounts, key }
+}
+
+const { offlineSigner } = await getKeplr(ChainId.Mainnet)
+
+/* 签署交易 */
+const address = 'inj1...'
+const signDoc = /* 来自上一步 */
+const directSignResponse = await offlineSigner.signDirect(address, signDoc as SignDoc)
+```
+
+你也可以使用我们的 `@injectivelabs/wallet-strategy` 包来获取开箱即用的钱包提供者，这些提供者将为你提供可用于签署交易的抽象方法。请参阅该包的文档，设置和使用都非常简单。**这是推荐的方式，因为你可以在 dApp 中使用多个钱包。`WalletStrategy` 提供的不仅仅是签署交易的抽象。**
+
+## 广播交易
+
+签名准备好后，我们需要将交易广播到 Injective 链本身。从第二步获取签名后，我们需要将该签名包含在已签署的交易中并将其广播到链上。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import {
+  TxRestApi,
+  CosmosTxV1Beta1Tx,
+  BroadcastModeKeplr,
+  getTxRawFromTxRawOrDirectSignResponse,
+  TxRaw,
+} from '@injectivelabs/sdk-ts/core/tx'
+import { TransactionException } from '@injectivelabs/exceptions'
+
+/**
+ * 重要说明：
+ * 如果我们使用 Keplr/Leap 钱包
+ * 签署交易后我们会得到一个 `directSignResponse`，
+ * 而不是将签名添加到我们使用 `createTransaction` 函数创建的 `txRaw` 中，
+ * 我们需要将 `directSignResponse` 中的签名附加到
+ * 实际被签署的交易（即 `directSignResponse.signed`），
+ * 原因是用户可以对原始交易进行一些更改
+ * （即更改 gas 限制或 gas 价格），被签署的交易
+ * 和被广播的交易不是同一个。
+ */
+const directSignResponse = /* 来自上面的第二步 */;
+const txRaw = getTxRawFromTxRawOrDirectSignResponse(directSignResponse)
+
+const broadcastTx = async (chainId: String, txRaw: TxRaw) => {
+  const getKeplr = async (chainId: string) => {
+    await window.keplr.enable(chainId);
+
+    return window.keplr
+  }
+
+  const keplr = await getKeplr(ChainId.Mainnet)
+  const result = await keplr.sendTx(
+    chainId,
+    CosmosTxV1Beta1Tx.TxRaw.encode(txRaw).finish(),
+    BroadcastModeKeplr.Sync,
+  )
+
+  if (!result || result.length === 0) {
+    throw new TransactionException(
+      new Error('交易广播失败'),
+      { contextModule: 'Keplr' },
+    )
+  }
+
+  return Buffer.from(result).toString('hex')
+}
+
+const txHash = await broadcastTx(ChainId.Mainnet, txRaw)
+
+/**
+ * 一旦我们获得 txHash，因为我们使用 Sync 模式，
+ * 我们不确定交易是否已包含在区块中，
+ * 它可能仍在内存池中，所以我们需要查询
+ * 链以查看交易何时被包含
+ */
+const restEndpoint = 'https://sentry.lcd.injective.network' /* getNetworkEndpoints(Network.MainnetSentry).rest */
+const txRestApi = new TxRestApi(restEndpoint)
+
+ /** 这将轮询查询交易并等待其包含在区块中 */
+const response = await txRestApi.fetchTxPoll(txHash)
+```
+
+## 示例（准备 + 签署 + 广播）
+
+让我们看看整个流程（使用 Keplr 作为签名钱包）
+
+```ts
+import {
+  MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  BaseAccount,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import { ChainId } from "@injectivelabs/ts-types";
+import { SignDoc } from "@keplr-wallet/types";
+import { toBigNumber, toChainFormat } from "@injectivelabs/utils";
+import { TransactionException } from "@injectivelabs/exceptions";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { getStdFee, DEFAULT_BLOCK_TIMEOUT_HEIGHT } from "@injectivelabs/utils";
+import {
+  TxRaw,
+  TxRestApi,
+  createTransaction,
+  CosmosTxV1Beta1Tx,
+  BroadcastModeKeplr,
+  getTxRawFromTxRawOrDirectSignResponse,
+} from "@injectivelabs/sdk-ts/core/tx";
+
+const getKeplr = async (chainId: string) => {
+  await window.keplr.enable(chainId);
+
+  const offlineSigner = window.keplr.getOfflineSigner(chainId);
+  const accounts = await offlineSigner.getAccounts();
+  const key = await window.keplr.getKey(chainId);
+
+  return { offlineSigner, accounts, key };
+};
+
+const broadcastTx = async (chainId: string, txRaw: TxRaw) => {
+  const keplr = await getKeplr(ChainId.Mainnet);
+  const result = await keplr.sendTx(
+    chainId,
+    CosmosTxV1Beta1Tx.TxRaw.encode(txRaw).finish(),
+    BroadcastModeKeplr.Sync
+  );
+
+  if (!result || result.length === 0) {
+    throw new TransactionException(
+      new Error("交易广播失败"),
+      { contextModule: "Keplr" }
+    );
+  }
+
+  return Buffer.from(result).toString("hex");
+};
+
+(async () => {
+  const chainId = "injective-1"; /* ChainId.Mainnet */
+  const { key, offlineSigner } = await getKeplr(chainId);
+  const pubKey = Buffer.from(key.pubKey).toString("base64");
+  const injectiveAddress = key.bech32Address;
+  const restEndpoint =
+    "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.MainnetSentry).rest */
+  const amount = {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  };
+
+  /** 账户详情 **/
+  const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
+  const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+    injectiveAddress
+  );
+  const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+
+  /** 区块详情 */
+  const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
+  const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+  const latestHeight = latestBlock.header.height;
+  const timeoutHeight = toBigNumber(latestHeight).plus(
+    DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  );
+
+  /** 准备交易 */
+  const msg = MsgSend.fromJSON({
+    amount,
+    srcInjectiveAddress: injectiveAddress,
+    dstInjectiveAddress: injectiveAddress,
+  });
+
+  /** 准备交易 **/
+  const { signDoc } = createTransaction({
+    pubKey,
+    chainId,
+    fee: getStdFee({}),
+    message: msg,
+    sequence: baseAccount.sequence,
+    timeoutHeight: timeoutHeight.toNumber(),
+    accountNumber: baseAccount.accountNumber,
+  });
+
+  const directSignResponse = await offlineSigner.signDirect(
+    injectiveAddress,
+    signDoc as SignDoc
+  );
+  const txRaw = getTxRawFromTxRawOrDirectSignResponse(directSignResponse);
+  const txHash = await broadcastTx(ChainId.Mainnet, txRaw);
+  const response = await new TxRestApi(restEndpoint).fetchTxPoll(txHash);
+
+  console.log(response);
+})();
+```
+
+## 使用 WalletStrategy 的示例（准备 + 签署 + 广播）
+
+示例可以在 [wallet-core 包](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-core)中找到。
