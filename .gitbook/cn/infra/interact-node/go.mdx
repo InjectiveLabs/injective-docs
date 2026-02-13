@@ -1,0 +1,88 @@
+---
+title: 使用 Go 以编程方式与节点交互
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+以下示例使用 Go 编写，但 Python 和 TS SDK 也可用于以编程方式与节点/Injective 交互。
+
+* [TypeScript 示例](/developers-native/examples/)
+* [Python 示例](https://github.com/InjectiveLabs/sdk-python/tree/master/examples)
+</Callout>
+
+以下代码片段展示了如何在 Go 程序中使用 gRPC 查询状态。其思路是创建一个 gRPC 连接，并使用 Protobuf 生成的客户端代码来查询 gRPC 服务器。
+
+```go
+import (
+    "context"
+    "fmt"
+
+	"google.golang.org/grpc"
+
+    sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+)
+
+func queryState() error {
+    myAddress, err := sdk.AccAddressFromBech32("inj...")
+    if err != nil {
+        return err
+    }
+
+    // 创建到 gRPC 服务器的连接。
+    grpcConn := grpc.Dial(
+        "127.0.0.1:9090", // 你的 gRPC 服务器地址。
+        grpc.WithInsecure(), // SDK 不支持任何传输安全机制。
+    )
+    defer grpcConn.Close()
+
+    // 创建一个 gRPC 客户端来查询 x/bank 服务。
+    bankClient := banktypes.NewQueryClient(grpcConn)
+    bankRes, err := bankClient.Balance(
+        context.Background(),
+        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: "inj"},
+    )
+    if err != nil {
+        return err
+    }
+
+    fmt.Println(bankRes.GetBalance()) // 打印账户余额
+
+    return nil
+}
+```
+
+#### **使用 Go 查询历史状态**
+
+通过在 gRPC 请求中添加区块高度 metadata 来查询历史区块。
+
+```go
+import (
+    "context"
+    "fmt"
+
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/metadata"
+
+    grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+)
+
+func queryState() error {
+    // --snip--
+
+    var header metadata.MD
+    bankRes, err = bankClient.Balance(
+        metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "12"), // 向请求添加 metadata
+        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: denom},
+        grpc.Header(&header), // 从响应中获取 header
+    )
+    if err != nil {
+        return err
+    }
+    blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
+
+    fmt.Println(blockHeight) // 打印区块高度 (12)
+
+    return nil
+}
+```
