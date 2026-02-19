@@ -19,7 +19,7 @@ The following is a short summary of the upgrade steps:
 
 1. Vote and wait till the node panics at block height **154983000**.
 2. Backing up configs, data, and keys used for running the Injective Chain.
-3. Install the [1.18.0](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/v1.18.0) binaries.
+3. Install the [1.18.0](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.18.0-1770939123) binaries.
 4. Start your node with the new injectived binary to fulfill the upgrade.
 
 Upgrade coordination and support for validators will be available on the `#validators` private channel of the [Injective Discord](https://discord.gg/injective).
@@ -71,7 +71,7 @@ rm -rf .injectived/wasm/wasm/cache/
 3. Download and install the `injective-chain` release for `1.18.0`:
 
     ```bash
-    wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.18.0/linux-amd64.zip
+    wget https://github.com/InjectiveFoundation/injective-core/releases/download/v1.18.0-1770939123/linux-amd64.zip
     unzip linux-amd64.zip
     sudo mv injectived peggo /usr/bin
     sudo mv libwasmvm.x86_64.so /usr/lib
@@ -81,7 +81,8 @@ rm -rf .injectived/wasm/wasm/cache/
 
     ```bash
     $ injectived version
-    Version v1.18.0
+    Version v1.18.0 (6632cef)
+    Compiled at 20260212-2333 using Go go1.23.9 (amd64)
     ```
 5.  Start `injectived`:
 
@@ -93,7 +94,8 @@ rm -rf .injectived/wasm/wasm/cache/
 
     ```bash
     $ peggo version
-    Version v1.18.0
+    Version v1.18.0 (6632cef)
+    Compiled at 20260212-2333 using Go go1.23.9 (amd64)
     ```
 
 7.  Start peggo:
