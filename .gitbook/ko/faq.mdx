@@ -1,0 +1,44 @@
+---
+title: Injective FAQ
+icon: question
+---
+
+## 기본 사항
+
+Q: Injective에서 지원되는 계정 주소 유형은 무엇인가요?
+
+A: 2가지 주소 유형이 지원됩니다:
+- Bech32 (`inj...`): 주로 Cosmos 지갑/도구를 통해 상호작용할 때 사용됩니다
+- Hexadecimal (`0x...`): 주로 EVM 지갑/도구를 통해 상호작용할 때 사용됩니다
+
+----
+
+Q: Injective Cosmos 주소가 어떤 Injective EVM 주소에 매핑되어 있는지 확인하는 방법이 있나요?
+
+A: 이러한 주소 유형 간의 매핑은 수학적 연산을 통해 수행되며, 1:1 양방향 매핑입니다.
+- 실시간 예제: [Injective Testnet Faucet](https://testnet.faucet.injective.network/)
+- 문서: [TS 코드 예제](https://docs.injective.network/developers/convert-addresses)
+
+----
+
+## 인프라
+
+Q: 프라이빗 노드를 유지할 때:
+
+- 2.5 Ti 아카이벌 데이터(event provider)를 저장해야 하나요?
+- 해당 부분을 건너뛰고 indexer를 작동시킬 수 있나요?
+
+A: Event provider는 프루닝이 가능합니다. 초기 동기화를 위해 퍼블릭 event provider endpoint를 사용할 수 있습니다. 그 후 로컬 배포를 사용하되, 최신 height부터만 사용하면 됩니다. 따라서, 예, 건너뛸 수 있습니다.
+
+----
+
+## EVM
+
+Q: Injective에 [`multicall3`](https://www.multicall3.com/) 스마트 컨트랙트가 배포되어 있나요?
+
+A: 예.
+
+- Injective Mainnet `multicall3`: [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
+- Injective Testnet `multicall3`: [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://testnet.blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
+
+----
