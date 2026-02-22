@@ -1061,6 +1061,20 @@
             ]
           }
         ]
+      },
+      {
+        "language": "ko",
+        "groups": [
+          {
+            "group": "INJECTIVE",
+            "pages": [
+              "ko/index",
+              "ko/faq",
+              "ko/glossary",
+              "ko/references"
+            ]
+          }
+        ]
       }
     ]
   },
