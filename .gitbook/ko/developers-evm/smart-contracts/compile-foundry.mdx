@@ -1,0 +1,150 @@
+---
+title: Foundry 설정 및 스마트 컨트랙트 컴파일
+---
+
+## 사전 요구 사항
+
+다음 명령을 실행하여 Foundry가 설치되어 있는지 확인하세요:
+
+```shell
+forge --version
+```
+
+이 튜토리얼에서 사용된 버전은 `1.2.3-stable`입니다. 따라할 때 이 버전 이상을 사용하세요.
+
+foundry가 아직 없는 경우 다음 명령을 실행하여 설치합니다:
+
+```shell
+curl -L https://foundry.paradigm.xyz | bash
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Foundry를 설치하는 다른 옵션이 있습니다.
+[Foundry 설치 문서](https://getfoundry.sh/introduction/installation)를 참조하세요.
+</Callout>
+
+지갑과 테스트넷 INJ로 충전된 계정이 필요합니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+[Injective 테스트넷 faucet](https://testnet.faucet.injective.network/)에서 EVM 테스트넷 자금을 요청할 수 있습니다.
+</Callout>
+
+계정을 생성한 후 이 튜토리얼을 완료하는 데 필요하므로 개인 키를 접근 가능한 곳에 복사해 두세요.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+개인 키는 주의해서 다루어야 합니다.
+여기의 지침은 로컬 개발과 테스트넷에 충분한 것으로 간주됩니다.
+그러나 이는 메인넷에서 사용되는 개인 키에는 **충분히 안전하지 않습니다**.
+메인넷에서는 키 보안에 대한 모범 사례를 따르고 메인넷과 다른 네트워크 간에 동일한 키/계정을 재사용하지 마세요.
+</Callout>
+
+## 새 Foundry 프로젝트 설정
+
+git을 사용하여 데모 저장소를 복제하세요. 프로젝트가 이미 완전히 설정되어 있습니다.
+
+```shell
+git clone https://github.com/injective-dev/foundry-inj
+cd foundry-inj
+```
+
+이 프로젝트에서 사용되는 유틸리티 함수를 제공하는 `forge-std` 라이브러리를 설치합니다.
+
+```shell
+forge install foundry-rs/forge-std
+```
+
+## 오리엔테이션
+
+코드 에디터/IDE에서 저장소를 열고 디렉토리 구조를 살펴보세요.
+
+```text
+foundry-inj/
+  src/
+    Counter.sol → 스마트 컨트랙트 Solidity 코드
+  test/
+    Counter.t.sol → 테스트 케이스
+  foundry.toml → 설정
+```
+
+`foundry.toml` 파일은 이미 Injective EVM 테스트넷에 연결하도록 사전 구성되어 있습니다.
+진행하기 전에 Injective 테스트넷 계정의 개인 키만 제공하면 됩니다.
+
+다음 명령을 입력하여 개인 키를 가져오고 `injTest`라는 계정에 저장합니다:
+
+```shell
+cast wallet import injTest --interactive
+```
+
+개인 키와 이 계정을 사용할 때마다 입력해야 하는 비밀번호를 입력하라는 메시지가 표시됩니다.
+이전에 생성하고 충전한 계정의 개인 키를 사용하세요(예: Injective 테스트넷 faucet을 통해).
+개인 키와 비밀번호에 대한 텍스트를 입력하거나 붙여넣을 때 터미널에 아무것도 표시되지 않습니다.
+출력은 다음과 유사해야 합니다:
+
+```text
+Enter private key:
+Enter password:
+`injTest` keystore was saved successfully. Address: 0x58f936cb685bd6a7dc9a21fa83e8aaaf8edd5724
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+이렇게 하면 개인 키의 암호화된 버전이 `~/.foundry/keystores`에 저장되며,
+이후 명령에서 `--account` CLI 플래그를 사용하여 액세스할 수 있습니다.
+</Callout>
+
+## 스마트 컨트랙트 편집
+
+이 데모에 포함된 스마트 컨트랙트는 매우 기본적입니다. 다음을 수행합니다:
+
+- 숫자인 하나의 `value`를 저장합니다.
+- `value()` 쿼리 메서드를 노출합니다.
+- `increment(num)` 트랜잭션 메서드를 노출합니다.
+
+파일을 여세요: `src/Counter.sol`
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+contract Counter {
+    uint256 public value = 0;
+
+    function increment(uint256 num) external {
+        value += num;
+    }
+}
+
+```
+
+## 스마트 컨트랙트 컴파일
+
+다음 명령을 실행합니다:
+
+```shell
+forge build
+```
+
+Foundry는 `foundry.toml` 파일에 구성된 Solidity 컴파일러(`solc`) 버전을 자동으로 다운로드하고 실행합니다.
+
+## 컴파일 출력 확인
+
+컴파일러가 완료된 후 프로젝트 디렉토리에 추가 디렉토리가 표시됩니다:
+
+```text
+foundry-inj/
+  cache/
+    ...
+  out/
+    build-info/
+      ...
+    Counter.sol/
+        Counter.json → 이 파일을 여세요
+```
+
+`Counter.json` 파일(`out/Counter.sol/Counter.json`)을 여세요.
+그 안에서 `abi` 및 `bytecode` 필드를 포함한 컴파일러 출력을 볼 수 있습니다.
+이러한 아티팩트는 이후의 모든 단계(테스트, 배포, 검증 및 상호작용)에서 사용됩니다.
+
+## 다음 단계
+
+이제 Foundry 프로젝트를 설정하고 스마트 컨트랙트를 컴파일했으므로 해당 스마트 컨트랙트를 테스트할 준비가 되었습니다!
+다음으로 [Foundry로 스마트 컨트랙트 테스트](./test-foundry/) 튜토리얼을 확인하세요.

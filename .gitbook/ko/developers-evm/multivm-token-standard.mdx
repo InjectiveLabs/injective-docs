@@ -1,0 +1,86 @@
+---
+title: MultiVM Token Standard
+description: Injective의 multi-VM 아키텍처에서 토큰 표현 이해
+---
+
+## MultiVM Token Standard(MTS)란?
+
+MTS(MultiVM Token Standard)는 Injective의 모든 토큰이 -
+Cosmos 모듈을 사용하여 배포되었든 Ethereum Virtual Machine(EVM)을 통해 배포되었든 -
+하나의 정식 잔액과 ID를 갖도록 보장합니다.
+이 통합된 접근 방식은 단편화를 방지하고 토큰 브릿징 또는 래핑의 필요성을 제거하여
+탈중앙화 금융(DeFi) 및 dApp 상호작용을 위한 원활한 상호운용성과 통합 유동성을 가능하게 합니다.
+
+## MTS가 중요한 이유
+
+* **원활한 상호운용성:** 토큰은 Cosmos 및 EVM 환경에서 일관성을 유지합니다.
+* **통합 유동성:** 단일 진실 소스가 유동성 단편화를 방지합니다.
+* **향상된 개발자 경험:** Hardhat, Foundry, MetaMask와 같은 표준 도구가 즉시 작동합니다.
+* **보안 및 효율성:** 모든 토큰 상태는 bank 모듈에서 중앙 집중적으로 유지되어 강력한 보안을 보장합니다.
+
+## 아키텍처
+
+시스템은 두 가지 주요 구성 요소로 구성됩니다:
+
+* [**Bank Precompile**](/ko/developers-evm/bank-precompile/):
+  * Go로 개발된 이 precompile은 Injective EVM에 직접 내장되어 있습니다.
+  * mint, burn, transfer와 같은 ERC20 작업을 bank 모듈로 프록시하는 Solidity 인터페이스를 제공합니다.
+* [**ERC20 Module**](/ko/developers-evm/erc20-module/):
+  * 이 모듈은 네이티브 bank denom(예: INJ, IBC 토큰, Peggy 자산)을 EVM 내의 ERC20 컨트랙트에 매핑합니다.
+  * bank 모듈이 유지하는 정식 토큰 잔액을 항상 반영하는 MTS 호환 ERC20 컨트랙트를 배포합니다.
+
+<figure><img src="/img/multivm-token-single-token-representation-architecture.png" alt="" /><figcaption><p>단일 토큰 표현 아키텍처</p></figcaption></figure>
+
+### MTS 호환 토큰 생성
+
+1. [**사전 구축된 템플릿 사용**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
+   * `BankERC20.sol`, `MintBurnBankERC20.sol` 또는 `FixedSupplyBankERC20.sol`과 같은 제공된 Solidity 템플릿으로 시작합니다.
+2. [**컨트랙트 배포**](/ko/developers-evm/smart-contracts/):
+   * Injective EVM 네트워크에 MTS 토큰 컨트랙트를 배포합니다.
+   * 컨트랙트는 Bank Precompile과 자동으로 상호작용하여 정식 상태를 업데이트합니다.
+
+### 상호운용성 및 크로스체인 통합
+
+#### 네이티브 상호운용성*
+
+Injective의 EVM은 Cosmos 기반 체인에 직접 통합되어 있습니다.
+
+* MTS를 사용할 때 EVM 스마트 컨트랙트는 네이티브 모듈(예: exchange, staking 및 governance 모듈)에 즉시 반영되는 작업을 수행합니다.
+* Injective 바이너리 내에서 제공되는 [JSON-RPC 엔드포인트](/ko/developers-evm/network-information/)는 Ethereum과 호환되어 원활한 개발자 통합을 보장합니다.
+
+#### 크로스체인 작업
+
+* **IBC 호환성:** 기존 네이티브 토큰
+  (예: [Token Factory](/developers-native/injective/tokenfactory/)를 통해 생성되었거나 Peggy를 통해 페깅된 토큰)은
+  MTS 페어링이 설정되면 EVM에서 액세스할 수 있습니다.
+* **브릿징 대안:** 많은 블록체인은 별도의 브릿지 작업(잠금, 민트, 잠금 해제)이 필요하지만
+  MTS는 상태를 네이티브로 동기화하여 이러한 단계를 피합니다.
+
+#### Allowances 및 확장 ERC20 함수
+
+* MTS 컨트랙트는 allowance(approve/transferFrom)와 같은 표준 ERC20 기능을 유지합니다.
+* allowance 메커니즘이 편의를 위해 EVM 컨트랙트 내에서 유지되지만
+  궁극적인 잔액은 bank 모듈에서 관리되어 무결성을 보존합니다.
+
+### 성능, 가스 및 보안 고려 사항
+
+#### 가스 비용 및 효율성
+
+* 가스 비용은 INJ로 지불됩니다.
+  EVM을 통한 MTS 작업은 네이티브 트랜잭션에 비해 가스 사용량을 약간 증가시킬 수 있는 추상화 레이어를 도입하지만
+  전체 비용은 Ethereum의 비교 가능한 작업보다 낮게 유지됩니다.
+* 가스 모델은 EVM 스타일 opcode 비용과 네이티브 모듈 상호작용 간의 균형을 반영하도록 설계되었습니다.
+
+#### 보안
+
+* 단일 진실 소스로서의 [bank 모듈](/developers-native/core/)은 토큰 잔액이 일관되고 검증 가능하도록 보장하여 MTS의 보안을 뒷받침합니다.
+* [precompile](/ko/developers-evm/precompiles/) 사용은 상태 비동기화와 같은 일반적인 함정을 방지하여
+  어디에서 시작되었든 모든 작업이 동일한 정식 원장을 업데이트하도록 보장합니다.
+* 스마트 컨트랙트 개발을 위한 고급 보안 지침 및 모범 사례는 보안 섹션 및 외부 리소스에서 제공됩니다.
+
+**ℹ️ 참고:**
+
+denom 스팸을 방지하기 위해 ERC20 모듈을 통한 ERC20 컨트랙트 배포는
+**유료 작업**이며 **1 INJ**의 배포 수수료가 필요합니다.
+ERC20 컨트랙트 배포 트랜잭션에 이 금액이 포함되어 있는지 확인하세요.
+그렇지 않으면 작업이 거부됩니다.

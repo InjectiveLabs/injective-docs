@@ -1069,6 +1069,53 @@
             "group": "INJECTIVE",
             "pages": [
               "ko/index",
+              {
+                "group": "EVM 개발자",
+                "icon": "rectangle-code",
+                "expanded": false,
+                "pages": [
+                  "ko/developers-evm/index",
+                  "ko/developers-evm/network-information",
+                  {
+                    "group": "첫 번째 EVM 스마트 컨트랙트",
+                    "pages": [
+                      "ko/developers-evm/smart-contracts/index",
+                      "ko/developers-evm/smart-contracts/compile-hardhat",
+                      "ko/developers-evm/smart-contracts/test-hardhat",
+                      "ko/developers-evm/smart-contracts/deploy-hardhat",
+                      "ko/developers-evm/smart-contracts/verify-hardhat",
+                      "ko/developers-evm/smart-contracts/interact-hardhat",
+                      "ko/developers-evm/smart-contracts/compile-foundry",
+                      "ko/developers-evm/smart-contracts/test-foundry",
+                      "ko/developers-evm/smart-contracts/deploy-foundry",
+                      "ko/developers-evm/smart-contracts/verify-foundry",
+                      "ko/developers-evm/smart-contracts/interact-foundry"
+                    ]
+                  },
+                  {
+                    "group": "첫 번째 EVM dApp",
+                    "pages": [
+                      "ko/developers-evm/dapps/index",
+                      "ko/developers-evm/dapps/connect-with-metamask",
+                      "ko/developers-evm/dapps/connect-with-walletconnect"
+                    ]
+                  },
+                  "ko/developers-evm/evm-equivalence",
+                  "ko/developers-evm/multivm-token-standard",
+                  "ko/developers-evm/permissioned-multivm-token",
+                  "ko/developers-evm/wrapped-inj",
+                  "ko/developers-evm/precompiles",
+                  "ko/developers-evm/bank-precompile",
+                  "ko/developers-evm/exchange-precompile",
+                  "ko/developers-evm/erc20-module",
+                  "ko/developers-evm/infrastructure-and-tooling",
+                  "ko/developers-evm/add-injective-to-your-dapp",
+                  "ko/developers-evm/evm-integrations-cheat-sheet",
+                  "ko/developers-evm/evm-integrations-faq",
+                  "redirects/https_testnet_faucet_injective_network",
+                  "redirects/https_testnet_blockscout_injective_network_blocks"
+                ]
+              },
               "ko/faq",
               "ko/glossary",
               "ko/references"

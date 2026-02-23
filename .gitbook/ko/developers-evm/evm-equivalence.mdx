@@ -1,0 +1,42 @@
+---
+description: Injective의 EVM 동등성 이해
+title: EVM 동등성
+---
+
+## Injective EVM vs. Ethereum 메인넷
+
+Injective의 네이티브 EVM은 체인의 핵심 아키텍처에 통합된 완전히 내장된 실행 환경입니다. 개발 경험 측면에서 Ethereum과 1:1 동등하도록 설계되었습니다.
+
+Injective의 네이티브 EVM은 최신 버전의 `geth`를 지원하여 개발자가 최신 기능, 도구, 보안 패치 및 개선 사항에 액세스할 수 있도록 합니다. 또한 Injective의 EVM은 성능을 향상시키고 기능을 확장하여 Ethereum에서 사용할 수 있는 것 이상으로 Injective의 정교한 금융 인프라에 대한 액세스를 부여합니다.
+
+## 트랜잭션에 대한 가스 비용 추정
+
+| 체인 | 가스 가격 범위 | 토큰 가격 | ERC-4337 계정 생성 | 단순 전송 | ERC-20 전송 |
+| --- | --- | --- | --- | --- | --- |
+| Ethereum¹ | 30.5 ± 10.6 gwei | $3000 | $35.25 ± $12.25 | $1.9215 ± $0.6678 | $5.9475 ± $2.067 |
+| Polygon² | 224 ± 108 gwei | $0.4 | $0.0345 ± $0.0166 | $0.0018 ± $0.0009 | $0.0058 ± $0.0028 |
+| Optimism³ | 0.30 ± 0.15 gwei | $3000 | $0.3467 ± $0.1733 | $0.0189 ± $0.0094 | $0.0585 ± $0.0292 |
+| Avalanche⁴ | 36.4 ± 4.5 nAVAX | $28 | $0.3926 ± $0.0485 | $0.0214 ± $0.0026 | $0.0662 ± $0.0081 |
+| BnB Smart Chain⁵ | 7.05 ± 0.53 gwei | $600 | $1.6296 ± $0.1225 | $0.0888 ± $0.0066 | $0.2749 ± $0.0206 |
+| Sei⁶ | 0.02 usei | $0.40 | $0.0030 | $0.00017 | $0.0005 |
+| Injective⁷ | 0.16 nINJ | $23 | $0.0014 | $0.00008 | $0.0002 |
+
+### 참고: 작업당 가스 <a href="#note-gas-per-action" id="note-gas-per-action"></a>
+
+* ERC-4337 계정 생성: `385266`
+* 단순 전송: `21000`
+* ERC-20 토큰 전송: `65000`
+
+### 가스 가격 출처
+
+1. [Ethereum 가스 가격 출처](https://etherscan.io/chart/gasprice) ↩︎
+2. [Polygon 가스 가격 출처](https://polygonscan.com/chart/gasprice) ↩︎
+3. [Optimism 가스 가격 출처](https://optimistic.etherscan.io/chart/gasprice) ↩︎
+4. [Avalanche 가스 가격 출처](https://snowtrace.io/insight/leaderboard/gas-tracker) ↩︎
+5. [BnB Smart Chain 가스 가격 출처](https://bscscan.com/chart/gasprice) ↩︎
+6. [Sei 가스 가격 구성](https://github.com/sei-protocol/chain-registry/blob/main/gas.json) ↩︎
+7. [Injective 가스 압축 출시](https://injective.com/blog/injective-unveils-fee-reductions-with-gas-compression/) ↩︎
+
+## EIP-1559 구성
+
+곧 제공될 예정입니다.

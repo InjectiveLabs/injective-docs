@@ -1,0 +1,168 @@
+---
+title: Exchange Precompile
+---
+
+Exchange Precompile은 고정 주소 `0x0000000000000000000000000000000000000065`에 있는 시스템 스마트 컨트랙트입니다. Solidity 개발자에게 Injective 체인의 exchange 모듈과 직접 상호작용하는 가스 효율적이고 네이티브한 경로를 제공합니다. 이 precompile을 활용하면 스마트 컨트랙트가 다음을 포함한 다양한 거래소 관련 작업을 원활하게 수행할 수 있습니다:
+
+* 서브계정으로/에서 자금 입금 및 출금.
+* 현물 및 파생상품 주문 배치 또는 취소.
+* 서브계정 잔액 및 오픈 포지션 쿼리.
+* 다른 계정 또는 컨트랙트에 대한 권한 부여 관리.
+
+#### Precompile 호출: 직접 vs. 프록시 액세스
+
+Exchange Precompile과 상호작용하는 것은 두 가지 주요 방식으로 접근할 수 있습니다:
+
+**1. 직접 액세스(자체 호출 컨트랙트)**
+
+이 모드에서 스마트 컨트랙트는 자체를 대신하여 precompile과 상호작용합니다. 컨트랙트 자체가 exchange 모듈에서 작업을 수행하는 주체이며, 자체 자금을 사용하고 자체 포지션을 관리합니다.
+
+_예:_
+
+```
+exchange.deposit(address(this), subaccountID, denom, amount);  
+```
+
+이 방법은 간단하며 컨트랙트가 자체 리소스를 관리할 권한이 본질적으로 있으므로 **명시적 권한 부여가 필요하지 않습니다**.
+
+**2. 프록시 액세스(다른 사용자를 대신하여 호출)**
+
+스마트 컨트랙트는 외부 사용자 계정을 대신하여 거래소 작업을 수행하는 중개자로 설계될 수도 있습니다. 이 시나리오에서 컨트랙트는 precompile을 호출하여 제3자의 주소를 발신자 또는 작업 대상 계정으로 지정합니다.
+
+_예:_
+
+```
+exchange.deposit(userAddress, subaccountID, denom, amount);  
+```
+
+이것이 성공하려면 스마트 컨트랙트(`grantee`)가 지정된 작업을 수행하도록 사용자(`userAddress`, `granter`)에 의해 **명시적으로 권한이 부여되어야** 합니다. 이 권한 부여는 precompile에서 제공하는 `approve` 및 `revoke` 메서드를 사용하여 관리됩니다. **사용자 자금을 보호하기 위해 이러한 권한 부여를 신중하게 처리하는 것이 중요합니다.**
+
+컨트랙트가 귀하를 대신하여 특정 작업을 수행하도록 권한을 부여하려면:
+
+```
+exchange.approve(grantee, msgTypes, spendLimit, duration);  
+```
+
+* `grantee`: 권한이 부여되는 컨트랙트의 주소.
+* `msgTypes`: `grantee`가 실행할 수 있는 메시지 유형 배열(예: `MsgCreateDerivativeLimitOrder`, `MsgDeposit`). 전체 목록은 `ExchangeTypes.sol` 또는 Injective Protocol protobuf 정의를 참조하세요.
+* `spendLimit`: `grantee`가 메시지 유형당 또는 전체 권한 부여에 대해 활용할 수 있는 지정된 토큰의 최대 양을 정의하는 `Cosmos.Coin` 구조체 배열.
+* `duration`: 권한 부여가 유효한 기간(초).
+
+이전에 부여된 권한을 취소하려면:
+
+```
+exchange.revoke(grantee, msgTypes);  
+```
+
+권한 부여가 현재 존재하는지 확인하려면:
+
+```
+exchange.allowance(grantee, granter, msgType);  
+```
+
+#### 예제: 직접 방식
+
+아래 `ExchangeDemo` 컨트랙트는 스마트 컨트랙트가 직접 액세스 방식을 사용하는 방법을 보여줍니다. 자금 입금, 자금 출금, 파생상품 지정가 주문 생성 및 서브계정 포지션 쿼리와 같은 기본 거래소 작업을 자체 서브계정과 자금을 사용하여 수행합니다.
+
+`Exchange.sol` 및 `ExchangeTypes.sol` 파일에는 precompile과 상호작용하는 데 필요한 인터페이스 정의 및 데이터 구조가 포함되어 있습니다. 이는 일반적으로 공식 Injective Solidity 컨트랙트 저장소에서 사용할 수 있거나 프로젝트에 종속성으로 포함될 수 있습니다.
+
+```solidity
+// SPDX-License-Identifier: MIT  
+pragma solidity ^0.8.4;  
+  
+import "../src/Exchange.sol"; // IExchangeModule 인터페이스 포함  
+import "../src/ExchangeTypes.sol"; // DerivativeOrder와 같은 필요한 구조체 포함  
+  
+contract ExchangeDemo {  
+    address constant exchangeContract = 0x0000000000000000000000000000000000000065;  
+    IExchangeModule exchange = IExchangeModule(exchangeContract);  
+  
+    /***************************************************************************  
+     * precompile 직접 호출 (컨트랙트가 자체를 대신하여 작동)  
+    ****************************************************************************/  
+  
+    /**  
+     * @notice 컨트랙트 잔액에서 거래소 서브계정 중 하나로 자금을 입금합니다.  
+     * @param subaccountID 대상 서브계정 ID(컨트랙트 주소에서 파생됨).  
+     * @param denom 입금할 자산의 denom(예: "inj").  
+     * @param amount 입금할 자산 수량.  
+     * @return success 입금 성공 여부를 나타내는 불린.  
+     */  
+    function deposit(  
+        string calldata subaccountID,  
+        string calldata denom,  
+        uint256 amount  
+    ) external returns (bool) {  
+        try exchange.deposit(address(this), subaccountID, denom, amount) returns (bool success) {  
+            return success;  
+        } catch Error(string memory reason) {  
+            revert(string(abi.encodePacked("Deposit error: ", reason)));  
+        } catch {  
+            revert("Unknown error during deposit");  
+        }  
+    }  
+  
+    /**  
+     * @notice 컨트랙트의 거래소 서브계정 중 하나에서 메인 잔액으로 자금을 출금합니다.  
+     * @param subaccountID 소스 서브계정 ID.  
+     * @param denom 출금할 자산의 denom.  
+     * @param amount 출금할 자산 수량.  
+     * @return success 출금 성공 여부를 나타내는 불린.  
+     */  
+    function withdraw(  
+        string calldata subaccountID,  
+        string calldata denom,  
+        uint256 amount  
+    ) external returns (bool) {  
+        try exchange.withdraw(address(this), subaccountID, denom, amount) returns (bool success) {  
+            return success;  
+        } catch Error(string memory reason) {  
+            revert(string(abi.encodePacked("Withdraw error: ", reason)));  
+        } catch {  
+            revert("Unknown error during withdraw");  
+        }  
+    }  
+  
+    /**  
+     * @notice 이 컨트랙트의 주어진 서브계정에 대한 파생상품 포지션을 쿼리합니다.  
+     * @param subaccountID 쿼리할 서브계정 ID.  
+     * @return positions DerivativePosition 구조체 배열.  
+     */  
+    function subaccountPositions(  
+        string calldata subaccountID  
+    ) external view returns (IExchangeModule.DerivativePosition[] memory positions) {  
+        // 참고: precompile을 호출하는 view 함수는 노드 구성에 따라 다르게 작동할 수 있습니다  
+        // 온체인 상태의 경우 이것은 괜찮습니다. 오프체인 쿼리의 경우 직접 gRPC/API 쿼리가 종종 선호됩니다.  
+        return exchange.subaccountPositions(subaccountID);  
+    }  
+  
+    /**  
+     * @notice 컨트랙트의 서브계정에서 새 파생상품 지정가 주문을 생성합니다.  
+     * @param order 주문 세부 정보가 포함된 DerivativeOrder 구조체.  
+     * @return response 주문 해시와 같은 세부 정보가 포함된 응답 구조체.  
+     */  
+    function createDerivativeLimitOrder(  
+        IExchangeModule.DerivativeOrder calldata order  
+    ) external returns (IExchangeModule.CreateDerivativeLimitOrderResponse memory response) {  
+        try exchange.createDerivativeLimitOrder(address(this), order) returns (IExchangeModule.CreateDerivativeLimitOrderResponse memory resp) {  
+            return resp;  
+        } catch Error(string memory reason) {  
+            revert(string(abi.encodePacked("CreateDerivativeLimitOrder error: ", reason)));  
+        } catch {  
+            revert("Unknown error during createDerivativeLimitOrder");  
+        }  
+    }  
+}  
+```
+
+#### 빌딩 시작
+
+서브계정 설정 및 자금 조달을 포함하여 이 `ExchangeDemo` 스마트 컨트랙트를 빌드, 배포 및 상호작용하는 방법에 대한 자세한 지침은 [solidity-contracts](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange) 저장소에서 제공되는 포괄적인 데모를 참조하세요.
+
+#### 결론
+
+Exchange Precompile은 정교한 프로토콜 통합 거래 로직을 Injective의 스마트 컨트랙트에 직접 내장할 수 있는 강력한 도구입니다. 컨트랙트가 자체 포트폴리오를 관리하든 다른 사용자를 위한 다목적 거래 인터페이스(`approve` 및 `revoke`를 사용한 프록시 패턴을 통해)로 작동하든 이 precompile은 Solidity를 사용하여 핵심 exchange 모듈과 상호작용하는 깔끔하고 안전하며 효율적인 방법을 제공합니다.
+
+자체 포함된 컨트랙트 로직에 대한 직접 호출을 우선시하고 더 넓은 Injective 에코시스템을 위한 재사용 가능한 컨트랙트 인터페이스를 구축할 때 강력한 권한 부여로 프록시 패턴을 신중하게 구현해야 합니다.
+
+\

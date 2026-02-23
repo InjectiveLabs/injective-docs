@@ -1,0 +1,144 @@
+---
+title: Hardhat 설정 및 스마트 컨트랙트 컴파일
+---
+
+## 사전 요구 사항
+
+최신 버전의 NodeJs가 설치되어 있는지 확인하세요.
+다음 명령으로 확인할 수 있습니다:
+
+```shell
+node -v
+```
+
+이 가이드는 다음 버전으로 작성되었습니다:
+
+```text
+v22.16.0
+```
+
+NodeJs가 아직 설치되지 않은 경우 다음을 사용하여 설치하세요:
+
+- Linux 또는 Mac: [NVM](https://github.com/nvm-sh/nvm)
+- Windows: [NVM for Windows](https://github.com/coreybutler/nvm-windows)
+
+지갑과 테스트넷 INJ로 충전된 계정이 필요합니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+[Injective 테스트넷 faucet](https://testnet.faucet.injective.network/)에서 EVM 테스트넷 자금을 요청할 수 있습니다.
+</Callout>
+
+계정을 생성한 후 이 튜토리얼을 완료하는 데 필요하므로 개인 키를 접근 가능한 곳에 복사해 두세요.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+개인 키는 주의해서 다루어야 합니다.
+여기의 지침은 로컬 개발과 테스트넷에 충분한 것으로 간주됩니다.
+그러나 이는 메인넷에서 사용되는 개인 키에는 **충분히 안전하지 않습니다**.
+메인넷에서는 키 보안에 대한 모범 사례를 따르고 메인넷과 다른 네트워크 간에 동일한 키/계정을 재사용하지 마세요.
+</Callout>
+
+## 새 Hardhat 프로젝트 설정
+
+git을 사용하여 데모 저장소를 복제하세요. 프로젝트가 이미 완전히 설정되어 있습니다.
+
+```shell
+git clone https://github.com/injective-dev/hardhat-inj
+```
+
+npm에서 종속성을 설치합니다:
+
+```shell
+npm install
+```
+
+## 오리엔테이션
+
+npm이 다운로드 및 설치하는 동안 코드 에디터/IDE에서 저장소를 열고 디렉토리 구조를 살펴보세요.
+
+```text
+hardhat-inj/
+  contracts/
+    Counter.sol → 스마트 컨트랙트 Solidity 코드
+  script/
+    deploy.js → 배포 스크립트
+  test/
+    Counter.test.js → 테스트 케이스
+  hardhat.config.js → 설정
+  .example.env
+```
+
+`hardhat.config.js` 파일은 이미 Injective EVM 테스트넷에 연결하도록 사전 구성되어 있습니다.
+진행하기 전에 Injective 테스트넷 계정의 개인 키만 제공하면 됩니다.
+
+```shell
+cp .example.env .env
+```
+
+`.env` 파일을 편집하여 개인 키를 추가하세요.
+선택적으로 대체 JSON-RPC 엔드포인트로 업데이트할 수 있습니다.
+
+```shell
+PRIVATE_KEY=0x 접두사 없는 개인 키
+INJ_TESTNET_RPC_URL=https://k8s.testnet.json-rpc.injective.network/
+
+```
+
+## 스마트 컨트랙트 편집
+
+이 데모에 포함된 스마트 컨트랙트는 매우 기본적입니다. 다음을 수행합니다:
+
+- 숫자인 하나의 `value`를 저장합니다.
+- `value()` 쿼리 메서드를 노출합니다.
+- `increment(num)` 트랜잭션 메서드를 노출합니다.
+
+파일을 여세요: `contracts/Counter.sol`
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+contract Counter {
+    uint256 public value = 0;
+
+    function increment(uint256 num) external {
+        value += num;
+    }
+}
+
+```
+
+## 스마트 컨트랙트 컴파일
+
+다음 명령을 실행합니다:
+
+```shell
+npx hardhat compile
+```
+
+Hardhat은 `hardhat.config.js` 파일에 구성된 Solidity 컴파일러(`solc`) 버전을 자동으로 다운로드하고 실행합니다.
+
+## 컴파일 출력 확인
+
+컴파일러가 완료된 후 프로젝트 디렉토리에 추가 디렉토리가 표시됩니다:
+
+```text
+hardhat-inj/
+  artifacts/
+    build-info/
+      ...
+    contracts/
+      Counter.sol/
+        Counter.json → 이 파일을 여세요
+        ...
+  cache/
+    ...
+```
+
+`Counter.json` 파일(`artifacts/contracts/Counter.sol/Counter.json`)을 여세요.
+그 안에서 `abi` 및 `bytecode` 필드를 포함한 컴파일러 출력을 볼 수 있습니다.
+이러한 아티팩트는 이후의 모든 단계(테스트, 배포, 검증 및 상호작용)에서 사용됩니다.
+
+## 다음 단계
+
+이제 Hardhat 프로젝트를 설정하고 스마트 컨트랙트를 컴파일했으므로 해당 스마트 컨트랙트를 테스트할 준비가 되었습니다!
+다음으로 [Hardhat으로 스마트 컨트랙트 테스트](./test-hardhat/) 튜토리얼을 확인하세요.

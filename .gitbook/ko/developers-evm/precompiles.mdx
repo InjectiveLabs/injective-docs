@@ -1,0 +1,81 @@
+---
+title: Precompiles
+---
+
+### Injective의 Precompiles란?
+
+Injective에서 precompiles는 프로토콜 수준에서 EVM(Ethereum Virtual Machine) 레이어에 직접 내장된 특별하고 고도로 최적화된 스마트 컨트랙트입니다. 사용자가 배포하는 표준 Solidity 스마트 컨트랙트와 달리 precompiles는 체인의 핵심 로직의 일부입니다. Solidity 대신 Go로 작성되며 고정 주소로 EVM에 노출되어 다른 스마트 컨트랙트처럼 Solidity 스마트 컨트랙트에서 호출할 수 있습니다.
+
+Ethereum 스타일 인터페이스가 제공된 Injective 체인의 네이티브 함수로 생각하세요.
+
+### 왜 필요한가요? (EVM과 네이티브 모듈 연결)
+
+Injective EVM은 사일로에서 작동하지 않습니다. Bank 모듈(토큰 관리용), Exchange 모듈(온체인 오더북용), Staking 모듈 등과 같은 Injective의 강력한 네이티브 Cosmos SDK 모듈과 깊이 통합되어 있습니다.
+
+Precompiles는 EVM 세계(Solidity 컨트랙트가 있는 곳)와 이러한 네이티브 Injective 기능 사이의 중요한 **브릿지** 역할을 합니다. precompiles가 없으면 EVM 스마트 컨트랙트는 격리되어 더 넓은 Injective 에코시스템의 풍부한 기능과 유동성을 활용할 수 없습니다.
+
+예를 들어, 네이티브 및 EVM 환경에서 통합 토큰 잔액을 보장하는 [MultiVM Token Standard(MTS)](/ko/developers-evm/multivm-token-standard) 모델은 **Bank Precompile**에 크게 의존합니다.
+
+### 개발자를 위한 이점
+
+* **네이티브 기능에 대한 액세스:** 온체인 오더북, 네이티브 스테이킹, 거버넌스 및 MTS용 bank 모듈과 같은 Injective의 고유한 모듈과 직접 상호작용합니다.
+* **향상된 성능:** precompiles를 통해 실행되는 작업은 최적화된 네이티브 코드로 실행되므로 순수 Solidity에서 복잡한 네이티브 로직을 복제하려는 것보다 훨씬 빠르고 가스 효율적일 수 있습니다.
+* **원활한 상호운용성:** EVM과 Injective의 Cosmos 네이티브 기능의 강점을 모두 활용하는 진정으로 통합된 애플리케이션을 구축합니다.
+* **간소화된 개발:** 익숙한 Solidity 인터페이스를 통해 복잡한 네이티브 기능과 상호작용하여 기본 Cosmos 복잡성의 많은 부분을 추상화합니다.
+
+Bank precompile로 지원되는 다양한 ERC-20 구현과 precompile 인터페이스 및 추상 컨트랙트는 [Injective의 Solidity Contracts 저장소](https://github.com/InjectiveLabs/solidity-contracts)에서 사용할 수 있습니다. 주요 컨트랙트는 다음과 같습니다:
+
+* [**Bank.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/Bank.sol) – precompile 인터페이스
+* [**BankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/BankERC20.sol) – Bank precompile로 지원되는 추상 ERC20 구현
+* [**FixedSupplyBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/FixedSupplyBankERC20.sol) – 고정 공급량의 탈중앙화 ERC20(소유자 없음, 민팅 또는 버닝 없음)
+* [**MintBurnBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/MintBurnBankERC20.sol) – 토큰을 민트하고 버닝할 수 있는 소유자가 있는 ERC20
+
+이러한 구현은 OpenZeppelin의 ERC20 컨트랙트를 기반으로 합니다. 개발자는 Bank precompile을 활용하는 사용자 정의 ERC20 컨트랙트를 자유롭게 만들 수 있습니다.
+
+### 시작하기 위한 데모
+
+Bank, Exchange 및 Staking precompiles를 사용하여 컨트랙트를 구축하는 방법을 보여주는 몇 가지 데모를 준비했습니다. 이 예제는 또한 가장 일반적인 Ethereum 개발 프레임워크인 **Foundry**를 사용하여 Injective EVM과 상호작용하는 방법을 보여줍니다.
+
+Foundry의 `cast` 도구를 활용하면 터미널에서 직접 컨트랙트를 쉽게 배포하고 Injective 체인과 상호작용할 수 있습니다. 이를 통해 빌더는 Injective의 네이티브 모듈을 활용하는 강력한 애플리케이션을 빠르게 실험, 테스트 및 배포할 수 있습니다.
+
+아래 데모를 탐색하여 확인하세요:
+
+- 토큰 관리, 거래 및 스테이킹을 위해 precompiles를 호출하는 Solidity 컨트랙트를 작성하는 방법.
+- Foundry 스크립트와 `cast` 명령을 사용하여 Injective EVM에서 이러한 컨트랙트를 배포하고 상호작용하는 방법.
+- EVM 로직을 Injective의 네이티브 기능과 연결하는 모범 사례.
+
+[Injective Solidity Contracts 저장소](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos)를 복제하고 각 데모 디렉토리의 단계별 가이드를 따라 개발을 시작하세요.
+
+* [Bank Precompile 데모](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/erc20)
+* [Exchange Precompile 데모](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange)
+* [Staking Precompile 데모](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/staking)
+
+### Precompile 주소
+
+| 이름                               | 목적                       | EVM 주소 |
+| ---------------------------------- | ----------------------------- | ----------- |
+| [Bank](/ko/developers-evm/bank-precompile)         | 토큰 관리              | `0x64`      |
+| [Exchange](/ko/developers-evm/exchange-precompile) | 온체인 오더북           | `0x65`      |
+| Staking                            | 온체인 네이티브 스테이킹 토큰 | `0x66`      |
+
+## 비 컨트랙트 주소 오류
+
+Foundry를 사용하고 Injective 메인넷 또는 Injective 테스트넷을 로컬로 "포크"하여
+해당 환경에서 스마트 컨트랙트를 실행할 때
+다음과 유사한 오류가 표시될 수 있습니다:
+
+```text
+[Revert] call to non-contract address 0x0000000000000000000000000000000000000064
+```
+
+이는 Foundry가 실제로 Injective에서 실행되는 것이 아니라
+Injective를 로컬로 *시뮬레이션*하기 때문에 발생합니다.
+따라서 Injective에 특화된 것이 아닌 *일반 EVM* 시뮬레이션을 실행하고 있습니다.
+차이점은 Injective의 네이티브 기능이 존재하지 않아
+precompiles를 인식하지 못한다는 것입니다.
+
+이에 대한 수정은 간단합니다:
+Injective의 precompiles를 포함하도록 패치된 Foundry 버전을 사용하세요:
+[github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases).
+
+여기에는 x86_64 Linux 및 macOS ARM64용 사전 빌드된 바이너리가 포함됩니다.
