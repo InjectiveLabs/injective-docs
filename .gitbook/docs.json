@@ -1070,6 +1070,73 @@
             "pages": [
               "ko/index",
               {
+                "group": "DeFi",
+                "icon": "coins",
+                "expanded": false,
+                "pages": [
+                  "ko/defi/index",
+                  {
+                    "group": "지갑",
+                    "pages": [
+                      "ko/defi/wallet/index",
+                      "ko/defi/wallet/create",
+                      "ko/defi/wallet/accounts"
+                    ]
+                  },
+                  {
+                    "group": "트레이딩",
+                    "pages": [
+                      "ko/defi/trading/index",
+                      "ko/defi/trading/order-types",
+                      "ko/defi/trading/fees",
+                      "ko/defi/trading/24-5-equity-feeds",
+                      "ko/defi/trading/margin",
+                      "ko/defi/trading/margin-liquidation",
+                      "ko/defi/trading/margin-funding-rates",
+                      "ko/defi/trading/margin-performing-liquidations",
+                      "ko/defi/trading/derivatives",
+                      "ko/defi/trading/derivatives-perpetuals",
+                      "ko/defi/trading/derivatives-expiry-futures",
+                      "ko/defi/trading/derivatives-election-perpetual",
+                      "ko/defi/trading/derivatives-pre-launch-futures",
+                      "ko/defi/trading/derivatives-index-perpetual-futures",
+                      "ko/defi/trading/derivatives-iassets"
+                    ]
+                  },
+                  {
+                    "group": "토큰 표준",
+                    "pages": [
+                      "ko/defi/tokens/index",
+                      "ko/defi/tokens/inj-coin",
+                      "ko/defi/tokens/token-factory",
+                      "ko/defi/tokens/cw20-standard"
+                    ]
+                  },
+                  "ko/defi/bridge",
+                  "ko/defi/staking",
+                  "ko/defi/governance",
+                  "ko/defi/community-buyback",
+                  "ko/defi/transactions",
+                  "ko/defi/transaction-fees",
+                  {
+                    "group": "Open Liquidity Program",
+                    "pages": [
+                      "ko/defi/open-liquidity-program/introduction",
+                      "ko/defi/open-liquidity-program/epochs",
+                      "ko/defi/open-liquidity-program/eligibility",
+                      "ko/defi/open-liquidity-program/scoring",
+                      "ko/defi/open-liquidity-program/formula-parameters",
+                      "ko/defi/open-liquidity-program/reward-allocations",
+                      "ko/defi/open-liquidity-program/flexible-reward-allocations",
+                      "ko/defi/open-liquidity-program/reward-disbursements",
+                      "ko/defi/open-liquidity-program/performance-tracking",
+                      "ko/defi/open-liquidity-program/volatility-response-modifications",
+                      "ko/defi/open-liquidity-program/fee-tiers"
+                    ]
+                  }
+                ]
+              },
+              {
                 "group": "EVM 개발자",
                 "icon": "rectangle-code",
                 "expanded": false,

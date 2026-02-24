@@ -1,0 +1,79 @@
+---
+description: "단일 시장에서 마켓 메이커의 Epoch 성과 점수 산정"
+title: "점수 산정 공식/방법론"
+---
+
+Injective 온체인 오더북 전반에 걸쳐 깊고 지속적인 유동성을 촉진하기 위해 OLP는 다음 지표를 우선시합니다:
+
+- **양방향 유동성** (매수 및 매도 유동성 모두)
+- **유동성 깊이**
+- **매수-매도 스프레드**
+- **마켓 메이커 가동 시간**
+- **거래량** (메이커 및 테이커)
+- **다중 시장 참여**
+
+## 총점
+
+주어진 시장에 대해 유동성 제공자의 epoch $TS$ (총점)는 다음과 같이 계산됩니다:
+
+$$
+TS_{Market} = (LS_{Epoch})^a \cdot (Uptime_{Epoch})^b \cdot (Volume_{epoch})^c
+$$
+
+여기서 $LS_{epoch}$는 epoch에서 해당 시장의 유동성 제공자의 [유동성 점수](/ko/defi/open-liquidity-program/scoring#liquidity-score)이고, $Uptime_{Epoch}$는 epoch에서 해당 시장의 유동성 제공자의 [가동 시간 점수](/ko/defi/open-liquidity-program/scoring#uptime-score)이며, $Volume_{epoch}$는 epoch에서 해당 시장의 유동성 제공자의 총 거래량(메이커 및 테이커)입니다.
+
+<Info>
+  $a$, $b$, $c$는 공식의 여러 구성 요소에 가중치를 부여하는 지수 [파라미터](/ko/defi/open-liquidity-program/formula-parameters)입니다.
+</Info>
+
+## 유동성 점수
+
+$$
+LS_{Epoch} =  \sum \limits_{N=1}^{40,320}  \min(LS_{N_{Bid}}, LS_{N_{Ask}})
+$$
+
+epoch에서 시장에 대한 유동성 제공자의 유동성 점수 $LS_{Epoch}$는 관련 시장에 대한 epoch의 모든 오더북 스냅샷에서 매수와 매도 유동성 점수(아래 참조) 중 최소값의 합계에 각 시장에 대한 맞춤형 변동성 파라미터(Θ로 표시)를 곱한 것입니다. 이는 $\min()$ 함수 하에서 단방향 유동성이 0의 유동성 점수를 얻기 때문에 양방향 유동성을 촉진합니다.
+
+오더북 스냅샷은 10-100 블록마다 무작위로 취합니다. 이는 평균적으로 대략 매분이며, 이는 epoch에 약 40,320개의 스냅샷이 있음을 의미합니다 $(60 \cdot 24 \cdot 28 = 40,320).$ 실제로 합계의 상한은 epoch의 실제 스냅샷 수에 따라 달라집니다. 이 가이드의 목적상 epoch에 정확히 40,320개의 스냅샷이 있다고 가정합니다.
+
+$$
+LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots
+ \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+$$
+
+$$
+LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+$$
+
+$LS_{N_{Bid}}$는 스냅샷 $N$에서 유동성 제공자가 배치한 $MinDepth$ 이상의 크기와 $MaxSpread$ 이내의 스프레드를 가진 모든 지정가 주문에 대해 모든 매수 주문 깊이를 주문의 스프레드로 나눈 값에 해당 스냅샷의 변동성 파라미터를 곱한 합계입니다.
+
+$LS_{N_{Ask}}$는 $LS_{N_{Bid}}$와 동일한 로직을 따르지만 오더북의 매도 쪽에 대한 것입니다.
+
+변동성 파라미터는 다음과 같이 계산됩니다:
+
+$$
+\Theta_{\text{vol}}(S_b)\;=\;
+\min\!\bigl(\,\Theta_{\max},\;
+           \max\!\{\,1,\;
+                    e^{\alpha\,\sigma_b\,|\frac{S_b-\mu_b}{S_b}|}\}\bigr)
+$$
+
+여기서 $\mu_b$는 $N$ 블록(1000 블록, 대략 10분) 동안의 오라클 가격 이동 평균이고, $S_b$는 현재 블록의 오라클 가격을 나타내며, $\sigma_b$는 $N$ 블록 동안의 실현 변동성을 나타냅니다.
+
+$Spread$는 중간 가격으로부터 계산됩니다(중간 가격으로부터의 거리를 중간 가격으로 나눔).
+
+<Info>
+  $MinDepth$와 $MaxSpread$의 현재 값은 [공식 파라미터 페이지](/ko/defi/open-liquidity-program/formula-parameters)를 참조하세요.
+</Info>
+
+## 가동 시간 점수
+
+$$
+Uptime_{Epoch} = \sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases}
+$$
+
+$Uptime_{Epoch}$는 유동성 제공자가 관심 시장에서 [**_양의 매수 유동성 점수와 양의 매도 유동성 점수_**](/ko/defi/open-liquidity-program/scoring#liquidity-score)를 가진 epoch 전체의 오더북 스냅샷 수입니다.
+
+<Info>
+  개별 보상 계산에 대한 정보는 [보상 할당 페이지](/ko/defi/open-liquidity-program/reward-allocations)를 참조하세요.
+</Info>

@@ -1,0 +1,48 @@
+---
+title: 가스 및 수수료
+---
+
+## 가스 및 수수료
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Injective에서 `Gas`와 `Fees`의 차이점에 대해 알아보세요.
+
+사전 필수 읽기 → [Cosmos SDK Gas](https://docs.cosmos.network/main/build/modules/auth#gas--fees)
+</Callout>
+
+가스는 상태 머신에서 특정 작업을 실행하는 데 필요한 계산 노력의 양을 나타냅니다.
+
+Injective는 가스 개념을 활용하여 실행 중 작업의 리소스 사용량을 추적합니다. Injective의 작업은 체인 스토어에 수행된 읽기 또는 쓰기로 표현됩니다.
+
+수수료는 메시지 실행 중에 계산되어 사용자에게 부과됩니다. 이 수수료는 메시지 실행에서 소비된 모든 가스의 합계에서 계산됩니다:
+
+```
+fee = gas * gas price
+```
+
+가스는 작업이 완료하는 데 과도한 양의 계산 능력을 요구하지 않도록 하고 악의적인 사용자가 네트워크를 스팸하는 것을 방지하는 데 사용됩니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**최소 가스 가격:** 검증인이 설정한 최소 가스 가격은 현재 `160,000,000inj`입니다. `inj`로 지불된 금액을 찾으려면 가스 가격에 가스 양을 곱하고 1e18(INJ는 18자리 소수점)로 나누세요.
+
+**예:** `gasWanted`가 104,519이면 `gasFees` = 160,000,000 \* 104,519 / 1e18 = 0.000016723`inj`
+</Callout>
+
+### Cosmos SDK `Gas`
+
+Cosmos SDK에서 가스는 메인 `GasMeter`와 `BlockGasMeter`에서 추적됩니다:
+
+* `GasMeter`: 상태 전환으로 이어지는 실행 중에 소비된 가스를 추적합니다. 모든 트랜잭션 실행 시 재설정됩니다.
+* `BlockGasMeter`: 블록에서 소비된 가스를 추적하고 가스가 미리 정의된 한도를 초과하지 않도록 합니다. 이 한도는 Tendermint 합의 파라미터에 정의되어 있으며 거버넌스 파라미터 변경 제안을 통해 변경할 수 있습니다.
+
+Cosmos SDK의 가스에 대한 자세한 정보는 [여기](https://docs.cosmos.network/main/learn/beginner/gas-fees)에서 찾을 수 있습니다.
+
+Cosmos에는 트랜잭션에 의해 트리거되지 않지만 상태 전환을 초래할 수 있는 작업 유형이 있습니다. 구체적인 예로는 `BeginBlock` 및 `EndBlock` 작업과 트랜잭션에서 상태 전환을 실행하기 전에 스토어에 읽고 쓸 수 있는 `AnteHandler` 검사가 있습니다.
+
+#### `BeginBlock` 및 `EndBlock`
+
+이러한 작업은 Tendermint Core의 Application Blockchain Interface(ABCI)에 의해 정의되며 각 Cosmos SDK 모듈에 의해 정의됩니다. 이름에서 알 수 있듯이 각 블록 처리의 시작과 끝에서 각각 실행됩니다(즉, 트랜잭션 실행 전과 후).
+
+#### `AnteHandler`
+
+Cosmos SDK [`AnteHandler`](https://docs.cosmos.network/v0.45/modules/auth/03_antehandlers.html)는 트랜잭션 실행 전에 기본 검사를 수행합니다. 이러한 검사는 일반적으로 서명 검증, 트랜잭션 필드 검증, 트랜잭션 수수료 등입니다.

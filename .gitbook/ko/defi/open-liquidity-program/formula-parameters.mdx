@@ -1,0 +1,23 @@
+---
+description: "OLP 공식 파라미터 값"
+title: "공식 파라미터"
+---
+
+<table>
+<thead>
+<tr>
+<th align="center">파라미터</th>
+<th align="center">정의</th>
+<th align="center">값 (변경 가능)</th>
+</tr>
+</thead>
+
+<tbody>
+  <tr><td align="center"><span class="math">a</span></td><td align="center"><a href="/ko/defi/open-liquidity-program/scoring#liquidity-score">유동성 점수</a> 지수</td><td align="center">0.4</td></tr>
+  <tr><td align="center"><span class="math">b</span></td><td align="center"><a href="/ko/defi/open-liquidity-program/scoring#uptime-score">가동 시간 점수</a> 지수</td><td align="center">3</td></tr>
+  <tr><td align="center"><span class="math">c</span></td><td align="center"><a href="./scoring/#volume">거래량</a> 지수</td><td align="center">0.8</td></tr>
+  <tr><td align="center"><span class="math">MinDepth</span></td><td align="center"><a href="/ko/defi/open-liquidity-program/scoring#total-score">총점</a>에 대한 포인트를 생성하는 데 필요한 최소 명목 주문 크기</td><td align="center"><span class="not-math">20k (BTC / INJ / ETH perp 시장), 4k (기타 시장)</span></td></tr>
+  <tr><td align="center"><span class="math">MaxSpread</span></td><td align="center"><a href="/ko/defi/open-liquidity-program/scoring#total-score">총점</a>에 대한 포인트를 생성하기 위한 주문의 중간 가격 대비 최대 허용 스프레드</td><td align="center">50 bps (BTC & ETH perp 시장), 100 bps (기타 시장)</td></tr>
+</tbody>
+
+</table>
