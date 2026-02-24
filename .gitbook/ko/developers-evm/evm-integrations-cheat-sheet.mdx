@@ -1,0 +1,132 @@
+---
+title: "EVM 통합 치트 시트"
+description: Injective의 EVM 메인넷에서 프로덕션 애플리케이션을 구축하려고 하시나요? 통합을 빠르게 진행하기 위한 편리한 참조입니다. 그린필드 배포와 크로스체인 배포 모두에 적합합니다.
+---
+
+# 네트워크 구성
+
+- Chain ID: `1776`
+
+참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet) 
+
+<Warning>
+inEVM은 **더 이상 사용되지 않으므로** 사용하지 **마세요**.
+</Warning>
+
+# 탐색기
+
+- [https://blockscout.injective.network/](https://blockscout.injective.network/) → EVM 트랜잭션만 볼 수 있음
+- [https://injscan.com/](https://injscan.com/) → EVM 및 Cosmos 트랜잭션 모두 볼 수 있음
+
+참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet) 
+
+# RPC 엔드포인트
+
+- 통합 파트너에게 권장
+    - 애플리케이션 요구에 맞게 사용자 정의 가능
+    - 사용자 정의 가능한 속도 제한 및 과거 데이터 쿼리에 대한 차단 없음
+    - 프리미엄/유료 옵션
+    - 연결 방법:
+        - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj) 
+        - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
+- 통합 파트너에게 권장되지 않음
+    - 애플리케이션 요구에 맞게 사용자 정의 불가
+    - 엄격한 속도 제한 및 과거 데이터 쿼리 차단
+    - 무료 옵션
+    - 연결 방법:
+        - JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
+        - WS Endpoint: `wss://sentry.evm-ws.injective.network`
+    
+참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet) 
+
+<Warning>
+inEVM은 **더 이상 사용되지 않으므로** 사용하지 **마세요**.
+</Warning>
+
+# 컨트랙트 주소
+
+|   |   |   |
+|---|---|---|
+|USDT|MTS USDT|`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`|
+|wETH|wrapped ETH|`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`|
+|wINJ|wrapped INJ|`0x0000000088827d2d103ee2d9A6b781773AE03FfB`|
+|USDC||`0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989`|
+|MultiCall||`0xcA11bde05977b3631167028862bE2a173976CA11`|
+
+아래 참조 페이지를 정식 소스로 사용하세요.
+
+참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet) 
+
+# 브릿지
+
+[Injective Bridge](https://bridge.injective.network)
+
+가이드:
+- [Metamask를 사용하여 Ethereum에서 Injective로 브릿지하는 방법](https://injective.com/blog/how-to-bridge-from-ethereum-to-injective-using-metamask/)
+- [Phantom을 사용하여 Solana에서 Injective로 브릿지하는 방법](https://injective.com/blog/how-to-bridge-from-solana-to-injective-using-phantom/)
+- [Wormhole을 사용하여 Injective로 브릿지하는 방법](https://injective.com/blog/how-to-bridge-to-injective-using-wormhole/)
+- [Keplr를 사용하여 Cosmos에서 Injective로 브릿지하는 방법](https://injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/)
+
+# 데이터
+
+## 탐색기
+
+- Explorer: [`blockscout.injective.network`](https://blockscout.injective.network/)
+- Explorer API: [`blockscout-api.injective.network/api`](https://blockscout-api.injective.network/api)
+
+## 오라클
+
+- API3: 
+    - 가격 피드: [Api3 Market | Injective EVM](https://market.api3.org/injective)
+- Pyth:
+    - 문서: [Pyth EVM Real Time Data Pull Integration](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/evm)
+    - 참조 문서: [Pyth EVM Smart Contract Addresses](https://docs.pyth.network/price-feeds/core/contract-addresses/evm)
+- Chainlink: 
+    - 문서: [Chainlink Data Streams](https://docs.chain.link/data-streams)
+
+# 지갑
+
+## `injectived`
+
+프로그래밍 방식 제어에 적합, 예: 애플리케이션/dApp 운영 계정.
+
+설치 빠른 시작:
+  
+```shell
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.17.2-1765930431/linux-amd64.zip # 최신 버전의 injective로 교체
+unzip linux-amd64.zip
+sudo mv injectived peggo /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib
+```
+
+<Tip>
+위 명령에서 `wget` 다운로드 URL은 최신 릴리스로 교체해야 합니다.
+[Mainnet Validator](/infra/validator-mainnet) 섹션에서 정확한 명령(URL 포함)을 찾을 수 있습니다.
+</Tip>
+
+<Tip>
+Docker를 통한 설치 또는 소스에서 컴파일을 포함한 더 많은 옵션은
+아래 참조 페이지에서 확인할 수 있습니다.
+</Tip>
+
+참조: [injectived | Injective | Docs](/developers/injectived) 
+
+## MetaMask
+
+EVM DApp과 상호작용해야 하는 소매 사용자에게 적합합니다.
+
+설치:
+
+- [https://metamask.io/en-GB](https://metamask.io/en-GB)에서 특정 브라우저용 브라우저 확장 프로그램을 받으세요.
+- [https://blockscout.injective.network/](https://blockscout.injective.network/)를 방문하여 페이지 하단으로 스크롤합니다
+- "Add Injective" 버튼을 클릭합니다
+- MetaMask 사용자 인터페이스의 프롬프트를 따릅니다
+
+참조: [Injective 지갑 생성 방법(MetaMask)](https://injective.com/blog/how-to-create-an-injective-wallet-2/#to-connect-to-injective-with-metamask)
+
+## Keplr
+
+- Keplr: [https://www.keplr.app](https://www.keplr.app)
+- 통합을 위한 Keplr API 문서: [https://docs.keplr.app/api/intro](https://docs.keplr.app/api/intro)
+
+참조: [Injective 지갑 생성 방법(Keplr)](https://injective.com/blog/how-to-create-an-injective-wallet-2#to-connect-to-injective-with-keplr)

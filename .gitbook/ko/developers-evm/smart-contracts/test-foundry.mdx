@@ -1,0 +1,84 @@
+---
+title: Foundry로 스마트 컨트랙트 테스트
+---
+
+## 사전 요구 사항
+
+Foundry 프로젝트가 이미 설정되어 있고 스마트 컨트랙트가 성공적으로 컴파일되어 있어야 합니다.
+방법은 [Foundry 설정 및 스마트 컨트랙트 컴파일](./compile-foundry/) 튜토리얼을 참조하세요.
+
+## 테스트 사양 편집
+
+테스트하는 스마트 컨트랙트가 최소이므로 필요한 테스트 케이스도 최소입니다.
+
+테스트 전에 스마트 컨트랙트를 배포해야 합니다.
+이것은 `setUp` 블록에서 발생합니다.
+스마트 컨트랙트는 단독으로 실행될 수 없으며 EVM 내에서 실행되어야 하기 때문입니다.
+Foundry에서는 기본적으로 테스트가 일시적인 에뮬레이트된 인메모리 EVM 인스턴스에서 실행되므로 배포는 형식적입니다.
+
+파일을 여세요: `test/Counter.t.sol`
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import { Test } from "forge-std/Test.sol";
+import { Counter } from "../src/Counter.sol";
+
+contract CounterTest is Test {
+    Counter public counter;
+
+    function setUp() public {
+        counter = new Counter();
+    }
+
+    function testInitialValue() public view {
+        assertEq(counter.value(), 0);
+    }
+
+    function testIncrementValueFromZero() public {
+        counter.increment(100);
+        assertEq(counter.value(), 100);
+    }
+
+    function testIncrementValueFromNonZero() public {
+        counter.increment(100);
+        counter.increment(23);
+        assertEq(counter.value(), 123);
+    }
+}
+
+```
+
+3개의 테스트 케이스가 있습니다:
+
+- 초기 `value()` 확인.
+- `increment(num)`을 호출한 다음 `value()`가 업데이트되었는지 확인.
+- `increment(num)`을 다시 호출한 다음 `value()`가 다시 업데이트되었는지 확인.
+
+## 스마트 컨트랙트에 대한 테스트 실행
+
+다음 명령은 방금 살펴본 테스트를 실행합니다.
+
+```shell
+forge test
+```
+
+## 테스트 출력 확인
+
+모든 테스트가 계획대로 작동하면 다음과 유사한 출력이 표시됩니다:
+
+```text
+Ran 3 tests for test/Counter.t.sol:CounterTest
+[PASS] testIncrementValueFromNonZero() (gas: 32298)
+[PASS] testIncrementValueFromZero() (gas: 31329)
+[PASS] testInitialValue() (gas: 10392)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 5.35ms (3.16ms CPU time)
+
+Ran 1 test suite in 171.04ms (5.35ms CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)
+```
+
+## 다음 단계
+
+이제 스마트 컨트랙트를 테스트했으므로 해당 스마트 컨트랙트를 배포할 준비가 되었습니다!
+다음으로 [Foundry로 스마트 컨트랙트 배포](./deploy-foundry/) 튜토리얼을 확인하세요.
