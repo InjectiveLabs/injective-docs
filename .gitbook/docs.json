@@ -1122,6 +1122,20 @@
             ]
           }
         ]
+      },
+      {
+        "language": "jp",
+        "groups": [
+          {
+            "group": "INJECTIVE",
+            "pages": [
+              "jp/index",
+              "jp/faq",
+              "jp/glossary",
+              "jp/references"
+            ]
+          }
+        ]
       }
     ]
   },
