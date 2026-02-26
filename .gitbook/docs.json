@@ -1070,6 +1070,47 @@
             "pages": [
               "ko/index",
               {
+                "group": "개발자",
+                "icon": "laptop-code",
+                "expanded": false,
+                "pages": [
+                  "ko/developers/index",
+                  "ko/developers/convert-addresses",
+                  "ko/developers/network-information",
+                  {
+                    "group": "AI 개발",
+                    "pages": [
+                      "ko/developers/ai/mcp"
+                    ]
+                  },
+                  {
+                    "group": "injectived",
+                    "pages": [
+                      "ko/developers/injectived/index",
+                      "ko/developers/injectived/install",
+                      "ko/developers/injectived/use",
+                      "ko/developers/injectived/advanced",
+                      "ko/developers/testnet-proposals"
+                    ]
+                  },
+                  {
+                    "group": "개념",
+                    "pages": [
+                      "ko/developers/concepts/index",
+                      "ko/developers/concepts/sentry-node",
+                      "ko/developers/concepts/indexer-api",
+                      "ko/developers/concepts/trading-account",
+                      "ko/developers/concepts/grpc-protobuf",
+                      "ko/developers/concepts/token-factory",
+                      "ko/developers/concepts/calculation-min-price-tick-size",
+                      "ko/developers/concepts/calculation-min-quantity-tick-size",
+                      "ko/developers/concepts/cosmjs-support",
+                      "ko/developers/concepts/networks"
+                    ]
+                  }
+                ]
+              },
+              {
                 "group": "EVM 개발자",
                 "icon": "rectangle-code",
                 "expanded": false,

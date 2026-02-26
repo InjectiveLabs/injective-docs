@@ -1,0 +1,30 @@
+---
+title: 마켓 최소 수량 틱 사이즈 계산
+---
+
+주문 가격에 대한 최소 마켓 수량 틱 사이즈 - 마켓의 minQuantityTickSize가 `0.001`이고 수량이 `0.0011`인 주문 제출은 거부됩니다.
+
+파생상품 마켓은 UI와 체인 간에 minQuantityTickSize에 대해 동일한 형식을 공유하므로 포맷팅이 필요하지 않습니다.
+
+## 현물 마켓
+
+1.  UI 사람이 읽을 수 있는 형식에서 체인 형식으로:
+    18개의 base decimals와 6개의 quote decimals를 가진 INJ/USDT 마켓을 예로 들어, 값을 체인 형식으로 변환하는 방법은 다음과 같습니다:
+
+```js
+import { toChainFormat } from "@injectivelabs/utils";
+
+const chainFormat = toChainFormat(value, baseDecimals).toFixed();
+```
+
+2. 체인 형식에서 UI 사람이 읽을 수 있는 형식으로:
+   18개의 base decimals와 6개의 quote decimals를 가진 INJ/USDT 마켓을 예로 들어, 값을 UI 사람이 읽을 수 있는 형식으로 변환하는 방법은 다음과 같습니다:
+
+```js
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const humanReadableFormat = toHumanReadable(
+  minQuantityTickSize,
+  baseDecimals
+).toFixed();
+```

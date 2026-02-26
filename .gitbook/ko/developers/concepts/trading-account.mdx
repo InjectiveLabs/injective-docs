@@ -1,0 +1,11 @@
+---
+title: Trading Account
+---
+
+Subaccount 또는 Trading Account는 네이티브 Injective Bank 모듈의 자금(스테이킹, 경매 입찰, 거버넌스 참여, 마켓 생성 등에 사용 가능)을 거래를 실행할 수 있는 격리된 거래 계정으로 분리할 수 있게 해주는 개념입니다. 하나의 Injective 주소는 무제한의 trading account를 가질 수 있습니다. 표현 방식은 `${ethereumAddress}${subaccountNonce}`이며, `ethereumAddress`는 `bech32` Injective 주소의 `hex` 버전이고 `subaccountNonce`는 12바이트로 표현된 nonce입니다. nonce 1의 trading account 예시는 `0xc7dca7c15c364865f77a4fb67ab11dc95502e6fe000000000000000000000001`입니다.
+
+<Tip>
+subaccount와 주요 기능에 대한 일반적인 개요는 [계정](/defi/wallet/accounts#subaccounts) 페이지를 참조하세요.
+</Tip>
+
+v1.10.0 체인 업그레이드부터 Bank 잔액과 기본 trading account(nonce = 0)가 병합되며, Bank 자금이 기본 trading account에서 발생하는 거래를 실행할 때 직접 사용됩니다.
