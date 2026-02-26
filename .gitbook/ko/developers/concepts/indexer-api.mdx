@@ -1,0 +1,13 @@
+---
+title: Indexer API
+---
+
+Indexer API는 Injective 체인에서 인덱싱된 데이터를 제공하는 마이크로서비스 모음입니다. Injective Chain은 트랜잭션이 포함될 때 이벤트를 발생시키고 Indexer API 내의 이벤트 리스너가 이러한 이벤트를 수신하고 처리하여 MongoDB에 데이터를 저장합니다. 체인에서 직접 조회하는 것은 MongoDB에서 데이터를 제공하는 API를 조회하는 것보다 비용이 많이 들고 성능이 떨어지는 API 호출이므로 Indexer API가 존재합니다.
+
+Indexer API를 사용하는 또 다른 이점은 스트리밍입니다. MongoDB는 컨렉션/문서의 업데이트를 스트리밍할 수 있으며 이는 좋은 사용자 경험에 상당히 유익할 수 있습니다. 이렇게 하면 데이터를 폴링할 필요 없이 스트림을 구독하고 스트림 내에서 브로드캠스트된 업데이트에 따라 dApp의 상태를 업데이트할 수 있습니다.
+
+마지막으로, Indexer API는 기록 데이터 또는 일정 기간 동안 처리된 데이터를 제공할 수 있습니다(예: 차트 그리기 등).
+
+## 자체 indexer 실행하기
+
+자체 Injective Indexer 서비스를 실행하려면 [Indexer Service Setup Guide](https://injective.notion.site/Injective-Indexer-Service-Setup-Guide-7e59980634d54991862300670583d46a)를 참조하세요.

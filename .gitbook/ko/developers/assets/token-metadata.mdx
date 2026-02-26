@@ -1,0 +1,24 @@
+---
+title: Token 메타데이터
+---
+
+Injective의 자산은 denom으로 표현됩니다. denom(및 금액)은 사람이 읽을 수 없으며, 이로 인해 특정 denom에 토큰 메타데이터 정보를 "첨부"하는 방법이 필요합니다.
+
+시작하기 섹션에서 가지고 있는 denom 유형을 요약해 보겠습니다:
+
+* **Native denom** - 이 유형의 denom은 하나만 있으며, Injective의 네이티브 코인을 나타내는 `inj` denom입니다.
+* **Peggy denom** - Peggy 브릿지를 사용하여 Ethereum에서 Injective로 브릿지된 자산을 나타냅니다. `peggy{ERC20_CONTRACT_ADDRESS}` 형식입니다.
+* **IBC denom** - IBC를 통해 다른 Cosmos 체인에서 브릿지된 자산을 나타냅니다. `ibc/{hash}` 형식입니다.
+* **Insurance Fund Denom** - Injective에서 생성된 insurance fund의 토큰 지분을 나타냅니다. `share{id}` 형식입니다.
+* **Factory Denom** - Injective 네이티브 bank 모듈의 Cosmwasm CW20 토큰을 나타냅니다. `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` 형식이며, `CW20_ADAPTER_CONTRACT`는 CW20과 네이티브 Bank 모듈을 변환하는 어댑터 컨트랙트 주소입니다.
+
+더 빠른 액세스를 위해 [injective-lists](https://github.com/InjectiveLabs/injective-lists/tree/master/tokens) 저장소에서 오프체인으로 토큰 메타데이터 목록을 유지 관리합니다.
+
+## Token 검증
+
+토큰 메타데이터 검증은 몇 가지 방법으로 할 수 있습니다. 검증 레벨과 그 의미는 다음과 같습니다:
+
+* **Verified** → 자산 메타데이터가 `@injectivelabs/token-metadata` 패키지에 **제출되고 검증되었습니다**. 토큰 메타데이터를 패키지에 추가하는 튜토리얼은 [여기](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)에서 찾을 수 있습니다.
+* **Internal** → 자산 메타데이터가 [여기](/developers-native/examples/token-factory)에 설명된 `MsgSetDenomMetadata` 메시지를 사용하여 온체인에서 검증되었습니다.
+* **External** → 자산 메타데이터가 Ethereum의 컨트랙트 세부 정보 등 일부 외부 소스에서 검증되었습니다.
+* **Unverified** → 자산 메타데이터가 어디에도 제공되지 않았습니다.

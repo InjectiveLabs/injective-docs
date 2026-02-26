@@ -1,0 +1,24 @@
+---
+title: Denom
+---
+
+denom은 Injective의 Bank 모듈 내에서 자산이 표현되는 방식입니다. 이러한 자산은 거래, exchange 모듈에서 새 마켓 생성, 경매 참여, 다른 주소로 전송 등에 사용될 수 있습니다.
+
+denom의 출처와 Injective에서 생성된 방식에 따라 다양한 유형의 denom이 있습니다:
+
+* **Native denom** - 이 유형의 denom은 하나만 있으며, Injective의 네이티브 코인을 나타내는 `inj` denom입니다.
+* **Peggy denom** - Peggy 브릿지를 사용하여 Ethereum에서 Injective로 브릿지된 자산을 나타냅니다. `peggy{ERC20_CONTRACT_ADDRESS}` 형식입니다.
+* **IBC denom** - IBC를 통해 다른 Cosmos 체인에서 브릿지된 자산을 나타냅니다. `ibc/{hash}` 형식입니다.
+* **Insurance Fund Denom** - Injective에서 생성된 insurance fund의 토큰 지분을 나타냅니다. `share{id}` 형식입니다.
+* **Factory Denom** - Injective 네이티브 bank 모듈의 Cosmwasm CW20 토큰을 나타냅니다. `factory/{OWNER}/{SUBDENOM}` 형식이며, `OWNER`는 factory denom을 생성한 소유자입니다. 한 가지 예로 CW20 토큰 factory denom은 `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`이며, `CW20_ADAPTER_CONTRACT`는 CW20과 네이티브 Bank 모듈 간 변환을 수행하는 어댑터 컨트랙트 주소입니다.
+
+## Token
+
+Token은 단순히 일부 메타 정보가 포함된 Injective 체인의 denom입니다. 메타데이터에는 특정 denom에 대한 symbol, name, decimals, logo 등의 정보가 포함됩니다. denom의 메타데이터는 체인의 정보가 원시 형식으로 저장되기 때문에 dApp 개발자에게 매우 중요합니다(예: 체인에서 `1inj`는 `1*10^18inj`로 표현됨). 따라서 사용자에게 사람이 읽을 수 있는 정보(숫자, 로고, 심볼 등)를 표시하는 방법이 필요합니다.
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+**지원 중단 공지**
+
+Injective SDK 내에 "Denom Client"가 사용 가능했습니다.
+이것은 [Injective List](/developers/assets/injective-list)를 위해 지원 중단되었습니다.
+</Callout>

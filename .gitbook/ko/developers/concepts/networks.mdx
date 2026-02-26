@@ -1,0 +1,52 @@
+---
+title: Networks
+---
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+최신 공개 Endpoint는 [여기](https://docs.injective.network/develop/public-endpoints/#mainnet)에서 찾을 수 있습니다. 높은 사용량/트래픽을 가진 애플리케이션에서 프로덕션 사용은 <mark style="color:red;">**권장하지 않습니다**</mark>. 수천 명의 개발자가 공개 인프라를 사용하고 있으며 100% 가동 시간과 신뢰성을 약속할 수 없습니다. \
+\
+여전히 **공개** 네트워크를 사용하려면 `@injectivelabs/networks` 패키지에서 `Network.{Mainnet|Testnet}Sentry`를 사용할 수 있습니다.
+</Callout>
+
+Injective에서 dApp을 구축하려면 dApp을 쉽게 테스트할 수 있는 다양한 환경과 네트워크에 액세스해야 합니다. `injective-ts` 모노레포의 일부로, `@injectivelabs/networks` 패키지를 통해 개발자가 Injective의 다양한 부분에 연결하기 위한 사전 정의된 환경에 쉽게 액세스할 수 있습니다.
+
+이 패키지에서 내보내는 두 가지 주요 함수가 있습니다:
+
+* `export function getNetworkEndpoints(network: Network): NetworkEndpoints`
+* `export function getEndpointsForNetwork(network: Network): OldNetworkEndpoints`
+* `export function getNetworkInfo(network: Network): ChainInfo`
+
+첫 번째 `getNetworkEndpoints`는 개발자가 필요에 따라 사용할 수 있는 사전 정의된 endpoint 세트를 반환합니다. 이 함수에서 반환되는 인터페이스는 다음과 같습니다:
+
+```ts
+export type NetworkEndpoints = {
+  indexer: string // indexer API 서비스의 grpc-web 포트
+  grpc: string // sentry 노드의 grpc-web 포트
+  rest: string // sentry 노드의 REST endpoint
+  rpc?: string // Tendermint RPC의 REST endpoint
+}
+
+/** @deprecated */
+export type OldNetworkEndpoints = {
+  exchangeApi: string // @deprecated - exchange API 서비스의 grpc-web 포트
+  indexerApi: string // indexer API 서비스의 grpc-web 포트
+  sentryGrpcApi: string // sentry 노드의 grpc-web 포트
+  sentryHttpApi: string // sentry 노드의 REST endpoint
+  tendermintApi?: string // Tendermint RPC의 REST endpoint
+  chronosApi?: string // chronos API 서비스의 REST endpoint
+  exchangeWeb3GatewayApi?: string // web3-gateway 서비스 API의 grpc-web 포트
+}
+```
+
+이러한 endpoint가 무엇을 의미하는지 설명하겠습니다:
+
+* `indexer`는 체인에서 이벤트를 수신하고 처리하여 데이터를 MongoDB에 저장하는 `exchange/indexer` 서비스에 연결하는 데 사용할 수 있는 [**grpc-web**](https://github.com/grpc/grpc-web) endpoint입니다.
+* `grpc`는 sentry 노드에 연결하는 데 사용할 수 있는 [**grpc-web**](https://github.com/grpc/grpc-web) endpoint입니다. Sentry 노드는 체인에서 직접 데이터를 조회하는 데 사용할 수 있는 체인의 읽기 전용(및 경량) 버전입니다.
+* `rest`는 sentry 노드에 연결하는 데 사용할 수 있는 REST endpoint입니다.
+* `rpc`는 Tendermint RPC에 연결하는 데 사용할 수 있는 REST endpoint입니다.
+
+`getNetworkInfo`는 이러한 endpoint와 원하는 `Network`의 `chainId` 및 기본 `fee`를 내보냅니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+자체 인프라(endpoint)로 TypeScript SDK를 사용하려면 서버에서 `grpc-web` 프록시를 설정해야 합니다. 자세한 내용은 [이 문서](https://github.com/grpc/grpc-web?tab=readme-ov-file#2-run-the-server-and-proxy)를 참조하세요.
+</Callout>

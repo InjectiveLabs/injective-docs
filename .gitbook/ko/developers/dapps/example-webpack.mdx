@@ -1,0 +1,37 @@
+---
+title: Webpack을 사용한 간단한 HTML 예제
+---
+
+[예제](https://github.com/InjectiveLabs/injective-ts-webpack-example)는 [Cosmos 트랜잭션 처리 섹션](../../developers-native/transactions/cosmos/)을 기반으로 합니다.
+
+## 예제 실행
+
+프로젝트 저장소를 클론하세요:
+
+```
+git clone https://github.com/InjectiveLabs/injective-ts-webpack-example.git
+```
+
+npm이 설치되어 있는지 확인하고 종속성을 설치하세요:
+
+```
+cd injective-ts-webpack-example && npm install
+```
+
+예제를 실행하세요:
+
+```
+npm start
+....
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: http://localhost:8080/, http://[::1]:8080/
+....
+```
+
+브라우저에서 http://localhost:8080/로 이동하세요. Keplr 지갑이 설정되어 있고 Injective testnet에 연결되어 있으면 "트랜잭션 확인" 팝업 창이 표시됩니다.
+
+## 어떻게 작동하나요?
+
+트랜잭션 로직은 `src/index.html`에서 로드되는 `src/sendTx.ts`에 있습니다. Webpack은 모든 것을 함께 넣고 로컬 서버 endpoint에서 제공하는 데 사용됩니다.
+
+`webpack.config.js` 파일은 `./src/sendTx.ts`에서 시작하여 TypeScript 애플리케이션을 번들링하도록 Webpack을 구성하고, TypeScript 파일을 트랜스파일하기 위해 `ts-loader`를 사용하며, `.js` 및 `.json` 파일을 적절히 처리하는 규칙을 포함합니다. `fallback` 옵션을 사용하여 Node.js 코어 모듈의 브라우저 호환 버전을 해결하여 브라우저 환경에서 `buffer`, `crypto`, `stream`과 같은 모듈을 사용할 수 있게 합니다. 구성은 `src/index.html`을 기반으로 HTML 파일을 생성하기 위해 `HtmlWebpackPlugin`을 사용하고, `Buffer` 및 `process` 변수를 전역적으로 자동 로드하기 위해 `ProvidePlugin`을 사용합니다. 번들된 출력은 `bundle.js`로 이름이 지정되고 `dist` 디렉토리에 배치되며, 개발 목적으로 `./dist`에서 콘텐츠를 제공하도록 `devServer`가 설정됩니다.

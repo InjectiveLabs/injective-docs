@@ -1,0 +1,179 @@
+---
+title: Nuxt 구성
+---
+
+## Nuxt3 - 직관적인 웹 프레임워크
+
+@InjectiveLabs에서 Injective에서 탈중앙화 애플리케이션을 구축하는 데 선호하는 UI 프레임워크는 Nuxt3입니다. Crypto 지갑과 상호작용하는 데 필요한 `@injectivelabs` 패키지와 일부 polyfill로 Nuxt3 + Vite 빌더를 구성하는 데 도움을 드리겠습니다.
+
+### 1. Nuxt 3 설치
+
+[Nuxt3 Docs](https://nuxt.com/docs/getting-started/installation)의 시작 가이드를 따라 애플리케이션을 설정하세요.
+
+### 2. @injectivelabs 패키지 설치
+
+yarn을 사용하여 @injectivelabs 패키지를 설치할 수 있습니다.
+
+```bash
+$ yarn add @injectivelabs/sdk-ts @injectivelabs/networks @injectivelabs/ts-types @injectivelabs/utils
+
+## 지갑 연결이 필요한 경우
+$ yarn add @injectivelabs/wallet-strategy
+```
+
+이것들은 `injective-ts` 모노레포에서 가장 일반적으로 사용되는 패키지입니다.
+
+### 3. Nuxt 구성 및 polyfill 추가
+
+먼저 필요한 polyfill 패키지를 추가하세요
+
+```bash
+$ yarn add @bangjelkoski/node-stdlib-browser
+$ yarn add -D @bangjelkoski/vite-plugin-node-polyfills
+```
+
+`vue-tsc@1.8.8`, `nuxt@^3.8.1`, `typescript@^5.0.4` 버전을 사용하고 있는지 확인하세요.
+
+**Buffer**
+
+모든 crypto 관련 탈중앙화 애플리케이션의 주요 종속성 중 하나는 Buffer입니다. 프로젝트에 Buffer를 추가하려면 종속성으로 설치한 다음 global/window 객체로 가져오기 위한 Nuxt 플러그인을 만들 수 있습니다:
+
+```bash
+$ yarn add buffer
+```
+
+```ts
+// filename - plugins/buffer.client.ts
+export default defineNuxtPlugin(() => {
+  import('buffer/').then((Buffer) => {
+    window.Buffer = window.Buffer || Buffer.default.Buffer
+    globalThis.Buffer = window.Buffer || Buffer.default.Buffer
+  })
+})
+```
+
+### 4. 상태 관리 사용
+
+상태 관리로 `pinia`를 사용하려면 패키지에 추가하세요:
+
+```bash
+$ yarn add @pinia/nuxt@^0.4.9
+```
+
+### 5. `vueuse` 사용
+
+많은 유틸리티 함수를 제공하므로 `@vueuse/nuxt`를 종속성으로 추가하는 것이 좋습니다.
+
+그런 다음 TypeScript를 사용하는 경우(권장) `tsconfig.json`을 구성해야 합니다. 다음 `tsconfig.json`을 기본으로 참조할 수 있습니다.
+
+```json
+{
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["@vueuse/nuxt", "@pinia/nuxt"]
+  },
+  "exclude": ["node_modules", "dist", ".output"]
+}
+```
+
+### 6. nuxt.config.ts / packages.json
+
+애플리케이션을 부팅하기 전에 모든 Nuxt 3 애플리케이션의 주요 구성 지점인 `nuxt.config.ts`에서 모든 것을 설정해야 합니다. 참조 `nuxt.config.ts`를 보고 개발자가 이해하기 쉽도록 주석을 사용하여 각 줄을 설명하겠습니다.
+
+```ts
+// filename - nuxt.config.ts
+import tsconfigPaths from 'vite-tsconfig-paths'
+import { nodePolyfills } from '@bangjelkoski/vite-plugin-node-polyfills'
+
+export default defineNuxtConfig({
+  ssr: false, // 애플리케이션을 사전 렌더링할지 여부
+  modules: [
+    // nuxtjs 모듈
+    '@pinia/nuxt',
+    '@vueuse/nuxt',
+  ],
+
+  typescript: {
+    typeCheck: 'build', // 빌드 시에만 typescript 검사를 하도록 build를 권장합니다
+  },
+
+  imports: {
+    // store 정의의 자동 import(pinia 사용 시)
+    dirs: ['store/**'],
+  },
+
+  pinia: {
+    // pinia 정의 import
+    autoImports: ['defineStore'],
+  },
+
+  plugins: [
+    {
+      // 우리가 만든 buffer 플러그인 import
+      src: './plugins/buffer.client.ts',
+      ssr: false,
+    },
+  ],
+
+  // 서버가 필요 없으므로 클라이언트 측에만 sitemap을 생성합니다
+  // 참고: Vite + Nuxt3의 sitemap 문제가 있습니다
+  // 평소와 같이 sitemap을 생성하는 데
+  // 너무 많은 시간/메모리가 소요되어
+  // 빌드 프로세스가 실패할 수 있습니다
+  // Github Actions/Netlify/Vercel 등에서
+  // 따라서 로컬에서 생성하고 bugsng과 같은
+  // 서비스에 푸시하는 다른 전략을 사용해야 합니다
+  sourcemap: {
+    server: false,
+    client: true,
+  },
+
+  // Vite 관련 구성
+  vite: {
+    plugins: [
+      // node + crypto polyfill + vite TS 경로 해결 설정
+      tsconfigPaths(),
+      nodePolyfills({ protocolImports: false }),
+    ],
+
+    build: {
+      sourcemap: false, // 생성하지 않음
+
+      // 기본 rollup 옵션
+      rollupOptions: {
+        cache: false,
+        output: {
+          manualChunks: (id: string) => {
+            //
+          },
+        },
+      },
+    },
+
+    // @bangjelkoski/vite-plugin-node-polyfills 플러그인의
+    // 일부 Vite 관련 문제에 필요
+    optimizeDeps: {
+      exclude: ['fsevents'],
+    },
+  },
+})
+```
+
+번들 크기를 줄이기 위해 할 수 있는 하나의 최적화 - `packages.json`에 이러한 resolution을 추가하세요
+
+```
+"resolutions": {
+  "@ethereumjs/tx": "^4.1.1",
+  "**/libsodium": "npm:@bangjelkoski/noop",
+  "**/libsodium-wrappers": "npm:@bangjelkoski/noop"
+}
+```
+
+### 7. 앱 부팅
+
+마지막으로 `yarn dev`를 사용하여 로컬에서 앱을 시작하거나 `yarn generate`를 사용하여 Netlify, Vercel 등과 같은 정적 페이지 호스팅에 배포할 수 있는 정적 페이지를 생성할 수 있습니다.

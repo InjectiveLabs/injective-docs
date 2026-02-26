@@ -1,0 +1,97 @@
+---
+title: React 구성
+---
+
+## React - 사용자 인터페이스 구축을 위한 라이브러리
+
+React는 현재 가장 인기 있는 UI 프레임워크 중 하나입니다. Crypto 지갑과 상호작용하는 데 필요한 `@injectivelabs` 패키지와 일부 polyfill로 React + Vite 빌더를 구성하는 데 도움을 드리겠습니다.
+
+### 1. React 설치
+
+[Vite Docs](https://vitejs.dev/guide/)의 시작 가이드를 따라 애플리케이션을 설정하세요.
+
+```bash
+$ npm create vite@latest
+```
+
+### 2. @injectivelabs 패키지 설치
+
+yarn을 사용하여 @injectivelabs 패키지를 설치할 수 있습니다.
+
+```bash
+$ yarn add @injectivelabs/sdk-ts @injectivelabs/networks @injectivelabs/ts-types @injectivelabs/utils
+
+## 지갑 연결이 필요한 경우
+$ yarn add @injectivelabs/wallet-strategy
+```
+
+이것들은 `injective-ts` 모노레포에서 가장 일반적으로 사용되는 패키지입니다.
+
+### 3. Vite 구성 및 polyfill 추가
+
+먼저 필요한 polyfill 패키지와 buffer를 추가하세요
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+모든 crypto 관련 탈중앙화 애플리케이션의 주요 종속성 중 하나는 `Buffer`입니다. 프로젝트에 `Buffer`를 추가하려면 종속성으로 설치한 다음 global/window 객체로 가져올 수 있습니다.
+
+예제 `vite.config.ts`는 아래에 공유됩니다.
+</Callout>
+
+```bash
+$ yarn add @bangjelkoski/node-stdlib-browser
+$ yarn add -D @bangjelkoski/vite-plugin-node-polyfills
+$ yarn add buffer
+```
+
+마지막으로 `main.tsx` 파일 상단에 `buffer`를 import하세요
+
+```typescript
+import { Buffer } from "buffer";
+
+if (!window.Buffer) {
+    window.Buffer = Buffer; // Buffer가 전역이길 기대하는 패키지에 선택 사항
+}
+```
+
+### 4. 상태 관리 사용
+
+React에는 많은 다양한 상태 관리자가 있으며, 사용할 것을 선택하고 설치하세요. 서드파티 솔루션을 설치할 필요 없이 상태 관리를 위해 내장된 `Context API`를 사용할 수 있습니다. 선호하는 서드파티 상태 관리자는 `Redux`와 `Zustand`입니다.
+
+```bash
+$ yarn add zustand
+```
+
+### 5. vite.config.ts
+
+마지막 단계는 앞서 설치한 `node-polyfills`를 사용하도록 Vite를 구성하는 것입니다.
+
+`vite.config.ts`를 열고 `plugins` 배열 내에 `node-polyfills`를 추가하세요.
+
+구성은 다음과 같아야 합니다:
+
+```ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import { nodePolyfills } from "@bangjelkoski/vite-plugin-node-polyfills";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react(), nodePolyfills({ protocolImports: true })],
+  define: {
+    global: "globalThis",
+  },
+  resolve: {
+    alias: {
+      // 기타
+      buffer: "buffer/",
+    },
+  },
+  optimizeDeps: {
+    include: ["buffer"],
+  },
+});
+```
+
+### 8. 앱 부팅
+
+마지막으로 `yarn dev`를 사용하여 로컬에서 앱을 시작하거나 `yarn build`를 사용하여 Netlify, Vercel 등과 같은 정적 페이지 호스팅에 배포할 수 있는 프로덕션 빌드를 할 수 있습니다.
