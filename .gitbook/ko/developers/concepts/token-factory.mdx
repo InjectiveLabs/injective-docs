@@ -1,0 +1,59 @@
+---
+title: Token Factory
+---
+
+Injective의 Token Factory 모듈은 사용자와 컨트랙트가 새로운 네이티브 토큰을 생성하고 Mint + Burn 모델을 사용하여 네이티브 토큰을 CW20 토큰과 교환할 수 있게 해줍니다. 다양한 소스의 자산을 네이티브 bank denom으로 표현하는 것은 사용자가 exchange, auction, insurance funds 등 나머지 온체인 모듈에 액세스할 수 있게 하는 중요한 기능입니다. token factory denom의 형식은 `factory/{creator address}/{subdenom}`입니다.
+
+생성자 역할을 하는 `CW20AdapterContract`와 결합하여, CW20 자산을 Token Factory denom으로 Injective에서 네이티브하게 표현할 수 있습니다. 작동 방식은 CW20 자산이 `CW20AdapterContract`에 보관되고 injective 주소에 대한 factory denom으로 민트되며, 이를 다시 CW20으로 상환하려면 bank 모듈에서 소각하고 `CW20AdapterContract`에서 소유자 주소로 잠금 해제됩니다.
+
+## factory denom을 CW20으로 상환하는 예제
+
+```ts
+import {
+  MsgExecuteContractCompat,
+  ExecArgCW20AdapterRedeemAndTransfer,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+
+const message = MsgExecuteContractCompat.fromJSON({
+  sender: injectiveAddress,
+  contractAddress: CW20_ADAPTER_CONTRACT,
+  funds: {
+    denom: `factory/${CW20_ADAPTER_CONTRACT}/${contractCw20Address}`,
+    amount: actualAmount.toFixed(),
+  },
+  execArgs: ExecArgCW20AdapterRedeemAndTransfer.fromJSON({
+    recipient: injectiveAddress,
+  }),
+})
+
+// 그런 다음 메시지를 트랜잭션에 패키징하고, 서명한 후 체인에 브로드캐스트합니다
+```
+
+## CW20을 factory denom으로 변환하는 예제
+
+```ts
+import {
+  ExecArgCW20Send,
+  MsgExecuteContractCompat,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+const amount = '1000000' // 체인에서 6 decimals로 표현된 1 USDT
+
+const message = MsgExecuteContractCompat.fromJSON({
+  contractAddress: contractCw20Address,
+  sender: injectiveAddress,
+  execArgs: ExecArgCW20Send.fromJSON({
+    amount,
+    contractAddress: CW20_ADAPTER_CONTRACT,
+  }),
+})
+
+// 그런 다음 메시지를 트랜잭션에 패키징하고, 서명한 후 체인에 브로드캐스트합니다
+```

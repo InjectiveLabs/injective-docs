@@ -1,0 +1,359 @@
+---
+title: 명령어
+---
+
+이 섹션에서는 실행 중인 `injectived` 프로세스(노드)에 연결하는 명령줄 인터페이스인 `injectived`에서 사용할 수 있는 명령어를 설명합니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+여러 `injectived` 명령은 하위 명령, 인수 또는 플래그가 필요합니다. 이 정보를 보려면 `--help` 또는 `-h` 플래그와 함께 `injectived` 명령을 실행하세요. help 플래그 사용 예제는 `query` 또는 `tx`를 참조하세요.
+
+`chain-id` 인수의 경우 메인넷에는 `injective-1`을, 테스트넷에는 `injective-888`을 사용해야 합니다.
+</Callout>
+
+### `add-genesis-account`
+
+`genesis.json`에 제네시스 계정을 추가합니다. `genesis.json`에 대한 자세한 정보는 Join Testnet 또는 Join Mainnet 가이드를 참조하세요.
+
+**구문**
+
+```bash
+injectived add-genesis-account <address-or-key-name> <amount><coin-denominator>
+```
+
+**예제**
+
+```bash
+injectived add-genesis-account acc1 100000000000inj
+```
+
+### `collect-gentxs`
+
+제네시스 트랜잭션을 수집하고 `genesis.json`으로 출력합니다. `genesis.json`에 대한 자세한 정보는 [여기](../../infra/join-a-network/)의 Join Testnet 또는 Join Mainnet 가이드를 참조하세요.
+
+**구문**
+
+```bash
+injectived collect-gentxs
+```
+
+### `debug`
+
+애플리케이션 디버깅을 돕습니다. 구문 및 하위 명령 목록을 보려면 `--help` 또는 `-h` 플래그와 함께 `debug` 명령을 실행하세요:
+
+```bash
+injectived debug -h
+```
+
+**하위 명령**:
+
+```bash
+injectived debug [subcommand]
+```
+
+* **`addr`**: hex와 bech32 간 주소 변환
+* **`pubkey`**: proto JSON에서 pubkey 디코딩
+* **`raw-bytes`**: raw bytes 출력 (예: \[72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100])을 hex로 변환
+
+### `export`
+
+상태를 JSON으로 내보냅니다.
+
+**구문**
+
+```bash
+injectived export
+```
+
+### `gentx`
+
+`genesis.json`에 제네시스 트랜잭션을 추가합니다. `genesis.json`에 대한 자세한 정보는 Join Testnet 또는 Join Mainnet 가이드를 참조하세요.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**참고:** `gentx` 명령에는 많은 플래그가 있습니다. 모든 플래그를 보려면 `--help` 또는 `-h`와 함께 `gentx` 명령을 실행하세요.
+</Callout>
+
+**구문**
+
+```bash
+injectived gentx <key-name> <amount><coin-denominator>
+```
+
+**예제**
+
+```bash
+injectived gentx myKey 100000000000inj --home=/path/to/home/dir --keyring-backend=os --chain-id=injective-1 \
+    --moniker="myValidator" \
+    --commission-max-change-rate=0.01 \
+    --commission-max-rate=1.0 \
+    --commission-rate=0.07 \
+    --details="..." \
+    --security-contact="..." \
+    --website="..."
+```
+
+### `help`
+
+사용 가능한 명령의 개요를 표시합니다.
+
+**구문**
+
+```bash
+injectived help
+```
+
+### `init`
+
+노드의 구성 파일을 초기화합니다.
+
+**구문**
+
+```bash
+injectived init <moniker>
+```
+
+**예제**
+
+```bash
+injectived init myNode
+```
+
+### `keys`
+
+Keyring 명령을 관리합니다. 이 키들은 Tendermint 암호화 라이브러리에서 지원하는 모든 형식일 수 있으며, light-clients, full nodes 또는 개인 키로 서명이 필요한 모든 애플리케이션에서 사용할 수 있습니다.
+
+구문 및 하위 명령 목록을 보려면 `--help` 또는 `-h` 플래그와 함께 `keys` 명령을 실행하세요:
+
+```bash
+injectived keys -h
+```
+
+**하위 명령**:
+
+```bash
+injectived keys [subcommand]
+```
+
+* **`add`**: 암호화된 개인 키 추가 (새로 생성하거나 복구), 암호화 후 제공된 파일 이름으로 저장
+* **`delete`**: 지정된 키 삭제
+* **`export`**: 개인 키 내보내기
+* **`import`**: 로컬 keybase로 개인 키 가져오기
+* **`list`**: 모든 키 나열
+* **`migrate`**: 레거시 (db 기반) Keybase에서 키 마이그레이션
+* **`mnemonic`**: 일부 입력 엔트로피에 대한 bip39 니모닉 계산
+* **`parse`**: hex에서 bech32로 또는 그 반대로 주소 파싱
+* **`show`**: 이름 또는 주소로 키 정보 검색
+* **`unsafe-export-eth-key`**: Ethereum 개인 키를 일반 텍스트로 내보내기
+* **`unsafe-import-eth-key`**: Ethereum 개인 키를 로컬 keybase로 가져오기
+
+\
+`migrate`
+
+소스 genesis를 대상 버전으로 마이그레이션하고 STDOUT으로 출력합니다. `genesis.json`에 대한 자세한 정보는 Join Testnet 또는 Join Mainnet 가이드를 참조하세요.
+
+**구문**
+
+```bash
+injectived migrate <target version> <path-to-genesis-file>
+```
+
+**예제**
+
+```bash
+injectived migrate v1.9.0 /path/to/genesis.json --chain-id=injective-888 --genesis-time=2023-03-07T17:00:00Z 
+```
+
+### `query`
+
+쿼리를 관리합니다. 구문 및 하위 명령 목록을 보려면 `--help` 또는 `-h` 플래그와 함께 `query` 하위 명령을 실행하세요:
+
+```bash
+injectived query -h
+```
+
+**하위 명령**:
+
+```bash
+injectived query [subcommand]
+```
+
+* **`account`**: 주소로 계정 쿼리
+* **`auction`**: `auction` 모듈 쿼리 명령
+* **`auth`**: `auth` 모듈 쿼리 명령
+* **`authz`**: `authz` 모듈 쿼리 명령
+* **`bank`**: `bank` 모듈 쿼리 명령
+* **`block`**: 지정된 높이의 블록에 대한 검증된 데이터 가져오기
+* **`chainlink`**: `oracle` 모듈 쿼리 명령
+* **`distribution`**: `distribution` 모듈 쿼리 명령
+* **`evidence`**: 해시 또는 모든 (페이지네이션된) 제출된 증거에 대한 쿼리
+* **`exchange`**: `exchange` 모듈 쿼리 명령
+* **`feegrant`**: `feegrant` 모듈 쿼리 명령
+* **`gov`**: `governance` 모듈 쿼리 명령
+* **`ibc`**: `ibc` 모듈 쿼리 명령
+* **`ibc-fee`**: IBC 릴레이어 인센티브화 쿼리 하위 명령
+* **`ibc-transfer`**: IBC 대체 가능 토큰 전송 쿼리 하위 명령
+* **`insurance`**: `insurance` 모듈 쿼리 명령
+* **`interchain-accounts`**: Interchain accounts 하위 명령
+* **`mint`**: minting 모듈 쿼리 명령
+* **`oracle`**: `oracle` 모듈 쿼리 명령
+* **`params`**: `params` 모듈 쿼리 명령
+* **`peggy`**: `peggy` 모듈 쿼리 명령
+* **`slashing`**: `slashing` 모듈 쿼리 명령
+* **`staking`**: `staking` 모듈 쿼리 명령
+* **`tendermint-validator-set`**: 지정된 높이에서 전체 Tendermint 검증자 세트 가져오기
+* **`tokenfactory`**: `tokenfactory` 모듈 쿼리 명령
+* **`tx`**: 커밋된 블록에서 해시, 계정 시퀀스 또는 쉼표로 구분된 서명 조합으로 트랜잭션 쿼리
+* **`txs`**: 이벤트 세트와 일치하는 페이지네이션된 트랜잭션 쿼리
+* **`upgrade`**: `upgrade` 모듈 쿼리 명령
+* **`wasm`**: `wasm` 모듈 쿼리 명령
+* **`xwasm`**: `wasmx` 모듈 쿼리 명령
+
+### `rollback`
+
+상태 롤백은 잘못된 애플리케이션 상태 전환에서 복구하기 위해 수행되며, Tendermint가 잘못된 app hash를 유지하여 진행할 수 없을 때 사용됩니다. 롤백은 높이 _n_의 상태를 높이 _n - 1_의 상태로 덮어씁니다. 애플리케이션도 높이 _n - 1_로 롤백됩니다. 블록은 제거되지 않으므로 Tendermint를 다시 시작하면 블록 _n_의 트랜잭션이 애플리케이션에 대해 다시 실행됩니다.
+
+**구문**
+
+```bash
+injectived rollback
+```
+
+### `rosetta`
+
+Rosetta 서버를 생성합니다.
+
+**구문**
+
+```bash
+injectived rosetta [flags]
+```
+
+### `start`
+
+Tendermint와 함께 또는 프로세스 외부에서 full node 애플리케이션을 실행합니다. 기본적으로 애플리케이션은 Tendermint와 함께 프로세스 내에서 실행됩니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`start` 명령에는 많은 플래그가 있습니다. 모든 플래그를 보려면 `--help` 또는 `-h`와 함께 `start` 명령을 실행하세요.
+</Callout>
+
+**구문**
+
+```bash
+injectived start [flags]
+```
+
+### `status`
+
+원격 노드의 상태를 표시합니다. 노드 endpoint를 지정하려면 `--node` 또는 `-n` 플래그를 사용하세요.
+
+**구문**
+
+```bash
+injectived status
+```
+
+### `tendermint`
+
+Tendermint 프로토콜을 관리합니다. 구문 및 하위 명령 목록을 보려면 `--help` 또는 `-h` 플래그와 함께 `query` 하위 명령을 실행하세요:
+
+```bash
+injectived tendermint -h
+```
+
+**하위 명령**:
+
+```bash
+injectived tendermint [subcommand]
+```
+
+* **`reset-state`**: 모든 데이터와 WAL 제거
+* **`show-address`**: 이 노드의 Tendermint 검증자 합의 주소 표시
+* **`show-node-id`**: 이 노드의 ID 표시
+* **`show-validator`**: 이 노드의 Tendermint 검증자 정보 표시
+* **`unsafe-reset-all`**: 모든 데이터와 WAL 제거, 이 노드의 검증자를 제네시스 상태로 재설정
+* **`version`** Tendermint 라이브러리 버전 표시
+
+### `testnet`
+
+지정된 수의 디렉토리로 테스트넷을 생성하고 각 디렉토리를 필요한 파일로 채웁니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`testnet` 명령에는 많은 플래그가 있습니다. 모든 플래그를 보려면 `--help` 또는 `-h`와 함께 `testnet` 명령을 실행하세요.
+</Callout>
+
+**구문**
+
+```bash
+injectived testnet [flags]
+```
+
+**예제**
+
+```bash
+injectived testnet --v 4 --keyring-backend test --output-dir ./output --ip-addresses 192.168.10.2
+```
+
+### `tx`
+
+트랜잭션의 생성, 서명 및 브로드캐스트를 관리합니다. 예제는 injectived 사용하기를 참조하세요.
+
+구문 및 사용 가능한 하위 명령에 대한 자세한 정보를 보려면 `--help` 또는 `-h` 플래그와 함께 `tx` 명령을 실행하세요:
+
+```bash
+injectived tx -h
+```
+
+**하위 명령**:
+
+```bash
+injectived tx [subcommand]
+```
+
+* **`auction`**: Auction 트랜잭션 하위 명령
+* **`authz`**: Authorization 트랜잭션 하위 명령
+* **`bank`**: Bank 트랜잭션 하위 명령
+* **`broadcast`**: 오프라인으로 생성된 트랜잭션 브로드캐스트
+* **`chainlink`**: Off-Chain Reporting (OCR) 하위 명령
+* **`crisis`**: Crisis 트랜잭션 하위 명령
+* **`decode`**: 바이너리로 인코딩된 트랜잭션 문자열 디코딩
+* **`distribution`**: Distribution 트랜잭션 하위 명령
+* **`encode`**: 오프라인으로 생성된 트랜잭션 인코딩
+* **`evidence`**: Evidence 트랜잭션 하위 명령
+* **`exchange`**: Exchange 트랜잭션 하위 명령
+* **`feegrant`**: Feegrant 트랜잭션 하위 명령
+* **`gov`**: Governance 트랜잭션 하위 명령
+* **`ibc`**: IBC 트랜잭션 하위 명령
+* **`ibc-fee`**: IBC 릴레이어 인센티브화 트랜잭션 하위 명령
+* **`ibc-transfer`**: IBC 대체 가능 토큰 전송 트랜잭션 하위 명령
+* **`insurance`**: Insurance 트랜잭션 하위 명령
+* **`multisign`**: 오프라인으로 생성된 트랜잭션에 대한 멀티시그 서명 생성
+* **`oracle`**: Oracle 트랜잭션 하위 명령
+* **`peggy`**: Peggy 트랜잭션 하위 명령
+* **`sign`**: 오프라인으로 생성된 트랜잭션 서명
+* **`sign-batch`**: 트랜잭션 배치 파일 서명
+* **`slashing`**: Slashing 트랜잭션 하위 명령
+* **`staking`**: Staking 트랜잭션 하위 명령
+* **`tokenfactory`**: Tokenfactory 트랜잭션 하위 명령
+* **`validate-signatures`**: 트랜잭션 서명 검증
+* **`vesting`**: Vesting 트랜잭션 하위 명령
+* **`wasm`**: Wasm 트랜잭션 하위 명령
+* **`xwasm`**: Wasmx 트랜잭션 하위 명령
+
+### `validate-genesis`
+
+기본 위치 또는 지정된 위치의 genesis 파일을 검증합니다. genesis 파일에 대한 자세한 정보는 Join Testnet 또는 Join Mainnet 가이드를 참조하세요.
+
+**구문**
+
+```bash
+injectived validate-genesis </path-to-file>
+```
+
+### `version`
+
+실행 중인 Injective 버전을 반환합니다.
+
+**구문**
+
+```bash
+injectived version
+```
