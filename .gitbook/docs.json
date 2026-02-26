@@ -1116,6 +1116,30 @@
                   "redirects/https_testnet_blockscout_injective_network_blocks"
                 ]
               },
+              {
+                "group": "인프라",
+                "icon": "network-wired",
+                "expanded": false,
+                "pages": [
+                  "ko/infra/index",
+                  {
+                    "group": "노드와 상호작용",
+                    "expanded": false,
+                    "pages": [
+                      "ko/infra/interact-node/index",
+                      "ko/infra/interact-node/command-line",
+                      "ko/infra/interact-node/grpc",
+                      "ko/infra/interact-node/go",
+                      "ko/infra/interact-node/rest"
+                    ]
+                  },
+                  "ko/infra/run-node",
+                  "ko/infra/set-up-keyring",
+                  "ko/infra/join-a-network",
+                  "ko/infra/cosmovisor",
+                  "ko/infra/upgrade-node"
+                ]
+              },
               "ko/faq",
               "ko/glossary",
               "ko/references"
