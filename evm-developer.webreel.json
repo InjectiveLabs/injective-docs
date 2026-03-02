@@ -1,28 +1,30 @@
 {
-  // JSON Schema for IDE autocompletion (VS Code, Cursor, JetBrains).
-  // Full docs: https://webreel.dev/configuration
   "$schema": "https://webreel.dev/schema/v1.json",
-
-  // Output directory for recorded videos (relative to this file).
-  "outDir": "./videos",
-
-  // Default delay (ms) after each step. Override per-step with "delay".
-  "defaultDelay": 500,
-
+  "outDir": "./webreels",
+  "defaultDelay": 100,
   "videos": {
     "evm-developer": {
-      "url": "https://example.com",
+      "url": "https://docs.injective.network/",
       "viewport": { "width": 1920, "height": 1080 },
-
-      // Optional: wait for an element before starting.
-      // "waitFor": "[data-ready]",
-
-      // Steps are executed in order. Each step is an action.
-      // Use "pause" for explicit waits; use "delay" on any step for post-step waits.
+      "waitFor": "#navigation-items",
       "steps": [
         { "action": "pause", "ms": 500 },
-        { "action": "click", "text": "Get Started" },
-        { "action": "key", "key": "mod+a", "delay": 1000 }
+        { "action": "hover", "text": "About Injective", "within": "#navigation-items" },
+        { "action": "click", "text": "About Injective", "within": "#navigation-items" },
+        { "action": "hover", "text": "EVM Developers", "within": "#navigation-items" },
+        { "action": "click", "text": "EVM Developers", "within": "#navigation-items" },
+        { "action": "hover", "text": "EVM Network Information", "within": "#navigation-items" },
+        { "action": "click", "text": "EVM Network Information", "within": "#navigation-items" },
+        { "action": "hover", "text": "Injective EVM Mainnet", "within": "#content" },
+        { "action": "click", "text": "Injective EVM Mainnet", "within": "#content" },
+        { "action": "scroll", "y": 200, "delay": 100 },
+        { "action": "scroll", "y": 100 },
+        { "action": "scroll", "y": -300 },
+        { "action": "hover", "text": "Injective EVM Testnet", "within": "#content" },
+        { "action": "click", "text": "Injective EVM Testnet", "within": "#content" },
+        { "action": "scroll", "y": 200, "delay": 100 },
+        { "action": "scroll", "y": 100 },
+        { "action": "scroll", "y": -300, "delay": 600 }
       ]
     }
   }
