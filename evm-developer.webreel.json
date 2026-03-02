@@ -1,0 +1,29 @@
+{
+  // JSON Schema for IDE autocompletion (VS Code, Cursor, JetBrains).
+  // Full docs: https://webreel.dev/configuration
+  "$schema": "https://webreel.dev/schema/v1.json",
+
+  // Output directory for recorded videos (relative to this file).
+  "outDir": "./videos",
+
+  // Default delay (ms) after each step. Override per-step with "delay".
+  "defaultDelay": 500,
+
+  "videos": {
+    "evm-developer": {
+      "url": "https://example.com",
+      "viewport": { "width": 1920, "height": 1080 },
+
+      // Optional: wait for an element before starting.
+      // "waitFor": "[data-ready]",
+
+      // Steps are executed in order. Each step is an action.
+      // Use "pause" for explicit waits; use "delay" on any step for post-step waits.
+      "steps": [
+        { "action": "pause", "ms": 500 },
+        { "action": "click", "text": "Get Started" },
+        { "action": "key", "key": "mod+a", "delay": 1000 }
+      ]
+    }
+  }
+}
