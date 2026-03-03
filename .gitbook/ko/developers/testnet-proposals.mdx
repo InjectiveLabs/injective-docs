@@ -1,0 +1,25 @@
+---
+title: 테스트넷 제안
+---
+
+`테스트넷`에서 제안을 제출하고 싶다고 가정해 보겠습니다. 제안에 대한 투표 기간이 짧기 때문에 제안이 바로 투표 단계로 들어가지 않도록 제안의 예치금을 낮추는 것이 좋습니다. 기본적으로 `min_deposit` 값보다 약간 낮아야 합니다.
+
+제안을 제출한 후에는 팀에 연락해야 합니다:
+
+1. [Injective Discord 서버](https://discord.gg/injective)에 가입하여 관련 채널을 찾으세요.
+2. [Injective 개발자 Telegram 채널](https://t.me/+8Y_0HOFLhnRlZDU9)에 가입하세요.
+
+다음은 `GrantProviderPrivilegeProposal`의 예시입니다
+
+```bash
+injectived tx oracle grant-provider-privilege-proposal YOUR_PROVIDER \
+  YOUR_ADDRESS_HERE \
+  --title="제안 제목" \
+  --description="PROVIDER를 오라클 제공자로 등록" \
+  --chain-id=injective-888 \
+  --from=local_key \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas-prices=160000000inj \
+  --gas=20000000 \
+  --deposit="40000000000000000000inj" <-- 이 금액을 사용하세요
+```

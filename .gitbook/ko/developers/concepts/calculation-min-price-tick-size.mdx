@@ -1,0 +1,49 @@
+---
+title: 마켓 최소 가격 틱 사이즈 계산
+---
+
+# 마켓 최소 가격 틱 사이즈
+
+주문 가격에 대한 최소 마켓 가격 틱 사이즈 - 마켓의 minPriceTickSize가 `0.001`이고 `0.0011` 가격으로 주문을 제출하면 거부됩니다.
+
+현물 및 호가 마켓 가격 틱 사이즈를 계산하는 공식은 다릅니다.
+
+### 현물 마켓
+
+1.  UI 사람이 읽을 수 있는 형식에서 체인 형식으로:
+    18 base decimals와 6 quote decimals를 가진 INJ/USDT 마켓을 예로 사용하면, 체인 형식으로 값을 변환하는 방법은 다음과 같습니다:
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+
+const value = toChainFormat(value, quoteDecimals - baseDecimals).toFixed();
+```
+
+2. 체인 형식에서 UI 사람이 읽을 수 있는 형식으로:
+   18 base decimals와 6 quote decimals를 가진 INJ/USDT 마켓을 예로 사용하면, UI 사람이 읽을 수 있는 형식으로 값을 변환하는 방법은 다음과 같습니다:
+
+```ts
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const value = toHumanReadable(value, quoteDecimals - baseDecimals).toFixed();
+```
+
+### 파생상품 마켓
+
+1.  UI 사람이 읽을 수 있는 형식에서 체인 형식으로:
+    6 quote decimals를 가진 INJ/USDT perp 마켓을 예로 사용하면, 체인 형식으로 값을 변환하는 방법은 다음과 같습니다:
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+
+const value = toChainFormat(value, -quoteDecimals).toFixed();
+```
+
+2. 체인 형식에서 UI 사람이 읽을 수 있는 형식으로:
+   6 quote decimals를 가진 INJ/USDT perp 마켓을 예로 사용하면, UI 사람이 읽을 수 있는 형식으로 값을 변환하는 방법은 다음과 같습니다:
+
+```ts
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const value = toHumanReadable(value, quoteDecimals).toFixed();
+```

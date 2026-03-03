@@ -1118,26 +1118,98 @@
                   "ko/defi/community-buyback",
                   "ko/defi/transactions",
                   "ko/defi/transaction-fees",
-                  {
-                    "group": "Open Liquidity Program",
-                    "pages": [
-                      "ko/defi/open-liquidity-program/introduction",
-                      "ko/defi/open-liquidity-program/epochs",
-                      "ko/defi/open-liquidity-program/eligibility",
-                      "ko/defi/open-liquidity-program/scoring",
-                      "ko/defi/open-liquidity-program/formula-parameters",
-                      "ko/defi/open-liquidity-program/reward-allocations",
-                      "ko/defi/open-liquidity-program/flexible-reward-allocations",
-                      "ko/defi/open-liquidity-program/reward-disbursements",
-                      "ko/defi/open-liquidity-program/performance-tracking",
-                      "ko/defi/open-liquidity-program/volatility-response-modifications",
-                      "ko/defi/open-liquidity-program/fee-tiers"
-                    ]
-                  }
+              {
+                "group": "Open Liquidity Program",
+                "pages": [
+                  "ko/defi/open-liquidity-program/introduction",
+                  "ko/defi/open-liquidity-program/epochs",
+                  "ko/defi/open-liquidity-program/eligibility",
+                  "ko/defi/open-liquidity-program/scoring",
+                  "ko/defi/open-liquidity-program/formula-parameters",
+                  "ko/defi/open-liquidity-program/reward-allocations",
+                  "ko/defi/open-liquidity-program/flexible-reward-allocations",
+                  "ko/defi/open-liquidity-program/reward-disbursements",
+                  "ko/defi/open-liquidity-program/performance-tracking",
+                  "ko/defi/open-liquidity-program/volatility-response-modifications",
+                  "ko/defi/open-liquidity-program/fee-tiers"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "개발자",
+            "icon": "laptop-code",
+            "expanded": false,
+            "pages": [
+              "ko/developers/index",
+              "ko/developers/convert-addresses",
+              "ko/developers/network-information",
+              {
+                "group": "AI 개발",
+                "pages": [
+                  "ko/developers/ai/mcp"
                 ]
               },
               {
-                "group": "EVM 개발자",
+                "group": "injectived",
+                "pages": [
+                  "ko/developers/injectived/index",
+                  "ko/developers/injectived/install",
+                  "ko/developers/injectived/use",
+                  "ko/developers/injectived/advanced",
+                  "ko/developers/testnet-proposals"
+                ]
+              },
+              {
+                "group": "개념",
+                "pages": [
+                  "ko/developers/concepts/index",
+                  "ko/developers/concepts/sentry-node",
+                  "ko/developers/concepts/indexer-api",
+                  "ko/developers/concepts/trading-account",
+                  "ko/developers/concepts/grpc-protobuf",
+                  "ko/developers/concepts/token-factory",
+                  "ko/developers/concepts/calculation-min-price-tick-size",
+                  "ko/developers/concepts/calculation-min-quantity-tick-size",
+                  "ko/developers/concepts/cosmjs-support",
+                  "ko/developers/concepts/networks"
+                ]
+              },
+              {
+                "group": "자산",
+                "pages": [
+                  "ko/developers/assets/index",
+                  "ko/developers/assets/denom",
+                  "ko/developers/assets/token-metadata",
+                  "ko/developers/assets/injective-list",
+                  "ko/developers/assets/token-create"
+                ]
+              },
+              {
+                "group": "dApp",
+                "pages": [
+                  "ko/developers/dapps/index",
+                  "ko/developers/dapps/configure-nuxt",
+                  "ko/developers/dapps/configure-react",
+                  "ko/developers/dapps/run-examples",
+                  "ko/developers/dapps/example-smart-contract",
+                  "ko/developers/dapps/example-dex",
+                  "ko/developers/dapps/example-webpack"
+                ]
+              },
+              "redirects/https_testnet_faucet_injective_network",
+              "redirects/https_sentry_lcd_injective_network_swagger",
+              "redirects/https_docs_ts_injective_network",
+              "redirects/https_github_com_InjectiveLabs_sdk_go",
+              "redirects/https_github_com_InjectiveLabs_sdk_python",
+              "redirects/https_github_com_InjectiveLabs_cw_injective",
+              "redirects/https_github_com_InjectiveLabs_injective_rust",
+              "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
+              "redirects/https_api_injective_exchange"
+            ]
+          },
+          {
+            "group": "EVM 개발자",
                 "icon": "rectangle-code",
                 "expanded": false,
                 "pages": [
