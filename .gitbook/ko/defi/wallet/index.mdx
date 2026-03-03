@@ -1,0 +1,47 @@
+---
+title: 지갑
+---
+
+Injective 지갑을 사용하면 Injective에서 자산을 모니터링할 수 있습니다. 자산은 Injective의 네이티브 토큰뿐만 아니라 Ethereum, Solana, Polygon 및 다양한 IBC 지원 체인에서 브릿지된 자산일 수 있습니다. [Injective Hub 스테이킹 가이드](https://injective.com/blog/injective-hub/)를 참조하세요.
+
+Injective에서 지원되는 다양한 지갑이 있습니다. 사용자는 Ethereum 또는 Cosmos 네이티브 지갑을 사용하여 Injective에서 트랜잭션을 제출할 수 있습니다.
+
+### 개요
+
+Injective의 `Account` 타입은 Ethereum의 ECDSA secp256k1 곡선을 키에 사용합니다. 간단히 말해, Injective의 계정은 Ethereum 계정과 네이티브(호환)되어 MetaMask와 같은 Ethereum 네이티브 지갑이 Injective와 상호작용할 수 있습니다. Keplr 및 Leap과 같은 인기 있는 Cosmos 지갑도 Injective와 통합되어 있습니다.
+
+#### Ethereum 기반 지갑
+
+위에서 설명한 것처럼 Ethereum 기반 지갑을 사용하여 Injective와 상호작용할 수 있습니다. 현재 가장 인기 있는 Ethereum 기반 지갑이 Injective에서 지원됩니다. 여기에는 다음이 포함됩니다:
+
+1. [MetaMask](https://metamask.io/)
+2. [Ledger](https://www.ledger.com/)
+3. [Trezor](https://trezor.io/)
+4. [Torus](https://tor.us/index.html)
+
+Ethereum 네이티브 지갑을 사용하여 Injective에서 트랜잭션에 서명하는 과정은 다음과 같습니다:
+
+1. 트랜잭션을 EIP712 TypedData로 변환,
+2. Ethereum 네이티브 지갑을 사용하여 EIP712 TypedData에 서명,
+3. 트랜잭션을 네이티브 Cosmos 트랜잭션으로 패키징(서명 포함)하고 체인에 브로드캐스트.
+
+이 과정은 최종 사용자에게 추상화되어 있습니다. 이전에 Ethereum 네이티브 지갑을 사용해 본 적이 있다면 사용자 경험은 동일합니다.
+
+#### Cosmos 기반 지갑
+
+Injective는 Cosmos 및 IBC와 호환되는 주요 지갑을 지원합니다:
+
+1. [Cosmostation](https://cosmostation.io/)
+2. [Keplr](https://www.keplr.app/)
+3. [Leap](https://www.leapwallet.io/)
+
+#### Injective 네이티브 지갑
+
+현재 [Ninji Wallet](https://ninji.xyz/)이 유일한 Injective 네이티브 지갑입니다. 이러한 지갑은 더 넓은 Injective 생태계와 특별히 시너지를 내도록 구축되었습니다.
+
+#### CEX 기반 지갑
+
+중앙화 거래소(CEX)에서 개발한 여러 지갑도 이제 Injective를 지원합니다. 이러한 CEX의 활성 사용자라면 해당 지갑을 사용하면 더 원활한 web3 경험을 제공받을 수 있습니다. 현재 Injective를 지원하는 CEX 기반 지갑은 다음과 같습니다:
+
+1. [Bitget Wallet](https://web3.bitget.com/en/)
+2. [OKX Wallet](https://www.okx.com/web3)

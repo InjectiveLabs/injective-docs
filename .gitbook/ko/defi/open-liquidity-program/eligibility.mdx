@@ -1,0 +1,42 @@
+---
+description: "OLP 보상 자격 획득 및 유지 방법"
+title: "자격 요건"
+---
+
+## 클린 슬레이트 자격
+
+Injective 주소는 다음 기준을 충족하면 OLP 자격을 얻을 수 있습니다:
+
+- **주소는 자격 프로세스 시작 전에 Trade & Earn (T&E) 프로그램에서 옵트아웃해야 합니다**. 주소는 자격 프로세스 동안 T&E 보상을 받지 않습니다. 프로그래밍 방식으로 옵트아웃하는 예시는 [Python](https://github.com/InjectiveLabs/sdk-python/blob/master/examples/chain_client/24_MsgRewardsOptOut.py), [Go](https://github.com/InjectiveLabs/sdk-go/blob/master/examples/chain/24_MsgRegisterAsDMM/example.go), [TS](https://github.com/InjectiveLabs/injective-ts/wiki/04CoreModulesExchange#msgrewardsoptout)를 참조하세요.
+  - 참고: 자격 프로세스에 대한 자격은 옵트아웃이 완료된 다음 날 00:00 UTC에 시작됩니다. 주소가 T&E에서 성공적으로 옵트아웃되었는지 확인하려면 [이 목록을 교차 참조](https://lcd.injective.network/injective/exchange/v1beta1/opted_out_of_rewards_accounts)할 수 있습니다.
+- 주소의 메이커 거래량은 동일한 epoch에서 **3일 연속으로** [**적격 시장**](./eligible-markets/)의 **일일 총 거래소 메이커 거래량의 최소 0.25%를 차지해야 합니다**. 자기 거래는 엄격히 금지됩니다.
+
+이 두 가지 요구 사항이 모두 충족되면 주소는 4일째 00:00 UTC에 OLP 보상 자격을 얻습니다. 자격을 얻으면 특별한 상황(예: 시스템 남용, 워시 트레이딩 등)이 주소 제거를 강제하지 않는 한 주소는 epoch의 나머지 기간 동안 보상 자격을 유지합니다. 자격 이전의 활동은 보상에 포함되지 않습니다.
+
+<Info>
+  메이커 거래량을 늘리기 위해 거래 전략을 단일 주소로 통합하는 것이 현명할 수 있습니다. 그렇지 않으면 필요한 임계값보다 메이커 거래량이 적은 주소는 여러 주소 간 총 거래량이 임계값을 초과하더라도 보상 자격을 얻지 못합니다.
+
+  거래 [수수료 할인](https://helixapp.com/fee-discounts)을 유지하면서 단일 주소에서 여러 전략을 실행하는 방법에 대한 [`Injective authz 모듈에 대한 문서`](https://docs.injective.network/develop/modules/Core/authz/)를 참조하세요.
+</Info>
+
+## 다음 Epoch 자격 유지/사전 자격
+
+현재 epoch에 자격을 얻은 후 다음 epoch에 자동으로 자격을 얻으려면 **주소는 자격 획득일부터 epoch 마지막 날까지** [적격 시장](./eligible-markets/)(KAVA 보상 시장 제외)의 **총 거래소 메이커 거래량의 최소 0.25%를 차지해야 합니다**.
+
+- 예: 주소 `inj1a`가 OLP 보상 자격이 없는 상태로 epoch 21에 진입합니다. `inj1a`는 epoch 21의 1, 2, 3일에 각각 [적격 시장](./eligible-markets/)의 일일 총 거래소 메이커 거래량의 1%, 0.1%, 0.2%를 차지합니다. 4, 5, 6일에 `inj1a`는 각각 해당 거래량의 0.5%를 차지합니다. `inj1a`는 epoch 7일째에 자격을 얻습니다. epoch 22의 자격을 유지하려면 `inj1a`는 epoch 21의 7일부터 28일까지 누적 해당 메이커 거래량의 최소 0.25%를 차지해야 합니다. 이 기간(7일부터 28일까지) 동안 [적격 시장](./eligible-markets/)의 누적 메이커 거래량이 $100M이었다면, `inj1a`는 동일한 기간 내에 해당 시장에서 $250,000의 누적 메이커 거래량을 차지해야 합니다.
+
+이전 epoch의 사전 자격을 통해 전체 epoch 동안 자격이 있었던 경우, 해당 주소는 전체 epoch에서 [적격 시장](./eligible-markets/)의 메이커 거래량의 최소 0.25%를 차지해야 합니다.
+
+- 예: 주소 `inj1a`가 epoch 21의 자격 유지로부터 사전 자격을 얻어 epoch 22에 진입합니다. epoch 22에서 [적격 시장](./eligible-markets.md)의 누적 메이커 거래량이 총 $200M이라고 가정합니다. 그러면 `inj1a`는 epoch 23의 자동 자격을 유지하기 위해 epoch 22가 끝날 때까지 [적격 시장](./eligible-markets.md)의 \$200M 중 최소 $500,000을 기여해야 합니다.
+
+## 자격 박탈
+
+**epoch에서 해당 메이커 거래량의 최소 0.25%를 차지하지 못한 주소는 다음 epoch 시작 시 OLP에서 자격이 박탈됩니다**. 주소가 프로그램에 다시 참여하려면 [클린 슬레이트 자격 프로세스](./eligibility/#clean-slate-qualification)를 다시 거쳐야 합니다(단, T&E에서 다시 옵트아웃할 필요는 없음). 주소가 자격이 없는 날에 기여한 유동성은 주소가 재자격을 얻으면 소급하여 보상되지 않습니다.
+
+<Info>
+  자격 박탈은 각 epoch 종료 시 발생하며, 이는 다음 epoch 자격에 관계없이 주소가 epoch 내에서 계속 보상을 누적한다는 것을 의미합니다.
+</Info>
+
+## 자격 추적
+
+[OLP 대시보드](https://trading.injective.network/program/liquidity/eligibility)를 사용하세요.
