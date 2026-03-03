@@ -1,0 +1,88 @@
+---
+title: Go를 사용하여 프로그래밍 방식으로 노드와 상호작용
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+다음 예제는 Go로 작성되었지만, Python 및 TS SDK를 사용하여 프로그래밍 방식으로 노드/Injective와 상호작용할 수도 있습니다.
+
+* [TypeScript 예제](/developers-native/examples/)
+* [Python 예제](https://github.com/InjectiveLabs/sdk-python/tree/master/examples)
+</Callout>
+
+다음 스니펫은 Go 프로그램 내에서 gRPC를 사용하여 상태를 쿼리하는 방법을 보여줍니다. 아이디어는 gRPC 연결을 만들고 Protobuf로 생성된 클라이언트 코드를 사용하여 gRPC 서버를 쿼리하는 것입니다.
+
+```go
+import (
+    "context"
+    "fmt"
+
+	"google.golang.org/grpc"
+
+    sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+)
+
+func queryState() error {
+    myAddress, err := sdk.AccAddressFromBech32("inj...")
+    if err != nil {
+        return err
+    }
+
+    // gRPC 서버에 연결을 생성합니다.
+    grpcConn := grpc.Dial(
+        "127.0.0.1:9090", // gRPC 서버 주소.
+        grpc.WithInsecure(), // SDK는 전송 보안 메커니즘을 지원하지 않습니다.
+    )
+    defer grpcConn.Close()
+
+    // x/bank 서비스를 쿼리하기 위한 gRPC 클라이언트를 생성합니다.
+    bankClient := banktypes.NewQueryClient(grpcConn)
+    bankRes, err := bankClient.Balance(
+        context.Background(),
+        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: "inj"},
+    )
+    if err != nil {
+        return err
+    }
+
+    fmt.Println(bankRes.GetBalance()) // 계정 잔액을 출력합니다
+
+    return nil
+}
+```
+
+#### **Go를 사용한 과거 블록 쿼리**
+
+과거 블록을 쿼리하려면 gRPC 요청에 블록 높이 메타데이터를 추가합니다.
+
+```go
+import (
+    "context"
+    "fmt"
+
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/metadata"
+
+    grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+)
+
+func queryState() error {
+    // --snip--
+
+    var header metadata.MD
+    bankRes, err = bankClient.Balance(
+        metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "12"), // 요청에 메타데이터 추가
+        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: denom},
+        grpc.Header(&header), // 응답에서 헤더 검색
+    )
+    if err != nil {
+        return err
+    }
+    blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
+
+    fmt.Println(blockHeight) // 블록 높이를 출력합니다 (12)
+
+    return nil
+}
+```

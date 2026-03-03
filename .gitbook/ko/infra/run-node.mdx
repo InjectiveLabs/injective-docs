@@ -1,0 +1,56 @@
+---
+title: 노드 실행하기
+---
+
+퍼블릭 네트워크에 참여하기 전에 로컬 프라이빗 네트워크를 먼저 설정하는 것이 좋습니다. 이렇게 하면 설정 프로세스에 익숙해지고 테스트를 위한 환경을 제공받을 수 있습니다.
+
+### **프라이빗 네트워크**
+
+* 로컬에서 독립형 네트워크를 설정하여 참여
+
+### **퍼블릭 네트워크**
+
+* 퍼블릭 엔드포인트를 통해 네트워크 사용; 또는
+* 노드를 실행하여 참여
+
+누구나 Injective 블록체인과 통신하기 위한 엔드포인트가 있는 자체 노드를 설정할 수 있습니다. 편의를 위해 체인을 쿼리하는 데 사용할 수 있는 일부 퍼블릭 엔드포인트도 있습니다. 이러한 엔드포인트는 개발 및 테스트 목적으로 권장됩니다. 최대한의 제어와 신뢰성을 위해서는 자체 노드를 실행하는 것이 좋습니다.
+
+## 노드 실행을 위한 준비
+
+노드를 실행하기로 선택한 경우(프라이빗 네트워크 설정 또는 퍼블릭 네트워크 참여), keyring을 설정해야 합니다. 또한 최소한의 다운타임으로 체인 업그레이드를 지원하는 Cosmovisor를 설치할 수도 있습니다.
+
+## 노드와 상호작용
+
+노드가 실행되면 gRPC 엔드포인트, REST 엔드포인트 또는 `injectived` CLI를 사용하여 노드와 상호작용하는 여러 가지 방법이 있습니다. [노드와 상호작용](/ko/infra/interact-node/) 섹션에서 자세히 알아볼 수 있습니다.
+
+## 노드 실행 가이드
+
+<Columns cols={3}>
+  <Card
+    title="Keyring 설정"
+    href="/ko/infra/set-up-keyring/"
+    arrow="true"
+    cta="여기를 클릭"
+    icon="panel-left-close"
+    img="/img/user-hero.png">
+    keyring 설정 방법 알아보기
+  </Card>
+  <Card
+    title="네트워크 참여"
+    href="/ko/infra/join-a-network/"
+    arrow="true"
+    cta="여기를 클릭"
+    icon="panel-left-close"
+    img="/img/bridge-hero.png">
+    네트워크 참여 방법 알아보기
+  </Card>
+  <Card
+    title="노드 업그레이드"
+    href="/ko/infra/upgrade-node/"
+    arrow="true"
+    cta="여기를 클릭"
+    icon="panel-left-close"
+    img="/img/validator-hero.png">
+    노드 업그레이드 방법 알아보기
+  </Card>
+</Columns>
