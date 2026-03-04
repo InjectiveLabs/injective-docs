@@ -1,0 +1,31 @@
+{
+  "$schema": "https://webreel.dev/schema/v1.json",
+  "outDir": "./webreels",
+  "defaultDelay": 100,
+  "videos": {
+    "evm-developer": {
+      "url": "https://docs.injective.network/",
+      "viewport": { "width": 1920, "height": 1080 },
+      "waitFor": "#navigation-items",
+      "steps": [
+        { "action": "pause", "ms": 500 },
+        { "action": "hover", "text": "About Injective", "within": "#navigation-items" },
+        { "action": "click", "text": "About Injective", "within": "#navigation-items" },
+        { "action": "hover", "text": "EVM Developers", "within": "#navigation-items" },
+        { "action": "click", "text": "EVM Developers", "within": "#navigation-items" },
+        { "action": "hover", "text": "EVM Network Information", "within": "#navigation-items" },
+        { "action": "click", "text": "EVM Network Information", "within": "#navigation-items" },
+        { "action": "hover", "text": "Injective EVM Mainnet", "within": "#content" },
+        { "action": "click", "text": "Injective EVM Mainnet", "within": "#content" },
+        { "action": "scroll", "y": 200, "delay": 100 },
+        { "action": "scroll", "y": 100 },
+        { "action": "scroll", "y": -300 },
+        { "action": "hover", "text": "Injective EVM Testnet", "within": "#content" },
+        { "action": "click", "text": "Injective EVM Testnet", "within": "#content" },
+        { "action": "scroll", "y": 200, "delay": 100 },
+        { "action": "scroll", "y": 100 },
+        { "action": "scroll", "y": -300, "delay": 600 }
+      ]
+    }
+  }
+}

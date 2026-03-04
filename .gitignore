@@ -9,6 +9,11 @@
 .docusaurus
 .cache-loader
 
+# Webreels
+/.webreel
+/webreels/*.mp4
+/webreels/*.webm
+
 # Misc
 .env
 .DS_Store
