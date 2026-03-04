@@ -169,7 +169,7 @@
             "group": "AI Developers",
             "pages": [
               "developers-ai/index",
-              "developers-ai/mcp"
+              "developers-ai/documentation-mcp"
             ]
           },
           {
@@ -1227,7 +1227,7 @@
     },
     {
       "source": "/developers/ai/mcp",
-      "destination": "/developers-ai/mcp"
+      "destination": "/developers-ai/documentation-mcp"
     },
     {
       "source": "/defi/community-burn",
