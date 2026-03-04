@@ -108,12 +108,6 @@
               "developers/convert-addresses",
               "developers/network-information",
               {
-                "group": "AI development",
-                "pages": [
-                  "developers/ai/mcp"
-                ]
-              },
-              {
                 "group": "injectived",
                 "pages": [
                   "developers/injectived/index",
@@ -169,6 +163,13 @@
               "redirects/https_github_com_InjectiveLabs_injective_rust",
               "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
               "redirects/https_api_injective_exchange"
+            ]
+          },
+          {
+            "group": "AI Developers",
+            "pages": [
+              "developers-ai/index",
+              "developers-ai/mcp"
             ]
           },
           {
@@ -1220,6 +1221,14 @@
     "eyebrows": "breadcrumbs"
   },
   "redirects": [
+    {
+      "source": "/developers/ai/",
+      "destination": "/developers-ai/"
+    },
+    {
+      "source": "/developers/ai/mcp",
+      "destination": "/developers-ai/mcp"
+    },
     {
       "source": "/defi/community-burn",
       "destination": "/defi/community-buyback"
