@@ -1,0 +1,121 @@
+---
+title: 계정
+---
+
+이 섹션에서는 Injective의 내장 계정 시스템에 대해 설명합니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+이 문서는 Injective의 내장 계정 시스템에 대해 설명합니다.
+
+사전 필수 읽기:
+
+* [Cosmos SDK Accounts](https://docs.cosmos.network/main/basics/accounts)
+* [Ethereum Accounts](https://ethereum.org/en/whitepaper/#ethereum-accounts)
+</Callout>
+
+Injective는 키에 Ethereum의 ECDSA secp256k1 곡선을 사용하는 커스텀 `Account` 타입을 정의합니다. 이는 전체 [BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) 경로에 대한 [EIP84](https://github.com/ethereum/EIPs/issues/84)를 충족합니다. Injective 기반 계정의 루트 HD 경로는 `m/44'/60'/0'/0`입니다.
+
+### 주소와 공개 키
+
+Injective에서 기본적으로 사용 가능한 3가지 주요 `Addresses`/`PubKeys` 타입이 있습니다:
+
+* **계정**용 주소와 키 - 사용자를 식별합니다(즉, `message`의 발신자). **`eth_secp256k1`** 곡선을 사용하여 파생됩니다.
+* **검증인 운영자**용 주소와 키 - 검증인의 운영자를 식별합니다. **`eth_secp256k1`** 곡선을 사용하여 파생됩니다.
+* **합의 노드**용 주소와 키 - 합의에 참여하는 검증인 노드를 식별합니다. **`ed25519`** 곡선을 사용하여 파생됩니다.
+
+|                    | Address bech32 Prefix | Pubkey bech32 Prefix | Curve           | Address byte length | Pubkey byte length |
+| ------------------ | --------------------- | -------------------- | --------------- | ------------------- | ------------------ |
+| Accounts           | `inj`                 | `injpub`             | `eth_secp256k1` | `20`                | `33` (compressed)  |
+| Validator Operator | `injvaloper`          | `injvaloperpub`      | `eth_secp256k1` | `20`                | `33` (compressed)  |
+| Consensus Nodes    | `injvalcons`          | `injvalconspub`      | `ed25519`       | `20`                | `32`               |
+
+### 클라이언트용 주소 형식
+
+`EthAccount`는 Ethereum의 Web3 도구 호환성을 위해 [Bech32](https://en.bitcoin.it/wiki/Bech32) 및 hex 형식 모두로 표현할 수 있습니다.
+
+Bech32 형식은 CLI 및 REST 클라이언트를 통한 Cosmos-SDK 쿼리 및 트랜잭션의 기본 형식입니다. hex 형식은 Cosmos `sdk.AccAddress`의 Ethereum `common.Address` 표현입니다.
+
+* Address (Bech32): `inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku`
+* Address ([EIP55](https://eips.ethereum.org/EIPS/eip-55) Hex): `0xAF79152AC5dF276D9A8e1E2E22822f9713474902`
+* Compressed Public Key: `{"@type":"/injective.crypto.v1beta1.ethsecp256k1.PubKey","key":"ApNNebT58zlZxO2yjHiRTJ7a7ufjIzeq5HhLrbmtg9Y/"}`
+
+Cosmos CLI 또는 REST 클라이언트를 사용하여 계정 주소를 쿼리할 수 있습니다:
+
+```bash
+# NOTE: --output (-o) 플래그는 JSON 또는 YAML(text)로 출력 형식을 정의합니다
+injectived q auth account $(injectived keys show <MYKEY> -a) -o text
+|
+  '@type': /injective.types.v1beta1.EthAccount
+  base_account:
+    account_number: "3"
+    address: inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku
+    pub_key: null
+    sequence: "0"
+  code_hash: xdJGAYb3IzySfn2y3McDwOUAtlPKgic7e/rYBF2FpHA=
+```
+
+```bash
+# GET /cosmos/auth/v1beta1/accounts/{address}
+curl -X GET "http://localhost:10337/cosmos/auth/v1beta1/accounts/inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku" -H "accept: application/json"
+```
+
+계정 API에 대한 전체 문서는 [Swagger API](https://lcd.injective.network/swagger/) 레퍼런스를 참조하세요.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Cosmos SDK Keyring 출력(즉, `injectived keys`)은 Bech32 형식의 주소만 지원합니다.
+</Callout>
+
+### 개인 키/니모닉에서 Injective 계정 파생
+
+다음은 개인 키 및/또는 니모닉 구문에서 Injective 계정을 파생하는 방법의 예입니다:
+
+```js
+import { Wallet } from 'ethers'
+import { Address as EthereumUtilsAddress } from 'ethereumjs-util'
+
+const mnemonic = "indoor dish desk flag debris potato excuse depart ticket judge file exit"
+const privateKey = "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890"
+const defaultDerivationPath = "m/44'/60'/0'/0/0"
+const defaultBech32Prefix = 'inj'
+const isPrivateKey: boolean = true /* 예시용 */
+
+const wallet = isPrivateKey ? Wallet.fromMnemonic(mnemonic, defaultDerivationPath) : new Wallet(privateKey)
+const ethereumAddress = wallet.address
+const addressBuffer = EthereumUtilsAddress.fromString(ethereumAddress.toString()).toBuffer()
+const injectiveAddress = bech32.encode(defaultBech32Prefix, bech32.toWords(addressBuffer))
+```
+
+다음은 개인 키에서 공개 키를 파생하는 방법의 예입니다:
+
+```js
+import secp256k1 from 'secp256k1'
+
+const privateKey = "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890"
+const privateKeyHex = Buffer.from(privateKey.toString(), 'hex')
+const publicKeyByte = secp256k1.publicKeyCreate(privateKeyHex)
+
+const buf1 = Buffer.from([10])
+const buf2 = Buffer.from([publicKeyByte.length])
+const buf3 = Buffer.from(publicKeyByte)
+
+const publicKey = Buffer.concat([buf1, buf2, buf3]).toString('base64')
+const type = '/injective.crypto.v1beta1.ethsecp256k1.PubKey'
+```
+
+## 서브계정
+
+Injective 서브계정을 사용하면 단일 메인 지갑 주소로 여러 개의 격리된 거래 계정을 관리할 수 있습니다. 이는 파워 유저, 특히 전문 트레이더와 마켓 메이커에게 유용합니다.
+
+<Tip>
+서브계정에 대한 기술적 구현 세부 사항은 [Trading Account](/developers/concepts/trading-account) 개발자 문서를 참조하세요.
+</Tip>
+
+### 주요 기능 및 설명
+
+- **프로그래매틱 액세스**: 이 기능은 Injective의 네이티브 API를 통한 프로그래매틱 거래에 높은 접근성을 제공하도록 설계되었으며, 금융 애플리케이션 개발자를 대상으로 합니다.
+- **고급 계정 관리**: 서브계정 기능은 정교한 계정 관리 기능을 제공하여 사용자(예: 기관 또는 알고리즘 트레이더)가 단일 기본 Injective 주소 내에서 자금과 거래 전략을 분리할 수 있게 합니다.
+- **격리 및 구성**: 한 서브계정 내의 자금과 주문은 다른 서브계정과 격리되어 있어 리스크 관리, 다른 거래 봇 실행 또는 간섭 없이 여러 전략을 동시에 적용하는 데 중요합니다.
+- **원활한 이체**: 사용자는 Injective 네트워크의 특정 메시지를 사용하여 메인 계정 잔액과 다양한 서브계정 간, 그리고 서로 다른 서브계정 간에 자산을 쉽게 이체할 수 있습니다.
+- **exchange 모듈과의 통합**: 서브계정 기능은 현물, 무기한, 선물 및 옵션 시장을 위한 온체인 오더북과 매칭 엔진을 포함하는 Injective의 핵심 exchange 모듈의 일부입니다.
+
+서브계정은 단일 사용자 계정이 제어하는 별도의 연결된 "포트폴리오"처럼 작동합니다. 이는 Injective의 DeFi 생태계 참여자에게 유연성과 운영 제어를 제공합니다.

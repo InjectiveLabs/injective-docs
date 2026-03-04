@@ -1,0 +1,376 @@
+---
+title: 네트워크 참여
+---
+
+이 가이드는 로컬에서 독립형 네트워크를 설정하고 메인넷 또는 테스트넷에서 노드를 실행하는 과정을 안내합니다.
+
+각 네트워크의 하드웨어 요구 사항도 해당 탭에서 확인할 수 있습니다.
+
+<Tabs>
+<Tab title="로컬 네트워크">
+로컬 노드를 쉽게 설정하려면 `setup.sh` 스크립트를 다운로드하고 실행하세요. 이렇게 하면 로컬 Injective 네트워크가 초기화됩니다.
+
+```bash
+wget https://raw.githubusercontent.com/InjectiveLabs/injective-chain-releases/master/scripts/setup.sh
+chmod +x ./setup.sh # 스크립트를 실행 가능하게 만들기
+./setup.sh
+```
+
+다음을 실행하여 노드를 시작합니다:
+
+```bash
+injectived start # 이 명령을 실행하면 블록이 들어오기 시작합니다
+```
+
+스크립트가 수행하는 작업에 대한 자세한 설명과 설정 프로세스에 대한 더 세밀한 제어를 원하면 아래를 계속 읽으세요.
+
+#### 체인 초기화
+
+Injective 노드를 실행하기 전에 체인과 노드의 제네시스 파일을 초기화해야 합니다:
+
+```bash
+# <moniker> 인수는 노드의 사용자 지정 사용자 이름입니다. 사람이 읽을 수 있어야 합니다.
+injectived init <moniker> --chain-id=injective-1
+```
+
+위의 명령은 노드를 실행하는 데 필요한 모든 구성 파일과 네트워크의 초기 상태를 정의하는 기본 제네시스 파일을 생성합니다. 이러한 모든 구성 파일은 기본적으로 `~/.injectived`에 있지만 `--home` 플래그를 전달하여 이 폴더의 위치를 덮어쓸 수 있습니다. `~/.injectived` 이외의 다른 디렉터리를 사용하기로 선택한 경우 `injectived` 명령을 실행할 때마다 `--home` 플래그로 위치를 지정해야 합니다. 이미 제네시스 파일이 있는 경우 `--overwrite` 또는 `-o` 플래그로 덮어쓸 수 있습니다.
+
+`~/.injectived` 폴더의 구조는 다음과 같습니다:
+
+```bash
+.                                   # ~/.injectived
+  |- data                           # 노드에서 사용하는 데이터베이스를 포함합니다.
+  |- config/
+      |- app.toml                   # 애플리케이션 관련 구성 파일.
+      |- config.toml                # Tendermint 관련 구성 파일.
+      |- genesis.json               # 제네시스 파일.
+      |- node_key.json              # p2p 프로토콜에서 노드 인증에 사용할 개인 키.
+      |- priv_validator_key.json    # 합의 프로토콜에서 검증자로 사용할 개인 키.
+```
+
+#### `genesis.json` 파일 수정
+
+이 시점에서 `genesis.json` 파일을 수정해야 합니다:
+
+* staking `bond_denom`, crisis `denom`, gov `denom`, mint `denom` 값을 `"inj"`로 변경합니다. 이것이 Injective의 네이티브 토큰이기 때문입니다.
+
+다음 명령을 실행하여 쉽게 수행할 수 있습니다:
+
+```bash
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+위의 명령은 기본 `.injectived` 디렉터리를 사용하는 경우에만 작동합니다. 특정 디렉터리의 경우 위의 명령을 수정하거나 `genesis.json` 파일을 수동으로 편집하여 변경 사항을 반영하세요.
+</Callout>
+
+#### 검증자 계정용 키 생성
+
+체인을 시작하기 전에 최소 하나의 계정으로 상태를 채워야 합니다. 이를 위해 먼저 `test` keyring 백엔드 아래에 `my_validator`라는 새 계정을 keyring에 생성합니다(다른 이름과 다른 백엔드를 자유롭게 선택하세요):
+
+```bash
+injectived keys add my_validator --keyring-backend=test
+
+# 생성된 주소를 나중에 사용하기 위해 변수에 저장합니다.
+MY_VALIDATOR_ADDRESS=$(injectived keys show my_validator -a --keyring-backend=test)
+```
+
+이제 로컬 계정을 생성했으므로 체인의 제네시스 파일에서 `inj` 토큰을 부여합니다. 이렇게 하면 체인이 제네시스부터 이 계정의 존재를 인식하게 됩니다:
+
+```bash
+injectived add-genesis-account $MY_VALIDATOR_ADDRESS 100000000000000000000000000inj --chain-id=injective-1
+```
+
+`$MY_VALIDATOR_ADDRESS`는 keyring의 `my_validator` 키 주소를 보유하는 변수입니다. Injective의 토큰은 `{amount}{denom}` 형식입니다: `amount`는 18자리 정밀도의 소수이고 `denom`은 명명 키(예: `inj`)가 있는 고유한 토큰 식별자입니다. 여기서는 `injectived`에서 스테이킹에 사용되는 토큰 식별자인 `inj` 토큰을 부여합니다.
+
+#### 체인에 검증자 추가
+
+이제 계정에 토큰이 있으므로 체인에 검증자를 추가해야 합니다. 검증자는 체인에 새 블록을 추가하기 위해 합의 과정에 참여하는 특수 풀 노드입니다. 모든 계정이 검증자 운영자가 되겠다는 의사를 선언할 수 있지만, 충분한 위임을 받은 계정만 활성 세트에 들어갈 수 있습니다. 이 가이드에서는 위의 `init` 명령을 통해 생성된 로컬 노드를 체인의 검증자로 추가합니다. 검증자는 `gentx`라는 제네시스 파일에 포함된 특수 트랜잭션을 통해 체인이 처음 시작되기 전에 선언할 수 있습니다:
+
+```bash
+# gentx를 생성합니다.
+injectived genesis gentx my_validator 1000000000000000000000inj --chain-id=injective-1 --keyring-backend=test
+
+# 제네시스 파일에 gentx를 추가합니다.
+injectived genesis collect-gentxs
+```
+
+`gentx`는 세 가지 작업을 수행합니다:
+
+1. 생성한 `validator` 계정을 검증자 운영자 계정(즉, 검증자를 제어하는 계정)으로 등록합니다.
+2. 제공된 `amount`의 스테이킹 토큰을 셀프 위임합니다.
+3. 운영자 계정을 블록 서명에 사용될 Tendermint 노드 pubkey와 연결합니다. `--pubkey` 플래그가 제공되지 않으면 위의 `injectived init` 명령을 통해 생성된 로컬 노드 pubkey가 기본값으로 사용됩니다.
+
+`gentx`에 대한 자세한 정보는 다음 명령을 사용하세요:
+
+```bash
+injectived genesis gentx --help
+```
+
+#### `app.toml` 및 `config.toml`을 사용하여 노드 구성
+
+`~/.injectived/config` 내에 두 개의 구성 파일이 자동으로 생성됩니다:
+
+* `config.toml`: Tendermint를 구성하는 데 사용됩니다([Tendermint 문서](https://docs.tendermint.com/v0.34/tendermint-core/configuration.html)에서 자세히 알아보기).
+* `app.toml`: Cosmos SDK(Injective가 구축된 기반)에서 생성되며 상태 정리 전략, 텔레메트리, gRPC 및 REST 서버 구성, 상태 동기화 등의 구성에 사용됩니다.
+
+두 파일 모두 자세한 주석이 있습니다. 노드를 조정하려면 직접 참조하세요.
+
+조정할 예시 구성 중 하나는 `app.toml` 내의 `minimum-gas-prices` 필드입니다. 이 필드는 검증자 노드가 트랜잭션 처리를 위해 기꺼이 수락하는 최소 가스 가격을 정의합니다. 비어 있으면 필드를 `10inj`와 같은 값으로 편집해야 합니다. 그렇지 않으면 노드가 시작 시 중단됩니다. 이 튜토리얼에서는 최소 가스 가격을 0으로 설정합니다:
+
+```toml
+ # 검증자가 트랜잭션 처리를 위해 기꺼이 수락하는 최소 가스 가격입니다.
+ # 트랜잭션 수수료는 이 구성에 지정된 모든 명명의
+ # 최소값을 충족해야 합니다 (예: 0.25token1;0.0001token2).
+ minimum-gas-prices = "0inj"
+```
+
+#### 로컬넷 실행
+
+이제 모든 것이 설정되었으므로 마침내 노드를 시작할 수 있습니다:
+
+```bash
+injectived start # 이 명령을 실행하면 블록이 들어오기 시작합니다
+```
+
+이 명령을 사용하면 단일 노드를 실행할 수 있으며, 이것만으로도 노드를 통해 체인과 상호작용하기에 충분하지만 여러 노드를 동시에 실행하여 노드 간의 합의가 어떻게 이루어지는지 확인할 수도 있습니다.
+</Tab>
+
+<Tab title="테스트넷 네트워크">
+#### 하드웨어 사양
+
+노드 운영자는 최적의 성능을 달성하기 위해 베어메탈 서버를 배포해야 합니다. 또한 검증자 노드는 높은 가동 시간을 보장하기 위해 권장 하드웨어 사양, 특히 CPU 요구 사항을 충족해야 합니다.
+
+|       _최소_       |    _권장_   |
+| :-------------------: | :-------------------: |
+|    RAM 메모리 128GB   |    RAM 메모리 128GB   |
+|      CPU 12 코어     |      CPU 16 코어     |
+| CPU 기본 클럭 3.7GHz | CPU 기본 클럭 4.2GHz |
+|    스토리지 2TB NVMe   |    스토리지 2TB NVMe   |
+|     네트워크 1Gbps+    |     네트워크 1Gbps+    |
+
+#### `injectived` 및 `peggo` 설치
+
+가장 최근 릴리스는 [Injective 릴리스 저장소](https://github.com/InjectiveLabs/testnet/releases)를 참조하세요. 검증자가 아닌 노드 운영자는 `peggo`를 설치할 필요가 없습니다.
+
+```bash
+wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv peggo /usr/bin
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib 
+```
+
+#### 새 Injective 체인 노드 초기화
+
+Injective 노드를 실행하기 전에 체인과 노드의 제네시스 파일을 초기화해야 합니다:
+
+```bash
+# <moniker> 인수는 노드의 사용자 지정 사용자 이름입니다. 사람이 읽을 수 있어야 합니다.
+export MONIKER=<moniker>
+# Injective 테스트넷의 chain-id는 "injective-888"입니다
+injectived init $MONIKER --chain-id injective-888
+```
+
+`init` 명령을 실행하면 `~/.injectived`에 `injectived` 기본 구성 파일이 생성됩니다.
+
+#### 테스트넷 참여를 위한 구성 준비
+
+이제 기본 구성을 테스트넷의 제네시스 파일과 애플리케이션 구성 파일로 업데이트하고, 시드 노드로 영구 피어를 구성해야 합니다.
+
+```bash
+git clone https://github.com/InjectiveLabs/testnet.git
+
+# 제네시스 파일을 config 디렉터리에 복사
+aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
+mv genesis.json ~/.injectived/config/
+
+# config 파일을 config 디렉터리에 복사
+cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
+cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
+```
+
+제네시스 체크섬도 확인할 수 있습니다 - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+```
+
+#### `injectived`용 `systemd` 서비스 구성
+
+`/etc/systemd/system/injectived.service`에서 구성을 편집합니다:
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+systemd 서비스 시작 및 재시작
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# 시스템 부팅 시 시작 활성화
+sudo systemctl enable injectived
+
+# 로그 확인
+journalctl -u injectived -f
+```
+
+#### 네트워크와 동기화
+
+스냅샷을 다운로드하고 네트워크와 동기화하려면 [Polkachu Injective 테스트넷 노드 스냅샷](https://polkachu.com/testnets/injective/snapshots)을 참조하세요.
+
+**지원**
+
+추가 질문이 있으시면 [Discord](https://discord.gg/injective), [Telegram](https://t.me/joininjective) 또는 [이메일](mailto:contact@injectivelabs.org)을 통해 Injective 팀에 문의하세요.
+</Tab>
+
+<Tab title="메인넷 네트워크">
+#### 하드웨어 사양
+
+노드 운영자는 최적의 성능을 달성하기 위해 베어메탈 서버를 배포해야 합니다. 또한 검증자 노드는 높은 가동 시간을 보장하기 위해 권장 하드웨어 사양, 특히 CPU 요구 사항을 충족해야 합니다.
+
+|       _최소_       |    _권장_   |
+| :-------------------: | :-------------------: |
+|    RAM 메모리 128GB   |    RAM 메모리 128GB   |
+|      CPU 12 코어     |      CPU 16 코어     |
+| CPU 기본 클럭 3.7GHz | CPU 기본 클럭 4.2GHz |
+|    스토리지 2TB NVMe   |    스토리지 2TB NVMe   |
+|     네트워크 1Gbps+    |     네트워크 1Gbps+    |
+
+#### `injectived` 및 `peggo` 설치
+
+가장 최근 릴리스는 [Injective 체인 릴리스 저장소](https://github.com/InjectiveLabs/injective-chain-releases/releases/)를 참조하세요. 검증자가 아닌 노드 운영자는 `peggo`를 설치할 필요가 없습니다.
+
+```bash
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv peggo /usr/bin
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib 
+```
+
+#### 새 Injective 노드 초기화
+
+Injective 노드를 실행하기 전에 체인과 노드의 제네시스 파일을 초기화해야 합니다:
+
+```bash
+# <moniker> 인수는 노드의 사용자 지정 사용자 이름입니다. 사람이 읽을 수 있어야 합니다.
+export MONIKER=<moniker>
+# Injective 메인넷의 chain-id는 "injective-1"입니다
+injectived init $MONIKER --chain-id injective-1
+```
+
+`init` 명령을 실행하면 `~/.injectived`에 `injectived` 기본 구성 파일이 생성됩니다.
+
+#### 메인넷 참여를 위한 구성 준비
+
+이제 기본 구성을 메인넷의 제네시스 파일과 애플리케이션 구성 파일로 업데이트하고, 시드 노드로 영구 피어를 구성해야 합니다.
+
+```bash
+git clone https://github.com/InjectiveLabs/mainnet-config
+
+# 제네시스 파일을 config 디렉터리에 복사
+cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
+
+# config 파일을 config 디렉터리에 복사
+cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
+```
+
+제네시스 체크섬도 확인할 수 있습니다 - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+```
+
+그런 다음 `~/.injectived/config/config.toml`의 `seeds` 필드를 `mainnet-config/10001/seeds.txt`의 내용으로 업데이트하고 `timeout_commit`을 `300ms`로 업데이트합니다.
+
+```bash
+cat mainnet-config/10001/seeds.txt
+nano ~/.injectived/config/config.toml
+```
+
+#### `injectived`용 `systemd` 서비스 구성
+
+`/etc/systemd/system/injectived.service`에서 구성을 편집합니다:
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+systemd 서비스 시작 및 재시작:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# 시스템 부팅 시 시작 활성화
+sudo systemctl enable injectived
+
+# 로그 확인
+journalctl -u injectived -f
+```
+
+스냅샷 데이터가 올바른 디렉터리에 로드되기 전에 서비스를 중지하고 이후에 시작해야 합니다.
+
+```bash
+# 노드 중지
+sudo systemctl stop injectived
+
+# 노드 시작
+sudo systemctl start injectived
+```
+
+#### 네트워크와 동기화
+
+**옵션 1. State-Sync**
+
+_곧 추가 예정_
+
+**옵션 2. 스냅샷**
+
+**정리됨**
+
+1. [Polkachu](https://polkachu.com/tendermint_snapshots/injective).
+2. [HighStakes](https://tools.highstakes.ch/files/injective.tar.gz).
+3. [Imperator](https://www.imperator.co/services/chain-services/mainnets/injective).
+4. [Bware Labs](https://bwarelabs.com/snapshots).
+5. [AutoStake](https://autostake.com/networks/injective/#validator).
+
+Injective `mainnet-config seeds.txt` 목록이 작동하지 않는 경우(노드가 블록 동기화에 실패), ChainLayer, Polkachu 및 Autostake는 피어 목록(`config.toml`의 `persistent_peers` 필드에 사용 가능) 또는 주소록(더 빠른 피어 검색용)을 유지 관리합니다.
+
+**지원**
+
+추가 질문이 있으시면 [Discord](https://discord.gg/injective), [Telegram](https://t.me/joininjective) 또는 [이메일](mailto:contact@injectivelabs.org)을 통해 Injective 팀에 문의하세요.
+</Tab>
+</Tabs>

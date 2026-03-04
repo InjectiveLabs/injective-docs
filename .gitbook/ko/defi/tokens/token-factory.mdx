@@ -1,0 +1,11 @@
+---
+title: Token Factory
+---
+
+TokenFactory 토큰은 Cosmos SDK의 bank 모듈에 기본적으로 통합된 토큰입니다. 이름은 `factory/{creatorAddress}/{subdenom}` 형식을 취합니다. 토큰이 생성자 주소로 네임스페이스되기 때문에 이름 충돌을 해결할 필요가 없어 무허가 토큰 발행이 가능합니다.
+
+이 통합은 스마트 컨트랙트를 직접 쿼리해야 하는 CW20 표준과 달리 모든 자산의 총 공급량을 추적하고 쿼리하는 것을 지원합니다. 이러한 이유로 TokenFactory 표준 사용이 권장됩니다. 예를 들어 Helix나 Mito와 같은 제품은 bank 토큰만 사용하는 Injective exchange 모듈에 구축되어 있습니다. TokenFactory 토큰은 injectived CLI를 통해서뿐만 아니라 스마트 컨트랙트를 통해서도 생성할 수 있습니다. Wormhole을 통해 Injective로 브릿지된 토큰도 TokenFactory 토큰입니다.
+
+Injective에서 토큰을 만드는 방법에 대해 자세히 알아보려면 [토큰 런칭](../../developers-defi/token-launch/)을 참조하세요.
+
+TokenFactory 표준에 대해 자세히 알아보려면 [token factory 모듈](../../developers-native/injective/tokenfactory/)을 참조하세요.

@@ -1,0 +1,96 @@
+---
+title: Keyring 설정
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+이 문서는 Injective 노드의 keyring과 다양한 백엔드를 구성하고 사용하는 방법을 설명합니다. keyring을 설정하기 전에 `injectived`가 설치되어 있어야 합니다. 자세한 내용은 [`injectived` 설치 페이지](../developers/injectived/install/)를 참조하세요.
+</Callout>
+
+keyring은 노드와 상호작용하는 데 사용되는 개인/공개 키 쌍을 보관합니다. 예를 들어, Injective 노드를 실행하기 전에 블록에 올바르게 서명할 수 있도록 검증자 키를 설정해야 합니다. 개인 키는 파일 또는 운영 체제의 자체 키 저장소와 같은 "백엔드"라는 다양한 위치에 저장할 수 있습니다.
+
+### 사용 가능한 keyring 백엔드
+
+#### `os` 백엔드
+
+`os` 백엔드는 키 저장을 안전하게 처리하기 위해 운영 체제별 기본값을 사용합니다. 일반적으로 운영 체제의 자격 증명 하위 시스템은 사용자의 암호 정책에 따라 암호 프롬프트, 개인 키 저장 및 사용자 세션을 처리합니다. 가장 인기 있는 운영 체제와 해당 암호 관리자 목록은 다음과 같습니다:
+
+* macOS (Mac OS 8.6 이후): [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
+* Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
+* GNU/Linux:
+  * [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
+  * [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)
+
+GNOME을 기본 데스크톱 환경으로 사용하는 GNU/Linux 배포판은 일반적으로 [Seahorse](https://wiki.gnome.org/Apps/Seahorse)가 함께 제공됩니다. KDE 기반 배포판 사용자에게는 일반적으로 [KDE Wallet Manager](https://userbase.kde.org/KDE_Wallet_Manager)가 제공됩니다. 전자는 실제로 `libsecret`의 편리한 프론트엔드이고, 후자는 `kwallet` 클라이언트입니다.
+
+`os`는 운영 체제의 기본 자격 증명 관리자가 사용자의 가장 일반적인 요구를 충족하고 보안을 손상시키지 않으면서 편안한 경험을 제공하도록 설계되었기 때문에 기본 옵션입니다.
+
+헤드리스 환경에서 권장되는 백엔드는 `file` 및 `pass`입니다.
+
+#### `file` 백엔드
+
+`file`은 앱의 구성 디렉터리 내에 암호화된 keyring을 저장합니다. 이 keyring은 액세스할 때마다 암호를 요청하며, 단일 명령에서 여러 번 발생할 수 있어 반복적인 암호 프롬프트가 나타날 수 있습니다. bash 스크립트를 사용하여 `file` 옵션으로 명령을 실행하는 경우 여러 프롬프트에 대해 다음 형식을 사용할 수 있습니다:
+
+```bash
+# KEYPASSWD가 환경에 설정되어 있다고 가정
+yes $KEYPASSWD | injectived keys add me
+yes $KEYPASSWD | injectived keys show me
+# keyring-backend 플래그로 injectived 시작
+injectived --keyring-backend=file start
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+빈 keyring에 처음 키를 추가할 때 암호를 두 번 입력하라는 메시지가 표시됩니다.
+</Callout>
+
+#### `pass` 백엔드
+
+`pass` 백엔드는 [pass](https://www.passwordstore.org/) 유틸리티를 사용하여 키의 민감한 데이터와 메타데이터의 디스크 암호화를 관리합니다. 키는 앱별 디렉터리 내의 `gpg` 암호화된 파일에 저장됩니다. `pass`는 가장 인기 있는 UNIX 운영 체제와 GNU/Linux 배포판에서 사용할 수 있습니다. 다운로드 및 설치 방법에 대한 정보는 매뉴얼 페이지를 참조하세요.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`pass`는 암호화를 위해 [GnuPG](https://gnupg.org/)를 사용합니다. `gpg`는 실행 시 GnuPG 자격 증명 캐싱을 처리하는 `gpg-agent` 데몬을 자동으로 호출합니다. 자격 증명 TTL 및 암호 만료와 같은 캐시 매개변수 구성 방법에 대한 자세한 내용은 `gpg-agent` 매뉴얼 페이지를 참조하세요.
+</Callout>
+
+암호 저장소는 처음 사용하기 전에 설정해야 합니다:
+
+```sh
+pass init <GPG_KEY_ID>
+```
+
+`<GPG_KEY_ID>`를 GPG 키 ID로 바꾸세요. 개인 GPG 키 또는 암호 저장소를 암호화하는 데 특별히 사용하려는 대체 키를 사용할 수 있습니다.
+
+#### `kwallet` 백엔드
+
+`kwallet` 백엔드는 KDE를 기본 데스크톱 환경으로 제공하는 GNU/Linux 배포판에 기본적으로 설치되는 `KDE Wallet Manager`를 사용합니다. 자세한 내용은 [KWallet 핸드북](https://docs.kde.org/stable/en/kdeutils/kwallet/index.html)을 참조하세요.
+
+#### `test` 백엔드
+
+`test` 백엔드는 `file` 백엔드의 암호 없는 변형입니다. 키는 디스크에 암호화되지 않은 상태로 저장됩니다.
+
+**테스트 목적으로만 제공됩니다. `test` 백엔드는 프로덕션 환경에서 사용하지 않는 것이 좋습니다**.
+
+#### `memory` 백엔드
+
+`memory` 백엔드는 키를 메모리에 저장합니다. 프로그램이 종료되면 키는 즉시 삭제됩니다.
+
+**테스트 목적으로만 제공됩니다. `memory` 백엔드는 프로덕션 환경에서 사용하지 않는 것이 좋습니다**.
+
+### keyring에 키 추가
+
+`injectived keys`를 사용하여 keys 명령에 대한 도움말을 볼 수 있고, `injectived keys [command] --help`를 사용하여 특정 하위 명령에 대한 자세한 정보를 얻을 수 있습니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`injectived completion` 명령으로 자동 완성을 활성화할 수도 있습니다. 예를 들어, bash 세션 시작 시 `. <(injectived completion)`을 실행하면 모든 `injectived` 하위 명령이 자동 완성됩니다.
+</Callout>
+
+keyring에 새 키를 만들려면 `<key_name>` 인수와 함께 `add` 하위 명령을 실행합니다. 이 튜토리얼에서는 `test` 백엔드만 사용하고 새 키를 `my_validator`라고 부릅니다. 이 키는 다음 섹션에서 사용됩니다.
+
+```bash
+$ injectived keys add my_validator --keyring-backend test
+
+# 생성된 주소를 나중에 사용하기 위해 변수에 저장합니다.
+MY_VALIDATOR_ADDRESS=$(injectived keys show my_validator -a --keyring-backend test)
+```
+
+이 명령은 새로운 24단어 니모닉 구문을 생성하고 관련 백엔드에 저장한 다음 키 쌍에 대한 정보를 출력합니다. 이 키 쌍을 가치 있는 토큰을 보관하는 데 사용할 경우 니모닉 구문을 안전한 곳에 기록해 두세요!
+
+기본적으로 keyring은 `eth_secp256k1` 키 쌍을 생성합니다. keyring은 `--algo ed25519` 플래그를 전달하여 생성할 수 있는 `ed25519` 키도 지원합니다. keyring은 물론 두 가지 유형의 키를 동시에 보관할 수 있습니다.
