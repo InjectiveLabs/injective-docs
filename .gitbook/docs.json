@@ -1205,7 +1205,9 @@
                   "ko/infra/set-up-keyring",
                   "ko/infra/join-a-network",
                   "ko/infra/cosmovisor",
-                  "ko/infra/upgrade-node"
+                  "ko/infra/upgrade-node",
+                  "redirects/https_injective_notion_site_indexer_service_setup_guide",
+                  "redirects/https_api_injective_network_swagger"
                 ]
               },
               "ko/faq",
