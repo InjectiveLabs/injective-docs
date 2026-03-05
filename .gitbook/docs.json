@@ -167,6 +167,8 @@
           },
           {
             "group": "AI Developers",
+            "icon": "brain",
+            "expanded": false,
             "pages": [
               "developers-ai/index",
               "developers-ai/documentation-mcp"
