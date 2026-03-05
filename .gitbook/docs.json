@@ -1205,7 +1205,27 @@
                   "ko/infra/set-up-keyring",
                   "ko/infra/join-a-network",
                   "ko/infra/cosmovisor",
-                  "ko/infra/upgrade-node"
+                  "ko/infra/upgrade-node",
+                  {
+                    "group": "메인넷 검증자",
+                    "pages": [
+                      "ko/infra/validator-mainnet/index",
+                      "ko/infra/validator-mainnet/peggo",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade"
+                    ]
+                  },
+                  {
+                    "group": "테스트넷 검증자",
+                    "pages": [
+                      "ko/infra/validator-testnet/index",
+                      "ko/infra/validator-testnet/peggo"
+                    ]
+                  },
+                  "ko/infra/public-endpoints",
+                  "ko/infra/premium-endpoints",
+                  "ko/infra/archival-setup",
+                  "redirects/https_injective_notion_site_indexer_service_setup_guide",
+                  "redirects/https_api_injective_network_swagger"
                 ]
               },
               "ko/faq",
