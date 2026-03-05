@@ -1,0 +1,41 @@
+---
+title: 최소 가격 틱 크기
+---
+
+## 최소 시장 가격 틱 크기
+
+최소 시장 가격 틱 크기는 주문 가격이 증가하거나 감소할 수 있는 최소 단위를 지정합니다. 예를 들어, 시장의 최소 가격 틱 크기가 **0.001**인 경우, **0.0011** 가격으로 제출된 주문은 허용된 증분과 일치하지 않으므로 거부됩니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**참고:** 가격 틱 크기 계산 공식은 현물 시장과 파생상품 시장 간에 다릅니다.
+</Callout>
+
+### 현물 시장
+
+#### 사람이 읽을 수 있는 형식에서 체인 형식으로 변환
+
+**18 기본 소수점**과 **6 견적 소수점**을 가진 INJ/USDT 시장을 예로 들면, 체인 형식으로의 변환은 다음과 같습니다:
+
+$$\text{chainFormat} = \text{value} \times 10^{(\text{quoteDecimals} - \text{baseDecimals})}$$
+
+#### 체인 형식에서 사람이 읽을 수 있는 형식으로 변환
+
+사람이 읽을 수 있는 형식으로 다시 변환하려면:
+
+$$\text{humanReadableFormat} = \text{value} \times 10^{(\text{baseDecimals} - \text{quoteDecimals})}$$
+
+### 파생상품 시장
+
+#### 사람이 읽을 수 있는 형식에서 체인 형식으로 변환
+
+**6 견적 소수점**을 가진 INJ/USDT 무기한 시장을 예로 들면, 체인 형식으로의 변환은 다음과 같습니다:
+
+$$\text{chainFormat} = \text{value} \times 10^{-\text{quoteDecimals}}$$
+
+#### 체인 형식에서 사람이 읽을 수 있는 형식으로 변환
+
+사람이 읽을 수 있는 형식으로 다시 변환하려면:
+
+$$\text{humanReadableFormat} = \text{value} \times 10^{-\text{quoteDecimals}}$$
+
+또한, [concepts](../developers/concepts/calculation-min-price-tick-size/)를 확인하세요.

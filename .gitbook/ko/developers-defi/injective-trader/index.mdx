@@ -1,0 +1,224 @@
+---
+title: Injective Trader
+---
+
+# Injective Trader
+
+Injective Trader는 Injective 블록체인에서 알고리즘 트레이딩 전략을 개발하고 배포하기 위한 고성능, 신뢰성 있는 기반을 제공하는 전문가급 프레임워크입니다. 알고리즘 트레이딩 전략과 블록체인 실행 간의 격차를 해소하여 기술적 장벽을 제거합니다. 이 프레임워크는 실시간 데이터 스트리밍, 주문 실행, 재연결/복구, 트랜잭션 배치 처리 및 분석과 같은 무거운 작업을 처리합니다. 이를 통해 트레이더는 블록체인의 복잡성이 아닌 전략 개발에만 집중할 수 있습니다.
+
+기존 전략을 가져오거나 다음을 수행하는 새 전략을 만드는 데 사용할 수 있습니다:
+
+* **로직에 따라 자동으로 주문 배치**
+* **24/7 시장 모니터링** 및 가격 변동에 대응
+* 내장된 한도 및 안전 기능으로 **리스크 관리**
+* **여러 시장을 동시에** 처리
+* 모든 거래 활동에 대한 **상세 로그 제공**
+
+### 핵심 기능
+
+**간소화된 전략 개발**
+
+* SDK 전문 지식 불필요 - 순수하게 트레이딩 로직에만 집중
+* 최소한의 기술적 오버헤드로 빠른 전략 배포
+* 직관적인 전략 구현을 가능하게 하는 이벤트 기반 아키텍처
+
+**내장된 신뢰성**
+
+* 자동화된 재연결 및 복구 메커니즘
+* 실행 전 트랜잭션 검증
+* 포괄적인 오류 처리 및 재시도 로직
+
+**성능 최적화**
+
+* 비용 절감을 위한 지능형 트랜잭션 배치 처리
+* 자동 수수료 관리 및 최적화
+* 확장을 위한 다중 계정 지원
+
+**엔터프라이즈급 기능**
+
+* 완전한 포지션 및 PnL 추적
+* 리스크 관리 기능
+* 상세한 성과 분석
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+Injective Trader는 실제 가치가 있는 자산을 거래하므로 보안이 가장 중요합니다. 다음을 보안 기준으로 사용하고 자산을 보호하기 위해 추가 조치를 취하세요.
+
+* **절대 개인 키를 공유하거나** Git에 커밋하지 마세요.
+* 비밀 정보는 로컬 **`.env` 파일**에 저장하고 환경 변수를 통해 로드하세요.
+* 추가 안전을 위해
+  [**AuthZ**](https://github.com/InjectiveLabs/injective-trader/tree/master?tab=readme-ov-file#authorization-trading-authz)를
+  사용하여 메인 계정을 노출하지 않고 거래 권한을 부여하는 것을 고려하세요.
+</Callout>
+
+## 빠른 시작 (5분)
+
+### 1. Injective 계정 준비하기 (및 자금 충전)
+
+1. Keplr 또는 `injectived`를 사용하여 Injective에 **계정을 생성**합니다.
+2. Keplr를 사용하는 경우 `.env` 파일을 위해 **개인 키를 내보내기**합니다.
+   * _팁: AuthZ를 사용하면 더 나은 보안을 위해 거래 계정에 제한된 권한을 부여할 수 있습니다._
+3. 다른 Injective 주소에서 전송하거나 [bridge.injective.network](http://bridge.injective.network/)를 통해 **USDT로 계정에 자금을 충전**합니다.
+   * _EVM 팁: TS SDK로 `inj` 주소를 파생하고 Injective 계정을 설정하지 않고도 Ethereum에서 Injective로 USDT를 브릿지할 수 있습니다._
+
+### 2. 다운로드 및 설정
+
+```bash
+git clone https://github.com/InjectiveLabs/injective-trader.git
+cd injective-trader
+
+# 가상 환경 생성 (권장)
+python3 -m venv .venv
+source .venv/bin/activate    # Windows: .venv\Scripts\Activate.ps1
+
+pip install -r requirements.txt
+pip install "injective-py==1.9"
+```
+
+_참고: `injective-trader`는 아직 `injective-py` v1.11과 호환되지 않습니다._
+
+### 3. 전략 구성
+
+기존 `config.yaml`을 편집합니다:
+
+```yaml
+Exchange: Helix
+ConsoleLevel: INFO
+FileLevel: DEBUG
+
+Components:
+  Initializer:
+    Network: mainnet
+    BotName: MyBot
+    MarketTickers:
+      - INJ/USDT PERP
+      - BTC/USDT PERP
+      - ETH/USDT PERP
+
+Strategies:
+  MyMarketMaker:
+    Name: "MyMarketMaker"
+    Class: "SimpleStrategy"
+    MarketIds:
+      - "0x17ef48032..."  # INJ/USDT PERP
+      - "0x4ca0f92f..."  # BTC/USDT PERP
+      - "0x9b998016..."  # ETH/USDT PERP
+    AccountAddresses:
+      - "inj1your_account_address_here"
+    TradingAccount: "inj1your_account_address_here"
+    CIDPrefix: "my_mm"
+    Parameters:
+      OrderSize: 0.1
+      MaxPosition: 1.0
+      SpreadThreshold: 0.005
+```
+
+### 4. 개인 키 설정
+
+단일 `INJECTIVE_PRIVATE_KEY` 대신 `.env`에서 **봇 범위 환경 변수**를 사용합니다(프레임워크 기본값과 일치):
+
+```
+# MyBot이라는 이름의 봇용
+MyBot_GRANTER_INJECTIVE_PRIVATE_KEY=your_granter_private_key_here
+MyBot_GRANTEE_0_INJECTIVE_PRIVATE_KEY=your_first_grantee_private_key_here
+```
+
+세션에 로드합니다:
+
+```bash
+export $(grep -v '^#' .env | xargs)
+```
+
+### 5. 전략 실행
+
+```bash
+python main.py MyBot config.yaml --log_path logs/my_bot.log --network mainnet
+```
+
+이것으로 끝입니다 - 봇이 이제 라이브입니다!
+
+## IDE 설정
+
+VS Code 또는 호환 IDE(예: Cursor)를 사용하는 경우 쉬운 디버깅을 위해 다음 구성을 추가하는 것을 고려하세요.
+
+`.vscode/launch.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run MyBot (mainnet)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "args": ["MyBot", "config.yaml", "--log_path", "logs/strategy.log", "--network", "mainnet"],
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "Run MyBot (testnet, debug)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "args": ["MyBot", "config.yaml", "--log_path", "logs/debug.log", "--network", "testnet", "--debug"],
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
+```
+
+이제 IDE에서 **Run → Start Debugging**을 수행할 수 있습니다.
+
+## 아키텍처
+
+### 시스템 아키텍처 다이어그램
+
+<figure>
+<img src="/img/injective-trader-network-architecture-diagram.png" alt="Injective Trader Network Architecture Diagram" width="563"></img>
+<figcaption><p>Injective Trader 네트워크 아키텍처 다이어그램</p></figcaption>
+</figure>
+
+### 핵심 설계 패턴
+
+* **Mediator 패턴**: 컴포넌트 간 통신을 중앙화하여 컴포넌트가 직접 의존성 없이 상호작용할 수 있는 분리된 아키텍처를 가능하게 합니다.
+* **Component 패턴**: 모든 시스템 컴포넌트에 대한 라이프사이클 관리(initialize, run, terminate)를 표준화하여 일관된 동작을 보장합니다.
+* **State 패턴**: 잘 정의된 상태(Idle, Running, Terminated)를 통해 컴포넌트 라이프사이클을 관리하여 예측 가능한 전환과 오류 처리를 제공합니다.
+* **Task Management 패턴**: 자동화된 모니터링 및 복구로 비동기 작업을 조정하여 이벤트 기반 환경에서 신뢰할 수 있는 실행을 보장합니다.
+* **Observer 패턴**: 전략이 특수화된 이벤트 핸들러를 통해 특정 업데이트 이벤트에 반응할 수 있게 하여 유연한 전략 개발 접근 방식을 만듭니다.
+
+### 주요 컴포넌트
+
+**거래소별 에이전트**
+
+* **Initializer**: 거래소 연결, 계정 및 시장 설정
+* **ChainListener**: 자동 재연결로 실시간 블록체인 데이터 스트리밍
+* **MessageBroadcaster**: 재시도 로직으로 트랜잭션 생성 및 브로드캐스트 처리
+* **Liquidator**: 담보 부족 포지션에 대한 청산 모니터링 및 실행
+
+**매니저**
+
+* **MarketManager**: 시장 데이터 처리 및 오더북 무결성 유지
+* **AccountManager**: 잔액, 포지션 및 주문 상태 추적
+* **StrategyManager**: 시장 이벤트를 적절한 전략 구현으로 라우팅
+* **RiskManager**: 포지션 한도 및 리스크 통제 적용
+* **TaskManager**: 비동기 작업 실행 조율 및 모니터링
+
+**데이터 레벨 도메인**
+
+* **Market**: 오더북 및 메타데이터가 있는 거래 쌍 표현
+* **Account**: 계정 잔액, 예치금 및 서브계정 관리
+* **Positions**: PnL 계산이 있는 파생상품 포지션 추적
+* **Order**: 실행 이력이 있는 주문 상태 추적
+* **Oracle Prices**: 타임스탬프 추적이 있는 실시간 가격 피드
+
+**전략 레벨 플러그인**
+
+* **Strategy Base**: 사용자 정의 전략 구현을 위한 템플릿
+* **Update Handlers**: 시장 데이터 이벤트를 위한 이벤트별 프로세서
+* **Performance Metrics**: 통계 및 PnL 추적
+* **Risk Models**: 커스터마이징 가능한 리스크 관리 규칙
+
+## 다음
+
+코드베이스에 익숙해지기 위해 Injective Trader와 함께 제공되는 [simple strategy](/developers-defi/injective-trader/simple-strategy)에 대해 자세히 알아보세요.
