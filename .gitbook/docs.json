@@ -1185,6 +1185,19 @@
                 ]
               },
               {
+                "group": "DeFi 개발자",
+                "icon": "money-bill-transfer",
+                "expanded": false,
+                "pages": [
+                  "ko/developers-defi/index",
+                  "ko/developers-defi/calculate-min-price-tick-size",
+                  "ko/developers-defi/min-quantity-tick-size",
+                  "ko/developers-defi/testnet-faucet-integration",
+                  "ko/developers-defi/token-launch",
+                  "ko/developers-defi/market-launch"
+                ]
+              },
+              {
                 "group": "인프라",
                 "icon": "network-wired",
                 "expanded": false,

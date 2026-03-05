@@ -1,0 +1,27 @@
+---
+title: 최소 수량 틱 사이즈
+---
+
+## 최소 시장 수량 틱 사이즈
+
+최소 시장 수량 틱 사이즈는 주문 수량이 증가하거나 감소할 수 있는 가장 작은 단위를 결정합니다. 예를 들어, 시장의 최소 수량 틱 사이즈가 **0.001**인 경우, 수량 **0.0011**로 제출된 주문은 허용된 단위와 일치하지 않아 거부됩니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**참고:** 파생상품 시장은 사용자 인터페이스와 체인 간에 `minQuantityTickSize`에 대해 동일한 형식을 공유하므로 포맷팅이 필요하지 않습니다.
+</Callout>
+
+### 현물 시장
+
+#### 사람이 읽을 수 있는 형식에서 체인 형식으로 변환
+
+**18 base decimals**와 **6 quote decimals**를 가진 INJ/USDT 시장을 예로 들면, 체인 형식으로의 변환은 다음과 같습니다:
+
+$$\text{chainFormat} = \text{value} \times 10^{\text{baseDecimals}}$$
+
+#### 체인 형식에서 사람이 읽을 수 있는 형식으로 변환
+
+사람이 읽을 수 있는 형식으로 다시 변환:
+
+$$\text{humanReadableFormat} = \text{value} \times 10^{-\text{baseDecimals}}$$
+
+[개념](../developers/concepts/calculation-min-price-tick-size/)도 확인해 보세요.
