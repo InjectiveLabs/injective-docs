@@ -1,0 +1,45 @@
+---
+title: Canonical Chain 업그레이드
+---
+
+## 릴리스 버전 확인
+
+### Github의 릴리스
+
+Docker를 통해 `injectived` 또는 `peggo` 버전 번호를 확인하려면
+[`verify-injective-release`](https://github.com/injective-dev/snippets-inj/tree/main/verify-injective-release) 코드 스니펫의 지침을 따르세요.
+
+예를 들어, `v1.16.1`의 경우 다음과 같은 출력이 생성되어야 합니다:
+
+```text
+injectived version
+Version v1.16.1 (8be67e82d)
+Compiled at 20250802-1910 using Go go1.23.9 (amd64)
+peggo version
+Version v1.16.1 (8be67e82d)
+Compiled at 20250802-1913 using Go go1.23.9 (amd64)
+```
+
+### Docker의 릴리스
+
+`injectived`의 경우:
+
+```shell
+docker run -it --rm injectivelabs/injective-core:v1.16.1 injectived version
+```
+
+`peggo`의 경우:
+
+```shell
+docker run -it --rm injectivelabs/injective-core:v1.16.1 peggo version
+```
+
+### 일치 여부 확인
+
+출력에는 버전 번호 외에도 다음이 포함됩니다:
+
+- 바이너리 릴리스 해시 (예: `8be67e82d`)
+- 컴파일 타임스탬프 (예: `20250802-1910`)
+- 컴파일러 (예: `Go go1.23.9 (amd64)`)
+
+Github의 [Injective chain releases](https://github.com/InjectiveLabs/injective-chain-releases/releases) 페이지에 명시된 값과 **일치**하는지 확인할 수 있습니다.

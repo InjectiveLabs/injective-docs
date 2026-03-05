@@ -1,0 +1,95 @@
+---
+title: 테스트넷 Peggo
+---
+
+## Equinox 테스트넷
+
+## Step 1: Peggo relayer 구성
+
+```bash
+mkdir ~/.peggo
+cp testnet-config/staking/40014/peggo-config.env ~/.peggo/.env
+cd ~/.peggo
+```
+
+먼저 `.env` 파일의 `PEGGO_ETH_RPC`를 유효한 Sepolia EVM RPC 엔드포인트로 업데이트합니다.
+
+자체 Sepolia 풀 노드를 설정하려면 [여기](https://ethereum.org/en/developers/docs/nodes-and-clients/run-a-node/)의 지침을 따르세요.
+
+## **Cosmos 키**
+
+### **1. Cosmos Keyring**
+
+`PEGGO_COSMOS_FROM`을 검증자 키 이름으로, `PEGGO_COSMOS_FROM_PASSPHRASE`를 Cosmos Keyring 비밀번호로 업데이트합니다.
+
+Keyring 설정에 대해 [여기](https://docs.cosmos.network/v0.46/run-node/keyring.html)에서 자세히 알아보세요.
+
+### **2. Cosmos Private Key (안전하지 않음)**
+
+`PEGGO_COSMOS_PK`를 검증자의 계정 private key로 업데이트합니다.
+
+## **Ethereum 키**
+
+### **1. Geth Keystore**
+
+Geth 문서 [여기](https://geth.ethereum.org/docs/interface/managing-your-accounts)에서 keystore를 사용하여 새 Ethereum 계정을 생성하는 방법을 찾을 수 있습니다.
+
+[여기](https://www.alchemy.com/faucets/ethereum-sepolia)의 공개 faucet에서 Sepolia ETH를 요청할 수 있습니다.
+
+### **2. Ethereum Private Key (안전하지 않음)**
+
+`PEGGO_ETH_PK`를 새 Ethereum Private Key로 업데이트합니다.
+
+### Step 2: Orchestrator 및 Ethereum 주소 등록
+
+```bash
+injectived tx peggy set-orchestrator-address $VALIDATOR_INJ_ADDRESS $ORCHESTRATOR_INJ_ADDRESS $ETHEREUM_ADDRESS --from $VALIDATOR_KEY_NAME --chain-id=injective-888 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=160000000inj
+```
+
+https://testnet.sentry.lcd.injective.network/peggy/v1/valset/current 에서 성공적인 등록을 확인할 수 있습니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**참고:** `set-orchestrator-address` 메시지로 Orchestrator를 등록한 후에는 다시 등록**할 수 없습니다**.
+</Callout>
+
+## Step 3: Relayer 시작
+
+```bash
+peggo orchestrator
+```
+
+## Step 4: Peggo systemd 서비스 생성
+
+`/etc/systemd/system/peggo.service`:
+
+```ini
+[Unit]
+  Description=peggo
+
+[Service]
+  WorkingDirectory=/home/ec2-user/.peggo
+  ExecStart=/bin/bash -c 'peggo orchestrator '
+  Type=simple
+  Restart=always
+  RestartSec=1
+  User=ec2-user
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl start peggo
+sudo systemctl enable peggo
+journalctl -f -u peggo
+```
+
+## Step 5: (선택사항) 무단 액세스로부터 Cosmos Keyring 보호
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+이것은 고급 DevOps 주제입니다. 시스템 관리자와 상담하세요.
+</Callout>
+
+## 기여
+
+Peggo orchestrator 소스 코드를 검토하고 기여하고 싶다면 [https://github.com/InjectiveLabs/peggo](https://github.com/InjectiveLabs/peggo)에서 할 수 있습니다.

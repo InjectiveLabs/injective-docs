@@ -1,0 +1,192 @@
+---
+title: Peggo
+---
+
+이 페이지에 있다면 아마도 Injective의 검증자가 되셨을 것입니다. 축하합니다! `peggo` 구성은 설정의 마지막 단계입니다.
+
+peggo용 `.env` 예시:
+
+```bash
+PEGGO_ENV="local"         # 메트릭용 환경 이름 (dev/test/staging/prod/local)
+PEGGO_LOG_LEVEL="debug"   # 로그 레벨 깊이
+
+PEGGO_COSMOS_CHAIN_ID="injective-1"           # Injective 네트워크의 chain ID
+PEGGO_COSMOS_GRPC="tcp://localhost:9090"      # injectived 프로세스의 gRPC
+PEGGO_TENDERMINT_RPC="http://localhost:26657" # injectived 프로세스의 Tendermint RPC
+
+# 참고: PEGGO_COSMOS_GRPC와 PEGGO_TENDERMINT_RPC를 생략하면 독립 실행형 peggo 모드가 활성화됩니다.
+# 이 모드에서 peggo는 Injective 네트워크에서 제공하는 로드 밸런싱된 엔드포인트에 연결됩니다.
+
+# Injective 구성
+PEGGO_COSMOS_FEE_DENOM="inj"
+PEGGO_COSMOS_GAS_PRICES="160000000inj"
+PEGGO_COSMOS_KEYRING="file"
+PEGGO_COSMOS_KEYRING_DIR=
+PEGGO_COSMOS_KEYRING_APP="peggo"
+PEGGO_COSMOS_FROM=
+PEGGO_COSMOS_FROM_PASSPHRASE=
+PEGGO_COSMOS_PK=
+PEGGO_COSMOS_USE_LEDGER=false
+
+# Ethereum 구성
+PEGGO_ETH_KEYSTORE_DIR=
+PEGGO_ETH_FROM=
+PEGGO_ETH_PASSPHRASE=
+PEGGO_ETH_PK=
+PEGGO_ETH_GAS_PRICE_ADJUSTMENT=1.3
+PEGGO_ETH_MAX_GAS_PRICE="500gwei"
+PEGGO_ETH_CHAIN_ID=1
+PEGGO_ETH_RPC="http://localhost:8545"
+PEGGO_ETH_ALCHEMY_WS=""
+PEGGO_ETH_USE_LEDGER=false
+
+# 토큰 자산을 위한 가격 피드 제공자 (Batch Creator)
+PEGGO_COINGECKO_API="https://api.coingecko.com/api/v3"
+
+# Relayer 구성
+PEGGO_RELAY_VALSETS=true
+PEGGO_RELAY_VALSET_OFFSET_DUR="5m"
+PEGGO_RELAY_BATCHES=true
+PEGGO_RELAY_BATCH_OFFSET_DUR="5m"
+PEGGO_RELAY_PENDING_TX_WAIT_DURATION="20m"
+
+# Batch Creator 구성
+PEGGO_MIN_BATCH_FEE_USD=23.2
+
+# 메트릭 구성
+PEGGO_STATSD_PREFIX="peggo."
+PEGGO_STATSD_ADDR="localhost:8125"
+PEGGO_STATSD_STUCK_DUR="5m"
+PEGGO_STATSD_MOCKING=false
+PEGGO_STATSD_DISABLED=true
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**중요 참고:** 자체 `injectived`(Injective 노드)와 `geth`(Ethereum 노드) 프로세스를 실행하는 경우, 최신 상태와 동기화되어 있는지 확인하세요. 오래된 노드는 `peggo`의 비즈니스 로직을 왜곡하여 때때로 "거짓 경보" 로그를 표시할 수 있습니다.
+</Callout>
+
+## Step 1: .env 구성
+
+```bash
+# 공식 Injective 메인넷 .env 구성
+mkdir ~/.peggo
+cp mainnet-config/10001/peggo-config.env ~/.peggo/.env
+cd ~/.peggo
+```
+
+먼저 `.env` 파일의 `PEGGO_ETH_RPC`를 유효한 Ethereum EVM RPC 엔드포인트로 업데이트합니다.
+
+자체 Ethereum 풀 노드를 설정하려면 [여기](https://ethereum.org/en/developers/docs/nodes-and-clients/run-a-node/)의 지침을 따르세요. Alchemy나 Infura와 같은 외부 Ethereum RPC 제공자를 사용할 수 있지만, Peggo 브릿지 릴레이어가 `eth_getLogs` 호출을 많이 사용하므로 제공자에 따라 비용 부담이 증가할 수 있습니다.
+
+## **peggo를 위한 Ethereum 키 관리**
+
+Peggo는 서명 키 자격 증명을 제공하는 두 가지 옵션을 지원합니다 - Geth keystore 사용(권장) 또는 평문 Ethereum private key 제공.
+
+#### **옵션 1. Geth Keystore**
+
+Geth 문서 [여기](https://geth.ethereum.org/docs/interface/managing-your-accounts)에서 keystore를 사용하여 새 Ethereum 계정을 안전하게 생성하는 방법을 찾을 수 있습니다.
+
+```bash
+geth account new --datadir=/home/ec2-user/.peggo/data/
+```
+
+다음 환경 변수를 설정하세요:
+
+```bash
+PEGGO_ETH_KEYSTORE_DIR=/home/ec2-user/.peggo/data/keystore
+PEGGO_ETH_FROM=0x9782dc957DaE6aDc394294954B27e2118D05176C
+PEGGO_ETH_PASSPHRASE=12345678
+```
+
+그런 다음 Ethereum 주소에 충분한 ETH가 있는지 확인하세요.
+
+#### **옵션 2. Ethereum Private Key (안전하지 않음)**
+
+새 계정에서 새 Ethereum Private Key로 `PEGGO_ETH_PK`를 업데이트하기만 하면 됩니다.
+
+## Injective 구성
+
+### **Injective 트랜잭션 전송을 위한 위임된 Cosmos 키 생성**
+
+격리 목적으로 검증자 계정 키 대신 위임된 Cosmos 키를 생성하여 Injective 트랜잭션을 보내는 것이 좋습니다.
+
+```bash
+injectived keys add $ORCHESTRATOR_KEY_NAME
+```
+
+orchestrator inj 주소에 INJ 잔액이 있는지 확인하세요:
+
+```bash
+injectived tx bank send $VALIDATOR_KEY_NAME $ORCHESTRATOR_INJ_ADDRESS <amount-in-inj> --chain-id=injective-1 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
+```
+
+### **peggo를 위한 Cosmos 계정 키 관리**
+
+#### **옵션 1. Cosmos Keyring**
+
+`.env` 파일에서 `PEGGO_COSMOS_FROM`과 `PEGGO_COSMOS_FROM_PASSPHRASE`를 지정합니다.
+
+Cosmos Keyring 설정에 대해 [여기](https://docs.cosmos.network/v0.46/run-node/keyring.html)에서 자세히 읽을 수 있습니다.
+
+#### **옵션 2. Cosmos Private Key (안전하지 않음)**
+
+`.env` 파일에서 `PEGGO_COSMOS_PK`를 지정합니다.
+
+### Step 2: Orchestrator 및 Ethereum 주소 등록
+
+orchestrator와 ethereum 주소는 한 번만 등록할 수 있습니다. 나중에 **업데이트할 수 없습니다**.
+
+```bash
+injectived tx peggy set-orchestrator-address $VALIDATOR_INJ_ADDRESS $ORCHESTRATOR_INJ_ADDRESS $ETHEREUM_ADDRESS --from $VALIDATOR_KEY_NAME --chain-id=injective-1 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
+```
+
+https://lcd.injective.network/peggy/v1/valset/current 에서 성공적인 등록을 확인할 수 있습니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**참고:** `set-orchestrator-address` 메시지로 Orchestrator를 등록한 후에는 다시 등록**할 수 없습니다**. 이 단계가 완료되면 `검증자`는 제공된 Ethereum 주소에 바인딩됩니다.
+</Callout>
+
+### Step 3: Relayer 시작
+
+```bash
+cd ~/.peggo
+peggo orchestrator
+```
+
+### Step 4: Peggo systemd 서비스 생성
+
+`/etc/systemd/system/peggo.service` 아래에 다음 내용으로 파일을 추가합니다:
+
+```ini
+[Unit]
+  Description=peggo
+
+[Service]
+  WorkingDirectory=/home/ec2-user/.peggo
+  ExecStart=/bin/bash -c 'peggo orchestrator '
+  Type=simple
+  Restart=always
+  RestartSec=1
+  User=ec2-user
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl start peggo
+sudo systemctl enable peggo
+journalctl -f -u peggo
+```
+
+### Step 5: (선택사항) 무단 액세스로부터 Cosmos Keyring 보호
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+이것은 고급 DevOps 주제입니다. 시스템 관리자와 상담하세요.
+</Callout>
+
+Cosmos Keyring 설정에 대해 [여기](https://docs.cosmos.network/v0.46/run-node/keyring.html)에서 자세히 알아보세요.
+
+### 기여
+
+Peggo orchestrator 소스 코드를 검토하고 기여하고 싶다면 [https://github.com/InjectiveLabs/peggo](https://github.com/InjectiveLabs/peggo)에서 할 수 있습니다.

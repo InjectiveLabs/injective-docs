@@ -1,0 +1,74 @@
+---
+title: 테스트넷
+---
+
+노드 운영자는 최적의 성능을 위해 베어메탈 서버를 배포해야 합니다. 또한 검증자 노드는 높은 가동 시간을 보장하기 위해 권장 하드웨어 사양을 충족해야 합니다.
+
+#### 하드웨어 요구 사항
+
+|           _최소_              |        _권장_        |
+| :--------------------------:     | :---------------------------:  |
+|          RAM 메모리 128GB        |          RAM 메모리 128GB      |
+|          CPU 12 코어            |          CPU 16 코어          |
+|          CPU 기본 클럭 3.7GHz   |          CPU 기본 클럭 4.2GHz |
+|          스토리지 2TB NVMe        |          스토리지 2TB NVMe      |
+|          네트워크 1Gbps+          |          네트워크 1Gbps+        |
+
+### Step 1: 검증자 계정 생성
+
+```bash
+export VALIDATOR_KEY_NAME=[my-validator-key]
+injectived keys add $VALIDATOR_KEY_NAME
+```
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+**출력에는 키를 평문으로 나타내는 니모닉 문구가 포함됩니다. 이 문구를 키의 백업으로 반드시 저장하세요.**
+</Callout>
+
+### Step 2: INJ 획득
+
+[테스트넷 Faucet](https://faucet.injective.network/)에서 자금을 요청할 수 있습니다.
+
+```bash
+injectived q bank balances <my-validator-inj-address>
+```
+
+### Step 3: 검증자 계정 생성
+
+```bash
+VALIDATOR_PUBKEY=$(injectived tendermint show-validator)
+echo $VALIDATOR_PUBKEY
+```
+
+검증자 생성:
+
+```bash
+injectived tx staking create-validator \
+--moniker=$MONIKER \
+--amount=$AMOUNT \
+--gas-prices=500000000inj \
+--pubkey=$VALIDATOR_PUBKEY \
+--from=$VALIDATOR_KEY_NAME \
+--keyring-backend=file \
+--yes \
+--node=tcp://localhost:26657 \
+--chain-id=injective-888
+--commission-max-change-rate=$COMMISSION_MAX_CHANGE_RATE \
+--commission-max-rate=$COMMISSION_MAX_RATE \
+--commission-rate=$COMMISSION_RATE \
+--min-self-delegation=$MIN_SELF_DELEGATION_AMOUNT
+```
+
+[스테이킹 대시보드](https://injhub.com/stake/)에서 검증자가 성공적으로 생성되었는지 확인할 수 있습니다.
+
+![Inj Hub Staking Validators Section](/img/inj-hub-staking-validators-section.png)
+
+### Step 4: (선택사항) 검증자에 추가 INJ 위임
+
+```bash
+injectived tx staking delegate [validator-addr] [amount] --from $VALIDATOR_KEY_NAME --chain-id=injective-888 --keyring-backend=file --yes --node=tcp://localhost:26657
+```
+
+### 다음 단계
+
+다음으로 Ethereum Bridge Relayer를 설정하세요. 이는 검증자가 슬래싱되는 것을 방지하기 위해 필요한 단계입니다.
