@@ -1,0 +1,158 @@
+---
+title: MCP 서버
+description: Model Context Protocol을 사용하여 AI 어시스턴트를 Injective 문서에 연결하세요
+---
+
+Injective 문서는 Claude, Cursor 및 기타 MCP 호환 도구와 같은 AI 어시스턴트가 Injective 문서에서 **정보를 검색하고 검색**할 수 있도록 하는 Model Context Protocol (MCP) 서버를 제공합니다.
+
+이것은 문서 검색뿐만 아니라 다른 MCP 서버 및 AI 에이전트와 **함께 사용**할 때도 강력합니다.
+예를 들어, Cursor와 같은 에이전트 개발 도구를 연결하여 이 MCP 서버를 사용하면 LLM의 범용 소프트웨어 작성 능력에 **Injective 관련 지식을 추가**하여 Injective 애플리케이션을 바이브 코딩할 수 있습니다.
+개발자 도구 구성 방법에 대한 자세한 내용은 아래에 포함되어 있습니다.
+
+## MCP란 무엇인가요?
+
+[MCP](https://modelcontextprotocol.io/introduction)는 AI 어시스턴트가 외부 데이터 소스 및 도구에 연결할 수 있도록 하는 **오픈 표준**입니다.
+AI 어시스턴트는 학습 데이터에만 의존하는 대신 MCP를 사용하여 문서에서 직접 실시간의 신뢰할 수 있는 정보에 액세스할 수 있습니다.
+
+## 왜 Injective MCP 서버를 사용해야 하나요?
+
+AI 어시스턴트를 Injective MCP 서버에 연결하면 다음을 수행할 수 있습니다:
+
+- 전체 Injective 문서 검색
+- 코드 예제, API 참조 및 가이드 찾기
+- 최신 정보로 질문에 답변
+- 관련 문서 페이지에 대한 직접 링크 제공
+
+이것은 Injective에서 구축할 때 특히 유용하며, AI가 특정 사용 사례에 맞는 올바른 문서를 찾는 데 도움을 줄 수 있습니다.
+
+## MCP 서버 세부 정보
+
+| 속성 | 값 |
+|----------|-------|
+| Endpoint | `https://docs.injective.network/mcp` |
+| Transport | HTTP (Streamable HTTP) |
+| 사용 가능한 도구 | `SearchInjectiveDocs` |
+
+## MCP 서버에 연결
+
+<Tabs>
+  <Tab title="모든 MCP 클라이언트">
+    MCP 호환 클라이언트의 경우 endpoint URL을 직접 사용하세요:
+
+    ```
+    https://docs.injective.network/mcp
+    ```
+
+    서버는 대부분의 최신 MCP 클라이언트에서 지원하는 Streamable HTTP transport를 사용합니다.
+  </Tab>
+  <Tab title="Cursor">
+    Cursor 설정에서 MCP 서버를 추가하세요:
+
+    1. Cursor 설정 열기
+    2. **Features** → **MCP Servers**로 이동
+    3. **Add new MCP server** 클릭
+    4. 다음을 입력하세요:
+       - **Name**: `injective-docs`
+       - **Type**: `command`
+       - **Command**: `npx mcp-remote https://docs.injective.network/mcp`
+  </Tab>
+  <Tab title="Claude Desktop">
+    Claude Desktop 구성 파일에 다음을 추가하세요:
+
+    <Tabs>
+      <Tab title="macOS">
+        `~/Library/Application Support/Claude/claude_desktop_config.json`을 편집하세요:
+
+        ```json
+        {
+          "mcpServers": {
+            "injective-docs": {
+              "command": "npx",
+              "args": [
+                "mcp-remote",
+                "https://docs.injective.network/mcp"
+              ]
+            }
+          }
+        }
+        ```
+      </Tab>
+      <Tab title="Windows">
+        `%APPDATA%\Claude\claude_desktop_config.json`을 편집하세요:
+
+        ```json
+        {
+          "mcpServers": {
+            "injective-docs": {
+              "command": "npx",
+              "args": [
+                "mcp-remote",
+                "https://docs.injective.network/mcp"
+              ]
+            }
+          }
+        }
+        ```
+      </Tab>
+    </Tabs>
+
+    구성을 저장한 후 Claude Desktop을 다시 시작하세요. Injective Docs 도구가 Claude의 사용 가능한 도구에 나타납니다.
+  </Tab>
+</Tabs>
+
+## MCP 서버 사용
+
+연결되면 AI 어시스턴트에게 Injective에 대한 질문을 할 수 있습니다.
+어시스턴트는 자동으로 `SearchInjectiveDocs` 도구를 사용하여 관련 정보를 찾습니다.
+
+**예시 프롬프트:**
+
+- "Injective에서 지갑을 어떻게 만드나요?"
+- "CosmWasm 스마트 컨트랙트를 배포하는 방법을 보여주세요"
+- "Injective 메인넷의 네트워크 endpoint가 무엇인가요?"
+- "Token Factory 모듈을 어떻게 사용하나요?"
+- "Injective에서 마진 트레이딩이 어떻게 작동하는지 설명해주세요"
+
+AI는 문서를 검색하고 관련 페이지 링크와 함께 답변을 제공합니다.
+
+## MCP 도구 참조
+
+### `SearchInjectiveDocs`
+
+Injective 문서 전체에서 관련 정보를 검색합니다.
+
+**매개변수:**
+
+| 매개변수 | 타입 | 필수 | 설명 |
+|-----------|------|----------|-------------|
+| `query` | string | 예 | 관련 문서를 찾기 위한 검색 쿼리 |
+
+**반환:**
+
+문서 페이지에 대한 제목과 직접 링크가 포함된 컨텍스트 콘텐츠입니다.
+이 도구는 전체 Injective 문서 코퍼스에서 시맨틱 검색을 수행하여 쿼리를 페이지 콘텐츠, 제목 및 코드 예제와 매칭합니다.
+결과는 관련성 순으로 정렬되며 쿼리에 가장 잘 응답하는 추출된 스니펫과 추가 읽기를 위한 소스 URL과 함께 반환됩니다.
+
+**예시:**
+
+요청:
+```json
+{
+  "tool": "SearchInjectiveDocs",
+  "arguments": {
+    "query": "token factory를 사용하여 토큰을 만드는 방법"
+  }
+}
+```
+
+응답:
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "# Token Factory\n\nToken Factory 모듈을 사용하면 Injective에서 커스텀 토큰을 생성하고 관리할 수 있습니다...\n\n## 토큰 생성\n\n새 토큰을 생성하려면 `tokenfactory/create-denom` 메시지를 사용하세요...\n\nSource: https://docs.injective.network/developers/concepts/token-factory"
+    }
+  ]
+}
+```

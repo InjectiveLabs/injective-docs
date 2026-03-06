@@ -1,0 +1,21 @@
+---
+title: 토큰 생성
+---
+
+Injective에서 자신만의 토큰을 생성하는 가장 쉬운 방법은 `tokenfactory` 모듈을 사용하는 것입니다. `tokenfactory` 모듈을 사용하면 모든 계정이 `factory/{creator address}/{subdenom}` 이름의 새 토큰을 생성할 수 있습니다. 토큰이 생성자 주소로 네임스페이스화되어 있기 때문에 이름 충돌을 해결할 필요가 없어 토큰 발행이 무허가로 이루어질 수 있습니다.
+
+단일 계정은 각 생성된 denom에 고유한 subdenom을 제공하여 여러 denom을 생성할 수 있습니다. denom이 생성되면 원래 생성자에게 자산에 대한 "관리자" 권한이 부여됩니다. 이를 통해 다음을 수행할 수 있습니다:
+
+* 모든 계정에 자신의 denom을 발행
+* 모든 계정에서 자신의 denom을 소각
+* 두 계정 간의 denom 전송을 생성
+* 관리자 변경. 향후 더 많은 관리자 기능이 추가될 수 있습니다. 관리자는 authz 모듈을 사용하여 다른 계정과 관리자 권한을 공유하도록 선택할 수 있습니다. ChangeAdmin 기능을 사용하면 마스터 관리자 계정을 변경하거나 제로 주소 `inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49`로 설정하여 어떤 계정도 자산에 대한 관리자 권한이 없도록 할 수 있습니다.
+* 온체인에서 토큰 메타데이터 설정
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+factory denom의 특별한 사용 사례 중 하나는 `CW20_ADAPTER`입니다. 이 어댑터를 사용하면 CW20으로 표현된 자산을 bank denom으로 변환한 다음 마켓 출시, 온체인에서 쉽게 전송 등에 사용할 수 있습니다.
+
+CW20 자산의 denom은 항상 `factory/{CW20_ADAPTER_CONTRACT_ADDRESS}/{CW20_ASSET_ADDRESS}` 형식이며, 여기서 메인넷의 경우 `CW20_ADAPTER_CONTRACT_ADDRESS=inj14ejqjyq8um4p3xfqj74yld5waqljf88f9eneuk`입니다.
+</Callout>
+
+denom 생성을 시작하려면 예제를 보기 위해 [TokenFactory Core Module 페이지](/developers-native/examples/token-factory/)로 이동하세요.

@@ -1,0 +1,11 @@
+---
+title: 트레이딩 계정
+---
+
+서브계정 또는 트레이딩 계정은 네이티브 Injective Bank 모듈의 자금(스테이킹, 경매 입찰, 거버넌스 참여, 마켓 생성 등에 사용 가능)을 거래를 실행할 수 있는 격리된 트레이딩 계정으로 분리할 수 있는 개념입니다. 하나의 Injective 주소는 무제한의 트레이딩 계정을 가질 수 있습니다. 표현 방식은 `${ethereumAddress}${subaccountNonce}`이며, 여기서 `ethereumAddress`는 `bech32` Injective 주소의 `hex` 버전이고 `subaccountNonce`는 12바이트로 표현된 nonce입니다. nonce 1의 트레이딩 계정 예시는 `0xc7dca7c15c364865f77a4fb67ab11dc95502e6fe000000000000000000000001`입니다.
+
+<Tip>
+서브계정과 그 주요 기능에 대한 일반적인 개요는 [계정](/defi/wallet/accounts#subaccounts) 페이지를 참조하세요.
+</Tip>
+
+v1.10.0 체인 업그레이드부터 Bank 잔액과 기본 트레이딩 계정(nonce = 0)이 병합되고 Bank 자금이 기본 트레이딩 계정에서 발생하는 거래 실행 시 직접 사용됩니다.

@@ -1,0 +1,192 @@
+---
+title: injectived 사용하기
+---
+
+다음 페이지에서는 Injective에 연결하는 명령줄 인터페이스인 `injectived`를 통해 수행할 수 있는 작업을 설명합니다. `injectived`를 사용하여 스마트 컨트랙트 업로드, 데이터 쿼리, 스테이킹 활동 관리, 거버넌스 제안 작업 등을 통해 Injective 블록체인과 상호 작용할 수 있습니다.
+
+## 사전 요구 사항
+
+### injectived가 설치되었는지 확인
+
+자세한 내용은 [injectived 설치](/developers/injectived/install/)를 참조하세요. `injectived`를 성공적으로 설치했다면 다음 명령을 실행할 수 있어야 합니다:
+
+```bash
+injectived version
+```
+
+홈 디렉토리를 적절히 사용하도록 명령을 조정하세요.
+
+```bash
+injectived keys list --home ~/.injective
+```
+
+### Docker화된 CLI 사용
+
+Docker에서 실행하는 경우 홈 디렉토리를 컨테이너에 마운트해야 합니다.
+
+```bash
+docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys list --home /root/.injective
+```
+
+Docker화된 CLI를 사용하여 키를 추가하는 것은 간단합니다.
+
+```bash
+docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys add my_key --home /root/.injective
+```
+
+해당 명령의 분석은 다음과 같습니다:
+
+* docker는 `injectivelabs/injective-core:v1.14.1` 이미지를 실행합니다
+* `injectived`는 컨테이너 내에서 CLI를 실행하는 명령입니다
+* `keys add`는 키를 추가하는 명령입니다
+* `my_key`는 키의 이름입니다
+* `--home /root/.injective`는 컨테이너 내부의 CLI 홈 디렉토리입니다
+* `-v ~/.injective:/root/.injective`는 호스트의 `~/.injective` 디렉토리를 컨테이너의 `/root/.injective` 디렉토리에 마운트합니다.
+
+키 쌍이 생성되어 컨테이너의 `/root/.injective/keyring-file` 디렉토리에 저장되며, 이는 호스트의 `~/.injective/keyring-file` 디렉토리와 동일합니다.
+
+다음을 실행하여 모든 키를 나열할 수 있습니다:
+
+```bash
+docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys list --home /root/.injective
+```
+
+### RPC endpoint 사용
+
+Injective 블록체인에 액세스하려면 먼저 노드가 실행 중이어야 합니다. 자체 전체 노드를 실행하거나 다른 사람의 노드에 연결할 수 있습니다.
+
+상태를 쿼리하고 트랜잭션을 보내려면 전체 피어 연결 네트워크에 대한 액세스 포인트인 노드에 연결해야 합니다. 자체 전체 노드를 실행하거나 다른 사람의 노드에 연결할 수 있습니다.
+
+[자체 노드 실행](/infra/join-a-network/)은 고급 사용자만을 위한 것입니다. 대부분의 사용자에게는 공개 노드에 연결하는 것이 권장됩니다.
+
+RPC endpoint를 설정하려면 다음 명령을 사용할 수 있습니다:
+
+```bash
+injectived config set client node https://sentry.tm.injective.network:443
+injectived config set client chain-id injective-1
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+테스트넷의 경우에만 `https://k8s.testnet.tm.injective.network:443` (chain-id `injective-888`)을 사용할 수 있습니다
+</Callout>
+
+이제 상태를 쿼리해 보세요:
+
+```bash
+injectived q bank balances inj1yu75ch9u6twffwp94gdtf4sa7hqm6n7egsu09s
+
+balances:
+- amount: "28748617927330656"
+  denom: inj
+```
+
+### 일반 도움말
+
+`injectived`에 대한 더 많은 일반 정보를 보려면 다음을 실행하세요:
+
+```bash
+injectived --help
+```
+
+특정 `injectived` 명령에 대한 더 많은 정보를 보려면 명령 뒤에 `-h` 또는 `--help` 플래그를 추가하세요. 예:
+
+```bash
+injectived query --help.
+```
+
+### `injectived` 클라이언트 구성
+
+`injectived`의 더 많은 옵션을 구성하려면 `~/.injective/config/` 디렉토리의 `config.toml` 파일을 편집하세요. keyring-backend가 `file`로 설정된 경우 Keyring 파일은 `~/.injective/keyring-file` 디렉토리에 있습니다. keyring-backend를 `test` 또는 `os`로 설정할 수도 있습니다. test의 경우 `~/.injective/keyring-test`에 파일로 저장되지만 비밀번호로 보호되지 않습니다.
+
+파일의 모든 옵션은 CLI를 사용하여 설정할 수 있습니다: `injectived config set client <option> <value>`.
+
+## 트랜잭션 생성, 서명 및 브로드캐스트
+
+다음 명령을 실행하면 발신자 계정에서 수신자 계정으로 INJ 토큰을 보냅니다. `1000inj`는 보낼 INJ 토큰의 양이며, `1 INJ = 10^18 inj`이므로 `1000inj`는 매우 작은 양입니다.
+
+```bash
+injectived tx bank send MY_WALLET RECEIVER_WALLET 1000inj --from MY_WALLET
+```
+
+다음 단계가 수행됩니다:
+
+* 하나의 `Msg`(`x/bank`의 `MsgSend`)가 포함된 트랜잭션을 생성하고 생성된 트랜잭션을 콘솔에 출력합니다.
+* `$MY_WALLET` 계정에서 트랜잭션을 보낼지 사용자에게 확인을 요청합니다.
+* keyring에서 `$MY_WALLET`을 가져옵니다. 이전 단계에서 CLI의 keyring을 설정했기 때문에 가능합니다.
+* keyring의 계정으로 생성된 트랜잭션에 서명합니다.
+* 서명된 트랜잭션을 네트워크에 브로드캐스트합니다. CLI가 공개 Injective 노드의 RPC endpoint에 연결하기 때문에 가능합니다.
+
+CLI는 필요한 모든 단계를 사용하기 쉬운 사용자 경험으로 번들합니다. 그러나 모든 단계를 개별적으로 실행하는 것도 가능합니다.
+
+### 트랜잭션 (만) 생성하기
+
+트랜잭션을 생성하는 것은 `tx` 명령에 `--generate-only` 플래그를 추가하여 간단히 수행할 수 있습니다. 예:
+
+```bash
+injectived tx bank send MY_WALLET RECEIVER_WALLET 1000inj --from MY_WALLET --generate-only
+```
+
+이렇게 하면 서명되지 않은 트랜잭션이 콘솔에 JSON으로 출력됩니다. 위 명령에 `> unsigned_tx.json`을 추가하여 서명되지 않은 트랜잭션을 파일에 저장할 수도 있습니다(서명자 간에 더 쉽게 전달하기 위해).
+
+### 사전 생성된 트랜잭션에 서명하기
+
+CLI를 사용하여 트랜잭션에 서명하려면 서명되지 않은 트랜잭션이 파일에 저장되어 있어야 합니다. 서명되지 않은 트랜잭션이 현재 디렉토리의 `unsigned_tx.json`이라는 파일에 있다고 가정합니다(이렇게 하는 방법은 이전 단락 참조). 그런 다음 다음 명령을 실행하기만 하면 됩니다:
+
+```bash
+injectived tx sign unsigned_tx.json --from=MY_WALLET
+```
+
+이 명령은 서명되지 않은 트랜잭션을 디코딩하고 keyring에 이미 설정한 `MY_WALLET`의 키로 `SIGN_MODE_DIRECT`로 서명합니다. 서명된 트랜잭션이 콘솔에 JSON으로 출력되며, 위와 같이 명령줄에 `> signed_tx.json`을 추가하여 파일에 저장할 수 있습니다.
+
+```bash
+injectived tx sign unsigned_tx.json --from=MY_WALLET > signed_tx.json
+```
+
+`tx sign` 명령에서 고려해야 할 유용한 플래그:
+
+* `--sign-mode`: `amino-json`을 사용하여 `SIGN_MODE_LEGACY_AMINO_JSON`으로 트랜잭션에 서명할 수 있습니다.
+* `--offline`: 오프라인 모드로 서명합니다. 이는 `tx sign` 명령이 노드에 연결하여 서명에 필요한 서명자의 계정 번호와 시퀀스를 검색하지 않음을 의미합니다. 이 경우 `--account-number` 및 `--sequence` 플래그를 수동으로 제공해야 합니다. 이것은 인터넷에 액세스할 수 없는 보안 환경에서 서명하는 오프라인 서명에 유용합니다.
+
+### 여러 서명자로 서명하기 (Multi Sig)
+
+여러 서명자로 서명하는 것은 `tx multi-sign` 명령으로 수행됩니다. 이 명령은 모든 서명자가 `SIGN_MODE_LEGACY_AMINO_JSON`을 사용한다고 가정합니다. 흐름은 `tx sign` 명령 흐름과 유사하지만, 서명되지 않은 트랜잭션 파일에 서명하는 대신 각 서명자가 이전 서명자가 서명한 파일에 서명합니다. `tx multi-sign` 명령은 기존 트랜잭션에 서명을 추가합니다. 서명자가 `GetSigners()` 메서드를 사용하여 검색할 수 있는 트랜잭션에 주어진 것과 **동일한 순서**로 트랜잭션에 서명하는 것이 중요합니다.
+
+예를 들어, `unsigned_tx.json`으로 시작하고 트랜잭션에 4명의 서명자가 있다고 가정하면 다음을 실행합니다:
+
+```bash
+# signer1이 서명되지 않은 tx에 서명하게 합니다.
+injectived tx multi-sign unsigned_tx.json signer_key_1 > partial_tx_1.json
+# 이제 signer1이 partial_tx_1.json을 signer2에게 보냅니다.
+# Signer2가 자신의 서명을 추가합니다:
+injectived tx multi-sign partial_tx_1.json signer_key_2 > partial_tx_2.json
+# Signer2가 partial_tx_2.json 파일을 signer3에게 보내고 signer3이 자신의 서명을 추가할 수 있습니다:
+injectived tx multi-sign partial_tx_2.json signer_key_3 > partial_tx_3.json
+```
+
+### 트랜잭션 브로드캐스트
+
+트랜잭션 브로드캐스트는 다음 명령을 사용하여 수행됩니다:
+
+```bash
+injectived tx broadcast tx_signed.json
+```
+
+선택적으로 `--broadcast-mode` 플래그를 전달하여 노드에서 받을 응답을 지정할 수 있습니다:
+
+* `block`: CLI는 tx가 블록에 포함될 때까지 기다립니다.
+* `sync`: CLI는 CheckTx 실행 응답만 기다리고, 포함되었는지 확인하려면 수동으로 트랜잭션 결과를 쿼리합니다.
+* `async`: CLI가 즉시 반환합니다 (트랜잭션이 실패할 수 있음) - 사용하지 마세요.
+
+트랜잭션 결과를 쿼리하려면 다음 명령을 사용할 수 있습니다:
+
+```bash
+injectived tx query TX_HASH
+```
+
+## 추가 문제 해결
+
+때때로 config가 올바르게 설정되지 않습니다. 다음을 명령줄에 추가하여 올바른 노드 RPC endpoint를 강제할 수 있습니다. 다른 사람과 명령을 공유할 때 모든 플래그를 명령줄에 명시적으로 설정하는 것이 좋습니다. (chain-id, node, keyring-backend 등)
+
+```bash
+injectived --node https://sentry.tm.injective.network:443
+```
