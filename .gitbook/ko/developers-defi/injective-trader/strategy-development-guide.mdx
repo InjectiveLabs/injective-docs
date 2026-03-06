@@ -1,0 +1,717 @@
+---
+title: 전략 개발 가이드
+---
+
+# 전략 개발 가이드
+
+## 구성 가이드
+
+Injective Trader는 동작, 컴포넌트 및 전략 매개변수를 정의하기 위해 YAML 구성 파일을 사용합니다.
+
+집중해야 할 가장 중요한 구성 섹션은 다음과 같습니다:
+
+* `LogLevel`
+* `Components` 섹션 아래 `Initializer`의 `Network` 및 `MarketTickers`
+* `Strategies` 섹션
+
+구성 구조에 대한 자세한 설명은 다음과 같습니다:
+
+### 최상위 매개변수
+
+```yaml
+Exchange: Helix                # 사용할 거래소
+LogLevel: INFO                 # 로깅 레벨 (DEBUG, INFO, WARNING, ERROR)
+```
+
+### Components 섹션
+
+`Components` 섹션은 프레임워크 컴포넌트를 구성합니다:
+
+```yaml
+Components:
+  # 체인 초기화 및 마켓 설정
+  Initializer:
+    Network: mainnet           # 연결할 네트워크 (mainnet 또는 testnet)
+    MarketTickers:             # 추적할 마켓 티커 (ID로 변환됨)
+      - INJ/USDT PERP
+      - ETH/USDT
+    BotName: MyBot
+
+  # 체인 리스닝 구성
+  ChainListener:
+    ReconnectionDelay: 5       # 재연결 시도 전 대기 시간(초)
+    LargeGapThreshold: 50      # orderbook 스냅샷 요청을 위한 시퀀스 갭 임계값
+
+  # 트랜잭션 브로드캐스팅 구성
+  MessageBroadcaster:
+    ErrorCodesJson: config/error_codes.json   # tx 검증을 위한 오류 코드 조회
+    GranteePool:               # authz 트랜잭션 모드용
+      MaxPendingTxs: 5         # grantee당 최대 대기 중 트랜잭션
+      ErrorThreshold: 3        # grantee 차단 전 연속 오류 수
+      BlockDuration: 300       # 오류 후 grantee 차단 시간(초)
+      RotationInterval: 1      # grantee 로테이션 간격(초)
+    RefreshInterval: 300       # 권한 부여 갱신 확인 간격(초)
+    Batch:                     # 트랜잭션 배칭 설정
+      MaxBatchSize: 15         # 배치당 최대 메시지 수
+      MinBatchSize: 3          # 즉시 전송을 트리거하는 최소 메시지 수
+      MaxGasLimit: 5000000     # 배치당 최대 가스
+      MaxBatchDelay: 0.5       # 배치 완료 대기 최대 시간(초)
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**참고**: 대부분의 사용자는 `Network`만 관리하고 수신하려는 모든 마켓을 `MarketTickers`에 포함하면 됩니다.
+이러한 고급 컴포넌트 설정을 수정할 필요가 없습니다. 기본값은 대부분의 사용 사례에서 잘 작동합니다.
+</Callout>
+
+### Strategies 섹션
+
+`Strategies` 섹션은 각 트레이딩 전략을 정의합니다:
+
+```yaml
+Strategies:
+  SimpleStrategy:                                    # 전략 식별자 (선택 사항)
+    # 필수 매개변수
+    Name: "SimpleStrategy"                           # 전략 이름 (로그에 사용)
+    Class: "SimpleStrategy"                          # [필수] 인스턴스화할 Python 클래스 이름
+    MarketIds:                                       # [필수] 거래할 마켓
+      - "0x9b9980167ecc3645ff1a5517886652d94a0825e54a77d2057cbbe3ebee015963"  # INJ/USDT PERP
+    AccountAddresses:                                # [필수] 사용할 계정
+      - "inj1youractualaccount..."                   # (env의 개인 키와 일치해야 함)
+    TradingAccount: "inj1youractualaccount..."       # [필수] 주문 배치용 계정 (env의 개인 키와 일치해야 함)
+
+    # 선택적 매개변수
+    FeeRecipient: "inj1feerecipient..."   # 거래 수수료를 받을 주소 (해당되는 경우)
+    CIDPrefix: "simple_strat"              # 클라이언트 주문 ID 접두사
+    SubaccountIds: ["0x123..."]            # 사용할 특정 subaccount (그렇지 않으면 사용 가능한 모든 것)
+
+    # 리스크 관리 구성 [선택사항]
+    # 특정 리스크 모델이 없으면 포함할 필요 없음
+    Risk: "BasicRiskModel"                 # 적용할 리스크 모델 (리스크 관리 사용 시)
+    RiskConfig:                            # 리스크 임계값
+      DrawdownWarning: 0.1                 # 10% drawdown 경고 임계값
+      DrawdownCritical: 0.2                # 20% drawdown 위험 임계값
+      MarginWarning: 0.7                   # 70% 마진 사용 경고
+      MarginCritical: 0.8                  # 80% 마진 사용 위험
+```
+
+**필수 전략 매개변수:**
+
+* `Class`: Python 클래스 이름과 정확히 일치해야 함
+* `MarketIds`: 이 전략에서 거래할 마켓 ID 목록 (hex 형식 사용)
+* `AccountAddresses`: 이 전략에서 거래에 사용할 계정 목록
+* `TradingAccount`: 주문 실행에 사용되는 계정 (`AccountAddresses`에 있어야 함)
+
+**권장 매개변수:**
+
+* `CIDPrefix`: 클라이언트 주문 ID 접두사 (주문 식별에 도움)
+* `Name`: 로그 및 모니터링을 위한 사람이 읽을 수 있는 이름
+
+**커스텀 매개변수:**
+
+* 전략에 필요한 모든 커스텀 매개변수를 추가할 수 있음
+* 전략 이름 아래의 모든 매개변수는 `self.config`에서 사용 가능
+* 명확성을 위해 `Parameters` 섹션 아래에 관련 매개변수 그룹화
+
+### Trading Mode 구성
+
+프레임워크는 두 가지 거래 모드를 지원합니다:
+
+#### Direct Execution Mode
+
+```yaml
+Strategies:
+  SimpleStrategy:
+    # 기타 매개변수...
+    TradingAccount: "inj1youraccount..."   # 트랜잭션에 서명하고 브로드캐스트할 계정
+```
+
+#### Authorization (Authz) Mode
+
+```yaml
+Strategies:
+  SimpleStrategy:
+    # 기타 매개변수...
+    Granter: "inj1granteraccount..."   # 거래 실행 권한을 부여하는 계정
+    Grantees:                          # granter를 대신하여 거래를 실행할 수 있는 계정
+      - "inj1grantee1..."
+      - "inj1grantee2..."
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**참고**: direct execution을 위한 `TradingAccount` 또는 authorization mode를 위한 `Granter`와 `Grantees`를 지정해야 합니다.
+프레임워크는 초기화 중에 이 요구 사항을 적용합니다.
+</Callout>
+
+### RetryConfig 섹션
+
+`RetryConfig` 섹션은 네트워크 작업에 대한 재시도 동작을 제어합니다:
+
+```yaml
+RetryConfig:
+  # 전역 재시도 설정
+  DefaultRetry:
+    max_attempts: 3            # 최대 재시도 횟수
+    base_delay: 1.0            # 재시도 간 기본 지연(초)
+    max_delay: 32.0            # 최대 지연 제한(초)
+    jitter: true               # 지연에 무작위성 추가
+    timeout: 30.0              # 작업 타임아웃(초)
+    error_threshold: 10        # 서킷 브레이킹 전 오류 수
+    error_window: 60           # 오류 카운팅 윈도우(초)
+
+  # 컴포넌트별 재시도 설정 (기본값 재정의)
+  ChainListener:
+    max_attempts: 5            # 체인 리스너에 대한 더 많은 재시도
+    base_delay: 2.0
+    max_delay: 45.0
+  MessageBroadcaster:
+    max_attempts: 3
+    base_delay: 1.0
+    max_delay: 30.0
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**참고**: RetryConfig에는 합리적인 기본값이 있으며 특정 연결 문제가 발생하지 않는 한 일반적으로 커스터마이징이 필요하지 않습니다.
+</Callout>
+
+***
+
+이제 전체 구조를 이해했으므로 커스텀 전략을 개발할 준비가 되었습니다!
+
+## 전략 개발 가이드
+
+Injective Trader의 전략은 `Strategy` 기본 클래스를 기반으로 일관된 구조를 따릅니다. 이 섹션에서는 효과적인 전략을 구축하는 방법을 설명합니다.
+
+### Strategy 클래스 구조
+
+전략 클래스는 기본 `Strategy` 클래스를 상속합니다:
+
+```python
+from src.core.strategy import Strategy, StrategyResult
+from src.utils.enums import UpdateType, Side
+
+class SimpleStrategy(Strategy):
+    def __init__(self, logger, config):
+		"""
+        logger와 구성으로 전략 초기화.
+
+        Args:
+            logger: 전략 로깅을 위한 Logger 인스턴스
+            config: 전략 구성 딕셔너리
+                필수 키:
+                - MarketIds: 거래할 마켓 ID 목록
+                - AccountAddresses: 사용할 계정 주소 목록
+                선택적 키:
+                - Name: 전략 이름
+                - Parameters: 전략별 매개변수
+                - RiskConfig: 리스크 관리 매개변수
+        """
+        super().__init__(logger, config)
+
+    def on_initialize(self, accounts, markets):
+        """
+        전략별 상태 및 매개변수 초기화.
+        전략이 업데이트 처리를 시작하기 전에 한 번 호출됩니다.
+
+        Args:
+            accounts: account_address -> Account 딕셔너리
+            markets: market_id -> Market 딕셔너리
+        """
+        pass
+
+    async def _execute_strategy(self, update_type, processed_data):
+        """
+        전략별 실행 로직.
+
+       Args:
+          update_type: 처리 중인 업데이트 유형
+          processed_data: 핸들러 처리 후 업데이트별 데이터 딕셔너리
+              공통 필드:
+              - market_id: 마켓 식별자
+              - account_address: 계정 주소 (계정 업데이트용)
+              - subaccount_id: Subaccount 식별자 (포지션/거래 업데이트용)
+
+        Returns:
+            StrategyResult:
+            - orders
+            - cancellations
+            - margin updates
+        """
+        pass
+```
+
+#### Strategy Constructor (`__init__`)
+
+전략 클래스에는 부모 클래스 생성자를 호출하는 생성자가 포함될 수 있습니다:
+
+```python
+def __init__(self, logger, config):
+    super().__init__(logger, config)
+
+    # 마켓이나 계정이 필요 없는 커스텀 초기화
+    self.custom_parameter = 42
+
+    # 선택사항: 커스텀 핸들러 재정의
+    self.handlers[UpdateType.OnOrderbook] = MyCustomOrderbookHandler(
+        self.logger, self.config, self.metrics
+    )
+
+    # 선택사항: 커스텀 성능 메트릭 재정의
+    self.my_metrics = MyCustomPerformanceMetrics(self.logger)
+```
+
+기본 클래스 생성자는 다음을 처리합니다:
+
+1. 매개변수 검증 및 추출
+2. 표준 메트릭 및 핸들러 설정
+3. 상태 추적 컨테이너 초기화
+4. 거래 모드 설정 (direct 또는 authz)
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**중요**: `__init__` 메서드는 마켓 데이터나 계정 정보에 접근할 수 없습니다.
+이러한 리소스가 필요한 작업에는 `on_initialize`를 사용하세요.
+</Callout>
+
+기본 `__init__`에서 제공하는 사용 가능한 속성:
+
+| **속성**             | **설명**                                       | **소스**                                                             | **필수**   |
+| ------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------- | -------------- |
+| `self.name`              | 로그에 사용되는 전략 이름                             | config의 `Name`에서                                                     | YES            |
+| `self.logger`            | Logger 인스턴스                                       | 전략별 로깅용                                          | YES            |
+| `self.config`            | 완전한 전략 구성                       | config의 `Strategies` 섹션 아래 해당 전략 하위 섹션 | YES            |
+| `self.market_ids`        | 이 전략에 관심 있는 마켓 ID 목록        | config의 `MarketIds`에서                                                | YES            |
+| `self.account_addresses` | 이 전략에 관심 있는 계정 주소 목록 | config의 `AccountAddresses`에서                                         | YES            |
+| `self.subaccount_ids`    | subaccount ID 목록                                | config의 `SubaccountIds`에서                                            | NO             |
+| `self.markets`           | market_id → `Market` 객체 딕셔너리           | 초기화 중 채워짐                                        | NO             |
+| `self.accounts`          | account_address → `Account` 객체 딕셔너리    | 초기화 중 채워짐                                        | NO             |
+| `self.trading_mode`      | "direct" 또는 "authz"                                   | config 기반                                                        | YES            |
+| `self.fee_recipient`     | 수수료 수신자 주소                                 | config의 `FeeRecipient`에서                                             | NO             |
+| `self.cid_prefix`        | 클라이언트 주문 ID 접두사                                | config의 `CIDPrefix`에서                                                | NO             |
+| `self.metrics`           | 성능 추적                                  | 메트릭 및 알림 기록용                                       | YES [DEFAULT] |
+| `self.handlers`          | 이벤트 핸들러 딕셔너리                             | UpdateType → Handler 객체                                           | YES [DEFAULT] |
+
+#### Initialization Method (`on_initialize`)
+
+`on_initialize` 메서드는 마켓과 계정이 로드된 후 프레임워크 시작 중에 한 번 호출됩니다.
+
+**목적**: 전략 상태 및 매개변수 초기화
+
+**매개변수**:
+* `accounts`: account_address → `Account` 객체 딕셔너리
+* `markets`: market_id → `Market` 객체 딕셔너리
+
+**반환**: [선택사항] 초기 주문이 있는 `StrategyResult` (있는 경우)
+
+```python
+def on_initialize(self, accounts, markets):
+    # 이제 모든 마켓 및 계정 데이터에 접근할 수 있습니다
+
+    # 예제: 마켓 메타데이터 접근
+    for market_id in self.market_ids:
+        market = markets[market_id]
+        self.logger.info(f"Market {market_id} tick sizes: "
+                         f"price={market.min_price_tick}, "
+                         f"quantity={market.min_quantity_tick}")
+
+    # 예제: 마켓 정보가 필요한 매개변수 초기화
+    self.avg_prices = {
+        market_id: markets[market_id].orderbook.tob()[0]
+        for market_id in self.market_ids
+        if markets[market_id].orderbook.tob()[0]
+    }
+
+    # 예제: 초기 주문 배치
+    if self.config.get("PlaceInitialOrders", False):
+        result = StrategyResult()
+        # 초기 주문 추가...
+        return result
+
+    return None  # 초기 주문 없음
+```
+
+#### Strategy Logic (`_execute_strategy`) Method
+
+`_execute_strategy` 메서드는 "Strategy Execution (`execute`) Method"의 일부입니다. 기본 클래스 `execute` 메서드는 전체 실행 흐름을 처리합니다:
+
+1. **초기화 확인**: 필요한 경우 전략 초기화
+2. **상태 업데이트**: 전략의 계정 및 마켓 참조 업데이트
+3. **데이터 처리**: 적절한 핸들러를 통해 원시 업데이트 데이터 처리
+4. **전략 실행**: 처리된 데이터로 `_execute_strategy` 메서드 호출
+5. **주문 보강**: 주문에 기본값 추가 (수수료 수신자, 클라이언트 ID)
+
+이 메서드를 재정의할 필요는 거의 없습니다. 대신 커스텀 거래 로직이 들어가는 `_execute_strategy` 구현에 집중하세요:
+
+**목적**: 마켓 데이터 분석 및 거래 신호 생성
+
+**매개변수**:
+* `update_type`: 처리 중인 업데이트 유형
+* `processed_data`: 관련 필드가 있는 핸들러 처리 데이터 딕셔너리
+
+**반환**: 주문/취소가 있는 `StrategyResult` 또는 `None`
+
+```python
+async def _execute_strategy(self, update_type, processed_data):
+    # orderbook 업데이트에만 응답
+    if update_type != UpdateType.OnOrderbook:
+        return None
+
+    # 마켓 데이터 가져오기
+    market_id = processed_data["market_id"]
+    market = self.markets[market_id]
+
+    # 현재 가격 가져오기
+    bid, ask = market.orderbook.tob()
+    if not bid or not ask:
+        self.logger.warning(f"Incomplete orderbook for {market_id}")
+        return None
+
+    # 전략 로직 구현
+    spread = (ask - bid) / bid
+    if spread < self.min_spread_threshold:
+        self.logger.info(f"Spread too narrow: {spread:.2%}")
+        return None
+
+    # 주문을 위한 subaccount 가져오기
+    subaccount_id = self.config.get("SubaccountIds", [""])[0]
+    if not subaccount_id:
+        return None
+
+    # 제한 초과를 피하기 위해 현재 포지션 확인
+    position = self.get_position(subaccount_id, market_id)
+    current_size = Decimal("0")
+    if position:
+        current_size = position.get("quantity", Decimal("0"))
+
+    # 주문 매개변수 결정
+    result = StrategyResult()
+
+    # 새 주문 생성
+    if current_size < self.max_position:
+        buy_order = Order(
+            market_id=market_id,
+            subaccount_id=subaccount_id,
+            order_side=Side.BUY,
+            price=bid,
+            quantity=self.order_size,
+            market_type=market.market_type # v0.5.1부터 필수 필드
+        )
+        result.orders.append(buy_order)
+        self.logger.info(f"Creating BUY order at {bid}: {self.order_size}")
+
+    # 필요한 경우 기존 주문 취소
+    for order_hash in self.active_orders:
+        result.cancellations.append({
+            "market_id": market_id,
+            "subaccount_id": subaccount_id,
+            "order_hash": order_hash
+        })
+
+    return result
+```
+
+`_execute_strategy`에서 다음을 수행할 수 있습니다:
+
+* 업데이트 유형별 필터링으로 특정 이벤트 처리
+* 현재 마켓 데이터 및 계정 상태 접근
+* 주문 배치 전 기존 포지션 확인
+* 마켓 조건에 따른 커스텀 거래 로직 구현
+* 새 주문 생성 및 기존 주문 취소
+* 파생상품 마켓의 포지션 마진 업데이트
+* 모니터링 및 디버깅을 위한 전략 결정 로깅
+
+프레임워크는 반환된 `StrategyResult`를 기반으로 트랜잭션 생성, 시뮬레이션 및 브로드캐스팅과 같은 실행 세부 사항을 처리합니다.
+
+#### 모범 사례
+
+1. **`on_initialize`에서 모든 매개변수 초기화**
+   * `self.config`에서 매개변수 가져오기
+   * 누락된 매개변수에 대한 기본값 설정
+   * 내부 상태 변수 초기화
+2. **업데이트 유형 필터링**
+   * 전략이 관심 있는 업데이트 유형만 처리
+   * processed_data에서 필수 필드 항상 확인
+3. **마켓 데이터 검증**
+   * 사용 전 bid/ask 존재 여부 확인
+   * 결정 전 포지션 존재 여부 확인
+4. **마켓 제약 준수**
+   * 가격과 수량을 마켓 틱 사이즈로 반올림
+   * 최소 주문 크기 및 명목 요구 사항 확인
+5. **거래 계정 적절히 처리**
+   * 거래 계정이 AccountAddresses에 있는지 확인
+   * 주문에 올바른 subaccount_id 지정
+6. **적절한 로깅 구현**
+   * 전략 결정 및 중요 이벤트 로깅
+   * 적절한 로그 레벨 사용 (info, warning, error)
+7. **커스텀 매개변수 설정**
+   * 전략별 값에 `Parameters` 섹션 사용
+   * 예상되는 매개변수 문서화
+
+### Custom Handlers
+
+프레임워크는 데이터를 전략에 전달하기 전에 전문화된 핸들러를 통해 업데이트를 처리합니다. 데이터 처리에 대한 더 많은 제어를 위해 커스텀 핸들러를 만들 수 있습니다.
+
+#### Handler Base Class
+
+모든 핸들러는 `UpdateHandler` 기본 클래스를 상속합니다:
+
+```python
+class UpdateHandler(ABC):
+    def __init__(self, logger, config, metrics):
+        self.logger = logger
+        self.config = config
+        self.metrics = metrics
+
+    async def process(self, **update_data) -> Dict:
+        """업데이트 데이터 처리 및 처리된 결과 반환"""
+        try:
+            return await self._process_update(**update_data)
+        except Exception as e:
+            self.logger.error(f"Error processing update: {e}")
+            return None
+
+    @abstractmethod
+    async def _process_update(self, **kwargs) -> Dict:
+        """특정 업데이트 유형 처리. 서브클래스에서 구현되어야 함."""
+        pass
+```
+
+#### Creating a Custom Handler
+
+커스텀 핸들러를 만들려면:
+
+1. 적절한 핸들러 기본 클래스 상속
+2. `_process_update` 메서드 재정의
+3. 전략의 생성자에 핸들러 등록
+
+```python
+from src.core.handlers import OrderbookHandler
+
+class MyCustomOrderbookHandler(OrderbookHandler):
+    async def _process_update(self, **update_data):
+        # 기본 처리된 데이터 가져오기
+        processed_data = await super()._process_update(**update_data)
+        if not processed_data:
+            return None
+
+        # 커스텀 메트릭 추가
+        market = update_data.get("market")
+        bid, ask = market.orderbook.tob()
+
+        if bid and ask:
+            # 커스텀 메트릭 계산
+            spread = ask - bid
+            spread_pct = (ask - bid) / bid
+
+            # 처리된 데이터에 추가
+            processed_data["spread"] = spread
+            processed_data["spread_pct"] = spread_pct
+
+            # 메트릭 시스템에 기록
+            self.metrics.add_custom_metric(f"{market.market_id}_spread", spread_pct)
+
+        return processed_data
+```
+
+#### Registering Custom Handlers
+
+전략 생성자에 커스텀 핸들러 등록:
+
+```python
+def __init__(self, logger, config):
+    super().__init__(logger, config)
+
+    # 기본 핸들러를 커스텀 구현으로 교체
+    self.handlers[UpdateType.OnOrderbook] = MyCustomOrderbookHandler(
+        self.logger, self.config, self.metrics
+    )
+    self.handlers[UpdateType.OnPosition] = MyCustomPositionHandler(
+        self.logger, self.config, self.metrics
+    )
+```
+
+#### Available Handler Types
+
+프레임워크는 확장할 수 있는 다음 핸들러 유형을 제공합니다:
+
+| **Handler Class**  | **Update Type**            | **목적**                  |
+| ------------------ | -------------------------- | ---------------------------- |
+| `OrderbookHandler` | `UpdateType.OnOrderbook`   | orderbook 업데이트 처리    |
+| `OracleHandler`    | `UpdateType.OnOraclePrice` | oracle 가격 업데이트 처리 |
+| `PositionHandler`  | `UpdateType.OnPosition`    | 포지션 업데이트 처리     |
+| `BalanceHandler`   | `UpdateType.OnBankBalance` | 잔액 업데이트 처리      |
+| `DepositHandler`   | `UpdateType.OnDeposit`     | 입금 업데이트 처리      |
+| `TradeHandler`     | `UpdateType.OnSpotTrade`   | 거래 실행 처리      |
+| `OrderHandler`     | `UpdateType.OnSpotOrder`   | 주문 업데이트 처리        |
+
+## 주요 데이터 구조
+
+### Update Types and Corresponding Data Fields
+
+프레임워크는 전략이 반응할 수 있는 다음 주요 이벤트 유형을 처리합니다:
+
+| **Update Type**                | **설명**            | **주요 데이터 필드**                                                                                                                                                            |
+| ------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `UpdateType.OnOrderbook`       | Orderbook 업데이트          | <p>- market_id: str<br />- market: 업데이트된 orderbook이 있는 Market 객체<br />- sequence: int<br />- block_time: Optional[str]</p>                                                    |
+| `UpdateType.OnOraclePrice`     | Oracle 가격 업데이트       | <p>- market_id: str<br />- symbol: str<br />- price: Decimal<br />- timestamp: int</p>                                                                                               |
+| `UpdateType.OnBankBalance`     | 계정 잔액 업데이트    | <p>- account_address: str<br />- account: Account 객체<br />- balance: BankBalance 객체</p>                                                                                    |
+| `UpdateType.OnDeposit`         | Subaccount 입금 업데이트 | <p>- account_address: str<br />- subaccount_id: str<br />- account: Account 객체<br />- deposit: Deposit 객체</p>                                                                |
+| `UpdateType.OnPosition`        | 포지션 변경           | <p>- market_id: str<br />- account_address: str<br />- subaccount_id: str<br />- account: Account 객체<br />- position: Position 객체</p>                                          |
+| `UpdateType.OnSpotTrade`       | Spot 거래 실행       | <p>- market_id: str<br />- subaccount_id: str<br />- account: Account 객체<br />- trade: 거래를 나타내는 Order 객체<br />- order: 체결된 원본 Order 객체</p> |
+| `UpdateType.OnDerivativeTrade` | Derivative 거래 실행 | <p>- market_id: str<br />- subaccount_id: str<br />- account: Account 객체<br />- trade: 거래를 나타내는 Order 객체<br />- order: 체결된 원본 Order 객체</p> |
+| `UpdateType.OnSpotOrder`       | Spot 주문 업데이트         | <p>- market_id: str<br />- subaccount_id: str<br />- account: Account 객체<br />- order: Order 객체</p>                                                                          |
+| `UpdateType.OnDerivativeOrder` | Derivative 주문 업데이트   | <p>- market_id: str<br />- subaccount_id: str<br />- account: Account 객체<br />- order: Order 객체</p>                                                                          |
+
+### Strategy Result
+
+전략이 조치를 취하기로 결정하면 다음을 포함하는 `StrategyResult` 객체를 반환합니다:
+
+| **필드**        | **설명**                                               | **내용**                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `orders`         | 생성할 새 주문 목록                                  | `[Order(...), Order(...)]`                                                                                                                                  |
+| `cancellations`  | 취소할 주문 목록                                      | `[{"market_id": "0x123...", "subaccount_id": "0x456...", "order_hash": "0x789..."}]`                                                                        |
+| `margin_updates` | 마진 조정 목록                                    | `[{"action": "increase", "market_id": "0x123...", "source_subaccount_id": "0x456...", "destination_subaccount_id": "0x456...", "amount": Decimal("50.0")}]` |
+| `liquidations`   | 마진 부족으로 청산될 포지션 목록 | `[{"market_id": "0x123...", "subaccount_id": "0x456...", "executor_subaccount_id": "0x789...", "price": price, "quantity": quantity, "margin": margin}]`    |
+
+### Market
+
+| **속성**         | **유형**                                               | **설명**                          | **참고**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------- | ------------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `market_id`          | `str`                                                  | 고유 마켓 식별자                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `market_type`        | `MarketType` 객체                                    | 마켓 유형 (SPOT, DERIVATIVE 또는 BINARY) | v0.5.1부터 필수                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `market`             | `BinaryOptionMarket \| DerivativeMarket \| SpotMarket` | `pyinjective`의 Market 객체         | <p>SpotMarket: <a href="https://api.injective.exchange/#chain-exchange-for-spot-spotmarkets">https://api.injective.exchange/#chain-exchange-for-spot-spotmarkets</a><br />DerivativeMarket: <a href="https://api.injective.exchange/#chain-exchange-for-derivatives-derivativemarkets">https://api.injective.exchange/#chain-exchange-for-derivatives-derivativemarkets</a><br />BinaryOptionMarket: <a href="https://api.injective.exchange/#chain-exchange-for-binary-options-binaryoptionsmarkets">https://api.injective.exchange/#chain-exchange-for-binary-options-binaryoptionsmarkets</a></p> |
+| `orderbook`          | `Orderbook` 객체                                     | 현재 마켓 orderbook                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `oracle_price`       | `Decimal`                                              | 현재 마켓 oracle 가격              |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `min_price_tick`     | `Decimal`                                              | 최소 가격 증분                  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `min_quantity_tick`  | `Decimal`                                              | 최소 수량 증분               |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `base_oracle_price`  | `Decimal`                                              | 기본 토큰 oracle 가격                  | 선택사항                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `quote_oracle_price` | `Decimal`                                              | 견적 토큰 oracle 가격                 | 선택사항                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `oracle_timestamp`   | `int`                                                  | Oracle 가격 타임스탬프                   | 선택사항                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `mark_price`         | `Decimal`                                              | 파생상품 마크 가격                | 선택사항                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+
+### Orderbook
+
+| **속성** | **유형**             | **설명**                            | **참고**                                |
+| ------------ | -------------------- | ------------------------------------------ | --------------------------------------- |
+| `sequence`   | `str`                | Orderbook 시퀀스 번호                  |                                         |
+| `bids`       | `List[L2PriceLevel]` | 매수 가격 레벨 목록                   | `L2PriceLevel` : `price` 및 `quantity` |
+| `asks`       | `List[L2PriceLevel]` | 매도 가격 레벨 목록                   | `L2PriceLevel` : `price` 및 `quantity` |
+| `tob`        | `Tuple`              | 최상위 호가 (bid, ask) 가격              |                                         |
+| `is_health`  | `bool`               | orderbook이 정상 상태인지 표시 | 시퀀스가 0일 때 `False`              |
+
+### Account
+
+| **속성**      | **유형**                 | **설명**                    | **참고**                                |
+| ----------------- | ------------------------ | ---------------------------------- | --------------------------------------- |
+| `private_key`     | `PrivateKey`             | Injective 개인 키              | 직접 접근 불가                 |
+| `public_key`      | `PublicKey`              | 해당 공개 키           |                                         |
+| `address`         | `Address`                | 계정 주소 객체             | 시퀀스 정보 포함           |
+| `account_address` | `str`                    | Bech32 주소 문자열              | 형식: "inj1..."                       |
+| `bank_balances`   | `Dict[str, BankBalance]` | 계정의 토큰 잔액          | 키: denom                              |
+| `balances`        | `Dict[str, Balance]`     | 대체 잔액 표현 | 키: denom                              |
+| `subaccounts`     | `Dict[str, SubAccount]`  | 이 계정이 소유한 Subaccount  | 키: subaccount_id                     |
+| `sequence`        | `int`                    | 트랜잭션 시퀀스 번호        | address.sequence에 접근하는 속성 |
+
+### BankBalance
+
+| **속성** | **유형**  | **설명**    | **참고**                  |
+| ------------ | --------- | ------------------ | ------------------------- |
+| `denom`      | `str`     | 토큰 denomination | 예: "inj", "peggy0x..." |
+| `amount`     | `Decimal` | 토큰 금액       | 사람이 읽을 수 있는 형식     |
+
+### Balance
+
+| **속성** | **유형**  | **설명**    | **참고**                   |
+| ------------ | --------- | ------------------ | -------------------------- |
+| `denom`      | `str`     | 토큰 denomination | 예: "inj", "peggy0x..."  |
+| `total`      | `Decimal` | 총 잔액      |                            |
+| `available`  | `Decimal` | 사용 가능한 잔액  | 총액에서 잠긴 금액 차감 |
+
+### SubAccount
+
+| **속성**        | **유형**                      | **설명**              | **참고**                           |
+| ------------------- | ----------------------------- | ---------------------------- | ---------------------------------- |
+| `subaccount_id`     | `str`                         | 고유 subaccount 식별자 | 형식: "0x..."                    |
+| `portfolio`         | `Dict[str, Deposit]`          | subaccount의 토큰 입금 | 키: denom                         |
+| `positions`         | `Dict[str, Position]`         | 거래 포지션            | 키: market_id                    |
+| `open_bid_orders`   | `Dict[str, Dict[str, Order]]` | 미체결 매수 주문              | `market_id -> {order_hash: Order}` |
+| `open_ask_orders`   | `Dict[str, Dict[str, Order]]` | 미체결 매도 주문             | `market_id -> {order_hash: Order}` |
+| `traded_bid_orders` | `Dict[str, Dict[str, Order]]` | 체결된 매수 주문            | `market_id -> {order_hash: Order}` |
+| `traded_ask_orders` | `Dict[str, Dict[str, Order]]` | 체결된 매도 주문           | `market_id -> {order_hash: Order}` |
+
+### Deposit
+
+| **속성**        | **유형**  | **설명**          | **참고**                       |
+| ------------------- | --------- | ------------------------ | ------------------------------ |
+| `denom`             | `str`     | 토큰 denomination       | 예: "inj", "peggy0x..."      |
+| `total_balance`     | `Decimal` | 총 입금 금액     |                                |
+| `available_balance` | `Decimal` | 사용 가능한 입금 금액 | 총액에서 마진 및 잠긴 금액 차감 |
+
+### Position
+
+| **속성**               | **유형**  | **설명**              | **참고**   |
+| -------------------------- | --------- | ---------------------------- | ---------- |
+| `subaccount_id`            | `str`     | 소유자 subaccount ID          |            |
+| `market_id`                | `str`     | 마켓 식별자            |            |
+| `quantity`                 | `Decimal` | 포지션 크기                |            |
+| `entry_price`              | `Decimal` | 평균 진입 가격          |            |
+| `margin`                   | `Decimal` | 총 마진 금액          |            |
+| `cumulative_funding_entry` | `Decimal` | 진입 시 누적 펀딩  |            |
+| `is_long`                  | `bool`    | 롱 (true) 또는 숏 (false) |            |
+| `unrealized_pnl`           | `Decimal` | 미실현 손익       | 기본값: 0 |
+| `total_volume`             | `Decimal` | 총 거래량         | 기본값: 0 |
+| `trades_count`             | `int`     | 거래 횟수             | 기본값: 0 |
+| `mark_price`               | `Decimal` | 현재 시장 가격         | 선택사항   |
+| `liquidation_price`        | `Decimal` | 청산 임계값        | 선택사항   |
+| `margin_ratio`             | `Decimal` | 현재 마진 비율         | 선택사항   |
+
+### Order
+
+| **속성**     | **유형**      | **설명**             | **참고**                      |
+| ---------------- | ------------- | --------------------------- | ----------------------------- |
+| `market_id`      | `str`         | 마켓 식별자           |                               |
+| `subaccount_id`  | `str`         | Subaccount 식별자       |                               |
+| `order_side`     | `Side`        | 매수 또는 매도                 | Side.BUY 또는 Side.SELL         |
+| `price`          | `Decimal`     | 주문 가격                 |                               |
+| `quantity`       | `Decimal`     | 주문 수량              |                               |
+| `order_hash`     | `str`         | 고유 주문 식별자     | 선택사항, 체인에서 설정        |
+| `fillable`       | `Decimal`     | 미체결 수량 | 선택사항                      |
+| `filled`         | `Decimal`     | 체결된 수량             | 선택사항                      |
+| `status`         | `OrderStatus` | 주문 상태                | BOOKED, PARTIAL_FILLED 등 |
+| `order_type`     | `str`         | 주문 유형                  | 기본값: "LIMIT"              |
+| `margin`         | `Decimal`     | 마진 금액 (파생상품) | 선택사항                      |
+| `leverage`       | `Decimal`     | 레버리지 배수           | 선택사항                      |
+| `trigger_price`  | `Decimal`     | 조건부 주문용      | 선택사항                      |
+| `market_type`    | `MarketType`  | SPOT, DERIVATIVE, BINARY    | 선택사항                      |
+| `fee_recipient`  | `str`         | 수수료 수신자 주소       | 기본값: ""                   |
+| `cid`            | `str`         | 클라이언트 주문 ID             | 선택사항                      |
+| `created_at`     | `datetime`    | 생성 타임스탬프          | 선택사항                      |
+| `updated_at`     | `datetime`    | 마지막 업데이트 타임스탬프       | 선택사항                      |
+| `position_delta` | `Dict`        | 포지션 변경 데이터        | 파생상품 선택사항      |
+| `payout`         | `Decimal`     | 예상 지급액             | 파생상품 선택사항      |
+| `tx_hash`        | `str`         | 트랜잭션 해시            | 선택사항                      |
+| `error_code`     | `str`         | 실패 시 오류 코드        | 선택사항                      |
+| `error_message`  | `str`         | 오류 세부 정보               | 선택사항                      |
+
+### OrderStatus (Enum)
+
+| **값**        | **설명**           |
+| ---------------- | ------------------------- |
+| `BOOKED`         | 주문 수락 및 활성화 |
+| `PARTIAL_FILLED` | 부분 체결          |
+| `FILLED`         | 완전 체결         |
+| `CANCELLED`      | 사용자에 의해 취소됨           |
+| `EXPIRED`        | 만료됨 (시간 기반)      |
+
+### Side (Enum)
+
+| **값** | **설명** |
+| --------- | --------------- |
+| `BUY`     | 매수 주문       |
+| `SELL`    | 매도 주문      |
+
+### MarketType (Enum)
+
+| **값**    | **설명**       |
+| ------------ | --------------------- |
+| `SPOT`       | Spot 마켓           |
+| `DERIVATIVE` | Derivatives 마켓    |
+| `BINARY`     | Binary options 마켓 |

@@ -1,0 +1,140 @@
+---
+title: 시작하기
+---
+
+# 시작하기
+
+Injective Trader에는 빠른 프로토타이핑과 코드베이스 익히기를 돕기 위한 "Simple Strategy"가 내장되어 있습니다.
+
+**기능:**
+
+* INJ, BTC, ETH의 orderbook 모니터링
+* 시장 가격보다 약간 낮게 매수 주문 배치
+* 시장 가격보다 약간 높게 매도 주문 배치
+* 수익성을 위한 스프레드 유지
+* 리스크 제어를 위한 포지션 제한 준수
+
+**적합한 용도:** Injective Trader에 익숙해지면서 예측 가능하고 안정적인 거래. **프로덕션 사용에는 권장되지 않습니다.**
+
+**예제 로그:**
+
+```
+[INFO] Placing BUY order: 0.1 INJ at $3.45 (spread: 0.5%)
+[INFO] Placing SELL order: 0.1 INJ at $3.47 (spread: 0.5%)
+[INFO] Order filled: BUY 0.1 INJ at $3.45
+```
+
+## 전략 커스터마이징
+
+### 주문 크기
+
+```yaml
+OrderSize: 0.5
+MaxPosition: 2.0
+```
+
+### 더 많은 마켓
+
+```yaml
+MarketTickers:
+  - INJ/USDT PERP
+  - BTC/USDT PERP
+  - ETH/USDT PERP
+  - APT/USDT PERP
+  - AVAX/USDT PERP
+  - SOL/USDT PERP
+```
+
+### 스프레드
+
+```yaml
+SpreadThreshold: 0.01   # 보수적
+SpreadThreshold: 0.002  # 공격적
+```
+
+## 일반적인 구성
+
+### Conservative Maker
+
+```yaml
+OrderSize: 0.05
+MaxPosition: 0.5
+SpreadThreshold: 0.01
+```
+
+### Aggressive Maker
+
+```yaml
+OrderSize: 0.5
+MaxPosition: 5.0
+SpreadThreshold: 0.002
+```
+
+### Multi-Market Strategy
+
+```yaml
+MarketTickers:
+  - INJ/USDT PERP
+  - BTC/USDT PERP
+  - ETH/USDT PERP
+  - APT/USDT PERP
+  - AVAX/USDT PERP
+  - SOL/USDT PERP
+  - TON/USDT PERP
+  - ATOM/USDT PERP
+```
+
+## 봇 모니터링
+
+```bash
+tail -f logs/my_bot.log
+grep "Order filled" logs/my_bot.log
+grep "ERROR" logs/my_bot.log
+```
+
+### 주요 메시지
+
+* ✅ Order placed successfully
+* 💰 Order filled
+* ⚠️ Position limit reached
+* ❌ Insufficient balance
+
+### 성능 지표
+
+* Total PnL
+* Win rate
+* Fill rate
+* Average spread
+
+## 리스크 관리
+
+* 포지션 제한 설정 (`MaxPosition`)
+* 포지션 모니터링 및 필요 시 수동으로 손절
+* 마진, 수수료 및 버퍼를 위한 충분한 USDT 유지
+
+## 문제 해결
+
+**개인 키를 찾을 수 없음**
+
+```bash
+echo $MyBot_GRANTER_INJECTIVE_PRIVATE_KEY
+```
+
+* **잔액 부족** → USDT 추가 / `OrderSize` 줄이기
+* **마켓을 찾을 수 없음** → 티커/ID 다시 확인
+* **봇 작동 중지**
+
+```bash
+grep "ERROR" logs/my_bot.log | tail -10
+python main.py MyBot config.yaml --log_path logs/my_bot.log --network mainnet
+```
+
+## 고급 기능
+
+* `AccountAddresses`를 통한 **다중 계정**
+* **커스텀 주문 유형** (limit, market, reduce-only)
+* Redis/Valkey를 통한 **외부 시그널**
+
+## 다음
+
+Injective Trader용 [커스텀 전략](/developers-defi/injective-trader/strategy-development-guide) 개발 방법을 알아보세요.

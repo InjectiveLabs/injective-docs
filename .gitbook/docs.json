@@ -1266,7 +1266,18 @@
                   "ko/developers-defi/min-quantity-tick-size",
                   "ko/developers-defi/testnet-faucet-integration",
                   "ko/developers-defi/token-launch",
-                  "ko/developers-defi/market-launch"
+                  "ko/developers-defi/market-launch",
+                  "ko/developers-defi/denom-and-bank",
+                  "ko/developers-defi/provider-oracle",
+                  {
+                    "group": "Injective Trader",
+                    "expanded": false,
+                    "pages": [
+                      "ko/developers-defi/injective-trader/index",
+                      "ko/developers-defi/injective-trader/simple-strategy",
+                      "ko/developers-defi/injective-trader/strategy-development-guide"
+                    ]
+                  }
                 ]
               },
               {
