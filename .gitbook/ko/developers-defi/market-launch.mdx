@@ -1,0 +1,45 @@
+---
+title: 마켓 출시
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+마켓을 출시하기 위한 전제 조건은 [토큰 출시](/developers-defi/token-launch/)입니다.
+</Callout>
+
+Injective에서 거래 쌍을 출시하는 것은 빠르고 쉬우며, 무엇보다 무허가입니다!
+
+다음 튜토리얼은 Ethereum에서 브릿징된 ERC-20 토큰을 base 자산으로, INJ를 quote 자산으로 하여 쌍이 상장되는 것을 가정합니다.
+
+Injective 네이티브 토큰의 경우, 브릿징 부분을 건너뛰고 6단계로 바로 이동하세요.
+
+1. [Injective Bridge](http://bridge.injective.network/)로 이동하여 Peggy 브릿지를 사용해 Ethereum에서 Injective로 선택한 ERC-20 토큰을 브릿징하는 프로세스를 시작합니다.
+
+![Injective Bridge](</img/Docs - Deposit Peggy.png>)
+
+2. 드롭다운을 클릭하고 아래로 스크롤한 다음, 고급 도구 옆의 "add"를 클릭하여 토큰 주소를 사용해 커스텀 ERC-20 토큰을 추가합니다. CoinGecko와 같은 신뢰할 수 있는 소스에서 확인하는 것이 좋습니다.
+
+![Add Custom ERC-20 Token](</img/Docs - Deposit From.png>)
+
+3. 올바른 컨트랙트 주소를 복사하여 붙여넣고 "add"를 클릭합니다.
+
+![Add Smart Contract Address](</img/Docs - Add and Bridge ERC20.png>)
+
+4. 이제 브릿징하려는 ERC-20 토큰의 원하는 양을 입력하고, "approve"를 클릭하고, 트랜잭션을 확인한 다음, "review"를 클릭하고, 트랜잭션을 확인하고 기다립니다.
+
+![Launch trading Pair](https://docs.injective.network/assets/images/ltp4-f8f97c3328c04389962ac3deb9b137a9.png) ![Launch trading Pair](https://docs.injective.network/assets/images/ltp6-7812b6fe19b088c68b8d2a9bda8df05c.png) ![Launch trading Pair](https://docs.injective.network/assets/images/ltp7-d83a52c9fc794a2934ea8f2a5371595a.png) ![Launch trading Pair](https://docs.injective.network/assets/images/ltp8-da76aaaa5ee9f233ea47bbcb1f5b53bf.png)
+
+5. approve spend와 deposit 트랜잭션이 Ethereum 블록체인에서 확인되면 브릿징 트랜잭션의 진행 상황을 볼 수 있습니다. 트랜잭션이 Injective에서 확인되면 브릿징된 ERC-20 토큰이 Injective 지갑에서 사용 가능합니다. (참고, 소스 체인에서 MetaMask를 사용한 경우 기본적으로 브릿징된 토큰은 MetaMask에 연결된 inj 주소로 전송됩니다. 이는 4단계 시작 시 수신자 주소 옆의 잠금 아이콘을 클릭하여 변경할 수 있습니다.)
+
+![Bridging Completion](</img/Docs - Transaction Submitted.png>)
+
+6. 브릿징 트랜잭션이 완료된 후, [Injective Hub](https://injhub.com/proposal/create/)로 이동하여 Injective에서 토큰을 무허가로 상장할 수 있습니다.
+
+![List on Injective](</img/Docs - New Proposal.png>)
+
+7. 첫 번째 드롭다운에서 "instant spot market launch"를 선택하고 티커를 지정합니다. 이 예제에서는 PEPE/INJ를 사용하겠습니다. 이제 드롭다운에서 base 토큰을 선택합니다. 그러나 주의하세요, 동일한 티커 아래에 여러 토큰이 존재할 수 있습니다. 항상 올바른 토큰 주소를 매칭하세요. 이 경우 토큰이 Peggy 브릿지를 사용하여 브릿징되었으므로 주소는 peggy 다음에 ERC-20 컨트랙트 주소가 옵니다.
+
+![Specify Ticker](</img/Docs - Select Ticker.png>)
+
+8. 이제 올바른 quote denom을 선택합니다. 이 경우 inj입니다. (참고, 토큰을 USDT와 페어링하려면 "올바른" USDT 주소를 선택해야 합니다. 이는 peggy 다음에 USDT의 ERC-20 컨트랙트 주소입니다.) 마지막으로 최소 가격 틱 사이즈와 최소 수량 틱 사이즈를 지정합니다. PEPE/INJ는 1센트의 아주 작은 부분에서 거래되므로 최소 틱이 그에 맞게 설정됩니다.
+
+![Select Quote Denom](</img/Docs - Quote Denom.png>)
