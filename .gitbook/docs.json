@@ -1214,6 +1214,17 @@
             ]
           },
           {
+            "group": "AI 개발자",
+            "icon": "brain",
+            "expanded": false,
+            "pages": [
+              "ko/developers-ai/index",
+              "ko/developers-ai/injective-cli-skill",
+              "ko/developers-ai/injective-evm-developer-skill",
+              "ko/developers-ai/documentation-mcp"
+            ]
+          },
+          {
             "group": "EVM 개발자",
                 "icon": "rectangle-code",
                 "expanded": false,
