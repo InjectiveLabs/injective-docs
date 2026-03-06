@@ -1,0 +1,207 @@
+---
+title: NeptuneService
+---
+
+`NeptuneService`는 Injective의 Neptune CosmWasm 스마트 컨트랙트와 상호작용하는 간단한 도구입니다. 자산 가격 조회, 환율 계산, 예치 및 출금 메시지 생성, 대출 이자율 조회가 가능합니다.
+
+아래는 `NeptuneService` 클래스의 각 메서드 사용 예제입니다.
+
+## NeptuneService 초기화
+
+서비스를 사용하기 전에 `NeptuneService`의 인스턴스를 생성하세요.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { NeptuneService } from "@injectivelabs/sdk-ts/client/wasm";
+
+// 메인넷을 사용하여 NeptuneService 인스턴스 생성
+const neptuneService = new NeptuneService(Network.MainnetSentry);
+```
+
+## 가격 조회
+
+- Neptune Price Oracle 컨트랙트에서 특정 자산의 가격을 가져옵니다. bank denom의 경우 native_token을, CW20 토큰의 경우 contract_addr가 있는 token을 사용하세요.
+
+```ts
+const assets = [
+  {
+    native_token: {
+      denom: "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7", // peggy USDT bank denom
+    },
+  },
+  {
+    token: {
+      contract_addr: "inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s", // nUSDT 컨트랙트 주소
+    },
+  },
+];
+
+const prices = await neptuneService.fetchPrices(assets);
+
+console.log(prices);
+```
+
+## 상환 비율 조회
+
+- nUSDT (CW20 토큰)와 USDT (bank 토큰) 간의 상환 비율을 계산합니다.
+
+```ts
+const cw20Asset = {
+  token: {
+    contract_addr: "inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s", // nUSDT
+  },
+};
+
+const nativeAsset = {
+  native_token: {
+    denom: "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
+  },
+};
+
+const redemptionRatio = await neptuneService.fetchRedemptionRatio({
+  cw20Asset,
+  nativeAsset,
+});
+
+console.log(`Redemption Ratio: ${redemptionRatio}`);
+```
+
+## CW20 nUSDT를 Bank USDT로 변환
+
+- 상환 비율을 사용하여 주어진 CW20 nUSDT 금액에서 bank USDT 금액을 계산합니다.
+
+```ts
+const amountCW20 = 1000; // nUSDT 금액
+const redemptionRatio = 0.95; // fetchRedemptionRatio에서 얻음
+
+const bankAmount = neptuneService.calculateBankAmount(
+  amountCW20,
+  redemptionRatio
+);
+
+console.log(`Bank USDT Amount: ${bankAmount}`);
+```
+
+## Bank USDT를 CW20 nUSDT로 변환
+
+- 상환 비율을 사용하여 주어진 bank USDT 금액에서 CW20 nUSDT 금액을 계산합니다.
+
+```ts
+const amountBank = 950; // USDT 금액
+const redemptionRatio = 0.95; // fetchRedemptionRatio에서 얻음
+
+const cw20Amount = neptuneService.calculateCw20Amount(
+  amountBank,
+  redemptionRatio
+);
+
+console.log(`CW20 nUSDT Amount: ${cw20Amount}`);
+```
+
+## 대출 이자율 조회
+
+- Neptune의 lending market 스마트 컨트랙트에서 다양한 lending market의 대출 이자율을 조회합니다.
+
+```ts
+const lendingRates = await neptuneService.getLendingRates({
+  limit: 10, // 선택사항: 조회할 이자율 수
+});
+
+console.log(lendingRates);
+```
+
+## Denomination별 대출 이자율 조회
+
+- 예를 들어 USDT의 대출 이자율을 가져옵니다.
+
+```ts
+const denom = "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT denom
+
+const lendingRate = await neptuneService.getLendingRateByDenom({ denom });
+
+if (lendingRate) {
+  console.log(`Lending Rate for USDT: ${lendingRate}`);
+} else {
+  console.log("Lending Rate for USDT not found");
+}
+```
+
+## 연간 수익률(APY) 계산
+
+- 연간 이자율(APR)을 연속 복리 연간 수익률(APY)로 변환합니다. apr로 사용하려면 neptuneService.getLendingRateByDenom에서 조회한 대출 이자율을 사용해야 합니다.
+
+```ts
+const apr = 0.1; // 10% APR
+
+const apy = neptuneService.calculateAPY(apr);
+
+console.log(`APY (continuously compounded): ${(apy * 100).toFixed(2)}%`);
+```
+
+## 예치 메시지 생성 및 브로드캐스트
+
+- Neptune USDT lending market에 USDT를 예치하는 메시지를 생성하고 네트워크에 브로드캐스트합니다.
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const denom = "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT denom
+
+const amountInUsdt = "100";
+
+// 금액을 최소 단위로 변환 (USDT는 소수점 6자리)
+const amount = toChainFormat(amountInUsdt, 6).toFixed();
+
+const depositMsg = neptuneService.createDepositMsg({
+  denom,
+  amount,
+  sender: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.MainnetSentry,
+}).broadcast({
+  msgs: depositMsg,
+});
+
+console.log(txHash);
+```
+
+## 출금 메시지 생성 및 브로드캐스트
+
+- Neptune USDT lending market에서 USDT를 출금하는 메시지를 생성하고 네트워크에 브로드캐스트합니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x..."; // 개인 키
+const injectiveAddress = "inj1..."; // Injective 주소
+
+// 출금할 금액 정의 (예: 100 nUSDT)
+const amountInNusdt = "100";
+
+// 금액을 최소 단위로 변환 (nUSDT는 소수점 6자리)
+const amount = toChainFormat(amountInNusdt, 6).toFixed();
+
+const withdrawMsg = neptuneService.createWithdrawMsg({
+  amount,
+  sender: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.MainnetSentry,
+}).broadcast({
+  msgs: withdrawMsg,
+});
+
+console.log(`Transaction Hash: ${txHash}`);
+```

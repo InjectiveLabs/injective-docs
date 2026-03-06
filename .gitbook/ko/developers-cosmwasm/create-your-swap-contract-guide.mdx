@@ -1,0 +1,91 @@
+---
+title: Swap 컨트랙트 만들기
+---
+
+[swap 컨트랙트](https://github.com/InjectiveLabs/swap-contract)는 두 개의 다른 토큰 간의 즉시 스왑을 허용합니다. 내부적으로 하나 이상의 스팟 마켓에서 마켓 오더를 배치하기 위해 atomic order를 사용합니다.
+
+### 시작하기
+
+누구나 swap 컨트랙트의 인스턴스를 인스턴스화할 수 있습니다. Injective 메인넷에 이미 업로드된 이 컨트랙트의 버전이 있으며, [여기](https://injscan.com/code/67/)에서 찾을 수 있습니다.
+
+컨트랙트를 인스턴스화하기 전에 컨트랙트 소유자로서 세 가지 질문에 답해야 합니다:
+
+#### 1. 어떤 주소가 수수료 수신자가 되어야 합니까?
+
+swap 컨트랙트에 의해 배치된 오더는 Injective Exchange Module의 오더이므로, 각 오더는 거래 수수료의 40%를 받을 수 있는 수수료 수신자를 가질 수 있습니다. 일반적으로 Exchange dApp은 수수료 수신자를 자신의 주소로 설정합니다.
+
+#### 2. 이 컨트랙트는 어떤 토큰을 지원해야 합니까?
+
+컨트랙트에서 사용 가능한 모든 토큰은 라우트가 정의되어 있어야 합니다. 라우트는 `토큰 A`가 `토큰 B`를 얻기 위해 어떤 마켓을 거치는지를 나타냅니다. 예를 들어, ATOM과 INJ 간의 스왑을 지원하려면 ATOM/USDT 및 INJ/USDT의 마켓 ID를 컨트랙트에 제공하여 라우트를 설정해야 합니다. 그러면 ATOM과 INJ 간의 스왑 라우트가 ATOM ⇔ USDT ⇔ INJ임을 알 수 있습니다.
+
+현재 컨트랙트는 USDT로 호가된 마켓만 지원할 수 있습니다.
+
+#### 3. 이 컨트랙트에 얼마나 많은 버퍼를 제공해야 합니까?
+
+컨트랙트 소유자로서 스왑이 발생할 때 사용될 자금을 컨트랙트에 제공해야 합니다. 버퍼는 컨트랙트가 오더를 배치할 때 사용됩니다. 사용자가 큰 금액을 스왑하거나 유동성이 낮은 마켓에서 스왑하면 더 많은 버퍼가 필요합니다. 컨트랙트 버퍼가 사용자의 입력 금액을 충족할 수 없으면 오류가 발생합니다.
+
+현재 버퍼는 USDT만 가능합니다.
+
+### 메시지
+
+#### Instantiate
+
+컨트랙트 버전 및 구성 세부 정보로 컨트랙트 상태를 초기화합니다. 구성에는 관리자 주소와 수수료 수신자 주소가 포함됩니다.
+
+```rust
+pub fn instantiate(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError>
+```
+
+#### Execute
+
+다양한 유형의 트랜잭션과 관리 기능을 처리합니다:
+
+* SwapMinOutput: 최소 출력 수량으로 스왑합니다.
+* SwapExactOutput: 정확한 출력 수량으로 스왑합니다.
+* SetRoute: 스왑 라우트를 설정합니다.
+* DeleteRoute: 스왑 라우트를 삭제합니다.
+* UpdateConfig: 컨트랙트 구성을 업데이트합니다.
+* WithdrawSupportFunds: 컨트랙트에서 지원 자금을 인출합니다.
+
+```rust
+pub fn execute(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError>
+```
+
+#### Reply
+
+다른 컨트랙트 또는 트랜잭션의 응답을 처리합니다.
+
+```rust
+pub fn reply(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    msg: Reply,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError>
+```
+
+#### Query
+
+컨트랙트에 대한 다양한 쿼리를 처리합니다:
+
+* GetRoute: 특정 스왑 라우트를 가져옵니다.
+* GetOutputQuantity: 주어진 입력 수량에 대한 출력 수량을 가져옵니다.
+* GetInputQuantity: 주어진 출력 수량에 대한 입력 수량을 가져옵니다.
+* GetAllRoutes: 사용 가능한 모든 스왑 라우트를 가져옵니다.
+
+```rust
+pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdResult<Binary>
+```
+
+### 저장소
+
+swap 컨트랙트의 전체 GitHub 저장소는 [여기](https://github.com/InjectiveLabs/swap-contract)에서 찾을 수 있습니다.
