@@ -1,0 +1,63 @@
+---
+title: 오프체인 (임의) 데이터
+---
+
+이 페이지에서는 Cosmos의 [ADR-036](https://docs.cosmos.network/main/build/architecture/adr-036-arbitrary-signature) 사양에 따라 임의 데이터를 서명하고 검증하는 방법의 예시를 제공합니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`@injectivelabs/sdk-ts`의 `generateArbitrarySignDoc` 함수를 사용하여 ADR-36 호환 `signDoc`을 생성할 수 있습니다. 그런 다음 브라우저 지갑이나 CLI 환경에서 서명/검증에 사용할 수 있습니다. 최신 패키지 버전을 사용하고 있는지 확인하세요.
+</Callout>
+
+#### Keplr과 같은 브라우저 지갑을 사용하여 서명 및 검증
+
+```typescript
+
+(async () => {
+  const message = "오프라인 서명 메시지 예시";
+  const signer = 'inj1...'
+  const chainId = 'injective-1'
+  
+  // 임의 데이터 서명
+  const signature = await window.keplr.signArbitrary(chainId, signer, message)
+  
+  // 임의 데이터 검증
+  const result = await window.keplr.verifyArbitrary(chainId, signer, message, signature)
+  
+  if (result) {
+    console.log("서명이 유효합니다");
+  }
+})();
+```
+
+#### CLI 환경에서 PrivateKey를 사용하여 서명 및 검증
+
+```typescript
+import { config } from "dotenv";
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { generateArbitrarySignDoc } from "@injectivelabs/sdk-ts/core/tx";
+
+config();
+
+(async () => {
+  const { privateKey } = PrivateKey.generate();
+  const injectiveAddress = privateKey.toBech32();
+  const publicKey = privateKey.toPublicKey();
+  
+  const message = "오프라인 서명 메시지 예시";
+  const { signDocBuff } = generateArbitrarySignDoc(message, injectiveAddress);
+
+  const signature = await privateKey.sign(signDocBuff);
+  const signatureInHex = Buffer.from(signature).toString("hex");
+
+  if (
+    PrivateKey.verifyArbitrarySignature({
+      signature: signatureInHex,
+      signDoc: signDocBuff,
+      publicKey: publicKey.toHex(),
+    })
+  ) {
+    console.log("서명이 유효합니다");
+  }
+})();
+
+```

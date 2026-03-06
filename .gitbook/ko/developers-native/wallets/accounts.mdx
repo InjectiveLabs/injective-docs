@@ -1,0 +1,158 @@
+---
+title: 계정
+---
+
+Injective는 키에 Ethereum의 ECDSA secp256k1 곡선을 사용하는 자체 커스텀 Account 타입을 정의합니다. 이는 전체 [BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) 경로에 대한 [EIP84](https://github.com/ethereum/EIPs/issues/84)를 충족합니다. Injective 기반 계정의 루트 HD 경로는 `m/44'/60'/0'/0`입니다.
+
+### 주소 변환
+
+`@injectivelabs/sdk-ts` 패키지의 유틸리티 함수를 사용하여 Injective 주소와 Ethereum 주소 간에 쉽게 변환할 수 있습니다:
+
+```ts
+import {
+  getInjectiveAddress,
+  getEthereumAddress,
+} from "@injectivelabs/sdk-ts/utils";
+
+const injectiveAddress = "inj1...";
+const ethereumAddress = "0x..";
+
+console.log(
+  "Ethereum 주소에서 Injective 주소 => ",
+  getInjectiveAddress(ethereumAddress)
+);
+console.log(
+  "Injective 주소에서 Ethereum 주소 => ",
+  getEthereumAddress(injectiveAddress)
+);
+```
+
+### 지갑 파생
+
+**Injective 유틸리티 클래스 사용**
+
+- 개인키 및/또는 니모닉 문구에서 Injective 계정을 파생하는 코드 예시:
+
+```ts
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+
+const mnemonic =
+  "indoor dish desk flag debris potato excuse depart ticket judge file exit";
+const privateKey =
+  "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890";
+const privateKeyFromMnemonic = PrivateKey.fromMnemonic(mnemonic);
+const privateKeyFromHex = PrivateKey.fromPrivateKey(privateKey);
+
+const address =
+  privateKeyFromMnemonic.toAddress(); /* 또는 privateKeyFromHex.toAddress() */
+console.log({
+  injectiveAddress: address.toBech32(),
+  ethereumAddress: address.toHex(),
+});
+```
+
+- 공개키에서 공개 주소를 파생하는 코드 예시:
+
+```ts
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
+
+const pubKey = "AuY3ASbyRHfgKNkg7rumWCXzSGCvvgtpR6KKWlpuuQ9Y";
+const publicKey = PublicKey.fromBase64(pubKey);
+
+console.log(publicKey.toAddress().toBech32());
+```
+
+- 개인키에서 주소를 파생하는 코드 예시:
+
+```ts
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
+
+const privateKey =
+  "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890";
+const publicKey = PublicKey.fromPrivateKeyHex(privateKey);
+const type = "/injective.crypto.v1beta1.ethsecp256k1.PubKey";
+
+console.log(publicKey.toBase64());
+```
+
+**Injective 유틸리티 클래스 없이**
+
+- 개인키 및/또는 니모닉 문구에서 Injective 계정을 파생하는 코드 예시:
+
+```ts
+import { Wallet } from "ethers";
+import { Address as EthereumUtilsAddress } from "ethereumjs-util";
+
+const mnemonic =
+  "indoor dish desk flag debris potato excuse depart ticket judge file exit";
+const privateKey =
+  "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890";
+const defaultDerivationPath = "m/44'/60'/0'/0/0";
+const defaultBech32Prefix = "inj";
+const isPrivateKey: boolean = true; /* 예시용 */
+
+const wallet = isPrivateKey
+  ? Wallet.fromMnemonic(mnemonic, defaultDerivationPath)
+  : new Wallet(privateKey);
+const ethereumAddress = wallet.address;
+const addressBuffer = EthereumUtilsAddress.fromString(
+  ethereumAddress.toString()
+).toBuffer();
+const injectiveAddress = bech32.encode(
+  defaultBech32Prefix,
+  bech32.toWords(addressBuffer)
+);
+```
+
+- 개인키에서 공개키를 파생하는 코드 예시:
+
+```ts
+import secp256k1 from "secp256k1";
+
+const privateKey =
+  "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890";
+const privateKeyHex = Buffer.from(privateKey.toString(), "hex");
+const publicKeyByte = secp256k1.publicKeyCreate(privateKeyHex);
+
+const buf1 = Buffer.from([10]);
+const buf2 = Buffer.from([publicKeyByte.length]);
+const buf3 = Buffer.from(publicKeyByte);
+
+const publicKey = Buffer.concat([buf1, buf2, buf3]).toString("base64");
+const type = "/injective.crypto.v1beta1.ethsecp256k1.PubKey";
+```
+
+#### Cosmos 주소를 Injective 주소로 변환
+
+Injective는 기본 Cosmos와 다른 파생 경로를 사용하므로, Cosmos `publicAddress`를 Injective로 변환하려면 계정의 `publicKey`가 필요합니다.
+
+다음은 변환 방법의 예시입니다:
+
+```typescript
+import { config } from "dotenv";
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+
+config();
+
+(async () => {
+  const chainApi = new ChainRestAuthApi(
+    "https://rest.cosmos.directory/cosmoshub"
+  );
+
+  const cosmosAddress = "cosmos1..";
+  const account = await chainApi.fetchCosmosAccount(cosmosAddress);
+
+  if (!account.pub_key?.key) {
+    console.log("공개키를 찾을 수 없습니다");
+    return;
+  }
+
+  console.log(
+    "injectiveAddress",
+    PublicKey.fromBase64(account.pub_key.key || "")
+      .toAddress()
+      .toBech32()
+  );
+})();
+```

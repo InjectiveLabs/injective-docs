@@ -1,0 +1,250 @@
+---
+title: Governance
+---
+
+Injective는 커뮤니티 운영 블록체인이며 INJ를 스테이킹한 사용자는 블록체인과 관련된 거버넌스에 참여할 수 있습니다. Injective 프로그램의 수정, 기술 업그레이드 또는 전체 Injective 생태계에 영향을 미치는 기타 Injective 관련 변경 사항을 제안하기 위해 제안서를 제출할 수 있습니다.
+
+생성하는 모든 제안에 대해 최소 1 INJ를 예치해야 합니다. 이는 귀하가 Injective 커뮤니티의 적극적인 참여자이며 앞으로 제안하고 프로토콜을 관리할 자격이 있음을 보장하기 위한 것입니다. 제안이 투표 단계로 넘어가려면 500 INJ가 예치되어야 합니다. 500 INJ를 직접 예치하거나 커뮤니티와 협력하여 공동으로 예치할 수 있습니다.
+
+## 메시지
+
+Governance 모듈이 내보내는 메시지와 Injective 체인과 상호작용하는 데 사용할 수 있는 메시지를 살펴보고 예제를 제공하겠습니다. 예를 들어 이러한 메시지를 사용하여 새로운 spot, perpetual 또는 futures 마켓을 제안할 수 있습니다.
+
+### MsgGovDeposit
+
+이 메시지는 기존 제안에 대해 예치하는 데 사용할 수 있습니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgGovDeposit } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const denom = "inj";
+const proposalId = 12345;
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const amount = toChainFormat(1).toFixed();
+
+const message = MsgGovDeposit.fromJSON({
+  amount: {
+    denom,
+    amount,
+  },
+  proposalId,
+  depositor: injectiveAddress,
+});
+
+/* 트랜잭션 브로드캐스트 */
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgVote
+
+제안이 적절히 자금을 확보한 후 투표를 시작할 수 있습니다. "Yes", "No", "Abstain" 또는 "No with Veto"로 투표할 수 있습니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { VoteOption } from "@injectivelabs/sdk-ts/types";
+import { MsgVote } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const proposalId = 12345;
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const vote = VoteOption.VOTE_OPTION_YES;
+
+const message = MsgVote.fromJSON({
+  vote,
+  proposalId,
+  voter: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgSubmitTextProposal
+
+Injective에서 모든 작업을 제안합니다. TextProposal은 승인 시 수동으로 업데이트해야 하는 변경 사항이 있는 표준 텍스트 제안을 정의합니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgSubmitTextProposal } from "@injectivelabs/sdk-ts/core/modules";
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const amount = toChainFormat(1).toFixed();
+
+const message = MsgSubmitTextProposal.fromJSON({
+  title: "제안 제목",
+  description: "제안 설명",
+  proposer: injectiveAddress,
+  deposit: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgSubmitProposalSpotMarketLaunch
+
+이 메시지를 사용하여 새로운 spot 마켓을 제안할 수 있습니다. 티커가 정확한지 확인하고 기본 자산 denom 다음에 견적 자산 denom을 제공하세요. 기본 denom은 거래하려는 자산을 나타내고 견적 denom은 기본 자산이 표시되는 자산을 나타냅니다. 예를 들어 INJ/USDT 마켓에서는 USDT를 사용하여 INJ를 사고 팔게 됩니다.
+
+```ts
+import { TokenStaticFactory } from "@injectivelabs/sdk-ts/service";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { toChainFormat, toHumanReadable } from "@injectivelabs/utils";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { MsgSubmitProposalSpotMarketLaunch } from "@injectivelabs/sdk-ts/core/modules";
+// https://github.com/InjectiveLabs/injective-lists 참조
+import { tokens } from "../data/tokens.json";
+
+const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[]);
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const amount = toChainFormat(1).toFixed();
+
+const market = {
+  baseDenom: "inj", // 예시
+  quoteDenom: "peggy0x...",
+  makerFeeRate: "0.001",
+  takerFeeRate: "0.002",
+  title: "INJ/USDT Spot 마켓 런칭",
+  description:
+    "이 제안은 메이커 및 테이커 수수료가 각각 0.001%와 0.002%인 INJ/USDT Spot 마켓을 런칭합니다",
+  ticker: "INJ/USDT",
+  minPriceTickSize: "0.001",
+  minQuantityTickSize: "0.001",
+};
+
+const baseDenom = tokenStaticFactory.toToken(market.baseDenom);
+const quoteDenom = tokenStaticFactory.toToken(market.quoteDenom);
+const marketWithDecimals: SpotMarketLaunchProposal = {
+  ...market,
+  baseTokenDecimals: baseDenom ? baseDenom.decimals : 18,
+  quoteTokenDecimals: quoteDenom ? quoteDenom.decimals : 6,
+};
+
+const marketWithTickSizes = {
+  ...market,
+  minPriceTickSize: toHumanReadable(
+    marketWithDecimals.minPriceTickSize,
+    marketWithDecimals.baseTokenDecimals - marketWithDecimals.quoteTokenDecimals
+  ).toFixed(),
+  minQuantityTickSize: toChainFormat(
+    marketWithDecimals.minQuantityTickSize,
+    marketWithDecimals.baseTokenDecimals
+  ).toFixed(),
+};
+
+const message = MsgSubmitProposalSpotMarketLaunch.fromJSON({
+  market: marketWithTickSizes,
+  proposer: injectiveAddress,
+  deposit: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```
+
+### MsgSubmitProposalPerpetualMarketLaunch
+
+이 메시지를 사용하여 새로운 perpetual 마켓을 제안할 수 있습니다. perpetual futures 계약 또는 perp는 사용자가 실제로 기초 자산을 소유하지 않고도 기초 자산의 가치를 사고 팔 수 있게 하는 파생 선물 계약입니다. 이 메시지를 사용하여 지정된 토큰 쌍에 대한 perp 마켓을 생성할 수 있습니다.
+
+```ts
+import {
+  TokenStaticFactory,
+  MsgBroadcasterWithPk,
+  MsgSubmitProposalPerpetualMarketLaunch,
+} from "@injectivelabs/sdk-ts/core/modules";
+import { toChainFormat } from "@injectivelabs/utils";
+import { TokenStaticFactory } from "@injectivelabs/sdk-ts/service";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+// https://github.com/InjectiveLabs/injective-lists 참조
+import { tokens } from "../data/tokens.json";
+
+const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[]);
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+const amount = toChainFormat(1).toFixed();
+
+const market = {
+  title: "INJ/USDT Perpetual 마켓 런칭",
+  description:
+    "이 제안은 메이커 및 테이커 수수료가 각각 0.001%와 0.002%인 INJ/USDT Spot 마켓을 런칭합니다",
+  ticker: "INJ/USDT PERP",
+  quoteDenom: "peggy0x...",
+  oracleBase: "INJ",
+  oracleQuote: "USDT",
+  oracleScaleFactor: 6,
+  oracleType: 10, // BAND IBC
+  initialMarginRatio: "0.05",
+  maintenanceMarginRatio: "0.02",
+  makerFeeRate: "0.01",
+  takerFeeRate: "0.02",
+  minPriceTickSize: "0.01",
+  minQuantityTickSize: "0.01",
+};
+
+const quoteDenom = await tokenStaticFactory.toToken(market.quoteDenom);
+const marketWithDecimals = {
+  ...market,
+  quoteTokenDecimals: quoteDenom ? quoteDenom.decimals : 6,
+};
+
+const marketWithTickSizes = {
+  ...market,
+  minPriceTickSize: toChainFormat(
+    marketWithDecimals.minPriceTickSize,
+    marketWithDecimals.quoteTokenDecimals
+  ).toFixed(),
+};
+
+const message = MsgSubmitProposalPerpetualMarketLaunch.fromJSON({
+  market: marketWithTickSizes,
+  proposer: injectiveAddress,
+  deposit: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: message,
+});
+```

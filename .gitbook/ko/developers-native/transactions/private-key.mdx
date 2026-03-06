@@ -1,0 +1,258 @@
+---
+title: 개인키 트랜잭션
+---
+
+이 문서에서는 PrivateKey를 사용하여 Injective에서 트랜잭션에 서명하는 방법을 보여드립니다.
+
+Injective의 모든 트랜잭션은 동일한 흐름을 따릅니다. 이 흐름은 트랜잭션 준비, 서명, 브로드캐스트의 세 단계로 구성됩니다. 각 단계를 개별적으로 살펴보고 전체 트랜잭션 흐름을 이해할 수 있도록 프로세스를 심층적으로 설명합니다(예제 포함).
+
+## 트랜잭션 준비
+
+먼저 서명을 위해 트랜잭션을 준비해야 합니다.
+
+```ts
+import {
+  toBigNumber,
+  toChainFormat,
+  getDefaultStdFee,
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
+} from "@injectivelabs/utils";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { ChainId } from "@injectivelabs/ts-types";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { createTransaction } from "@injectivelabs/sdk-ts/core/tx";
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { PrivateKey, BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
+
+const privateKeyHash = "";
+const privateKey = PrivateKey.fromHex(privateKeyHash);
+const injectiveAddress = privateKey.toBech32();
+const address = privateKey.toAddress();
+const pubKey = privateKey.toPublicKey().toBase64();
+const chainId = "injective-1"; /* ChainId.Mainnet */
+const restEndpoint =
+  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(0.01).toFixed(),
+};
+
+/** 계정 세부 정보 **/
+const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
+const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+  injectiveAddress
+);
+const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+const accountDetails = baseAccount.toAccountDetails();
+
+/** 블록 세부 정보 */
+const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
+const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+const latestHeight = latestBlock.header.height;
+const timeoutHeight = toBigNumber(latestHeight).plus(
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+);
+
+/** 트랜잭션 준비 */
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+/** 트랜잭션 준비 **/
+const { txRaw, signBytes } = createTransaction({
+  pubKey,
+  chainId,
+  message: msg,
+  fee: getDefaultStdFee(),
+  sequence: baseAccount.sequence,
+  timeoutHeight: timeoutHeight.toNumber(),
+  accountNumber: baseAccount.accountNumber,
+});
+```
+
+## 트랜잭션 서명
+
+트랜잭션을 준비한 후 서명을 진행합니다. 이전 단계에서 `txRaw` 트랜잭션을 얻은 후 Cosmos 네이티브 지갑(예: Keplr)을 사용하여 서명합니다.
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+
+/* 트랜잭션 서명 */
+const privateKeyHash = ''
+const privateKey = PrivateKey.fromHex(privateKeyHash);
+const signBytes = /* 이전 단계에서 */
+
+/** 트랜잭션 서명 */
+const signature = await privateKey.sign(Buffer.from(signBytes));
+```
+
+## 트랜잭션 브로드캐스트
+
+서명이 준비되면 트랜잭션을 Injective 체인 자체에 브로드캐스트해야 합니다. 두 번째 단계에서 서명을 받은 후 서명된 트랜잭션에 해당 서명을 포함하고 체인에 브로드캐스트해야 합니다.
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import { TxClient } from '@injectivelabs/sdk-ts/core/tx'
+import { TxGrpcApi } from '@injectivelabs/sdk-ts/client/chain'
+import { Network, getNetworkInfo } from '@injectivelabs/networks'
+
+/** 서명 첨부 */
+const network = getNetworkInfo(Network.Testnet);
+const txRaw = /* 첫 번째 단계에서 */
+const signature = /* 두 번째 단계에서 */
+txRaw.signatures = [signature];
+
+/** 트랜잭션 해시 계산 */
+console.log(`트랜잭션 해시: ${TxClient.hash(txRaw)}`);
+
+const txService = new TxGrpcApi(network.grpc);
+
+/** 트랜잭션 시뮬레이션 */
+const simulationResponse = await txService.simulate(txRaw);
+
+console.log(
+  `트랜잭션 시뮬레이션 응답: ${JSON.stringify(
+    simulationResponse.gasInfo
+  )}`
+);
+
+/** 트랜잭션 브로드캐스트 */
+const txResponse = await txService.broadcast(txRaw);
+
+console.log(txResponse);
+
+if (txResponse.code !== 0) {
+  console.log(`트랜잭션 실패: ${txResponse.rawLog}`);
+} else {
+  console.log(
+    `브로드캐스트된 트랜잭션 해시: ${JSON.stringify(txResponse.txHash)}`
+  );
+}
+```
+
+## 예제 (준비 + 서명 + 브로드캐스트)
+
+전체 흐름을 살펴보겠습니다 (Keplr을 서명 지갑으로 사용)
+
+```ts
+import {
+  TxClient,
+  TxGrpcApi,
+  createTransaction,
+} from "@injectivelabs/sdk-ts/core/tx";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { getNetworkInfo, Network } from "@injectivelabs/networks";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
+
+/** MsgSend 예시 */
+(async () => {
+  const network = getNetworkInfo(Network.Testnet);
+  const privateKeyHash =
+    "f9db9bf330e23cb7839039e944adef6e9df447b90b503d5b4464c90bea9022f3";
+  const privateKey = PrivateKey.fromHex(privateKeyHash);
+  const injectiveAddress = privateKey.toBech32();
+  const publicKey = privateKey.toPublicKey().toBase64();
+
+  /** 계정 세부 정보 **/
+  const accountDetails = await new ChainRestAuthApi(network.rest).fetchAccount(
+    injectiveAddress
+  );
+
+  /** 메시지 준비 */
+  const amount = {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  };
+
+  const msg = MsgSend.fromJSON({
+    amount,
+    srcInjectiveAddress: injectiveAddress,
+    dstInjectiveAddress: injectiveAddress,
+  });
+
+  /** 트랜잭션 준비 **/
+  const { signBytes, txRaw } = createTransaction({
+    message: msg,
+    memo: "",
+    pubKey: publicKey,
+    fee: getDefaultStdFee(),
+    sequence: parseInt(accountDetails.account.base_account.sequence, 10),
+    accountNumber: parseInt(
+      accountDetails.account.base_account.account_number,
+      10
+    ),
+    chainId: network.chainId,
+  });
+
+  /** 트랜잭션 서명 */
+  const signature = await privateKey.sign(Buffer.from(signBytes));
+
+  /** 서명 첨부 */
+  txRaw.signatures = [signature];
+
+  /** 트랜잭션 해시 계산 */
+  console.log(`트랜잭션 해시: ${TxClient.hash(txRaw)}`);
+
+  const txService = new TxGrpcApi(network.grpc);
+
+  /** 트랜잭션 시뮬레이션 */
+  const simulationResponse = await txService.simulate(txRaw);
+  console.log(
+    `트랜잭션 시뮬레이션 응답: ${JSON.stringify(
+      simulationResponse.gasInfo
+    )}`
+  );
+
+  /** 트랜잭션 브로드캐스트 */
+  const txResponse = await txService.broadcast(txRaw);
+
+  if (txResponse.code !== 0) {
+    console.log(`트랜잭션 실패: ${txResponse.rawLog}`);
+  } else {
+    console.log(
+      `브로드캐스트된 트랜잭션 해시: ${JSON.stringify(txResponse.txHash)}`
+    );
+  }
+})();
+```
+
+## MsgBroadcasterWithPk를 사용한 예제
+
+`@injectivelabs/sdk-ts` 패키지의 `MsgBroadcasterWithPk` 클래스를 사용하면 위에 작성된 대부분의 로직을 단일 클래스로 추상화할 수 있습니다.
+
+**이 추상화를 사용하면 Node/CLI 환경에서 트랜잭션에 서명할 수 있습니다.**
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(1).toFixed(),
+};
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

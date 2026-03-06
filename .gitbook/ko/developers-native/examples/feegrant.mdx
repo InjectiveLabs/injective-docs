@@ -1,0 +1,78 @@
+---
+title: Fee Grant
+---
+
+`feegrant` 모듈은 계정(granters)이 다른 계정(grantees)에게 수수료 허용량을 부여할 수 있게 합니다. 이를 통해 grantee는 granter의 자금을 사용하여 트랜잭션 수수료를 지불할 수 있습니다.
+
+## 메시지
+
+### MsgGrantAllowance
+
+수수료 허용량 부여는 `MsgGrantAllowance` 메시지를 사용하여 생성됩니다. (granter, grantee) 쌍에 대한 권한이 이미 있는 경우 새 권한이 이전 권한을 덮어씁니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgGrantAllowance } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKeyOfGranter = "0x...";
+
+const date = new Date("2023-10-02T00:00:00Z");
+const expiration = date.getTime() / 1000;
+const granter = "inj...";
+const grantee = "inj...";
+const allowance = {
+  spendLimit: [
+    {
+      denom: "inj",
+      amount: "10000",
+    },
+  ],
+  expiration,
+};
+
+const msg = MsgGrantAllowance.fromJSON({
+  granter,
+  grantee,
+  allowance,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGranter,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgRevokeAllowance
+
+MsgRevokeAllowance 메시지를 사용하여 권한을 제거할 수 있습니다. grantee는 더 이상 granter의 자금을 사용하여 트랜잭션 수수료를 지불할 수 없게 됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgRevokeAllowance } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x...";
+const granteeAddress = "inj...";
+const granterAddress = "inj...";
+
+const params = {
+  grantee: granteeAddress,
+  granter: granterAddress,
+};
+
+const msg = MsgRevokeAllowance.fromJSON(params);
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

@@ -1,0 +1,237 @@
+---
+title: Keplr 지갑을 통한 Ledger 트랜잭션
+---
+
+이 페이지에서는 사용자가 Keplr 지갑을 통해 Ledger 장치를 사용할 때 Injective의 구현에 대해 살펴보겠습니다.
+
+앞서 설명한 것처럼, Injective는 다른 Cosmos 체인과 다른 파생 곡선을 사용하므로 사용자는 Injective와 상호작용하기 위해 (현재로서는) Ethereum 앱을 사용해야 합니다.
+
+모든 에지 케이스를 다루고 Injective에서 지원되는 모든 지갑에 대한 완전한 바로 사용 가능한 솔루션을 얻는 가장 쉬운 방법은 [MsgBroadcaster + WalletStrategy](./msgbroadcaster/#msgbroadcaster-+-wallet-strategy) 추상화를 살펴보는 것입니다. 자체 구현을 하려면 코드 예제를 함께 살펴보겠습니다.
+
+## 개요
+
+Keplr은 `experimentalSignEIP712CosmosTx_v0` 메서드를 노출하며, 이 메서드를 사용하여 EIP712 타입 데이터에 서명할 수 있습니다(위 메서드에 Cosmos StdSignDoc을 전달하면 Keplr 측에서 자동으로 생성됨). 이를 통해 Keplr을 통해 Ledger 장치가 연결된 EVM 호환 체인에서 적절한 서명을 얻을 수 있습니다.
+
+함수 시그니처는 다음과 같습니다:
+
+```typescript
+/**
+ * ethermint의 EIP-712 형식으로 sign doc에 서명합니다.
+ * signEthereum(..., EthSignType.EIP712)과의 차이점은 이 API가
+ * 사용자의 수수료 설정에 의해 변경된 새로운 sign doc과
+ * 해당 sign doc에 대한 서명을 반환한다는 것입니다.
+ * tx를 EIP-712 형식으로 인코딩하는 것은 이 API를 사용하는 측에서 수행해야 합니다.
+ * cosmjs와 호환되지 않습니다.
+ * 반환된 서명은 ethereum에서 사용되는 (r | s | v) 형식입니다.
+ * v는 체인에 관계없이 ethereum 메인넷에서 사용되는 27 또는 28이어야 합니다.
+ * @param chainId
+ * @param signer
+ * @param eip712
+ * @param signDoc
+ * @param signOptions
+ */
+experimentalSignEIP712CosmosTx_v0(chainId: string, signer: string, eip712: {
+    types: Record<string, {
+        name: string;
+        type: string;
+    }[] | undefined>;
+    domain: Record<string, any>;
+    primaryType: string;
+}, signDoc: StdSignDoc, signOptions?: KeplrSignOptions): Promise<AminoSignResponse>;
+```
+
+이제 해야 할 일은 `eip712`와 `signDoc`을 생성하고 이 함수에 전달하면 Keplr이 사용자에게 Ledger 장치의 Ethereum 앱을 사용하여 트랜잭션에 서명하도록 요청합니다.
+
+## 구현 예제
+
+위의 개요를 기반으로 Ledger + Keplr을 사용하여 Injective에서 트랜잭션에 서명하는 방법의 전체 예제를 보여드리겠습니다. 아래 예제는 `@injectivelabs/sdk-ts` 패키지에서 내보낸 [Msgs](https://github.com/InjectiveLabs/injective-ts/blob/master/packages/sdk-ts/src/core/modules/msgs.ts#L60) 인터페이스를 사용하고 있다고 가정합니다.
+
+```typescript
+import {
+ TxGrpcApi,
+ SIGN_AMINO,
+ createTransaction,
+ createTxRawEIP712,
+ getEip712TypedData
+ createWeb3Extension,
+ getGasPriceBasedOnMessage,
+} from '@injectivelabs/sdk-ts/core/tx'
+import {
+ BaseAccount,
+} from '@injectivelabs/sdk-ts/core/accounts'
+import {
+ ChainRestAuthApi,
+ ChainRestTendermintApi,
+} from '@injectivelabs/sdk-ts/client/chain'
+import { EvmChainId, ChainId } from '@injectivelabs/ts-types'
+import { getNetworkEndpoints, NetworkEndpoints, Network } from '@injectivelabs/networks'
+import { GeneralException, TransactionException } from '@injectivelabs/exceptions'
+import { toBigNumber, getStdFee } from '@injectivelabs/utils'
+
+export interface Options {
+  evmChainId: EvmChainId /* Evm 체인 ID */
+  chainId: ChainId; /* Injective 체인 ID */
+  endpoints: NetworkEndpoints /* Network 기반으로 @injectivelabs/networks에서 가져올 수 있음 */
+}
+
+export interface Transaction {
+  memo?: string
+  injectiveAddress?: string
+  msgs: Msgs | Msgs[]
+
+  // 가스 옵션을 수동으로 설정하려는 경우
+  gas?: {
+    gasPrice?: string
+    gas?: number /** 가스 한도 */
+    feePayer?: string
+    granter?: string
+  }
+}
+
+/** EIP712 tx 세부 정보를 Cosmos Std Sign Doc으로 변환 */
+export const createEip712StdSignDoc = ({
+  memo,
+  chainId,
+  accountNumber,
+  timeoutHeight,
+  sequence,
+  gas,
+  msgs,
+}: {
+  memo?: string
+  chainId: ChainId
+  timeoutHeight?: string
+  accountNumber: number
+  sequence: number
+  gas?: string
+  msgs: Msgs[]
+}) => ({
+  chain_id: chainId,
+  timeout_height: timeoutHeight || '',
+  account_number: accountNumber.toString(),
+  sequence: sequence.toString(),
+  fee: getStdFee({ gas }),
+  msgs: msgs.map((m) => m.toEip712()),
+  memo: memo || '',
+})
+
+/**
+ * Injective에서 Keplr의 Ledger를 사용하여 트랜잭션을 브로드캐스트하려는 경우에만 이 메서드를 사용합니다
+ *
+ * 참고: 가스 추정을 사용할 수 없음
+ * @param tx 브로드캐스트해야 하는 트랜잭션
+ */
+export const experimentalBroadcastKeplrWithLedger = async (
+  tx: Transaction,
+  options: Options
+) => {
+  const { endpoints, chainId, evmChainId } = options
+  const msgs = Array.isArray(tx.msgs) ? tx.msgs : [tx.msgs]
+  const DEFAULT_BLOCK_TIMEOUT_HEIGHT = 60
+
+  /**
+   * 사용자가 실제로 Ledger + Keplr로 연결되어 있는지
+   * 확인할 수 있습니다
+   */
+  if (/* 여기에 조건 */) {
+    throw new GeneralException(
+        new Error(
+          '이 메서드는 Keplr이 Ledger와 연결된 경우에만 사용할 수 있습니다',
+        ),
+      )
+  }
+
+  /** 계정 세부 정보 * */
+  const chainRestAuthApi = new ChainRestAuthApi(endpoints.rest)
+  const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+    tx.injectiveAddress,
+  )
+  const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse)
+  const accountDetails = baseAccount.toAccountDetails()
+
+  /** 블록 세부 정보 */
+  const chainRestTendermintApi = new ChainRestTendermintApi(endpoints.rest)
+  const latestBlock = await chainRestTendermintApi.fetchLatestBlock()
+  const latestHeight = latestBlock.header.height
+  const timeoutHeight = toBigNumber(latestHeight).plus(
+    DEFAULT_BLOCK_TIMEOUT_HEIGHT,
+  )
+
+  const key = await window.keplr.getKey(chainId)
+  const pubKey = Buffer.from(key.pubKey).toString('base64')
+  const gas = (tx.gas?.gas || getGasPriceBasedOnMessage(msgs)).toString()
+
+  /** Ethereum 지갑에서 서명하기 위한 EIP712 */
+  const eip712TypedData = getEip712TypedData({
+    msgs,
+    fee: getStdFee({ ...tx.gas, gas }),
+    tx: {
+      memo: tx.memo,
+      accountNumber: accountDetails.accountNumber.toString(),
+      sequence: accountDetails.sequence.toString(),
+      timeoutHeight: timeoutHeight.toFixed(),
+      chainId,
+    },
+    evmChainId,
+  })
+
+  const aminoSignResponse = await window.keplr.experimentalSignEIP712CosmosTx_v0(
+    chainId,
+    tx.injectiveAddress,
+    eip712TypedData,
+    createEip712StdSignDoc({
+      ...tx,
+      ...baseAccount,
+      msgs,
+      chainId,
+      gas: gas || tx.gas?.gas?.toString(),
+      timeoutHeight: timeoutHeight.toFixed(),
+    })
+  )
+
+  /**
+   * 사용자가 Keplr 팝업에서 수수료/메모를 변경한 경우
+   * 응답으로 받은 서명된 tx에서 TxRaw를 생성합니다
+   */
+  const { txRaw } = createTransaction({
+    pubKey,
+    message: msgs,
+    memo: aminoSignResponse.signed.memo,
+    signMode: SIGN_AMINO,
+    fee: aminoSignResponse.signed.fee,
+    sequence: parseInt(aminoSignResponse.signed.sequence, 10),
+    timeoutHeight: parseInt(
+      (aminoSignResponse.signed as any).timeout_height,
+      10,
+    ),
+    accountNumber: parseInt(aminoSignResponse.signed.account_number, 10),
+    chainId,
+  })
+
+  /** 클라이언트 브로드캐스팅을 위한 트랜잭션 준비 */
+  const web3Extension = createWeb3Extension({
+    evmChainId,
+  })
+  const txRawEip712 = createTxRawEIP712(txRaw, web3Extension)
+
+  /** 서명 첨부 */
+  const signatureBuff = Buffer.from(
+    aminoSignResponse.signature.signature,
+    'base64',
+  )
+  txRawEip712.signatures = [signatureBuff]
+
+  /** 트랜잭션 브로드캐스트 */
+  const response = await new TxGrpcApi(endpoints.grpc).broadcast(txRawEip712)
+
+  if (response.code !== 0) {
+    throw new TransactionException(new Error(response.rawLog), {
+      code: UnspecifiedErrorCode,
+      contextCode: response.code,
+      contextModule: response.codespace,
+    })
+  }
+
+  return response
+}
+```

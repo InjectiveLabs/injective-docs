@@ -1,0 +1,54 @@
+---
+title: Web3 Gateway 트랜잭션
+---
+
+_사전 필수 읽기 #1:_ [트랜잭션 라이프사이클](https://docs.cosmos.network/main/basics/tx-lifecycle)
+
+_사전 필수 읽기 #2:_ Injective의 트랜잭션
+
+Web3Gateway 마이크로서비스는 Injective에서 발생하는 트랜잭션에 대한 수수료 위임을 제공하는 것을 주요 목적으로 하는 API를 최종 사용자에게 노출합니다. 이를 통해 사용자는 Web3Gateway 서비스 운영자가 가스를 지불하므로 가스가 없는 환경에서 Injective와 상호작용할 수 있습니다.
+
+수수료 위임 지원 외에도 Web3Gateway를 통해 개발자는 메시지를 EIP712 타입 데이터로 변환할 수 있습니다. 메시지를 EIP712 데이터로 변환한 후 모든 Ethereum 네이티브 지갑으로 서명한 다음 Injective에 브로드캐스트할 수 있습니다.
+
+## 수수료 위임
+
+앞서 말한 것처럼 수수료 위임을 사용하면 사용자가 가스를 지불하지 않고도 Injective와 상호작용(트랜잭션 제출)할 수 있습니다. 모든 Cosmos-SDK 기반 체인의 _트랜잭션 라이프사이클_의 일부로 서명 검증, 가스 계산 및 수수료 공제를 수행하는 `AnteHandler`가 있습니다.
+
+알아야 할 몇 가지 사항이 있습니다:
+
+* 트랜잭션에는 여러 서명자가 있을 수 있습니다(즉, 트랜잭션에 여러 서명을 포함할 수 있음).
+* 트랜잭션의 가스 수수료는 `authInfo.fee.feePayer` 값에서 공제되며 `feePayer`에 대해 검증되는 서명은 트랜잭션의 서명 목록 내 첫 번째 서명입니다([참조](https://github.com/cosmos/cosmos-sdk/blob/e2d6cbdeb55555893ffde3f2ae0ed6db7179fd0d/x/auth/ante/fee.go#L15-L24)).
+* 나머지 서명은 트랜잭션의 실제 발신자에 대해 검증됩니다.
+
+이를 알고 수수료 위임을 달성하려면 Web3Gateway 마이크로서비스의 개인키를 사용하여 트랜잭션에 서명하고, 해당 `privateKey`의 주소를 `feePayer`로 포함하고, Injective와 상호작용하려는 privateKey를 사용하여 이 트랜잭션에 서명한 다음 해당 트랜잭션을 브로드캐스트해야 합니다.
+
+## Web3Gateway API
+
+모든 사람이 Web3Gateway 마이크로서비스를 실행하고 사용자에게 수수료 위임 서비스를 제공할 수 있습니다. 예를 들어 Injective 위에 거래소 dApp을 구축하는 개발자는 이 마이크로서비스를 실행하여 트레이더에게 가스가 없는 거래 환경을 제공할 수 있습니다.
+
+이 마이크로서비스는 두 가지 핵심 메서드를 포함하는 API를 노출합니다:
+
+* `PrepareTx`(및 `PrepareCosmosTx`)
+* `BroadcastTx`(및 `BroadcastCosmosTx`)
+
+## PrepareTx
+
+`PrepareTx` 메서드는 사용자가 실행하려는 트랜잭션에 대한 컨텍스트(`chainId`, `signerAddress`, `timeoutHeight` 등)를 포함하는 메시지를 받아들이고, EIP712 타입 데이터 내에 서명을 포함한 특정 메시지의 EIP712 타입 데이터를 반환합니다. 이 EIP712 타입 데이터를 사용하여 Ethereum 네이티브 지갑으로 서명하고 Injective와 상호작용하려는 사용자의 서명을 얻을 수 있습니다.
+
+EIP712 타입 데이터는 `PrepareTx` 메서드에 전달하는 메시지의 proto 정의에서 생성됩니다.
+
+## BroadcastTx
+
+`BroadcastTx` 메서드는 트랜잭션을 노드에 브로드캐스트하는 역할을 합니다. `PrepareTx` API 호출의 전체 응답과 함께 EIP712 타입 데이터의 서명을 전달합니다. 그런 다음 `BroadcastTx`는 메시지를 네이티브 Cosmos 트랜잭션으로 패킹하고 트랜잭션(컨텍스트 포함)을 준비한 다음 Injective에 브로드캐스트합니다. 결과적으로 트랜잭션 해시가 사용자에게 반환됩니다.
+
+## Prepare/BroadcastCosmosTx
+
+위의 메서드는 EIP712 트랜잭션 표현에 서명하므로 **Ethereum 네이티브 지갑**을 사용하여 트랜잭션에 서명하고 브로드캐스트할 때 사용됩니다.
+
+Web3Gateway를 사용하여 Cosmos 네이티브 지갑에서 수수료 위임을 지원하려면 PrepareCosmosTx 호출을 생략하거나(또는 Web3Gateway 서명자의 `publicKey`가 필요한 경우 호출하고), 클라이언트 측에서 트랜잭션을 준비하고, Cosmos 지갑을 사용하여 서명한 다음, `BroadcastCosmosTx` 메서드를 사용하여 브로드캐스트할 수 있습니다.
+
+이 방법은 `TxRaw`의 `authInfo` 객체에 `Web3Gateway` 서명자의 `publicKey`를 추가한 다음 브로드캐스트할 때 API 측에서 `privateKey`를 사용하여 트랜잭션에 서명합니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+이전 EIP712 접근 방식과의 차이점은 EIP712를 생성할 때 미리 `Web3Gateway` 서명자를 사용하여 트랜잭션에 서명해야 한다는 것입니다. 즉, `PrepareTx`를 사용해야 하며 클라이언트 측에서 트랜잭션을 생성할 수 없습니다.
+</Callout>

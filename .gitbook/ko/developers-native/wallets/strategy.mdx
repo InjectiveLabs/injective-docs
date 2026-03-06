@@ -1,0 +1,103 @@
+---
+title: Wallet Strategy
+---
+
+`@injectivelabs/wallet-strategy`의 주요 목적은 개발자에게 Injective에서 다양한 지갑 구현을 사용할 수 있는 방법을 제공하는 것입니다. 이러한 모든 지갑 구현은 동일한 `ConcreteStrategy` 인터페이스를 노출하므로 사용자는 특정 지갑의 기본 구현을 알 필요 없이 이러한 메서드를 사용할 수 있습니다.
+
+시작하려면 `WalletStrategy` 클래스의 인스턴스를 만들어야 합니다. 이를 통해 다양한 지갑을 바로 사용할 수 있습니다. `walletStrategy` 인스턴스에서 `setWallet` 메서드를 사용하여 현재 사용 중인 지갑을 전환할 수 있습니다(참고: `setWallet`은 비동기이며 `await`가 필요합니다).
+
+`WalletStrategy` 전략이 노출하는 메서드와 그 의미를 살펴보겠습니다:
+
+**Ethereum 및 Cosmos 네이티브 지갑 모두:**
+
+- `getAddresses`는 연결된 지갑 전략에서 주소를 가져옵니다. 이 메서드는 Ethereum 네이티브 지갑(전략)의 경우 Ethereum 주소를 반환하고 Cosmos 네이티브 지갑(전략)의 경우 Injective 주소를 반환합니다.
+- `signTransaction`은 해당 지갑 유형 메서드를 사용하여 트랜잭션에 서명합니다(Cosmos 네이티브 지갑의 경우 `signCosmosTransaction`, Ethereum 네이티브 지갑의 경우 `signEip712TypedData`)
+- `sendTransaction`은 해당 지갑 유형 메서드를 사용하여 트랜잭션에 서명합니다(Ethereum 네이티브 지갑에서 사용하려면 옵션에 `sentryEndpoint`를 전달해야 합니다 - 아래에서 설명)
+- `getWalletDeviceType`은 지갑 연결 유형(모바일, 브라우저, 하드웨어)을 반환합니다.
+
+**Cosmos 네이티브 지갑:**
+
+- `signCosmosTransaction`은 연결된 지갑 전략을 사용하여 Injective 트랜잭션에 서명합니다.
+- `getPublicKey`는 Cosmos 네이티브 지갑 전략의 공개키를 가져옵니다.
+
+**Ethereum 네이티브 지갑:**
+
+- `getEthereumChainId`는 Ethereum 네이티브 지갑 전략의 체인 ID를 가져옵니다.
+- `signEip712TypedData`는 연결된 지갑 전략을 사용하여 EIP712 타입 데이터에 서명합니다.
+- `sendEvmTransaction`은 연결된 지갑 전략을 사용하여 Ethereum Web3 트랜잭션을 전송합니다.
+- `signEvmTransaction`은 연결된 지갑 전략을 사용하여 Ethereum Web3 트랜잭션에 서명합니다.
+- `getEvmTransactionReceipt`는 지갑 전략에 대한 Ethereum 네이티브 트랜잭션의 트랜잭션 영수증을 가져옵니다.
+
+### 인자
+
+WalletStrategy에 전달되는 인자는 다음 인터페이스를 가집니다:
+
+```ts
+export interface WalletStrategyEvmOptions {
+  rpcUrl: string; // 전략의 Ethereum 네이티브 메서드에만 필요한 rpc url
+  evmChainId: EvmChainId; // Wallet Strategies를 사용하여 EIP712 타입 데이터에 서명하는 경우 필요
+}
+
+export interface EthereumWalletStrategyArgs {
+  chainId: ChainId; // Injective 체인 ID
+  evmOptions?: WalletStrategyEvmOptions; // 선택사항, Ethereum 네이티브 지갑을 사용하는 경우에만 필요
+  disabledWallets?: Wallet[]; // 선택사항, 일부 지갑의 인스턴스화를 비활성화하려는 경우 필요
+  wallet?: Wallet; // 선택사항, 처음 선택된 지갑(`evmOptions`가 전달되면 Metamask가 기본값, 그렇지 않으면 Keplr)
+}
+```
+
+_참고:_ Ethereum 네이티브 지갑에서 `sendTransaction`을 다른 옵션(chainId 및 address)과 함께 사용하려면 트랜잭션을 브로드캐스트하기 위해 sentry에 대한 gRPC 엔드포인트도 전달해야 합니다. Ethereum 네이티브 지갑에서는 Keplr이나 Leap에서처럼 지갑의 추상화를 사용하여 트랜잭션을 브로드캐스트하는 `broadcastTx` 메서드에 접근할 수 없으므로 클라이언트 측에서 직접 체인에 브로드캐스트해야 하기 때문입니다.
+
+### 사용 예시
+
+```ts
+import { TxRaw } from '@injectivelabs/sdk-ts/types'
+import { Web3Exception } from '@injectivelabs/exceptions'
+import { ChainId, EvmChainId } from '@injectivelabs/ts-types'
+import { WalletStrategy } from '@injectivelabs/wallet-strategy'
+
+const chainId = ChainId.Testnet // Injective Testnet 체인 ID
+const evmChainId = EvmChainId.TestnetEvm // Injective Evm Testnet 체인 ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
+
+export const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    evmChainId,
+    rpcUrl: evmRpcEndpoint,
+  },
+})
+
+// 지갑 주소 가져오기
+export const getAddresses = async (): Promise<string[]> => {
+  const addresses = await walletStrategy.getAddresses()
+
+  if (addresses.length === 0) {
+    throw new Web3Exception(new Error('이 지갑에 연결된 주소가 없습니다.'))
+  }
+
+  return addresses
+}
+
+// Injective 트랜잭션 서명
+export const signTransaction = async (tx: TxRaw): Promise<string[]> => {
+  const response = await walletStrategy.signCosmosTransaction(
+    /*transaction:*/ { txRaw: tx, accountNumber: /* */, chainId: 'injective-1' },
+    /*address: */ 'inj1...',
+  )
+
+  return response
+}
+
+// Injective 트랜잭션 전송
+export const sendTransaction = async (tx: TxRaw): Promise<string[]> => {
+  const response = await walletStrategy.sendTransaction(
+    tx,
+    // Ethereum 지갑을 사용하는 경우 `sentryEndpoint` 필요
+    {address: 'inj1...', chainId: 'injective-1', sentryEndpoint: 'https://grpc.injective.network' }
+  )
+
+  return response
+}
+```
