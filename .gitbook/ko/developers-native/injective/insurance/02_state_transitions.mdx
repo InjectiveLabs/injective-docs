@@ -1,0 +1,119 @@
+---
+sidebar_position: 2
+title: State Transitions
+---
+
+# State Transitions
+
+이 문서는 다음과 관련된 state transition 작업을 설명합니다:
+
+- 보험 펀드 생성
+- 보험 펀드 underwriting
+- 보험 펀드에서 redemption 요청
+- 만료된 redemption 요청의 자동 처리
+
+## 보험 펀드 생성
+
+**매개변수 설명**
+`Sender` 필드는 보험 펀드의 생성자를 설명합니다.
+`Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleType`, `Expiry` 필드는 보험 펀드와 연결된 파생상품 시장 정보를 설명합니다.
+`InitialDeposit` 필드는 보험 펀드에 예치할 초기 예치금을 설명합니다.
+
+**단계**
+
+- 보험 펀드의 `MarketId` 가져오기 - **참고**, 시장이 아직 `exchange`에서 사용 가능하지 않을 수 있으며 이는 문제가 되지 않습니다
+- `MarketId`와 연결된 보험 펀드가 존재하지 않는지 확인
+- 초기 예치금이 0이 아닌지 확인
+- 고유한 `shareDenom` 가져오기 - 보험 펀드 생성을 위해 share denom이 요청되거나 잔액이 0이고 total share denom 공급이 0이 아닌 보험 펀드에 underwriting할 때 증가됩니다.
+- 생성자 계정에서 insurance fund 모듈 계정으로 코인 전송
+- `DefaultRedemptionNoticePeriodDuration`과 제공된 매개변수로 보험 펀드 객체 생성
+- 펀드 객체의 `Balance`를 초기 예치금으로 설정
+- 생성자 계정에 `InsuranceFundInitialSupply` (10^18) `shareDenom` 토큰 발행
+- 보험 펀드 객체를 store에 저장
+- BankKeeper 내에 새로 생성된 보험 펀드 `shareDenom` 메타데이터 등록
+
+## 보험 펀드 underwriting
+
+**매개변수 설명**
+`Sender` 필드는 보험 펀드의 underwriter를 설명합니다.
+`MarketId` 필드는 보험 펀드의 파생상품 market id를 설명합니다.
+`Deposit` 필드는 보험 펀드에 추가할 예치금을 설명합니다.
+
+**단계**
+
+- `MarketId`와 연결된 보험 펀드가 존재하는지 확인
+- sender 계정에서 모듈 계정으로 underwriting 토큰 전송
+- `MarketId`와 연결된 보험 펀드의 상태에 따라 작업 수행
+    * A. `Balance`와 `ShareDenomSupply`가 모두 0인 경우
+        1. sender에게 `InsuranceFundInitialSupply` (10^18) 발행
+        2. `Balance`를 예치금으로 설정
+        3. `ShareDenomSupply`를 `InsuranceFundInitialSupply`로 설정
+    * B. `Balance`가 0이고 `ShareDenomSupply`가 0이 아닌 경우
+        1. 보험 펀드의 `ShareDenom`을 변경하여 새 보험 펀드를 처음부터 시작
+        2. bank keeper에 새로 생성된 `ShareDenom` 등록
+        3. sender에게 `InsuranceFundInitialSupply` (10^18) 발행
+        4. `Balance`를 예치금으로 설정
+        5. `ShareDenomSupply`를 `InsuranceFundInitialSupply`로 설정
+    * C. `Balance`가 0이 아니고 `ShareDenomSupply`가 0인 경우
+        1. sender에게 `InsuranceFundInitialSupply` (10^18) 발행
+        2. `Balance`를 예치금만큼 증가
+        3. `ShareDenomSupply`를 `InsuranceFundInitialSupply`로 설정
+    * D. `Balance`와 `ShareDenomSupply`가 모두 0이 아닌 경우 - 정상적인 경우
+        1. `Balance`를 예치금만큼 증가
+        2. sender에게 `prev_ShareDenomSupply * deposit_amount / prev_Balance` 수량의 `ShareDenom` 발행
+        3. `ShareDenomSupply`를 발행량만큼 증가
+- 보험 펀드 객체를 store에 저장
+
+## 보험 펀드에서 redemption 요청
+
+**매개변수 설명**
+`Sender` 필드는 보험 펀드의 redemption 요청자를 설명합니다.
+`MarketId` 필드는 보험 펀드와 연결된 파생상품 market id를 설명합니다.
+`Amount` 필드는 redeem할 share token 수량을 설명합니다.
+
+**단계**
+
+- `MarketId`와 연결된 보험 펀드가 존재하는지 확인
+- `ShareDenom`을 모듈 계정으로 전송
+- 새 redemption schedule ID 가져오기
+- 보험 펀드의 redemption 통지 기간과 현재 블록 시간에서 `ClaimTime` 계산
+- pending redemption(redemption schedule)을 저장할 키 계산
+- 세부 정보가 포함된 redemption schedule 객체 생성
+- redemption schedule 객체를 store에 저장
+
+## 파생상품 시장의 청산 이벤트에 대한 보험 펀드 작업
+
+**단계**
+
+- `exchange` 모듈이 insurance keeper에서 관련 보험 펀드를 찾습니다.
+- `missingFund`가 양수이면 `WithdrawFromInsuranceFund`를 통해 보험 펀드에서 해당 금액을 인출합니다.
+- `missingFund`가 음수이면 `DepositIntoInsuranceFund`를 통해 보험 펀드에 해당 금액을 예치합니다.
+
+## pending redemption의 자동 처리
+
+**단계**
+
+`ClaimTime` 기준으로 정렬된 순서대로 만료된 모든 redemption을 반복하고 다음 작업을 수행합니다:
+
+- `ClaimTime`이 현재 블록 시간 이후이면 조기 종료
+- 만료된 redemption schedule에 대한 보험 펀드가 존재하는지 확인
+- share 수량에서 redeem 금액 계산 - `shareAmt * fund.Balance * fund.TotalShare`
+- 모듈 계정에서 redeemer 계정으로 계산된 redeem 금액 전송
+- redemption schedule 시점에 모듈 계정으로 전송된 share 토큰 소각
+- redemption schedule 객체 삭제
+- 보험 펀드의 `Balance`를 redeem 금액만큼 감소
+- 업데이트된 insurance 객체를 store에 저장
+
+# Hooks
+
+다른 모듈은 보험 펀드 내에서 특정 이벤트가 발생했을 때 실행할 작업을 등록할 수 있습니다. 이러한 이벤트는 exchange 이벤트 직전(`Before`) 또는 직후(`After`)에 실행되도록 등록할 수 있습니다(hook 이름에 따름). 다음 hook을 exchange에 등록할 수 있습니다:
+
+**참고**: Hook은 사용할 수 없으며 exchange 모듈이 insurance keeper 함수를 직접 호출합니다.
+
+**단계**
+파생상품 시장에서 청산 이벤트가 발생할 때
+
+- `exchange` 모듈이 insurance keeper에서 관련 보험 펀드를 찾습니다.
+- `missingFund`가 양수이면 `WithdrawFromInsuranceFund`를 통해 보험 펀드에서 해당 금액을 인출합니다.
+- `missingFund`가 음수이면 `DepositIntoInsuranceFund`를 통해 보험 펀드에 해당 금액을 예치합니다.
+

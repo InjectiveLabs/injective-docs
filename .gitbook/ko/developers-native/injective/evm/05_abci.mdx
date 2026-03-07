@@ -1,0 +1,28 @@
+---
+title: Application Blockchain Interface (ABCI)
+---
+
+Application Blockchain Interface (ABCI)를 통해 애플리케이션은 Tendermint Core Consensus 엔진과 상호 작용할 수 있습니다. 애플리케이션은 Tendermint와 여러 개의 별도 ABCI 연결을 유지합니다. `x/evm`과 가장 관련이 있는 것은 [Commit에서의 Consensus 연결](https://docs.tendermint.com/v0.35/spec/abci/apps.html#consensus-connection)입니다. 이 연결은 블록 실행을 담당하며 `InitChain`(`InitGenesis` 포함), `BeginBlock`, `DeliverTx`, `EndBlock`, `Commit` 함수를 호출합니다. `InitChain`은 새 블록체인이 처음 시작될 때만 호출되고 `DeliverTx`는 블록의 각 트랜잭션에 대해 호출됩니다.
+
+## InitGenesis
+
+`InitGenesis`는 `GenesisState` 필드를 store에 설정하여 EVM 모듈 genesis 상태를 초기화합니다. 특히 매개변수와 genesis 계정(상태 및 코드)을 설정합니다.
+
+## ExportGenesis
+
+`ExportGenesis` ABCI 함수는 EVM 모듈의 genesis 상태를 내보냅니다. 특히 bytecode, balance 및 storage가 있는 모든 계정, 트랜잭션 로그, EVM 매개변수 및 chain configuration을 검색합니다.
+
+## BeginBlock
+
+EVM 모듈 `BeginBlock` 로직은 트랜잭션의 상태 전환을 처리하기 전에 실행됩니다. 이 함수의 주요 목적은 다음과 같습니다:
+
+- EVM 상태 전환 실행 중에 `StateDB` 함수 중 하나가 호출되면 block header, store, gas meter 등을 `Keeper`에서 사용할 수 있도록 현재 블록에 대한 context를 설정합니다.
+- `InitChain` 중에 설정되지 않은 경우 EIP155 `ChainID` 번호(전체 chain-id에서 얻음)를 설정합니다
+
+## EndBlock
+
+EVM 모듈 `EndBlock` 로직은 트랜잭션의 모든 상태 전환을 실행한 후에 발생합니다. 이 함수의 주요 목적은 다음과 같습니다:
+
+- Block bloom 이벤트 내보내기
+    - 이는 Ethereum 헤더에 이 유형이 필드로 포함되어 있으므로 Web3 호환성을 위한 것입니다. JSON-RPC 서비스는 이 이벤트 쿼리를 사용하여 Tendermint Header에서 Ethereum Header를 구성합니다.
+    - block Bloom filter 값은 Transient Store에서 가져온 다음 내보내집니다

@@ -1,0 +1,235 @@
+---
+title: State
+---
+
+이 섹션에서는 `x/evm` 모듈 상태에 저장된 객체, go-ethereum `StateDB` 인터페이스에서 파생된 기능, Keeper를 통한 구현 및 genesis에서의 상태 구현에 대한 개요를 제공합니다.
+
+## State Objects
+
+`x/evm` 모듈은 다음 객체를 상태에 유지합니다:
+
+### State
+
+|             | 설명                                                  | Key                           | Value               | Store     |
+| ----------- | ------------------------------------------------------------ | ----------------------------- | ------------------- | --------- |
+| Code        | 스마트 컨트랙트 bytecode                                      | `[]byte{1} + []byte(address)` | `[]byte{code}`      | KV        |
+| Storage     | 스마트 컨트랙트 저장소                                       | `[]byte{2} + [32]byte{key}`   | `[32]byte(value)`   | KV        |
+| Block Bloom | 블록 bloom filter, 현재 블록의 bloom filter를 누적하는 데 사용되며 end blocker에서 이벤트로 내보내집니다. | `[]byte{1} + []byte(tx.Hash)` | `protobuf([]Log)`   | Transient |
+| Tx Index    | 현재 블록에서 현재 트랜잭션의 인덱스.               | `[]byte{2}`                   | `BigEndian(uint64)` | Transient |
+| Log Size    | 현재 블록에서 지금까지 내보낸 로그 수. 후속 로그의 로그 인덱스를 결정하는 데 사용됩니다. | `[]byte{3}`                   | `BigEndian(uint64)` | Transient |
+| Gas Used    | 현재 cosmos-sdk 트랜잭션의 ethereum 메시지에서 사용된 가스 양, cosmos-sdk 트랜잭션에 여러 ethereum 메시지가 포함된 경우 필요합니다. | `[]byte{4}`                   | `BigEndian(uint64)` | Transient |
+
+## StateDB
+
+`StateDB` 인터페이스는 `x/evm/statedb` 모듈의 `StateDB`에 의해 구현되어 컨트랙트와 계정 모두의 전체 상태 쿼리를 위한 EVM 데이터베이스를 나타냅니다. Ethereum 프로토콜 내에서 `StateDB`는 IAVL 트리 내의 모든 것을 저장하고 중첩된 상태의 캐싱 및 저장을 처리하는 데 사용됩니다.
+
+```go
+// github.com/ethereum/go-ethereum/core/vm/interface.go
+type StateDB interface {
+	CreateAccount(common.Address)
+
+	SubBalance(common.Address, *big.Int)
+	AddBalance(common.Address, *big.Int)
+	GetBalance(common.Address) *big.Int
+
+	GetNonce(common.Address) uint64
+	SetNonce(common.Address, uint64)
+
+	GetCodeHash(common.Address) common.Hash
+	GetCode(common.Address) []byte
+	SetCode(common.Address, []byte)
+	GetCodeSize(common.Address) int
+
+	AddRefund(uint64)
+	SubRefund(uint64)
+	GetRefund() uint64
+
+	GetCommittedState(common.Address, common.Hash) common.Hash
+	GetState(common.Address, common.Hash) common.Hash
+	SetState(common.Address, common.Hash, common.Hash)
+
+	Suicide(common.Address) bool
+	HasSuicided(common.Address) bool
+
+	// Exist reports whether the given account exists in state.
+	// Notably this should also return true for suicided accounts.
+	Exist(common.Address) bool
+	// Empty returns whether the given account is empty. Empty
+	// is defined according to EIP161 (balance = nonce = code = 0).
+	Empty(common.Address) bool
+
+	PrepareAccessList(sender common.Address, dest *common.Address, precompiles []common.Address, txAccesses types.AccessList)
+	AddressInAccessList(addr common.Address) bool
+	SlotInAccessList(addr common.Address, slot common.Hash) (addressOk bool, slotOk bool)
+	// AddAddressToAccessList adds the given address to the access list. This operation is safe to perform
+	// even if the feature/fork is not active yet
+	AddAddressToAccessList(addr common.Address)
+	// AddSlotToAccessList adds the given (address,slot) to the access list. This operation is safe to perform
+	// even if the feature/fork is not active yet
+	AddSlotToAccessList(addr common.Address, slot common.Hash)
+
+	RevertToSnapshot(int)
+	Snapshot() int
+
+	AddLog(*types.Log)
+	AddPreimage(common.Hash, []byte)
+
+	ForEachStorage(common.Address, func(common.Hash, common.Hash) bool) error
+}
+```
+
+`x/evm`의 `StateDB`는 다음 기능을 제공합니다:
+
+### CRUD of Ethereum accounts
+
+제공된 주소에서 `EthAccount` 인스턴스를 생성하고 `createAccount()`로 `AccountKeeper`에 저장할 값을 설정할 수 있습니다. 주어진 주소를 가진 계정이 이미 존재하면 이 함수는 해당 주소와 연결된 기존 코드 및 저장소도 재설정합니다.
+
+계정의 코인 잔액은 `BankKeeper`를 통해 관리되며 `GetBalance()`로 읽고 `AddBalance()` 및 `SubBalance()`로 업데이트할 수 있습니다.
+
+- `GetBalance()`는 제공된 주소의 EVM denomination 잔액을 반환합니다. denomination은 모듈 매개변수에서 가져옵니다.
+- `AddBalance()`는 새 코인을 발행하고 주소로 전송하여 주어진 금액을 주소 잔액 코인에 추가합니다. 코인 denomination은 모듈 매개변수에서 가져옵니다.
+- `SubBalance()`는 코인을 에스크로 계정으로 전송한 다음 소각하여 주어진 금액을 주소 잔액에서 뺍니다. 코인 denomination은 모듈 매개변수에서 가져옵니다. 금액이 음수이거나 사용자에게 전송에 충분한 자금이 없으면 이 함수는 no-op을 수행합니다.
+
+nonce(또는 트랜잭션 시퀀스)는 auth 모듈 `AccountKeeper`를 통해 Account `Sequence`에서 얻을 수 있습니다.
+
+- `GetNonce()`는 주어진 주소로 계정을 검색하고 트랜잭션 시퀀스(즉, nonce)를 반환합니다. 계정을 찾을 수 없으면 함수는 no-op을 수행합니다.
+- `SetNonce()`는 주어진 nonce를 주소 계정의 시퀀스로 설정합니다. 계정이 존재하지 않으면 주소에서 새 계정이 생성됩니다.
+
+임의의 컨트랙트 로직을 포함하는 스마트 컨트랙트 bytecode는 `EVMKeeper`에 저장되며 `GetCodeHash()`, `GetCode()` 및 `GetCodeSize()`로 쿼리하고 `SetCode()`로 업데이트할 수 있습니다.
+
+- `GetCodeHash()`는 저장소에서 계정을 가져와 code hash를 반환합니다. 계정이 존재하지 않거나 EthAccount 유형이 아닌 경우 빈 code hash 값을 반환합니다.
+- `GetCode()`는 주어진 주소와 연결된 코드 바이트 배열을 반환합니다. 계정의 code hash가 비어 있으면 이 함수는 nil을 반환합니다.
+- `SetCode()`는 코드 바이트 배열을 애플리케이션 KVStore에 저장하고 주어진 계정에 code hash를 설정합니다. 코드가 비어 있으면 저장소에서 삭제됩니다.
+- `GetCodeSize()`는 이 객체와 연결된 컨트랙트 코드의 크기를 반환하거나 없으면 0을 반환합니다.
+
+환불된 가스는 EVM 실행이 완료된 후 사용된 가스 값에서 빼거나 더하기 위해 별도의 변수에서 추적하고 저장해야 합니다. 환불 값은 모든 트랜잭션과 모든 블록이 끝날 때 지워집니다.
+
+- `AddRefund()`는 주어진 양의 가스를 메모리 내 환불 값에 추가합니다.
+- `SubRefund()`는 주어진 양의 가스를 메모리 내 환불 값에서 뺍니다. 가스 양이 현재 환불보다 크면 이 함수는 패닉합니다.
+- `GetRefund()`는 트랜잭션 실행이 완료된 후 반환할 수 있는 가스 양을 반환합니다. 이 값은 모든 트랜잭션에서 0으로 재설정됩니다.
+
+상태는 `EVMKeeper`에 저장됩니다. `GetCommittedState()`, `GetState()`로 쿼리하고 `SetState()`로 업데이트할 수 있습니다.
+
+- `GetCommittedState()`는 주어진 key hash에 대해 저장소에 설정된 값을 반환합니다. 키가 등록되지 않은 경우 이 함수는 빈 hash를 반환합니다.
+- `GetState()`는 주어진 key hash에 대한 메모리 내 dirty 상태를 반환하고, 존재하지 않으면 KVStore에서 커밋된 값을 로드합니다.
+- `SetState()`는 주어진 hash(key, value)를 상태에 설정합니다. value hash가 비어 있으면 이 함수는 상태에서 key를 삭제하고, 새 값은 먼저 dirty 상태에 유지되다가 끝에서 KVStore에 커밋됩니다.
+
+계정은 suicide 상태로 설정할 수도 있습니다. 컨트랙트가 suicide를 커밋하면 계정이 suicided로 표시되고, 커밋할 때 코드, 저장소 및 계정이 삭제됩니다(다음 블록부터).
+
+- `Suicide()`는 주어진 계정을 suicided로 표시하고 EVM 토큰의 계정 잔액을 지웁니다.
+- `HasSuicided()`는 현재 트랜잭션에서 계정이 suicided로 표시되었는지 확인하기 위해 메모리 내 플래그를 쿼리합니다. suicided된 계정은 쿼리 중에 non-nil로 반환되고 블록이 커밋된 후 "cleared"됩니다.
+
+계정 존재 여부를 확인하려면 `Exist()` 및 `Empty()`를 사용합니다.
+
+- `Exist()`는 주어진 계정이 저장소에 존재하거나 suicided로 표시된 경우 true를 반환합니다.
+- `Empty()`는 주소가 다음 조건을 충족하면 true를 반환합니다:
+  - nonce가 0
+  - evm denom의 잔액이 0
+  - 계정 code hash가 비어 있음
+
+### EIP2930 functionality
+
+트랜잭션이 접근할 계획인 주소 및 storage key 목록인 [access list](https://eips.ethereum.org/EIPS/eip-2930)를 포함하는 트랜잭션 유형을 지원합니다. access list 상태는 메모리에 유지되며 트랜잭션이 커밋된 후 폐기됩니다.
+
+- `PrepareAccessList()`는 EIP-2929 및 EIP-2930과 관련하여 상태 전환 실행을 위한 준비 단계를 처리합니다. 이 메서드는 현재 번호에 Yolov3/Berlin/2929+2930이 적용 가능한 경우에만 호출해야 합니다.
+  - sender를 access list에 추가 (EIP-2929)
+  - destination을 access list에 추가 (EIP-2929)
+  - precompiles를 access list에 추가 (EIP-2929)
+  - 선택적 트랜잭션 access list의 내용을 추가 (EIP-2930)
+- `AddressInAccessList()`는 주소가 등록되어 있으면 true를 반환합니다.
+- `SlotInAccessList()`는 주소와 slot이 등록되어 있는지 확인합니다.
+- `AddAddressToAccessList()`는 주어진 주소를 access list에 추가합니다. 주소가 이미 access list에 있으면 이 함수는 no-op을 수행합니다.
+- `AddSlotToAccessList()`는 주어진 (address, slot)을 access list에 추가합니다. 주소와 slot이 이미 access list에 있으면 이 함수는 no-op을 수행합니다.
+
+### Snapshot state and Revert functionality
+
+EVM은 오류를 처리하기 위해 상태 되돌리기 예외를 사용합니다. 이러한 예외는 현재 호출(및 모든 하위 호출)에서 상태에 대한 모든 변경 사항을 취소하고 호출자는 오류를 처리하고 전파하지 않을 수 있습니다. 이 기능을 지원하기 위해 `Snapshot()`으로 현재 상태를 revision으로 식별하고 `RevertToSnapshot()`으로 주어진 revision으로 상태를 되돌릴 수 있습니다.
+
+- `Snapshot()`은 새 스냅샷을 생성하고 식별자를 반환합니다.
+- `RevertToSnapshot(rev)`는 `rev`로 식별된 스냅샷까지의 모든 수정 사항을 취소합니다.
+
+Ethermint는 이를 지원하기 위해 [go-ethereum journal 구현](https://github.com/ethereum/go-ethereum/blob/master/core/state/journal.go#L39)을 적용했습니다. journal log 목록을 사용하여 지금까지 수행된 모든 상태 수정 작업을 기록하고, 스냅샷은 고유 id와 로그 목록의 인덱스로 구성되며, 스냅샷으로 되돌리려면 스냅샷 인덱스 이후의 journal log를 역순으로 취소하면 됩니다.
+
+### Ethereum Transaction logs
+
+`AddLog()`를 사용하면 현재 상태에 유지되는 트랜잭션 hash와 연결된 Log 목록에 주어진 ethereum `Log`를 추가할 수 있습니다. 이 함수는 로그를 저장소에 설정하기 전에 트랜잭션 hash, 블록 hash, 트랜잭션 인덱스 및 로그 인덱스 필드도 채웁니다.
+
+## Keeper
+
+EVM 모듈 `Keeper`는 EVM 모듈 상태에 대한 접근 권한을 부여하고 `StateDB` 구현을 지원하기 위해 `statedb.Keeper` 인터페이스를 구현합니다. Keeper에는 EVM 모듈에서만 접근할 수 있는 multistore의 구체적인 하위 트리에 DB가 쓸 수 있도록 하는 store key가 포함되어 있습니다. 쿼리 및 지속성을 위해 trie 및 database를 사용하는 대신(Ethermint의 `StateDB` 구현) Cosmos `KVStore`(key-value store) 및 Cosmos SDK `Keeper`를 사용하여 상태 전환을 용이하게 합니다.
+
+인터페이스 기능을 지원하기 위해 4개의 모듈 Keeper를 가져옵니다:
+
+- `auth`: CRUD accounts
+- `bank`: accounting (supply) 및 잔액의 CRUD
+- `staking`: 과거 헤더 쿼리
+- `fee market`: `ChainConfig` 매개변수에서 `London` 하드 포크가 활성화된 후 `DynamicFeeTx` 처리를 위한 EIP1559 기본 수수료
+
+```go
+type Keeper struct {
+	// Protobuf codec
+	cdc          codec.Codec
+	// Store key required for the EVM Prefix KVStore. It is required by:
+	// - storing account's Storage State
+	// - storing account's Code
+	// - storing module parameters
+	storeKey storetypes.StoreKey
+
+	// key to access the object store, which is reset on every block during Commit
+	objectKey storetypes.StoreKey
+
+	// the address capable of executing a MsgUpdateParams message. Typically, this should be the x/gov module account.
+	authority sdk.AccAddress
+	// access to account state
+	accountKeeper types.AccountKeeper
+	// update balance and accounting operations with coins
+	bankKeeper types.BankKeeper
+	// access historical headers for EVM state transition execution
+	stakingKeeper types.StakingKeeper
+	// fetch EIP1559 base fee and parameters
+	feeMarketKeeper types.FeeMarketKeeper
+
+	// chain ID number obtained from the context's chain id
+	eip155ChainID *big.Int
+
+	// Tracer used to collect execution traces from the EVM transaction execution
+	tracer string
+
+	// EVM Hooks for tx post-processing
+	hooks types.EvmHooks
+
+	customContractFns []CustomContractFn
+}
+```
+
+## Genesis State
+
+`x/evm` 모듈 `GenesisState`는 이전에 내보낸 높이에서 체인을 초기화하는 데 필요한 상태를 정의합니다. 여기에는 `GenesisAccounts`와 모듈 매개변수가 포함됩니다
+
+```go
+type GenesisState struct {
+  // accounts is an array containing the ethereum genesis accounts.
+  Accounts []GenesisAccount `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts"`
+  // params defines all the parameters of the module.
+  Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
+}
+```
+
+## Genesis Accounts
+
+`GenesisAccount` 유형은 Ethereum `GenesisAccount` 유형의 적용에 해당합니다. genesis 상태에서 초기화할 계정을 정의합니다.
+
+Ethermint의 것과의 주요 차이점은 evm `State`에 대해 map 대신 slice를 사용하는 사용자 정의 `Storage` 유형을 사용하고(비결정성으로 인해) private key 필드를 포함하지 않는다는 것입니다.
+
+또한 Cosmos SDK의 `auth` 모듈이 계정 상태를 관리하므로 `Address` 필드는 `auth` 모듈의 `Keeper`(즉, `AccountKeeper`)에 저장된 기존 `EthAccount`에 해당해야 한다는 점에 유의해야 합니다.
+
+```go
+type GenesisAccount struct {
+  // address defines an ethereum hex formated address of an account
+  Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+  // code defines the hex bytes of the account code.
+  Code string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+  // storage defines the set of state key values for the account.
+  Storage Storage `protobuf:"bytes,3,rep,name=storage,proto3,castrepeated=Storage" json:"storage"`
+}
+```

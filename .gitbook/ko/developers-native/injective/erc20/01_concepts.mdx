@@ -1,0 +1,11 @@
+---
+sidebar_position: 1
+title: 개념
+---
+
+# 개념
+
+`ERC20` 모듈은 기존 bank denom(IBC 브릿지 토큰, USDC, tokenfactory, peggy 등)을 Injective EVM에 도입하기 위해 설계되었습니다. 이 모듈은 저장소에 토큰 페어 간의 연결을 유지함으로써 이를 달성합니다. 기존 bank denom에 대한 새로운 토큰 페어를 생성할 때, 모듈은 bank precompile을 활용하는 새로운 ERC20 컨트랙트를 업로드합니다. 이 precompile은 모듈의 저장소에 접근하여 새로 생성된 ERC20 주소와 기존 bank denom 간의 매핑을 찾습니다. 이 별도의 모듈이 필요한 이유는 다음과 같습니다:
+
+1. storage: bank denom ↔ erc20 address 간의 매핑 저장
+2. 새로운 Msg 타입: 사용자가 매핑에 새로운 토큰 페어를 생성할 수 있도록 허용하며, 이는 체인 Msg를 발행하여 수행됩니다

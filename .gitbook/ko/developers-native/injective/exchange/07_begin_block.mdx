@@ -1,0 +1,74 @@
+---
+sidebar_position: 8
+title: BeginBlocker
+---
+
+# BeginBlocker
+
+Exchange BeginBlocker는 마지막 모듈로 정의된 순서대로 모든 블록 시작 시 실행됩니다.
+
+### 1. 시간별 Fundings 처리
+
+1. Funding payments를 받을 첫 번째 market을 확인합니다. 첫 번째 market이 아직 fundings을 받을 시간이 아니면 (funding timestamp에 도달하지 않음), 모든 fundings을 건너뜁니다.
+2. 그렇지 않으면 각 market을 하나씩 처리합니다:
+   1. Funding timestamp에 아직 도달하지 않으면 market을 건너뜁니다.
+   2. Funding을 `twap + hourlyInterestRate`로 계산합니다. 여기서 $\mathrm{twap = \frac{cumulativePrice}{timeInterval * 24}}$이고 $\mathrm{timeInterval = lastTimestamp - startingTimestamp}$입니다. `cumulativePrice`는 이전에 각 거래마다 VWAP와 mark price 간의 시간 가중 차이로 계산됩니다: $\mathrm{\frac{VWAP - markPrice}{markPrice} * timeElapsed}$.
+   3. 필요한 경우 `HourlyFundingRateCap`에 의해 정의된 최대값으로 funding을 cap합니다.
+   4. 다음 funding timestamp를 설정합니다.
+   5. `EventPerpetualMarketFundingUpdate`를 emit합니다.
+
+### 2. Settle 예정된 Markets 처리
+
+Settle할 markets 목록의 각 market에 대해:
+
+1. Zero closing fee와 현재 mark price로 market을 settle합니다.
+   1. Socialized loss를 실행합니다. 이것은 market에서 누락된 총 자금 금액을 계산한 다음 각 수익성 있는 포지션에 대해 비례적으로 payout을 줄입니다. 예를 들어 총 100 USDT가 누락된 자금이 있고 동일한 quantity를 가진 10개의 수익성 있는 포지션이 있는 market은 각 포지션에 대해 10 USDT의 payout 감소를 초래합니다.
+   2. 모든 포지션이 강제로 청산됩니다.
+2. Storage에서 삭제합니다.
+
+### 3. 만기된 Expiry Future Markets 처리
+
+각 time expiry market에 대해, 먼저 만기되는 것부터 시작하여 반복합니다:
+
+1. Market이 미숙성이면 반복을 중지합니다.
+2. Market이 비활성화되면 storage에서 market을 삭제하고 다음 market으로 이동합니다.
+3. Oracle에서 market의 cumulative price를 가져옵니다.
+4. Market이 maturation을 시작하면 market의 `startingCumulativePrice`를 저장합니다.
+5. Market이 만기되면 settlement price를 $\mathrm{twap = (currentCumulativePrice - startingCumulativePrice) / twapWindow}$로 계산하고 settle될 markets 목록에 추가합니다.
+6. 정의된 closing fee와 settlement price로 모든 만기된 markets를 settle합니다. 절차는 이전 settlement 프로세스와 동일합니다 (위 참조). Socialized loss는 선택적 단계입니다. 일반적인 경우 market은 socialized loss가 필요하지 않습니다.
+7. 정산된 모든 markets를 storage에서 삭제합니다.
+
+### 4. Trading Rewards 처리
+
+1. 현재 trading rewards 캠페인이 종료되었는지 확인합니다.
+2. 캠페인이 종료되면 적격 트레이더에게 reward 토큰을 배포합니다.
+
+   1. 각 reward denom에 대해 사용 가능한 reward를 `min(campaignRewardTokens, communityPoolRewardTokens)`로 계산합니다
+   2. `accountPoints * totalReward / totalTradingRewards`로 계산된 각 트레이더의 trading share를 기반으로 트레이더 rewards를 가져옵니다.
+   3. Community pool에서 트레이더에게 reward 토큰을 전송합니다.
+   4. Total 및 모든 account trading reward points를 재설정합니다.
+   5. 현재 캠페인 종료 timestamp를 삭제합니다.
+
+3. 새 캠페인이 런치되면 다음 현재 캠페인 종료 timestamp를 `CurrentCampaignStartTimestamp + CampaignDurationSeconds`로 설정합니다.
+4. 현재 캠페인이 진행 중이지 않고 새 캠페인이 런치되지 않으면 storage에서 campaign info, market qualifications 및 market multipliers를 삭제합니다.
+
+### 5. Fee Discount Buckets 처리
+
+- 가장 오래된 bucket의 종료 timestamp가 `block.timestamp - bucketCount * bucketDuration`보다 오래된 경우:
+  - 가장 오래된 bucket을 정리합니다
+  - 모든 `bucketStartTimestamp + account → FeesPaidAmount`를 반복합니다:
+    - 각 account의 `totalPastBucketFeesPaidAmount`에서 `FeesPaidAmount`를 뺍니다
+    - Account의 `account → {tier, TTL timestamp}`를 삭제합니다. 이것은 Endblocker에서 TTL timestamps를 확인하므로 정확성을 위해 기술적으로 필요하지 않지만 상태 정리 전략입니다.
+  - `CurrBucketStartTimestamp ← CurrBucketStartTimestamp + BucketDuration`을 업데이트합니다.
+
+```
+bucket count 5이고 100초 duration인 경우
+
+120 220 320 420 520          220 320 420 520 620
+ |   |   |   |   |   |  -->   |   |   |   |   |   |
+   1   2   3   4   5            1   2   3   4   5
+
+현재 block.timestamp가 621인 경우:
+621 - 5*100 = 121
+120은 121보다 오래되었으므로 마지막 bucket을 정리하고 새 bucket을 생성합니다.
+```

@@ -1,0 +1,70 @@
+---
+sidebar_position: 3
+title: 기타 개념
+---
+
+# 기타 개념
+
+## 동시성 친화적 Market Order Clearing Price 알고리즘
+
+효율적인 데이터 처리를 위해 동시성을 활용하는 [split-apply-combine](https://stackoverflow.com/tags/split-apply-combine/info) 패러다임을 적용합니다.
+
+1. 모든 markets에서 매칭 가능한 모든 orders를 동시에 매칭합니다 (자세한 내용은 order 매칭 참조).
+
+- 중간 결과는 clearing price와 fill quantities가 있는 매칭된 orders 목록입니다.
+- 최종 결과는 모든 새 이벤트와 positions, orders, subaccount deposits, trading reward points 및 지불된 수수료에 대한 모든 변경 사항의 임시 캐시입니다.
+
+2. 모든 markets에서 실행을 기다리고 모든 데이터를 persist합니다.
+
+참고: settlement 실행 외에도 설계는 오프체인 소비를 위한 market 데이터 배포 요건도 고려해야 합니다.
+
+## Atomic Market Order 실행
+
+Cosmwasm에 구축된 새 애플리케이션의 일반적인 요청은 order 실행 시 알림을 받는 기능입니다. 일반 order 실행 흐름에서는 Frequent Batch Auctions (FBA)가 EndBlocker 내에서 실행되기 때문에 이것이 불가능합니다. FBA를 우회하기 위해 새로운 유형의 atomic market orders가 도입되었습니다. 이러한 atomic market order를 즉시 실행하는 특권에 대해 추가 거래 수수료가 부과됩니다. Atomic market order의 수수료를 계산하려면 market의 taker fee에 market 유형의 `AtomicMarketOrderFeeMultiplier`를 곱합니다.
+
+- `SpotAtomicMarketOrderFeeMultiplier`
+- `DerivativeAtomicMarketOrderFeeMultiplier`
+- `BinaryOptionsAtomicMarketOrderFeeMultiplier`
+
+이러한 multipliers는 글로벌 exchange parameters에 정의됩니다. 또한 exchange parameters는 atomic market order를 실행하는 데 필요한 최소 액세스 레벨을 지정하는 `AtomicMarketOrderAccessLevel`도 정의합니다.
+
+```golang
+const (
+	AtomicMarketOrderAccessLevel_Nobody                         AtomicMarketOrderAccessLevel = 0
+	AtomicMarketOrderAccessLevel_BeginBlockerSmartContractsOnly AtomicMarketOrderAccessLevel = 1
+	AtomicMarketOrderAccessLevel_SmartContractsOnly             AtomicMarketOrderAccessLevel = 2
+	AtomicMarketOrderAccessLevel_Everyone                       AtomicMarketOrderAccessLevel = 3
+)
+```
+
+## Trading Rewards
+
+거버넌스가 다음을 지정하는 **TradingRewardCampaignLaunchProposal**을 승인합니다:
+
+- 첫 번째 캠페인의 시작 timestamp
+- 다음을 지정하는 **TradingRewardCampaignInfo**
+  - 캠페인 기간 (초)
+  - 허용되는 trading fee quote currency denoms
+  - 선택적 market별 **boost** 정보
+  - 거래가 보상을 받지 못하는 disqualified marketIDs
+- 각 연속 캠페인에 대한 trading rewards pool을 구성하는 최대 epoch rewards를 지정하는 **CampaignRewardPools**
+
+주어진 캠페인 동안 exchange는 모든 적격 markets (매칭되는 quote currency가 있고 disqualified 목록에 없는 markets)에서 거래량 (해당되는 경우 boosts 적용)으로 얻은 각 트레이더의 누적 trading reward points를 기록합니다.
+
+각 캠페인 종료 시, 즉 `campaign starting timestamp + campaign duration`이 경과한 후, 각 트레이더는 해당 캠페인 epoch의 trading rewards points를 기반으로 trading rewards pool의 비례 배분 비율을 받습니다.
+
+캠페인은 자동 롤오버되지 않습니다. **CampaignRewardPools**에 정의된 추가 캠페인이 없으면 trading reward 캠페인이 종료됩니다.
+
+## Fee Discounts
+
+거버넌스가 **FeeDiscountProposal**을 승인합니다. 이는 fee discount **schedule**을 정의하고, 이 schedule은 트레이더가 지정된 최소 INJ 스테이킹 금액을 충족하고 지정된 기간 (`bucket count * bucket duration seconds`, 30일이어야 함) 동안 지정된 trading volume (지정된 **quote denoms** 기반)을 가진 경우 받을 maker 및 taker discount rates를 각각 지정하는 fee discount **tiers**를 지정합니다. Schedule은 또한 trading volume이 volume 기여도에 포함되지 않는 disqualified marketIDs 목록을 지정합니다.
+
+- Base와 quote가 모두 허용된 quote currencies 목록에 있는 Spot markets는 보상받지 않습니다 (예: USDC/USDT spot market).
+- 마이너스 maker fees가 있는 markets에서의 Maker fills는 트레이더에게 fee discounts를 제공하지 않습니다.
+- Fee discount proposal이 30일 이전에 통과된 경우, 즉 proposal 생성 이후 `BucketCount * BucketDuration`이 아직 경과하지 않은 경우, 즉시 온보딩하는 market makers를 불공정하게 불이익하지 않도록 fee volume 요건이 무시됩니다.
+
+내부적으로 trading volumes는 buckets에 저장되며, 일반적으로 각각 24시간 지속되는 30개의 buckets입니다. Bucket이 30일보다 오래되면 제거됩니다. 또한 성능상의 이유로 계정의 fee discount tier를 검색하기 위한 캐시가 있습니다. 이 캐시는 24시간마다 업데이트됩니다.
+
+### Stake Delegations/Grants
+
+Fee discount tiers를 위한 스테이킹된 INJ 요건은 INJ를 스테이킹한 다른 주소의 grants를 통해 충족될 수 있습니다. Fee discount 계산에 사용되는 총 스테이킹 INJ 값은 `OwnStake + StakeGrantedFromGranter - TotalStakeGrantedToOthers`입니다. 여러 grants가 단일 주소에 부여될 수 있지만 **한 번에 하나의 grant만 활성화**될 수 있습니다. 그러나 단일 주소는 동시에 다른 주소에 여러 grants를 가질 수 있습니다. 25개 validators에 스테이킹된 INJ만 stake grant 목적의 `OwnStake` 계산에 사용됩니다. 모든 스테이킹된 INJ가 grants에 활용될 수 있도록 25개 이하의 validators에 스테이킹하십시오. 부여된 stake는 다시 부여될 수 없습니다.

@@ -1,0 +1,78 @@
+---
+sidebar_position: 9
+title: EndBlocker
+---
+
+# EndBlocker
+
+Exchange EndBlocker는 governance 및 staking 모듈 이후, peggy, auction 및 insurance 모듈 이전에 정의된 순서대로 모든 블록 끝에서 실행됩니다. Governance 모듈의 EndBlocker가 exchange 모듈의 것보다 먼저 실행되는 것이 특히 중요합니다.
+
+- Stage 0: 현재 블록에서 fee-discount가 지원되는 market에 order를 배치한 모든 계정에 대한 fee discounts를 결정합니다.
+- Stage 1: 모든 market orders를 병렬로 처리합니다 - spot market 및 derivative market orders
+  - Markets orders는 블록 시작 시의 resting orderbook에 대해 실행됩니다.
+  - Market orders는 이후 들어오는 oracle 업데이트 또는 limit order 취소로 인해 EndBlocker에서 무효화될 수 있습니다.
+- Stage 2: Market order 실행을 store에 persist합니다
+
+  - Spot Markets
+    - Spot market order 실행 데이터 persist
+    - 관련 이벤트 emit
+      - `EventBatchSpotExecution`
+  - Derivative Markets
+    - Derivative market order 실행 데이터 persist
+    - 관련 이벤트 emit
+      - `EventBatchDerivativeExecution`
+      - `EventCancelDerivativeOrder`
+
+- Stage 3: 매칭되는 모든 limit orders를 병렬로 처리합니다 - spot 및 derivative limit orders
+  - Limit orders는 공정한 매칭 가격을 보장하기 위해 frequent batch auction 모드에서 실행됩니다. 자세한 내용은 아래를 참조하세요.
+  - Vanilla limit orders는 이후 들어오는 oracle 업데이트로 인해 EndBlocker에서 무효화될 수 있으며, reduce-only limit orders는 포지션을 뒤집는 이후 들어오는 orders로 인해 EndBlocker에서 무효화될 수 있습니다.
+- Stage 4: Limit order 매칭 실행 + 새 limit orders를 store에 persist합니다
+
+  - Spot Markets
+    - Spot Matching 실행 데이터 persist
+    - 관련 이벤트 emit
+      - `EventNewSpotOrders`
+      - `EventBatchSpotExecution`
+  - Derivative Markets
+    - Derivative Matching 실행 데이터 persist
+    - 관련 이벤트 emit
+      - `EventNewDerivativeOrders`
+      - `EventBatchDerivativeExecution`
+      - `EventCancelDerivativeOrder`
+
+- Stage 5: Perpetual market funding 정보 persist
+- Stage 6: Trading rewards total 및 account points persist.
+- Stage 7: 새 fee discount 데이터 persist, 즉 새 fees paid 추가 및 새 account tiers.
+- Stage 8: Spot Market Param Updates 처리 (있는 경우)
+- Stage 9: Derivative Market Param Updates 처리 (있는 경우)
+- Stage 10: Deposit 및 Position Update Events emit
+
+## Order 매칭: Frequent Batch Auction (FBA)
+
+FBA의 목표는 모든 [Front-Running](https://www.investopedia.com/terms/f/frontrunning.asp)을 방지하는 것입니다. 이는 주어진 블록에서 매칭된 모든 orders에 대해 단일 clearing price를 계산하여 달성됩니다.
+
+1. Market orders가 먼저 블록 시작 시의 resting orderbook에 대해 체결됩니다. Resting orders는 각각의 order 가격에서 체결되는 반면, market orders는 모두 limit orders와 동일한 메커니즘으로 균일한 clearing price에서 체결됩니다. FBA 방식의 market order 매칭 예시는 [여기](https://api.injective.exchange/#examples-market-order-matching) API 문서를 참조하세요.
+2. 마찬가지로 limit orders는 균일한 clearing price에서 체결됩니다. 새 limit orders는 resting orderbook과 결합되고 negative spread가 여전히 있는 한 orders가 매칭됩니다. Clearing price는 다음 중 하나입니다
+
+a. 마지막으로 매칭된 order가 해당 방향으로 spread를 교차하는 경우 가장 좋은 buy/sell order,
+b. Derivative markets의 경우 mark price가 마지막으로 매칭된 orders 사이에 있는 경우 mark price 또는
+c. Mid price.
+
+FBA 방식의 limit order 매칭 예시는 [여기](https://api.injective.exchange/#examples-limit-order-matching) API 문서를 참조하세요.
+
+## 단일 거래 계산
+
+- 적격 market의 경우 fee discounts 계산:
+  - Fee discounts는 refunds로 적용되고 fee paid 기여도가 기록됩니다.
+  - Relayer fees는 fee discount가 적용된 후에 적용됩니다.
+- 적격 market의 경우 trade reward point 기여도 계산:
+  - Maker와 taker에 대한 FeePaidMultiplier를 얻습니다.
+  - Trade reward point 기여도를 계산합니다.
+  - Trade reward points는 할인된 trading fee를 기반으로 합니다.
+- Fee refunds (또는 charges) 계산. 매칭 후 order가 fee refund를 받을 수 있는 몇 가지 이유가 있습니다:
+  1. 매칭되지 않거나 부분적으로만 매칭된 limit order이므로 resting limit order가 되어 taker fee에서 maker fee로 전환됩니다. Refund는 `UnmatchedQuantity * (TakerFeeRate - MakerFeeRate)`입니다. 마이너스 maker fees의 경우 대신 `UnmatchedQuantity * TakerFeeRate`를 refund합니다.
+  2. Fee discounts가 적용됩니다. 원래 지불한 fee와 할인 후 지불한 fee의 차이를 refund합니다.
+  3. Order가 더 좋은 가격에 매칭되어 다른 fee가 발생합니다.
+     - Buy orders의 경우 더 좋은 가격은 더 낮은 가격을 의미하고 따라서 더 낮은 fee입니다. Fee price delta를 refund합니다.
+     - Sell orders의 경우 더 좋은 가격은 더 높은 가격을 의미하고 따라서 더 높은 fee입니다. Fee price delta를 charge합니다.
+  - 예시와 함께 해당 코드는 [여기](https://github.com/InjectiveLabs/injective-core/blob/80dbc4e9558847ff0354be5d19a4d8b0bba7da96/injective-chain/modules/exchange/keeper/derivative_orders_processor.go#L502)에서 찾을 수 있습니다. 최신 체인 코드는 master 브랜치를 확인하세요.

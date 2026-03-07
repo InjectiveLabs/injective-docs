@@ -1,0 +1,34 @@
+---
+sidebar_position: 1
+title: 정의
+---
+
+# 소개
+
+이 문서는 기술적 관점에서 `Peggy`(Injective의 Ethereum 브릿지)에 대한 개요를 제공하고 운영 로직을 심층적으로 다룹니다.
+Peggy는 Injective에 구축된 커스텀 Cosmos SDK 모듈과 브릿지의 양쪽을 구성하는 Ethereum 컨트랙트(Peggy.sol)의 이름입니다.
+`Peggo`라는 중간 프로세스를 통해 연결되어 사용자는 네트워크 간에 토큰 자산을 안전하게 이동할 수 있습니다.
+
+개선 사항을 제안하려면 GitHub 이슈를 열어주세요.
+
+### 주요 정의
+
+용어의 명확성을 통해 사고와 커뮤니케이션의 명확성을 추구합니다.
+이해를 돕기 위한 주요 정의는 다음과 같습니다:
+
+- `Operator` - `Validator`와 `Orchestrator` 프로세스를 제어하고 운영하는 사람(또는 사람들)
+- `Validator` - Injective Chain 검증 노드 (예: `injectived` 프로세스)
+- `Validator Set` - 스테이크 가중치에 의해 결정된 각각의 투표 권한과 함께 (활성) Injective Chain `Validator` 세트(Valset). 각 검증자는 Ethereum 네트워크에서 대표되기 위한 Ethereum 주소와 연결됨
+- `Orchestrator (Peggo)` - Injective와 Ethereum 사이에서 중개자 역할을 하는 오프체인 프로세스(`peggo`). Orchestrator는 브릿지를 온라인 상태로 유지하는 역할을 담당하며 완전히 동기화된 Injective(Ethereum) 노드에 대한 활성 엔드포인트가 필요함
+- `Peggy module` - `Peggy contract`의 상대측 Cosmos 모듈. 토큰 자산 브릿지 서비스를 제공하는 것 외에도, 시간이 지남에 따라 변경되는 활성 `Validator Set`을 자동으로 반영함. 업데이트는 나중에 `Peggo`를 통해 Ethereum에 적용됨
+- `Peggy Contract` - 모든 ERC-20 토큰을 보유하는 Ethereum 컨트랙트. 또한 `Delegate Keys`와 정규화된 파워를 사용하여 Injective Chain `Validator Set`의 압축된 체크포인트 표현을 유지함
+- `Delegate Keys` - `Operator`가 처음으로 `Orchestrator`를 설정할 때 (Injective에서) `Validator`의 주소를 Ethereum 주소로 등록함. 해당 키는 메시지에 서명하고 Ethereum에서 해당 검증자를 대표하는 데 사용됨.
+  선택적으로, `Validator`를 대신하여 Injective 메시지(예: `Claims`)에 서명하기 위해 하나의 위임 Injective Chain 계정 키를 제공할 수 있음
+- `Peggy Tx pool (withdrawals)` - 사용자가 Injective에서 Ethereum으로 자산을 이동하려고 할 때 개별 tx가 동일한 자산을 가진 다른 것들과 함께 풀링됨
+- `Peggy Batch pool` - 풀링된 출금은 (`Orchestrator`에 의해) 함께 배치되어 서명되고 결국 Ethereum으로 중계됨. 이러한 배치는 이 풀 내에 보관됨
+- `Claim` - `Peggy contract`에서 이벤트가 발생했다는 (`Orchestrator`에 의한) 서명된 증명
+- `Attestation` - `Peggy contract`에서 발생한 특정 이벤트 nonce에 대한 claim의 집합. `Orchestrator`의 대다수가 claim을 증명한 후, 이벤트가 인정되고 Injective에서 실행됨
+- `Majority` - Injective 네트워크의 대다수, 2/3 + 1 검증자
+- `Deposit` - Ethereum에서 Injective로 시작된 자산 전송
+- `Withdrawal` - Injective에서 Ethereum으로 시작된 자산 전송 (`Peggy Tx pool`에 존재)
+- `Batch` - 동일한 토큰 유형의 출금 배치 (`Peggy Batch pool`에 존재)

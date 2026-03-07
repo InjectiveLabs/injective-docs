@@ -1,0 +1,75 @@
+---
+sidebar_position: 2
+title: 상태
+---
+
+# 상태
+
+tokenfactory 모듈은 다음 주요 객체의 상태를 유지합니다:
+
+## Denom Authority Metadata 
+
+- 0x02 + | + denom + |  + 0x01 ⇒ `DenomAuthorityMetadata`
+
+## Denom Creators
+
+- 0x03 + | + creator + | denom ⇒ denom
+
+
+```protobuf
+// DenomAuthorityMetadata는 token factory denom에 대해 특정
+// 권한을 가진 주소의 메타데이터를 지정합니다.
+message DenomAuthorityMetadata {
+  option (gogoproto.equal) = true;
+
+  // admin이 없으면 비어 있거나, 유효한 injective 주소
+  string admin = 1 [ (gogoproto.moretags) = "yaml:\"admin\"" ];
+
+  // admin이 다른 주소에서 토큰을 소각할 수 있으면 true
+  bool admin_burn_allowed = 2 [ (gogoproto.moretags) = "yaml:\"admin_burn_allowed\"" ];
+}
+```
+
+Genesis state는 모듈 설정에 사용할 모듈의 초기 상태를 정의합니다.
+
+```protobuf
+// GenesisState는 tokenfactory 모듈의 genesis 상태를 정의합니다.
+message GenesisState {
+  // params는 모듈의 파라미터를 정의합니다.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+
+  repeated GenesisDenom factory_denoms = 2 [
+    (gogoproto.moretags) = "yaml:\"factory_denoms\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// GenesisDenom은 genesis 상태 내에서 정의되는 tokenfactory denom을 정의합니다.
+// 구조체에는 denom의 admin을 정의하는 DenomAuthorityMetadata가 포함됩니다.
+message GenesisDenom {
+  option (gogoproto.equal) = true;
+
+  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  DenomAuthorityMetadata authority_metadata = 2 [
+    (gogoproto.moretags) = "yaml:\"authority_metadata\"",
+    (gogoproto.nullable) = false
+  ];
+}
+```
+## Params
+
+`Params`는 시스템 파라미터를 저장하고 tokenfactory 모듈의 전체 기능을 정의하는 모듈 전체 구성입니다.
+이 모듈은 `gov` 모듈에서 기본적으로 지원하는 params 업데이트 제안을 사용하여 거버넌스로 수정할 수 있습니다.
+
+`ocr` 모듈 params 저장소의 구조체입니다.
+```protobuf
+// Params는 tokenfactory 모듈의 파라미터를 정의합니다.
+message Params {
+  repeated cosmos.base.v1beta1.Coin denom_creation_fee = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"denom_creation_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+```

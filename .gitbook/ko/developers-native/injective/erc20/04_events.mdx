@@ -1,0 +1,19 @@
+---
+sidebar_position: 4
+title: 이벤트
+---
+
+# 이벤트
+
+erc20 모듈은 다음 이벤트를 발생시킵니다:
+
+```protobuf 
+message EventCreateTokenPair {
+  string bank_denom = 1;
+  string erc20_address = 2;
+}
+
+message EventDeleteTokenPair {
+  string bank_denom = 1;
+}
+```

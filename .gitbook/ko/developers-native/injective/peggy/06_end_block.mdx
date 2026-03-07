@@ -1,0 +1,51 @@
+---
+sidebar_position: 5
+title: End-Block
+---
+
+# EndBlocker
+
+각 블록이 끝날 때 모듈의 상태에 대해 다음 작업이 수행됩니다
+
+## 1. 슬래싱
+
+### 검증자 슬래싱
+
+검증자는 `SignedValsetsWindow`를 통과한 valset 업데이트에 서명하지 않으면 슬래싱됩니다.
+즉, 검증자가 사전 구성된 시간 내에 valset 업데이트에 대한 확인을 제공하지 않으면 스테이크의 `SlashFractionValset` 부분이 슬래싱되고 즉시 감옥에 갇힙니다.
+
+### 배치 슬래싱
+
+검증자는 `SignedBatchesWindow`를 통과한 배치에 서명하지 않으면 슬래싱됩니다.
+즉, 검증자가 사전 구성된 시간 내에 배치에 대한 확인을 제공하지 않으면 스테이크의 `SlashFractionBatch` 부분이 슬래싱되고 즉시 감옥에 갇힙니다.
+
+## 2. 타임아웃된 배치 취소
+
+`BatchTimeout`(배치가 실행되어야 하는 지정된 Ethereum 높이)이 초과된 `Outgoing Batch pool`에 여전히 존재하는 모든 배치는 풀에서 제거되고 출금은 `Outgoing Tx pool`에 다시 삽입됩니다.
+
+## 3. 새 Valset 업데이트 생성
+
+새 `Validator Set` 업데이트는 다음 경우에 자동으로 생성됩니다:
+* 최신 검증자 세트와 현재 검증자 세트 간의 파워 차이가 5%보다 클 때
+* 검증자가 언본딩을 시작할 때
+
+새 검증자 세트는 결국 Ethereum의 `Peggy contract`로 중계됩니다.
+
+## 4. 오래된 검증자 세트 정리
+
+`SignedValsetsWindow`를 통과한 이전에 관찰된 valset은 상태에서 제거됩니다
+
+## 5. Attestation 처리
+
+현재 투표 중인 모든 attestation(특정 이벤트에 대한 claim의 집합)을 처리합니다. 각 attestation은 각 `Peggy contract` 이벤트가 처리되도록 하나씩 처리됩니다.
+각 처리된 attestation 후에 모듈의 `lastObservedEventNonce`와 `lastObservedEthereumBlockHeight`가 업데이트됩니다.
+
+attestation의 claim 유형에 따라 다음이 실행됩니다:
+* `MsgDepositClaim`: 입금된 토큰이 수신자 주소에 대해 발행/잠금 해제됩니다
+* `MsgWithdrawClaim`: 해당 배치가 outgoing 풀에서 제거되고 이전 배치가 취소됩니다
+* `MsgValsetUpdatedClaim`: 모듈의 `LastObservedValset`이 업데이트됩니다
+* `MsgERC20DeployedClaim`: 새 토큰 메타데이터가 검증되고 모듈의 상태 내에 등록됩니다 (`denom <-> token_contract`)
+
+## 6. 처리된 attestation 정리
+
+이전에 처리된 attestation(`lastObservedEthereumBlockHeight`보다 이전 높이)은 모듈 상태에서 제거됩니다

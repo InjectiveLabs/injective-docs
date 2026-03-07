@@ -1,0 +1,188 @@
+---
+sidebar_position: 3
+title: Messages
+---
+
+# Messages
+
+## MsgRelayBandRates
+
+인가된 Band relayer는 `MsgRelayBandRates` message를 사용하여 여러 symbol에 대한 price feed 데이터를 relay할 수 있습니다.
+등록된 handler는 `MsgRelayBandRates`에 있는 모든 symbol을 반복하여 각 symbol에 대한 `BandPriceState`를 생성/업데이트합니다.
+
+```protobuf
+message MsgRelayBandRates {
+  string relayer = 1;
+  repeated string symbols = 2;
+  repeated uint64 rates = 3;
+  repeated uint64 resolve_times = 4;
+  repeated uint64 requestIDs = 5;
+}
+```
+
+Relayer가 인가된 Band relayer가 아닌 경우 이 message는 실패할 것으로 예상됩니다.
+
+## MsgRelayCoinbaseMessages
+
+Coinbase provider의 relayer는 `MsgRelayCoinbaseMessages` message를 사용하여 price 데이터를 전송할 수 있습니다.
+
+각 Coinbase `Messages`는 Coinbase oracle 주소 `0xfCEAdAFab14d46e20144F48824d0C09B1a03F2BC`가 제공하는 `Signatures`로 인증되므로, 누구나 `MsgRelayCoinbaseMessages`를 제출할 수 있습니다.
+
+```protobuf
+message MsgRelayCoinbaseMessages {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string sender = 1;
+
+  repeated bytes messages = 2;
+  repeated bytes signatures = 3;
+}
+```
+
+서명 검증이 실패하거나 제출된 Timestamp가 이전에 제출된 Coinbase price보다 최신이 아닌 경우 이 message는 실패할 것으로 예상됩니다.
+
+## MsgRelayPriceFeedPrice
+
+PriceFeed provider의 relayer는 `MsgRelayPriceFeedPrice` message를 사용하여 price feed를 전송할 수 있습니다.
+
+```protobuf
+// MsgRelayPriceFeedPrice는 pricefeed oracle을 통해 가격을 설정하기 위한 SDK message를 정의합니다.
+message MsgRelayPriceFeedPrice {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string sender = 1;
+
+  repeated string base = 2;
+  repeated string quote = 3;
+
+  // price는 oracle base와 quote의 가격을 정의합니다.
+  repeated string price = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
+```
+
+Relayer(`Sender`)가 주어진 Base Quote pair에 대해 인가된 pricefeed relayer가 아니거나 가격이 10000000보다 큰 경우 이 message는 실패할 것으로 예상됩니다.
+
+## MsgRequestBandIBCRates
+
+`MsgRequestBandIBCRates`는 Band chain에 즉시 request를 브로드캐스트하기 위한 message입니다.
+
+```protobuf
+// MsgRequestBandIBCRates는 IBC를 사용하여 BandChain에서 데이터를 요청하기 위한 SDK message를 정의합니다.
+message MsgRequestBandIBCRates {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string sender = 1;
+  uint64 request_id = 2;
+
+}
+```
+
+누구나 이 message를 브로드캐스트할 수 있으며 특별한 권한이 필요하지 않습니다.
+handler는 `BandIbcEnabled` flag가 true인지 확인하고 request를 전송합니다.
+
+## MsgRelayPythPrices
+
+`MsgRelayPythPrices`는 Pyth contract가 oracle module에 가격을 relay하기 위한 message입니다.
+
+```protobuf
+// MsgRelayPythPrices는 Pyth 가격을 업데이트하기 위한 SDK message를 정의합니다.
+message MsgRelayPythPrices {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string sender = 1;
+  repeated PriceAttestation price_attestations = 2;
+}
+
+message PriceAttestation {
+  string product_id = 1;
+  bytes price_id = 2;
+  int64 price = 3;
+  uint64 conf = 4;
+  int32 expo = 5;
+  int64 ema_price = 6;
+  uint64 ema_conf = 7;
+  PythStatus status = 8;
+  uint32 num_publishers = 9;
+  uint32 max_num_publishers = 10;
+  int64 attestation_time = 11;
+  int64 publish_time = 12;
+}
+
+enum PythStatus {
+  // 알 수 없는 이유로 price feed가 현재 업데이트되지 않고 있습니다.
+  Unknown = 0;
+  // price feed가 예상대로 업데이트되고 있습니다.
+  Trading = 1;
+  // 상품 거래가 중단되어 price feed가 현재 업데이트되지 않고 있습니다.
+  Halted = 2;
+  // 경매가 가격을 설정하고 있어 price feed가 현재 업데이트되지 않고 있습니다.
+  Auction = 3;
+}
+```
+
+Relayer(`sender`)가 oracle module Params에 정의된 Pyth contract 주소와 같지 않은 경우 이 message는 실패할 것으로 예상됩니다.
+
+## MsgRelayStorkPrices
+
+`MsgRelayStorkPrices`는 Stork contract가 oracle module에 가격을 relay하기 위한 message입니다.
+
+```protobuf
+// MsgRelayStorkPrices는 Stork API에서 price message를 relay하기 위한 SDK message를 정의합니다.
+message MsgRelayStorkPrices {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1;
+  repeated AssetPair asset_pairs = 2;
+}
+
+message AssetPair {
+  string asset_id = 1;
+  repeated SignedPriceOfAssetPair signed_prices = 2;
+}
+
+message SignedPriceOfAssetPair {
+  string publisher_key = 1;
+  uint64 timestamp = 2;
+  string price = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  bytes signature = 4;
+}
+```
+
+다음과 같은 경우 이 message는 실패할 것으로 예상됩니다:
+- Relayer(`sender`)가 인가된 oracle publisher가 아니거나 제공된 asset pair 중 `assetId`가 고유하지 않은 경우
+- `SignedPriceOfAssetPair`에 대한 ECDSA 서명 검증이 실패한 경우
+- timestamp 간의 차이가 `MaxStorkTimestampIntervalNano`(500밀리초)를 초과하는 경우
+
+## MsgRelayProviderPrices
+
+특정 Provider의 relayer는 `MsgRelayProviderPrices` message를 사용하여 price feed를 전송할 수 있습니다.
+
+```protobuf
+// MsgRelayProviderPrice는 provider oracle을 통해 가격을 설정하기 위한 SDK message를 정의합니다.
+message MsgRelayProviderPrices {
+  option (amino.name) = "oracle/MsgRelayProviderPrices";
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1;
+  string provider = 2;
+  repeated string symbols = 3;
+  repeated string prices = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
+```
+
+Relayer(`Sender`)가 주어진 Base Quote pair에 대해 인가된 pricefeed relayer가 아니거나 가격이 10000000보다 큰 경우 이 message는 실패할 것으로 예상됩니다.

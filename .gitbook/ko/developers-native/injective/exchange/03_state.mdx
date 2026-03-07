@@ -1,0 +1,630 @@
+---
+sidebar_position: 4
+title: State
+---
+
+# State
+
+Genesis state는 모듈을 설정하는 데 사용되는 모듈의 초기 상태를 정의합니다.
+
+```go
+// GenesisState는 exchange 모듈의 genesis state를 정의합니다.
+type GenesisState struct {
+	// params는 exchange와 관련된 모든 parameters를 정의합니다.
+	Params Params
+	// accounts는 genesis trade pairs를 포함하는 배열입니다
+	SpotMarkets []*SpotMarket
+	// accounts는 genesis derivative markets를 포함하는 배열입니다
+	DerivativeMarkets []*DerivativeMarket
+	// spot_orderbook은 genesis에서 활성화된 spot exchange limit orderbook을 정의합니다.
+	SpotOrderbook []SpotOrderBook
+	// derivative_orderbook은 genesis에서 활성화된 derivative exchange limit orderbook을 정의합니다.
+	DerivativeOrderbook []DerivativeOrderBook
+	// balances는 genesis에서 활성화된 exchange users balances를 정의합니다.
+	Balances []Balance
+	// positions는 genesis에서의 exchange derivative positions를 정의합니다
+	Positions []DerivativePosition
+	// subaccount_trade_nonces는 genesis에서 subaccounts의 subaccount trade nonces를 정의합니다
+	SubaccountTradeNonces []SubaccountNonce
+	// expiry_futures_market_info는 genesis에서 expiry futures markets의 market info를 정의합니다
+	ExpiryFuturesMarketInfoState []ExpiryFuturesMarketInfoState
+	// perpetual_market_info는 genesis에서 perpetual derivative markets의 market info를 정의합니다
+	PerpetualMarketInfo []PerpetualMarketInfo
+	// perpetual_market_funding_state는 genesis에서 perpetual derivative markets의 funding state를 정의합니다
+	PerpetualMarketFundingState []PerpetualMarketFundingState
+	// derivative_market_settlement_scheduled는 genesis에서 settlement를 위해 예약된 markets를 정의합니다
+	DerivativeMarketSettlementScheduled []DerivativeMarketSettlementInfo
+	// spot markets를 enabled로 설정
+	IsSpotExchangeEnabled               bool
+	// derivative markets를 enabled로 설정
+	IsDerivativesExchangeEnabled        bool
+	// 현재 trading reward campaign info
+	TradingRewardCampaignInfo           *TradingRewardCampaignInfo
+	// 현재 및 예정된 trading reward campaign pools
+	TradingRewardPoolCampaignSchedule   []*CampaignRewardPool
+	// 현재 및 예정된 trading reward account points
+	TradingRewardCampaignAccountPoints  []*TradingRewardCampaignAccountPoints
+	// 현재 및 예정된 trading reward campaign pending pools
+	PendingTradingRewardPoolCampaignSchedule []*CampaignRewardPool
+	// pending trading reward account points
+	PendingTradingRewardCampaignAccountPoints []*TradingRewardCampaignAccountPendingPoints
+	// fee discount schedule
+	FeeDiscountSchedule                 *FeeDiscountSchedule
+	// TTL이 있는 캐시된 fee discount account tiers
+	FeeDiscountAccountTierTtl           []*FeeDiscountAccountTierTTL
+	// 모든 buckets에서 계정이 지불한 fee discount
+	FeeDiscountBucketFeesPaidAccounts   []*FeeDiscountBucketFeesPaidAccounts
+	// 첫 번째 fee cycle을 finished로 설정
+	IsFirstFeeCycleFinished             bool
+}
+```
+
+## Params
+
+`Params`는 exchange 모듈의 시스템 parameters를 저장하고 전반적인 기능을 정의하는 모듈 전체 구성입니다.
+이 구성은 `gov` 모듈에서 기본적으로 지원하는 params update proposal을 사용하여 거버넌스로 수정할 수 있습니다.
+
+Spot 및 derivative markets에 사용할 기본 fee 객체와 derivative markets 및 instant listing fees에 대한 funding parameters를 정의합니다.
+
+`exchange` 모듈 params store의 Protobuf 인터페이스.
+
+```go
+type Params struct {
+	// spot_market_instant_listing_fee는 거버넌스를 우회하여 spot market을 생성하는 데 필요한 INJ expedited fee를 정의합니다
+	SpotMarketInstantListingFee types.Coin
+	// derivative_market_instant_listing_fee는 거버넌스를 우회하여 derivative market을 생성하는 데 필요한 INJ expedited fee를 정의합니다
+	DerivativeMarketInstantListingFee types.Coin
+	// default_spot_maker_fee는 spot market에서 makers의 기본 exchange trade fee를 정의합니다
+	DefaultSpotMakerFeeRate math.LegacyDec
+	// default_spot_taker_fee_rate는 새 spot market에서 takers의 기본 exchange trade fee rate를 정의합니다
+	DefaultSpotTakerFeeRate math.LegacyDec
+	// default_derivative_maker_fee는 새 derivative market에서 makers의 기본 exchange trade fee를 정의합니다
+	DefaultDerivativeMakerFeeRate math.LegacyDec
+	// default_derivative_taker_fee는 새 derivative market에서 takers의 기본 exchange trade fee를 정의합니다
+	DefaultDerivativeTakerFeeRate math.LegacyDec
+	// default_initial_margin_ratio는 새 derivative market의 기본 initial margin ratio를 정의합니다
+	DefaultInitialMarginRatio math.LegacyDec
+	// default_maintenance_margin_ratio는 새 derivative market의 기본 maintenance margin ratio를 정의합니다
+	DefaultMaintenanceMarginRatio math.LegacyDec
+	// default_funding_interval은 derivative market의 기본 funding interval을 정의합니다
+	DefaultFundingInterval int64
+	// funding_multiple은 funding timestamp가 배수여야 하는 timestamp multiple을 정의합니다
+	FundingMultiple int64
+	// relayer_fee_share_rate는 relayers에게 가는 trade fee share percentage를 정의합니다
+	RelayerFeeShareRate math.LegacyDec
+	// default_hourly_funding_rate_cap은 hourly funding rate의 기본 최대 절대값을 정의합니다
+	DefaultHourlyFundingRateCap math.LegacyDec
+	// hourly_interest_rate는 hourly interest rate를 정의합니다
+	DefaultHourlyInterestRate math.LegacyDec
+	// max_derivative_order_side_count는 subaccount가 주어진 orderbook side에 가질 수 있는 derivative active orders의 최대 수를 정의합니다
+	MaxDerivativeOrderSideCount uint32
+	// inj_reward_staked_requirement_threshold는 더 많이 받으려면 staked INJ도 필요한 INJ rewards의 threshold를 정의합니다
+	InjRewardStakedRequirementThreshold github_com_cosmos_cosmos_sdk_types.Int
+	// trading_rewards_vesting_duration은 trading rewards의 vesting 시간을 정의합니다
+	TradingRewardsVestingDuration int64
+}
+```
+
+## Balance
+
+`Balance`는 계정의 잔액을 관리합니다. 모듈은 전체 잔액을 모듈 계정에 저장하고, 각 계정의 잔액은 기록으로만 관리됩니다.
+
+`Balance` 객체는 `subaccount_id`와 `denom`으로 저장됩니다.
+
+```go
+message Balance {
+	SubaccountId string
+	Denom        string
+	Deposits     *Deposit
+}
+
+// 주어진 base currency에 대한 subaccount의 deposit
+type Deposit struct {
+	AvailableBalance math.LegacyDec
+	TotalBalance     math.LegacyDec
+}
+
+type SubaccountDeposit {
+	SubaccountId []byte
+	Deposit      *Deposit
+}
+```
+
+## SubaccountNonce
+
+`SubaccountNonce`는 고유한 order hashes를 표현하는 데 사용됩니다.
+
+```go
+type SubaccountNonce struct {
+	SubaccountId         string
+	SubaccountTradeNonce SubaccountTradeNonce
+}
+```
+
+## Order
+
+Orders를 store에 저장하는 데 사용되는 여러 구조체가 있습니다.
+
+```go
+type OrderInfo struct {
+	// bytes32 order를 생성한 subaccount ID
+	SubaccountId string
+	// address order에 대한 fees를 받을 fee_recipient 주소
+	FeeRecipient string
+	// order의 price
+	Price math.LegacyDec
+	// order의 quantity
+	Quantity math.LegacyDec
+}
+
+type SubaccountOrderbookMetadata struct {
+	VanillaLimitOrderCount    uint32
+	ReduceOnlyLimitOrderCount uint32
+	// AggregateReduceOnlyQuantity는 주어진 방향에서 subaccount의 reduce-only limit orders의 aggregate fillable quantity입니다.
+	AggregateReduceOnlyQuantity math.LegacyDec
+	// AggregateVanillaQuantity는 주어진 방향에서 subaccount의 vanilla limit orders의 aggregate fillable quantity입니다.
+	AggregateVanillaQuantity math.LegacyDec
+}
+
+type SubaccountOrder struct {
+	// order의 price
+	Price math.LegacyDec
+	// fillable하게 남은 quantity 양
+	Quantity     math.LegacyDec
+	IsReduceOnly bool
+    Cid          string
+}
+
+type MarketOrderIndicator struct {
+	// market_id는 market의 고유 ID를 나타냅니다
+	MarketId string
+	IsBuy    bool
+}
+```
+
+## SpotMarket
+
+`SpotMarket`은 spot market에 필요한 모든 정보와 상태를 저장하는 구조체입니다.
+Spot markets는 market을 효율적으로 쿼리하기 위해 market의 hash로 저장됩니다.
+
+```go
+// 두 자산의 trade pair를 설명하는 객체.
+type SpotMarket struct {
+	// AAA/BBB 형식의 pair 이름, AAA는 base 자산, BBB는 quote 자산입니다.
+	Ticker string
+	// base 자산에 사용되는 Coin denom
+	BaseDenom string
+	// quote 자산에 사용되는 Coin
+	QuoteDenom string
+	// maker_fee_rate는 거래 시 makers가 지불하는 fee percentage를 정의합니다
+	MakerFeeRate math.LegacyDec
+	// taker_fee_rate는 거래 시 takers가 지불하는 fee percentage를 정의합니다
+	TakerFeeRate math.LegacyDec
+	// relayer_fee_share_rate는 derivative market에서 relayer와 공유되는 transaction fee의 percentage를 정의합니다
+	RelayerFeeShareRate math.LegacyDec
+	// 고유한 market ID.
+	MarketId string
+	// Market의 상태
+	Status MarketStatus
+	// min_price_tick_size는 market의 orders에 필요한 price의 minimum tick size를 정의합니다
+	MinPriceTickSize math.LegacyDec
+	// min_quantity_tick_size는 market의 orders에 필요한 quantity의 minimum tick size를 정의합니다
+	MinQuantityTickSize math.LegacyDec
+}
+```
+
+## SpotOrderBook
+
+`SpotOrderBook`은 특정 market의 spot limit orders를 저장하는 구조체입니다.
+Buy orders용과 sell orders용 두 객체가 생성됩니다.
+
+```go
+// Spot Exchange Limit Orderbook
+type SpotOrderBook struct {
+	MarketId  string
+	IsBuySide bool
+	Orders    []*SpotLimitOrder
+}
+
+type SpotOrder struct {
+	// market_id는 market의 고유 ID를 나타냅니다
+	MarketId string
+	// order_info는 order의 정보를 포함합니다
+	OrderInfo OrderInfo
+	// order types
+	OrderType OrderType
+	// trigger_price는 stop/take orders에서 사용되는 trigger price입니다
+	TriggerPrice *math.LegacyDec
+}
+
+// Metadata가 있는 유효한 Spot limit order.
+type SpotLimitOrder struct {
+	// order_info는 order의 정보를 포함합니다
+	OrderInfo OrderInfo
+	// order types
+	OrderType OrderType
+	// fillable하게 남은 quantity 양
+	Fillable math.LegacyDec
+	// trigger_price는 stop/take orders에서 사용되는 trigger price입니다
+	TriggerPrice *math.LegacyDec
+	OrderHash    []byte
+}
+
+// Metadata가 있는 유효한 Spot market order.
+type SpotMarketOrder struct {
+	// order_info는 order의 정보를 포함합니다
+	OrderInfo   OrderInfo
+	BalanceHold math.LegacyDec
+	OrderHash   []byte
+}
+```
+
+## DerivativeMarket
+
+`DerivativeMarket`은 derivative market에 필요한 모든 정보와 상태를 저장하는 구조체입니다.
+Derivative markets는 market을 효율적으로 쿼리하기 위해 market의 hash로 저장됩니다.
+
+```go
+// Injective Futures Protocol의 derivative market을 설명하는 객체.
+type DerivativeMarket struct {
+	// derivative contract의 Ticker.
+	Ticker string
+	// Oracle base currency
+	OracleBase string
+	// Oracle quote currency
+	OracleQuote string
+	// Oracle type
+	OracleType types1.OracleType
+	// Oracle prices의 Scale factor.
+	OracleScaleFactor uint32
+	// derivative contract의 quote currency denomination 주소
+	QuoteDenom string
+	// 고유한 market ID.
+	MarketId string
+	// initial_margin_ratio는 derivative market의 initial margin ratio를 정의합니다
+	InitialMarginRatio math.LegacyDec
+	// maintenance_margin_ratio는 derivative market의 maintenance margin ratio를 정의합니다
+	MaintenanceMarginRatio math.LegacyDec
+	// maker_fee_rate는 derivative market의 maker fee rate를 정의합니다
+	MakerFeeRate math.LegacyDec
+	// taker_fee_rate는 derivative market의 taker fee rate를 정의합니다
+	TakerFeeRate math.LegacyDec
+	// relayer_fee_share_rate는 derivative market에서 relayer와 공유되는 transaction fee의 percentage를 정의합니다
+	RelayerFeeShareRate math.LegacyDec
+	// market이 perpetual market이면 true. market이 expiry futures market이면 false
+	IsPerpetual bool
+	// Market의 상태
+	Status MarketStatus
+	// min_price_tick_size는 market의 orders에 필요한 price와 margin의 minimum tick size를 정의합니다
+	MinPriceTickSize math.LegacyDec
+	// min_quantity_tick_size는 market의 orders에 필요한 quantity의 minimum tick size를 정의합니다
+	MinQuantityTickSize math.LegacyDec
+}
+```
+
+## DerivativeOrderBook
+
+`DerivativeOrderBook`은 특정 market의 derivative limit orders를 저장하는 구조체입니다.
+Buy orders용과 sell orders용 두 객체가 생성됩니다.
+
+```go
+// Spot Exchange Limit Orderbook
+type DerivativeOrderBook struct {
+	MarketId  string
+	IsBuySide bool
+	Orders    []*DerivativeLimitOrder
+}
+
+type DerivativeOrder struct {
+	// market_id는 market의 고유 ID를 나타냅니다
+	MarketId string
+	// order_info는 order의 정보를 포함합니다
+	OrderInfo OrderInfo
+	// order types
+	OrderType OrderType
+	// margin은 limit order에서 사용되는 margin입니다
+	Margin math.LegacyDec
+	// trigger_price는 stop/take orders에서 사용되는 trigger price입니다
+	TriggerPrice *math.LegacyDec
+}
+
+// Metadata가 있는 유효한 Derivative limit order.
+type DerivativeLimitOrder struct {
+	// order_info는 order의 정보를 포함합니다
+	OrderInfo OrderInfo
+	// order types
+	OrderType OrderType
+	// margin은 limit order에서 사용되는 margin입니다
+	Margin math.LegacyDec
+	// fillable하게 남은 quantity 양
+	Fillable math.LegacyDec
+	// trigger_price는 stop/take orders에서 사용되는 trigger price입니다
+	TriggerPrice *math.LegacyDec
+	OrderHash    []byte
+}
+
+// Metadata가 있는 유효한 Derivative market order.
+type DerivativeMarketOrder struct {
+	// order_info는 order의 정보를 포함합니다
+	OrderInfo OrderInfo
+	// order types
+	OrderType  OrderType
+	Margin     math.LegacyDec
+	MarginHold math.LegacyDec
+	// trigger_price는 stop/take orders에서 사용되는 trigger price입니다
+	TriggerPrice *math.LegacyDec
+	OrderHash    []byte
+}
+
+type DerivativeMarketOrderCancel struct {
+	MarketOrder    *DerivativeMarketOrder
+	CancelQuantity math.LegacyDec
+}
+```
+
+## DerivativePosition
+
+`DerivativePosition`은 특정 market에서 subaccount의 derivative positions를 저장하는 구조체입니다.
+
+**참고:** Derivative orders는 의도를 나타내고 positions는 소유를 나타냅니다.
+
+```go
+type Position struct {
+	IsLong                 bool
+	Quantity               math.LegacyDec
+	EntryPrice             math.LegacyDec
+	Margin                 math.LegacyDec
+	CumulativeFundingEntry math.LegacyDec
+}
+
+type PositionDelta struct {
+	IsLong            bool
+	ExecutionQuantity math.LegacyDec
+	ExecutionMargin   math.LegacyDec
+	ExecutionPrice    math.LegacyDec
+}
+
+type DerivativePosition struct {
+	SubaccountId string
+	MarketId     string
+	Position     *Position
+}
+
+type SubaccountPosition struct {
+	Position     *Position
+	SubaccountId []byte
+}
+```
+
+## ExpiryFuturesMarketInfo
+
+`ExpiryFuturesMarketInfo`는 expiry futures market의 정보를 유지하는 구조체입니다.
+Market의 id로 저장됩니다.
+
+```go
+type ExpiryFuturesMarketInfo struct {
+	// market ID.
+	MarketId string
+	// expiration_timestamp는 time expiry futures market의 expiration 시간을 정의합니다.
+	ExpirationTimestamp int64
+	// expiration_twap_start_timestamp는 TWAP 계산 window의 시작 시간을 정의합니다
+	TwapStartTimestamp int64
+	// expiration_twap_start_price_cumulative는 TWAP window 시작 시의 cumulative price를 정의합니다
+	ExpirationTwapStartPriceCumulative math.LegacyDec
+	// settlement_price는 time expiry futures market의 settlement price를 정의합니다.
+	SettlementPrice math.LegacyDec
+}
+```
+
+## PerpetualMarketInfo
+
+`PerpetualMarketInfo`는 perpetual market의 정보를 유지하는 구조체입니다.
+
+```go
+type PerpetualMarketInfo struct {
+	// market ID.
+	MarketId string
+	// hourly_funding_rate_cap은 hourly funding rate의 최대 절대값을 정의합니다
+	HourlyFundingRateCap math.LegacyDec
+	// hourly_interest_rate는 hourly interest rate를 정의합니다
+	HourlyInterestRate math.LegacyDec
+	// next_funding_timestamp는 perpetual market의 다음 funding timestamp (초)를 정의합니다
+	NextFundingTimestamp int64
+	// funding_interval은 perpetual market의 다음 funding interval (초)을 정의합니다.
+	FundingInterval int64
+}
+```
+
+## PerpetualMarketFunding
+
+`PerpetualMarketFunding`은 perpetual market fundings 정보를 관리하는 구조체입니다.
+
+```go
+type PerpetualMarketFunding struct {
+	// cumulative_funding은 perpetual market의 cumulative funding을 정의합니다.
+	CumulativeFunding math.LegacyDec
+	// cumulative_price는 마지막 timestamp까지의 현재 시간의 cumulative price를 정의합니다
+	CumulativePrice math.LegacyDec
+	LastTimestamp   int64
+}
+```
+
+## Trading Rewards
+
+### CampaignRewardPool
+
+`CampaignRewardPool`은 예정된 trading reward pools를 가져오는 데 사용되는 구조체입니다.
+
+```go
+type CampaignRewardPool struct {
+	StartTimestamp int64
+	// max_campaign_rewards는 캠페인 종료 시 지급될 최대 reward 금액입니다
+	MaxCampaignRewards sdk.Coins
+}
+```
+
+### TradingRewardCampaignInfo
+
+`TradingRewardCampaignInfo`는 trading reward campaign 정보를 가져오는 데 사용되는 구조체입니다.
+
+```go
+type TradingRewardCampaignInfo struct {
+	// 각 캠페인 기간의 초 단위 수
+	CampaignDurationSeconds int64
+	// rewards에 포함될 trading fee quote denoms
+	QuoteDenoms []string
+	// markets에 대한 선택적 boost 정보
+	TradingRewardBoostInfo *TradingRewardCampaignBoostInfo
+	// 보상에서 제외된 marketIDs
+	DisqualifiedMarketIds []string
+}
+
+type TradingRewardCampaignBoostInfo struct {
+	BoostedSpotMarketIds        []string
+	SpotMarketMultipliers       []PointsMultiplier
+	BoostedDerivativeMarketIds  []string
+	DerivativeMarketMultipliers []PointsMultiplier
+}
+
+type PointsMultiplier struct {
+	MakerPointsMultiplier math.LegacyDec
+	TakerPointsMultiplier math.LegacyDec
+}
+```
+
+## FeeDiscountProposal
+
+`FeeDiscountProposal`은 새 fee discount schedule과 기간을 제안하는 데 사용되는 구조체입니다.
+
+```go
+type FeeDiscountSchedule struct {
+	// bucket count, 예: 30
+	BucketCount    uint64
+	// bucket duration, 예: 1일
+	BucketDuration int64
+	// fee paid 기여도에 포함될 trading fee quote denoms
+	QuoteDenoms []string
+	// fee discount tiers
+	TierInfos []*FeeDiscountTierInfo
+	// fee paid 금액 기여에서 제외된 marketIDs
+	DisqualifiedMarketIds []string
+}
+
+type FeeDiscountTierInfo struct {
+	MakerDiscountRate math.LegacyDec
+	TakerDiscountRate math.LegacyDec
+	StakedAmount      math.Int
+	FeePaidAmount     math.LegacyDec
+}
+```
+
+## DerivativeMarketSettlementInfo
+
+`DerivativeMarketSettlementInfo`는 settlement가 예정된 markets에 사용되는 구조체입니다.
+
+```go
+type DerivativeMarketSettlementInfo struct {
+	// market ID.
+	MarketId string
+	// settlement_price는 settlement price를 정의합니다
+	SettlementPrice math.LegacyDec
+	// starting_deficit은 starting deficit을 정의합니다
+	StartingDeficit math.LegacyDec
+}
+```
+
+## TradeLog
+
+Trade logs는 거래 기록을 추적하기 위해 이벤트로 emit됩니다.
+
+```go
+type TradeLog struct {
+	Quantity math.LegacyDec
+	Price    math.LegacyDec
+	// bytes32 거래를 실행한 subaccount ID
+	SubaccountId []byte
+	Fee          math.LegacyDec
+	OrderHash    []byte
+}
+
+type DerivativeTradeLog struct {
+	SubaccountId  []byte
+	PositionDelta *PositionDelta
+	Payout        math.LegacyDec
+	Fee           math.LegacyDec
+	OrderHash     []byte
+}
+```
+
+## Enums
+
+Enums는 order types, execution types 및 market status를 설명하는 데 사용됩니다.
+
+```protobuf
+enum OrderType {
+  UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNSPECIFIED"];
+  BUY = 1 [(gogoproto.enumvalue_customname) = "BUY"];
+  SELL = 2 [(gogoproto.enumvalue_customname) = "SELL"];
+  STOP_BUY = 3 [(gogoproto.enumvalue_customname) = "STOP_BUY"];
+  STOP_SELL = 4 [(gogoproto.enumvalue_customname) = "STOP_SELL"];
+  TAKE_BUY = 5 [(gogoproto.enumvalue_customname) = "TAKE_BUY"];
+  TAKE_SELL = 6 [(gogoproto.enumvalue_customname) = "TAKE_SELL"];
+  BUY_PO = 7 [(gogoproto.enumvalue_customname) = "BUY_PO"];
+  SELL_PO = 8 [(gogoproto.enumvalue_customname) = "SELL_PO"];
+  BUY_ATOMIC = 9 [ (gogoproto.enumvalue_customname) = "BUY_ATOMIC" ];
+  SELL_ATOMIC = 10 [ (gogoproto.enumvalue_customname) = "SELL_ATOMIC" ];
+}
+
+enum MarketStatus {
+  Unspecified = 0;
+  Active = 1;
+  Paused = 2;
+  Suspended = 3;
+  Demolished = 4;
+  Expired = 5;
+}
+
+enum ExecutionType {
+  UnspecifiedExecutionType = 0;
+  Market = 1;
+  LimitFill = 2;
+  LimitMatchRestingOrder = 3;
+  LimitMatchNewOrder = 4;
+}
+```
+
+## GrantAuthorization
+
+`GrantAuthorization`은 granter가 trading fee discounts를 위해 grantee에게 승인한 stake 금액과 grantee의 주소를 추적하는 데 사용됩니다.
+
+```protobuf
+type GrantAuthorization struct {
+  Grantee string             
+  Amount  math.Int
+}
+
+```
+
+## ActiveGrant
+
+`ActiveGrant`는 grantee가 활성화한 grant에서 granter의 주소와 부여된 stake 금액 (trading fee discounts용)을 추적하는 데 사용됩니다.
+
+```protobuf
+type ActiveGrant struct {
+  Granter string             
+  Amount  math.Int
+}
+
+```
+
+## EffectiveGrant
+
+`EffectiveGrant`는 granter가 trading fee discounts를 위한 stake grants에서 승인한 총 stake 금액을 추적하는 데 사용됩니다.
+
+```protobuf
+type EffectiveGrant struct {
+  Granter         string               
+  NetGrantedStake math.Int 
+  IsValid         bool                  
+}
+```

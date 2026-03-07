@@ -1,0 +1,42 @@
+---
+title: Oracle
+---
+
+## 개요
+
+이 문서는 oracle module에 대한 사양을 설명합니다. Oracle module은 주로 `exchange` module에서 외부 가격 데이터를 가져오는 데 사용됩니다.
+
+## 워크플로우
+
+1. 새로운 price feed provider는 먼저 governance proposal을 통해 relayer 목록에 권한을 부여받아야 합니다. 단, Coinbase price oracle의 경우 Coinbase oracle private key로 이미 서명되어 있으므로 누구나 Coinbase price update를 전송할 수 있습니다. <br/>
+   **Grant Proposal 예시**: `GrantBandOraclePrivilegeProposal`, `GrantPriceFeederPrivilegeProposal`
+2. Governance proposal이 승인되면, 지정된 relayer는 해당 oracle type에 맞는 relay message를 전송하여 oracle 데이터를 게시할 수 있습니다.<br/>
+   **Relay Message 예시**: `MsgRelayBandRates`, `MsgRelayPriceFeedPrice`, `MsgRelayCoinbaseMessages` 등
+3. Relay message를 수신하면, oracle module은 relayer 계정이 grant 권한을 가지고 있는지 확인하고 최신 가격 데이터를 state에 저장합니다.
+4. 다른 Cosmos-SDK module은 oracle module을 쿼리하여 특정 provider의 최신 가격 데이터를 가져올 수 있습니다.
+
+**참고**: 불일치가 발생할 경우, governance를 통해 price feed 권한을 취소할 수 있습니다. <br />
+**Revoke Proposal 예시**: `RevokeBandOraclePrivilegeProposal`, `RevokePriceFeederPrivilegeProposal` 등
+
+## Band IBC 통합 흐름
+
+Cosmos SDK 블록체인은 IBC를 사용하여 서로 상호 작용할 수 있으며, Injective는 IBC를 통해 Band chain에서 price feed를 가져오는 기능을 지원합니다.
+
+1. IBC를 사용하여 Band chain의 oracle과 통신하려면, Injective Chain이 먼저 relayer를 사용하여 Band chain의 oracle module과 통신 채널을 초기화해야 합니다.
+
+2. 연결이 설정되면, Injective Chain용과 Band용 두 개의 channel identifier가 생성됩니다. Channel identifier는 Injective Chain에서 Band로 나가는 oracle request packet을 라우팅하는 데 사용됩니다. 마찬가지로, Band의 oracle module은 oracle response를 다시 보낼 때 channel identifier를 사용합니다.
+
+3. 통신 채널 설정 후 Band IBC 통합을 활성화하려면, `EnableBandIBCProposal` governance proposal이 통과되어야 합니다.
+
+4. 그런 다음, IBC를 통해 가져올 가격 목록은 `AuthorizeBandOracleRequestProposal` 및 `UpdateBandOracleRequestProposal`로 결정되어야 합니다.
+
+5. BandIBC가 활성화되면, chain은 주기적으로 Band chain에 price request IBC packet(`OracleRequestPacketData`)을 전송하고, Band chain은 IBC packet(`OracleResponsePacketData`)을 통해 가격으로 응답합니다. Band chain은 임계값 수의 data provider가 확인하면 가격을 제공하며, request 전송 후 가격을 받는 데 시간이 걸립니다. 설정된 간격 전에 가격을 요청하려면, 모든 사용자가 즉시 실행되는 `MsgRequestBandIBCRates` message를 브로드캐스트할 수 있습니다.
+
+## 목차
+
+1. [State](/developers-native/injective/oracle/01_state)
+2. [Keeper](/developers-native/injective/oracle/02_keeper)
+3. [Messages](/developers-native/injective/oracle/03_messages)
+4. [Proposals](/developers-native/injective/oracle/04_proposals)
+5. [Events](/developers-native/injective/oracle/05_events)
+6. [Improvements](/developers-native/injective/oracle/06_future_improvements)

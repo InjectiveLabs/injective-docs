@@ -1,0 +1,153 @@
+---
+sidebar_position: 3
+---
+
+# 메시지
+
+이 섹션에서는 tokenfactory 메시지의 처리와 해당 상태 업데이트에 대해 설명합니다.
+
+## 메시지
+
+### CreateDenom
+
+denom 생성자 주소, subdenom 및 관련 메타데이터(name, symbol, decimals)가 주어지면 `factory/{creator address}/{subdenom}` 형식의 denom을 생성합니다. Subdenom은 `[a-zA-Z0-9./]`를 포함할 수 있습니다.
+`allow_admin_burn`을 true로 설정하면 admin이 다른 주소에서 토큰을 소각할 수 있습니다.
+```protobuf
+message MsgCreateDenom {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // subdenom은 최대 44개의 "영숫자" 문자 길이가 될 수 있습니다.
+  string subdenom = 2 [ (gogoproto.moretags) = "yaml:\"subdenom\"" ];
+  string name = 3 [ (gogoproto.moretags) = "yaml:\"name\"" ];
+  string symbol = 4 [ (gogoproto.moretags) = "yaml:\"symbol\"" ];
+  uint32 decimals = 5 [ (gogoproto.moretags) = "yaml:\"decimals\"" ];
+  // admin이 다른 주소에서 토큰을 소각할 수 있으면 true
+  bool allow_admin_burn = 6 [ (gogoproto.moretags) = "yaml:\"allow_admin_burn\"" ];}
+```
+
+**상태 변경:**
+
+- `Params`에 설정된 denom 생성 수수료를 생성자 주소에서 커뮤니티 풀로 전송합니다.
+- bank keeper를 통해 `DenomMetaData`를 설정합니다.
+- 생성된 denom `factory/{creator address}/{subdenom}`의 admin을 저장하기 위해 해당 denom에 대한 `AuthorityMetadata`를 설정합니다. Admin은 자동으로 Msg 발신자로 설정됩니다.
+- 생성자별로 생성된 denom의 상태를 유지하는 `CreatorPrefixStore`에 denom을 추가합니다.
+
+### Mint
+
+특정 denom의 발행은 현재 admin에게만 허용됩니다.
+현재 admin은 기본적으로 denom의 생성자로 설정됩니다.
+
+```protobuf
+message MsgMint {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+```
+
+**상태 변경:**
+
+- 다음 안전 검사 수행
+    - denom 발행이 `tokenfactory` 모듈을 통해 생성되었는지 확인
+    - 메시지 발신자가 denom의 admin인지 확인
+- `bank` 모듈을 통해 해당 denom에 대해 지정된 양의 토큰 발행
+
+### Burn
+
+특정 denom의 소각은 현재 admin에게만 허용됩니다.
+현재 admin은 기본적으로 denom의 생성자로 설정됩니다.
+
+```protobuf
+message MsgBurn {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+```
+
+**상태 변경:**
+
+- 다음 안전 검사 수행
+    - denom 발행이 `tokenfactory` 모듈을 통해 생성되었는지 확인
+    - 메시지 발신자가 denom의 admin인지 확인
+- `bank` 모듈을 통해 해당 denom에 대해 지정된 양의 토큰 소각
+
+### ChangeAdmin
+
+denom의 admin을 변경합니다. 이는 denom의 현재 admin만 호출할 수 있습니다. admin 주소가 zero address로 설정된 후에도 토큰 보유자는 자신이 보유한 토큰에 대해 `MsgBurn`을 실행할 수 있습니다.
+
+```protobuf
+message MsgChangeAdmin {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string newAdmin = 3 [ (gogoproto.moretags) = "yaml:\"new_admin\"" ];
+}
+```
+
+### SetDenomMetadata
+
+특정 denom의 메타데이터 설정은 해당 denom의 admin에게만 허용됩니다.
+bank 모듈에서 denom 메타데이터를 덮어쓸 수 있습니다. admin은 활성화된 경우 admin burn 기능을 비활성화할 수도 있습니다.
+
+```protobuf
+message MsgSetDenomMetadata {
+  option (amino.name) = "injective/tokenfactory/set-denom-metadata";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.bank.v1beta1.Metadata metadata = 2 [
+    (gogoproto.moretags) = "yaml:\"metadata\"",
+    (gogoproto.nullable) = false
+  ];
+
+  message AdminBurnDisabled {
+    // admin burn 기능을 비활성화해야 하면 true
+    bool should_disable = 1 [ (gogoproto.moretags) = "yaml:\"should_disable\"" ];
+  }
+  AdminBurnDisabled admin_burn_disabled = 3 [ (gogoproto.moretags) = "yaml:\"admin_burn_disabled\"" ];
+}
+```
+
+**상태 변경:**
+
+- 메시지 발신자가 denom의 admin인지 확인
+- denom의 admin을 변경하고 admin burn 기능을 잠재적으로 비활성화하기 위해 `AuthorityMetadata` 상태 항목 수정
+
+
+## 체인에서의 기대사항
+
+체인의 주소에 대한 bech32 접두사는 최대 16자까지 가능합니다.
+
+이는 SDK에서 적용되는 denom의 최대 길이가 128바이트이고, longest_subdenom이 44바이트로 설정된 것에서 비롯됩니다.
+
+Token factory 토큰의 denom은 다음과 같습니다: `factory/{creator address}/{subdenom}`
+
+하위 구성 요소로 분리하면 다음과 같습니다:
+
+- `len(factory) = 7`
+- `2 * len("/") = 2`
+- `len(longest_subdenom)`
+- `len(creator_address) = len(bech32(longest_addr_length, chain_addr_prefix))`.
+
+현재 가장 긴 주소 길이는 `32바이트`입니다. SDK 오류 수정 설정으로 인해 `len(bech32(32, chain_addr_prefix)) = len(chain_addr_prefix) + 1 + 58`이 됩니다.
+이를 모두 더하면 총 길이 제약은 `128 = 7 + 2 + len(longest_subdenom) + len(longest_chain_addr_prefix) + 1 + 58`입니다.
+따라서 `len(longest_subdenom) + len(longest_chain_addr_prefix) = 128 - (7 + 2 + 1 + 58) = 60`입니다.
+
+longest_subdenom과 longest_chain_addr_prefix 사이에서 이 60바이트를 어떻게 분할할지에 대한 표준화 선택은 다소 임의적입니다.
+이에 대한 고려 사항:
+
+- [BIP-0173](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki#bech32)에 따르면
+  32바이트 주소('data field')에 대한 기술적으로 가장 긴 HRP는 31바이트입니다.
+  (encode(data) = 59바이트, 최대 길이 = 90바이트에서 비롯됨)
+- subdenom은 해시를 포함할 수 있도록 최소 32바이트여야 합니다
+- 더 긴 subdenom은 사람이 읽을 수 있는 denom을 생성하는 데 매우 유용합니다
+- 체인 주소는 더 짧은 것이 좋습니다. 현재까지 cosmos에서 가장 긴 HRP는 11바이트입니다. (`persistence`)
+
+명확성을 위해 현재 `len(longest_subdenom) = 44` 및 `len(longest_chain_addr_prefix) = 16`으로 설정되어 있습니다.
+
+SDK가 denom의 최대 길이를 128바이트에서 늘리면 이러한 제한도 증가해야 합니다.
+
+따라서 파싱을 위해 이러한 최대 길이에 의존하는 코드를 작성하지 마십시오.

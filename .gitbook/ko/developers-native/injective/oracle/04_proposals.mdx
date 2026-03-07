@@ -1,0 +1,166 @@
+---
+sidebar_position: 4
+title: Governance Proposals
+---
+
+# Governance Proposals
+
+## GrantBandOraclePrivilegeProposal
+
+Band provider의 Relayer 계정에 `GrantBandOraclePrivilegeProposal`을 통해 Band Oracle 권한을 부여할 수 있습니다.
+
+```protobuf
+// 권한 부여
+message GrantBandOraclePrivilegeProposal {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_getters) = false;
+
+    string title = 1;
+    string description = 2;
+    repeated string relayers = 3;
+}
+```
+
+## RevokeBandOraclePrivilegeProposal
+
+Band provider의 Relayer 계정에서 `RevokeBandOraclePrivilegeProposal`을 통해 Band Oracle 권한을 취소할 수 있습니다.
+
+```protobuf
+// 권한 취소
+message RevokeBandOraclePrivilegeProposal {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_getters) = false;
+
+    string title = 1;
+    string description = 2;
+    repeated string relayers = 3;
+}
+```
+
+## GrantPriceFeederPrivilegeProposal
+
+`GrantPriceFeederPrivilegeProposal`을 통해 주어진 base quote pair에 대한 price feeder 권한을 relayer에게 발급할 수 있습니다.
+
+```protobuf
+// 권한 부여
+message GrantPriceFeederPrivilegeProposal {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_getters) = false;
+
+    string title = 1;
+    string description = 2;
+    string base = 3;
+    string quote = 4;
+    repeated string relayers = 5;
+}
+```
+
+## RevokePriceFeederPrivilegeProposal
+
+`RevokePriceFeederPrivilegeProposal`을 통해 Relayer 계정에서 price feeder 권한을 취소할 수 있습니다.
+
+```protobuf
+// 권한 취소
+message RevokePriceFeederPrivilegeProposal {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_getters) = false;
+
+    string title = 1;
+    string description = 2;
+    string base = 3;
+    string quote = 4;
+    repeated string relayers = 5;
+}
+```
+
+## AuthorizeBandOracleRequestProposal
+
+이 proposal은 Band oracle request를 목록에 추가하기 위한 것입니다. 이것이 승인되면, Injective chain은 Band chain에서 하나 더 많은 price 정보를 가져옵니다.
+
+```protobuf
+message AuthorizeBandOracleRequestProposal {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_getters) = false;
+
+    string title = 1;
+    string description = 2;
+    BandOracleRequest request = 3 [(gogoproto.nullable) = false];
+}
+```
+
+## UpdateBandOracleRequestProposal
+
+이 proposal은 request를 삭제하거나 업데이트하는 데 사용됩니다.
+`DeleteRequestId`가 0이 아닌 경우, 해당 id를 가진 request를 삭제하고 실행을 완료합니다.
+`DeleteRequestId`가 0인 경우, id가 `UpdateOracleRequest.RequestId`인 request를 UpdateOracleRequest로 업데이트합니다.
+
+```protobuf
+message UpdateBandOracleRequestProposal {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_getters) = false;
+
+    string title = 1;
+    string description = 2;
+    uint64 delete_request_id = 3;
+    BandOracleRequest update_oracle_request = 4;
+}
+```
+
+## EnableBandIBCProposal
+
+이 proposal은 Band chain과 Injective chain 간의 IBC 연결을 활성화하기 위한 것입니다.
+proposal이 승인되면, BandIBCParams를 proposal에 구성된 새로운 것으로 업데이트합니다.
+
+```protobuf
+message EnableBandIBCProposal {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_getters) = false;
+
+    string title = 1;
+    string description = 2;
+
+    BandIBCParams band_ibc_params = 3 [(gogoproto.nullable) = false];
+}
+```
+
+`BandIBCParams`의 세부 사항은 **[State](./01_state)**에서 확인할 수 있습니다.
+
+## GrantStorkPublisherPrivilegeProposal
+
+`GrantStorkPublisherPrivilegeProposal`을 통해 Publisher에게 Stork Publisher 권한을 부여할 수 있습니다.
+
+```protobuf
+// 권한 부여
+message GrantStorkPublisherPrivilegeProposal {
+  option (amino.name) = "oracle/GrantStorkPublisherPrivilegeProposal";
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+
+  string title = 1;
+  string description = 2;
+
+  repeated string stork_publishers = 3;
+}
+```
+
+## RevokeStorkPublisherPrivilegeProposal
+
+`RevokeStorkPublisherPrivilegeProposal`을 통해 Publisher에서 Stork Publisher 권한을 취소할 수 있습니다.
+
+```protobuf
+// 권한 취소
+message RevokeStorkPublisherPrivilegeProposal {
+  option (amino.name) = "oracle/RevokeStorkPublisherPrivilegeProposal";
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+
+  string title = 1;
+  string description = 2;
+
+  repeated string stork_publishers = 3;
+}
+```

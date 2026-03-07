@@ -1,0 +1,404 @@
+---
+sidebar_position: 7
+title: 거버넌스 Proposals
+---
+
+# 거버넌스 Proposals
+
+## Proposal/SpotMarketParamUpdate
+
+`SpotMarketParamUpdateProposal`은 spot market params 업데이트를 제안하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type SpotMarketParamUpdateProposal struct {
+	Title                string
+	Description          string
+	MarketId             string
+	MakerFeeRate         *math.LegacyDec
+	TakerFeeRate         *math.LegacyDec
+	RelayerFeeShareRate  *math.LegacyDec
+	MinPriceTickSize     *math.LegacyDec
+	MinQuantityTickSize  *math.LegacyDec
+    MinNotional          *math.LegacyDec
+	Status               MarketStatus
+}
+```
+
+**필드 설명**
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `MarketId`는 params를 변경할 market의 id를 설명합니다.
+- `MakerFeeRate`는 makers에 대한 목표 fee rate를 설명합니다.
+- `TakerFeeRate`는 takers에 대한 목표 fee rate를 설명합니다.
+- `RelayerFeeShareRate`는 relayer fee share rate를 설명합니다.
+- `MinPriceTickSize`는 order price의 minimum tick size를 정의합니다.
+- `MinQuantityTickSize`는 order quantity의 minimum tick size를 정의합니다.
+- `Status`는 market의 목표 상태를 설명합니다.
+
+## Proposal/ExchangeEnable
+
+`ExchangeEnableProposal`은 특정 exchange 유형의 enable을 제안하기 위한 메시지를 정의합니다.
+
+```go
+type ExchangeEnableProposal struct {
+	Title        string
+	Description  string
+	ExchangeType ExchangeType
+}
+```
+
+**필드 설명**
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `ExchangeType`은 exchange 유형, spot 또는 derivatives를 설명합니다.
+
+
+## Proposal/BatchExchangeModification
+
+`BatchExchangeModificationProposal`은 exchange 모듈에서 여러 proposals를 배치로 처리하기 위한 메시지를 정의합니다.
+
+```go
+type BatchExchangeModificationProposal struct {
+	Title                                string
+	Description                          string
+	SpotMarketParamUpdateProposal        []*SpotMarketParamUpdateProposal
+	DerivativeMarketParamUpdateProposal  []*DerivativeMarketParamUpdateProposal
+	SpotMarketLaunchProposal             []*SpotMarketLaunchProposal
+	PerpetualMarketLaunchProposal        []*PerpetualMarketLaunchProposal
+	ExpiryFuturesMarketLaunchProposal    []*ExpiryFuturesMarketLaunchProposal
+	TradingRewardCampaignUpdateProposal  *TradingRewardCampaignUpdateProposal
+}
+```
+
+**필드 설명**
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `SpotMarketParamUpdateProposal`은 SpotMarketParamUpdateProposal을 설명합니다.
+- `DerivativeMarketParamUpdateProposal`은 DerivativeMarketParamUpdateProposal을 설명합니다.
+- `SpotMarketLaunchProposal`은 SpotMarketLaunchProposal을 설명합니다.
+- `PerpetualMarketLaunchProposal`은 PerpetualMarketLaunchProposal을 설명합니다.
+- `ExpiryFuturesMarketLaunchProposal`은 ExpiryFuturesMarketLaunchProposal을 설명합니다.
+- `TradingRewardCampaignUpdateProposal`은 TradingRewardCampaignUpdateProposal을 설명합니다.
+
+
+## Proposal/SpotMarketLaunch
+
+`SpotMarketLaunchProposal`은 거버넌스를 통해 새 spot market을 제안하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type SpotMarketLaunchProposal struct {
+	Title                string
+	Description          string
+	Ticker               string
+	BaseDenom            string
+	QuoteDenom           string
+	MinPriceTickSize     math.LegacyDec
+	MinQuantityTickSize  math.LegacyDec
+    MinNotional          math.LegacyDec
+	MakerFeeRate         math.LegacyDec
+	TakerFeeRate         math.LegacyDec
+}
+```
+
+**필드 설명**
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `Ticker`는 spot market의 ticker를 설명합니다.
+- `BaseDenom`은 base 통화로 사용할 코인 유형을 지정합니다.
+- `QuoteDenom`은 quote 통화로 사용할 코인 유형을 지정합니다.
+- `MinPriceTickSize`는 order price의 minimum tick size를 정의합니다.
+- `MinQuantityTickSize`는 order quantity의 minimum tick size를 정의합니다.
+- `MakerFeeRate` 필드는 derivative market의 makers에 대한 trade fee rate를 설명합니다.
+- `TakerFeeRate` 필드는 derivative market의 takers에 대한 trade fee rate를 설명합니다.
+
+## Proposal/PerpetualMarketLaunch
+
+`PerpetualMarketLaunchProposal`은 거버넌스를 통해 새 perpetual futures market을 제안하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type PerpetualMarketLaunchProposal struct {
+	Title                   string
+	Description             string
+	Ticker                  string
+	QuoteDenom              string
+	OracleBase              string
+	OracleQuote             string
+	OracleScaleFactor       uint32
+	OracleType              types1.OracleType
+	InitialMarginRatio      math.LegacyDec
+	MaintenanceMarginRatio  math.LegacyDec
+	MakerFeeRate            math.LegacyDec
+	TakerFeeRate            math.LegacyDec
+	MinPriceTickSize        math.LegacyDec
+	MinQuantityTickSize     math.LegacyDec
+}
+```
+
+**필드 설명**
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `Ticker` 필드는 derivative market의 ticker를 설명합니다.
+- `QuoteDenom` 필드는 base 통화로 사용할 코인 유형을 설명합니다.
+- `OracleBase` 필드는 oracle base 통화를 설명합니다.
+- `OracleQuote` 필드는 oracle quote 통화를 설명합니다.
+- `OracleScaleFactor` 필드는 oracle prices의 scale factor를 설명합니다.
+- `OracleType` 필드는 oracle 유형을 설명합니다.
+- `MakerFeeRate` 필드는 derivative market의 makers에 대한 trade fee rate를 설명합니다.
+- `TakerFeeRate` 필드는 derivative market의 takers에 대한 trade fee rate를 설명합니다.
+- `InitialMarginRatio` 필드는 derivative market의 initial margin ratio를 설명합니다.
+- `MaintenanceMarginRatio` 필드는 derivative market의 maintenance margin ratio를 설명합니다.
+- `MinPriceTickSize` 필드는 order의 price와 margin의 minimum tick size를 설명합니다.
+- `MinQuantityTickSize` 필드는 order quantity의 minimum tick size를 설명합니다.
+
+## Expiry futures market 런치 proposal
+
+```go
+// ExpiryFuturesMarketLaunchProposal은 거버넌스를 통해 새 expiry futures market을 제안하기 위한 SDK 메시지를 정의합니다
+type ExpiryFuturesMarketLaunchProposal struct {
+	Title                      string
+	Description                string
+	// derivative market의 Ticker.
+	Ticker                     string
+	// quote 통화로 사용할 코인 유형
+	QuoteDenom                 string
+	// Oracle base 통화
+	OracleBase                 string
+	// Oracle quote 통화
+	OracleQuote                string
+	// Oracle prices의 Scale factor.
+	OracleScaleFactor          uint32
+	// Oracle 유형
+	OracleType                 types1.OracleType
+	// Market의 Expiration 시간
+	Expiry                     int64
+	// initial_margin_ratio는 derivative market의 initial margin ratio를 정의합니다
+	InitialMarginRatio         math.LegacyDec
+	// maintenance_margin_ratio는 derivative market의 maintenance margin ratio를 정의합니다
+	MaintenanceMarginRatio     math.LegacyDec
+	// maker_fee_rate는 derivative market의 makers에 대한 exchange trade fee를 정의합니다
+	MakerFeeRate               math.LegacyDec
+	// taker_fee_rate는 derivative market의 takers에 대한 exchange trade fee를 정의합니다
+	TakerFeeRate               math.LegacyDec
+	// min_price_tick_size는 order의 price와 margin의 minimum tick size를 정의합니다
+	MinPriceTickSize           math.LegacyDec
+	// min_quantity_tick_size는 order quantity의 minimum tick size를 정의합니다
+	MinQuantityTickSize        math.LegacyDec
+    // min_notional은 market의 orders에 필요한 minimum notional (quote 자산)을 정의합니다
+    MinNotional                math.LegacyDec
+}
+```
+
+**필드 설명**
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `Ticker` 필드는 derivative market의 ticker를 설명합니다.
+- `QuoteDenom` 필드는 quote 통화로 사용할 코인 유형을 설명합니다.
+- `OracleBase` 필드는 oracle base 통화를 설명합니다.
+- `OracleQuote` 필드는 oracle quote 통화를 설명합니다.
+- `OracleScaleFactor` 필드는 oracle prices의 scale factor를 설명합니다.
+- `OracleType` 필드는 oracle 유형을 설명합니다.
+- `Expiry` 필드는 market의 expiration 시간을 설명합니다.
+- `MakerFeeRate` 필드는 derivative market의 makers에 대한 trade fee rate를 설명합니다.
+- `TakerFeeRate` 필드는 derivative market의 takers에 대한 trade fee rate를 설명합니다.
+- `InitialMarginRatio` 필드는 derivative market의 initial margin ratio를 설명합니다.
+- `MaintenanceMarginRatio` 필드는 derivative market의 maintenance margin ratio를 설명합니다.
+- `MinPriceTickSize` 필드는 order의 price와 margin의 minimum tick size를 설명합니다.
+- `MinQuantityTickSize` 필드는 order quantity의 minimum tick size를 설명합니다.
+
+## Binary options market 런치 proposal
+
+```go
+type BinaryOptionsMarketLaunchProposal struct {
+	Title       string
+	Description string
+	// derivative contract의 Ticker.
+	Ticker string
+	// Oracle symbol
+	OracleSymbol string
+	// Oracle Provider
+	OracleProvider string
+	// Oracle 유형
+	OracleType types1.OracleType
+	// Oracle prices의 Scale factor.
+	OracleScaleFactor uint32
+	// expiration timestamp
+	ExpirationTimestamp int64
+	// expiration timestamp
+	SettlementTimestamp int64
+	// market의 admin
+	Admin string
+	// binary options contract의 quote currency denomination 주소
+	QuoteDenom string
+	// maker_fee_rate는 binary options market의 maker fee rate를 정의합니다
+	MakerFeeRate math.LegacyDec
+	// taker_fee_rate는 derivative market의 taker fee rate를 정의합니다
+	TakerFeeRate math.LegacyDec
+	// min_price_tick_size는 market의 orders에 필요한 price와 margin의 minimum tick size를 정의합니다
+	MinPriceTickSize math.LegacyDec
+	// min_quantity_tick_size는 market의 orders에 필요한 quantity의 minimum tick size를 정의합니다
+	MinQuantityTickSize math.LegacyDec
+}
+```
+
+## Binary options market param 업데이트
+
+```go
+type BinaryOptionsMarketParamUpdateProposal struct {
+	Title       string
+	Description string
+	MarketId    string
+	// maker_fee_rate는 derivative market의 makers에 대한 exchange trade fee를 정의합니다
+	MakerFeeRate *math.LegacyDec
+	// taker_fee_rate는 derivative market의 takers에 대한 exchange trade fee를 정의합니다
+	TakerFeeRate *math.LegacyDec
+	// relayer_fee_share_rate는 derivative market의 relayer fee share rate를 정의합니다
+	RelayerFeeShareRate *math.LegacyDec
+	// min_price_tick_size는 order의 price와 margin의 minimum tick size를 정의합니다
+	MinPriceTickSize *math.LegacyDec
+	// min_quantity_tick_size는 order quantity의 minimum tick size를 정의합니다
+	MinQuantityTickSize *math.LegacyDec
+    // min_notional은 orders의 minimum notional을 정의합니다
+    MinNotional *math.LegacyDec
+	// expiration timestamp
+	ExpirationTimestamp int64
+	// expiration timestamp
+	SettlementTimestamp int64
+	// market이 settle될 새 가격
+	SettlementPrice *math.LegacyDec
+	// market의 admin
+	Admin        string
+	Status       MarketStatus
+	OracleParams *ProviderOracleParams
+}
+```
+
+## Proposal/DerivativeMarketParamUpdate
+
+```go
+type OracleParams struct {
+    // Oracle base 통화
+    OracleBase        string
+    // Oracle quote 통화
+    OracleQuote       string
+    // Oracle prices의 Scale factor.
+    OracleScaleFactor uint32
+    // Oracle 유형
+    OracleType        types1.OracleType
+}
+
+type DerivativeMarketParamUpdateProposal struct {
+	Title                  string
+	Description            string
+	MarketId               string
+	InitialMarginRatio     *math.LegacyDec
+	MaintenanceMarginRatio *math.LegacyDec
+	MakerFeeRate           *math.LegacyDec
+	TakerFeeRate           *math.LegacyDec
+	RelayerFeeShareRate    *math.LegacyDec
+	MinPriceTickSize       *math.LegacyDec
+	MinQuantityTickSize    *math.LegacyDec
+    MinNotional            *math.LegacyDec
+	HourlyInterestRate     *math.LegacyDec
+	HourlyFundingRateCap   *math.LegacyDec
+	Status                 MarketStatus
+	OracleParams           *OracleParams
+}
+```
+
+**필드 설명**
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `MarketId`는 params를 변경할 market의 id를 설명합니다.
+- `InitialMarginRatio`는 목표 initial margin ratio를 설명합니다.
+- `MaintenanceMarginRatio`는 목표 maintenance margin ratio를 설명합니다.
+- `MakerFeeRate`는 makers에 대한 목표 fee rate를 설명합니다.
+- `TakerFeeRate`는 takers에 대한 목표 fee rate를 설명합니다.
+- `RelayerFeeShareRate`는 relayer fee share rate를 설명합니다.
+- `MinPriceTickSize`는 order price의 minimum tick size를 정의합니다.
+- `MinQuantityTickSize`는 order quantity의 minimum tick size를 정의합니다.
+- `Status`는 market의 목표 상태를 설명합니다.
+- `OracleParams`는 새로운 oracle parameters를 설명합니다.
+
+## Proposal/TradingRewardCampaignLaunch
+
+`TradingRewardCampaignLaunchProposal`은 새 trading reward 캠페인을 런치하기 위한 제안에 대한 SDK 메시지를 정의합니다.
+
+```go
+type TradingRewardCampaignLaunchProposal struct {
+	Title               string
+	Description         string
+	CampaignInfo        *TradingRewardCampaignInfo
+	CampaignRewardPools []*CampaignRewardPool
+}
+```
+
+**필드 설명**
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `CampaignInfo`는 CampaignInfo를 설명합니다.
+- `CampaignRewardPools`는 CampaignRewardPools를 설명합니다.
+
+## Proposal/TradingRewardCampaignUpdate
+
+`TradingRewardCampaignUpdateProposal`은 기존 trading reward 캠페인을 업데이트하기 위한 제안에 대한 SDK 메시지를 정의합니다.
+
+```go
+type TradingRewardCampaignUpdateProposal struct {
+	Title                        string
+	Description                  string
+	CampaignInfo                 *TradingRewardCampaignInfo
+	CampaignRewardPoolsAdditions []*CampaignRewardPool
+	CampaignRewardPoolsUpdates   []*CampaignRewardPool
+}
+```
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `CampaignRewardPoolsAdditions`는 CampaignRewardPoolsAdditions를 설명합니다.
+- `CampaignRewardPoolsUpdates`는 CampaignRewardPoolsUpdates를 설명합니다.
+
+## Proposal/FeeDiscount
+
+`FeeDiscountProposal`은 fee discount schedule을 런치하거나 업데이트하기 위한 제안에 대한 SDK 메시지를 정의합니다.
+
+```go
+type FeeDiscountProposal struct {
+	Title          string
+	Description    string
+	Schedule       *FeeDiscountSchedule
+}
+```
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `Schedule`은 Fee discount schedule을 설명합니다.
+
+## Proposal/TradingRewardPendingPointsUpdate
+
+`TradingRewardPendingPointsUpdateProposal`은 vesting 기간 동안 특정 주소의 reward points를 업데이트하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type TradingRewardPendingPointsUpdateProposal struct {
+	Title                  string
+	Description            string
+	PendingPoolTimestamp   int64
+	RewardPointUpdates     *[]RewardPointUpdate
+}
+```
+
+**필드 설명**
+
+- `Title`은 proposal의 제목을 설명합니다.
+- `Description`은 proposal의 설명을 설명합니다.
+- `PendingPoolTimestamp`는 pending pool의 timestamp를 설명합니다.
+- `RewardPointUpdates`는 RewardPointUpdate를 설명합니다.
+
+

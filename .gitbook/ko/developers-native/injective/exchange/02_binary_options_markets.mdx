@@ -1,0 +1,113 @@
+---
+sidebar_position: 2
+title: Binary Options Markets
+---
+
+## 개념
+
+Binary options markets는 다른 markets와 같은 base 자산이 없으며, **USDT**로 호가됩니다 (나중에 다른 quote 자산이 추가될 수 있습니다). Binary options markets의 티커는 일반적으로 **UFC-KHABIB-TKO-09082022** 또는 유사한 형식을 따릅니다. 일반적으로 binary options markets는 스포츠 이벤트에 베팅하는 데 사용되지만 모든 결과에 베팅하는 데도 사용할 수 있습니다. 모든 markets는 $0.00에서 $1.00 사이의 가격대를 가지며 사용자는 $0.01에서 $0.99까지 orders를 넣을 수 있습니다. ($0.00과 $1.00은 각각 결과가 발생하지 않았거나 발생했음을 나타내는 종료 조건입니다). Order에 제출된 가격은 본질적으로 주어진 이벤트 (market)가 발생할 가정된 확률입니다.
+
+모든 binary options markets에서 **수수료는 항상 quote 자산**으로 지불됩니다. 예: USDT.
+
+이러한 유형의 markets에는 레버리지가 없습니다. 사용자들이 제로섬 market에서 서로 거래하기 때문입니다. 이로부터 다른 요건이 암시됩니다: 베팅의 한 쪽이 이벤트가 발생할 것이라고 믿으면 (YES 쪽), 이 정확한 이벤트에 대한 현재 market 확률이 *P*이면 (현재 market 가격이 *P*임을 의미), 베팅의 반대쪽은 이벤트가 *(1-P)* 확률로 발생하지 않을 것이라고 확신해야 합니다. 따라서 YES 쪽의 사람이 가격 *P*로 *Q*개의 계약을 매수하면 *Q\*P*의 잔액을 margin으로 잠그고, 반대 NO 쪽 (seller 쪽)은 *Q\*(1-P)*의 quote 잔액을 margin으로 잠가야 합니다.
+
+**예시:**
+
+Alice가 $0.20에 1개 계약을 매수하고 ($0.20 margin) Bob이 $0.20에 1개 계약을 매도하여 ($0.80 margin), 둘 다의 포지션이 생성됩니다.
+
+- Alice는 market이 $1에서 settle되면 $0.80을 얻고, Bob은 market이 $0에서 settle되면 $0.2를 얻습니다.
+
+## Oracle
+
+Binary options markets는 Provider Oracle 유형과 긴밀하게 결합되어 있습니다. 이를 통해 거버넌스에 등록된 provider가 새로운 가격 피드를 연속적으로 추가하기 위한 추가 거버넌스 없이 provider의 subtype 하에 임의의 새 가격 피드 데이터를 릴레이할 수 있습니다. 각 binary options market은 다음 oracle parameters로 구성됩니다:
+* Oracle symbol (예: UFC-KHABIB-TKO-09082022)
+* Oracle provider (예: frontrunner)
+* Oracle type (provider여야 함)
+* Oracle scale factor (예: quote denom이 USDT인 경우 6)
+
+Oracle의 주요 목표는 이벤트의 최종 결과를 게시하는 것입니다. 이 최종 가격은 해당 정확한 가격에서 market을 settle합니다. 이 가격은 binary 결과를 반영하여 대부분의 경우 0 또는 1과 같을 것으로 예상됩니다.
+
+또한 market은 (0, 1) 가격대 내의 모든 가격에서 settle될 수 있습니다. oracle이 게시한 *settlement_price*가 0 또는 1 사이인 경우, 모든 포지션은 *settlement_price* (예: 0.42)에서 청산됩니다. Oracle 가격이 1을 초과하면 settlement 가격은 1로 내림됩니다.
+
+Oracle은 또한 **-1**의 최종 가격을 게시할 수 있습니다. 이는 현재 market의 모든 포지션 환불을 트리거하고 market을 demolish하는 플래그 가격입니다. Settlement 전에 oracle 업데이트가 없으면, 모든 포지션의 환불을 트리거하기 위해 기본적으로 -1의 oracle 가격이 사용됩니다.
+
+Oracle provider 유형에 대한 추가 문서는 Oracle 모듈 문서에서 찾을 수 있습니다.
+
+### Oracle Provider 등록
+
+Oracle provider를 등록하려면 `GrantProviderPrivilegeProposal` 거버넌스 제안을 제출해야 합니다. 이 제안은 provider를 등록하고 주소가 가격 피드를 릴레이할 수 있게 합니다.
+
+```go
+type GrantProviderPrivilegeProposal struct {
+	Title       string   
+	Description string   
+	Provider    string    // provider의 이름, 고유해야 합니다
+	Relayers    []string  // 가격을 릴레이할 수 있는 주소들
+}
+```
+
+제안이 통과되면 provider가 등록되고 가격 피드를 릴레이할 수 있습니다 (아래 예시).
+
+## Market 라이프사이클
+
+### Market 생성
+Binary options market은 인스턴트 런치 (`MsgInstantBinaryOptionsMarketLaunch`를 통해) 또는 거버넌스 (`BinaryOptionsMarketLaunchProposal`을 통해)를 통해 생성할 수 있습니다.
+
+Market은 선택적으로 settlement를 트리거하고 market 상태를 변경하며 주어진 market의 expiration 및 settlement timestamp를 수정할 수 있는 market admin으로 구성될 수 있습니다. Market이 admin을 지정하지 않으면 market parameters는 거버넌스를 통해서만 수정할 수 있으며 settlement 절차는 연관된 oracle provider 가격 피드에 전적으로 기반합니다.
+
+### Market 상태 전환
+Binary options markets는 Injective에서 세 가지 상태 중 하나를 가질 수 있습니다: Active, Expired 또는 Demolished. Market이 생성된 후 market은 `Active` 상태를 가지며, 이는 개인이 거래를 시작할 수 있음을 의미합니다.
+
+특히 binary options markets는 market의 거래 활동이 중단되는 마감 시간을 지정하는 `ExpirationTimestamp`와 settlement가 발생하는 마감 시간을 지정하는 `SettlementTimestamp` (expiration 이후여야 함)를 가집니다.
+
+* **Active** = 거래 가능
+* **Expired** = 거래 중단, 미체결 orders 취소, 포지션 변경 없음.
+* **Demolished** = 포지션 settle/환불 (settlement에 따라), market demolished
+
+Binary options markets의 상태 전환 특성은 다음과 같습니다:
+
+| 상태 변경 | 워크플로우 |
+| --- | --- |
+| Active → Expired | Expiration은 market의 표준 워크플로우의 일부입니다. Market의 거래가 즉시 중단되고 모든 미체결 orders가 취소됩니다. Market은 이제 admin 또는 oracle에 의해 즉시 (강제로) settle되거나 SettlementTimestamp에 도달할 때 최신 oracle 가격을 사용하여 자연스럽게 settle될 수 있습니다.
+| Expired → Demolished (Settlement) | 모든 포지션은 강제 settlement 또는 자연 settlement에 의해 설정된 가격에서 settle됩니다. Market은 다시 거래되거나 재활성화될 수 없습니다. 자연 settlement의 경우, SettlementTimestamp 시간에 마지막 oracle 가격이 기록되어 settlement에 사용됩니다. 'force-settle'의 경우, Admin은 SettlementPrice가 [0, 1] 가격대에 설정된 MarketUpdate msg를 게시해야 합니다.
+| Active/Expired → Demolished (Refund) | 모든 포지션이 환불됩니다. Market은 다시 거래되거나 재활성화될 수 없습니다. Admin은 SettlementPrice가 -1로 설정된 MarketUpdate msg를 게시해야 합니다. |
+
+
+### Market Settlement
+
+Settlement 가격 옵션은 위의 [oracle](#oracle) 섹션에서 설명되어 있습니다.
+
+Market settle은 다음 두 가지 옵션 중 하나를 사용하여 달성할 수 있습니다:
+1. 특정 market에 대해 등록된 provider oracle 사용. Provider oracle에 가격 릴레이 권한이 부여되면 (위에서 설명), 권한이 있는 주소는 `MsgRelayProviderPrices` 메시지를 사용하여 특정 가격 피드의 가격을 릴레이할 수 있습니다.
+```go
+// MsgRelayProviderPrices는 provider oracle을 통해 가격을 설정하기 위한 SDK 메시지를 정의합니다.
+type MsgRelayProviderPrices struct {
+	Sender   string                        
+	Provider string                        
+	Symbols  []string                      
+	Prices   []cosmossdk_io_math.LegacyDec 
+}
+```
+
+2. Market의 admin (creator)이 settlement 가격을 market에 직접 제출할 수 있는 `MsgAdminUpdateBinaryOptionsMarket` 사용.
+```go
+type MsgAdminUpdateBinaryOptionsMarket struct {
+  // market이 settle될 새 가격
+  SettlementPrice *Dec 
+  // expiration timestamp
+  ExpirationTimestamp int64
+  // expiration timestamp
+  SettlementTimestamp int64
+  // Market의 상태
+  Status MarketStatus
+}
+
+// Status는 다음 옵션 중 하나일 수 있습니다
+enum MarketStatus {
+  Unspecified = 0;
+  Active = 1;
+  Paused = 2;
+  Demolished = 3;
+  Expired = 4;
+} 
+```
