@@ -1,0 +1,39 @@
+---
+title: Peggy
+---
+
+## 개요
+
+peggy 모듈은 Injective Chain이 Ethereum과의 신뢰가 필요 없는(trustless) 온체인 양방향 ERC-20 토큰 브릿지를 지원할 수 있도록 합니다. 이 시스템에서 Ethereum의 ERC-20 토큰 보유자는 자신의 ERC-20 토큰을 Injective Chain의 Cosmos 네이티브 코인으로 변환하거나 그 반대로 변환할 수 있습니다.
+
+이 탈중앙화 브릿지는 Injective Chain의 검증자(validator)들에 의해 보안이 유지되고 운영됩니다.
+
+## 목차
+
+1. [정의](/developers-native/injective/peggy/01_definitions)
+2. [워크플로우](/developers-native/injective/peggy/02_workflow)
+3. [상태](/developers-native/injective/peggy/03_state)
+4. [메시지](/developers-native/injective/peggy/04_messages)
+5. [슬래싱](/developers-native/injective/peggy/05_slashing)
+6. [End-Block](/developers-native/injective/peggy/06_end_block)
+7. [이벤트](/developers-native/injective/peggy/07_events)
+8. [파라미터](/developers-native/injective/peggy/08_params)
+
+### 구성 요소
+
+1. **Ethereum의 [Peggy](https://etherscan.io/address/0xF955C57f9EA9Dc8781965FEaE0b6A2acE2BAD6f3) 스마트 컨트랙트**
+2. **Injective Chain의 Peggy 모듈**
+3. **[Peggo](https://github.com/InjectiveLabs/peggo) (오프체인 relayer, 일명 orchestrator)**
+    - **Oracle** (Peggy 컨트랙트의 이벤트를 관찰하고 Peggy 모듈에 claim을 전송)
+    - **EthSigner** (Peggy 모듈에 Valset 및 Batch 확인 서명)
+    - **Batch Requester** (Peggy 모듈에 배치 토큰 출금 요청 전송)
+    - **Valset Relayer** (Peggy 컨트랙트에 검증자 세트 업데이트 제출)
+    - **Batch Relayer** (Peggy 컨트랙트에 토큰 출금 배치 제출)
+
+블록 서명을 위해 `injectived` 노드를 실행하는 것 외에도, Injective Chain 검증자는 Ethereum의 Peggy 스마트 컨트랙트와 Injective Chain의 Peggy 모듈 간의 데이터를 중계하기 위해 `peggo` orchestrator도 실행해야 합니다.
+
+### Peggo 기능
+
+1. **Ethereum에서 Injective Chain 검증자 세트의 최신 체크포인트 유지**
+2. **Ethereum에서 Injective Chain으로 ERC-20 토큰 전송**
+3. **Injective Chain에서 Ethereum으로 페깅된 토큰 전송**

@@ -1,0 +1,470 @@
+---
+sidebar_position: 5
+title: State Transitions
+---
+
+# State Transitions
+
+이 문서는 다음과 관련된 상태 전환 작업을 설명합니다:
+
+- Exchange 모듈 계정에 입금
+- Exchange 모듈 계정에서 출금
+- Instant spot market 런치
+- Instant perpetual market 런치
+- Instant expiry futures market 런치
+- Spot limit order 생성
+- Spot limit orders 배치 생성
+- Spot market order 생성
+- Spot order 취소
+- Spot order 배치 취소
+- Derivative limit order 생성
+- Derivative limit order 배치 생성
+- Derivative market order 생성
+- Derivative order 취소
+- Derivative orders 배치 취소
+- Subaccounts 간 이체
+- 외부 계정으로 이체
+- 포지션 청산
+- 포지션 margin 증가
+- Spot market param 업데이트 proposal
+- Exchange enable proposal
+- Spot market 런치 proposal
+- Perpetual market 런치 proposal
+- Expiry futures market 런치 proposal
+- Derivative market param 업데이트 proposal
+- Trading rewards 런치 proposal
+- Trading rewards 업데이트 proposal
+- Begin-blocker
+- End-blocker
+- Fee discount schedule proposal
+- Stake grant authorizations
+- Stake grant activation
+
+## Exchange 모듈 계정에 입금
+
+Deposit 작업은 `Sender`, `SubaccountId` 및 `Amount` 필드로 구성된 `MsgDeposit`에 의해 수행됩니다.
+
+**참고:** `SubaccountId`는 선택 사항이며 사용할 수 없는 경우 `Sender` 주소에서 동적으로 계산됩니다.
+
+**단계**
+
+- `msg.Amount`에 지정된 denom이 bank supply에 존재하는 유효한 denom인지 확인
+- 개인 계정에서 `exchange` 모듈 계정으로 코인 전송, 실패하면 revert
+- `msg.SubaccountId`에서 `subaccountID`의 hash 유형 가져오기, zero subaccount이면 `SdkAddressToSubaccountID`를 사용하여 `msg.Sender`에서 동적으로 계산
+- `subaccountID`의 deposit 금액을 `msg.Amount`만큼 증가
+- `msg.Sender`, `subaccountID` 및 `msg.Amount`로 `EventSubaccountDeposit` 이벤트 emit
+
+## Exchange 모듈 계정에서 출금
+
+Withdraw 작업은 `Sender`, `SubaccountId` 및 `Amount` 필드로 구성된 `MsgWithdraw`에 의해 수행됩니다.
+
+**참고:** `msg.SubaccountId`의 `msg.Sender` 소유권은 `msg.ValidateBasic` 함수에서 검증됩니다.
+
+**단계**
+
+- `msg.SubaccountId`에서 `subaccountID`의 hash 유형 가져오기
+- `msg.Amount`에 지정된 denom이 bank supply에 존재하는 유효한 denom인지 확인
+- `subaccountID`에서 `msg.Amount`만큼 출금 금액 감소, 실패하면 revert
+- `exchange` 모듈에서 `msg.Sender`로 코인 전송
+- `subaccountID`, `msg.Sender` 및 `msg.Amount`로 `EventSubaccountWithdraw` 이벤트 emit
+
+## Instant spot market 런치
+
+Instant spot market 런치 작업은 `Sender`, `Ticker`, `BaseDenom`, `QuoteDenom`, `MinPriceTickSize` 및 `MinQuantityTickSize` 필드로 구성된 `MsgInstantSpotMarketLaunch`에 의해 수행됩니다.
+
+**단계**
+
+- `msg.BaseDenom`과 `msg.QuoteDenom`에서 `marketID` 계산
+- `marketID`로 동일한 market 런치 proposal이 존재하는지 확인하고 이미 존재하면 revert
+- `msg.Ticker`, `msg.BaseDenom`, `msg.QuoteDenom`, `msg.MinPriceTickSize`, `msg.MinQuantityTickSize`로 spot market 런치, 실패하면 revert
+- `msg.Sender`에서 `exchange` 모듈 계정으로 instant listing fee(params.SpotMarketInstantListingFee) 전송
+- 마지막으로 instant listing fee를 community spend pool로 전송
+
+## Instant perpetual market 런치
+
+Instant perpetual market 런치 작업은 `Sender`, `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleScaleFactor`, `OracleType`, `MakerFeeRate`, `TakerFeeRate`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MinPriceTickSize` 및 `MinQuantityTickSize` 필드로 구성된 `MsgInstantPerpetualMarketLaunch`에 의해 수행됩니다.
+
+**단계**
+
+- `msg.Ticker`, `msg.QuoteDenom`, `msg.OracleBase`, `msg.OracleQuote` 및 `msg.OracleType`에서 `marketID` 계산.
+- `marketID`로 동일한 market 런치 proposal이 존재하는지 확인하고 이미 존재하면 revert
+- `msg.Sender`에서 `exchange` 모듈 계정으로 instant listing fee(params.DerivativeMarketInstantListingFee) 전송
+- `msg` 객체의 필수 params로 perpetual market 런치, 실패하면 revert
+- 마지막으로 instant listing fee를 community spend pool로 전송
+
+## Instant expiry futures market 런치
+
+Instant expiry futures market 런치 작업은 `Sender`, `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleScaleFactor`, `OracleType`, `Expiry`, `MakerFeeRate`, `TakerFeeRate`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MinPriceTickSize` 및 `MinQuantityTickSize` 필드로 구성된 `MsgInstantExpiryFuturesMarketLaunch`에 의해 수행됩니다.
+
+**단계**
+
+- `msg.Ticker`, `msg.QuoteDenom`, `msg.OracleBase`, `msg.OracleQuote`, `msg.OracleType` 및 `msg.Expiry`에서 `marketID` 계산.
+- `marketID`로 동일한 market 런치 proposal이 존재하는지 확인하고 이미 존재하면 revert
+- `msg.Sender`에서 `exchange` 모듈 계정으로 instant listing fee(params.DerivativeMarketInstantListingFee) 전송
+- `msg` 객체의 필수 params로 expiry futures market 런치, 실패하면 revert
+- market 정보로 `EventExpiryFuturesMarketUpdate` 이벤트 트리거
+- 마지막으로 instant listing fee를 community spend pool로 전송
+
+## Spot limit order 생성
+
+Spot limit order 생성은 `Sender`와 `Order`로 구성된 `MsgCreateSpotLimitOrder`에 의해 수행됩니다.
+
+**단계**
+
+- Spot exchange가 spot market에서 order를 생성할 수 있도록 활성화되어 있는지 확인, 그렇지 않으면 revert
+- Order의 price와 quantity tick sizes가 market의 min quantity와 price tick size에 맞는지 확인
+- Subaccount의 `TradeNonce` 증가
+- Spot market id가 활성 spot market을 참조하지 않으면 거부
+- `TradeNonce`로 고유한 order hash 계산
+- Subaccount의 available deposits가 거래에 필요한 최소 자금을 가지고 있지 않으면 거부
+- Order 자금 조달에 필요한 자금 금액만큼 available balance 감소
+- Transient limit order store와 transient market indicator store에 order 저장
+
+**참고:** Transient store의 order는 endblocker에서 실행되거나 그렇지 않으면 long-live store에 저장됩니다.
+
+## Spot limit orders 배치 생성
+
+Spot limit orders 배치 생성은 `Sender`와 `Orders`로 구성된 `MsgBatchCreateSpotLimitOrders`에 의해 수행됩니다.
+
+**단계**
+
+- `msg.Orders`를 반복하고 `MsgCreateSpotLimitOrder`와 같이 spot limit order 생성
+
+## Spot market order 생성
+
+Spot market order 생성은 `Sender`와 `Order`로 구성된 `MsgCreateSpotMarketOrder`에 의해 수행됩니다.
+
+**단계**
+
+- Spot exchange가 spot market에서 order를 생성할 수 있도록 활성화되어 있는지 확인, 그렇지 않으면 revert
+- Order의 price와 quantity tick sizes가 market의 min quantity와 price tick size에 맞는지 확인
+- Subaccount의 `TradeNonce` 증가
+- Spot market id가 활성 spot market을 참조하지 않으면 거부
+- `TradeNonce`로 고유한 order hash 계산
+- Market order 자금 조달을 위한 available balance 확인
+- Market order의 worst acceptable price 계산
+- Balance hold만큼 deposit의 AvailableBalance 감소
+- Transient spot market order store와 transient market indicator store에 order 저장
+
+## Spot order 취소
+
+Spot order 취소는 `Sender`와 `MarketId`, `SubaccountId` 및 `OrderHash`로 구성된 `MsgCancelSpotOrder`에 의해 수행됩니다.
+
+**단계**
+
+- Spot exchange가 작업을 실행할 수 있도록 활성화되어 있는지 확인, 그렇지 않으면 revert
+- Spot market id가 active, suspended 또는 demolished spot market을 참조하지 않으면 거부
+- `marketID`, `subaccountID` 및 `orderHash`로 spot limit order가 존재하는지 확인
+- Margin hold를 available balance에 다시 추가
+- Available balance margin hold 증가
+- ordersStore와 ordersIndexStore에서 order state 삭제
+- marketID와 order 정보로 `EventCancelSpotOrder` 이벤트 emit
+
+## Spot orders 배치 취소
+
+Spot orders 배치 취소는 `Sender`와 `Data`로 구성된 `MsgBatchCancelSpotOrders`에 의해 수행됩니다.
+
+**단계**
+
+- `msg.Data`를 반복하고 `MsgCancelSpotOrder`와 같이 spot order 취소
+
+## Derivative limit order 생성
+
+Derivative limit order 생성은 `Sender`와 `Order`로 구성된 `MsgCreateDerivativeLimitOrder`에 의해 수행됩니다.
+
+**단계**
+
+- Derivative exchange가 derivative market에서 order를 생성할 수 있도록 활성화되어 있는지 확인, 그렇지 않으면 revert
+- `subaccountID`가 market에 이미 market order를 배치했는지 거부 (**참고:** market order와 limit order가 동시에 존재할 수 없나요?)
+- `marketID`로 derivative market과 markPrice 가져오기
+- 지정된 `marketID`와 `subaccountID`에 대한 orderbook metadata (`SubaccountOrderbookMetadata`) 가져오기
+- Limit order가 유효한지 확인:
+  - Market config (market id와 tick sizes)
+  - Subaccount trade nonce
+  - Subaccount max order count
+  - Reduce-only order인 경우:
+    - 유효한 quantity와 반대 방향의 Position 존재
+    - Order가 다른 reduce-only orders를 stale하게 만들면 거부
+  - Limit order인 경우:
+    - Margin hold를 위한 충분한 subaccount deposits
+    - Order가 기존 position의 반대 방향이고 다른 reduce-only orders를 stale하게 만들면, stale reduce-only orders 취소
+- Transient limit order store와 transient market indicator store에 order 저장
+- Subaccount의 orderbook metadata 업데이트
+
+## Derivative limit orders 배치 생성
+
+Derivative limit orders 배치 생성은 `Sender`와 `Orders`로 구성된 `MsgBatchCreateDerivativeLimitOrders`에 의해 수행됩니다.
+
+**단계**
+
+- `msg.Orders`를 반복하고 `MsgCreateDerivativeLimitOrder`와 같이 derivative limit order 생성
+
+## Derivative market order 생성
+
+Derivative market order 생성은 `Sender`와 `Order`로 구성된 `MsgCreateDerivativeMarketOrder`에 의해 수행됩니다.
+
+**단계**
+
+- Derivative exchange가 derivative market에서 order를 생성할 수 있도록 활성화되어 있는지 확인, 그렇지 않으면 revert
+- 새 order를 생성하려는 `SubaccountID`가 limit derivative order 또는 market order를 가지고 있는지 확인하고 거부. **참고:** Perpetual market은 두 개의 market orders 또는 limit / market orders를 동시에 배치할 수 없나요?
+- Order의 price와 quantity tick sizes가 market의 min quantity와 price tick size에 맞는지 확인
+- Subaccount의 `TradeNonce` 증가
+- Derivative market id가 활성 derivative market을 참조하지 않으면 거부
+- `TradeNonce`로 고유한 order hash 계산
+- Market order worst price가 가장 좋은 반대 resting orderbook price에 도달하는지 확인
+- Order/Position Margin 금액 확인
+- 1. Reduce only order인 경우
+- A. Market의 `subaccountID`에 대한 position이 nil이 아닌지 확인
+- B. Order가 position을 청산할 수 있는지 확인
+- C. position.quantity - AggregateReduceOnlyQuantity - order.quantity < 0이면 거부
+- D. 포지션 매도를 위한 margin hold가 없으므로 MarginHold를 0으로 설정
+- 2. Reduce only order가 아닌 경우
+- A. Market order 자금 조달을 위한 available balance 확인
+- B. Subaccount의 available deposits가 거래에 필요한 최소 자금을 가지고 있지 않으면 거부
+- C. Balance hold만큼 deposit의 AvailableBalance 감소
+- 반대 position의 경우, AggregateVanillaQuantity > position.quantity - AggregateReduceOnlyQuantity - order.FillableQuantity이면, 새 reduce-only order가 기존 reduce-only orders를 무효화하거나 자체적으로 무효가 될 수 있으며, 이에 대한 작업 수행.
+- Transient derivative market order store와 transient market indicator store에 order 저장
+
+## Derivative order 취소
+
+Derivative order 취소는 `Sender`, `MarketId`, `SubaccountId` 및 `OrderHash`로 구성된 `MsgCancelDerivativeOrder`에 의해 수행됩니다.
+
+**단계**
+
+- Derivative exchange가 작업을 실행할 수 있도록 활성화되어 있는지 확인, 그렇지 않으면 revert
+- Derivative market id가 활성 derivative market을 참조하지 않으면 거부
+- `marketID`, `subaccountID` 및 `orderHash`로 resting derivative limit order가 존재하는지 확인
+- Margin hold를 available balance에 다시 추가
+- 유형이 취소되지 않아야 하는 limit orders 취소 건너뛰기
+- ordersStore, ordersIndexStore 및 subaccountOrderStore에서 order state 삭제
+- Subaccount의 orderbook metadata 업데이트
+- marketID와 order 정보로 `EventCancelDerivativeOrder` 이벤트 emit
+
+## Derivative orders 배치 취소
+
+Derivative orders 배치 취소는 `Sender`와 `Data`로 구성된 `MsgBatchCancelDerivativeOrders`에 의해 수행됩니다.
+
+**단계**
+
+- `msg.Data`를 반복하고 `MsgCancelDerivativeOrder`와 같이 spot order 취소
+
+## Batch order 업데이트
+
+Batch order 업데이트는 `Sender`와 `Orders`로 구성된 `MsgBatchUpdateOrders`에 의해 수행됩니다.
+
+**단계**
+
+- 지정된 subaccount id에 대해 `SpotMarketIdsToCancelAll`과 `DerivativeMarketIdsToCancelAll`에 지정된 모든 market id의 모든 orders 취소
+- `msg.SpotOrdersToCancel`을 반복하고 `MsgCancelSpotOrder`와 같이 spot limit order 취소. 취소가 실패하면 다음 order로 계속. 취소 성공은 `MsgBatchUpdateOrdersResponse`의 `SpotCancelSuccess`에 반영됩니다.
+- `msg.DerivativeOrdersToCancel`을 반복하고 `MsgCancelDerivativeOrder`와 같이 derivative limit order 취소. 취소가 실패하면 다음 order로 계속. 취소 성공은 `MsgBatchUpdateOrdersResponse`의 `DerivativeCancelSuccess`에 반영됩니다.
+- `msg.SpotOrdersToCreate`를 반복하고 `MsgCreateSpotOrder`와 같이 spot limit order 생성. 생성이 실패하면 다음 order로 계속. 성공적인 생성은 `MsgBatchUpdateOrdersResponse`의 `SpotOrderHashes`에 반영됩니다.
+- `msg.DerivativeOrdersToCreate`를 반복하고 `MsgCreateDerivativeOrder`와 같이 derivative limit order 생성. 생성이 실패하면 다음 order로 계속. 성공적인 생성은 `MsgBatchUpdateOrdersResponse`의 `DerivativeOrderHashes`에 반영됩니다.
+
+## Subaccounts 간 이체
+
+Subaccounts 간 이체는 `Sender`, `SourceSubaccountId`, `DestinationSubaccountId` 및 `Amount`로 구성된 `MsgSubaccountTransfer`에 의해 실행됩니다.
+
+**단계**
+
+- `msg.SourceSubaccountId`에서 `msg.Amount`만큼 deposit 출금, 실패하면 트랜잭션 revert
+- `msg.DestinationSubaccountId`의 deposit을 `msg.Amount`만큼 증가
+- `SrcSubaccountId`, `DstSubaccountId` 및 `msg.Amount`로 `EventSubaccountBalanceTransfer` 이벤트 emit
+
+**참고:** Subaccount 이체에서는 bank 모듈에서 실제 코인을 이체할 필요 없이 기록만 변경하면 됩니다.
+
+## 외부 계정으로 이체
+
+외부 계정으로 이체는 `Sender`, `SourceSubaccountId`, `DestinationSubaccountId` 및 `Amount`로 구성된 `MsgExternalTransfer`에 의해 실행됩니다.
+
+**단계**
+
+- `msg.SourceSubaccountId`에서 `msg.Amount`만큼 deposit 출금, 실패하면 트랜잭션 revert
+- `msg.DestinationSubaccountId`의 deposit을 `msg.Amount`만큼 증가
+- `SrcSubaccountId`, `DstSubaccountId` 및 `msg.Amount`로 `EventSubaccountBalanceTransfer` 이벤트 emit
+
+**참고:** Subaccount 이체에서는 bank 모듈에서 실제 코인을 이체할 필요 없이 기록만 변경하면 됩니다.
+
+1. Subaccount 이체와 external 이체의 이벤트가 달라야 합니다.
+2. Subaccount 이체와 external 이체에 차이가 없는데도 다른 메시지를 유지해야 하나요?
+
+## 포지션 청산
+
+포지션 청산은 `Sender`, `SubaccountId`, `MarketId` 및 `Order`로 구성된 `MsgLiquidatePosition`에 의해 실행됩니다.
+
+**단계**
+
+- Derivative exchange가 derivative market에서 포지션을 청산할 수 있도록 활성화되어 있는지 확인, 그렇지 않으면 revert
+- Derivative market id가 활성 derivative market을 참조하지 않으면 거부
+- `marketID`로 derivative market과 markPrice 가져오기
+- `marketID`와 `subaccountID`로 position 가져오기
+- Position 정보에서 `liquidationPrice`와 `bankruptcyPrice` 계산
+- Vaporize 또는 liquidate 결정, 둘 다 아니면 revert
+- 주어진 market에서 position holder가 생성한 모든 reduce-only limit orders 취소
+- Funding 적용 및 position 업데이트
+- 주어진 market에서 position holder가 생성한 모든 market orders 취소
+- Subaccount nonce 확인 및 증가, order hash 계산
+- `liquidationOrder` hash 계산
+- Storage에 liquidation order 설정
+- Position과 liquidation order를 매칭하여 청산 실행
+- Payout이 양수인지 음수인지에 따라 다르게 처리 (insurance fund가 계산에 관여)
+  - 양수 Payout:
+    1. Payout의 절반을 liquidator에게 전송 (liquidator 봇 실행 인센티브)
+    2. 나머지 절반을 insurance fund에 전송 (insurance funds 참여 인센티브)
+  - 음수 Payout - 자금 회수를 위한 네 단계 에스컬레이션:
+    1. 트레이더의 available balance에서
+    2. Vanilla limit orders 취소로 트레이더의 locked balance에서
+    3. Insurance fund에서
+    4. 충분한 자금이 없음. Market을 일시 중지하고 다음 블록에서 settle될 markets를 storage에 추가, `BeginBlocker` specs 참조.
+- Market이 perpetual market이면 liquidation price와 quantity에 따라 VWAP 데이터 업그레이드
+- Liquidation order에 남은 것이 있으면 order 취소로 잔여분 반환
+
+## 포지션 margin 증가
+
+포지션 margin 증가는 `Sender`, `SourceSubaccountId`, `DestinationSubaccountId`, `MarketId` 및 `Amount`로 구성된 `MsgIncreasePositionMargin`에 의해 실행됩니다.
+
+**단계**
+
+- Derivative exchange가 derivative market에서 포지션 margin을 증가시킬 수 있도록 활성화되어 있는지 확인, 그렇지 않으면 revert
+- Derivative market id가 활성 derivative market을 참조하지 않으면 거부
+- `sourceSubaccountID`의 deposit 가져오기
+- `deposit.AvailableBalance`가 `msg.Amount`보다 낮으면 revert
+- `marketID`와 `destinationSubaccountID`로 position 가져오기, 존재하지 않으면 revert
+- `sourceSubaccountID`의 deposit 금액을 `msg.Amount`만큼 감소
+- Position margin을 `msg.Amount`만큼 증가시키고 store에 position 업데이트
+
+## Exchange enable proposal
+
+Market 유형의 enable은 `Title`, `Description` 및 `ExchangeType`으로 구성된 `ExchangeEnableProposal`에 의해 수행됩니다.
+
+**단계**
+
+- Proposal에 대한 `ValidateBasic`
+- `p.ExchangeType`이 spot market이면 spot exchange 활성화
+- `p.ExchangeType`이 derivative market이면 derivative market 활성화
+
+## Spot market 런치 proposal
+
+Spot market 런치는 `Title`, `Description`, `Ticker`, `BaseDenom`, `QuoteDenom`, `MinPriceTickSize` 및 `MinQuantityTickSize` 필드로 구성된 `SpotMarketLaunchProposal`에 의해 처리됩니다.
+
+**단계**
+
+- Proposal에 대한 `ValidateBasic`
+- `BaseDenom`과 `QuoteDenom`이 유효한지 검증
+- `msg.BaseDenom`과 `msg.QuoteDenom`으로 동일한 market이 존재하지 않는지 검증
+- Exchange 모듈 params에 따라 RelayerFeeShareRate 계산. **참고:** INJ 통화의 경우 relayer share rate는 100%로 설정됩니다
+- 계산된 `ticker`, `baseDenom`, `quoteDenom`, `exchangeParams.DefaultSpotMakerFeeRate`, `exchangeParams.DefaultSpotTakerFeeRate`, `relayerFeeShareRate`, `minPriceTickSize`, `minQuantityTickSize`, `marketID`, 및 `MarketStatus_Active`로 spot market 저장.
+
+## Perpetual market 런치 proposal
+
+Perpetual market 런치는 `Title`, `Description`, `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleScaleFactor`, `OracleType`, `MakerFeeRate`, `TakerFeeRate`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MinPriceTickSize` 및 `MinQuantityTickSize` 필드로 구성된 `PerpetualMarketLaunchProposal`에 의해 처리됩니다.
+
+**단계**
+
+- Proposal에 대한 `ValidateBasic`
+- `quoteDenom` 검증.
+- `ticker`, `quoteDenom`, `oracleBase`, `oracleQuote`, `oracleType`에서 `marketID` 계산
+- `marketID`에 대한 활성 또는 비활성 perpetual market이 존재하지 않는지 검증
+- `oracleBase`, `oracleQuote`, `oracleScaleFactor`, `oracleType`으로 price oracle 확인을 위해 derivative market price 가져오기 시도
+- `marketID`에 대한 insurance fund 존재 검증
+- `exchange` 모듈 params에서 `defaultFundingInterval`, `nextFundingTimestamp`, `relayerFeeShareRate` 계산
+- `market`, `marketInfo` 및 `funding` 객체로 market 정보를 storage에 설정하기 위해 `SetDerivativeMarketWithInfo` 실행
+
+## Expiry futures market 런치 proposal
+
+Expiry futures market 런치는 `Title`, `Description`, `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleScaleFactor`, `OracleType`, `Expiry`, `MakerFeeRate`, `TakerFeeRate`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MinPriceTickSize` 및 `MinQuantityTickSize` 필드로 구성된 `ExpiryFuturesMarketLaunchProposal`에 의해 처리됩니다.
+
+**단계**
+
+- Proposal에 대한 `ValidateBasic`
+- `quoteDenom` 검증
+- `p.Ticker`, `p.QuoteDenom`, `p.OracleBase`, `p.OracleQuote`, `p.OracleType` 및 `p.Expiry`에서 `marketID` 계산
+- `marketID`에 대한 활성 또는 비활성 expiry futures market이 존재하지 않는지 검증
+- Expiry 시간이 이미 `ctx.BlockTime()`을 지났으면 revert
+- `oracleBase`, `oracleQuote`, `oracleScaleFactor`, `oracleType`으로 price oracle 확인을 위해 derivative market price 가져오기 시도
+- `marketID`에 대한 insurance fund 존재 검증
+- Exchange 모듈 params에 따라 RelayerFeeShareRate 계산. **참고:** INJ 통화의 경우 relayer share rate는 100%로 설정됩니다
+- `market`, `marketInfo` 객체로 market 정보를 storage에 설정하기 위해 `SetDerivativeMarketWithInfo` 실행 **참고:** TwapStartTimestamp는 `expiry - thirtyMinutesInSeconds`로 설정됩니다.
+
+## Spot market param 업데이트 proposal
+
+Spot market param 업데이트는 `Title`, `Description`, `MarketId`, `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` 및 `Status`로 구성된 `SpotMarketParamUpdateProposal`에 의해 처리됩니다.
+
+**단계**
+
+- Proposal에 대한 `ValidateBasic`
+- `p.MarketId`로 spot market 가져오기, 존재하지 않으면 revert
+- `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` 및 `Status`에 대한 params 재설정, 비어있지 않으면, 비어있으면 그대로 유지.
+- `MakerFeeRate`가 `TakerFeeRate`보다 큰지 검증.
+
+## Derivative market param 업데이트 proposal
+
+Derivative market param 업데이트는 `Title`, `Description`, `MarketId`, `InitialMarginRatio`, `MaintenanceMarginRatio`, `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` 및 `Status`로 구성된 `DerivativeMarketParamUpdateProposal`에 의해 처리됩니다.
+
+**단계**
+
+- Proposal에 대한 `ValidateBasic`
+- `p.MarketId`로 Derivative market이 존재하는지 검증, 존재하지 않으면 revert
+- `InitialMarginRatio`, `MaintenanceMarginRatio`, `MakerFeeRate`, `TakerFeeRate`, `RelayerFeeShareRate`, `MinPriceTickSize`, `MinQuantityTickSize` 및 `Status`에 대한 params 재설정, 비어있지 않으면, 비어있으면 그대로 유지.
+- `MakerFeeRate`가 `TakerFeeRate`보다 큰지 검증.
+- `InitialMarginRatio`가 `MaintenanceMarginRatio`보다 큰지 검증.
+- Derivative market param 업데이트 예약 및 Endblocker에서 업데이트 완료 - **참고:** 이것은 derivative market param 업데이트를 위한 orders 업데이트 때문입니다 - 여기서 아무것도 panic하지 않도록 해야 합니다.
+
+## Trading Rewards Campaign 런치 Proposal
+
+**단계**
+
+- Proposal에 대한 `ValidateBasic`
+- 기존 캠페인이 존재하지 않아야 합니다.
+- 캠페인 시작 timestamps는 미래여야 합니다.
+- 캠페인 quote denoms가 존재해야 합니다.
+- 모든 시작 timestamps는 duration과 일치해야 합니다.
+- 캠페인 데이터 설정 (Reward Pools, Info, Market Qualifications 및 Market Point Multipliers)
+- `EventTradingRewardCampaignUpdate` emit
+
+## Trading Rewards Campaign 업데이트 Proposal
+
+**단계**
+
+- Proposal에 대한 `ValidateBasic`
+- `CampaignRewardPoolsUpdates` 내의 모든 `StartTimestamp`는 기존 캠페인과 같아야 합니다.
+- `CampaignDurationSeconds`는 수정할 수 없지만 현재 캠페인과 일치해야 합니다.
+- `CampaignRewardPoolsUpdates`는 현재 캠페인을 수정할 수 없으며 reward pool을 삭제하기 위해 nil 값을 포함할 수 있습니다.
+- `CampaignRewardPoolsAdditions`의 캠페인 시작 timestamps는 미래여야 합니다.
+- 모든 캠페인 quote denoms가 존재해야 합니다.
+- 현재 캠페인 데이터 삭제 (Info, Market Qualifications 및 Market Point Multipliers)
+- 캠페인 데이터 설정 (Info, Market Qualifications 및 Market Point Multipliers)
+- Reward Pool Updates 설정
+- Reward Pool Additions 설정
+- `EventTradingRewardCampaignUpdate` emit
+
+## Fee Discount Schedule Proposal
+
+**단계**
+
+- Proposal에 대한 `ValidateBasic`
+- 현재 Fee Discount Schedule이 존재하면 Market Qualifications와 함께 삭제
+- 정의된 quote denoms가 존재해야 합니다.
+- Fee cycle 재시작이 필요한 경우 (bucket count, bucket duration 또는 quote denoms가 변경됨), 모든 account fee buckets를 삭제하고 cycle 재시작.
+- 첫 번째 fee paid bucket timestamp를 현재 블록 시간으로 설정
+- 새 Fee Discount Schedule 설정, Market Qualifications와 함께 삭제
+- 새 Market Qualifications 설정
+
+## Stake Grant Authorizations
+
+**단계**
+
+- Granter에서 grantee에게 기존 grant가 이미 존재하는지 확인
+- 기존 grant 금액을 빼고 새 grant 금액을 더하여 grantee에게 부여된 총 stake 금액 계산 (본질적으로 기존 grant 금액을 새 grant 금액으로 덮어씁니다)
+- 부여된 총 금액이 granter가 staked한 총 금액보다 작거나 같은지 확인하여 유효한 grant authorizations 보장
+- Grantee에 대한 grant 금액 업데이트
+- 현재 active grant가 같은 granter에서 온 것이거나 현재 active grant가 없으면 grant를 active로 설정
+- Granter와 grants로 `EventGrantAuthorizations` emit
+
+## Stake Grant Activation
+
+**단계**
+
+- Granter에서 grantee로의 grant가 존재하는지 확인
+- Granter가 총 staked 금액보다 많이 granting하지 않는지 확인
+- Grant 금액이 0이면 grant 삭제, 그렇지 않으면 새 grant 금액을 store에 기록
+- Grantee, granter 및 금액으로 `EventGrantActivation` emit

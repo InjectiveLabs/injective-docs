@@ -1,0 +1,202 @@
+---
+sidebar_position: 4
+title: 권한 관리형 자산 출시 방법
+---
+
+권한 관리형 자산은 [Injective APIs/SDKs](https://api.injective.exchange/#permissions) 또는 Injective CLI인 `injectived`를 사용하여 출시할 수 있습니다. Injective CLI 사용에 대한 자세한 정보는 https://docs.injective.network/toolkits/injectived 를 참조하세요.
+
+```bash
+injectived tx permissions [command]
+```
+
+- CLI를 통해 사용할 수 있는 네 가지 트랜잭션 명령이 있습니다:
+    - `create-namespace`
+        - `TokenFactory` denom에 대한 권한 관리형 namespace를 json 파일에서 생성하는 데 사용됩니다
+        - Namespace를 생성할 때, 주소는 동일한 `TokenFactory` denom의 admin이어야 합니다. 그렇지 않으면 namespace를 출시할 수 없습니다
+    - `update-namespace`
+        - 다음을 포함한 namespace 매개변수를 업데이트하는 데 사용됩니다:
+            - Contract hook
+            - Role permissions
+            - Role managers
+            - Policy statuses
+            - Policy managers
+        - Namespace 업데이트는 증분 방식이므로, JSON에 명시적으로 변경 사항이 지정되지 않는 한 기존 state는 변경되지 않습니다
+    - `update-namespace-roles`
+        - 주소에 역할을 할당하고 주소에서 역할을 취소하는 데 사용됩니다
+        - Namespace 업데이트와 마찬가지로, 역할 업데이트도 증분 방식입니다
+    - `claim-voucher`
+        - 주로 사용자가 권한 관리형 자산을 수신할 권한이 없지만 Injective 모듈에서 자금을 받은 경우에 사용됩니다. 자금은 사용자가 자산을 수신할 올바른 권한을 받을 때까지 Injective 모듈 주소에 보관됩니다
+
+## `create-namespace`
+
+```bash
+injectived tx permissions create-namespace <namespace.json> [flags]
+```
+
+- json 파일은 다음 형식을 따라야 합니다(제출 전에 모든 주석을 제거하세요):
+
+```json
+{ // Remove all comments before submitting! 
+  "denom": "factory/inj1address/myTokenDenom",
+  "contract_hook": "ContractHookAddress",
+  "role_permissions": [ // CAUTION: makes sure to set role permissions for all namespace management roles!
+    {
+      "name": "EVERYONE",
+      "role_id": 0,
+      "permissions": 10 // SEND (8) + RECEIVE (2); excludes MINT, SUPER_BURN, and management actions
+    },
+    {
+      "name": "admin",
+      "role_id": 1,
+      "permissions": 2013265920 // MODIFY_ROLE_PERMISSIONS, MODIFY_ROLE_MANAGERS, etc. (all namespace management actions)
+    },
+    {
+      "name": "user",
+      "role_id": 2,
+      "permissions": 15 // MINT (1), RECEIVE (2), BURN (4), SEND (8)
+    }
+  ],
+  "actor_roles": [
+    {
+      "actor": "inj1specificactoraddress",
+      "roles": ["admin"]
+    },
+    {
+      "actor": "inj1anotheractoraddress",
+      "roles": ["user"]
+    }
+  ],
+  "role_managers": [ // CAUTION: Make sure to set role managers for all namespace management roles!
+    {
+      "manager": "inj1manageraddress",
+      "roles": ["admin"]
+    }
+  ],
+  "policy_statuses": [ 
+    {
+      "action": 1, // Action_MINT
+      "is_disabled": false,
+      "is_sealed": false
+    },
+    {
+      "action": 4, // Action_BURN
+      "is_disabled": false,
+      "is_sealed": false
+    }
+  ],
+  "policy_manager_capabilities": [
+    {
+      "manager": "inj1policymanageraddress",
+      "action": 268435456, // MODIFY_CONTRACT_HOOK
+      "can_disable": true,
+      "can_seal": false
+    }
+  ]
+}
+
+```
+
+## `update-namespace`
+
+```json
+injectived tx permissions update-namespace <namespace-update.json> [flags]
+```
+
+- Namespace 업데이트는 증분 방식이므로, JSON에 명시적으로 변경 사항이 지정되지 않는 한 기존 state는 변경되지 않습니다
+
+```json
+{ // Remove all comments before submitting! 
+  "denom": "factory/inj1address/myTokenDenom",
+  "contract_hook": {
+    "new_value": "newContractHookAddress"
+  },
+  "role_permissions": [
+    {
+      "name": "user",
+      "role_id": 2,
+      "permissions": 10 // RECEIVE (2) + SEND (8)
+    },
+    {
+      "name": "EVERYONE",
+      "role_id": 0,
+      "permissions": 0 // Revoke all permissions
+    }
+  ],
+  "role_managers": [
+    {
+      "manager": "inj1manageraddress",
+      "roles": ["admin", "user"]
+    }
+  ],
+  "policy_statuses": [
+    {
+      "action": 1, // MINT
+      "is_disabled": true,
+      "is_sealed": false
+    },
+    {
+      "action": 4, // BURN
+      "is_disabled": false,
+      "is_sealed": true
+    }
+  ],
+  "policy_manager_capabilities": [
+    {
+      "manager": "inj1policymanageraddress",
+      "action": 536870912, // MODIFY_ROLE_PERMISSIONS
+      "can_disable": true,
+      "can_seal": false
+    }
+  ]
+}
+
+```
+
+## `update-namespace-roles`
+
+```json
+ injectived tx permissions update-namespace-roles <roles.json> [flags]
+```
+
+```json
+{
+  "denom": "factory/inj1address/myTokenDenom",
+  "role_actors_to_add": [
+    {
+      "role": "admin",
+      "actors": [
+        "inj1actoraddress1",
+        "inj1actoraddress2"
+      ]
+    },
+    {
+      "role": "user",
+      "actors": [
+        "inj1actoraddress3"
+      ]
+    }
+  ],
+  "role_actors_to_revoke": [
+    {
+      "role": "user",
+      "actors": [
+        "inj1actoraddress4"
+      ]
+    },
+    {
+      "role": "admin",
+      "actors": [
+        "inj1actoraddress5"
+      ]
+    }
+  ]
+}
+```
+
+## `claim-voucher`
+
+```bash
+injectived tx permissions claim-voucher <denom>
+```
+
+- 필요한 매개변수가 denom뿐이므로 이 명령에는 JSON이 필요하지 않습니다

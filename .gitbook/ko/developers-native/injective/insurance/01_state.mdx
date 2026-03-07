@@ -1,0 +1,90 @@
+---
+sidebar_position: 1
+title: State
+---
+
+# State
+
+## Params
+
+`Params`는 시스템 매개변수를 저장하고 insurance 모듈의 전체적인 기능을 정의하는 모듈 전체 구성 구조입니다.
+
+- Params: `Paramsspace("insurance") -> legacy_amino(params)`
+
+```go
+
+type Params struct {
+	// default_redemption_notice_period_duration은 underwriter가 redemption 요청을 보낸 후
+	// 토큰을 청구하기 전에 경과해야 하는 기본 최소 통지 기간을 정의합니다
+	DefaultRedemptionNoticePeriodDuration time.Duration 
+}
+```
+
+## Insurance Types
+
+`InsuranceFund`는 시장별 `Insurance Funds`의 모든 정보를 정의합니다.
+
+```go
+
+type InsuranceFund struct {
+	// 해당 보험 펀드의 예치 denomination
+	DepositDenom string 
+	// 해당 보험 펀드의 insurance fund pool token denomination
+	InsurancePoolTokenDenom string 
+	// redemption_notice_period_duration은 underwriter가 redemption 요청을 보낸 후
+	// 토큰을 청구하기 전에 경과해야 하는 최소 통지 기간을 정의합니다
+	RedemptionNoticePeriodDuration time.Duration 
+	// 펀드 잔액
+	Balance math.Int 
+	// 발행된 총 share token
+	TotalShare math.Int 
+	// 파생상품 시장의 marketID
+	MarketId string 
+	// 파생상품 시장의 ticker
+	MarketTicker string 
+	// 파생상품 시장의 Oracle base currency
+	OracleBase string 
+	// 파생상품 시장의 Oracle quote currency
+	OracleQuote string 
+	// 파생상품 시장의 Oracle type
+	OracleType types.OracleType 
+    // 파생상품 시장의 만료 시간. perpetual 시장의 경우 -1이어야 합니다.
+	Expiry int64
+}
+```
+
+`RedemptionSchedule`은 사용자의 redemption 일정을 정의합니다 - redemption은 즉시 실행되지 않으며 시장별로 지정된 `redemption_notice_period_duration`이 있습니다.
+
+```go
+type RedemptionSchedule struct {
+	// redemption schedule의 id
+	Id uint64 
+	// redemption schedule의 marketId
+	MarketId string
+	// redeemer의 주소
+	Redeemer string
+	// redemption을 청구할 수 있는 시간
+	ClaimableRedemptionTime time.Time 
+  // redeem할 insurance_pool_token 수량
+	RedemptionAmount sdk.Coin
+}
+```
+
+추가로, 보험 펀드 share token denom과 다양한 사용자의 redemption schedule을 관리하기 위해 `next_share_denom_id`와 `next_redemption_schedule_id`를 도입합니다.
+
+```go
+// GenesisState는 insurance 모듈의 genesis state를 정의합니다.
+type GenesisState struct {
+	// params는 insurance 관련 모든 매개변수를 정의합니다.
+	Params                   Params               
+	InsuranceFunds           []InsuranceFund      
+	RedemptionSchedule       []RedemptionSchedule 
+	NextShareDenomId         uint64               
+	NextRedemptionScheduleId uint64               
+}
+```
+
+## Pending Redemptions
+
+Pending Redemption 객체는 redemption 요청에 대한 모든 정보를 저장하고 기간이 경과하면 자동으로 인출하기 위해 유지됩니다.
+

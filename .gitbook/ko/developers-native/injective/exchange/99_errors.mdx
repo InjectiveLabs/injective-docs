@@ -1,0 +1,114 @@
+---
+title: Error Codes
+---
+
+이 문서는 모듈에서 사용되는 error codes를 나열합니다.
+
+
+| Module | Error Code | 설명 |
+|--------|------------|-------------|
+| exchange |  1 | order 검증 실패 |
+| exchange |  2 | spot market을 찾을 수 없음 |
+| exchange |  3 | spot market이 존재함 |
+| exchange |  4 | struct 필드 오류 |
+| exchange |  5 | market 검증 실패 |
+| exchange |  6 | subaccount의 deposits가 불충분함 |
+| exchange |  7 | 인식할 수 없는 order 유형 |
+| exchange |  8 | order에 대한 position quantity가 불충분함 |
+| exchange |  9 | order hash가 유효하지 않음 |
+| exchange |  10 | subaccount id가 유효하지 않음 |
+| exchange |  11 | 유효하지 않은 ticker |
+| exchange |  12 | 유효하지 않은 base denom |
+| exchange |  13 | 유효하지 않은 quote denom |
+| exchange |  14 | 유효하지 않은 oracle |
+| exchange |  15 | 유효하지 않은 expiry |
+| exchange |  16 | 유효하지 않은 price |
+| exchange |  17 | 유효하지 않은 quantity |
+| exchange |  18 | 지원되지 않는 oracle 유형 |
+| exchange |  19 | order가 존재하지 않음 |
+| exchange |  20 | spot limit orderbook fill이 유효하지 않음 |
+| exchange |  21 | perpetual market이 존재함 |
+| exchange |  22 | expiry futures market이 존재함 |
+| exchange |  23 | expiry futures market이 만료됨 |
+| exchange |  24 | 오더북에 유동성이 없음! |
+| exchange |  25 | Orderbook 유동성이 현재 worst price를 충족할 수 없음 |
+| exchange |  26 | 불충분한 margin |
+| exchange |  27 | Derivative market을 찾을 수 없음 |
+| exchange |  28 | Position을 찾을 수 없음 |
+| exchange |  29 | Position 방향이 reduce-only order와 반대되지 않음 |
+| exchange |  30 | Price가 Bankruptcy Price를 초과함 |
+| exchange |  31 | Position을 청산할 수 없음 |
+| exchange |  32 | 유효하지 않은 trigger price |
+| exchange |  33 | 유효하지 않은 oracle 유형 |
+| exchange |  34 | 유효하지 않은 minimum price tick size |
+| exchange |  35 | 유효하지 않은 minimum quantity tick size |
+| exchange |  36 | 유효하지 않은 minimum order margin |
+| exchange |  37 | Order side count 초과 |
+| exchange |  38 | 같은 블록에서 같은 market에 이미 market order를 배치한 경우 Subaccount가 market order를 배치할 수 없음 |
+| exchange |  39 | 같은 상대 방향에 conditional market order가 이미 존재하는 경우 conditional market order를 배치할 수 없음 |
+| exchange |  40 | 동일한 market 런치 proposal이 이미 존재함. |
+| exchange |  41 | 유효하지 않은 Market Status |
+| exchange |  42 | base denom은 quote denom과 같을 수 없음 |
+| exchange |  43 | oracle base는 oracle quote와 같을 수 없음 |
+| exchange |  44 | MakerFeeRate가 TakerFeeRate 요건과 일치하지 않음 |
+| exchange |  45 | MaintenanceMarginRatio가 InitialMarginRatio보다 클 수 없음 |
+| exchange |  46 | OracleScaleFactor가 MaxOracleScaleFactor보다 클 수 없음 |
+| exchange |  47 | Spot exchange가 아직 활성화되지 않음 |
+| exchange |  48 | Derivatives exchange가 아직 활성화되지 않음 |
+| exchange |  49 | Oracle price delta가 threshold를 초과함 |
+| exchange |  50 | 유효하지 않은 hourly interest rate |
+| exchange |  51 | 유효하지 않은 hourly funding rate cap |
+| exchange |  52 | Perpetual markets만 funding parameters를 업데이트할 수 있음 |
+| exchange |  53 | 유효하지 않은 trading reward campaign |
+| exchange |  54 | 유효하지 않은 fee discount schedule |
+| exchange |  55 | 유효하지 않은 liquidation order |
+| exchange |  56 | Campaign distributions에서 알 수 없는 오류 발생 |
+| exchange |  57 | 유효하지 않은 trading reward points 업데이트 |
+| exchange |  58 | 유효하지 않은 batch msg 업데이트 |
+| exchange |  59 | Post-only order가 top of book price를 초과함 |
+| exchange |  60 | 주어진 메시지에 대해 Order 유형이 지원되지 않음 |
+| exchange |  61 | Sender가 dmm account와 일치해야 함 |
+| exchange |  62 | 이미 rewards를 opt out함 |
+| exchange |  63 | 유효하지 않은 margin ratio |
+| exchange |  64 | 제공된 funds가 minimum 이하임 |
+| exchange |  65 | Position이 initial margin requirement 이하임 |
+| exchange |  66 | Pool의 total lp token supply가 양수가 아님 |
+| exchange |  67 | 전달된 lp token burn 금액이 total lp token supply보다 큼 |
+| exchange |  68 | 지원되지 않는 action |
+| exchange |  69 | position quantity는 음수가 될 수 없음 |
+| exchange |  70 | binary options market이 존재함 |
+| exchange |  71 | binary options market을 찾을 수 없음 |
+| exchange |  72 | 유효하지 않은 settlement |
+| exchange |  73 | account가 존재하지 않음 |
+| exchange |  74 | sender는 market admin이어야 함 |
+| exchange |  75 | market이 이미 settle 예정임 |
+| exchange |  76 | market을 찾을 수 없음 |
+| exchange |  77 | denom decimal이 max scale factor보다 높을 수 없음 |
+| exchange |  78 | state가 유효하지 않음 |
+| exchange |  79 | 취소까지의 transient orders가 지원되지 않음 |
+| exchange |  80 | 유효하지 않은 trade |
+| exchange |  81 | subaccount에 잠긴 margin이 없음 |
+| exchange |  82 | 작업을 수행할 유효하지 않은 access level |
+| exchange |  83 | 유효하지 않은 address |
+| exchange |  84 | 유효하지 않은 argument |
+| exchange |  85 | 유효하지 않은 funds direction |
+| exchange |  86 | 제공된 funds가 없음 |
+| exchange |  87 | 유효하지 않은 signature |
+| exchange |  88 | 잠금 해제할 funds가 없음 |
+| exchange |  89 | 제공된 msgs가 없음 |
+| exchange |  90 | 제공된 msg가 없음 |
+| exchange |  91 | 유효하지 않은 amount |
+| exchange |  92 | 현재 기능이 비활성화됨 |
+| exchange |  93 | Order에 margin이 너무 많음 |
+| exchange |  94 | Subaccount nonce가 유효하지 않음 |
+| exchange |  95 | 불충분한 funds |
+| exchange |  96 | exchange가 post-only 모드임 |
+| exchange |  97 | client order id가 이미 존재함 |
+| exchange |  98 | client order id가 유효하지 않음. 최대 길이는 36자임 |
+| exchange |  99 | emergency 모드에서는 market을 settle할 수 없음 |
+| exchange |  100 | 유효하지 않은 notional |
+| exchange |  101 | 오래된 oracle price |
+| exchange |  102 | 유효하지 않은 stake grant |
+| exchange |  103 | grant를 위한 stake가 불충분함 |
+| exchange |  104 | 유효하지 않은 permissions |
+| exchange |  105 | denom에 지정된 decimals가 올바르지 않음 |

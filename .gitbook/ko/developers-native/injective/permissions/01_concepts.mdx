@@ -1,0 +1,162 @@
+---
+sidebar_position: 1
+title: 핵심 개념
+---
+
+## 개요
+`Permissions` 모듈은 RBAC(Role-Based Access Control) 시스템을 통해 권한 관리형 자산을 생성할 수 있게 합니다. 이 모듈은 스테이블코인(중앙화된 기관에서 발행), 토큰화된 국채, 기타 RWA(Real World Assets)와 같이 다양한 수준의 권한이 필요한 자산을 출시하기 위한 기본 요소 역할을 합니다.
+
+지원되는 기능으로는 송신/수신 제한(자산 동결), 발행 및 소각 접근 제어, 모든 주소에 대한 특정 행위 일시 중지, 관리 행위 관리, 그리고 모듈 위에 추가 개발을 위한 Wasm contract hook 지원이 포함됩니다.
+
+## `Permissions` 모듈 작동 방식
+
+### `TokenFactory` 모듈과의 관계
+
+`Permissions` 모듈은 `TokenFactory` 모듈과 밀접하게 연결되어 있습니다. 이 모듈을 통해 사용자는 특정 `TokenFactory` 토큰의 송신, 수신, 발행, 소각에 대한 제한을 생성할 수 있으며, 이를 위해 토큰 denom에 대한 namespace를 생성하고 행위를 역할에 할당하며 역할을 주소에 할당합니다. 이러한 방식으로 올바른 역할을 가진 주소만 해당 행위를 수행할 수 있습니다. 이 모듈은 본질적으로 `TokenFactory` denom 위에 선택적 권한 레이어를 구축합니다.
+
+`Permissions` 모듈이 기능하려면 `TokenFactory` denom이 존재해야 하므로, 먼저 `TokenFactory` denom을 출시한 후 `Permissions` namespace를 생성해야 합니다.
+
+- `TokenFactory` 모듈에 대한 문서는 https://docs.injective.network/developers/modules/injective/tokenfactory 를 참조하세요
+- 모듈을 사용한 토큰 출시 가이드는 https://docs.injective.network/guides/launch-a-token 을 참조하세요
+    - 참고: `TokenFactory` admin은 null 주소(inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49)로 변경하면 안 됩니다. `Permissions` 모듈은 `Permissions` namespace 생성자가 해당 `TokenFactory` denom의 admin이어야 하기 때문입니다.
+
+`TokenFactory` denom이 활성화되고 토큰에 대한 `Permissions` namespace가 생성되면, 토큰의 발행, 소각, 송신, 수신 시 해당 행위에 대한 올바른 권한이 있는지 확인하는 검사가 수행됩니다.
+
+### Namespace의 구성 요소
+
+권한 관리형 자산을 위한 RBAC 시스템 구현으로서, `Permissions` 모듈은 namespace 내의 역할에 할당할 수 있는 여러 기본 행위를 정의합니다. Namespace는 단일 자산에 대한 모든 규칙, 매개변수, 할당된 권한의 컨테이너 역할을 합니다. 각 자산(denom)은 하나의 namespace만 가질 수 있습니다.
+
+핵심적으로 namespace는 다음으로 구성됩니다:
+
+- Denom
+- Actions
+- Roles
+- Role Managers
+- Role Actors
+- Policy Statuses
+- Policy Managers
+- Wasm Contract Hook
+
+**Denom**
+
+- `TokenFactory` 자산의 denomination입니다. Namespace의 denom은 동일한 이름을 가진 `TokenFactory` 자산에 해당하며, namespace 생성자는 해당 `TokenFactory` 자산의 admin이기도 합니다
+
+![image.png](./NamespaceRoleCreationPermissionsFlow.png)
+
+**Actions**
+
+- Actions는 역할에 매핑/할당되어 해당 역할에 행위 실행 권한을 부여합니다
+- Actions는 사용자 행위와 namespace 관리 행위의 두 가지 범주로 나뉩니다. 다음은 namespace에서 가능한 모든 권한 행위 목록입니다:
+    - 사용자 행위:
+        - `MINT` - `receiver` 필드를 사용하여 `RECEIVE` 행위 권한이 있는 모든 주소로 발행할 수 있습니다. 지정하지 않으면 기본 주소는 메시지 발신자의 주소입니다
+        - `RECEIVE` - 주소가 토큰을 수신할 수 있습니다
+        - `BURN` - 자신의 자금을 소각합니다
+        - `SEND` - `RECEIVE` 권한이 있는 모든 주소로 전송할 수 있습니다
+        - `SUPER_BURN` - 사용자가 Burn 권한도 가지고 있지 않는 한, 자신의 지갑을 제외한 모든 지갑에서 자금을 소각합니다
+    - Namespace 관리 행위:
+        - `MODIFY_POLICY_MANAGERS` - Namespace 내의 policy manager와 그들의 기능(비활성화 또는 봉인 가능 여부)을 변경합니다
+        - `MODIFY_CONTRACT_HOOK` - Wasm contract hook을 변경합니다
+        - `MODIFY_ROLE_PERMISSIONS` - 역할과 허용된 행위의 매핑을 변경합니다(각 역할이 할 수 있는 것을 변경)
+        - `MODIFY_ROLE_MANAGERS` - 누가 역할을 가질 수 있는지 결정하는 manager를 변경합니다
+- Actions는 고유한 2의 거듭제곱 정수로 식별됩니다(내부 비트마스킹 목적):
+    - `MINT` = 1
+    - `RECEIVE` = 2
+    - `BURN` = 4
+    - `SEND` = 8
+    - `SUPER_BURN` = 16
+    - `MODIFY_POLICY_MANAGERS` = 134217728
+    - `MODIFY_CONTRACT_HOOK` = 268435456
+    - `MODIFY_ROLE_PERMISSIONS` = 536870912
+    - `MODIFY_ROLE_MANAGERS` = 1073741824
+- Permissions는 허용된 모든 행위 값의 합계로 10진수로 식별됩니다
+    - 예: receive, burn, send 권한은 14 (2 + 4 + 8)입니다
+
+
+**Roles**
+
+- Roles는 actor가 수행할 수 있도록 허용된 행위(권한)의 하위 집합으로 구성됩니다. 각 역할은 Role Manager에 의해 0개, 1개 또는 여러 개의 행위가 할당될 수 있습니다
+- 역할의 행위는 해당 역할이 할당된 주소가 실행할 수 있는 허용된 행위를 나타냅니다. 즉, 역할은 역할에서 지정한 행위를 수행할 수 있는 권한을 부여합니다
+- 역할은 namespace가 출시될 때 또는 `MODIFY_ROLE_PERMISSIONS` 행위 실행 권한이 있는 사용자가 새로운 역할-행위 매핑으로 namespace를 업데이트할 때 생성됩니다
+- 역할은 일반적으로 namespace(admin)에서 정의하지만, 두 가지 특별한 유형의 역할이 있습니다:
+    - `EVERYONE` 역할
+        - 다른 역할이 없는 모든 주소에 할당되는 기본 `EVERYONE` 역할이 있습니다
+        - Actor에게 역할이 할당되지 않으면 다른 역할이 할당될 때까지 `EVERYONE` 역할이 적용되며, 이 시점에서 `EVERYONE` 역할은 더 이상 적용되지 않습니다
+        - 이 역할에 권한을 할당할 필요는 없지만, **`EVERYONE` 역할은 생성 시 정의해야 합니다**(행위를 할당하지 않고 정의할 수 있음)
+        - `EVERYONE` 역할은 `MINT`, `SUPER_BURN` 또는 namespace 관리 행위에 대한 권한을 가질 수 없습니다. 이는 `EVERYONE` 역할에 할당할 수 있는 허용된 행위가 `SEND`, `RECEIVE`, `BURN`만이라는 것을 의미합니다
+    - Blacklist 역할
+        - 허용된 행위가 없는 모든 역할(`EVERYONE` 포함)은 blacklist 역할로 간주됩니다. Blacklist 역할은 고유한 이름으로 불릴 수 있습니다.
+        - Blacklist 역할은 다른 모든 역할보다 우선하므로, blacklist 역할이 할당된 주소는 더 이상 blacklist되지 않을 때까지 모든 권한이 취소됩니다
+        - Blacklist 역할이 주소에서 제거되면, 주소가 이전에 가지고 있던 다른 모든 역할/권한이 복원됩니다
+            - `EVERYONE`이 권한이 없는 경우, 주소가 다른 비-blacklist 역할을 받으면 `EVERYONE`은 다른 역할이 없을 때만 적용되므로 더 이상 권한이 없거나 blacklist되지 않습니다
+
+**Role Managers**
+
+- Role manager는 다른 주소(role actor)에 역할을 할당할 수 있는 능력을 가집니다
+- Namespace 내에 정의된 각 역할에 대해, 특정 역할의 주소 목록을 관리하기 위해 하나 이상의 role manager가 필요합니다
+    - 여기에는 namespace 관리 행위에 대한 역할이 포함됩니다:
+        - `MODIFY_POLICY_MANAGERS` Role Managers
+        - `MODIFY_CONTRACT_HOOK` Role Managers
+        - `MODIFY_ROLE_PERMISSIONS` Roles Managers
+        - `MODIFY_ROLE_MANAGERS` Role Managers
+- Role manager는 자신이 특정 role manager인 역할에 대해서만 역할을 할당할 수 있습니다
+- 주소는 동시에 여러 역할의 role manager가 될 수 있습니다
+
+**Role Actors**
+
+- Role actor, 또는 단순히 actor는 해당 role manager로부터 하나 이상의 역할을 부여받은 주소입니다
+- Role actor는 자신의 역할 중 어느 것이든 허용하는 모든 행위를 실행할 수 있습니다
+    - 예를 들어, 역할 ABC에 mint, send, receive 권한이 있다면, 역할 ABC를 가진 모든 role actor는 namespace 자산을 `mint`, `send`, `receive`할 수 있습니다. 역할 XYZ에 `burn`과 `mint` 권한이 있고, actor가 역할 ABC와 XYZ를 모두 가지고 있다면, 해당 actor는 자산을 `mint`, `send`, `receive`, `burn`할 수 있습니다.
+
+![image.png](./PolicyManagers.png)
+
+**Policy Statuses**
+
+- 각 행위에는 활성화/비활성화 및/또는 봉인될 수 있는 policy status가 연결되어 있습니다(봉인 없이 활성화 또는 비활성화될 수 있거나, 활성화 또는 비활성화되고 봉인될 수 있음). 내부적으로 이는 `IsDisabled`와 `IsSealed`에 대한 두 개의 boolean으로 구성됩니다
+    - Actions는 기본적으로 비활성화되지 않고 봉인되지 않습니다
+- Policy status는 전체 namespace에서 행위의 상태를 결정합니다. 행위 policy가 비활성화되면, 다시 활성화될 때까지 어떤 사용자도 해당 행위를 실행할 수 없습니다
+- 사용자 행위 policy를 봉인하면 `IsDisabled`에 대한 행위 policy가 영구적으로 설정됩니다
+    - **참고: namespace 관리 행위(**`MODIFY_POLICY_MANAGERS`**,** `MODIFY_CONTRACT_HOOK`**,** `MODIFY_ROLE_PERMISSIONS`**,** `MODIFY_ROLE_MANAGERS`**) policy를 봉인하면 해당 행위가 영구적으로 비활성화됩니다. 사용자 행위와 namespace 관리 행위 모두 활성화 상태로 봉인할 수 있지만, 해당 namespace 관리 행위의 결과 동작은 사실상 영구적으로 비활성화되는 반면 사용자 행위는 영구적으로 활성화됩니다.**
+
+**Policy Managers**
+
+- Policy manager는 승인된 행위에 대한 policy status 설정을 담당합니다.
+- 행위에 대한 policy manager가 설정되면, `PolicyManagerCapabilities` 필드를 통해 행위 policy를 비활성화 및/또는 봉인할 수 있는 권한을 부여받을 수 있습니다.
+    - Policy manager capabilities는 주소(policy manager)가 행위를 비활성화하거나 봉인할 수 있는지 여부를 설명합니다. 다른 말로 하면: policy manager가 행위의 policy 상태를 변경할 수 있는 범위를 설명합니다.
+    - Policy manager는 행위 중 하나 이상에 대한 권한을 가져야 합니다. 행위 policy status를 업데이트할 수 없는 policy manager를 갖는 것은 의미가 없기 때문입니다. 두 권한이 모두 제거되면 policy manager는 완전히 제거됩니다.
+
+**Wasm Contract Hook**
+
+- Wasm contract hook은 권한 관리형 namespace와 `TokenFactory` 기본 요소 위에 확장 기능을 구축하는 데 유용합니다
+- Wasm contract hook은 주소가 권한 관리형 자산을 수신할 때 호출됩니다. Hook은 `MODIFY_CONTRACT_HOOK` 행위를 수행할 역할을 가진 주소가 설정할 수 있습니다
+- Contract에 전달되는 정보에는 `fromAddr`, `toAddr`, `action`, `amount`가 포함됩니다. 행위는 현재 `Action_RECEIVE`로 전달됩니다
+
+### Namespace와 상호작용
+
+Permissions 모듈과 상호작용하기 위한 네 가지 관련 메시지가 있습니다:
+
+- `MsgCreateNamespace` - role permissions, role managers, policy statuses, policy managers/capabilities 및/또는 Wasm contract hook에 대한 초기 설정/매개변수로 namespace를 생성합니다
+- `MsgUpdateNamespace` - role permissions, role managers, policy statuses, policy managers/capabilities 및/또는 Wasm contract hook을 업데이트합니다
+- `MsgUpdateActorRoles` - 주소에 역할을 할당하거나 취소합니다
+- `MsgClaimVoucher` - Injective 모듈에서 수신자에게 전송하지 못한 자산(`RECEIVE` 권한 부족으로 인해)에 대한 voucher를 청구합니다. Voucher는 수신자 주소가 `RECEIVE` 권한을 얻은 후에만 의도된 수신자가 청구할 수 있습니다. 외부 소유 주소 간의 전송의 경우, 권한 부족으로 인한 전송 실패 시 voucher가 생성되지 않고 트랜잭션이 되돌려집니다
+
+### 기본 Namespace 값
+
+다음 조건에서 namespace 생성 시 role managers, policy statuses, policy managers에 대한 기본 namespace 값이 할당됩니다:
+
+- 역할에 대해 role manager가 설정되지 않은 경우:
+    - Namespace 생성자가 모든 역할의 role manager로 설정됩니다
+    - 참고: Namespace 출시 시 하나 이상의 역할에 대해 role manager가 지정되면, role manager가 지정되지 않은 역할에 대해서도 기본 role manager가 설정되지 않습니다
+- 특정 행위에 대해 policy status가 설정되지 않은 경우:
+    - 해당 행위에 대해 policy status가 비활성화되지 않고 봉인되지 않은 상태로 설정됩니다(생성 시 달리 지정하지 않는 한)
+- 행위에 대해 policy managers/policy manager capabilities(둘 다 단일 데이터 구조로 표현됨)가 설정되지 않은 경우:
+    - 모든 행위에 대한 policy manager가 namespace 생성자로 설정됩니다
+    - Policy manager에게 행위 비활성화/활성화 및 행위 policy status 봉인 능력이 모두 부여됩니다
+
+> **주의: 기본 namespace 값은 잘못된 권한이 설정된 경우 namespace가 사용 불가능해지는 것을 방지하지 않습니다.**
+
+- 이를 방지하려면, **namespace 관리 역할은 namespace 생성 시 namespace 관리 행위에 매핑되어야 하며, namespace 생성 시 각 namespace 관리 역할**(특히 role managers와 role provisions를 수정할 수 있는 역할)**에 대해 role managers도 설정해야 합니다**.
+    - 이렇게 하면 역할이 권한에 제대로 매핑되지 않아 namespace를 업데이트할 수 없거나, role managers나 역할을 할당할 권한이 있는 주소가 없어 role permissions/role managers를 업데이트할 수 없거나, 새로운 역할을 생성/부여할 권한이 있는 주소가 없는 경우를 방지할 수 있습니다
+
+### 거버넌스를 통한 Namespace 업데이트
+
+Namespace 설정은 거버넌스로 재정의할 수 있지만, 기본적으로는 그렇지 않습니다. 이는 사용자가 소유하지 않은 namespace를 거버넌스를 통해 임의로 편집하는 것을 방지합니다. 거버넌스를 통한 namespace 업데이트를 활성화하려면 `Gov` 모듈 주소에 적절한 역할/권한을 할당해야 합니다.

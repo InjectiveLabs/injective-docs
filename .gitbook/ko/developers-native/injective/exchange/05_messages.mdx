@@ -1,0 +1,473 @@
+---
+sidebar_position: 6
+title: Messages
+---
+
+# Messages
+
+이 섹션에서는 exchange 메시지의 처리와 state에 대한 해당 업데이트를 설명합니다. 각 메시지에 의해 생성/수정된 모든 state 객체는 [State Transitions](./04_state_transitions) 섹션에 정의되어 있습니다.
+
+## Msg/Deposit
+
+`MsgDeposit`은 sender의 bank 잔액에서 subaccount의 exchange deposits로 코인을 전송하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type MsgDeposit struct {
+	Sender        string
+	// (선택 사항) 자금을 입금할 bytes32 subaccount ID. 비어있으면 sender의 기본
+	// subaccount 주소로 코인이 입금됩니다.
+	SubaccountId string
+	Amount       types.Coin
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 입금하는 주소를 설명합니다.
+- `SubaccountId`는 입금을 받을 sub-account의 ID를 설명합니다.
+- `Amount`는 입금 금액을 지정합니다.
+
+## Msg/Withdraw
+
+`MsgWithdraw`는 subaccount의 deposits에서 사용자의 bank 잔액으로 코인을 출금하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type MsgWithdraw struct {
+	Sender       string
+	// 자금을 출금할 bytes32 subaccount ID
+	SubaccountId string
+	Amount       types.Coin
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 출금을 받을 주소를 설명합니다.
+- `SubaccountId`는 출금할 sub-account의 ID를 설명합니다.
+- `Amount`는 출금 금액을 지정합니다.
+
+## Msg/InstantSpotMarketLaunch
+
+`MsgInstantSpotMarketLaunch`는 거버넌스 없이 listing fee를 지불하여 새 spot market을 생성하기 위한 SDK 메시지를 정의합니다. Fee는 community spend pool로 전송됩니다.
+
+```go
+type MsgInstantSpotMarketLaunch struct {
+	Sender              string
+	Ticker              string
+	BaseDenom           string
+	QuoteDenom          string
+	MinPriceTickSize    math.LegacyDec
+	MinQuantityTickSize math.LegacyDec
+    MinNotional         math.LegacyDec
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Ticker`는 spot market의 ticker를 설명합니다.
+- `BaseDenom`은 base 통화로 사용할 코인 유형을 지정합니다.
+- `QuoteDenom`은 quote 통화로 사용할 코인 유형을 지정합니다.
+- `MinPriceTickSize`는 order price의 minimum tick size를 정의합니다.
+- `MinQuantityTickSize`는 order quantity의 minimum tick size를 정의합니다.
+
+## Msg/InstantPerpetualMarketLaunch
+
+`MsgInstantPerpetualMarketLaunch`는 거버넌스 없이 listing fee를 지불하여 새 perpetual futures market을 생성하기 위한 SDK 메시지를 정의합니다. Fee는 community spend pool로 전송됩니다.
+
+```go
+type MsgInstantPerpetualMarketLaunch struct {
+	Sender                  string
+	Ticker                  string
+	QuoteDenom              string
+	OracleBase              string
+	OracleQuote             string
+	OracleScaleFactor       uint32
+	OracleType              types1.OracleType
+	MakerFeeRate            math.LegacyDec
+	TakerFeeRate            math.LegacyDec
+	InitialMarginRatio      math.LegacyDec
+	MaintenanceMarginRatio  math.LegacyDec
+	MinPriceTickSize        math.LegacyDec
+	MinQuantityTickSize     math.LegacyDec
+    MinNotional             math.LegacyDec
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Ticker` 필드는 derivative market의 ticker를 설명합니다.
+- `QuoteDenom` 필드는 base 통화로 사용할 코인 유형을 설명합니다.
+- `OracleBase` 필드는 oracle base 통화를 설명합니다.
+- `OracleQuote` 필드는 oracle quote 통화를 설명합니다.
+- `OracleScaleFactor` 필드는 oracle prices의 scale factor를 설명합니다.
+- `OracleType` 필드는 oracle 유형을 설명합니다.
+- `MakerFeeRate` 필드는 derivative market의 makers에 대한 trade fee rate를 설명합니다.
+- `TakerFeeRate` 필드는 derivative market의 takers에 대한 trade fee rate를 설명합니다.
+- `InitialMarginRatio` 필드는 derivative market의 initial margin ratio를 설명합니다.
+- `MaintenanceMarginRatio` 필드는 derivative market의 maintenance margin ratio를 설명합니다.
+- `MinPriceTickSize` 필드는 order의 price와 margin의 minimum tick size를 설명합니다.
+- `MinQuantityTickSize` 필드는 order quantity의 minimum tick size를 설명합니다.
+
+## Msg/InstantExpiryFuturesMarketLaunch
+
+`MsgInstantExpiryFuturesMarketLaunch`는 거버넌스 없이 listing fee를 지불하여 새 expiry futures market을 생성하기 위한 SDK 메시지를 정의합니다. Fee는 community spend pool로 전송됩니다.
+
+```go
+type MsgInstantExpiryFuturesMarketLaunch struct {
+	Sender                  string
+	Ticker                  string
+	QuoteDenom              string
+	OracleBase              string
+	OracleQuote             string
+	OracleType              types1.OracleType
+	OracleScaleFactor       uint32
+	Expiry                  int64
+	MakerFeeRate            math.LegacyDec
+	TakerFeeRate            math.LegacyDec
+	InitialMarginRatio      math.LegacyDec
+	MaintenanceMarginRatio  math.LegacyDec
+	MinPriceTickSize        math.LegacyDec
+	MinQuantityTickSize     math.LegacyDec
+    MinNotional             math.LegacyDec
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Ticker` 필드는 derivative market의 ticker를 설명합니다.
+- `QuoteDenom` 필드는 quote 통화로 사용할 코인 유형을 설명합니다.
+- `OracleBase` 필드는 oracle base 통화를 설명합니다.
+- `OracleQuote` 필드는 oracle quote 통화를 설명합니다.
+- `OracleScaleFactor` 필드는 oracle prices의 scale factor를 설명합니다.
+- `OracleType` 필드는 oracle 유형을 설명합니다.
+- `Expiry` 필드는 market의 expiration 시간을 설명합니다.
+- `MakerFeeRate` 필드는 derivative market의 makers에 대한 trade fee rate를 설명합니다.
+- `TakerFeeRate` 필드는 derivative market의 takers에 대한 trade fee rate를 설명합니다.
+- `InitialMarginRatio` 필드는 derivative market의 initial margin ratio를 설명합니다.
+- `MaintenanceMarginRatio` 필드는 derivative market의 maintenance margin ratio를 설명합니다.
+- `MinPriceTickSize` 필드는 order의 price와 margin의 minimum tick size를 설명합니다.
+- `MinQuantityTickSize` 필드는 order quantity의 minimum tick size를 설명합니다.
+
+## Msg/CreateSpotLimitOrder
+
+`MsgCreateSpotLimitOrder`는 새 spot limit order를 생성하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type MsgCreateSpotLimitOrder struct {
+	Sender string
+	Order  SpotOrder
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Order` 필드는 order 정보를 설명합니다.
+
+## Msg/BatchCreateSpotLimitOrders
+
+`MsgBatchCreateSpotLimitOrders`는 새 spot limit orders 배치를 생성하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type MsgBatchCreateSpotLimitOrders struct {
+	Sender string
+	Orders []SpotOrder
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Orders` 필드는 orders 정보를 설명합니다.
+
+## Msg/CreateSpotMarketOrder
+
+`MsgCreateSpotMarketOrder`는 새 spot market order를 생성하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type MsgCreateSpotMarketOrder struct {
+	Sender string
+	Order  SpotOrder
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Order` 필드는 order 정보를 설명합니다.
+
+## Msg/CancelSpotOrder
+
+`MsgCancelSpotOrder`는 spot order를 취소하기 위한 메시지를 정의합니다.
+
+```go
+type MsgCancelSpotOrder struct {
+	Sender       string
+	MarketId     string
+	SubaccountId string
+	OrderHash    string
+    Cid          string
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `MarketId` 필드는 order가 배치된 market의 id를 설명합니다.
+- `SubaccountId` 필드는 order를 배치한 subaccount id를 설명합니다.
+- `OrderHash` 필드는 order의 hash를 설명합니다.
+
+## Msg/BatchCancelSpotOrders
+
+`MsgBatchCancelSpotOrders`는 spot orders를 배치로 취소하기 위한 메시지를 정의합니다.
+
+```go
+type MsgBatchCancelSpotOrders struct {
+	Sender string
+	Data   []OrderData
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Data` 필드는 취소할 orders를 설명합니다.
+
+## Msg/CreateDerivativeLimitOrder
+
+`MsgCreateDerivativeLimitOrder`는 derivative limit order를 생성하기 위한 메시지를 정의합니다.
+
+```go
+type MsgCreateDerivativeLimitOrder struct {
+	Sender string
+	Order  DerivativeOrder
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Order` 필드는 order 정보를 설명합니다.
+
+## Derivative limit orders 배치 생성
+
+`MsgBatchCreateDerivativeLimitOrders`는 derivative limit orders의 배치 생성을 설명합니다.
+
+```go
+type MsgBatchCreateDerivativeLimitOrders struct {
+	Sender string
+	Orders []DerivativeOrder
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Orders` 필드는 orders 정보를 설명합니다.
+
+## Msg/CreateDerivativeMarketOrder
+
+`MsgCreateDerivativeMarketOrder`는 derivative market order를 생성하기 위한 메시지입니다.
+
+```go
+// Cosmos-SDK MsgCreateDerivativeMarketOrder
+type MsgCreateDerivativeMarketOrder struct {
+	Sender string
+	Order  DerivativeOrder
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Order` 필드는 order 정보를 설명합니다.
+
+## Msg/CancelDerivativeOrder
+
+`MsgCancelDerivativeOrder`는 derivative order를 취소하기 위한 메시지입니다.
+
+```go
+type MsgCancelDerivativeOrder struct {
+	Sender       string
+	MarketId     string
+	SubaccountId string
+	OrderHash    string
+    OrderMask    int32
+    Cid          string
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `MarketId` 필드는 order가 배치된 market의 id를 설명합니다.
+- `SubaccountId` 필드는 order를 배치한 subaccount id를 설명합니다.
+- `OrderHash` 필드는 order의 hash를 설명합니다.
+
+## Msg/BatchCancelDerivativeOrders
+
+`MsgBatchCancelDerivativeOrders`는 derivative orders를 배치로 취소하기 위한 메시지입니다.
+
+```go
+type MsgBatchCancelDerivativeOrders struct {
+	Sender string
+	Data   []OrderData
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `Data` 필드는 취소할 orders를 설명합니다.
+
+## Msg/SubaccountTransfer
+
+`MsgSubaccountTransfer`는 sub-accounts 간에 잔액을 이체하기 위한 메시지입니다.
+
+```go
+type MsgSubaccountTransfer struct {
+	Sender                  string
+	SourceSubaccountId      string
+	DestinationSubaccountId string
+	Amount                  types.Coin
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `SourceSubaccountId` 필드는 코인을 보낼 source subaccount를 설명합니다.
+- `DestinationSubaccountId` 필드는 코인을 받을 destination subaccount를 설명합니다.
+- `Amount` 필드는 보낼 코인의 양을 설명합니다.
+
+## Msg/ExternalTransfer
+
+`MsgExternalTransfer`는 source account 중 하나에서 외부 sub-account로 잔액을 이체하기 위한 메시지입니다.
+
+```go
+type MsgExternalTransfer struct {
+	Sender                  string
+	SourceSubaccountId      string
+	DestinationSubaccountId string
+	Amount                  types.Coin
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `SourceSubaccountId` 필드는 코인을 보낼 source subaccount를 설명합니다.
+- `DestinationSubaccountId` 필드는 코인을 받을 destination subaccount를 설명합니다.
+- `Amount` 필드는 보낼 코인의 양을 설명합니다.
+
+## Msg/LiquidatePosition
+
+`MsgLiquidatePosition`은 계정의 포지션을 청산하기 위한 메시지를 설명합니다
+
+```go
+type MsgLiquidatePosition struct {
+	Sender       string
+	SubaccountId string
+	MarketId     string
+	// 청산을 위해 제공할 선택적 order
+	Order        *DerivativeOrder
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `SubaccountId` 필드는 청산 금액을 받을 subaccount를 설명합니다.
+- `MarketId` 필드는 포지션이 있는 market을 설명합니다.
+- `Order` 필드는 order 정보를 설명합니다.
+
+## Msg/IncreasePositionMargin
+
+`MsgIncreasePositionMargin`은 계정의 margin을 증가시키기 위한 메시지를 설명합니다.
+
+```go
+// Cosmos-SDK MsgIncreasePositionMargin
+type MsgIncreasePositionMargin struct {
+	Sender                  string
+	SourceSubaccountId      string
+	DestinationSubaccountId string
+	MarketId                string
+	// amount는 포지션에 추가할 margin 양을 정의합니다
+	Amount                  math.LegacyDec
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `SourceSubaccountId` 필드는 잔액을 보낼 source subaccount를 설명합니다.
+- `DestinationSubaccountId` 필드는 잔액을 받을 destination subaccount를 설명합니다.
+- `MarketId` 필드는 포지션이 있는 market을 설명합니다.
+- `Amount` 필드는 증가시킬 양을 설명합니다.
+
+
+
+## Msg/BatchUpdateOrders
+
+`MsgBatchUpdateOrders`는 새로운 order 취소 모드와 함께 spot 및 derivative limit orders의 atomic 취소 및 생성을 허용합니다. 실행 시 order 취소 (있는 경우)가 먼저 발생하고 그 다음 order 생성 (있는 경우)이 발생합니다.
+
+```go
+// Cosmos-SDK MsgBatchUpdateOrders
+// SubaccountId는 spot_market_ids_to_cancel_all과 derivative_market_ids_to_cancel_all에만 사용됩니다.
+type MsgBatchUpdateOrders struct {
+	Sender                          string
+	SubaccountId                    string
+	SpotMarketIdsToCancelAll        []string
+	DerivativeMarketIdsToCancelAll  []string
+	SpotOrdersToCancel              []OrderData
+	DerivativeOrdersToCancel        []OrderData
+	SpotOrdersToCreate              []SpotOrder
+	DerivativeOrdersToCreate        []DerivativeOrder
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 이 msg의 creator를 설명합니다.
+- `SubaccountId` 필드는 sender의 sub-account ID를 설명합니다.
+- `SpotMarketIdsToCancelAll` 필드는 sender가 모든 미체결 orders를 취소하려는 spot market IDs 목록을 설명합니다.
+- `DerivativeMarketIdsToCancelAll` 필드는 sender가 모든 미체결 orders를 취소하려는 derivative market IDs 목록을 설명합니다.
+- `SpotOrdersToCancel` 필드는 sender가 취소하려는 특정 spot orders를 설명합니다.
+- `DerivativeOrdersToCancel` 필드는 sender가 취소하려는 특정 derivative orders를 설명합니다.
+- `SpotOrdersToCreate` 필드는 sender가 생성하려는 spot orders를 설명합니다.
+- `DerivativeOrdersToCreate` 필드는 sender가 생성하려는 derivative orders를 설명합니다.
+
+## Msg/AuthorizeStakeGrants
+
+`MsgAuthorizeStakeGrants`는 fee discount 목적으로 다른 주소에 staked INJ 잔액을 부여하는 데 사용되는 메시지입니다. 부여된 금액이 0으로 설정되면 grants를 취소/제거하는 데도 사용할 수 있습니다.
+
+```go
+type MsgAuthorizeStakeGrants struct {
+	Sender  string 
+	Grants  []*GrantAuthorization 
+}
+```
+
+**필드 설명**
+
+- `Sender`는 이 msg의 creator를 설명합니다.
+- `Grants`는 grantees의 주소와 grant 금액 목록을 설명합니다
+
+## Msg/ActivateStakeGrant
+
+`MsgActivateStakeGrant`는 fee discount 목적으로 stake grant를 선택/활성화하는 데 사용되는 메시지입니다.
+
+```go
+type MsgActivateStakeGrant struct {
+	Sender  string 
+	Granter string 
+}
+```
+
+**필드 설명**
+
+- `Sender`는 이 msg의 creator를 설명합니다.
+- `Granter`는 granter의 주소를 설명합니다.

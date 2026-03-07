@@ -1,0 +1,50 @@
+---
+sidebar_position: 4
+title: Governance Proposals
+---
+
+# Governance Proposals
+
+## SetConfigProposal
+
+`SetConfigProposal`은 거버넌스를 통해 feed config를 설정하는 proposal입니다.
+
+```protobuf
+message SetConfigProposal {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string title = 1;
+  string description = 2;
+  FeedConfig config = 3;
+}
+```
+
+**단계**
+
+- Proposal의 기본 사항 검증
+- 모듈의 `LinkDenom`이 proposal의 `LinkDenom`과 같은지 확인
+- `ctx.ChainID`에서 `p.Config.OnchainConfig.ChainId` 설정
+- `feedId`에 대한 feed config 설정
+- `Config.Transmitters`에 대한 feed transmission 및 observation count 설정
+
+## SetBatchConfigProposal
+
+`SetBatchConfigProposal`은 거버넌스를 통해 여러 feed config를 한 번에 설정하는 proposal입니다.
+
+```protobuf
+message SetBatchConfigProposal {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string title = 1;
+  string description = 2;
+  // signers ith element is address ith oracle uses to sign a report
+  repeated string signers = 3;
+  // transmitters ith element is address ith oracle uses to transmit a report via the transmit method
+  repeated string transmitters = 4;
+  // Native denom for LINK coin in the bank keeper
+  string link_denom = 5;
+  repeated FeedProperties feed_properties = 6;
+}
+```

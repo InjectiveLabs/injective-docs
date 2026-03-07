@@ -1,0 +1,75 @@
+---
+title: State Transitions
+---
+
+`x/evm` 모듈을 통해 사용자는 Ethereum 트랜잭션(`Tx`)을 제출하고 포함된 메시지를 실행하여 주어진 상태에서 상태 전환을 유발할 수 있습니다.
+
+사용자는 클라이언트 측에서 트랜잭션을 제출하여 네트워크에 브로드캐스트합니다. 합의 중에 트랜잭션이 블록에 포함되면 서버 측에서 실행됩니다. 상태 전환을 자세히 이해하려면 [Tendermint consensus engine](https://docs.tendermint.com/master/introduction/what-is-tendermint.html#intro-to-abci)의 기본 사항을 이해하는 것을 강력히 권장합니다.
+
+## Client-Side
+
+::: tip
+👉 이것은 `eth_sendTransaction` JSON-RPC를 기반으로 합니다
+:::
+
+1. 사용자가 Ethereum 호환 클라이언트 또는 지갑(예: Metamask, WalletConnect, Ledger 등)을 사용하여 사용 가능한 JSON-RPC 엔드포인트 중 하나를 통해 트랜잭션을 제출합니다:
+   a. eth (public) namespace:
+      - `eth_sendTransaction`
+      - `eth_sendRawTransaction`
+   b. personal (private) namespace:
+      - `personal_sendTransaction`
+2. 누락된 트랜잭션 인수를 기본값으로 채우기 위해 `SetTxDefaults`를 사용하여 RPC 트랜잭션을 채운 후 `MsgEthereumTx` 인스턴스가 생성됩니다
+3. `Tx` 필드는 `ValidateBasic()`을 사용하여 (상태 비저장) 검증됩니다
+4. `Tx`는 sender 주소와 연결된 키와 `ChainConfig`의 최신 ethereum 하드 포크(`London`, `Berlin` 등)를 사용하여 **서명**됩니다
+5. `Tx`는 Cosmos Config builder를 사용하여 msg 필드에서 **빌드**됩니다
+6. `Tx`는 [`CheckTx`](https://docs.tendermint.com/master/introduction/what-is-tendermint.html#intro-to-abci) 실행 응답을 기다리기 위해 [sync mode](https://docs.cosmos.network/master/run-node/txs.html#broadcasting-a-transaction)로 **브로드캐스트**됩니다. 트랜잭션은 합의 엔진의 mempool에 추가되기 전에 `CheckTx()`를 사용하여 애플리케이션에 의해 검증됩니다.
+7. JSON-RPC 사용자는 트랜잭션 필드의 [`RLP`](https://eth.wiki/en/fundamentals/rlp) hash가 포함된 응답을 받습니다. 이 hash는 트랜잭션 바이트의 `sha256` hash를 계산하는 SDK 트랜잭션에서 사용하는 기본 hash와 다릅니다.
+
+## Server-Side
+
+트랜잭션을 포함하는 블록이 합의 중에 커밋되면 일련의 ABCI 메시지로 서버 측 애플리케이션에 적용됩니다.
+
+각 `Tx`는 [`RunTx`](https://docs.cosmos.network/master/core/baseapp.html#runtx)를 호출하여 애플리케이션에서 처리됩니다. `Tx`의 각 `sdk.Msg`에 대한 상태 비저장 검증 후 `AnteHandler`는 `Tx`가 Ethereum 트랜잭션인지 SDK 트랜잭션인지 확인합니다. Ethereum 트랜잭션으로서 포함된 메시지는 애플리케이션의 상태를 업데이트하기 위해 `x/evm` 모듈에서 처리됩니다.
+
+### AnteHandler
+
+`anteHandler`는 모든 트랜잭션에 대해 실행됩니다. `Tx`가 Ethereum 트랜잭션인지 확인하고 내부 ante handler로 라우팅합니다. 여기서 `Tx`는 일반 Cosmos SDK 트랜잭션과 다르게 처리하기 위해 EthereumTx extension option을 사용하여 처리됩니다. `antehandler`는 각 `Tx`에 대해 일련의 옵션과 해당 `AnteHandle` 함수를 실행합니다:
+
+- `EthSetUpContextDecorator()`는 cosmos-sdk의 SetUpContextDecorator에서 적용되었으며, gas meter를 infinite로 설정하여 가스 소비를 무시합니다
+- `EthValidateBasicDecorator(evmKeeper)`는 Ethereum 유형 Cosmos `Tx` msg의 필드를 검증합니다
+- `EthSigVerificationDecorator(evmKeeper)`는 등록된 chain id가 메시지의 것과 동일하고 signer 주소가 메시지에 정의된 것과 일치하는지 검증합니다. 다른 ante handler가 작동하는 데 중요한 `From` 주소를 설정하기 때문에 RecheckTx에서 건너뛰지 않습니다. RecheckTx에서 실패하면 특히 CheckTx가 성공한 경우 트랜잭션이 블록에 포함되는 것을 방지하며, 이 경우 사용자에게 오류 메시지가 표시되지 않습니다.
+- `EthAccountVerificationDecorator(ak, bankKeeper, evmKeeper)`는 sender 잔액이 총 트랜잭션 비용보다 큰지 확인합니다. 계정을 찾을 수 없는 경우(즉, store에서 찾을 수 없는 경우) 계정이 store에 설정됩니다. 다음의 경우 이 AnteHandler decorator가 실패합니다:
+    - 메시지 중 MsgEthereumTx가 아닌 것이 있는 경우
+    - from 주소가 비어 있는 경우
+    - 계정 잔액이 트랜잭션 비용보다 낮은 경우
+- `EthNonceVerificationDecorator(ak)`는 트랜잭션 nonce가 유효하고 sender 계정의 현재 nonce와 동일한지 검증합니다.
+- `EthGasConsumeDecorator(evmKeeper)`는 Ethereum 트랜잭션 메시지에 intrinsic gas를 충당할 충분한 가스가 있는지(CheckTx 중에만) 및 sender에게 가스 비용을 지불할 충분한 잔액이 있는지 검증합니다. 트랜잭션의 intrinsic gas는 트랜잭션이 실행되기 전에 트랜잭션이 사용하는 가스 양입니다. 가스는 상수 값에 트랜잭션과 함께 제공된 추가 데이터 바이트로 인한 비용을 더한 것입니다. 다음의 경우 이 AnteHandler decorator가 실패합니다:
+    - 트랜잭션에 둘 이상의 메시지가 포함된 경우
+    - 메시지가 MsgEthereumTx가 아닌 경우
+    - sender 계정을 찾을 수 없는 경우
+    - 트랜잭션의 gas limit이 intrinsic gas보다 낮은 경우
+    - 사용자에게 트랜잭션 수수료(gas_limit * gas_price)를 차감할 충분한 잔액이 없는 경우
+    - 트랜잭션 또는 블록 gas meter의 가스가 부족한 경우
+- `CanTransferDecorator(evmKeeper, feeMarketKeeper)`는 메시지에서 EVM을 생성하고 BlockContext CanTransfer 함수를 호출하여 주소가 트랜잭션을 실행할 수 있는지 확인합니다.
+- `EthIncrementSenderSequenceDecorator(ak)`는 signer(즉, sender)의 시퀀스 증가를 처리합니다. 트랜잭션이 컨트랙트 생성인 경우 nonce는 이 AnteHandler decorator 내에서가 아니라 트랜잭션 실행 중에 증가합니다.
+
+`authante.NewMempoolFeeDecorator()`, `authante.NewTxTimeoutHeightDecorator()` 및 `authante.NewValidateMemoDecorator(ak)` 옵션은 Cosmos `Tx`의 경우와 동일합니다. `anteHandler`에 대한 자세한 내용은 [여기](https://docs.cosmos.network/master/basics/gas-fees.html#antehandler)를 클릭하십시오.
+
+### EVM module
+
+`antehandler`를 통한 인증 후 `Tx`의 각 `sdk.Msg`(이 경우 `MsgEthereumTx`)는 `x/evm` 모듈의 Msg Handler로 전달되고 다음 단계를 거칩니다:
+
+1. `Msg`를 ethereum `Tx` 유형으로 변환
+2. `EVMConfig`와 함께 `Tx`를 적용하고 상태 전환을 수행하려고 시도합니다. 트랜잭션이 실패하지 않으면 기본 KVStore에만 유지(커밋)됩니다:
+    1. `EVMConfig`가 생성되었는지 확인
+    2. `EVMConfig`의 chain config 값을 사용하여 ethereum signer 생성
+    3. StateDB 함수에서도 사용할 수 있도록 ethereum 트랜잭션 hash를 (임시) transient store에 설정
+    4. 새 EVM 인스턴스 생성
+    5. 컨트랙트 생성(`EnableCreate`) 및 컨트랙트 실행(`EnableCall`)에 대한 EVM 매개변수가 활성화되어 있는지 확인
+    6. 메시지 적용. `To` 주소가 `nil`이면 코드를 deployment code로 사용하여 새 컨트랙트를 생성합니다. 그렇지 않으면 주어진 입력을 매개변수로 사용하여 주어진 주소에서 컨트랙트를 호출합니다
+    7. evm 작업에서 사용된 가스 계산
+3. `Tx`가 성공적으로 적용된 경우
+    1. EVM `Tx` 후처리 hook 실행. hook이 오류를 반환하면 전체 `Tx`를 되돌림
+    2. Ethereum 가스 회계 규칙에 따라 가스 환불
+    3. 트랜잭션에서 생성된 로그를 사용하여 block bloom filter 값 업데이트
+    4. 트랜잭션 필드 및 트랜잭션 로그에 대한 SDK 이벤트 내보내기

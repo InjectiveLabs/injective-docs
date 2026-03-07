@@ -1,0 +1,90 @@
+---
+sidebar_position: 4
+title: 메시지
+---
+
+## 메시지
+
+### MsgUpdateContract
+
+등록된 컨트랙트의 실행 파라미터(가스 가격, 한도)를 업데이트합니다. 새로운 관리자 계정도 정의할 수 있습니다.
+관리자(정의된 경우) 또는 컨트랙트 자체만 호출할 수 있습니다.
+
+```go
+
+type MsgUpdateContract struct {
+    Sender string `json:"sender,omitempty"`
+    // Unique Identifier for contract instance to be registered.
+    ContractAddress string `json:"contract_address,omitempty"`
+    // Maximum gas to be used for the smart contract execution.
+    GasLimit uint64 `json:"gas_limit,omitempty"`
+    // gas price to be used for the smart contract execution.
+    GasPrice uint64 `json:"gas_price,omitempty"`
+    // optional - admin account that will be allowed to perform any changes
+    AdminAddress string `json:"admin_address,omitempty"`
+}
+```
+
+### MsgDeactivateContract
+
+등록된 컨트랙트를 비활성화합니다 (더 이상 begin blocker에서 실행되지 않음)
+
+```go
+
+type MsgDeactivateContract struct {
+    Sender string `json:"sender,omitempty"`
+    // Unique Identifier for contract instance to be activated.
+    ContractAddress string `json:"contract_address,omitempty"`
+}
+```
+
+### MsgActivateContract
+
+등록된 컨트랙트를 다시 활성화합니다 (이제부터 다시 begin blocker에서 실행됨)
+
+```go
+
+type MsgActivateContract struct {
+    Sender string `json:"sender,omitempty"`
+    // Unique Identifier for contract instance to be activated.
+    ContractAddress string `json:"contract_address,omitempty"`
+}
+```
+
+### MsgExecuteContract
+
+스마트 컨트랙트 내에서 정의된 함수를 호출합니다. 함수와 파라미터는 Base64로 인코딩된 JSON 메시지인 `ExecuteMsg`에 인코딩됩니다.
+
+```go
+type MsgExecuteContract struct {
+    Sender     sdk.AccAddress   `json:"sender" yaml:"sender"`
+    Contract   sdk.AccAddress   `json:"contract" yaml:"contract"`
+    ExecuteMsg core.Base64Bytes `json:"execute_msg" yaml:"execute_msg"`
+    Coins      sdk.Coins        `json:"coins" yaml:"coins"`
+}
+```
+
+### MsgMigrateContract
+
+마이그레이션 가능한 스마트 컨트랙트의 소유자가 code ID를 다른 것으로 재설정하기 위해 발행할 수 있습니다. `MigrateMsg`는 Base64로 인코딩된 JSON 메시지입니다.
+
+```go
+type MsgMigrateContract struct {
+    Owner      sdk.AccAddress   `json:"owner" yaml:"owner"`
+    Contract   sdk.AccAddress   `json:"contract" yaml:"contract"`
+    NewCodeID  uint64           `json:"new_code_id" yaml:"new_code_id"`
+    MigrateMsg core.Base64Bytes `json:"migrate_msg" yaml:"migrate_msg"`
+}
+```
+
+### MsgUpdateContractOwner
+
+스마트 컨트랙트의 소유자가 소유권을 이전하기 위해 발행할 수 있습니다.
+
+```go
+type MsgUpdateContractOwner struct {
+    Owner    sdk.AccAddress `json:"owner" yaml:"owner"`
+    NewOwner sdk.AccAddress `json:"new_owner" yaml:"new_owner"`
+    Contract sdk.AccAddress `json:"contract" yaml:"contract"`
+}
+```

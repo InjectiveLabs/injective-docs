@@ -1,0 +1,54 @@
+---
+sidebar_position: 4
+title: 이벤트
+---
+
+# 이벤트
+
+tokenfactory 모듈은 다음 이벤트를 발생시킵니다:
+
+EventCreateTFDenom은 새로운 token factory denom을 생성하는 MsgCreateDenom 실행 시 발생합니다.
+
+```protobuf 
+message EventCreateTFDenom {
+  string account = 1;
+  string denom = 2;
+}
+```
+
+EventMintTFDenom은 수신자에게 새로운 token factory denom을 발행하는 MsgMint 실행 시 발생합니다.
+
+```protobuf
+message EventMintTFDenom {
+  string recipient_address = 1;
+  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+}
+```
+
+EventBurnDenom은 사용자의 특정 denom에 대해 지정된 양을 소각하는 MsgBurn 실행 시 발생합니다.
+
+```protobuf
+message EventBurnDenom {
+  string burner_address = 1;
+  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+}
+``` 
+
+EventChangeTFAdmin은 새로운 token factory denom의 admin 주소를 변경하는 MsgChangeAdmin 실행 시 발생합니다.
+
+```protobuf
+message EventChangeTFAdmin {
+  string denom = 1;
+  string new_admin_address = 2;
+}
+
+``` 
+
+EventSetTFDenomMetadata는 주어진 token factory denom에 대한 token factory denom 메타데이터를 설정하는 MsgSetDenomMetadata 실행 시 발생합니다.
+
+```protobuf
+message EventSetTFDenomMetadata {
+  string denom = 1;
+  cosmos.bank.v1beta1.Metadata metadata = 2[(gogoproto.nullable) = false];
+}
+```

@@ -1,0 +1,56 @@
+---
+sidebar_position: 3
+---
+
+# 메시지
+
+이 섹션에서는 `erc20` 모듈 메시지의 처리와 해당 상태 업데이트에 대해 설명합니다.
+
+### 토큰 페어 생성: `MsgCreateTokenPair`
+
+기존 bank denom과 새로운 또는 기존 ERC20 스마트 컨트랙트 간의 연결을 생성합니다.
+ERC20 주소가 비어 있으면 새로운 ERC20 스마트 컨트랙트가 인스턴스화됩니다. 모든 bank denom이 지원되는 것은 아닙니다.
+
+유효성 검사 규칙:
+
+- tokenfactory denom의 경우, denom admin만 토큰 페어를 생성할 수 있습니다
+- peggy 및 IBC denom의 경우, 누구나 토큰 페어를 생성할 수 있습니다 (erc20 주소가 비어 있는 경우에만)
+
+```go
+type MsgCreateTokenPair struct {
+	Sender    string   
+	TokenPair TokenPair
+}
+
+type TokenPair struct {
+	BankDenom    string
+	Erc20Address string
+}
+```
+
+**상태 수정:**
+
+- 유효성 검사:
+	- Sender가 이 denom에 대한 토큰 페어를 생성할 권한이 있는지 확인 (tokenfactory denom의 경우 denom admin이어야 함)
+	- 제공된 bank denom이 존재하고 공급량이 0이 아닌지 확인
+	- ERC20 주소가 제공된 경우:
+		- 컨트랙트가 존재하고 실제로 ERC-20 스마트 컨트랙트인지 확인 (`symbol()` 메서드 호출)
+		- 기존 컨트랙트에 유통 중인 공급량이 있는 bank denom이 이미 연결되어 있지 않은지 확인
+- bank denom 유형에 따라 연결 생성:
+	- tokenfactory denom:
+		- ERC-20 주소가 제공되지 않은 경우 새로운 `MintBurnBankERC20` 스마트 컨트랙트를 인스턴스화하고, 그렇지 않으면 제공된 주소 사용
+		- 연결 저장
+	- IBC 및 peggy denom:
+		- 새로운 `FixedSupplyBankERC20` 스마트 컨트랙트 인스턴스화
+		- 연결 저장
+
+### 토큰 페어 삭제: `MsgDeleteTokenPair`
+
+현재 authority만 페어의 bank denom을 제공하여 토큰 페어를 제거할 수 있습니다.
+
+```go
+type MsgDeleteTokenPair struct {
+	Sender    string
+	BankDenom string
+}
+```

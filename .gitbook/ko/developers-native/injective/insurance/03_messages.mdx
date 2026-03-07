@@ -1,0 +1,94 @@
+---
+sidebar_position: 3
+title: Messages
+---
+
+# Messages
+
+이 섹션에서는 exchange 메시지의 처리와 해당 state 업데이트에 대해 설명합니다. 각 메시지에 의해 생성/수정되는 모든 state 객체는 [state](./02_state_transitions) 섹션에 정의되어 있습니다.
+
+## Msg/CreateInsuranceFund
+
+`MsgCreateInsuranceFund`는 파생상품 시장에 대한 보험 펀드를 생성하기 위한 메시지를 정의합니다.
+
+```protobuf
+// MsgCreateInsuranceFund는 파생상품 시장에 대한 보험 펀드를 생성하기 위한 메시지입니다.
+message MsgCreateInsuranceFund {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  // 보험 펀드의 생성자.
+  string sender = 1;
+  // 파생상품 시장의 Ticker.
+  string ticker = 2;
+  // 시장 quote denom에 사용할 Coin denom
+  string quote_denom = 3;
+  // Oracle base currency
+  string oracle_base = 4;
+  // Oracle quote currency
+  string oracle_quote = 5;
+  // Oracle type
+  injective.oracle.v1beta1.OracleType oracle_type = 6;
+  // 시장의 만료 시간. perpetual 시장의 경우 -1이어야 합니다.
+  int64 expiry = 7;
+  // 보험 펀드의 초기 예치금
+  cosmos.base.v1beta1.Coin initial_deposit = 8 [(gogoproto.nullable) = false];
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 보험 펀드의 생성자를 설명합니다.
+- `Ticker`, `QuoteDenom`, `OracleBase`, `OracleQuote`, `OracleType`, `Expiry` 필드는 보험 펀드가 해당하는 파생상품 시장 정보를 설명합니다.
+- `InitialDeposit`은 보험 펀드를 underwrite하는 데 사용되는 초기 예치금을 지정합니다.
+
+면책 조항: 보험 펀드를 생성할 때 share의 일부(1%)가 펀드 자체에 의해 예약됩니다(protocol owned liquidity). 첫 번째 구독으로 1 USD 가치를 권장합니다.
+
+이 기능의 동기는 펀드에 underwriting할 때 발생할 수 있는 잠재적인 반올림 문제를 피하기 위함입니다. 예를 들어, protocol owned liquidity가 없는 경우, 원래 펀드 생성자가 대부분의 share를 인출하고 소량만 남기면 share token의 가치가 원래 가치에서 크게 벗어날 수 있습니다. 그러면 다음 underwriter는 동일한 양의 share를 얻으면서도 훨씬 더 큰 예치금을 제공해야 합니다.
+
+## Msg/Underwrite
+
+`MsgUnderwrite`는 보험 펀드를 underwrite하기 위한 메시지를 정의합니다.
+
+```protobuf
+// MsgUnderwrite는 보험 펀드를 underwrite하기 위해 코인을 예치하는 메시지를 정의합니다
+message MsgUnderwrite {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  // underwriter의 주소.
+  string sender = 1;
+  // 보험 펀드의 MarketID.
+  string market_id = 2;
+  // 보험 펀드를 underwrite하기 위한 quote_denom 금액.
+  cosmos.base.v1beta1.Coin deposit = 3 [(gogoproto.nullable) = false];
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 보험 펀드의 underwriter를 설명합니다.
+- `MarketId` 필드는 보험 펀드의 파생상품 market id를 설명합니다.
+- `Deposit` 필드는 보험 펀드에 추가할 예치금을 설명합니다.
+
+## Msg/RequestRedemption
+
+`MsgRequestRedemption`은 보험 펀드에서 redemption을 요청하기 위한 메시지를 정의합니다.
+
+```protobuf
+// MsgRequestRedemption은 sender의 보험 펀드 토큰 redemption을 요청하는 메시지를 정의합니다
+message MsgRequestRedemption {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  // redemption을 요청하는 underwriter의 주소.
+  string sender = 1;
+  // 보험 펀드의 MarketID.
+  string market_id = 2;
+  // redeem할 보험 펀드 share token 수량.
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+}
+```
+
+**필드 설명**
+
+- `Sender` 필드는 보험 펀드의 redemption 요청자를 설명합니다.
+- `MarketId` 필드는 보험 펀드와 연결된 파생상품 market id를 설명합니다.
+- `Amount` 필드는 redeem할 share token 수량을 설명합니다.

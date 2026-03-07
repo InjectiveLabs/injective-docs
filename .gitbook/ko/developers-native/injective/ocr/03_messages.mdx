@@ -1,0 +1,227 @@
+---
+sidebar_position: 3
+title: Messages
+---
+
+# Messages
+
+이 섹션에서는 ocr 메시지 처리와 해당 state 업데이트에 대해 설명합니다.
+
+## Msg/CreateFeed
+
+`MsgCreateFeed`는 feed config를 생성하는 메시지이며, 모듈 관리자만 실행할 수 있는 제한된 메시지입니다.
+
+```protobuf
+message MsgCreateFeed {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string sender = 1;
+  FeedConfig config = 2;
+}
+```
+
+**단계**
+
+- `Sender`가 모듈 관리자인지 확인
+- `msg.Config.OnchainConfig.LinkDenom`이 모듈 param의 `LinkDenom`인지 확인
+- `ctx.ChainID`에서 `OnchainConfig.ChainId` 설정
+- 동일한 `FeedId`를 가진 `FeedConfig`가 존재하지 않는지 확인
+- 최신 `EpochAndRound`를 `(0, 0)`으로 설정
+- `feedId`에 대한 feed config 설정
+- Feed transmission count와 observation count를 1로 설정
+
+## Msg/UpdateFeed
+
+`MsgCreateFeed`는 feed config를 업데이트하는 메시지이며, feed 관리자 또는 feed billing 관리자만 실행할 수 있는 제한된 메시지입니다.
+
+```protobuf
+message MsgUpdateFeed {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string sender = 1;
+  // feed_id is an unique ID for the target of this config
+  string feed_id = 2;
+  // signers ith element is address ith oracle uses to sign a report
+  repeated string signers = 3;
+  // transmitters ith element is address ith oracle uses to transmit a report via the transmit method
+  repeated string transmitters = 4;
+  // Fixed LINK reward for each observer
+  string link_per_observation = 5[
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = true
+  ];
+  // Fixed LINK reward for transmitter
+  string link_per_transmission = 6[
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = true
+  ];
+  // Native denom for LINK coin in the bank keeper
+  string link_denom = 7;
+  // feed administrator
+  string feed_admin = 8;
+  // feed billing administrator
+  string billing_admin = 9;
+}
+```
+
+**단계**
+
+- `feedId`로 이전 feed config를 가져오고 존재하는지 확인
+- `Sender`가 feed 관리자 또는 feed billing 관리자인지 확인
+- Billing 관리자가 Signer, Transmitter 및 feed 관리자를 변경하지 않는지 확인
+- 이전 feed config에 대한 보상 지급 처리
+- 이전 feed transmission 및 observation count 삭제
+- 최신 `EpochAndRound`를 `(0, 0)`으로 설정
+- 설정된 경우 signer, transmitter, `LinkPerObservation`, `LinkPerTransmission`, `LinkDenom`, `FeedAdmin`, `BillingAdmin` 업데이트
+
+## Msg/Transmit
+
+`MsgTransmit`은 특정 feed에 대한 report를 전송하는 메시지입니다. 메시지를 브로드캐스트할 때, 수락되려면 observer로부터 충분한 양의 서명이 있어야 합니다.
+
+```protobuf
+message MsgTransmit {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  // Address of the transmitter
+  string transmitter = 1;
+  bytes config_digest = 2;
+  string feed_id = 3;
+  uint64 epoch = 4;
+  uint64 round = 5;
+  bytes extra_hash = 6;
+  Report report = 7;
+  repeated bytes signatures = 8;
+}
+```
+
+**단계**
+
+- `feedId`에 대한 epoch 및 round 가져오기
+- `msg.Epoch` 및 `msg.Round`를 확인하여 report가 오래된 것이 아닌지 확인
+- `feedId`에서 feed config 및 config info 가져오기
+- msg.ConfigDigest가 feed config info의 latest config digest와 같은지 확인
+- Transmitter가 `feedConfig`에 구성된 유효한 transmitter인지 확인
+- Transmitter report 저장
+- Transmission에 대한 이벤트 발생
+- 서명 및 서명 수 검증
+- Feed observation 및 transmission count 증가
+
+## Msg/FundFeedRewardPool
+
+`MsgFundFeedRewardPool`은 transmitter와 observer에게 지급할 feed reward pool에 자금을 추가하는 메시지입니다.
+
+```protobuf
+message MsgFundFeedRewardPool {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string sender = 1;
+  string feed_id = 2;
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+}
+```
+
+**단계**
+
+- `feedId`에서 이전 reward pool 금액 가져오기
+- 이전 금액이 비어 있으면 pool 금액을 0으로 초기화
+- 이전 금액 denom이 존재하는 경우 입금 denom과 다르지 않은지 확인
+- 계정에서 모듈 계정(`ocr` 모듈)으로 코인 전송
+- `amount` 필드 추가로 reward pool 금액 업데이트
+- Hook이 설정된 경우 `AfterFundFeedRewardPool` hook 호출
+
+## Msg/WithdrawFeedRewardPool
+
+`MsgFundFeedRewardPool`은 feed reward pool에서 자금을 인출하는 메시지이며, feed 관리자 또는 billing 관리자로 제한됩니다.
+
+```protobuf
+message MsgWithdrawFeedRewardPool {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string sender = 1;
+  string feed_id = 2;
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+}
+```
+
+**단계**
+
+- `feedId`에서 feed config 가져오기
+- `msg.Sender`가 `feedAdmin` 또는 `billingAdmin`인지 확인
+- Feed에 대한 보상 처리
+- 모듈 계정에서 지정된 금액 `msg.Amount` 인출
+
+## Msg/SetPayees
+
+`MsgSetPayees`는 transmitter에 대한 payee를 설정하는 메시지이며, feed 관리자로 제한됩니다. 한 번 설정되면 payee만 변경할 수 있습니다.
+
+```protobuf
+message MsgSetPayees {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string sender = 1;
+  string feed_id = 2;
+  // addresses oracles use to transmit the reports
+  repeated string transmitters = 3;
+  // addresses of payees corresponding to list of transmitters
+  repeated string payees = 4;
+}
+```
+
+**단계**
+
+- `feedId`에서 feed config를 가져오고 feed config가 존재하는지 확인
+- `msg.Sender`가 feed 관리자인지 확인
+- `msg.Transmitters` 반복,
+- 1. Transmitter에 대해 payee가 이미 설정되어 있는지 확인
+- 2. Transmitter에 대한 payee 설정
+
+## Msg/TransferPayeeship
+
+`MsgTransferPayeeship`은 feed의 특정 transmitter에 대한 payeeship을 이전하는 메시지입니다. 실행 후 pending payeeship 객체가 생성됩니다.
+
+```protobuf
+message MsgTransferPayeeship {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // transmitter address of oracle whose payee is changing
+  string sender = 1;
+  string transmitter = 2;
+  string feed_id = 3;
+  // new payee address
+  string proposed = 4;
+}
+```
+
+**단계**
+
+- `feedId`에서 feed config를 가져오고 feed config가 존재하는지 확인
+- msg.Sender가 현재 payee인지 확인
+- 이전 pending payeeship transfer 레코드를 확인하고 이전 payeeship transfer가 충돌하지 않는지 확인
+- Payeeship transfer 레코드 설정
+
+## Msg/AcceptPayeeship
+
+`MsgTransferPayeeship`은 feed의 특정 transmitter에 대한 payeeship을 수락하는 메시지입니다.
+
+```protobuf
+message MsgAcceptPayeeship {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  // new payee address
+  string payee = 1;
+  // transmitter address of oracle whose payee is changing
+  string transmitter = 2;
+  string feed_id = 3;
+}
+```
+
+**단계**
+
+- `feedId`에서 feed config를 가져오고 feed config가 존재하는지 확인
+- `msg.Transmitter` 및 `feedId`에 대한 pending payeeship transfer 레코드 가져오기
+- `feedId` 및 `transmitter`에 대한 payee 재설정
+- `feedId`의 `transmitter`에 대한 pending payeeship transfer 삭제
