@@ -1,0 +1,31 @@
+---
+title: Injective CLI Agent Skill
+description: AI 엔지니어링 Harness에서 Injective CLI Agent Skill 사용하기
+---
+
+일관된 지갑 처리, 엔드포인트 선택 및 가스 구성으로
+Injective 체인에 대해 쿼리하고 트랜잭션을 수행하려면 `injectived` 바이너리를 사용하세요.
+
+## 설치
+
+skill 설치:
+
+```bash
+uvx upd-skill InjectiveLabs/injective-cli
+```
+
+skill 전역 설치:
+
+```bash
+uvx upd-skill InjectiveLabs/injective-cli --global
+```
+
+NPX를 통한 설치:
+
+```bash
+npx skills add https://github.com/InjectiveLabs/agent-skills --skill injective-cli
+```
+
+## 사용법
+
+skill을 설치한 후, harness에 프롬프트를 입력하여 이 skill을 사용하세요.

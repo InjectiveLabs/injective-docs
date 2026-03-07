@@ -1,0 +1,97 @@
+---
+description: >-
+  생성형 AI 소프트웨어 엔지니어링으로 Injective에서 개발하세요.
+title: AI 개발자
+---
+
+## 왜 Injective에서 생성형 AI 도구로 개발해야 할까요?
+
+생성형 AI 코딩 도구를 사용하면 Injective를 포함해 애플리케이션을 매우 빠르게 개발할 수 있습니다.
+그러나 잘못된 방향으로 빠르게 개발하는 것은 이상적이지 않습니다.
+여기에서 효과적인 AI 소프트웨어 엔지니어링에 도움이 되는 skill, agent, workflow 및 MCP 서버를 찾을 수 있습니다.
+
+## 어떤 유형의 생성형 AI 도구를 사용할 수 있나요?
+
+- **LLM** -
+    대규모 언어 모델(LLM)은 거의 모든 생성형 AI 소프트웨어 엔지니어링을 지원하는 기반 기술입니다.
+    거의 모든 AI 개발 도구는 LLM의 래퍼입니다.
+    인기 있는 모델로는 Claude Opus (Anthropic), Gemini (Google), Kimi (Moonshot AI)가 있습니다.
+- **LLM Provider** -
+    저사양 및 중간급 LLM은 소비자용 하드웨어에서 실행할 수 있습니다.
+    그러나 최상급 LLM은 원격으로 액세스해야 합니다.
+    주요 옵션 3가지:
+    - **로컬 provider** - 예: LM Studio 또는 Ollama 사용.
+    - **모델 개발사의 원격 provider** - 예: Anthropic 구독을 통해 Claude Opus에 액세스.
+    - **모델 통합 업체의 원격 provider** - 예: OpenRouter 구독을 통해 Claude Opus, Gemini 또는 Kimi에 액세스.
+- **Tool** -
+    함수, 스크립트, CLI(명령줄 인터페이스) 등 LLM이 이해하거나 호출할 수 있도록
+    패키징된 모든 것이 될 수 있습니다.
+    예를 들어, LLM이 실시간 정보에 액세스하도록 하려면
+    (즉, LLM이 학습될 때 사용할 수 없었던 정보),
+    웹 검색이나 기타 데이터 API를 호출하는 도구에 대한 액세스 권한을 부여해야 합니다.
+- **MCP** -
+    Model-Context-Protocol(MCP)은 LLM에 의한 도구 검색 및 호출을 위해 설계된 프로토콜입니다.
+    다양한 LLM과 LLM provider가 도구를 호출하는 방식을 표준화하도록 설계되었습니다.
+    이전에는 각 LLM 또는 LLM provider마다 경쟁하는 표준/프로토콜이 있었습니다.
+- **Skill, workflow, agent** -
+    지원 리소스, 도구, MCP 서버 등을 선택적으로 참조하는 마크다운 파일입니다.
+    AI 엔지니어링 harness와 함께 작동하도록 특별히 설계되었습니다(다른 컨텍스트에서도 사용 가능).
+    재귀적일 수 있습니다. 예를 들어 skill은 다른 skill을 참조할 수 있습니다.
+    마찬가지로 workflow는 일반적으로 정의된 순서를 가진 skill 세트이며,
+    agent는 workflow와 skill의 집합입니다.
+    "agent"라는 용어는 여러 정의로 과도하게 사용되므로, 위 내용은 다른 컨텍스트에서는 적용되지 않을 수 있습니다.
+- **AI 엔지니어링 IDE** -
+    LLM에 프롬프트를 보내고, 도구 호출이나 MCP를 실행하며,
+    IDE 내에서 열린 코드베이스 작업에 출력을 사용할 수 있는
+    전용 IDE 또는 IDE 내 플러그인입니다.
+    인기 있는 것들: Roo, Cline, Cursor.
+- **AI 엔지니어링 Harness** -
+    코딩 작업을 위해 LLM을 호출하도록 설계된 CLI 또는 TUI입니다.
+    파일 시스템에서 직접 작동하며, 엔지니어링 작업을 위한 최적화 및 유틸리티가 내장되어 있습니다.
+    skill, workflow, agent를 사용할 때 가장 효과적이므로
+    AI 엔지니어링 IDE보다 더 강력한 경향이 있습니다.
+    인기 있는 것들: Claude Code (Anthropic), Codex (OpenAI), OpenCode (비제휴).
+- **AI 엔지니어링 Orchestrator** -
+    harness의 래퍼 역할을 하는 도구입니다.
+    주요 목적은 장시간 실행 루프 또는 harness 호출의 병렬화를 가능하게 하여
+    지속적인 인간 감독 없이 LLM이 더 길고 복잡한 작업을
+    자율적으로 수행할 수 있도록 하는 것입니다.
+    인기 있는 것들: Ralph, GSD.
+
+## Injective에서 개발할 때 어떤 유형의 생성형 AI 도구가 작동하나요?
+
+LLM, LLM Provider, Tool, MCP, Skill, Workflow, Agent, AI 엔지니어링 IDE, AI 엔지니어링 Harness, AI 엔지니어링 Orchestrator.
+간단히 말해, 모두 작동합니다!
+사실, 그것이 바로 이 **AI 개발자** 섹션의 목적입니다!
+
+## Skill
+
+### Injective CLI
+
+[Injective CLI skill](/ko/developers-ai/injective-cli-skill)을 설치하고 사용하는 방법.
+
+일관된 지갑 처리, 엔드포인트 선택 및 가스 구성으로
+Injective 체인에 대해 쿼리하고 트랜잭션을 수행하려면 `injectived` 바이너리를 사용하세요.
+
+### Injective EVM Developer
+
+[Injective EVM Developer skill](/ko/developers-ai/injective-evm-developer-skill)을 설치하고 사용하는 방법.
+
+Injective의 EVM에서 개발할 때,
+EVM 호환 네트워크에 적용할 수 있는 일반 EVM 개발자 skill이 필요합니다.
+또한 Injective의 EVM에 특화된 일부 사항도 필요합니다.
+이 skill은 기존 EVM 개발자 skill을 보완하여 바로 그것을 제공합니다.
+
+## MCP 서버
+
+### Injective Documentation MCP
+
+[Injective documentation MCP 서버](/ko/developers-ai/documentation-mcp)를 사용하여
+이 문서 사이트에서 최신 정보를 얻는 방법.
+
+LLM에게 Injective에 대해 물으면,
+빠르게 발전하는 기술과 마찬가지로 오래된 정보를 제공할 가능성이 높습니다.
+이는 정보가 정의상 "시간이 고정된" 학습 데이터에서 얻어지기 때문입니다.
+AI 개발 워크플로우에 이 MCP를 추가하면,
+Injective 개발에 대한 최신 정보를 얻을 수 있을 뿐만 아니라
+이 문서 사이트의 URL 형태로 해당 정보에 대한 인용도 제공받을 수 있습니다.
