@@ -1,0 +1,127 @@
+---
+title: Wasm
+---
+
+`wasm` 모듈은 injective 체인에 배포된 wasm 스마트 컨트랙트와 상호작용하는 핵심입니다. [스마트 컨트랙트](https://injscan.com/smart-contracts/) 목록에서 Injective 체인에 배포된 스마트 컨트랙트를 찾을 수 있습니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  `MsgUpdateCode`와 `MsgStoreCode`는 Ethereum (예: Metamask) 지갑에서 지원되지
+  않습니다.
+</Callout>
+
+## 메시지
+
+### MsgExecuteContract (Transfer)
+
+이 메시지는 컨트랙트 함수를 실행하는 데 사용됩니다. 아래에서는 [CW20 spec](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md) transfer 메시지를 예제로 사용합니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContract } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const recipientAddress = "inj2...";
+const contractAddress = "cw...";
+
+const msg = MsgExecuteContract.fromJSON({
+  contractAddress,
+  sender: injectiveAddress,
+  exec: {
+    action: "transfer",
+    msg: {
+      recipient: recipientAddress,
+      amount: 100000,
+    },
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgExecuteContract (funds 예제)
+
+일부 시나리오에서는 스마트 컨트랙트의 함수에 따라 스마트 컨트랙트로 토큰을 전송해야 합니다. cosmwasm 관례에 따라 사용자의 bank 모듈에서 스마트 컨트랙트로 토큰을 전송하기 위해 funds 필드를 사용합니다.
+
+아래는 `test` 컨트랙트 함수를 사용하여 `MsgExecuteContract`를 보내는 방법의 예제입니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContract } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const contractAddress = "cw...";
+
+const msg = MsgExecuteContract.fromJSON({
+  contractAddress,
+  sender: injectiveAddress,
+  exec: {
+    action: "test",
+    funds: [
+      {
+        denom: "inj",
+        amount: toChainFormat(1).toFixed(),
+      },
+    ],
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgExecuteContractCompat
+
+이전 예제의 `funds` 배열과 `msgs` 객체를 EIP712로 파싱하는 데 일부 호환성 문제가 있습니다. `MsgExecuteContract`를 EIP712로 적절히 변환한 후 Ethereum 지갑으로 서명할 수 없기 때문에 EIP712와 완전히 호환되는 `MsgExecuteContractCompat`을 도입했습니다.
+
+_**참고:**_ _`MsgExecuteContract`와 `MsgExecuteContractCompat`의 기본 메시지는 동일합니다. `MsgExecuteContractCompat`은 단지 EIP712와 호환됩니다._
+
+아래는 `test` 컨트랙트 함수를 사용하여 `MsgExecuteContractCompact`를 보내는 방법의 예제입니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const contractAddress = "cw...";
+
+const msg = MsgExecuteContractCompat.fromJSON({
+  contractAddress,
+  sender: injectiveAddress,
+  exec: {
+    action: "test",
+    funds: [
+      {
+        denom: "inj",
+        amount: toChainFormat(1).toFixed(),
+      },
+    ],
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

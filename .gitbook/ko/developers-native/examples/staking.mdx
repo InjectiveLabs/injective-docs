@@ -1,0 +1,118 @@
+---
+title: Staking
+---
+
+이 모듈은 Cosmos SDK 기반 블록체인이 고급 Proof-of-Stake (PoS) 시스템을 지원할 수 있게 합니다. 이 시스템에서 체인의 네이티브 스테이킹 토큰 보유자는 검증자가 될 수 있고 검증자에게 토큰을 위임하여 궁극적으로 시스템의 유효 검증자 세트를 결정할 수 있습니다.
+
+## 메시지
+
+Staking 모듈이 내보내는 메시지와 Injective 체인과 상호작용하는 데 사용할 수 있는 메시지를 살펴보고 예제를 제공하겠습니다.
+
+### MsgBeginRedelegate
+
+이 메시지는 스테이킹된 INJ를 한 검증자에서 다른 검증자로 재위임하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgBeginRedelegate } from "@injectivelabs/sdk-ts/core/modules";
+
+const denom = "inj";
+const privateKey = "0x...";
+const amount = toChainFormat(5);
+const injectiveAddress = "inj1...";
+const sourceValidatorAddress = "inj1...";
+const destinationValidatorAddress = "inj1...";
+
+const msg = MsgBeginRedelegate.fromJSON({
+  injectiveAddress,
+  dstValidatorAddress: destinationValidatorAddress,
+  srcValidatorAddress: sourceValidatorAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgDelegate
+
+이 메시지는 검증자에게 INJ를 위임하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgDelegate } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const validatorAddress = "inj1...";
+const amount = toChainFormat(5).toFixed();
+
+const msg = MsgDelegate.fromJSON({
+  injectiveAddress,
+  validatorAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgCancelUnbondingDelegation
+
+이 메시지는 검증자로부터의 언본딩을 취소하고 본딩 기간을 재설정하며 이전 검증자에게 다시 위임하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCancelUnbondingDelegation } from "@injectivelabs/sdk-ts/core/modules";
+
+const denom = "inj";
+const delegatorAddress = "inj1...";
+const privateKey = "0x...";
+const amount = toChainFormat(5).toFixed();
+const validatorAddress = "inj1...";
+const creationHeight = "123456"; // 언본딩이 시작된 높이
+
+const msg = MsgCancelUnbondingDelegation.fromJSON({
+  delegatorAddress,
+  validatorAddress,
+  amount: {
+    denom,
+    amount,
+  },
+  creationHeight,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
