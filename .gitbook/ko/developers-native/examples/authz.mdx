@@ -1,0 +1,129 @@
+---
+title: AuthZ
+---
+
+`authz` 모듈은 ADR 30에 따른 Cosmos SDK 모듈의 구현으로, 한 계정(granter)에서 다른 계정(grantee)으로 임의의 권한을 부여할 수 있게 합니다.
+
+## 메시지
+
+### MsgGrant
+
+권한 부여는 MsgGrant 메시지를 사용하여 생성됩니다. (granter, grantee, Authorization) 쌍에 대한 권한이 이미 있는 경우 새 권한이 이전 권한을 덮어씁니다. 기존 권한을 업데이트하거나 연장하려면 동일한 (granter, grantee, Authorization) 쌍으로 새 권한을 생성해야 합니다.
+
+유용한 메시지 유형 목록:
+
+```
+"/injective.exchange.v1beta1.MsgCreateSpotLimitOrder",
+"/injective.exchange.v1beta1.MsgCreateSpotMarketOrder",
+"/injective.exchange.v1beta1.MsgCancelSpotOrder",
+"/injective.exchange.v1beta1.MsgBatchUpdateOrders",
+"/injective.exchange.v1beta1.MsgBatchCancelSpotOrders",
+"/injective.exchange.v1beta1.MsgDeposit",
+"/injective.exchange.v1beta1.MsgWithdraw",
+"/injective.exchange.v1beta1.MsgCreateDerivativeLimitOrder",
+"/injective.exchange.v1beta1.MsgCreateDerivativeMarketOrder",
+"/injective.exchange.v1beta1.MsgCancelDerivativeOrder",
+"/injective.exchange.v1beta1.MsgBatchUpdateOrders",
+"/injective.exchange.v1beta1.MsgBatchCancelDerivativeOrders",
+"/injective.exchange.v1beta1.MsgDeposit",
+"/injective.exchange.v1beta1.MsgWithdraw",
+```
+
+[cosmos sdk 문서](https://docs.cosmos.network/main/modules/authz)에 따르면 "권한은 특정 Msg 서비스 메서드에 대해 하나씩 부여되어야 합니다". 따라서 `granter`를 대신하여 `grantee`가 권한을 갖기를 원하는 각 메시지 유형에 대해 다음 코드 스니펫을 반복해야 합니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgGrant } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKeyOfGranter = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+const messageType =
+  "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder"; /* 메시지 유형 예시 */
+
+const msg = MsgGrant.fromJSON({
+  messageType,
+  grantee,
+  granter,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGranter,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgExec
+
+grantee가 granter를 대신하여 트랜잭션을 실행하려는 경우 MsgExec을 보내야 합니다. 이 예제에서는 granter의 계정 주소에서 다른 계정 주소로 자산을 전송하기 위해 MsgSend를 수행합니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExec, MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKeyOfGrantee = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+
+const msgs = MsgSend.fromJSON({
+  amount: {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  },
+  srcInjectiveAddress: granter,
+  dstInjectiveAddress: "inj1...",
+});
+
+const msg = MsgExec.fromJSON({
+  msgs,
+  grantee,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGrantee,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgRevoke
+
+MsgRevoke 메시지를 사용하여 권한을 제거할 수 있습니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgRevoke } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKeyOfGranter = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+const messageType =
+  "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder"; /* 메시지 유형 예시 */
+
+const msg = MsgRevoke.fromJSON({
+  messageType,
+  grantee,
+  granter,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGranter,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

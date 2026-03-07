@@ -1,0 +1,276 @@
+---
+title: Ethereum 트랜잭션
+---
+
+Injective의 모든 트랜잭션은 동일한 흐름을 따릅니다. 이 흐름은 트랜잭션 준비, 서명, 브로드캐스트의 세 단계로 구성됩니다. 각 단계를 개별적으로 살펴보고 전체 트랜잭션 흐름을 이해할 수 있도록 프로세스를 심층적으로 설명합니다(예제 포함).
+
+## 트랜잭션 준비
+
+먼저 서명을 위해 트랜잭션을 준비해야 합니다. Ethereum 네이티브 지갑을 사용하려면 트랜잭션을 EIP712 타입 데이터로 변환하고 지갑을 사용하여 이 타입 데이터에 서명해야 합니다.
+
+특정 메시지의 proto 파일에서 직접 EIP712 TypedData를 가져올 수 있는 메시지에 대한 우리의 커스텀 추상화를 사용합니다.
+
+```ts
+import {
+  MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  BaseAccount,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import {
+  getEip712TypedDataV2,
+} from "@injectivelabs/sdk-ts/core/tx";
+import {
+  toBigNumber,
+  toChainFormat,
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
+} from "@injectivelabs/utils";
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+
+const injectiveAddress = "inj1";
+const chainId = ChainId.Mainnet;
+const evmChainId = EvmChainId.Mainnet;
+const restEndpoint =
+  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(0.01).toFixed(),
+};
+
+/** 계정 세부 정보 **/
+const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
+const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+  injectiveAddress
+);
+const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+const accountDetails = baseAccount.toAccountDetails();
+
+/** 블록 세부 정보 */
+const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
+const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+const latestHeight = latestBlock.header.height;
+const timeoutHeight = toBigNumber(latestHeight).plus(
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+);
+
+/** 트랜잭션 준비 */
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+/** Ethereum 지갑에서 서명하기 위한 EIP712 */
+const eip712TypedData = getEip712TypedDataV2({
+  msgs: [msg],
+  tx: {
+    accountNumber: accountDetails.accountNumber.toString(),
+    sequence: accountDetails.sequence.toString(),
+    timeoutHeight: timeoutHeight.toFixed(),
+    chainId: chainId,
+  },
+  evmChainId,
+});
+```
+
+## 트랜잭션 서명
+
+EIP712 타입 데이터를 준비한 후 서명을 진행합니다.
+
+```ts
+/** EIP712 TypedData에 서명하기 위해 선호하는 접근 방식을 사용하세요. Metamask 예시 */
+const signature = await window.ethereum.request({
+  method: "eth_signTypedData_v4",
+  params: [
+    ethereumAddress,
+    JSON.stringify(eip712TypedData /* 이전 단계에서 */),
+  ],
+});
+
+/** 서명자의 공개키 가져오기 */
+const publicKeyHex = recoverTypedSignaturePubKey(eip712TypedData, signature);
+const publicKeyBase64 = hexToBase64(publicKeyHex);
+```
+
+`@injectivelabs/wallet-strategy` 패키지를 사용하여 트랜잭션에 서명하는 데 사용할 수 있는 추상화된 메서드를 제공하는 바로 사용 가능한 지갑 프로바이더를 얻을 수도 있습니다. 패키지의 문서를 참조하세요. 설정 및 사용이 정말 간단합니다. **dApp에서 여러 지갑을 사용할 수 있으므로 이 방법을 권장합니다. `WalletStrategy`는 트랜잭션 서명 추상화 이상의 기능을 제공합니다.**
+
+## 트랜잭션 브로드캐스트
+
+서명이 준비되면 트랜잭션을 Injective 체인 자체에 브로드캐스트해야 합니다. 두 번째 단계에서 서명을 받은 후 서명된 트랜잭션에 해당 서명을 포함하고 체인에 브로드캐스트해야 합니다.
+
+```ts
+import {
+  Network,
+  SIGN_AMINO,
+  getNetworkEndpoints,
+} from "@injectivelabs/networks";
+import { getDefaultStdFee } from "@injectivelabs/utils";
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { createTransaction, TxRestApi } from "@injectivelabs/sdk-ts/core/tx";
+
+const evmChainId = EvmChainId.Mainnet;
+
+const { txRaw } = createTransaction({
+  message: msgs,
+  memo: memo,
+  signMode: SIGN_AMINO,
+  fee: getDefaultStdFee(),
+  pubKey: publicKeyBase64 /* 이전 단계에서 */,
+  sequence: baseAccount.sequence,
+  timeoutHeight: timeoutHeight.toNumber(),
+  accountNumber: baseAccount.accountNumber,
+  chainId: chainId,
+});
+const web3Extension = createWeb3Extension({
+  evmChainId,
+});
+const txRawEip712 = createTxRawEIP712(txRaw, web3Extension);
+
+/** 서명 첨부 */
+txRawEip712.signatures = [signatureBuff /* 이전 단계에서 */];
+
+/** 트랜잭션 브로드캐스트 */
+const restEndpoint =
+  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+const txRestApi = new TxRestApi(restEndpoint);
+
+const txHash = await txRestApi.broadcast(txRawEip712);
+
+/**
+ * txHash를 받은 후 Sync 모드를 사용하기 때문에
+ * 트랜잭션이 블록에 포함되었는지 확실하지 않습니다.
+ * 아직 mempool에 있을 수 있으므로 체인을 쿼리하여
+ * 트랜잭션이 언제 블록에 포함되는지 확인해야 합니다
+ */
+
+/** 트랜잭션을 폴링하고 블록에 포함될 때까지 대기합니다 */
+const response = await txRestApi.fetchTxPoll(txHash);
+```
+
+## WalletStrategy 없이 예제 (준비 + 서명 + 브로드캐스트)
+
+전체 흐름을 살펴보겠습니다 (Metamask를 서명 지갑으로 사용)
+
+```ts
+import {
+  MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  BaseAccount,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
+  TxRestApi,
+  SIGN_AMINO,
+  hexToBase64,
+  createTransaction,
+  createTxRawEIP712,
+  getEip712TypedData,
+  createWeb3Extension,
+  recoverTypedSignaturePubKey,
+} from "@injectivelabs/sdk-ts/core/tx";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import {
+  getEthereumAddress,
+} from "@injectivelabs/sdk-ts/utils";
+import {
+  toBigNumber,
+  toChainFormat,
+  getDefaultStdFee,
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
+} from "@injectivelabs/utils";
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+
+const injectiveAddress = "inj1";
+const chainId = ChainId.Mainnet;
+const evmChainId = EvmChainId.Mainnet;
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const restEndpoint = getNetworkEndpoints(Network.MainnetSentry).rest;
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(0.01).toFixed(),
+};
+
+/** 계정 세부 정보 **/
+const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
+const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+  injectiveAddress
+);
+const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+const accountDetails = baseAccount.toAccountDetails();
+
+/** 블록 세부 정보 */
+const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
+const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+const latestHeight = latestBlock.header.height;
+const timeoutHeight = toBigNumber(latestHeight).plus(
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+);
+
+/** 트랜잭션 준비 */
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+/** Ethereum 지갑에서 서명하기 위한 EIP712 */
+const eip712TypedData = getEip712TypedData({
+  msgs: [msg],
+  tx: {
+    accountNumber: accountDetails.accountNumber.toString(),
+    sequence: accountDetails.sequence.toString(),
+    timeoutHeight: timeoutHeight.toFixed(),
+    chainId,
+  },
+  evmChainId,
+});
+
+/** EIP712 TypedData에 서명하기 위해 선호하는 접근 방식을 사용하세요. Metamask 예시 */
+const signature = await window.ethereum.request({
+  method: "eth_signTypedData_v4",
+  params: [ethereumAddress, JSON.stringify(eip712TypedData)],
+});
+
+/** 서명자의 공개키 가져오기 */
+const publicKeyHex = recoverTypedSignaturePubKey(eip712TypedData, signature);
+const publicKeyBase64 = hexToBase64(publicKeyHex);
+const signatureBuff = Buffer.from(signature.replace("0x", ""), "hex");
+
+const { txRaw } = createTransaction({
+  message: [msg],
+  memo: "",
+  signMode: SIGN_AMINO,
+  fee: getDefaultStdFee(),
+  pubKey: publicKeyBase64,
+  sequence: baseAccount.sequence,
+  timeoutHeight: timeoutHeight.toNumber(),
+  accountNumber: baseAccount.accountNumber,
+  chainId: chainId,
+});
+const web3Extension = createWeb3Extension({
+  evmChainId,
+});
+const txRawEip712 = createTxRawEIP712(txRaw, web3Extension);
+
+/** 서명 첨부 */
+txRawEip712.signatures = [signatureBuff];
+
+/** 트랜잭션 브로드캐스트 */
+const txRestApi = new TxRestApi(restEndpoint);
+
+const txResponse = await txRestApi.broadcast(txRawEip712);
+const response = await txRestApi.fetchTxPoll(txResponse.txHash);
+```
+
+## WalletStrategy를 사용한 예제 (준비 + 서명 + 브로드캐스트)
+
+예제는 [wallet-core 패키지](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-core)에서 찾을 수 있습니다.

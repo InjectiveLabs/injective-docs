@@ -1322,6 +1322,56 @@
                 ]
               },
               {
+                "group": "Native 개발자",
+                "icon": "microchip",
+                "expanded": false,
+                "pages": [
+                  "ko/developers-native/index",
+                  {
+                    "group": "지갑",
+                    "pages": [
+                      "ko/developers-native/wallets/index",
+                      "ko/developers-native/wallets/accounts",
+                      "ko/developers-native/wallets/connections",
+                      "ko/developers-native/wallets/strategy",
+                      "ko/developers-native/wallets/offchain-data"
+                    ]
+                  },
+                  {
+                    "group": "브릿지",
+                    "pages": [
+                      "ko/developers-native/bridges/index",
+                      "ko/developers-native/bridges/ethereum"
+                    ]
+                  },
+                  {
+                    "group": "트랜잭션",
+                    "pages": [
+                      "ko/developers-native/transactions/index",
+                      "ko/developers-native/transactions/cosmos",
+                      "ko/developers-native/transactions/cosmos-ledger-keplr",
+                      "ko/developers-native/transactions/ethereum",
+                      "ko/developers-native/transactions/ethereum-ledger",
+                      "ko/developers-native/transactions/msgbroadcaster",
+                      "ko/developers-native/transactions/private-key",
+                      "ko/developers-native/transactions/web3-gateway"
+                    ]
+                  },
+                  {
+                    "group": "트랜잭션 예제",
+                    "pages": [
+                      "ko/developers-native/examples/index",
+                      "ko/developers-native/examples/auction",
+                      "ko/developers-native/examples/authz",
+                      "ko/developers-native/examples/bank",
+                      "ko/developers-native/examples/distribution",
+                      "ko/developers-native/examples/feegrant",
+                      "ko/developers-native/examples/governance"
+                    ]
+                  }
+                ]
+              },
+              {
                 "group": "인프라",
                 "icon": "network-wired",
                 "expanded": false,

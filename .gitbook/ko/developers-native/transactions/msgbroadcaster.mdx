@@ -1,0 +1,137 @@
+---
+title: MsgBroadcaster 트랜잭션
+---
+
+`MsgBroadcaster` 추상화 클래스는 Injective에서 쉽게 트랜잭션을 브로드캐스트하는 방법입니다. 이를 사용하면 트랜잭션에 패킹하려는 메시지와 서명자의 주소를 전달하면 트랜잭션이 준비, 서명 및 브로드캐스트됩니다.
+
+사용 예시는 [Helix 데모 리포지토리](https://github.com/InjectiveLabs/injective-helix-demo)에서 찾을 수 있습니다. `broadcast` 메서드에 전달할 수 있는 메시지의 경우 문서의 [Core Modules](../examples/) 섹션에서 예시를 찾을 수 있습니다.
+
+## MsgBroadcaster + Wallet Strategy
+
+이 MsgBroadcaster는 탈중앙화 애플리케이션을 구축하기 위해 Wallet Strategy 클래스와 함께 사용됩니다.
+
+`MsgBroadcaster` 클래스를 인스턴스화(및 사용)하려면 다음 코드 스니펫을 사용할 수 있습니다
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcaster } from "@injectivelabs/wallet-core";
+import { WalletStrategy } from "@injectivelabs/wallet-strategy";
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+
+export const evmRpcEndpoint = "";
+export const walletStrategy = new WalletStrategy({
+  chainId: ChainId.Mainnet,
+  evmOptions: {
+    rpcUrl: evmRpcEndpoint,
+    evmChainId: EvmChainId.Mainnet,
+  },
+  strategies: {},
+});
+
+export const msgBroadcaster = new MsgBroadcaster({
+  walletStrategy,
+  simulateTx: true,
+  network: Network.Mainnet,
+  endpoints: getNetworkEndpoints(Network.Mainnet),
+  gasBufferCoefficient: 1.1,
+});
+
+// 사용 예시
+const signer = "inj1...";
+
+const msg = MsgSend.fromJSON({
+  amount: {
+    denom: "inj",
+    amount: toChainFormat(0.01, 18).toFixed(),
+  },
+  srcInjectiveAddress: signer,
+  dstInjectiveAddress: "inj1...",
+});
+
+// Wallet Strategy를 사용하여 트랜잭션 준비 + 서명 + 브로드캐스트
+await msgBroadcaster.broadcast({
+  injectiveAddress: signer,
+  msgs: msg,
+});
+```
+
+### 생성자/브로드캐스트 옵션
+
+`MsgBroadcaster`의 생성자에 전달된 일부 옵션과 트랜잭션 브로드캐스트 시 옵션을 재정의할 수 있습니다. 다음은 인터페이스와 각 필드의 의미입니다
+
+```typescript
+import { Msgs } from '@injectivelabs/sdk-ts/core/modules'
+import { ChainId, EvmChainId } from '@injectivelabs/ts-types'
+import { Network, NetworkEndpoints } from '@injectivelabs/networks'
+import type { WalletStrategy } from '../strategies'
+
+export interface MsgBroadcasterOptions {
+  network: Network /** 네트워크 구성 (chainId, fees 등) - 메인넷의 경우 Network.MainnetSentry 또는 테스트넷의 경우 Network.TestnetSentry */
+  endpoints?: NetworkEndpoints /** 선택사항 - `network` 매개변수에서 가져온 엔드포인트 재정의 **/
+  feePayerPubKey?: string /** 선택사항 - 수수료 위임 서비스를 사용하는 경우 Web3Gateway에 대한 추가 쿼리를 하지 않도록 수수료 지불자를 설정할 수 있음 */
+  simulateTx?: boolean /** 브로드캐스트 전에 트랜잭션 시뮬레이션 + 트랜잭션에 필요한 가스 수수료 가져오기 */
+  txTimeout?: number /** 선택사항 - tx가 블록에 포함될 때까지 대기할 블록 수 **/
+  walletStrategy: WalletStrategy
+  gasBufferCoefficient?: number /** 선택사항 - 트랜잭션이 블록에 포함되도록 시뮬레이션/하드코딩된 가스에 추가할 가스 버퍼 */
+}
+
+export interface MsgBroadcasterTxOptions {
+  memo?: string /** 트랜잭션에 추가된 MEMO **/
+  injectiveAddress: string /** 트랜잭션의 서명자 **/
+  msgs: Msgs | Msgs[] /** 트랜잭션에 패킹할 메시지 **/
+
+  /*
+  *** 하드코딩된 가스/시뮬레이션 재정의 -
+  *** MsgBroadcaster 생성자의 simulateTx 매개변수에
+  *** 따라 달라짐
+  */
+  gas?: {
+    gasPrice?: string
+    gas?: number /** 가스 한도 */
+    feePayer?: string
+    granter?: string
+  }
+}
+
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  `endpoints`를 재정의하고 자체 인프라를 사용하려면(권장)
+  제공해야 하는 엔드포인트와 설정 방법에 대해
+  [Networks](../../developers/concepts/networks/) 페이지에서 자세히 읽어보세요.
+</Callout>
+
+## 개인키를 사용한 MsgBroadcaster
+
+이 MsgBroadcaster는 개인키와 함께 사용됩니다(주로 CLI 환경에서 사용). 생성자/브로드캐스트 옵션은 `MsgBroadcaster`와 매우 유사합니다.
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+export const msgBroadcasterWithPk = new MsgBroadcasterWithPk({
+  privateKey: `0x...` /** 개인키 해시 또는 sdk-ts의 PrivateKey 클래스 */,
+  network: NETWORK,
+});
+
+// 사용 예시
+const signer = "inj1...";
+
+const msg = MsgSend.fromJSON({
+  amount: {
+    denom: "inj",
+    amount: toChainFormat(0.01, 18).toFixed(),
+  },
+  srcInjectiveAddress: signer,
+  dstInjectiveAddress: "inj1...",
+});
+
+// 개인키를 사용하여 트랜잭션 준비 + 서명 + 브로드캐스트
+await msgBroadcasterWithPk.broadcast({
+  injectiveAddress: signer,
+  msgs: msg,
+});
+```

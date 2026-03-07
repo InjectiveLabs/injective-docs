@@ -1,0 +1,103 @@
+---
+title: Bank
+---
+
+bank 모듈은 계정 간의 다중 자산 코인 전송을 처리하고 특정 종류의 계정(특히 베스팅 계정의 위임/위임 해제)과 다르게 작동해야 하는 특수한 의사 전송을 추적하는 역할을 합니다. 다른 모듈이 사용자 잔액을 안전하게 변경할 수 있도록 다양한 기능을 가진 여러 인터페이스를 노출합니다.
+
+또한 bank 모듈은 애플리케이션에서 사용되는 모든 자산의 총 공급량을 추적하고 쿼리 지원을 제공합니다.
+
+## 메시지
+
+Bank 모듈이 내보내는 메시지와 Injective 체인과 상호작용하는 데 사용할 수 있는 메시지를 살펴보고 예제를 제공하겠습니다.
+
+### MsgSend
+
+이 메시지는 한 주소에서 다른 주소로 코인을 보내는 데 사용됩니다. 모든 TokenFactory 토큰 및 Peggy 토큰을 여기서 사용할 수 있습니다.
+CW20 토큰을 전송하려면 [wasm 모듈 예제](/ko/developers-native/examples/wasm.md#msgexecutecontract-transfer)의 `MsgExecuteContract` 섹션을 참조하세요.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(1).toFixed(),
+};
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgMultiSend
+
+이 메시지는 여러 발신자로부터 여러 수신자에게 보내는 데 사용됩니다.
+
+```typescript
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgMultiSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const denom = "inj";
+const decimals = 18;
+const records = [
+  /** 여기에 레코드 추가 */
+] as {
+  address: string;
+  amount: string /* 사람이 읽을 수 있는 숫자 */;
+}[];
+const totalToSend = records.reduce((acc, record) => {
+  return acc.plus(toChainFormat(record.amount, decimals));
+}, toChainFormat(0));
+
+const msg = MsgMultiSend.fromJSON({
+  inputs: [
+    {
+      address: injectiveAddress,
+      coins: [
+        {
+          denom,
+          amount: totalToSend.toFixed(),
+        },
+      ],
+    },
+  ],
+  outputs: records.map((record) => {
+    return {
+      address: record.address,
+      coins: [
+        {
+          amount: toChainFormat(record.amount, decimals).toFixed(),
+          denom,
+        },
+      ],
+    };
+  }),
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

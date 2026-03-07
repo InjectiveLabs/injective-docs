@@ -1,0 +1,164 @@
+---
+title: Ethereum 브릿지
+---
+
+Injective Ethereum 브릿지는 Injective 체인이 신뢰가 필요 없는 온체인 양방향 토큰 브릿지를 지원할 수 있게 합니다. 이 시스템에서 Ethereum의 ERC-20 토큰 보유자는 ERC-20 토큰을 Injective 체인의 Cosmos 네이티브 코인으로 즉시 변환하거나 그 반대로 할 수 있습니다.
+
+Injective Peggy 브릿지는 세 가지 주요 구성 요소로 구성됩니다:
+
+1. Ethereum의 Peggy Contract
+2. Peggo Orchestrator
+3. Injective 체인의 Peggy Module
+
+## Peggy Contract
+
+Peggy 컨트랙트의 기능은 Ethereum에서 Injective 체인으로 ERC-20 토큰의 효율적인 양방향 크로스체인 전송을 용이하게 하는 것입니다. 다른 토큰 브릿지 설정과 달리 Injective Peggy 브릿지는 Injective의 검증자들만이 운영하는 탈중앙화된 비수탁형 브릿지입니다. 브릿지는 Injective 체인의 지분 증명 보안으로 보호되며, 입금 및 출금은 합의 스테이킹 파워에 기반한 검증자의 최소 2/3 이상의 증명에 따라 처리됩니다.
+
+## Peggo Orchestrator
+
+오케스트레이터는 모든 Injective 체인 검증자가 운영하는 오프체인 릴레이어로, Ethereum에서 Injective 체인으로 ERC-20 토큰 전송 데이터를 전송하는 기능을 합니다.
+
+## Peggy Module
+
+기본적으로 Peggy 모듈은 Ethereum에서 ERC-20 입금 시 Injective 체인에서 새 토큰을 발행하고, Injective 체인에서 Ethereum으로 토큰을 인출할 때 토큰을 소각합니다. Peggy 모듈은 또한 슬래싱 페널티, 네이티브 토큰 보상, 인출 수수료를 포함한 다양한 메커니즘을 통해 검증자가 정직하고 효율적으로 행동하도록 경제적 인센티브를 관리합니다.
+
+## Ethereum에서 Injective로
+
+Ethereum에서 Injective로 전송하려면 Web3 트랜잭션을 만들고 Ethereum의 Peggy 컨트랙트와 상호작용해야 합니다. 전송을 하려면 두 단계가 필요합니다:
+
+1. 기본적으로 ERC20 자산을 Ethereum에 있는 Peggy Contract에 잠그는 것이므로, 전송하는 자산에 대해 Peggy Contract에 대한 허용량을 설정해야 합니다. 어떤 web3 프로바이더(ethers.js 또는 web3.js 등)를 사용하여 Peggy 컨트랙트 주소를 spender로 하여 ERC-20 `approve` 함수를 호출할 수 있습니다.
+2. 허용량이 설정되면 Peggy Contract에서 Injective 체인으로 전송하려는 원하는 금액과 자산으로 `sendToInjective` 함수를 호출해야 합니다. `@injectivelabs/contracts`의 `PeggyContract` 클래스(아래 예시 참조)를 사용하거나 ABI를 사용하여 컨트랙트와 직접 상호작용할 수 있습니다. 트랜잭션이 확인되면 자산이 Injective 체인에 표시되기까지 몇 분 정도 걸립니다.
+
+위 예시에 대한 몇 가지 참고사항:
+
+- 대상 주소(트랜잭션을 직접 빌드하려는 경우)는 다음 형식입니다:
+
+```ts
+"0x000000000000000000000000{여기에_0X_PREFIX_없이_ETHEREUM_주소}";
+// 예시
+"0x000000000000000000000000e28b3b32b6c345a34ff64674606124dd5aceca30";
+```
+
+여기서 Ethereum 주소는 대상 Injective 주소의 해당 Ethereum 주소입니다.
+
+- `walletStrategy`는 우리가 구축한 추상화로, 트랜잭션에 서명하고 브로드캐스트하는 데 사용할 수 있는 많은 지갑을 지원합니다(Ethereum과 Injective 체인 모두). 자세한 내용은 npm 패키지 [@injectivelabs/wallet-strategy](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-strategy) 및 [@injectivelabs/wallet-core](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-core) 문서에서 찾을 수 있습니다. 물론 이것은 예시일 뿐이며 web3 패키지를 직접 사용하거나 어떤 web3 프로바이더를 사용하여 트랜잭션을 처리할 수 있습니다.
+
+```ts
+import { PeggyContract } from "@injectivelabs/contracts";
+
+const contract = new PeggyContract({
+  ethereumChainId,
+  address: peggyContractAddress,
+  web3: web3 as any,
+});
+```
+
+- 아래 스니펫은 PeggyContract 인스턴스를 인스턴스화하며, 컨트랙트의 생성자에 제공하는 `web3`를 사용하여 쉽게 `estimateGas`하고 `sendTransaction`할 수 있습니다. 구현은 [여기](https://github.com/InjectiveLabs/injective-ts/blob/master/packages/contracts/src/contracts/Peggy.ts)에서 찾을 수 있습니다. 물론 이것은 예시일 뿐이며 web3 패키지 + 컨트랙트의 ABI를 직접 사용하여 컨트랙트를 인스턴스화한 다음 일부 web3 프로바이더를 사용하여 트랜잭션의 서명 및 브로드캐스트 로직을 처리할 수 있습니다.
+
+## Injective에서 Ethereum으로
+
+이제 INJ의 ERC20 버전이 Injective로 전송되었으므로, Injective 체인의 네이티브 `inj` denom이 발행되며 이것이 INJ 토큰의 표준 버전입니다. Injective에서 Ethereum으로 `inj`를 인출하려면 Injective 체인에서 네이티브 Cosmos 트랜잭션을 준비, 서명한 다음 브로드캐스트해야 합니다.
+
+Cosmos에서 트랜잭션(및 메시지)이 어떻게 작동하는지 익숙하지 않다면 여기에서 자세한 정보를 찾을 수 있습니다. Injective에서 Ethereum으로 자금을 인출하도록 지시하기 위해 트랜잭션에 패킹해야 하는 메시지는 `MsgSendToEth`입니다.
+
+체인에서 `MsgSendToEth`가 호출되면 일부 검증자가 트랜잭션을 가져와 여러 `MsgSendToEth` 요청을 하나로 묶고: Injective에서 인출되는 자산을 소각하고, Ethereum의 Peggy Smart Contract에서 이 자금을 잠금 해제하여 해당 주소로 전송합니다.
+
+이러한 트랜잭션에는 검증자가 인출 요청을 더 빨리 가져와 처리하도록 인센티브를 주는 bridgeFee가 포함됩니다. bridgeFee는 사용자가 Ethereum으로 인출하려는 자산으로 지불됩니다(INJ를 인출하면 bridgeFee도 INJ로 지불해야 합니다).
+
+다음은 트랜잭션을 준비하고, privateKey를 사용하여 서명한 후 최종적으로 Injective에 브로드캐스트하는 구현 예시입니다:
+
+```ts
+import { getNetworkInfo, Network } from "@injectivelabs/networks";
+import {
+  TxClient,
+  TxRestApi,
+  createTransaction,
+} from "@injectivelabs/sdk-ts/core/tx";
+import {
+  PrivateKey,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
+  MsgSendToEth,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  ChainRestAuthApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
+
+/** MsgSendToEth 예시 */
+(async () => {
+  const network = getNetworkInfo(Network.Mainnet); // rpc/lcd 엔드포인트 가져오기
+  const privateKeyHash =
+    "f9db9bf330e23cb7839039e944adef6e9df447b90b503d5b4464c90bea9022f3";
+  const privateKey = PrivateKey.fromPrivateKey(privateKeyHash);
+  const injectiveAddress = privateKey.toBech32();
+  const ethAddress = privateKey.toHex();
+  const publicKey = privateKey.toPublicKey().toBase64();
+
+  /** 계정 세부 정보 **/
+  const accountDetails = await new ChainRestAuthApi(network.rest).fetchAccount(
+    injectiveAddress
+  );
+
+  /** 메시지 준비 */
+  const amount = {
+    amount: toChainFormat(0.01).toFixed(),
+    denom: "inj",
+  };
+  const bridgeFee = {
+    amount: toChainFormat(0.01).toFixed(),
+    denom: "inj",
+  };
+
+  const msg = MsgSendToEth.fromJSON({
+    amount,
+    bridgeFee,
+    injectiveAddress,
+    address: ethAddress,
+  });
+
+  /** 트랜잭션 준비 **/
+  const { signBytes, txRaw } = createTransaction({
+    message: msg,
+    pubKey: publicKey,
+    fee: getDefaultStdFee(),
+    sequence: parseInt(accountDetails.account.base_account.sequence, 10),
+    accountNumber: parseInt(
+      accountDetails.account.base_account.account_number,
+      10
+    ),
+    chainId: network.chainId,
+  });
+
+  /** 트랜잭션 서명 */
+  const signature = await privateKey.sign(Buffer.from(signBytes));
+
+  /** 서명 첨부 */
+  txRaw.signatures = [signature];
+
+  /** 트랜잭션 해시 계산 */
+  console.log(`트랜잭션 해시: ${TxClient.hash(txRaw)}`);
+
+  const txService = new TxRestApi(network.rest);
+
+  /** 트랜잭션 시뮬레이션 */
+  const simulationResponse = await txService.simulate(txRaw);
+
+  console.log(
+    `트랜잭션 시뮬레이션 응답: ${JSON.stringify(
+      simulationResponse.gasInfo
+    )}`
+  );
+
+  /** 트랜잭션 브로드캐스트 */
+  const txResponse = await txService.broadcast(txRaw);
+
+  if (txResponse.code !== 0) {
+    console.log(`트랜잭션 실패: ${txResponse.rawLog}`);
+  } else {
+    console.log(
+      `브로드캐스트된 트랜잭션 해시: ${JSON.stringify(txResponse.txhash)}`
+    );
+  }
+})();
+```
