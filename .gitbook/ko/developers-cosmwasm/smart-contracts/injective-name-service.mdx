@@ -1,0 +1,354 @@
+---
+title: Injective Name Service
+---
+
+이 섹션에서는 Injective Name Service 컨트랙트를 쿼리하여 .inj 도메인 이름을 확인하고 역방향 조회를 수행하는 방법을 살펴봅니다.
+
+## InjNameService 클래스 구현
+
+권장되는 접근 방식은 이름 서비스 기능을 캡슐화하는 자체 `InjNameService` 클래스를 만드는 것입니다. 이렇게 하면 도메인 확인 및 역방향 조회를 위한 깔끔하고 재사용 가능한 인터페이스가 제공됩니다.
+
+### InjNameService 클래스 생성
+
+다음은 애플리케이션에서 사용할 수 있는 완전한 구현입니다:
+
+```ts
+import {
+  Network,
+  getNetworkEndpoints,
+  getInjNameRegistryContractForNetwork,
+  getInjNameReverseResolverContractForNetwork,
+} from "@injectivelabs/networks";
+import {
+  QueryInjName,
+  ChainGrpcWasmApi,
+  QueryResolverAddress,
+  QueryInjectiveAddress,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+
+export class InjNameService {
+  private reverseResolverAddress: string;
+  private registryAddress: string;
+  private chainGrpcWasmApi: ChainGrpcWasmApi;
+
+  constructor(network: Network = Network.Mainnet) {
+    const endpoints = getNetworkEndpoints(network);
+    this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+    this.registryAddress = getInjNameRegistryContractForNetwork(network);
+    this.reverseResolverAddress =
+      getInjNameReverseResolverContractForNetwork(network);
+  }
+
+  /**
+   * 주어진 Injective 주소에 대한 .inj 이름을 가져옵니다 (역방향 확인)
+   * @param address - 확인할 Injective 주소
+   * @returns .inj 도메인 이름
+   */
+  async fetchInjName(address: string): Promise<string> {
+    const query = new QueryInjName({ address }).toPayload();
+
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      this.reverseResolverAddress,
+      query
+    );
+
+    const name =
+      InjNameServiceQueryTransformer.injectiveNameResponseToInjectiveName(
+        response
+      );
+
+    if (!name) {
+      throw new Error(`.inj name not found for ${address}`);
+    }
+
+    // 이름이 실제로 동일한 주소로 다시 확인되는지 확인하여 역방향 확인 검증
+    const addressFromName = await this.fetchInjAddress(name);
+
+    if (addressFromName.toLowerCase() !== address.toLowerCase()) {
+      throw new Error(`.inj name not found for ${address}`);
+    }
+
+    return name;
+  }
+
+  /**
+   * 주어진 .inj 도메인 이름에 대한 Injective 주소를 가져옵니다 (정방향 확인)
+   * @param name - 확인할 .inj 도메인 이름
+   * @returns Injective 주소
+   */
+  async fetchInjAddress(name: string): Promise<string> {
+    const normalizedName = normalizeName(name);
+    const node = nameToNode(normalizedName);
+
+    if (!node || node.length === 0) {
+      throw new Error(`The ${name} can't be normalized`);
+    }
+
+    const resolverAddress = await this.fetchResolverAddress(node);
+
+    if (!resolverAddress) {
+      throw new Error(`Resolver address not found for ${name}`);
+    }
+
+    const query = new QueryInjectiveAddress({ node }).toPayload();
+
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      resolverAddress,
+      query
+    );
+
+    const address =
+      InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(
+        response
+      );
+
+    if (!address) {
+      throw new Error(`Address not found for ${name}`);
+    }
+
+    return address;
+  }
+
+  /**
+   * 주어진 노드에 대한 resolver 주소를 가져옵니다
+   * @private
+   */
+  private async fetchResolverAddress(node: number[]): Promise<string> {
+    const query = new QueryResolverAddress({ node }).toPayload();
+
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      this.registryAddress,
+      query
+    );
+
+    return InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(
+      response
+    );
+  }
+}
+```
+
+### InjNameService 클래스 사용
+
+```ts
+import { Network } from "@injectivelabs/networks";
+
+// 서비스 초기화
+const injNameService = new InjNameService(Network.Mainnet);
+
+// .inj 도메인을 주소로 확인
+const address = await injNameService.fetchInjAddress("ninja.inj");
+console.log("Address:", address);
+
+// 주소를 .inj 도메인으로 역방향 확인
+const name = await injNameService.fetchInjName("inj1...");
+console.log("Name:", name);
+```
+
+## 직접 스마트 컨트랙트 쿼리
+
+추상화 레이어 없이 컨트랙트를 직접 쿼리해야 하거나 더 많은 제어가 필요한 경우 개별 메서드는 다음과 같습니다:
+
+### 도메인 확인 (정방향 조회)
+
+.inj 도메인 이름을 Injective 주소로 확인합니다.
+
+#### 1단계: Resolver 주소 가져오기
+
+```ts
+import {
+  Network,
+  getNetworkEndpoints,
+  getInjNameRegistryContractForNetwork,
+} from "@injectivelabs/networks";
+import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+import {
+  ChainGrpcWasmApi,
+  QueryResolverAddress,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+
+const endpoints = getNetworkEndpoints(Network.Mainnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const registryContractAddress = getInjNameRegistryContractForNetwork(
+  Network.Mainnet
+);
+
+const name = "ninja.inj";
+const normalizedName = normalizeName(name);
+const node = nameToNode(normalizedName);
+
+const query = new QueryResolverAddress({ node }).toPayload();
+
+const response = await chainGrpcWasmApi.fetchSmartContractState(
+  registryContractAddress,
+  query
+);
+
+const resolverAddress =
+  InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(
+    response
+  );
+
+console.log("Resolver Address:", resolverAddress);
+```
+
+#### 2단계: 도메인의 주소 가져오기
+
+```ts
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+import {
+  ChainGrpcWasmApi,
+  QueryInjectiveAddress,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+
+const endpoints = getNetworkEndpoints(Network.Mainnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const name = "ninja.inj";
+const normalizedName = normalizeName(name);
+const node = nameToNode(normalizedName);
+
+// 1단계의 resolver 주소 사용
+const resolverAddress = "...";
+
+const query = new QueryInjectiveAddress({ node }).toPayload();
+
+const response = await chainGrpcWasmApi.fetchSmartContractState(
+  resolverAddress,
+  query
+);
+
+const injectiveAddress =
+  InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(
+    response
+  );
+
+if (!injectiveAddress) {
+  throw new Error(`Address not found for ${name}`);
+}
+
+console.log("Injective Address:", injectiveAddress);
+```
+
+### 역방향 확인 (주소에서 도메인으로)
+
+Injective 주소를 기본 .inj 도메인 이름으로 확인합니다.
+
+```ts
+import {
+  Network,
+  getNetworkEndpoints,
+  getInjNameReverseResolverContractForNetwork,
+} from "@injectivelabs/networks";
+import {
+  QueryInjName,
+  ChainGrpcWasmApi,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+
+const endpoints = getNetworkEndpoints(Network.Mainnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const reverseResolverContractAddress =
+  getInjNameReverseResolverContractForNetwork(Network.Mainnet);
+
+const injectiveAddress = "inj1...";
+
+const query = new QueryInjName({ address: injectiveAddress }).toPayload();
+
+const response = await chainGrpcWasmApi.fetchSmartContractState(
+  reverseResolverContractAddress,
+  query
+);
+
+const name =
+  InjNameServiceQueryTransformer.injectiveNameResponseToInjectiveName(response);
+
+if (!name) {
+  throw new Error(`.inj name not found for ${injectiveAddress}`);
+}
+
+console.log("INS Name:", name);
+```
+
+**중요:** 이름이 실제로 원래 주소로 다시 확인되는지 정방향 조회를 수행하여 항상 역방향 확인을 검증하세요. 정방향 확인을 사용한 검증 방법은 다음과 같습니다:
+
+```ts
+import { Network, getNetworkEndpoints, getInjNameRegistryContractForNetwork } from "@injectivelabs/networks";
+import { nameToNode, normalizeName } from "@injectivelabs/sdk-ts/utils";
+import {
+  ChainGrpcWasmApi,
+  QueryResolverAddress,
+  QueryInjectiveAddress,
+  InjNameServiceQueryTransformer,
+} from "@injectivelabs/sdk-ts/client/wasm";
+
+// gRPC 클라이언트 초기화
+const endpoints = getNetworkEndpoints(Network.Mainnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+// 역방향 확인에서 이름을 얻은 후 다시 확인되는지 검증
+const normalizedName = normalizeName(name);
+const node = nameToNode(normalizedName);
+
+// resolver 주소 가져오기
+const registryContractAddress = getInjNameRegistryContractForNetwork(
+  Network.Mainnet
+);
+const resolverQuery = new QueryResolverAddress({ node }).toPayload();
+const resolverResponse = await chainGrpcWasmApi.fetchSmartContractState(
+  registryContractAddress,
+  resolverQuery
+);
+const resolverAddress =
+  InjNameServiceQueryTransformer.resolverAddressResponseToResolverAddress(
+    resolverResponse
+  );
+
+// 이름에서 주소 가져오기
+const addressQuery = new QueryInjectiveAddress({ node }).toPayload();
+const addressResponse = await chainGrpcWasmApi.fetchSmartContractState(
+  resolverAddress,
+  addressQuery
+);
+const addressFromName =
+  InjNameServiceQueryTransformer.injectiveAddressResponseToInjectiveAddress(
+    addressResponse
+  );
+
+// 이름이 원래 주소로 다시 확인되는지 검증
+if (addressFromName.toLowerCase() !== injectiveAddress.toLowerCase()) {
+  throw new Error(
+    `Verification failed: ${name} does not resolve back to ${injectiveAddress}`
+  );
+}
+```
+
+> **참고:** 앞서 보여준 `InjNameService` 클래스를 사용하는 경우 이 검증을 다음과 같이 단순화할 수 있습니다: `await injNameService.fetchInjAddress(name)`
+
+## 모범 사례
+
+1. **처리하기 전에 항상 도메인 이름을 정규화하세요** - 일관성을 보장합니다
+2. **역방향 확인을 검증하세요** - 이름이 실제로 주소로 다시 확인되는지 정방향 조회를 수행하여 확인합니다
+3. **오류를 우아하게 처리하세요** - 모든 주소에 .inj 이름이 있는 것은 아니며 모든 이름이 등록된 것도 아닙니다
+4. **적절한 네트워크 구성을 사용하세요** - 올바른 네트워크(메인넷 vs 테스트넷)를 쿼리하는지 확인하세요
+5. **적절한 경우 결과를 캐시하세요** - 불필요한 컨트랙트 쿼리를 줄입니다
+
+## 종속성
+
+Injective Name Service를 사용하려면 다음 패키지가 필요합니다:
+
+```json
+{
+  "dependencies": {
+    "@injectivelabs/sdk-ts": "latest",
+    "@injectivelabs/networks": "latest"
+  }
+}
+```

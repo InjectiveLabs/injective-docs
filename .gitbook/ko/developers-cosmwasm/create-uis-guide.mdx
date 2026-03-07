@@ -1,0 +1,26 @@
+---
+title: UI 만들기
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  UI 생성 및 부트스트래핑 옵션에 대한 더 포괄적인 문서는
+  [dApps 문서](/developers/dapps/)에서 찾을 수 있습니다.
+</Callout>
+
+Injective CLI를 통해 컨트랙트와 상호작용했지만, 이는 대부분의 dApp 사용자에게 이상적이지 않습니다. 웹 UI가 훨씬 더 나은 경험을 제공할 수 있습니다! `injectived`를 통해 트랜잭션 메시지를 보내는 대신 복잡성을 추상화하고 사용자에게 두 개의 버튼을 제공할 수 있습니다—하나는 카운트를 증가시키고, 하나는 카운트를 재설정하는 버튼입니다.
+
+![](https://docs.injective.network/img/Counter_website.png)
+
+예를 들어, [카운터 웹사이트](https://injective-simple-cosmwasm-sc.netlify.app/)를 참조하세요. Vue와 [Injective TS SDK](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/sdk-ts)를 사용한 프론트엔드 개발에 대한 고수준 가이드는 [웹사이트 저장소 여기](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui/tree/master/nuxt)에서 찾을 수 있습니다. React 구현은 [여기](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui/tree/master/next)를 참조하세요.
+
+이제 컨트랙트와 상호작용하는 것은 버튼을 클릭하고 MetaMask로 서명하는 것만큼 간단합니다(계정이 Ethereum Sepolia 테스트넷으로 설정되어 있는지 확인하세요. 그렇지 않으면 체인 ID 불일치 오류가 발생합니다).
+
+![](https://docs.injective.network/img/metamask_select_testnet.png)
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  카운트를 재설정하려고 할 때 "Unauthorized" 오류 메시지가 표시될 수 있습니다.
+  이것은 예상된 동작입니다! [reset에 대한 컨트랙트 로직](/developers-cosmwasm/smart-contracts/your-first-smart-contract/#reset)에서
+  컨트랙트 소유자만 카운트를 재설정할 수 있다는 것을 기억하세요.
+  프론트엔드가 상호작용하는 정확한 컨트랙트를 인스턴스화하지 않았으므로
+  카운트를 재설정하는 데 필요한 권한이 없습니다.
+</Callout>

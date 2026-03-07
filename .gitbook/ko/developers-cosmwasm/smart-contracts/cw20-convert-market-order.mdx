@@ -1,0 +1,56 @@
+---
+title: CW20를 Bank & Market Order로 한 트랜잭션에서 변환
+---
+
+이 예제는 Injective 블록체인에서 CW20 토큰을 bank 토큰으로 변환하는 메시지를 생성하는 데 도움을 줍니다. 이는 CW20 토큰이 있고 마켓 오더와 같은 작업을 수행하기 위해 해당 bank 토큰으로 변환해야 할 때 특히 유용합니다. 이 흐름은 cw20 토큰과 해당 [factory 토큰](../../developers/concepts/)에만 작동합니다.
+
+이 가이드에서는 다음을 안내합니다:
+
+* 사용자의 CW20 토큰 잔액 얻기
+* ConvertCw20ToBankService를 사용하여 CW20 토큰을 bank 토큰으로 변환하는 메시지 생성
+* 변환된 bank 잔액과 기존 bank 잔액을 사용하여 마켓 오더 실행
+
+## 사용자의 CW20 잔액 가져오기
+
+[explorer indexer 쿼리](../../developers-native/query-indexer/explorer/#fetch-cw20-balances)를 사용하여 이를 수행할 수 있습니다.
+
+* bank factory 토큰으로 변환하려는 결과 세트에서 cw20 주소와 잔액을 찾으세요
+
+## CW20에서 Bank로 변환 메시지 생성
+
+* CW20 토큰을 bank factory 토큰으로 변환하기 위해 [여기](../../developers/concepts/token-factory/#example-on-how-to-convert-cw20-to-a-factory-denom)에 설명된 단계를 사용하여 `convertMsg`를 생성하세요. 아직 트랜잭션을 제출할 필요가 없습니다.
+
+## `MsgCreateSpotMarketOrder` 메시지 생성
+
+* [MsgCreateSpotMarketOrder](../../developers-native/examples/exchange/#msgcreatespotmarketorder)에 설명된 단계를 사용하여 `msg`를 생성하세요. 아직 트랜잭션을 제출할 필요가 없습니다.
+* 생성하는 매수 오더는 변환된 cw20 잔액 + 기존 bank 잔액에 액세스할 수 있습니다. 예:
+
+```ts
+const order = {
+  price: 1,
+  quantity: 10,
+}
+```
+
+* 각각 $1의 가격으로 5개의 Cw20 토큰과 5개의 bank 토큰이 있었다면, 위의 오더는 체인이 이 마켓 오더를 실행하기 전에 cw20을 bank로 변환하기 때문에 통과됩니다. 이것은 다음 단계에서 더 명확해질 것입니다.
+
+## 변환된 CW20 잔액과 기존 bank 잔액을 사용하여 마켓 오더 배치
+
+이제 두 메시지가 모두 포맷되었으므로, 한 트랜잭션에서 cw20 토큰을 bank factory 토큰으로 변환한 다음 결합된 잔액을 사용하여 마켓 오더를 배치할 수 있습니다.
+
+```ts
+import { Network } from '@injectivelabs/networks'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+
+const privateKey = '0x...'
+const injectiveAddress = 'inj1...'
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.MainnetSentry,
+}).broadcast({
+  msgs: [convertMsg, msg], // bank로 변환하는 메시지가 먼저 실행됩니다. 그런 다음 해당 추가 잔액으로 다음 msg에서 마켓 오더를 완료할 수 있습니다
+})
+
+console.log(txHash)
+```

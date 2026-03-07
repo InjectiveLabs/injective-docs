@@ -1,0 +1,102 @@
+---
+title: 메인넷 배포
+---
+
+이 가이드는 Injective 메인넷에 CosmWasm 스마트 컨트랙트를 배포하고 인스턴스화하는 거버넌스 프로세스를 시작하는 방법을 안내합니다.
+
+### 코드 업로드 제안 제출
+
+이 섹션에서는 스마트 컨트랙트 코드 제안을 제출하고 투표하는 방법을 배웁니다.
+
+Injective 네트워크 참여자는 스마트 컨트랙트 배포를 제안하고 거버넌스에서 투표하여 활성화할 수 있습니다. `wasmd` 권한 설정은 온체인 거버넌스에 의해 결정되며, 이는 컨트랙트 배포가 완전히 거버넌스에 의해 결정됨을 의미합니다. 따라서 거버넌스 제안은 Injective 메인넷에 컨트랙트를 업로드하는 첫 번째 단계입니다.
+
+체인에 코드를 업로드하기 위한 거버넌스 제안을 시작하는 `injectived` 사용 예:
+
+```bash
+injectived tx wasm submit-proposal wasm-store artifacts/cw_controller.wasm
+--title="Proposal Title" \
+--summary="Proposal Summary" \
+--instantiate-everybody true \
+--broadcast-mode=sync \
+--chain-id=injective-1 \
+--node=https://sentry.tm.injective.network:443 \
+--deposit=100000000000000000000inj \
+--gas=20000000 \
+--gas-prices=160000000inj \
+--from [YOUR_KEY] \
+--yes \
+--output json
+```
+
+`injectived tx gov submit-proposal wasm-store` 명령은 wasm 바이너리 제안을 제출합니다. 제안이 거버넌스에 의해 승인되면 코드가 배포됩니다.
+
+업로드된 코드의 인스턴스화 권한을 설정하는 두 가지 주요 플래그 `instantiate-everybody`와 `instantiate-only-address`를 살펴보겠습니다. 기본적으로 모든 사람이 컨트랙트를 인스턴스화할 수 있습니다.
+
+```bash
+--instantiate-everybody boolean # 모든 사람이 코드에서 컨트랙트를 인스턴스화할 수 있음, 선택사항
+--instantiate-only-address string # 이 주소만 코드에서 컨트랙트 인스턴스를 인스턴스화할 수 있음
+```
+
+### 컨트랙트 인스턴스화 (거버넌스 없음)
+
+대부분의 경우 인스턴스화를 위해 다른 거버넌스 제안을 푸시할 필요가 없습니다. 간단히 `injectived tx wasm instantiate`로 인스턴스화하세요. 컨트랙트를 _업로드_하기 위해서만 거버넌스 제안이 필요합니다. `--instantiate-everybody` 플래그가 `false`로 설정되고 `--instantiate-only-address` 플래그가 거버넌스 모듈로 설정된 경우가 아니면 인스턴스화를 위해 거버넌스를 거칠 필요가 없습니다. `--instantiate-everybody`의 기본값은 `true`이며, 이 경우 `injectived tx wasm instantiate`를 통해 무허가로 인스턴스화할 수 있습니다.
+
+```bash
+injectived tx wasm instantiate [code_id_int64] [json_encoded_init_args] --label [text] --admin [address,optional] --amount [coins,optional]  [flags]
+```
+
+`injectived tx wasm instantiate` 예:
+
+```bash
+injectived tx wasm instantiate \
+150 \
+'{"bank": "inj1egl894wme0d4d029hlv3kuqs0mc9atep2s89h8"}' \
+--label="LABEL" \
+--from=inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c \
+--chain-id=injective-1 \
+--yes \
+--gas-prices 160000000inj \
+--gas=10000000 \
+--no-admin \
+--node=https://sentry.tm.injective.network:443 \
+```
+
+### 컨트랙트 인스턴스화 (거버넌스)
+
+위에서 언급했듯이, 메인넷에서의 컨트랙트 인스턴스화 권한은 코드 업로드 시 사용된 플래그에 따라 다릅니다. 기본적으로 genesis `wasmd` Injective 설정에서 확인할 수 있듯이 무허가로 설정됩니다:
+
+```json
+"wasm": {
+            "codes": [],
+            "contracts": [],
+            "gen_msgs": [],
+            "params": {
+                "code_upload_access": {
+                    "address": "",
+                    "permission": "Everybody"
+                },
+                "instantiate_default_permission": "Everybody"
+            },
+            "sequences": []
+        }
+```
+
+그러나 `--instantiate-everybody` 플래그가 `false`로 설정된 경우 컨트랙트 인스턴스화는 거버넌스를 통해 이루어져야 합니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Injective 테스트넷은 개발자가 쉽게 컨트랙트를 배포할 수 있도록 기본적으로 무허가입니다.
+</Callout>
+
+#### 컨트랙트 인스턴스화 제안
+
+```bash
+ injectived tx gov submit-proposal instantiate-contract [code_id_int64] [json_encoded_init_args] --label [text] --title [text] --description [text] --run-as [address] --admin [address,optional] --amount [coins,optional] [flags]
+```
+
+### 컨트랙트 마이그레이션
+
+마이그레이션은 주어진 스마트 컨트랙트의 코드를 교체하거나 '업그레이드'하는 프로세스입니다.
+
+컨트랙트를 인스턴스화할 때 설정할 수 있는 선택적 admin 필드가 있습니다. 비어 있으면 컨트랙트는 불변입니다. admin이 설정되면(외부 계정 또는 거버넌스 컨트랙트로) 해당 계정이 마이그레이션을 트리거할 수 있습니다. admin은 또한 admin 역할을 재할당하거나 원하는 경우 컨트랙트를 완전히 불변으로 만들 수 있습니다. 그러나 이전 컨트랙트에서 새 컨트랙트로 마이그레이션할 때 새 컨트랙트는 이전에 상태가 어떻게 인코딩되었는지 알아야 한다는 점을 명심하세요.
+
+마이그레이션의 기술적 측면에 대한 자세한 설명은 [CosmWasm 마이그레이션 문서](https://docs.cosmwasm.com/docs/smart-contracts/migration)에서 찾을 수 있습니다.

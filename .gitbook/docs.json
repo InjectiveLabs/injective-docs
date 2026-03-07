@@ -1261,6 +1261,32 @@
                 ]
               },
               {
+                "group": "CosmWasm 개발자",
+                "icon": "comet",
+                "expanded": false,
+                "pages": [
+                  "ko/developers-cosmwasm/index",
+                  {
+                    "group": "CosmWasm 스마트 컨트랙트",
+                    "pages": [
+                      "ko/developers-cosmwasm/smart-contracts/index",
+                      "ko/developers-cosmwasm/smart-contracts/your-first-smart-contract",
+                      "ko/developers-cosmwasm/smart-contracts/injective-name-service",
+                      "ko/developers-cosmwasm/smart-contracts/neptune-service",
+                      "ko/developers-cosmwasm/smart-contracts/cw20-convert-market-order"
+                    ]
+                  },
+                  "ko/developers-cosmwasm/local-development-guide",
+                  "ko/developers-cosmwasm/mainnet-deployment-guide",
+                  "ko/developers-cosmwasm/whitelisting-deployment-address-guide",
+                  "ko/developers-cosmwasm/create-your-swap-contract-guide",
+                  "ko/developers-cosmwasm/create-uis-guide",
+                  "ko/developers-cosmwasm/cosmwasm-any",
+                  "ko/developers-cosmwasm/cw20-adapter",
+                  "ko/developers-cosmwasm/injective-test-tube"
+                ]
+              },
+              {
                 "group": "DeFi 개발자",
                 "icon": "money-bill-transfer",
                 "expanded": false,

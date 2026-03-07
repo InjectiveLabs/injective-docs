@@ -1,0 +1,323 @@
+---
+title: Injective Test Tube
+---
+
+`injective-test-tube`는 `cw-multi-test`와 달리 모의 객체가 아닌 체인의 실제 로직에 대해 CosmWasm 컨트랙트를 테스트할 수 있는 CosmWasm x Injective 통합 테스트 라이브러리입니다.
+
+`dev` 브랜치는 현재 비공개 저장소에 의존하지만 게시된 버전을 대신 사용할 수 있습니다. 기능 및 업데이트 정보는 [`CHANGELOG`](https://github.com/InjectiveLabs/test-tube/blob/dev/packages/injective-test-tube/CHANGELOG.md)를 참조하세요.
+
+### 시작하기
+
+`injective-test-tube`의 작동 방식을 보여주기 위해 `cw-plus`의 [cw-whitelist](https://github.com/CosmWasm/cw-plus/tree/main/contracts/cw1-whitelist) 간단한 예제 컨트랙트를 사용합니다.
+
+테스트를 설정하는 방법은 다음과 같습니다:
+
+```rust
+use cosmwasm_std::Coin;
+use injective_test_tube::InjectiveTestApp;
+
+// 새 injective 앱체인 인스턴스 생성
+let app = InjectiveTestApp::new();
+
+// 초기 자금이 있는 새 계정 생성
+let accs = app
+    .init_accounts(
+        &[
+            Coin::new(1_000_000_000_000, "usdt"),
+            Coin::new(1_000_000_000_000, "inj"),
+        ],
+        2,
+    )
+    .unwrap();
+
+let admin = &accs[0];
+let new_admin = &accs[1];
+```
+
+이제 앱체인 인스턴스와 초기 잔액이 있고 앱체인과 상호작용할 수 있는 계정이 있습니다. 이것은 Docker 인스턴스를 실행하거나 외부 프로세스를 생성하지 않으며, 앱체인의 코드를 라이브러리로 로드하여 메모리 내 인스턴스를 생성합니다.
+
+`init_accounts`는 동일한 초기 잔액으로 여러 계정을 생성하는 편의 함수입니다. 하나의 계정만 생성하려면 `init_account`를 대신 사용할 수 있습니다.
+
+```rust
+use cosmwasm_std::Coin;
+use injective_test_tube::InjectiveTestApp;
+
+let app = InjectiveTestApp::new();
+
+let account = app.init_account(&[
+    Coin::new(1_000_000_000_000, "usdt"),
+    Coin::new(1_000_000_000_000, "inj"),
+]);
+```
+
+이제 cosmwasm 컨트랙트를 테스트하려면 다음을 수행해야 합니다:
+
+* wasm 파일 빌드
+* 코드 저장
+* 인스턴스화
+
+그런 다음 컨트랙트와 상호작용을 시작할 수 있습니다. 그렇게 해봅시다.
+
+```rust
+use cosmwasm_std::Coin;
+use cw1_whitelist::msg::{InstantiateMsg}; // cw1_whitelist 컨트랙트 인스턴스화용
+use injective_test_tube::{Account, Module, InjectiveTestApp, Wasm};
+
+let app = InjectiveTestApp::new();
+let accs = app
+    .init_accounts(
+        &[
+            Coin::new(1_000_000_000_000, "usdt"),
+            Coin::new(1_000_000_000_000, "inj"),
+        ],
+        2,
+    )
+    .unwrap();
+let admin = &accs[0];
+let new_admin = &accs[1];
+
+// ============= 새 코드 ================
+
+// `Wasm`은 앱체인의 cosmwasm 관련 로직과 상호작용하는 데 사용하는 모듈입니다
+// `Module` 트레이트를 구현하며 나중에 더 볼 수 있습니다.
+let wasm = Wasm::new(&app);
+
+// 컴파일된 wasm 바이트코드 로드
+let wasm_byte_code = std::fs::read("./test_artifacts/cw1_whitelist.wasm").unwrap();
+let code_id = wasm
+    .store_code(&wasm_byte_code, None, admin)
+    .unwrap()
+    .data
+    .code_id;
+```
+
+이 예제에서는 간단한 데모 목적으로 [cw-plus 릴리스](https://github.com/CosmWasm/cw-plus/releases)에서 wasm 바이트코드를 로드합니다. `cargo wasm`을 실행하고 `target/wasm32-unknown-unknown/release/<contract_name>.wasm`에서 wasm 파일을 찾을 수 있습니다.
+
+```rust
+use cosmwasm_std::Coin;
+use cw1_whitelist::msg::{InstantiateMsg, QueryMsg, AdminListResponse};
+use injective_test_tube::{Account, Module, InjectiveTestApp, Wasm};
+
+let app = InjectiveTestApp::new();
+let accs = app
+    .init_accounts(
+        &[
+            Coin::new(1_000_000_000_000, "usdt"),
+            Coin::new(1_000_000_000_000, "inj"),
+        ],
+        2,
+    )
+    .unwrap();
+let admin = &accs[0];
+let new_admin = &accs[1];
+
+let wasm = Wasm::new(&app);
+
+
+let wasm_byte_code = std::fs::read("./test_artifacts/cw1_whitelist.wasm").unwrap();
+let code_id = wasm
+    .store_code(&wasm_byte_code, None, admin)
+    .unwrap()
+    .data
+    .code_id;
+
+// ============= 새 코드 ================
+
+// 초기 admin으로 컨트랙트를 인스턴스화하고 admin 목록을 변경 가능하게 만듭니다
+let init_admins = vec![admin.address()];
+let contract_addr = wasm
+    .instantiate(
+        code_id,
+        &InstantiateMsg {
+            admins: init_admins.clone(),
+            mutable: true,
+        },
+        None, // 마이그레이션에 사용되는 컨트랙트 admin, cw1_whitelist admin과 다릅니다
+        Some("Test label"), // 컨트랙트 레이블
+        &[], // 자금
+        admin, // 서명자
+    )
+    .unwrap()
+    .data
+    .address;
+
+// 컨트랙트 인스턴스화가 제대로 작동하는지 확인하기 위해 컨트랙트 상태 쿼리
+let admin_list = wasm
+    .query::<QueryMsg, AdminListResponse>(&contract_addr, &QueryMsg::AdminList {})
+    .unwrap();
+
+assert_eq!(admin_list.admins, init_admins);
+assert!(admin_list.mutable);
+```
+
+이제 컨트랙트를 실행하고 컨트랙트의 상태가 제대로 업데이트되었는지 확인해 봅시다.
+
+```rust
+use cosmwasm_std::Coin;
+use cw1_whitelist::msg::{InstantiateMsg, QueryMsg, ExecuteMsg, AdminListResponse};
+use injective_test_tube::{Account, Module, InjectiveTestApp, Wasm};
+
+let app = InjectiveTestApp::new();
+let accs = app
+    .init_accounts(
+        &[
+            Coin::new(1_000_000_000_000, "usdt"),
+            Coin::new(1_000_000_000_000, "inj"),
+        ],
+        2,
+    )
+    .unwrap();
+let admin = &accs[0];
+let new_admin = &accs[1];
+
+let wasm = Wasm::new(&app);
+
+
+let wasm_byte_code = std::fs::read("./test_artifacts/cw1_whitelist.wasm").unwrap();
+let code_id = wasm
+    .store_code(&wasm_byte_code, None, admin)
+    .unwrap()
+    .data
+    .code_id;
+
+// 초기 admin으로 컨트랙트를 인스턴스화하고 admin 목록을 변경 가능하게 만듭니다
+let init_admins = vec![admin.address()];
+let contract_addr = wasm
+    .instantiate(
+        code_id,
+        &InstantiateMsg {
+            admins: init_admins.clone(),
+            mutable: true,
+        },
+        None,
+        Some("Test label"),
+        &[],
+        admin,
+    )
+    .unwrap()
+    .data
+    .address;
+
+let admin_list = wasm
+    .query::<QueryMsg, AdminListResponse>(&contract_addr, &QueryMsg::AdminList {})
+    .unwrap();
+
+assert_eq!(admin_list.admins, init_admins);
+assert!(admin_list.mutable);
+
+// ============= 새 코드 ================
+
+// admin 목록을 업데이트하고 상태를 다시 확인
+let new_admins = vec![new_admin.address()];
+wasm.execute::<ExecuteMsg>(
+    &contract_addr,
+    &ExecuteMsg::UpdateAdmins {
+        admins: new_admins.clone(),
+    },
+    &[],
+    admin,
+)
+.unwrap();
+
+let admin_list = wasm
+    .query::<QueryMsg, AdminListResponse>(&contract_addr, &QueryMsg::AdminList {})
+    .unwrap();
+
+assert_eq!(admin_list.admins, new_admins);
+assert!(admin_list.mutable);
+```
+
+### 디버깅
+
+컨트랙트 코드에서 디버깅하려면 [`deps.api.debug(..)`](https://docs.rs/cosmwasm-std/latest/cosmwasm_std/trait.Api.html#tymethod.debug)를 사용할 수 있으며, 이는 디버그 메시지를 stdout에 출력합니다. `wasmd`는 기본적으로 이것을 비활성화했지만 `InjectiveTestApp`은 stdout 출력을 허용하므로 테스트를 실행하면서 스마트 컨트랙트를 디버깅할 수 있습니다.
+
+### 모듈 래퍼 사용
+
+경우에 따라 환경을 설정하거나 앱체인의 상태를 쿼리하기 위해 앱체인 로직과 직접 상호작용할 수 있습니다. 모듈 래퍼는 앱체인의 모듈과 상호작용하는 편리한 함수를 제공합니다.
+
+`Exchange` 모듈과 상호작용해 봅시다:
+
+```rust
+use cosmwasm_std::{Addr, Coin};
+use injective_std::types::injective::exchange::v1beta1::{
+    MarketStatus, MsgInstantSpotMarketLaunch,
+    QuerySpotMarketsRequest, QuerySpotMarketsResponse, SpotMarket,
+};
+use injective_test_tube::{Account, Exchange, InjectiveTestApp};
+use test_tube_inj::Module;
+
+let app = InjectiveTestApp::new();
+let signer = app
+    .init_account(&[
+        Coin::new(10_000_000_000_000_000_000_000u128, "inj"),
+        Coin::new(100_000_000_000_000_000_000u128, "usdt"),
+    ])
+    .unwrap();
+let trader = app
+    .init_account(&[
+        Coin::new(10_000_000_000_000_000_000_000u128, "inj"),
+        Coin::new(100_000_000_000_000_000_000u128, "usdt"),
+    ])
+    .unwrap();
+let exchange = Exchange::new(&app);
+
+exchange
+    .instant_spot_market_launch(
+        MsgInstantSpotMarketLaunch {
+            sender: signer.address(),
+            ticker: "INJ/USDT".to_owned(),
+            base_denom: "inj".to_owned(),
+            quote_denom: "usdt".to_owned(),
+            min_price_tick_size: "10000".to_owned(),
+            min_quantity_tick_size: "100000".to_owned(),
+        },
+        &signer,
+    )
+    .unwrap();
+
+app.increase_time(1u64);
+
+let spot_markets = exchange
+    .query_spot_markets(&QuerySpotMarketsRequest {
+        status: "Active".to_owned(),
+        market_ids: vec![],
+    })
+    .unwrap();
+
+let expected_response = QuerySpotMarketsResponse {
+    markets: vec![SpotMarket {
+        ticker: "INJ/USDT".to_string(),
+        base_denom: "inj".to_string(),
+        quote_denom: "usdt".to_string(),
+        maker_fee_rate: "-100000000000000".to_string(),
+        taker_fee_rate: "1000000000000000".to_string(),
+        relayer_fee_share_rate: "400000000000000000".to_string(),
+        market_id: "0xd5a22be807011d5e42d5b77da3f417e22676efae494109cd01c242ad46630115"
+            .to_string(),
+        status: MarketStatus::Active.into(),
+        min_price_tick_size: "10000".to_string(),
+        min_quantity_tick_size: "100000".to_string(),
+    }],
+};
+assert_eq!(spot_markets, expected_response);
+```
+
+추가 예제는 [modules](https://github.com/InjectiveLabs/test-tube/tree/dev/packages/injective-test-tube/src/module) 디렉토리에서 찾을 수 있습니다.
+
+### 버전 관리
+
+injective-test-tube의 버전은 종속성인 injective와 test-tube의 버전, 그리고 자체 변경 사항에 따라 결정됩니다. 버전은 A.B.C 형식으로 표시되며:
+
+* A는 injective의 주요 버전입니다.
+* B는 test-tube의 부 버전입니다.
+* C는 injective-test-tube 자체의 패치 번호입니다.
+
+injective의 새 버전이 릴리스되고 호환성이 깨지는 변경 사항이 포함된 경우, test-tube의 호환성이 깨지는 변경 사항도 릴리스하고 injective-test-tube의 주요 버전을 증가시킵니다. 이렇게 하면 injective-test-tube의 새 버전이 이전 버전과 호환되지 않음이 분명해집니다.
+
+이전 버전과 호환되는 새 기능을 injective-test-tube에 추가할 때 부 버전 번호가 증가합니다.
+
+`injective-test-tube`에 특정하고 이전 버전과 호환되는 버그를 수정하거나 기타 변경 사항을 적용할 때 패치 번호가 증가합니다.
+
+호환성이 깨지는 변경 사항이 있는 경우 패키지 업그레이드에 대한 업그레이드 가이드를 검토하세요.
+
+종속성의 버전과 독립적으로 패키지 버전을 추적한다는 점에 유의해야 합니다.
