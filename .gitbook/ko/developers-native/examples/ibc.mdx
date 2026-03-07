@@ -1,0 +1,104 @@
+---
+title: IBC
+---
+
+## 메시지
+
+## MsgTransfer
+
+이 메시지는 Cosmos의 Inter-Blockchain Communication Protocol인 IBC를 통해 Injective의 발신자 Bank 모듈에서 다른 Cosmos 체인의 수신자 Bank 모듈로 코인을 전송하는 데 사용됩니다.
+Injective는 대부분의 네트워크에 대해 메인넷 IBC 전송만 지원한다는 점에 유의하세요.
+
+IBC의 애플리케이션 간 통신은 한 체인의 애플리케이션 모듈과 다른 체인의 해당 애플리케이션 모듈 사이를 라우팅하는 채널을 통해 수행됩니다. IBC 채널에 대한 자세한 정보는 https://tutorials.cosmos.network/academy/3-ibc/3-channels.html 에서 확인할 수 있습니다.
+Injective로 및 Injective에서의 메인넷 전송을 위한 표준 채널 ID 목록은 [Injective Lists 저장소](https://github.com/InjectiveLabs/injective-lists)에서 찾을 수 있습니다.
+또한 각 체인의 애플리케이션 모듈에는 각 끝의 모듈 유형을 지정하는 portId가 있다는 점도 주목할 만합니다.
+예를 들어, `transfer`는 bank 모듈 간의 ICS-20 토큰 전송을 지정하는 portId입니다.
+
+이 예제에서는 Injective에서 CosmosHub로 ATOM을 전송합니다.
+
+<Callout type="info">
+  토큰 메타데이터(심볼, decimals, 채널 매핑)는 JSON 형식으로 최신 토큰 정보를
+  제공하는 [Injective Lists](https://github.com/InjectiveLabs/injective-lists)를
+  사용하세요.
+</Callout>
+
+```ts
+import { toChainFormat, toBigNumber } from "@injectivelabs/utils";
+import { ChainId, CosmosChainId } from "@injectivelabs/ts-types";
+import { MsgTransfer } from "@injectivelabs/sdk-ts/core/modules";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { makeTimeoutTimestampInNs } from "@injectivelabs/sdk-ts/utils";
+import { ChainRestTendermintApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const injectiveChainId = CosmosChainId["Injective"];
+const destinationChainId = CosmosChainId["Cosmoshub"];
+
+const endpointsForNetwork = getNetworkEndpoints(Network.Mainnet);
+
+/**
+ * IBC 전송에는 다음이 필요합니다:
+ * 1. Injective에서 토큰의 IBC denom hash
+ * 2. 대상 체인의 채널 ID
+ *
+ * 이 정보는 Injective Lists 저장소에서 찾을 수 있습니다:
+ * https://github.com/InjectiveLabs/injective-lists
+ */
+const injectiveToCosmosHubChannelId = "channel-1";
+
+/**
+ * Injective에서 ATOM의 IBC denom
+ * 형식: ibc/{hash} 여기서 hash는 채널과 기본 denom에서 파생됩니다
+ */
+const atomIbcDenom =
+  "ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9";
+
+/* 전송 금액 형식 지정 (6 decimals로 0.001 ATOM) */
+const amount = {
+  denom: atomIbcDenom,
+  amount: toChainFormat(0.001, 6).toFixed(),
+};
+
+const injectiveAddress = "inj...";
+const destinationAddress = "cosmos...";
+const port = "transfer";
+const timeoutTimestamp = makeTimeoutTimestampInNs();
+
+/* 원본 체인에서 latestBlock 가져오기 */
+const tendermintRestApi = new ChainRestTendermintApi(endpointsForNetwork.rest);
+
+/* 원본 체인의 블록 세부 정보 */
+const latestBlock = await tendermintRestApi.fetchLatestBlock();
+const latestHeight = latestBlock.header.height;
+const timeoutHeight = toBigNumber(latestHeight).plus(
+  30 // 기본 블록 타임아웃 높이
+);
+
+/* proto 형식으로 메시지 생성 */
+const msg = MsgTransfer.fromJSON({
+  port,
+  memo: `${injectiveChainId}에서 ${destinationChainId}로 IBC 전송`,
+  sender: injectiveAddress,
+  receiver: destinationAddress,
+  channelId: injectiveToCosmosHubChannelId,
+  timeout: timeoutTimestamp,
+  height: {
+    revisionHeight: timeoutHeight.toNumber(),
+    revisionNumber: parseInt(latestBlock.header.version.block, 10),
+  },
+  amount,
+});
+
+const privateKey = "0x...";
+
+/* 트랜잭션 브로드캐스트 */
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

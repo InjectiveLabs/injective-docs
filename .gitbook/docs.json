@@ -1376,8 +1376,40 @@
                       "ko/developers-native/examples/authz",
                       "ko/developers-native/examples/bank",
                       "ko/developers-native/examples/distribution",
+                      "ko/developers-native/examples/exchange",
                       "ko/developers-native/examples/feegrant",
-                      "ko/developers-native/examples/governance"
+                      "ko/developers-native/examples/governance",
+                      "ko/developers-native/examples/ibc",
+                      "ko/developers-native/examples/insurance",
+                      "ko/developers-native/examples/peggy",
+                      "ko/developers-native/examples/permissions",
+                      "ko/developers-native/examples/staking",
+                      "ko/developers-native/examples/token-factory",
+                      "ko/developers-native/examples/wasm"
+                    ]
+                  },
+                  {
+                    "group": "Injective Modules",
+                    "pages": [
+                      "ko/developers-native/injective/index",
+                      {
+                        "group": "Auction",
+                        "pages": [
+                          "ko/developers-native/injective/auction/index",
+                          "ko/developers-native/injective/auction/01_state",
+                          "ko/developers-native/injective/auction/02_messages",
+                          "ko/developers-native/injective/auction/03_end_block",
+                          "ko/developers-native/injective/auction/04_events",
+                          "ko/developers-native/injective/auction/05_params",
+                          "ko/developers-native/injective/auction/99_errors"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Core Modules",
+                    "pages": [
+                      "ko/developers-native/core/index"
                     ]
                   }
                 ]

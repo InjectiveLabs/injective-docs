@@ -1,0 +1,60 @@
+---
+sidebar_position: 1
+title: State  
+---
+
+# State
+
+## Params
+
+Params는 시스템 파라미터를 저장하고 auction 모듈의 전체 기능을 정의하는 모듈 전체 구성 구조입니다.
+
+- Params: `Paramsspace("auction") -> legacy_amino(params)`
+
+```go
+type Params struct {
+	// auction_period_duration은 경매 기간 지속 시간을 정의합니다
+	AuctionPeriod int64 
+	// min_next_bid_increment_rate는 새 입찰에 대한 최소 증가율을 정의합니다
+	MinNextBidIncrementRate math.LegacyDec
+}
+```
+
+### **LastBid**
+
+현재 최고 입찰을 추적합니다.
+
+* LastBid: `0x01 -> ProtocolBuffer(Bid)`
+
+```go
+type Bid struct {
+	Bidder string                                  
+	Amount sdk.Coin 
+}
+```
+
+### **AuctionRound**
+
+현재 경매 라운드입니다.
+
+* AuctionRound: `0x03 -> BigEndian(AuctionRound)`
+
+### **EndingTimeStamp**
+
+이 값은 경매 라운드 정산을 결정하기 위해 현재 블록 시간과 비교됩니다. 내보낸 체인을 다시 가져올 때 EndingTimeStamp는 미래의 다음 값으로 업데이트됩니다.
+
+* `EndingTimeStamp`: `0x04 -> BigEndian(EndingTimestamp)`
+
+### **LastAuctionResult**
+
+마지막 경매 결과를 추적합니다.
+
+* LastAuctionResult: `0x05 -> ProtocolBuffer(LastAuctionResult)`
+
+```go
+type LastAuctionResult struct {
+    Winner string 
+    Amount sdk.Coin 
+    Round uint64 
+}
+```

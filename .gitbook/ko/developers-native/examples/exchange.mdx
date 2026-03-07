@@ -1,0 +1,661 @@
+---
+title: Exchange
+---
+
+`exchange` 모듈은 완전 탈중앙화된 현물 및 파생상품 거래를 가능하게 하는 Injective Chain의 핵심입니다.
+이는 체인의 필수 모듈이며 `auction`, `insurance`, `oracle`, `peggy` 모듈과 긴밀하게 통합됩니다.
+
+거래소 프로토콜은 트레이더가 임의의 현물 및 파생상품 시장을 생성하고 거래할 수 있게 합니다.
+오더북 관리, 거래 실행, 주문 매칭 및 결제의 전체 프로세스는 exchange 모듈에 의해 코드화된 로직을 통해 온체인에서 발생합니다.
+
+## 메시지
+
+Exchange 모듈이 내보내는 메시지와 Injective 체인과 상호작용하는 데 사용할 수 있는 메시지를 살펴보고 예제를 제공하겠습니다.
+
+### MsgDeposit
+
+이 메시지는 Bank 모듈에서 지갑의 서브계정으로 코인을 전송하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgDeposit } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(1).toFixed(),
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgDeposit.fromJSON({
+  amount,
+  subaccountId,
+  injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgWithdraw
+
+이 메시지는 지갑의 서브계정에서 사용자의 Bank 자금으로 코인을 다시 전송하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgWithdraw } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(1).toFixed(),
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgWithdraw.fromJSON({
+  amount,
+  subaccountId,
+  injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgCreateSpotLimitOrder
+
+이 메시지는 현물 지정가 주문을 생성하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgCreateSpotLimitOrder } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import {
+  getEthereumAddress,
+  getSpotMarketTensMultiplier,
+  spotPriceToChainPriceToFixed,
+  spotQuantityToChainQuantityToFixed,
+} from "@injectivelabs/sdk-ts/utils";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const feeRecipient = "inj1...";
+const market = {
+  marketId: "0x...",
+  baseDecimals: 18,
+  quoteDecimals: 6,
+  minPriceTickSize: "" /* 체인에서 가져옴 */,
+  minQuantityTickSize: "" /* 체인에서 가져옴 */,
+  priceTensMultiplier:
+    "" /** getSpotMarketTensMultiplier로 가져올 수 있음 */,
+  quantityTensMultiplier:
+    "" /** getSpotMarketTensMultiplier로 가져올 수 있음 */,
+};
+
+const order = {
+  price: 1,
+  quantity: 1,
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgCreateSpotLimitOrder.fromJSON({
+  subaccountId,
+  injectiveAddress,
+  orderType: 1 /* Buy */,
+  price: spotPriceToChainPriceToFixed({
+    value: order.price,
+    tensMultiplier: market.priceTensMultiplier,
+    baseDecimals: market.baseDecimals,
+    quoteDecimals: market.quoteDecimals,
+  }),
+  quantity: spotQuantityToChainQuantityToFixed({
+    value: order.quantity,
+    tensMultiplier: market.quantityTensMultiplier,
+    baseDecimals: market.baseDecimals,
+  }),
+  marketId: market.marketId,
+  feeRecipient: feeRecipient,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgCreateSpotMarketOrder
+
+이 메시지는 현물 시장가 주문을 생성하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgCreateSpotMarketOrder } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import {
+  getEthereumAddress,
+  getSpotMarketTensMultiplier,
+  spotPriceToChainPriceToFixed,
+  spotQuantityToChainQuantityToFixed,
+} from "@injectivelabs/sdk-ts/utils";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const feeRecipient = "inj1...";
+const market = {
+  marketId: "0x...",
+  baseDecimals: 18,
+  quoteDecimals: 6,
+  minPriceTickSize: "" /* 체인에서 가져옴 */,
+  minQuantityTickSize: "" /* 체인에서 가져옴 */,
+  priceTensMultiplier:
+    "" /** getSpotMarketTensMultiplier로 가져올 수 있음 */,
+  quantityTensMultiplier:
+    "" /** getSpotMarketTensMultiplier로 가져올 수 있음 */,
+};
+const order = {
+  price: 10,
+  quantity: 1,
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgCreateSpotMarketOrder.fromJSON({
+  subaccountId,
+  injectiveAddress,
+  orderType: 1 /* Buy */,
+  price: spotPriceToChainPriceToFixed({
+    value: order.price,
+    tensMultiplier: market.priceTensMultiplier,
+    baseDecimals: market.baseDecimals,
+    quoteDecimals: market.quoteDecimals,
+  }),
+  quantity: spotQuantityToChainQuantityToFixed({
+    value: order.quantity,
+    tensMultiplier: market.quantityTensMultiplier,
+    baseDecimals: market.baseDecimals,
+  }),
+  marketId: market.marketId,
+  feeRecipient: feeRecipient,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgCreateDerivativeLimitOrder
+
+이 메시지는 파생상품 지정가 주문을 생성하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCreateDerivativeLimitOrder } from "@injectivelabs/sdk-ts/core/modules";
+import {
+  getEthereumAddress,
+  getDerivativeMarketTensMultiplier,
+  derivativePriceToChainPriceToFixed,
+  derivativeQuantityToChainQuantityToFixed,
+  derivativeMarginToChainMarginToFixed,
+} from "@injectivelabs/sdk-ts/utils";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const feeRecipient = "inj1...";
+const market = {
+  marketId: "0x...",
+  baseDecimals: 18,
+  quoteDecimals: 6,
+  minPriceTickSize: "" /* 체인에서 가져옴 */,
+  minQuantityTickSize: "" /* 체인에서 가져옴 */,
+  priceTensMultiplier:
+    "" /** getDerivativeMarketTensMultiplier로 가져올 수 있음 */,
+  quantityTensMultiplier:
+    "" /** getDerivativeMarketTensMultiplier로 가져올 수 있음 */,
+};
+const order = {
+  price: 10,
+  quantity: 1,
+  margin: 10,
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgCreateDerivativeLimitOrder.fromJSON({
+  orderType: 1 /* Buy */,
+  triggerPrice: "0",
+  injectiveAddress,
+  price: derivativePriceToChainPriceToFixed({
+    value: order.price,
+    quoteDecimals: market.quoteDecimals,
+  }),
+  quantity: derivativeQuantityToChainQuantityToFixed({ value: order.quantity }),
+  margin: derivativeMarginToChainMarginToFixed({
+    value: order.margin,
+    quoteDecimals: market.quoteDecimals,
+  }),
+  marketId: market.marketId,
+  feeRecipient: feeRecipient,
+  subaccountId: subaccountId,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgCreateDerivativeMarketOrder
+
+이 메시지는 파생상품 시장가 주문을 생성하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCreateDerivativeMarketOrder } from "@injectivelabs/sdk-ts/core/modules";
+import {
+  getEthereumAddress,
+  getDerivativeMarketTensMultiplier,
+  derivativePriceToChainPriceToFixed,
+  derivativeQuantityToChainQuantityToFixed,
+  derivativeMarginToChainMarginToFixed,
+} from "@injectivelabs/sdk-ts/utils";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const feeRecipient = "inj1...";
+const market = {
+  marketId: "0x...",
+  baseDecimals: 18,
+  quoteDecimals: 6,
+  minPriceTickSize: "" /* 체인에서 가져옴 */,
+  minQuantityTickSize: "" /* 체인에서 가져옴 */,
+  priceTensMultiplier:
+    "" /** getDerivativeMarketTensMultiplier로 가져올 수 있음 */,
+  quantityTensMultiplier:
+    "" /** getDerivativeMarketTensMultiplier로 가져올 수 있음 */,
+};
+const order = {
+  price: 10,
+  quantity: 1,
+  margin: 10,
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgCreateDerivativeMarketOrder.fromJSON({
+  orderType: 1 /* Buy */,
+  triggerPrice: "0",
+  injectiveAddress,
+  price: derivativePriceToChainPriceToFixed({
+    value: order.price,
+    tensMultiplier: market.priceTensMultiplier,
+    quoteDecimals: market.quoteDecimals,
+  }),
+  quantity: derivativeQuantityToChainQuantityToFixed({
+    value: order.quantity,
+    tensMultiplier: market.quantityTensMultiplier,
+  }),
+  margin: derivativeMarginToChainMarginToFixed({
+    value: order.margin,
+    quoteDecimals: market.quoteDecimals,
+    tensMultiplier: market.priceTensMultiplier,
+  }),
+  marketId: market.marketId,
+  feeRecipient: feeRecipient,
+  subaccountId: subaccountId,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgBatchUpdateOrders
+
+이 메시지는 체인에서 주문을 일괄 업데이트하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { OrderSide } from "@injectivelabs/sdk-ts/types";
+import { MsgBatchUpdateOrders } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { GrpcOrderType } from "@injectivelabs/sdk-ts/client/chain";
+import {
+  getEthereumAddress,
+  getDerivativeMarketTensMultiplier,
+  derivativePriceToChainPriceToFixed,
+  derivativeQuantityToChainQuantityToFixed,
+  derivativeMarginToChainMarginToFixed,
+  spotPriceToChainPriceToFixed,
+  spotQuantityToChainQuantityToFixed,
+} from "@injectivelabs/sdk-ts/utils";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const feeRecipient = "inj1...";
+const derivativeMarket = {
+  marketId: "0x...",
+  baseDecimals: 18,
+  quoteDecimals: 6,
+  minPriceTickSize: "" /* 체인에서 가져옴 */,
+  minQuantityTickSize: "" /* 체인에서 가져옴 */,
+  priceTensMultiplier:
+    "" /** getDerivativeMarketTensMultiplier로 가져올 수 있음 */,
+  quantityTensMultiplier:
+    "" /** getDerivativeMarketTensMultiplier로 가져올 수 있음 */,
+};
+const derivativeOrder = {
+  price: 10,
+  quantity: 1,
+  margin: 10,
+  orderType: OrderSide.Buy,
+};
+const spotMarket = {
+  marketId: "0x...",
+  baseDecimals: 18,
+  quoteDecimals: 6,
+  minPriceTickSize: "" /* 체인에서 가져옴 */,
+  minQuantityTickSize: "" /* 체인에서 가져옴 */,
+  priceTensMultiplier:
+    "" /** getSpotMarketTensMultiplier로 가져올 수 있음 */,
+  quantityTensMultiplier:
+    "" /** getSpotMarketTensMultiplier로 가져올 수 있음 */,
+};
+const spotOrder = {
+  price: 10,
+  quantity: 1,
+  margin: 10,
+  orderType: OrderSide.Buy,
+};
+
+const ethereumAddress = getEthereumAddress(injectiveAddress);
+const subaccountIndex = 0;
+const suffix = "0".repeat(23) + subaccountIndex;
+const subaccountId = ethereumAddress + suffix;
+
+const msg = MsgBatchUpdateOrders.fromJSON({
+  injectiveAddress,
+  subaccountId: subaccountId,
+  derivativeOrdersToCreate: [
+    {
+      orderType: derivativeOrder.orderType as GrpcOrderType,
+      price: derivativePriceToChainPriceToFixed({
+        value: derivativeOrder.price,
+        quoteDecimals: 6 /* USDT는 6 decimals */,
+      }),
+      quantity: derivativeQuantityToChainQuantityToFixed({
+        value: derivativeOrder.quantity,
+      }),
+      margin: derivativeMarginToChainMarginToFixed({
+        value: derivativeOrder.margin,
+        quoteDecimals: 6 /* USDT는 6 decimals */,
+      }),
+      marketId: derivativeMarket.marketId,
+      feeRecipient: injectiveAddress,
+    },
+  ],
+  spotOrdersToCreate: [
+    {
+      orderType: spotOrder.orderType as GrpcOrderType,
+      price: spotPriceToChainPriceToFixed({
+        value: spotOrder.price,
+        baseDecimals: 18 /* INJ는 18 decimals */,
+        quoteDecimals: 6 /* USDT는 6 decimals */,
+      }),
+      quantity: spotQuantityToChainQuantityToFixed({
+        value: spotOrder.quantity,
+        baseDecimals: 18 /* INJ는 18 decimals */,
+      }),
+      marketId: spotMarket.marketId,
+      feeRecipient: injectiveAddress,
+    },
+  ],
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgBatchCancelSpotOrders
+
+이 메시지는 체인에서 현물 주문을 일괄 취소하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgBatchCancelSpotOrders } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const orders = [
+  {
+    marketId: "0x...",
+    subaccountId: "0x...",
+    orderHash: "0x...",
+  },
+  {
+    marketId: "0x...",
+    subaccountId: "0x...",
+    orderHash: "0x...",
+  },
+];
+
+const messages = orders.map((order) =>
+  MsgBatchCancelSpotOrders.fromJSON({
+    injectiveAddress,
+    orders: [
+      {
+        marketId: order.marketId,
+        subaccountId: order.subaccountId,
+        orderHash: order.orderHash,
+      },
+    ],
+  })
+);
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: messages,
+});
+
+console.log(txHash);
+```
+
+### MsgBatchCancelDerivativeOrders
+
+이 메시지는 체인에서 파생상품 주문을 일괄 취소하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgBatchCancelDerivativeOrders } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const orders = [
+  {
+    marketId: "0x...",
+    subaccountId: "0x...",
+    orderHash: "0x...",
+  },
+  {
+    marketId: "0x...",
+    subaccountId: "0x...",
+    orderHash: "0x...",
+  },
+];
+
+const messages = orders.map((order) =>
+  MsgBatchCancelDerivativeOrders.fromJSON({
+    injectiveAddress,
+    orders: [
+      {
+        marketId: order.marketId,
+        subaccountId: order.subaccountId,
+        orderHash: order.orderHash,
+      },
+    ],
+  })
+);
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: messages,
+});
+
+console.log(txHash);
+```
+
+### MsgRewardsOptOut
+
+이 메시지는 Trade & Earn 프로그램에서 탈퇴하는 데 사용됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgRewardsOptOut } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj...";
+
+const msg = MsgRewardsOptOut.fromJSON({ sender: injectiveAddress });
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgExternalTransfer
+
+이 메시지는 한 서브계정에서 다른 서브계정으로 잔액을 전송하는 데 사용됩니다.
+
+참고:
+
+- 기본 subaccountId에서는 전송할 수 없습니다. 해당 잔액은 이제 bank 모듈의 Injective 주소와 연결되어 있기 때문입니다. 따라서 `MsgExternalTransfer`가 작동하려면 기본이 아닌 subaccountId에서 전송해야 합니다.
+
+전송할 subaccountId를 찾는 방법:
+
+- [account portfolio api](../query-indexer/portfolio)를 통해 기존 subaccountId를 쿼리할 수 있습니다.
+
+bank 모듈의 Injective 주소와 연결된 자금을 사용하는 방법:
+
+- 기존의 기본이 아닌 서브계정이 있는 경우, [MsgDeposit](/ko/developers-native/examples/exchange#msgdeposit)을 기존 기본이 아닌 subaccountId 중 하나로 수행하고 해당 subaccountId를 아래의 `srcSubaccountId`로 사용해야 합니다.
+- 기존의 기본이 아닌 서브계정이 없는 경우, 새 기본 subaccountId로 [MsgDeposit](/ko/developers-native/examples/exchange#msgdeposit)을 수행할 수 있습니다. 이는 sdk-ts에서 `getSubaccountId`를 가져오고 [MsgDeposit](/ko/developers-native/examples/exchange#msgdeposit)의 `subaccountId` 필드를 `getSubaccountId(injectiveAddress, 1)`로 설정하여 수행됩니다.
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+import { Network } from "@injectivelabs/networks";
+import { MsgExternalTransfer } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const injectiveAddress = "inj...";
+const srcSubaccountId = "0x...";
+const dstSubaccountId = `0x...`;
+
+// INJ 토큰 정보
+const INJ_DENOM = "inj";
+const INJ_DECIMALS = 18;
+
+/* burn auction pool에 추가할 금액 형식 지정 */
+const amount = {
+  denom: INJ_DENOM,
+  amount: toChainFormat(1, INJ_DECIMALS).toFixed(),
+};
+
+/* proto 형식으로 메시지 생성 */
+const msg = MsgExternalTransfer.fromJSON({
+  amount,
+  dstSubaccountId,
+  srcSubaccountId,
+  injectiveAddress,
+});
+
+const privateKey = "0x...";
+
+/* 트랜잭션 브로드캐스트 */
+const txHash = await new MsgBroadcasterWithPk({
+  network: Network.Testnet,
+  privateKey,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

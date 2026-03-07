@@ -1,0 +1,32 @@
+---
+sidebar_position: 2
+title: Messages  
+---
+
+# Messages
+
+이 섹션에서는 auction 메시지의 처리와 해당 state 업데이트를 설명합니다.
+
+## Msg/Bid
+
+특정 라운드의 경매 바스켓은 `Msg/Bid` 서비스 메시지를 사용하여 입찰됩니다.
+
+```protobuf
+// Bid는 경매에 입찰하기 위한 SDK 메시지를 정의합니다
+message MsgBid {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string sender = 1;
+  // INJ 토큰으로 된 입찰 금액
+  cosmos.base.v1beta1.Coin bid_amount = 2 [(gogoproto.nullable) = false];
+  // 입찰 중인 현재 경매 라운드
+  uint64 round = 3;
+}
+```
+
+이 서비스 메시지는 다음과 같은 경우 실패할 것으로 예상됩니다:
+
+- `Round`가 현재 경매 라운드와 같지 않은 경우
+- `BidAmount`가 이전 최고 입찰 금액을 `min_next_increment_rate` 퍼센트 이상으로 초과하지 않는 경우
+
+이 서비스 메시지는 `Sender`에서 auction 모듈로 `BidAmount`의 INJ를 전송하고, 입찰을 저장하고, 마지막 입찰자의 입찰 금액을 환불합니다.

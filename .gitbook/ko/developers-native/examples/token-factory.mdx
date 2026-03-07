@@ -1,0 +1,263 @@
+---
+title: Token Factory
+---
+
+이 `tokenfactory` 모듈은 모든 계정이 `factory/{creator address}/{subdenom}` 이름으로 새 토큰을 생성할 수 있게 합니다. 토큰이 생성자 주소로 네임스페이스화되어 있기 때문에 이름 충돌을 해결할 필요 없이 토큰 발행이 무허가로 가능합니다.
+
+_참고: Helix, Hub, Explorer 등의 제품에서 denom이 표시되려면 아래에 설명된 대로 `MsgSetDenomMetadata` 메시지를 사용하여 토큰 메타데이터 정보를 추가하는 것이 중요합니다._
+
+_참고 #2: 안전과 공급 조작 방지를 위해 admin을 제로 주소로 변경하는 것이 권장됩니다._
+
+## 메시지
+
+TokenFactory 모듈이 내보내는 메시지와 Injective 체인과 상호작용하는 데 사용할 수 있는 메시지를 살펴보고 예제를 제공하겠습니다.
+
+### MsgCreateDenom
+
+denom 생성자 주소와 subdenom이 주어지면 `factory/{creator address}/{subdenom}`의 denom을 생성합니다. Subdenom은 \[a-zA-Z0-9./]를 포함할 수 있습니다. 새 토큰을 생성할 때 충당해야 하는 `creation fee`가 있다는 점을 명심하세요.
+
+토큰의 `admin`은 공급을 변경할 수 있습니다(새 토큰 발행 또는 소각). 아래에 설명된 대로 `MsgChangeAdmin`을 사용하여 `admin`을 해제하는 것이 권장됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgCreateDenom } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const subdenom = "inj-test";
+
+const msg = MsgCreateDenom.fromJSON({
+  subdenom,
+  symbol: "InjTest",
+  name: "Inj Testing",
+  sender: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgMint
+
+특정 denom의 발행은 현재 admin에게만 허용됩니다. 현재 admin은 denom 생성자로 기본 설정됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgMint } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const subdenom = "inj-test";
+const amountToMint = 1_000_000_000;
+
+const msg = MsgMint.fromJSON({
+  sender: injectiveAddress,
+  amount: {
+    denom: `factory/${injectiveAddress}/${subdenom}`,
+    amount: amountToMint,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgBurn
+
+admin은 token factory의 공급을 소각할 수 있습니다. 다른 모든 사람은 이 메시지를 사용하여 자신의 자금만 소각할 수 있습니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBurn } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const subdenom = "inj-test";
+const amountToBurn = 1_000_000_000;
+
+const msg = MsgBurn.fromJSON({
+  sender: injectiveAddress,
+  amount: {
+    denom: `factory/${injectiveAddress}/${subdenom}`,
+    amount: amountToBurn,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgSetDenomMetadata
+
+특정 denom의 메타데이터 설정은 denom의 admin에게만 허용됩니다. bank 모듈의 denom 메타데이터를 덮어쓸 수 있습니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgSetDenomMetadata } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const subdenom = 'inj-test'
+const denom = `factory/${injectiveAddress}/${subdenom}`;
+
+const denomUnitsIfTokenHas0Decimals = [
+  {
+    denom: denom,
+    exponent: 0,
+    aliases: [subdenom]
+  },
+]
+const denomUnitsIfTokenHas6Decimals = [
+  {
+    denom: denom, /** 전체 denom 사용 */
+    exponent: 0,
+    aliases: [subdenom]
+  },
+  {
+    denom: subdenom,
+    exponent: 6, /** subdenom만 사용 (토큰이 6 decimals를 갖도록 하려면) */
+    aliases: []
+  },
+]
+
+const msg = MsgSetDenomMetadata.fromJSON({
+  sender: injectiveAddress,
+  metadata: {
+    base: denom, /** 기본 denom */
+    description: '', /** 토큰 설명 */
+    display: subdenom, /** UI에서 토큰의 표시 별칭 (가장 높은 decimals 단위의 denom) */
+    name: '', /** 토큰 이름 */
+    symbol: '', /** 토큰 심볼 */
+    uri: '' /** 토큰 로고, IPFS에 호스팅되어야 하며 작은 webp 이미지여야 함 */
+    denomUnits: denomUnitsIfTokenHas6Decimals  /** 토큰의 decimals를 6 또는 0으로 선택 */,
+    decimals: 6 /** 토큰의 decimals를 6 또는 0으로 선택 */
+  }
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet
+}).broadcast({
+  msgs: msg
+});
+
+console.log(txHash);
+```
+
+### MsgChangeAdmin
+
+denom의 admin은 새 공급을 발행하거나 기존 공급을 소각할 수 있습니다. 토큰 공급 변경을 허용하지 않으려면 admin을 제로 주소로 변경하는 것이 권장됩니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgChangeAdmin } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const subdenom = "inj-test";
+const denom = `factory/${injectiveAddress}/${subdenom}`;
+
+const msg = MsgChangeAdmin.fromJSON({
+  denom,
+  sender: injectiveAddress,
+  newAdmin:
+    "inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49" /** 제로 주소로 설정 */,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+## 전체 예제
+
+다음은 Injective에서 새 토큰을 생성하고, 새 토큰을 발행하고, 토큰 메타데이터를 설정하는 전체 예제입니다.
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgSetDenomMetadata, MsgCreateDenom, MsgMint, MsgChangeAdmin } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const subdenom = 'inj-test'
+const denom = `factory/${injectiveAddress}/${subdenom}`;
+const amount = 1_000_000_000
+
+const msgCreateDenom = MsgCreateDenom.fromJSON({
+  subdenom,
+  sender: injectiveAddress,
+});
+const msgMint = MsgMint.fromJSON({
+  sender: injectiveAddress,
+  amount: {
+    denom: `factory/${injectiveAddress}/${subdenom}`,
+    amount: amount
+  }
+});
+const msgChangeAdmin = MsgChangeAdmin.fromJSON({
+  denom: `factory/${injectiveAddress}/${subdenom}`,
+  sender: injectiveAddress,
+  newAdmin: 'inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49' /** 제로 주소로 설정 */
+});
+const msgSetDenomMetadata = MsgSetDenomMetadata.fromJSON({
+  sender: injectiveAddress,
+  metadata: {
+    base: denom, /** 기본 denom */
+    description: '', /** 토큰 설명 */
+    display: '', /** UI에서 토큰의 표시 이름 */
+    name: '', /** 토큰 이름 */
+    symbol: '' /** 토큰 심볼 */,
+    uri: '' /** 토큰 로고, IPFS에 호스팅되어야 하며 작은 webp 이미지여야 함 */
+    denomUnits: [
+      {
+        denom: denom,
+        exponent: 0,
+        aliases: [subdenom]
+      },
+      {
+        denom: subdenom,
+        exponent: 6, /** 토큰이 6 decimals를 갖도록 하려면 */
+        aliases: []
+      },
+    ]
+  }
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet
+}).broadcast({
+  msgs: [msgCreateDenom, msgMint, msgSetDenomMetadata, msgChangeAdmin]
+});
+
+console.log(txHash);
+```
