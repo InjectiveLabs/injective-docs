@@ -1,0 +1,31 @@
+---
+title: Injective CLI Agent Skill
+description: 在你的 AI 工程框架中使用 Injective CLI Agent Skill
+---
+
+使用 `injectived` 二进制文件查询和交易 Injective 链，
+具有一致的钱包处理、端点选择和 gas 配置。
+
+## 安装
+
+安装 skill：
+
+```bash
+uvx upd-skill InjectiveLabs/injective-cli
+```
+
+全局安装 skill：
+
+```bash
+uvx upd-skill InjectiveLabs/injective-cli --global
+```
+
+通过 NPX 安装：
+
+```bash
+npx skills add https://github.com/InjectiveLabs/agent-skills --skill injective-cli
+```
+
+## 使用
+
+安装 skill 后，在框架中输入你的提示词以使用此 skill。

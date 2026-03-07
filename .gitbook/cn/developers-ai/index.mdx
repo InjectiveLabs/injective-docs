@@ -1,0 +1,98 @@
+---
+description: >-
+  使用生成式 AI 软件工程在 Injective 上构建应用。
+title: AI 开发者
+---
+
+## 为什么要在 Injective 上使用生成式 AI 工具进行构建？
+
+使用生成式 AI 编程工具，你可以非常快速地构建应用程序，包括在 Injective 上。
+然而，快速构建但方向错误并不理想。
+你可以在这里找到 skills、agents、workflows 和 MCP 服务器，它们将帮助你进行高效的 AI 软件工程。
+
+## 有哪些类型的生成式 AI 工具可用？
+
+- **LLMs** -
+    大型语言模型（LLMs）是驱动几乎所有生成式 AI 软件工程的基础层技术。
+    几乎所有 AI 开发工具都是 LLMs 的封装。
+    流行的包括 Claude Opus（Anthropic）、Gemini（Google）和 Kimi（Moonshot AI）。
+- **LLM 提供商** -
+    中低端 LLMs 可以在零售/消费级硬件上运行。
+    然而，顶级 LLMs 需要远程访问。
+    你有 3 个主要选项：
+    - **本地提供商** - 例如，使用 LM Studio 或 Ollama。
+    - **模型开发者的远程提供商** - 例如，通过 Anthropic 订阅访问 Claude Opus。
+    - **模型聚合器的远程提供商** - 例如，通过 OpenRouter 订阅访问 Claude Opus、Gemini 或 Kimi。
+- **Tools** -
+    这些可以是任何东西，从函数到脚本，再到命令行界面（CLIs），它们以一种让 LLMs 理解或可调用的方式打包。
+    例如，如果你希望 LLM 访问实时信息，
+    即 LLM 训练时不可用的信息，
+    你需要让它能够调用用于网络搜索或其他数据 API 的工具。
+- **MCP** -
+    Model-Context-Protocol（MCP）是一种专为 LLMs 发现和调用工具而设计的协议。
+    它们旨在标准化不同 LLMs 和 LLM 提供商调用工具的方式。
+    以前每个 LLM 或 LLM 提供商都有竞争性的标准/协议来做这件事。
+- **Skills、workflows、agents** -
+    这些是可选地引用支持资源、工具、MCP 服务器等的 markdown 文件。
+    它们专门设计用于与 AI 工程框架配合使用（但也可以在其他上下文中使用）。
+    它们可以是递归的，例如一个 skill 可以引用其他 skills。
+    同样，workflows 通常是一组具有定义顺序的 skills；
+    而 agents 是 workflows 和 skills 的集合。
+    注意 "agents" 这个术语被过度使用，有多种定义，因此上述内容不适用于其他上下文。
+- **AI 工程 IDEs** -
+    这些是专用 IDE 或 IDE 内的插件，允许你提示 LLMs，
+    包括执行工具调用或 MCPs，
+    并使用其输出来处理 IDE 中打开的代码库。
+    流行的包括：Roo、Cline 和 Cursor。
+- **AI 工程框架** -
+    这些是命令行界面（CLIs）或终端用户界面（TUIs），围绕
+    调用 LLMs 进行编码任务而设计。
+    它们直接在文件系统上操作，通常带有内置的工程任务优化和实用程序。
+    这些往往比使用 AI 工程 IDEs 更强大，
+    因为当使用 skills、workflows 和 agents 时它们工作得最好。
+    流行的包括：Claude Code（Anthropic）、Codex（OpenAI）和 OpenCode（独立）。
+- **AI 工程编排器** -
+    这些工具充当框架的包装器。
+    它们的主要目的是启用长时间运行的循环或框架调用的并行化，
+    使得 LLMs 能够自主地处理更长、更复杂的任务
+    而无需持续的人工监督。
+    流行的包括：Ralph、GSD。
+
+## 在 Injective 上开发时哪些类型的生成式 AI 工具可以使用？
+
+LLMs、LLM 提供商、Tools、MCP、Skills、Workflows、Agents、AI 工程 IDEs、AI 工程框架、AI 工程编排器。
+简而言之，所有这些都可以！
+事实上，这就是这个 **AI 开发者** 部分的意义所在！
+
+## Skills
+
+### Injective CLI
+
+如何安装和使用 [Injective CLI skill](/cn/developers-ai/injective-cli-skill)。
+
+使用 `injectived` 二进制文件查询和交易 Injective 链，
+具有一致的钱包处理、端点选择和 gas 配置。
+
+### Injective EVM Developer
+
+如何安装和使用 [Injective EVM Developer skill](/cn/developers-ai/injective-evm-developer-skill)。
+
+在 Injective 的 EVM 上构建时，
+你需要适用于 EVM 兼容网络的常规 EVM 开发者技能。
+你还需要一些 Injective EVM 的特定内容。
+这个 skill 增强了现有的 EVM 开发者技能，为你提供这些内容。
+
+## MCP 服务器
+
+### Injective Documentation MCP
+
+如何使用 [Injective documentation MCP 服务器](/cn/developers-ai/documentation-mcp)
+从本文档站点获取最新信息。
+
+如果你向任何 LLM 询问有关 Injective 的问题，
+它可能会给你过时的信息，就像对任何快速发展的技术一样。
+这是因为它们的信息来自其训练数据，
+根据定义，这些数据是"时间冻结的"。
+通过将此 MCP 添加到你的 AI 开发工作流程中，
+你不仅可以获得关于在 Injective 上开发的最新信息，
+你还将以本文档站点 URL 的形式获得该信息的引用。
