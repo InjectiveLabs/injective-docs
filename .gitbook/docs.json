@@ -795,6 +795,17 @@
                 ]
               },
               {
+                "group": "AI 开发者",
+                "icon": "brain",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-ai/index",
+                  "cn/developers-ai/injective-cli-skill",
+                  "cn/developers-ai/injective-evm-developer-skill",
+                  "cn/developers-ai/documentation-mcp"
+                ]
+              },
+              {
                 "group": "基础设施",
                 "icon": "network-wired",
                 "expanded": false,
