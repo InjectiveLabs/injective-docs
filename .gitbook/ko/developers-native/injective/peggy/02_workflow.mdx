@@ -1,0 +1,163 @@
+---
+sidebar_position: 2
+title: 워크플로우
+---
+
+# 워크플로우
+
+## 개념적 개요
+
+요약하면, 각 `Operator`는 2개의 보안 프로세스를 유지할 책임이 있습니다:
+
+1. 완전히 동기화된 Injective Chain `Validator` 노드 (`injectived` 프로세스)
+2. 두 네트워크와 상호작용하는 `Orchestrator` 서비스 (`peggo orchestrator` 프로세스). 암묵적으로, 완전히 동기화된 Ethereum 노드에 대한 RPC 엔드포인트도 필요합니다 (peggo .env 예제 참조)
+
+이 두 엔티티가 결합되어 3가지를 수행합니다:
+- Ethereum에서 Injective로 토큰 자산 이동
+- Injective에서 Ethereum으로 토큰 자산 이동
+- Injective의 활성 `Validator Set`과 `Peggy.sol` 컨트랙트 동기화 유지
+
+`Validator`가 아니어도 `peggo`를 실행할 수 있습니다. Peggo는 `Validator`와 **연결되지 않은** 주소로 구성되어 실행될 때 자동으로 "relayer mode"로 실행됩니다.
+이 모드에서는 두 가지만 발생할 수 있습니다:
+* Injective에서 새로운 토큰 배치 생성 가능
+* 확인된 valset/배치를 Ethereum으로 중계 가능
+
+## 자산 유형
+
+### 네이티브 Ethereum 자산
+
+ERC-20 표준을 구현하는 Ethereum 출신의 모든 자산은 [Peggy.sol](https://github.com/InjectiveLabs/peggo/blob/master/solidity/contracts/Peggy.sol) 컨트랙트의 `sendToInjective` 함수를 호출하여 Ethereum에서 Injective로 전송할 수 있습니다. 이 함수는 발신자의 잔액에서 Peggy 컨트랙트로 토큰을 전송합니다.
+
+`Operator`들은 모두 관찰한 입금을 설명하는 `MsgDepositClaim` 메시지를 제출하는 `peggo` 프로세스를 실행합니다. 전체 투표 권한의 66% 이상이 이 특정 입금에 대한 claim을 제출하면 대표 토큰이 발행되어 발신자가 요청한 Injective Chain 주소로 발급됩니다.
+
+이러한 대표 토큰의 denomination은 ERC-20 토큰 hex 주소와 연결된 `peggy` 접두사를 가집니다. 예: `peggy0xdac17f958d2ee523a2206206994597c13d831ec7`.
+
+### 네이티브 Cosmos SDK 자산
+
+Cosmos SDK 체인에 네이티브인 자산(예: `ATOM`)은 브릿지하기 전에 먼저 Ethereum에서 표현되어야 합니다. 이를 위해 [Peggy contract](https://github.com/InjectiveLabs/peggo/blob/master/solidity/contracts/Peggy.sol)는 누구나 `deployERC20` 함수를 호출하여 Cosmos 자산을 나타내는 새로운 ERC-20 토큰을 생성할 수 있도록 합니다.
+
+이 엔드포인트는 권한이 없으므로 주어진 ERC-20 토큰을 주어진 자산의 표현으로 선언하는 것은 검증자와 Peggy 브릿지 사용자에게 달려 있습니다.
+
+Ethereum 사용자가 `deployERC20`을 호출하면 원하는 자산을 설명하는 인수를 전달합니다. [Peggy.sol](https://github.com/InjectiveLabs/peggo/blob/master/solidity/contracts/Peggy.sol)은 ERC-20 팩토리를 사용하여 실제 ERC-20 컨트랙트를 배포하고 `ERC20DeployedEvent`를 발생시키기 전에 새 토큰의 전체 잔액 소유권을 Peggy 컨트랙트 자체에 할당합니다.
+
+peggo orchestrator는 이 이벤트를 관찰하고 Cosmos 자산이 정확하게 표현되었는지(올바른 소수점, 올바른 이름, 기존 표현 없음) 결정합니다. 이 경우, ERC-20 컨트랙트 주소가 채택되어 Ethereum에서 해당 Cosmos 자산의 최종 표현으로 저장됩니다.
+
+## `Orchestrator` (Peggo) 하위 프로세스
+
+`peggo orchestrator` 프로세스는 정확한 간격(루프)으로 동시에 실행되는 4개의 하위 프로세스로 구성됩니다:
+* `Signer` - `Operator`의 Ethereum 키로 새로운 `Validator Set` 업데이트와 `Token Batches`에 서명하고 [메시지](./04_messages.md#Ethereum-Signer-messages)를 사용하여 제출합니다.
+* `Oracle` - Ethereum 이벤트를 관찰하고 [claims](./04_messages.md#Oracle-messages)로 Injective에 전송합니다.
+* `Relayer` - 확인된 `Validator Set` 업데이트와 `Token Batches`를 Ethereum의 `Peggy Contract`에 제출합니다
+* `Batch Creator` - Injective에서 (새로운) 출금을 관찰하고 구성된 `PEGGO_MIN_BATCH_FEE_USD` 값에 따라 유형별로 배치할 항목을 결정합니다
+
+### Batch Creator
+
+`Batch Creator`의 목적은 Injective 측에서 토큰 배치를 생성하는 것입니다. 관련 `Peggy module` RPC는 권한이 없으므로 누구나 배치를 생성할 수 있습니다.
+
+사용자가 Injective에서 Ethereum으로 자산을 출금하려면 `Peggy Tx Pool`에 출금을 추가하는 특수 메시지(`MsgSendToEth`)를 Injective에 보냅니다.
+`Batch Creator`는 지속적으로 풀에서 출금을 (토큰 유형별로) 쿼리하고 잠재적 배치가 구성된 `PEGGO_MIN_BATCH_FEE_USD` 값을 충족할 때 Injective에 `MsgRequestBatch`를 발행합니다 (.env 예제 참조).
+
+수신 측에서, 요청의 토큰 유형과 일치하는 모든 풀링된 출금은 `Outgoing Tx Pool`에서 단일 배치로 이동되어 `Outgoing Batch Pool`에 배치됩니다.
+
+### Signer
+
+Signer의 책임은 `Operator (Orchestrator)`가 브릿지 활동에 참여하고 있다는 확인을 제공하는 것입니다. 이러한 확인을 제공하지 못하면 orchestrator의 `Validator`에 대한 슬래싱 페널티가 발생합니다.
+즉, 이 프로세스는 `Validator` 노드에 대해 **항상 실행되어야 합니다**.
+
+Injective->Ethereum 파이프라인에서 이동하는 모든 페이로드(`Validator Set` 업데이트/`Token Batches`)는 Ethereum으로 성공적으로 중계되기 위해 `Validator` 서명이 필요합니다. `Peggy Contract`의 특정 호출은 컨트랙트 자체의 `Validator Set`에 대해 확인할 서명 배열을 허용합니다.
+`Orchestrator`는 `Delegate Ethereum address`로 이러한 서명을 만듭니다: 이것은 초기 설정 시 `Operator`가 결정한 Ethereum 주소입니다 ([SetOrchestratorAddress](./04_messages.md#setorchestratoraddresses)). 이 주소는 Ethereum 블록체인에서 해당 검증자를 대표하며 Injective Chain 투표 권한에 가능한 한 가깝게 가중된 투표 권한으로 멀티시그의 서명 멤버로 추가됩니다.
+
+`Signer`가 `Peggy Module` 내에 확인되지 않은 valset 업데이트(토큰 배치)가 있음을 발견할 때마다 운영 중인 `Validator`가 브릿지 활동에 활성 상태임을 증명하는 `MsgConfirmValset`(`MsgConfirmBatch`)을 발행합니다.
+
+### Oracle
+
+Ethereum 네트워크에서 `Peggy Contract`와 관련된 새로운 이벤트를 모니터링합니다.
+
+컨트랙트에서 발생하는 모든 이벤트에는 고유한 이벤트 nonce가 있습니다. 이 nonce 값은 `Orchestrator`가 컨트랙트 활동을 적절히 관찰하고 Injective가 `Claims`를 통해 이를 인정하도록 조정하는 데 중요합니다.
+동일한 nonce의 여러 claim은 `Attestation`을 구성하며 orchestrator의 대다수(2/3)가 이벤트를 관찰하면 특정 로직이 Injective에서 실행됩니다.
+
+검증자의 2/3가 단일 `Attestation`에 동의할 수 없으면 oracle이 중단됩니다. 이는 일부 검증자가 투표를 변경할 때까지 Ethereum에서 새로운 이벤트가 중계되지 않음을 의미합니다. 이에 대한 슬래싱 조건은 없으며, 그 이유는 [슬래싱 사양](./05_slashing)에 설명되어 있습니다
+
+Peggy.sol에서 발생하는 4가지 유형의 이벤트가 있습니다:
+1. `TransactionBatchExecutedEvent` - 토큰 배치(출금)가 Ethereum으로 성공적으로 중계되었음을 나타내는 이벤트
+2. `ValsetUpdatedEvent` - `Validator Set` 업데이트가 Ethereum으로 성공적으로 중계되었음을 나타내는 이벤트
+3. `SendToInjectiveEvent` - Injective로의 새로운 입금이 시작되었음을 나타내는 이벤트
+4. `ERC20DeployedEvent` - 새로운 Cosmos 토큰이 Ethereum에 등록되었음을 나타내는 이벤트
+
+Injective의 `Oracle` 구현은 블록 최종성을 보장하기 위해 Ethereum의 마지막 12개 블록을 무시합니다. 실제로 이는 최신 이벤트가 발생 후 2-3분 후에 관찰됨을 의미합니다.
+
+### Relayer
+
+`Relayer`는 valset 업데이트(또는 토큰 배치)와 해당 확인을 Ethereum 트랜잭션으로 묶어 `Peggy contract`에 보냅니다.
+
+이러한 메시지는 급변하는 Ethereum 가스 가격에 따라 가변적인 비용이 들기 때문에 단일 배치가 백만 가스 이상이 드는 것은 드문 일이 아닙니다.
+relayer 보상에 대한 주요 설계 결정은 항상 Ethereum 체인에서 발행하는 것이었습니다. 이는 단점이 있는데, 특히 검증자 세트 업데이트 보상의 경우 이상한 동작이 있습니다.
+
+그러나 장점은 부인할 수 없습니다. Ethereum 메시지가 `msg.sender`에게 지불하기 때문에 Ethereum 생태계의 기존 봇이 이를 선택하고 제출하려고 합니다. 이는 중계 시장을 훨씬 더 경쟁적으로 만들고 카르텔과 같은 행동에 덜 취약하게 만듭니다.
+
+## 엔드투엔드 라이프사이클
+
+이 문서는 Peggy 브릿지의 엔드투엔드 라이프사이클을 설명합니다.
+
+### Peggy 스마트 컨트랙트 배포
+
+Peggy 컨트랙트를 배포하려면 네이티브 체인(Injective Chain)의 검증자 세트를 알아야 합니다. Peggy 컨트랙트 모음(Peggy Implementation, Proxy contract, ProxyAdmin contracts)을 배포할 때 Peggy 컨트랙트(Proxy contract)는 검증자 세트로 초기화되어야 합니다.
+초기화 시 컨트랙트에서 `ValsetUpdatedEvent`가 발생합니다.
+
+프록시 컨트랙트는 초기 단계에서 버그 수정 및 잠재적 개선을 위해 필요한 Peggy Implementation 컨트랙트를 업그레이드하는 데 사용됩니다. 이는 사용자가 직접 상호작용하는 간단한 래퍼 또는 "프록시"이며 로직을 포함하는 Peggy 구현 컨트랙트로 트랜잭션을 전달하는 역할을 합니다. 핵심 개념은 구현 컨트랙트는 교체될 수 있지만 프록시(접근 지점)는 절대 변경되지 않는다는 것입니다.
+
+ProxyAdmin은 Peggy 프록시의 중앙 관리자로, 관리를 단순화합니다. 업그레이드 가능성과 소유권 이전을 제어합니다. ProxyAdmin 컨트랙트 자체에는 만료 시간이 내장되어 있어, 만료되면 향후 Peggy 구현 컨트랙트 업그레이드가 방지됩니다.
+
+그런 다음 다음 peggy 제네시스 매개변수를 업데이트해야 합니다:
+1. `bridge_ethereum_address`를 Peggy 프록시 컨트랙트 주소로
+2. `bridge_contract_start_height`를 Peggy 프록시 컨트랙트가 배포된 높이로
+
+이것으로 Peggy 브릿지의 부트스트랩이 완료되고 체인을 시작할 수 있습니다. 이후 `Operator`는 `peggo` 프로세스를 시작하고 결국 초기 `ValsetUpdatedEvent`가 Injective에서 증명되었음을 관찰해야 합니다.
+
+### **Ethereum에서 Injective Chain 검증자 세트 업데이트**
+
+![img.png](./images/valsetupdate.png)
+
+검증자 세트는 Ethereum의 Peggy 컨트랙트에서 Injective 검증자 세트(Valset)를 나타내는 데 사용되는 정규화된 파워가 첨부된 일련의 Ethereum 주소입니다. Peggy 컨트랙트는 다음 메커니즘을 통해 Injective Chain 검증자 세트와 동기화를 유지합니다:
+1. **Injective에서 새 Valset 생성:** 새 Valset은 다음 중 하나일 때 Injective Chain에서 자동으로 생성됩니다:
+   * 마지막으로 기록된 Valset과 현재 활성 검증자 세트의 누적 파워 차이가 5%를 초과할 때
+   * 검증자가 세트에서 언본딩을 시작할 때
+2. **Injective에서 Valset 확인:** 각 `Operator`는 Injective에서 생성된 Valset 업데이트를 확인할 책임이 있습니다. `Signer` 프로세스는 검증자의 위임된 Ethereum 키가 Valset 데이터의 압축된 표현에 서명하도록 하여 `MsgConfirmValset`을 통해 이러한 확인을 보냅니다. `Peggy module`은 서명의 유효성을 검증하고 상태에 유지합니다.
+3. **Peggy 컨트랙트에서 Valset 업데이트:** 검증자의 2/3+1 대다수가 주어진 Valset에 대한 확인을 제출한 후 `Relayer`는 `updateValset`을 호출하여 새 Valset 데이터를 Peggy 컨트랙트에 제출합니다.
+Peggy 컨트랙트는 데이터를 검증하고, valset 체크포인트를 업데이트하고, valset 보상을 발신자에게 전송하고, `ValsetUpdatedEvent`를 발생시킵니다.
+4. **Injective에서 `ValsetUpdatedEvent` 인정:** `Oracle`이 Ethereum에서 `ValsetUpdatedEvent`를 목격하고 `Peggy module`에 Ethereum에서 Valset이 업데이트되었음을 알리는 `MsgValsetUpdatedClaim`을 보냅니다.
+5. **Injective에서 Valsets 정리:** 검증자의 2/3 대다수가 주어진 `ValsetUpdateEvent`에 대한 claim을 보내면 이전의 모든 valset이 `Peggy module` 상태에서 정리됩니다.
+6. **검증자 슬래싱:** 검증자는 확인을 제공하지 않으면 구성된 시간 창(`SignedValsetsWindow`) 후에 슬래싱 대상이 됩니다. [valset 슬래싱](./05_slashing)에서 자세히 읽어보세요
+
+----
+
+### **Ethereum에서 Injective로 ERC-20 토큰 전송**
+
+![img.png](./images/SendToCosmos.png)
+
+ERC-20 토큰은 다음 메커니즘을 통해 Ethereum에서 Injective로 전송됩니다:
+  1. **Peggy 컨트랙트에 ERC-20 토큰 입금:** 사용자는 Peggy 컨트랙트에 토큰을 입금하고 `SendToInjectiveEvent`를 발생시키는 Peggy 컨트랙트의 `sendToInjective` 함수를 호출하여 Ethereum에서 Injective로 ERC-20 토큰 전송을 시작합니다.
+     입금된 토큰은 미래의 불확정한 시점에 출금될 때까지 잠금 상태로 유지됩니다. 이 이벤트에는 토큰의 양과 유형, 자금을 받을 Injective Chain의 목적지 주소가 포함됩니다.
+
+  2. **입금 확인:** 각 `Oracle`이 `SendToInjectiveEvent`를 목격하고 입금 정보를 포함하는 `MsgDepositClaim`을 Peggy 모듈에 보냅니다.
+
+  3. **Injective에서 토큰 발행:** 검증자 대다수가 입금 claim을 확인하면 입금이 처리됩니다.
+  - 자산이 Ethereum에서 유래된 경우, 토큰이 발행되어 Injective Chain의 의도된 수신자 주소로 전송됩니다.
+  - 자산이 Cosmos-SDK에서 유래된 경우, 코인이 잠금 해제되어 Injective Chain의 의도된 수신자 주소로 전송됩니다.
+
+-----
+### **Injective에서 Ethereum으로 토큰 출금**
+
+![img.png](./images/SendToEth.png)
+
+1. **Injective에서 출금 요청:** 사용자는 peggy 모듈에 `MsgSendToEth` 트랜잭션을 보내 Injective Chain에서 Ethereum으로 자산 전송을 시작할 수 있습니다.
+   * 자산이 Ethereum 네이티브인 경우, 대표 토큰이 소각됩니다.
+   * 자산이 Cosmos SDK 네이티브인 경우, 코인이 모듈에 잠깁니다. 그런 다음 출금이 `Outgoing Tx Pool`에 추가됩니다.
+2. **배치 생성:** `Batch Creator`가 보류 중인 출금 풀을 관찰합니다. 배치 생성자(또는 외부 제3자)는 Injective Chain에 `MsgRequestBatch`를 보내 주어진 토큰에 대한 배치 생성을 요청합니다. `Peggy module`은 토큰 유형과 일치하는 출금을 배치로 수집하여 `Outgoing Batch Pool`에 넣습니다.
+3. **배치 확인:** Outgoing Batch의 존재를 감지하면 `Signer`는 Ethereum 키로 배치에 서명하고 Peggy 모듈에 `MsgConfirmBatch` tx를 제출합니다.
+4. **Peggy 컨트랙트에 배치 제출:** 검증자 대다수가 배치를 확인하면 `Relayer`는 배치와 확인으로 Peggy 컨트랙트의 `submitBatch`를 호출합니다. Peggy 컨트랙트는 서명을 검증하고, 배치 체크포인트를 업데이트하고, 배치 ERC-20 출금을 처리하고, 배치 수수료를 tx 발신자에게 전송하고, `TransactionBatchExecutedEvent`를 발생시킵니다.
+5. **Injective에 출금 Claim 전송:** `Oracles`가 `TransactionBatchExecutedEvent`를 목격하고 출금 정보를 포함하는 `MsgWithdrawClaim`을 Peggy 모듈에 보냅니다.
+6. **배치 정리** 검증자 대다수가 `MsgWithdrawClaim`을 제출하면 배치가 삭제되고 이전의 모든 배치가 Peggy 모듈에서 취소됩니다. 취소된 배치의 출금은 `Outgoing Tx Pool`로 다시 이동됩니다.
+7. **배치 슬래싱:** 검증자는 배치를 확인할 책임이 있으며 그렇지 않으면 슬래싱 대상이 됩니다. [배치 슬래싱](./05_slashing)에서 자세히 읽어보세요.
+
+배칭은 개별 출금 비용을 크게 줄이지만, 이는 지연 시간과 구현 복잡성의 비용이 따릅니다. 사용자가 빠르게 출금하려면 훨씬 더 높은 수수료를 지불해야 합니다. 그러나 이 수수료는 배칭이 없는 시스템에서 브릿지의 모든 출금에 필요한 수수료와 거의 동일합니다.

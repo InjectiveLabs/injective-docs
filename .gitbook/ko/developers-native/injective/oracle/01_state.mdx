@@ -1,0 +1,274 @@
+---
+sidebar_position: 1
+title: State
+---
+
+# State
+
+## Params
+oracle module parameter입니다.
+```protobuf
+message Params {
+  option (gogoproto.equal) = true;
+
+  string pyth_contract = 1;
+}
+```
+
+
+## PriceState
+
+PriceState는 모든 oracle type에 대해 cumulative price와 최신 가격을 timestamp와 함께 관리하는 공통 타입입니다.
+
+```protobuf
+message PriceState {
+    string price = 1 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+    
+    string cumulative_price = 2 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+    
+    int64 timestamp = 3;
+}
+```
+
+여기서
+
+- `Price`는 정규화된 decimal price를 나타냅니다.
+- `CumulativePrice`는 oracle price feed 생성 시점부터 해당 oracle price feed에 대한 cumulative price를 나타냅니다.
+- `Timestamp`는 price state가 relay된 block time을 나타냅니다.
+
+`CumulativePrice` 값은 [Uniswap V2 Oracle](https://uniswap.org/docs/v2/core-concepts/oracles/)에서 설정한 규칙을 따르며, module이 두 임의의 block time 간격 (t1, t2) 사이의 Time-Weighted Average Price (TWAP)를 계산할 수 있게 합니다.
+
+$\mathrm{TWAP = \frac{CumulativePrice_2 - CumulativePrice_1}{Timestamp_2 - Timestamp_1}}$
+
+## Band
+
+주어진 symbol에 대한 Band price 데이터는 다음과 같이 표현되고 저장됩니다:
+
+- BandPriceState: `0x01 | []byte(symbol) -> ProtocolBuffer(BandPriceState)`
+
+```protobuf
+message BandPriceState {
+    string symbol = 1;
+    string rate = 2 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+    uint64 resolve_time = 3;
+    uint64 request_ID = 4;
+    PriceState price_state = 5 [(gogoproto.nullable) = false];
+}
+```
+
+`Rate`는 Band chain에서 얻은 `Symbol`에 대한 원시 USD rate이며 1e9로 스케일링됩니다 (예: 1.42 가격은 1420000000). PriceState는 정규화된 decimal price를 가집니다 (예: 1.42).
+
+Band relayer는 다음과 같이 주소별로 저장됩니다.
+
+- BandRelayer: `0x02 | RelayerAddr -> []byte{}`
+
+## Band IBC
+
+이 섹션에서는 IBC를 통해 Band chain에 연결하여 가격을 유지하기 위한 모든 state 관리에 대해 설명합니다.
+
+- LatestClientID는 Band IBC packet에 대한 고유한 clientID를 관리하기 위해 유지됩니다. Band chain에 price request packet을 보낼 때 1씩 증가합니다.
+
+* LatestClientID: `0x32 -> Formated(LatestClientID)`
+
+- LatestRequestID는 고유한 `BandIBCOracleRequests`를 관리하기 위해 유지됩니다. 새로운 `BandIBCOracleRequest`를 생성할 때 1씩 증가합니다.
+
+* LatestRequestID: `0x36 -> Formated(LatestRequestID)`
+
+- 주어진 symbol에 대한 Band IBC price 데이터는 다음과 같이 저장됩니다:
+
+* BandPriceState: `0x31 | []byte(symbol) -> ProtocolBuffer(BandPriceState)`
+
+```protobuf
+message BandPriceState {
+  string symbol = 1;
+  string rate = 2 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  uint64 resolve_time = 3;
+  uint64 request_ID = 4;
+  PriceState price_state = 5 [(gogoproto.nullable) = false];
+}
+```
+
+- BandIBCCallDataRecord는 Band chain에 price request packet을 보낼 때 다음과 같이 저장됩니다:
+
+* CalldataRecord: `0x33 | []byte(ClientId) -> ProtocolBuffer(CalldataRecord)`
+
+```protobuf
+message CalldataRecord {
+  uint64 client_id = 1;
+  bytes calldata = 2;
+}
+```
+
+- BandIBCOracleRequest는 governance가 전송할 oracle request를 구성할 때 다음과 같이 저장됩니다:
+
+* BandOracleRequest: `0x34 | []byte(RequestId) -> ProtocolBuffer(BandOracleRequest)`
+
+```protobuf
+message BandOracleRequest {
+  // Band IBC oracle request의 고유 식별자
+  uint64 request_id = 1;
+
+  // OracleScriptID는 실행할 oracle script의 고유 식별자입니다.
+  int64 oracle_script_id = 2;
+
+  // Symbols는 calldata에 준비할 symbol 목록입니다.
+  repeated string symbols = 3;
+
+  // AskCount는 이 oracle request에 응답하도록 요청된 validator 수입니다.
+  // 높은 값은 더 높은 gas 비용으로 더 많은 보안을 의미합니다.
+  uint64 ask_count = 4;
+
+  // MinCount는 request가 실행 단계로 진행하는 데 필요한 최소 validator 수입니다.
+  // 높은 값은 liveness 비용으로 더 많은 보안을 의미합니다.
+  uint64 min_count = 5;
+
+  // FeeLimit는 모든 data source provider에게 지불될 최대 token입니다.
+  repeated cosmos.base.v1beta1.Coin fee_limit = 6 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // PrepareGas는 raw request를 준비하기 위해 지불할 gas 양입니다.
+  uint64 prepare_gas = 7;
+  // ExecuteGas는 실행을 위해 예약할 gas 양입니다.
+  uint64 execute_gas = 8;
+}
+```
+
+- BandIBCParams는 다음과 같이 저장되며 governance에 의해 구성됩니다:
+
+* BandIBCParams: `0x35 -> ProtocolBuffer(BandIBCParams)`
+
+`BandIBCParams`는 Band chain과의 IBC 연결에 대한 정보를 포함합니다.
+
+```protobuf
+message BandIBCParams {
+  // Band IBC를 활성화해야 하는 경우 true
+  bool band_ibc_enabled = 1;
+  // Band IBC 가격을 전송하기 위한 block request interval
+  int64 ibc_request_interval = 2;
+  // Band IBC source channel
+  string ibc_source_channel = 3;
+  // Band IBC version
+  string ibc_version = 4;
+  // Band IBC portID
+  string ibc_port_id = 5;
+}
+```
+
+참고:
+
+1. `BandIbcEnabled`는 Band IBC 연결 상태를 설명합니다.
+2. `IbcSourceChannel`, `IbcVersion`, `IbcPortId`는 IBC 연결에 필요한 공통 parameter입니다.
+3. `IbcRequestInterval`는 Injective chain의 beginblocker에서 자동으로 트리거되는 자동 price fetch request interval을 설명합니다.
+
+## Coinbase
+
+주어진 symbol("key")에 대한 Coinbase price 데이터는 다음과 같이 표현되고 저장됩니다:
+
+- CoinbasePriceState: `0x21 | []byte(key) -> CoinbasePriceState`
+
+```protobuf
+message CoinbasePriceState {
+  // kind는 항상 "prices"여야 합니다.
+  string kind = 1;
+  // Coinbase가 가격에 서명한 timestamp
+  uint64 timestamp = 2;
+  // 가격의 symbol, 예: BTC
+  string key = 3;
+  // 1e6으로 스케일링된 가격 값
+  uint64 value = 4;
+  // price state
+  PriceState price_state = 5 [(gogoproto.nullable) = false];
+}
+```
+
+Coinbase price oracle에 대한 자세한 내용은 [Coinbase API docs](https://docs.pro.coinbase.com/#oracle) 및 이 설명 [blog post](https://blog.coinbase.com/introducing-the-coinbase-price-oracle-6d1ee22c7068)에서 확인할 수 있습니다.
+
+`Value`는 Coinbase에서 얻은 원시 USD price 데이터이며 1e6으로 스케일링됩니다 (예: 1.42 가격은 1420000). PriceState는 정규화된 decimal price를 가집니다 (예: 1.42).
+
+## Pricefeed
+
+주어진 base quote pair에 대한 Pricefeed price 데이터는 다음과 같이 표현되고 저장됩니다:
+
+- PriceFeedInfo: `0x11 + Keccak256Hash(base + quote) -> PriceFeedInfo`
+
+```protobuf
+message PriceFeedInfo {
+  string base = 1;
+  string quote = 2;
+}
+```
+
+- PriceFeedPriceState: `0x12 + Keccak256Hash(base + quote) -> PriceFeedPriceState`
+
+```protobuf
+message PriceFeedState {
+  string base = 1;
+  string quote = 2;
+  PriceState price_state = 3;
+  repeated string relayers = 4;
+}
+```
+
+- PriceFeedRelayer: `0x13 + Keccak256Hash(base + quote) + relayerAddr -> relayerAddr`
+
+## Provider
+Provider price feed는 다음과 같이 표현되고 저장됩니다:
+
+- ProviderInfo: `0x61 + provider + @@@ -> ProviderInfo`
+```protobuf
+message ProviderInfo {
+  string provider = 1;
+  repeated string relayers = 2;
+}
+```
+
+- ProviderIndex: `0x62 + relayerAddress -> provider`
+
+- ProviderPrices: `0x63 + provider + @@@ + symbol -> ProviderPriceState`
+```protobuf
+message ProviderPriceState {
+  string symbol = 1;
+  PriceState state = 2;
+}
+```
+
+## Pyth
+
+Pyth price는 다음과 같이 표현되고 저장됩니다:
+- PythPriceState: `0x71 + priceID -> PythPriceState`
+```protobuf
+message PythPriceState {
+  bytes price_id = 1;
+  string ema_price = 2 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  string ema_conf = 3 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  string conf = 4 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  uint64 publish_time = 5;
+  PriceState price_state = 6 [(gogoproto.nullable) = false];
+}
+```
+
+## Stork
+
+Stork price는 다음과 같이 표현되고 저장됩니다:
+- StorkPriceState: `0x81 + symbol -> PythPriceState`
+```protobuf
+message StorkPriceState {
+  // Stork가 가격에 서명한 timestamp
+  uint64 timestamp = 1;
+  // 가격의 symbol, 예: BTC
+  string symbol = 2;
+  // 1e18로 스케일링된 가격 값
+  string value = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  // price state
+  PriceState price_state = 5 [ (gogoproto.nullable) = false ];
+}
+```
+
+Stork publisher는 다음과 같이 표현되고 저장됩니다:
+- Publisher: `0x82 + stork_publisher -> publisher`
+
+```protobuf
+string stork_publisher
+```

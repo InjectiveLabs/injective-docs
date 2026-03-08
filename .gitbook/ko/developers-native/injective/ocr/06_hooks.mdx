@@ -1,0 +1,17 @@
+---
+sidebar_position: 6
+---
+
+# Hooks
+
+다른 모듈은 ocr 모듈 내에서 특정 이벤트가 발생했을 때 실행할 작업을 등록할 수 있습니다. 다음 hook을 ocr에 등록할 수 있습니다:
+
+- `AfterSetFeedConfig(ctx sdk.Context, feedConfig *FeedConfig)`
+    - Feed config가 생성되거나 업데이트된 후 호출됨
+- `AfterTransmit(ctx sdk.Context, feedId string, answer math.LegacyDec, timestamp int64)`
+    - 정보가 전송될 때 호출됨
+- `AfterFundFeedRewardPool(ctx sdk.Context, feedId string, newPoolAmount sdk.Coin)`
+    - Feed reward pool이 업데이트될 때 호출됨
+
+참고:
+`oracle` 모듈은 transmission이 이루어질 때 누적 가격을 저장하기 위해 `AfterTransmit` hook을 수락합니다.

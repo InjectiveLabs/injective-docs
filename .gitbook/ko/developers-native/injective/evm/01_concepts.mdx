@@ -1,0 +1,109 @@
+---
+title: Concepts
+---
+
+## EVM
+
+Ethereum Virtual Machine (EVM)은 Ethereum 클라이언트를 실행하는 수천 대의 연결된 컴퓨터(노드)에 의해 유지되는 단일 엔티티로 생각할 수 있는 연산 엔진입니다. 가상 머신([VM](https://en.wikipedia.org/wiki/Virtual_machine))으로서 EVM은 환경(하드웨어 및 OS)에 관계없이 상태 변경을 결정론적으로 계산하는 역할을 합니다. 이는 동일한 시작 상태와 트랜잭션(tx)이 주어지면 모든 노드가 정확히 동일한 결과를 얻어야 함을 의미합니다.
+
+EVM은 [스마트 컨트랙트](https://ethereum.org/en/developers/docs/smart-contracts/)의 배포 및 실행을 처리하는 Ethereum 프로토콜의 일부로 간주됩니다. 명확한 구분을 위해:
+
+* Ethereum 프로토콜은 모든 Ethereum 계정과 스마트 컨트랙트가 존재하는 블록체인을 설명합니다. 체인의 주어진 블록에서 하나의 정규 상태(모든 계정을 유지하는 데이터 구조)만 존재합니다.
+* 그러나 EVM은 블록에서 블록으로의 새로운 유효한 상태를 계산하기 위한 규칙을 정의하는 [상태 머신](https://en.wikipedia.org/wiki/Finite-state_machine)입니다. EVM은 격리된 런타임으로, EVM 내부에서 실행되는 코드는 네트워크, 파일 시스템 또는 기타 프로세스(외부 API가 아닌)에 접근할 수 없습니다.
+
+`x/evm` 모듈은 EVM을 Cosmos SDK 모듈로 구현합니다. 이를 통해 사용자는 Ethereum 트랜잭션을 제출하고 주어진 상태에서 포함된 메시지를 실행하여 상태 전환을 유발함으로써 EVM과 상호 작용할 수 있습니다.
+
+### State
+
+Ethereum 상태는 체인의 모든 계정을 유지하는 [Merkle Patricia Trie](https://en.wikipedia.org/wiki/Merkle_tree)로 구현된 데이터 구조입니다. EVM은 이 데이터 구조를 변경하여 다른 State Root를 가진 새로운 상태를 생성합니다. 따라서 Ethereum은 EVM을 사용하여 블록 내의 트랜잭션을 실행함으로써 한 상태에서 다른 상태로 전환하는 상태 체인으로 볼 수 있습니다. 새로운 트랜잭션 블록은 Block header(parent hash, block number, time stamp, nonce, receipts 등)를 통해 설명할 수 있습니다.
+
+### Accounts
+
+주어진 주소에서 상태에 저장할 수 있는 두 가지 유형의 계정이 있습니다:
+
+* **Externally Owned Account (EOA)**: nonce(트랜잭션 카운터)와 balance를 가집니다
+* **Smart Contract**: nonce, balance, (불변) code hash, storage root(또 다른 Merkle Patricia Trie)를 가집니다
+
+스마트 컨트랙트는 블록체인의 일반 계정과 같지만, **EVM bytecode**라고 하는 Ethereum 특정 바이너리 형식으로 실행 가능한 코드를 추가로 저장합니다. 일반적으로 Solidity와 같은 Ethereum 고급 언어로 작성되어 EVM bytecode로 컴파일되고 Ethereum 클라이언트를 사용하여 트랜잭션을 제출함으로써 블록체인에 배포됩니다.
+
+### Architecture
+
+EVM은 스택 기반 머신으로 작동합니다. 주요 아키텍처 구성 요소는 다음과 같습니다:
+
+* Virtual ROM: 트랜잭션 처리 시 컨트랙트 코드가 이 읽기 전용 메모리로 로드됩니다
+* Machine state (휘발성): EVM이 실행됨에 따라 변경되며 각 트랜잭션 처리 후 초기화됩니다
+  * Program counter (PC)
+  * Gas: 사용된 가스 양을 추적합니다
+  * Stack and Memory: 상태 변경을 계산합니다
+* Access to account storage (영구적)
+
+### State Transitions with Smart Contracts
+
+일반적으로 스마트 컨트랙트는 사용자가 컨트랙트와 상호 작용할 수 있는 지원되는 방법 목록인 public ABI를 노출합니다. 컨트랙트와 상호 작용하고 상태 전환을 호출하려면 사용자는 상호 작용 유형과 추가 매개변수를 지정하는 ABI에 따라 형식이 지정된 데이터 페이로드와 임의의 양의 가스를 전달하는 트랜잭션을 제출합니다. 트랜잭션이 수신되면 EVM은 트랜잭션 페이로드를 사용하여 스마트 컨트랙트의 EVM bytecode를 실행합니다.
+
+### Executing EVM bytecode
+
+컨트랙트의 EVM bytecode는 **Opcodes**라고 하는 기본 연산(add, multiply, store 등)으로 구성됩니다. 각 Opcode 실행에는 트랜잭션과 함께 지불해야 하는 가스가 필요합니다. 따라서 EVM은 임의의 계산을 허용하지만 컨트랙트 실행 중 계산량이 트랜잭션에서 제공된 가스 양으로 제한되므로 준 튜링 완전으로 간주됩니다. 각 Opcode의 [**gas cost**](https://www.evm.codes/)는 실제 컴퓨터 하드웨어에서 이러한 연산을 실행하는 비용을 반영합니다(예: `ADD = 3gas` 및 `SSTORE = 100gas`). 트랜잭션의 가스 소비를 계산하려면 gas cost에 **gas price**를 곱하며, 이는 당시 네트워크 수요에 따라 변경될 수 있습니다. 네트워크 부하가 높으면 트랜잭션을 실행하기 위해 더 높은 gas price를 지불해야 할 수 있습니다. gas limit에 도달하면(out of gas exception) 발신자의 nonce가 증가하고 EVM의 시간을 낭비한 대가로 잔액이 감소하는 것을 제외하고는 Ethereum 상태에 변경 사항이 적용되지 않습니다.
+
+스마트 컨트랙트는 다른 스마트 컨트랙트를 호출할 수도 있습니다. 새 컨트랙트에 대한 각 호출은 새로운 EVM 인스턴스(새로운 스택 및 메모리 포함)를 생성합니다. 각 호출은 샌드박스 상태를 다음 EVM으로 전달합니다. 가스가 부족하면 모든 상태 변경이 취소됩니다. 그렇지 않으면 유지됩니다.
+
+추가 정보는 다음을 참조하십시오:
+
+* [EVM](https://eth.wiki/concepts/evm/evm)
+* [EVM Architecture](https://cypherpunks-core.github.io/ethereumbook/13evm.html#evm_architecture)
+* [What is Ethereum](https://ethdocs.org/en/latest/introduction/what-is-ethereum.html#what-is-ethereum)
+* [Opcodes](https://www.ethervm.io/)
+
+## Ethermint as Geth implementation
+
+Ethermint은 Cosmos SDK 모듈로서 [Golang의 Ethereum 프로토콜](https://geth.ethereum.org/docs/getting-started) (Geth) 구현입니다. Geth에는 상태 전환을 계산하기 위한 EVM 구현이 포함되어 있습니다. EVM opcode가 어떻게 구현되는지 확인하려면 [go-ethereum 소스 코드](https://github.com/ethereum/go-ethereum/blob/master/core/vm/instructions.go)를 참조하십시오. Geth가 Ethereum 노드로 실행될 수 있는 것처럼 Ethermint는 EVM으로 상태 전환을 계산하는 노드로 실행될 수 있습니다. Ethermint는 Web3 및 EVM 호환을 위해 Geth의 표준 [Ethereum JSON-RPC API](https://ethereum.org/en/developers/docs/apis/json-rpc/)를 지원합니다.
+
+### JSON-RPC
+
+JSON-RPC는 상태 비저장, 경량 원격 프로시저 호출(RPC) 프로토콜입니다. 이 사양은 주로 여러 데이터 구조와 그 처리 규칙을 정의합니다. 개념이 동일한 프로세스 내, 소켓을 통해, HTTP를 통해 또는 다양한 메시지 전달 환경에서 사용될 수 있다는 점에서 전송에 구애받지 않습니다. 데이터 형식으로 JSON (RFC 4627)을 사용합니다.
+
+#### JSON-RPC Example: `eth_call`
+
+JSON-RPC 메서드 [`eth_call`](https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_call)을 사용하면 컨트랙트에 대해 메시지를 실행할 수 있습니다. 일반적으로 트랜잭션을 Geth 노드에 보내 mempool에 포함시킨 다음 노드들이 서로 가십하고 결국 트랜잭션이 블록에 포함되어 실행됩니다. 그러나 `eth_call`은 트랜잭션을 커밋하지 않고 컨트랙트에 데이터를 보내고 어떤 일이 일어나는지 확인할 수 있습니다.
+
+Geth 구현에서 엔드포인트 호출은 대략 다음 단계를 거칩니다:
+
+1. `eth_call` 요청은 `eth` 네임스페이스를 사용하여 `func (s *PublicBlockchainAPI) Call()` 함수를 호출하도록 변환됩니다
+2. [`Call()`](https://github.com/ethereum/go-ethereum/blob/master/internal/ethapi/api.go#L982)은 트랜잭션 인수, 호출할 블록 및 상태를 수정하는 선택적 오버라이드를 받습니다. 그런 다음 `DoCall()`을 호출합니다
+3. [`DoCall()`](https://github.com/ethereum/go-ethereum/blob/d575a2d3bc76dfbdefdd68b6cffff115542faf75/internal/ethapi/api.go#L891)은 인수를 `ethtypes.message`로 변환하고 EVM을 인스턴스화하며 `core.ApplyMessage`로 메시지를 적용합니다
+4. [`ApplyMessage()`](https://github.com/ethereum/go-ethereum/blob/d575a2d3bc76dfbdefdd68b6cffff115542faf75/core/state_transition.go#L180)는 상태 전환 `TransitionDb()`를 호출합니다
+5. [`TransitionDb()`](https://github.com/ethereum/go-ethereum/blob/d575a2d3bc76dfbdefdd68b6cffff115542faf75/core/state_transition.go#L275)는 새 컨트랙트를 `Create()`하거나 컨트랙트를 `Call()`합니다
+6. [`evm.Call()`](https://github.com/ethereum/go-ethereum/blob/d575a2d3bc76dfbdefdd68b6cffff115542faf75/core/vm/evm.go#L168)은 메시지를 실행하기 위해 인터프리터 `evm.interpreter.Run()`을 실행합니다. 실행이 실패하면 상태는 실행 전에 찍은 스냅샷으로 되돌아가고 가스가 소비됩니다.
+7. [`Run()`](https://github.com/ethereum/go-ethereum/blob/d575a2d3bc76dfbdefdd68b6cffff115542faf75/core/vm/interpreter.go#L116)은 opcode를 실행하기 위해 루프를 수행합니다.
+
+Injective 구현은 유사하며 Cosmos SDK에 포함된 gRPC query client를 사용합니다:
+
+1. `eth_call` 요청은 `eth` 네임스페이스를 사용하여 `func (e *PublicAPI) Call` 함수를 호출하도록 변환됩니다
+2. [`Call()`](https://github.com/InjectiveLabs/injective-core/injective-chain/blob/main/rpc/namespaces/ethereum/eth/api.go#L639)은 `doCall()`을 호출합니다
+3. [`doCall()`](https://github.com/InjectiveLabs/injective-core/injective-chain/blob/main/rpc/namespaces/ethereum/eth/api.go#L656)은 인수를 `EthCallRequest`로 변환하고 evm 모듈의 query client를 사용하여 `EthCall()`을 호출합니다.
+4. [`EthCall()`](https://github.com/InjectiveLabs/injective-core/injective-chain/blob/main/x/evm/keeper/grpc_query.go#L212)은 인수를 `ethtypes.message`로 변환하고 `ApplyMessageWithConfig()`를 호출합니다
+5. [`ApplyMessageWithConfig()`](https://github.com/InjectiveLabs/injective-core/injective-chain/blob/d5598932a7f06158b7a5e3aa031bbc94eaaae32c/x/evm/keeper/state_transition.go#L341)는 EVM을 인스턴스화하고 Geth 구현을 사용하여 새 컨트랙트를 `Create()`하거나 컨트랙트를 `Call()`합니다.
+
+### StateDB
+
+[go-ethereum](https://github.com/ethereum/go-ethereum/blob/master/core/vm/interface.go)의 `StateDB` 인터페이스는 전체 상태 쿼리를 위한 EVM 데이터베이스를 나타냅니다. EVM 상태 전환은 이 인터페이스에 의해 활성화되며, `x/evm` 모듈에서는 `Keeper`에 의해 구현됩니다. 이 인터페이스의 구현이 Ethermint를 EVM 호환으로 만듭니다.
+
+## Consensus Engine
+
+`x/evm` 모듈을 사용하는 애플리케이션은 Application Blockchain Interface (ABCI)를 통해 Tendermint Core Consensus Engine과 상호 작용합니다. 애플리케이션과 Tendermint Core가 함께 완전한 블록체인을 실행하고 비즈니스 로직과 분산 데이터 저장을 결합하는 프로그램을 형성합니다.
+
+`x/evm` 모듈에 제출된 Ethereum 트랜잭션은 실행되어 애플리케이션 상태를 변경하기 전에 이 합의 프로세스에 참여합니다. 상태 전환을 자세히 이해하려면 [Tendermint consensus engine](https://docs.tendermint.com/master/introduction/what-is-tendermint.html#intro-to-abci)의 기본 사항을 이해하는 것이 좋습니다.
+
+## Transaction Logs
+
+모든 `x/evm` 트랜잭션에서 결과에는 JSON-RPC Web3 서버가 필터 쿼리 및 EVM Hooks 처리에 사용하는 상태 머신 실행의 Ethereum `Log`가 포함됩니다.
+
+트랜잭션 로그는 트랜잭션 실행 중 transient store에 저장된 다음 트랜잭션이 처리된 후 cosmos 이벤트를 통해 내보내집니다. gRPC 및 JSON-RPC를 통해 쿼리할 수 있습니다.
+
+## Block Bloom
+
+Bloom은 필터 쿼리에 사용할 수 있는 각 블록의 bloom filter 값(바이트)입니다. 블록 bloom 값은 transient store에 저장된 다음 `EndBlock` 처리 중에 cosmos 이벤트를 통해 내보내집니다. gRPC 및 JSON-RPC를 통해 쿼리할 수 있습니다.
+
+::: tip
+👉 **참고**: 상태에 저장되지 않으므로 Transaction Logs와 Block Blooms는 업그레이드 후에 유지되지 않습니다. 사용자는 레거시 체인 이벤트를 얻기 위해 업그레이드 후 아카이브 노드를 사용해야 합니다.
+:::

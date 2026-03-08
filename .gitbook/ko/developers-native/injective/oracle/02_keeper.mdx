@@ -1,0 +1,117 @@
+---
+sidebar_position: 2
+title: Keepers
+---
+
+# Keepers
+
+oracle module은 현재 다른 module에 전달할 수 있는 세 가지 exported keeper interface를 제공하여 price feed를 읽을 수 있게 합니다. Module은 필요한 기능을 제공하는 가장 제한적인 interface를 사용해야 합니다.
+
+## Oracle Module ViewKeeper
+
+oracle module ViewKeeper는 지원되는 모든 oracle type 및 oracle pair에 대한 price 데이터와 cumulative price 데이터를 얻는 기능을 제공합니다.
+
+```go
+type ViewKeeper interface {
+    GetPrice(ctx sdk.Context, oracletype types.OracleType, base string, quote string) *math.LegacyDec // 주어진 oracle type에 대해 주어진 pair의 가격을 반환합니다.
+    GetCumulativePrice(ctx sdk.Context, oracleType types.OracleType, base string, quote string) *math.LegacyDec // 주어진 oracle type에 대해 주어진 pair의 cumulative price를 반환합니다.
+}
+```
+
+Coinbase oracle에 대한 `GetPrice`는 5분 TWAP price를 반환합니다.
+
+## Band
+
+BandKeeper는 BandPricefeed 및 BandRelayer를 생성/수정/읽기/삭제하는 기능을 제공합니다.
+
+```go
+type BandKeeper interface {
+    GetBandPriceState(ctx sdk.Context, symbol string) *types.BandPriceState
+    SetBandPriceState(ctx sdk.Context, symbol string, priceState types.BandPriceState)
+    GetAllBandPriceStates(ctx sdk.Context) []types.BandPriceState
+    GetBandReferencePrice(ctx sdk.Context, base string, quote string) *math.LegacyDec
+    IsBandRelayer(ctx sdk.Context, relayer sdk.AccAddress) bool
+    GetAllBandRelayers(ctx sdk.Context) []string
+    SetBandRelayer(ctx sdk.Context, relayer sdk.AccAddress)
+    DeleteBandRelayer(ctx sdk.Context, relayer sdk.AccAddress)
+}
+```
+
+## Band IBC
+
+BandIBCKeeper는 BandIBCOracleRequest, BandIBCPriceState, BandIBCLatestClientID 및 BandIBCCallDataRecord를 생성/수정/읽기/삭제하는 기능을 제공합니다.
+
+```go
+type BandIBCKeeper interface {
+	SetBandIBCOracleRequest(ctx sdk.Context, req types.BandOracleRequest)
+	GetBandIBCOracleRequest(ctx sdk.Context) *types.BandOracleRequest
+	DeleteBandIBCOracleRequest(ctx sdk.Context, requestID uint64)
+	GetAllBandIBCOracleRequests(ctx sdk.Context) []*types.BandOracleRequest
+
+	GetBandIBCPriceState(ctx sdk.Context, symbol string) *types.BandPriceState
+	SetBandIBCPriceState(ctx sdk.Context, symbol string, priceState types.BandPriceState)
+	GetAllBandIBCPriceStates(ctx sdk.Context) []types.BandPriceState
+	GetBandIBCReferencePrice(ctx sdk.Context, base string, quote string) *math.LegacyDec
+
+	GetBandIBCLatestClientID(ctx sdk.Context) uint64
+	SetBandIBCLatestClientID(ctx sdk.Context, clientID uint64)
+	SetBandIBCCallDataRecord(ctx sdk.Context, clientID uint64, bandIBCCallDataRecord []byte)
+	GetBandIBCCallDataRecord(ctx sdk.Context, clientID uint64) *types.CalldataRecord
+}
+```
+
+## Coinbase
+
+CoinbaseKeeper는 CoinbasePricefeed 데이터를 생성, 수정 및 읽는 기능을 제공합니다.
+
+```go
+type CoinbaseKeeper interface {
+    GetCoinbasePrice(ctx sdk.Context, base string, quote string) *math.LegacyDec
+    HasCoinbasePriceState(ctx sdk.Context, key string) bool
+    GetCoinbasePriceState(ctx sdk.Context, key string) *types.CoinbasePriceState
+    SetCoinbasePriceState(ctx sdk.Context, priceData *types.CoinbasePriceState) error
+    GetAllCoinbasePriceStates(ctx sdk.Context) []*types.CoinbasePriceState
+}
+```
+
+`GetCoinbasePrice`는 Coinbase가 제공하는 `CoinbasePriceState.Timestamp` 값을 기반으로 CoinbasePriceState의 5분 TWAP price를 반환합니다.
+
+## PriceFeeder
+
+PriceFeederKeeper는 PriceFeedPrice 및 PriceFeedRelayer를 생성/수정/읽기/삭제하는 기능을 제공합니다.
+
+```go
+type PriceFeederKeeper interface {
+    IsPriceFeedRelayer(ctx sdk.Context, oracleBase, oracleQuote string, relayer sdk.AccAddress) bool
+    GetAllPriceFeedStates(ctx sdk.Context) []*types.PriceFeedState
+    GetAllPriceFeedRelayers(ctx sdk.Context, baseQuoteHash common.Hash) []string
+    SetPriceFeedRelayer(ctx sdk.Context, oracleBase, oracleQuote string, relayer sdk.AccAddress)
+    SetPriceFeedRelayerFromBaseQuoteHash(ctx sdk.Context, baseQuoteHash common.Hash, relayer sdk.AccAddress)
+    DeletePriceFeedRelayer(ctx sdk.Context, oracleBase, oracleQuote string, relayer sdk.AccAddress)
+    HasPriceFeedInfo(ctx sdk.Context, priceFeedInfo *types.PriceFeedInfo) bool
+    GetPriceFeedInfo(ctx sdk.Context, baseQuoteHash common.Hash) *types.PriceFeedInfo
+    SetPriceFeedInfo(ctx sdk.Context, priceFeedInfo *types.PriceFeedInfo)
+    GetPriceFeedPriceState(ctx sdk.Context, base string, quote string) *types.PriceState
+    SetPriceFeedPriceState(ctx sdk.Context, oracleBase, oracleQuote string, priceState *types.PriceState)
+    GetPriceFeedPrice(ctx sdk.Context, base string, quote string) *math.LegacyDec
+}
+```
+
+## Stork
+
+StorkKeeper는 StorkPricefeed 및 StorkPublishers 데이터를 생성/수정/읽기하는 기능을 제공합니다.
+
+```go
+type StorkKeeper interface {
+	GetStorkPrice(ctx sdk.Context, base string, quote string) *math.LegacyDec
+	IsStorkPublisher(ctx sdk.Context, address string) bool
+	SetStorkPublisher(ctx sdk.Context, address string)
+	DeleteStorkPublisher(ctx sdk.Context, address string)
+	GetAllStorkPublishers(ctx sdk.Context) []string
+
+	SetStorkPriceState(ctx sdk.Context, priceData *types.StorkPriceState)
+	GetStorkPriceState(ctx sdk.Context, symbol string) types.StorkPriceState
+	GetAllStorkPriceStates(ctx sdk.Context) []*types.StorkPriceState
+}
+```
+GetStorkPrice는 StorkPriceState의 price(`value`)를 반환합니다.

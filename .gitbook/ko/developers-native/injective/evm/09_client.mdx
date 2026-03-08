@@ -1,0 +1,105 @@
+---
+title: Client
+---
+
+사용자는 CLI, JSON-RPC, gRPC 또는 REST를 사용하여 `evm` 모듈을 쿼리하고 상호 작용할 수 있습니다.
+
+## CLI
+
+다음은 `x/evm` 모듈과 함께 추가된 `injectived` 명령 목록입니다. `injectived -h` 명령을 사용하여 전체 목록을 얻을 수 있습니다.
+
+### Queries
+
+`query` 명령을 통해 사용자는 `evm` 상태를 쿼리할 수 있습니다.
+
+**`code`**
+
+사용자가 주어진 주소에서 스마트 컨트랙트 코드를 쿼리할 수 있습니다.
+
+```go
+injectived query evm code ADDRESS [flags]
+```
+
+```bash
+# Example
+$ injectived query evm code 0x7bf7b17da59880d9bcca24915679668db75f9397
+
+# Output
+code: "0xef616c92f3cfc9e92dc270d6acff9cea213cecc7020a76ee4395af09bdceb4837a1ebdb5735e11e7d3adb6104e0c3ac55180b4ddf5e54d022cc5e8837f6a4f971b"
+```
+
+**`storage`**
+
+사용자가 주어진 key와 height로 계정의 storage를 쿼리할 수 있습니다.
+
+```bash
+injectived query evm storage ADDRESS KEY [flags]
+```
+
+```bash
+# Example
+$ injectived query evm storage 0x0f54f47bf9b8e317b214ccd6a7c3e38b893cd7f0 0 --height 0
+
+# Output
+value: "0x0000000000000000000000000000000000000000000000000000000000000000"
+```
+
+### Transactions
+
+`tx` 명령을 통해 사용자는 `evm` 모듈과 상호 작용할 수 있습니다.
+
+**`raw`**
+
+사용자가 raw ethereum 트랜잭션에서 cosmos 트랜잭션을 빌드할 수 있습니다.
+
+```bash
+injectived tx evm raw TX_HEX [flags]
+```
+
+```bash
+# Example
+$ injectived tx evm raw 0xf9ff74c86aefeb5f6019d77280bbb44fb695b4d45cfe97e6eed7acd62905f4a85034d5c68ed25a2e7a8eeb9baf1b84
+
+# Output
+value: "0x0000000000000000000000000000000000000000000000000000000000000000"
+```
+
+## JSON-RPC
+
+Ethermint에서 지원되는 JSON-RPC 메서드 및 네임스페이스에 대한 개요는 [https://docs.injective.zone/basics/json_rpc.html](https://docs.injective.zone/basics/json_rpc.html)을 참조하십시오.
+
+## gRPC
+
+### Queries
+
+| Verb   | Method                                               | 설명                                                                |
+| ------ | ---------------------------------------------------- | -------------------------------------------------------------------------- |
+| `gRPC` | `injective.evm.v1.Query/Account`                     | Ethereum 계정 가져오기                                                    |
+| `gRPC` | `injective.evm.v1.Query/CosmosAccount`               | Ethereum 계정의 Cosmos 주소 가져오기                                   |
+| `gRPC` | `injective.evm.v1.Query/ValidatorAccount`            | validator consensus 주소에서 Ethereum 계정 가져오기               |
+| `gRPC` | `injective.evm.v1.Query/Balance`                     | 단일 EthAccount의 EVM denomination 잔액 가져오기         |
+| `gRPC` | `injective.evm.v1.Query/Storage`                     | 단일 계정의 모든 코인 잔액 가져오기                          |
+| `gRPC` | `injective.evm.v1.Query/Code`                        | 단일 계정의 모든 코인 잔액 가져오기                          |
+| `gRPC` | `injective.evm.v1.Query/Params`                      | x/evm 모듈의 매개변수 가져오기                                         |
+| `gRPC` | `injective.evm.v1.Query/EthCall`                     | eth_call rpc api 구현                                            |
+| `gRPC` | `injective.evm.v1.Query/EstimateGas`                 | eth_estimateGas rpc api 구현                                     |
+| `gRPC` | `injective.evm.v1.Query/TraceTx`                     | debug_traceTransaction rpc api 구현                              |
+| `gRPC` | `injective.evm.v1.Query/TraceBlock`                  | debug_traceBlockByNumber 및 debug_traceBlockByHash rpc api 구현 |
+| `GET`  | `/injective/evm/v1/account/{address}`                | Ethereum 계정 가져오기                                                    |
+| `GET`  | `/injective/evm/v1/cosmos_account/{address}`         | Ethereum 계정의 Cosmos 주소 가져오기                                   |
+| `GET`  | `/injective/evm/v1/validator_account/{cons_address}` | validator consensus 주소에서 Ethereum 계정 가져오기               |
+| `GET`  | `/injective/evm/v1/balances/{address}`               | 단일 EthAccount의 EVM denomination 잔액 가져오기         |
+| `GET`  | `/injective/evm/v1/storage/{address}/{key}`          | 단일 계정의 모든 코인 잔액 가져오기                          |
+| `GET`  | `/injective/evm/v1/codes/{address}`                  | 단일 계정의 모든 코인 잔액 가져오기                          |
+| `GET`  | `/injective/evm/v1/params`                           | x/evm 모듈의 매개변수 가져오기                                         |
+| `GET`  | `/injective/evm/v1/eth_call`                         | eth_call rpc api 구현                                            |
+| `GET`  | `/injective/evm/v1/estimate_gas`                     | eth_estimateGas rpc api 구현                                     |
+| `GET`  | `/injective/evm/v1/trace_tx`                         | debug_traceTransaction rpc api 구현                              |
+| `GET`  | `/injective/evm/v1/trace_block`                      | debug_traceBlockByNumber 및 debug_traceBlockByHash rpc api 구현 |
+
+### Transactions
+
+| Verb   | Method                            | 설명                     |
+| ------ | --------------------------------- | ------------------------------- |
+| `gRPC` | `injective.evm.v1.Msg/EthereumTx` | Ethereum 트랜잭션 제출 |
+| `POST` | `/injective/evm/v1/ethereum_tx`   | Ethereum 트랜잭션 제출 |

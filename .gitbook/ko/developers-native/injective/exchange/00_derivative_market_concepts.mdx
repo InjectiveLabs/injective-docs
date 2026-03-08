@@ -1,0 +1,205 @@
+---
+sidebar_position: 1
+title: Derivative Market 개념
+---
+
+# Derivative Market 개념
+
+## 정의
+
+선형 계약을 사용하는 derivative market에서 (역방향 계약과 반대로), 티커가 **AAA/BBB**인 계약은 margin 및 settlement를 위해 quote 통화 BBB를 사용하여 기초 자산 AAA에 대한 노출을 제공합니다. 각 계약에 대해 호가 단위는 AAA 한 단위의 BBB 가격입니다. 예를 들어, ETH 한 단위의 USDT 가격입니다.
+
+**Notional** - 포지션의 명목 가치: `notional = quantity * price`.
+
+**Refunds -** 청산 시스템에서 refund는 계정의 **available balance**를 증가시키는 작업을 의미합니다. 이러한 자금 해제는 계정에 대한 부담이 해제될 때 발생합니다 (예: limit order 취소, order의 지불 가능한 수수료를 maker fee로 감소, market order 자금 조달에 더 적은 margin 사용 등).
+
+## Perpetual Market 거래 라이프사이클
+
+### Perpetual Market 생성
+
+Market은 먼저 `MsgInstantPerpetualMarketLaunch` 또는 `MsgInstantExpiryFuturesMarketLaunch`를 통한 인스턴트 런치 기능으로 생성됩니다. 이는 거버넌스 승인 없이 추가 수수료를 지불하여 market을 생성합니다. 또는 `MsgPerpetualMarketLaunchProposal` 또는 `MsgExpiryFuturesMarketLaunchProposal`을 통해 거버넌스를 통한 일반적인 방법으로 생성됩니다.
+
+### Balance 관리
+
+#### Exchange에 자금 입금
+
+트레이더는 `MsgDeposit`을 보내 USDT와 같은 자금을 exchange에 입금할 수 있습니다. 이는 Cosmos-SDK bank 모듈에서 exchange 모듈의 트레이더 subaccount deposits로 코인을 전송합니다.
+
+주어진 `Amount`의 코인을 입금하면 트레이더의 subaccount deposit `AvailableBalance`와 `TotalBalance` 모두 `Amount`만큼 증가합니다.
+
+#### Exchange에서 자금 출금
+
+트레이더는 `MsgWithdraw`를 보내 exchange에서 자금을 출금할 수 있습니다. 이는 exchange 모듈의 트레이더 subaccount에서 코인을 전송합니다.
+
+**출금 요건:** 주어진 `Amount`의 코인을 출금하면 트레이더의 subaccount deposit `AvailableBalance`와 `TotalBalance` 모두 `Amount`만큼 감소합니다. 참고: `Amount`는 `AvailableBalance` 이하여야 합니다.
+
+#### Subaccounts 간 자금 이체
+
+트레이더는 `MsgSubaccountTransfer`를 보내 자신의 subaccounts 간에 자금을 이체할 수 있습니다. 이는 트레이더의 한 subaccount deposits에서 트레이더가 소유한 다른 subaccount로 코인을 전송합니다.
+
+Subaccount 이체는 일반 출금과 동일한 출금 요건을 가집니다.
+
+#### 다른 Exchange 계정으로 자금 이체
+
+트레이더는 `MsgExternalTransfer`를 보내 외부 계정으로 자금을 이체할 수 있습니다. 이는 트레이더의 subaccount에서 다른 제3자 계정으로 자금을 전송합니다.
+
+외부 자금 이체는 일반 출금과 동일한 출금 요건을 가집니다.
+
+### Order 관리
+
+#### Limit Orders 제출
+
+트레이더는 `MsgCreateDerivativeLimitOrder`를 보내 limit buy 또는 sell order를 제출할 수 있습니다. 제출 시 order는 다음과 같이 될 수 있습니다:
+
+1. Endblocker 배치 경매에서 오더북의 다른 반대 resting orders와 즉시 (전체 또는 부분) 매칭되어 사용자의 포지션이 설정됩니다.
+2. 오더북에 추가됩니다.
+
+Order가 부분적으로 매칭되고 나머지 미매칭 부분이 오더북에 추가되는 것이 가능합니다.
+
+#### Market Orders 제출
+
+트레이더는 `MsgCreateDerivativeMarketOrder`를 보내 market buy 또는 sell order를 제출할 수 있습니다. 제출 시 market order는 Endblocker 배치 경매에서 오더북의 다른 반대 resting orders와 매칭되어 사용자의 포지션이 설정됩니다.
+
+#### Limit Orders 취소
+
+사용자는 `MsgCancelDerivativeOrder`를 보내 limit buy 또는 sell order를 취소합니다. 이는 오더북에서 사용자의 limit order를 제거합니다.
+
+### 포지션 Margin 증가
+
+사용자는 `MsgIncreasePositionMargin`을 보내 포지션의 margin을 증가시킬 수 있습니다.
+
+### 지급 불능 포지션 청산
+
+제3자는 `MsgLiquidatePosition`을 보내 포지션의 maintenance margin ratio가 위반된 경우 모든 사용자의 포지션을 청산할 수 있습니다.
+
+**Initial Margin 요건**
+
+이것은 새 포지션을 생성할 때 order의 notional과 mark price에 대한 margin 비율 요건입니다. mark price 요건의 아이디어는 거래 가격과 mark price가 서로 너무 멀리 일시적으로 벌어질 때 청산 위험을 최소화하는 것입니다. initial margin ratio가 주어지면, order는 두 가지 요건을 충족해야 합니다:
+
+- Margin은 다음을 충족해야 합니다: `Margin ≥ InitialMarginRatio * Price * Quantity`, 예를 들어, 최대 20배 레버리지의 market에서 initial margin ratio는 0.05입니다. 새 포지션은 최소 notional의 0.05인 margin을 가집니다.
+- Margin은 mark price 요건을 충족해야 합니다:
+
+- `Margin >= Quantity * (InitialMarginRatio * MarkPrice - PNL)`
+
+PNL은 현재 MarkPrice에서 포지션을 청산할 경우의 예상 손익입니다. MarkPrice에 대해 풀면 다음과 같습니다:
+
+- 매수의 경우: $\mathrm{MarkPrice}$ ≥ $\mathrm{\frac{Margin - Price * Quantity}{(InitialMarginRatio - 1) * Quantity}}$
+- 매도의 경우: $\mathrm{MarkPrice}$ ≤ $\mathrm{\frac{Margin + Price * Quantity}{(InitialMarginRatio + 1) * Quantity}}$
+
+**Maintenance Margin 요건**
+
+활성 포지션의 라이프사이클 전반에 걸쳐 다음 margin 요건이 충족되지 않으면 포지션은 청산 대상이 됩니다. (참고: 표기의 단순화를 위해 일반성을 잃지 않고, 고려되는 포지션에 funding이 없다고 가정합니다.)
+
+- Long의 경우: `Margin >= Quantity * MaintenanceMarginRatio * MarkPrice - (MarkPrice - EntryPrice)`
+- Short의 경우: `Margin >= Quantity * MaintenanceMarginRatio * MarkPrice - (EntryPrice - MarkPrice)`
+
+**청산 지급금**
+
+포지션이 maintenance margin ratio 아래로 떨어지면 누구나 포지션을 청산할 수 있습니다. 온체인에서 일어나는 것은 자동으로 포지션과 동일한 크기의 reduce-only market order가 생성되는 것입니다. Market order는 _Infinity_ 또는 _0_으로 정의된 최악의 가격을 가지며, 이는 오더북에서 사용 가능한 어떤 가격에서든 매칭될 것임을 의미합니다.
+
+reduce-only market order 실행으로 인한 지급금은 포지션 소유자에게 가지 않습니다. 대신, 남은 자금의 일부는 청산자 봇에게 전송되고 다른 일부는 insurance fund에 전송됩니다. 분할은 `LiquidatorRewardShareRate`에 의해 exchange params에서 정의됩니다. 포지션의 지급금이 마이너스인 경우, 즉 포지션의 마이너스 PNL이 margin보다 큰 경우, insurance fund가 누락된 자금을 커버합니다.
+
+또한 청산은 다른 order 매칭이 발생하기 전에 블록에서 즉시 실행됩니다.
+
+### Funding Payments
+
+Funding은 거래 가격을 mark price와 일치시키는 메커니즘으로 perpetual markets에만 존재합니다. 이는 모든 funding epoch 종료 시 (예: 매시간) 계약의 long 또는 short 트레이더 간에 교환되는 정기적인 지불을 의미합니다. funding rate가 양수이면 long이 short에게 지불합니다. 음수이면 short가 long에게 지불합니다.
+
+- `Position Size = Position Quantity * MarkPrice`
+- `Funding Payment = Position Size * Hourly Funding Rate (HFR)`
+- `HFR = Cap((TWAP((SyntheticVWAPExecutionPrice - MarkPrice)/MarkPrice) + DailyInterestRate) * 1/24)`
+- `SyntheticVWAPExecutionPrice = (Price_A*Volume_A +Price_B*Volume_B +Price_C*Volume_C)/(Volume_A + Volume_B + Volume_C)`
+  - `A`는 market buy 배치 실행입니다
+  - `B`는 market sell 배치 실행입니다
+  - `C`는 limit 매칭 배치 실행입니다
+
+Funding payments는 `CumulativeFunding` 값을 수정하여 전체 market에 적용됩니다. 각 포지션은 현재 `CumulativeFunding`을 `CumulativeFundingEntry`로 저장합니다. 후속 funding payments는 포지션 변경 시에만 적용되며 다음과 같이 계산할 수 있습니다:
+
+- FundingPayment
+  - Long의 경우: `FundingPayment ← PositionQuantity * (CumulativeFunding - CumulativeFundingEntry)`
+  - Short의 경우: `FundingPayment ← PositionQuantity * (CumulativeFundingEntry - CumulativeFunding)`
+- `Margin' ← Margin + FundingPayment`
+- `CumulativeFundingEntry' ← CumulativeFunding`
+
+## Perpetual Market 거래 사양
+
+### Positions
+
+트레이더의 포지션은 트레이더가 derivative 계약에 진입한 조건을 기록하며 다음과 같이 정의됩니다
+
+- Position 정의:
+  - `Quantity`
+  - `EntryPrice`
+  - `Margin`
+  - `HoldQuantity`
+  - `CumulativeFundingEntry`
+
+예를 들어, ETH/USDT market에서 다음 포지션을 고려해 보십시오:
+
+- `Quantity` = -2
+- `EntryPrice` = 2200
+- `Margin` = 800
+- `HoldQuantity` = 1
+- `CumulativeFundingEntry` = 4838123
+
+이 포지션은 800 USDT로 담보된 ETH/USDT market의 2개 계약에 대한 short 노출을 나타내며, 진입 가격은 2200입니다. `HoldQuantity`는 트레이더가 반대 orders를 가진 포지션의 수량을 나타냅니다. `CumulativeFundingEntry`는 포지션이 마지막으로 업데이트된 cumulative funding 값을 나타냅니다.
+
+Position Netting:
+
+기존 포지션이 있는 subaccount에 대해 새 vanilla order가 매칭되면, 새 포지션은 기존 포지션과 새 vanilla order를 netting한 결과가 됩니다. 매칭된 vanilla order는 `FillQuantity`, `FillMargin` 및 `ClearingPrice`로 정의된 position delta를 생성합니다.
+
+- 같은 방향의 포지션에 Position Delta 적용:
+  - `Entry Price' ← (Quantity \* EntryPrice + FillQuantity \* ClearingPrice) / (Quantity + FillQuantity)`
+  - `Quantity' ← Quantity + FillQuantity`
+  - `Margin' ← Margin + FillMargin`
+- 반대 방향의 포지션에 Position Delta 적용:
+  - `Entry Price - 변경 없음`
+  - `Quantity' ← Quantity - FillQuantity`
+  - `Margin' ← Margin \* (Quantity - FillQuantity) / Quantity`
+
+### Limit Buy Order
+
+Limit buy order는 지정된 margin 금액을 담보로 제공하여 지정된 Price에서 지정된 Quantity의 derivative 계약을 매수하려고 합니다.
+
+### Limit Sell Order
+
+Limit sell order는 지정된 margin 금액을 담보로 제공하여 지정된 Price에서 지정된 Quantity의 derivative 계약을 매도하려고 합니다.
+
+매칭된 포지션은 limit order가 maker order로 실행되는지 taker order로 실행되는지에 따라 **수수료가 차감**됩니다.
+
+### Market Buy Order
+
+Market buy order는 subaccount의 available balance를 margin 담보로 사용하여 지정된 worst price에서 지정된 Quantity의 derivative 계약을 매수하려고 합니다.
+
+Market order의 Handler 및 EndBlocker 실행은 트레이더가 initial min margin 요건으로 인해 암묵적으로 최대 가격 제한을 설정하는 margin을 전달하므로 Limit Buy Order (즉시 매칭 케이스)와 개념적으로 동일합니다.
+
+### Market Sell Order
+
+Market sell order는 subaccount의 available balance를 margin 담보로 사용하여 지정된 worst price에서 지정된 Quantity의 derivative 계약을 매도하려고 합니다.
+
+Market order의 Handler 및 EndBlocker 실행은 트레이더가 initial min margin 요건으로 인해 암묵적으로 최소 가격 제한을 설정하는 margin을 전달하므로 Limit Sell Order (즉시 매칭 케이스)와 개념적으로 동일합니다.
+
+### Order Types
+
+- BUY (1): 현재 market 가격 또는 설정된 limit 가격에서 자산을 매수하는 표준 buy order입니다.
+- SELL (2): 현재 market 가격 또는 설정된 limit 가격에서 자산을 매도하는 표준 sell order입니다.
+- STOP_BUY (3): Stop-buy order는 oracle 가격이 지정된 trigger 가격에 도달하거나 초과하면 일반 buy order로 전환됩니다.
+- STOP_SELL (4): Stop-sell order는 oracle 가격이 지정된 trigger 가격에 도달하거나 그 이하로 떨어지면 일반 sell order가 됩니다.
+- TAKE_BUY (5): Take-buy order는 oracle 가격이 지정된 trigger 가격에 도달하거나 그 이하로 떨어지면 일반 buy order로 전환됩니다.
+- TAKE_SELL (6): Stop-sell order는 oracle 가격이 지정된 trigger 가격에 도달하거나 초과하면 일반 sell order가 됩니다.
+- BUY_PO (7): Post-Only Buy. 이 order 유형은 order가 오더북에만 추가되고 기존 order와 매칭되지 않도록 보장합니다. 이는 여러분이 "taker"가 아닌 market "maker"가 될 것을 보장합니다.
+- SELL_PO (8): Post-Only Sell. BUY_PO와 유사하게, 이는 sell order가 오더북에 유동성만 추가하고 기존 order와 매칭되지 않도록 보장합니다.
+- BUY_ATOMIC (9): Atomic buy order는 Frequent Batch Auctions (FBA)를 우회하여 즉시 실행되는 market order입니다. 즉시 거래를 실행해야 하는 스마트 컨트랙트용입니다. 글로벌 exchange parameters에 정의된 더 높은 수수료가 지불됩니다.
+- SELL_ATOMIC (10): Atomic sell order는 BUY_ATOMIC과 유사하며, FBA를 우회하여 현재 market 가격에서 즉시 실행됩니다.
+
+### Reduce-Only Orders (포지션 매도)
+
+### Limit Buy Reduce-Only Order
+
+Limit buy reduce-only order는 지정된 `Quantity` ETH (**base currency**)만큼 기존 long 노출을 줄이려고 합니다.
+포지션 청산을 위한 지급금은 **수수료가 차감**됩니다.
+
+### Limit Sell Reduce-Only Order
+
+Limit sell reduce-only order는 지정된 `Quantity` ETH (**base currency**)만큼 기존 short 노출을 줄이려고 합니다.
+포지션 청산을 위한 지급금은 **수수료가 차감**됩니다.

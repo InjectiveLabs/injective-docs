@@ -1,0 +1,130 @@
+---
+sidebar_position: 3
+title: 거버넌스 제안
+---
+
+## 거버넌스 제안
+
+### ContractRegistrationRequest
+
+`ContractRegistrationRequest`는 새 컨트랙트를 등록하기 위한 기본 메시지입니다 (직접 사용하지 않고 제안의 일부로 사용해야 함)
+
+```go
+type ContractRegistrationRequest struct {
+	ContractAddress string 
+	GasLimit uint64 
+	GasPrice    uint64 
+	PinContract bool   
+	AllowUpdating bool
+	CodeId uint64
+    ContractAdmin string 
+	GranterAddress string
+	FundMode FundingMode
+}
+```
+
+**필드 설명**
+
+- `ContractAddress` - 등록할 컨트랙트 인스턴스의 고유 식별자.
+- `GasLimit` - 스마트 컨트랙트 실행에 사용될 최대 가스.
+- `GasPrice` - 스마트 컨트랙트 실행에 사용될 가스 가격.
+- `PinContract` - 컨트랙트를 고정해야 하는지 여부.
+- `AllowUpdating` - 컨트랙트 소유자가 다시 등록할 필요 없이 마이그레이션할 수 있는지 정의합니다 (false인 경우 현재 code_id만 실행이 허용됨)
+- `CodeId` - 등록되는 컨트랙트의 code_id - 마지막 순간 변경을 허용하기 위해 실행 시 검증됩니다 (투표가 완료된 후)
+- `AdminAddress` - 관리자 계정의 선택적 주소 (컨트랙트를 일시 중지하거나 파라미터를 업데이트할 수 있음)
+- `GranterAddress` - 실행을 위한 자금을 부여한 계정의 주소. `FundMode`가 `SelfFunded`가 아닌 경우 설정해야 합니다 (아래 설명 참조)
+
+`FundingMode`는 컨트랙트가 자체 실행 자금을 어떻게 조달할지 나타냅니다.
+
+```go
+enum FundingMode {
+    Unspecified = 0;
+    SelfFunded = 1;
+    GrantOnly = 2; 
+    Dual = 3;      
+}
+```
+
+- `SelfFunded` - 컨트랙트가 자체 자금을 사용하여 실행합니다.
+- `GrantOnly` - 컨트랙트가 grant에서 제공한 자금만 사용합니다.
+- `Dual` - 컨트랙트가 자체 자금을 사용하기 전에 먼저 grant의 자금을 소진합니다.
+
+### ContractRegistrationRequestProposal
+
+`ContractRegistrationRequestProposal`은 wasmx 컨트랙트 레지스트리에 단일 컨트랙트를 등록하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type ContractRegistrationRequestProposal struct {
+    Title                       string                      
+    Description                 string                      
+    ContractRegistrationRequest ContractRegistrationRequest 
+}
+```
+
+**필드 설명**
+
+- `Title`은 제안의 제목을 설명합니다.
+- `Description`은 제안의 설명을 설명합니다.
+- `ContractRegistrationRequest`는 컨트랙트 등록 요청을 포함합니다 (위에서 설명한 대로)
+
+
+
+
+### BatchContractRegistrationRequestProposal
+
+`BatchContractRegistrationRequestProposal`은 wasmx 컨트랙트 레지스트리에 컨트랙트 배치를 등록하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type BatchContractRegistrationRequestProposal struct {
+    Title                       string                      
+    Description                 string
+	ContractRegistrationRequests  []ContractRegistrationRequest 
+}
+```
+
+**필드 설명**
+
+- `Title`은 제안의 제목을 설명합니다.
+- `Description`은 제안의 설명을 설명합니다.
+- `ContractRegistrationRequests`는 컨트랙트 등록 요청 목록을 포함합니다 (위에서 설명한 대로)
+
+
+### BatchStoreCodeProposal
+
+`BatchStoreCodeProposal`은 wasm에 컨트랙트 배치를 저장하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type BatchStoreCodeProposal struct {
+    Title                       string                      
+    Description                 string
+	Proposals   []types.StoreCodeProposal
+}
+```
+
+**필드 설명**
+
+- `Title`은 제안의 제목을 설명합니다.
+- `Description`은 제안의 설명을 설명합니다.
+- `Proposals`는 store code 제안 목록을 포함합니다 (Cosmos wasm 모듈에서 정의됨)
+
+
+### BatchContractDeregistrationProposal
+
+`BatchContractDeregistrationProposal`은 wasm에서 컨트랙트 배치를 등록 해제하기 위한 SDK 메시지를 정의합니다.
+
+```go
+type BatchContractDeregistrationProposal struct {
+    Title                       string                      
+    Description                 string
+	Contracts   []string 
+}
+```
+
+**필드 설명**
+
+- `Title`은 제안의 제목을 설명합니다.
+- `Description`은 제안의 설명을 설명합니다.
+- `Contracts`는 등록 해제할 컨트랙트의 주소 목록을 포함합니다
+
+
+

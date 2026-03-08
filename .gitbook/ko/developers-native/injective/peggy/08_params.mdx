@@ -1,0 +1,97 @@
+---
+sidebar_position: 8
+title: 파라미터
+---
+
+# 파라미터
+
+이 문서는 Peggy 모듈의 파라미터를 설명하고 구성을 안내합니다. 기본 파라미터는 peggy 모듈의 genesis.go에서 찾을 수 있습니다.
+
+```go
+type Params struct {
+	PeggyId                       string                                 
+	ContractSourceHash            string                                 
+	BridgeEthereumAddress         string                                 
+	BridgeChainId                 uint64                                 
+	SignedValsetsWindow           uint64                                 
+	SignedBatchesWindow           uint64                                 
+	SignedClaimsWindow            uint64                                 
+	TargetBatchTimeout            uint64                                 
+	AverageBlockTime              uint64                                 
+	AverageEthereumBlockTime      uint64                                 
+	SlashFractionValset           math.LegacyDec 
+	SlashFractionBatch            math.LegacyDec 
+	SlashFractionClaim            math.LegacyDec 
+	SlashFractionConflictingClaim math.LegacyDec 
+	UnbondSlashingValsetsWindow   uint64  
+	SlashFractionBadEthSignature  math.LegacyDec 
+	CosmosCoinDenom               string  
+	CosmosCoinErc20Contract       string  
+	ClaimSlashingEnabled          bool    
+	BridgeContractStartHeight     uint64  
+	ValsetReward                  types.Coin
+}
+```
+
+## `peggy_id`
+
+서명 재사용을 방지하기 위한 임의의 32바이트 값입니다. 예를 들어
+Injective Chain 검증자가 Peggy를 실행하는 다른 체인에도 동일한 Ethereum 키를 사용하기로 결정한 경우, 체인 A의 입금을 체인 B의 Peggy에서 재생하는 것이 가능하지 않기를 원합니다. 이 값은 ETHEREUM에서 사용되므로
+시작하기 전에 genesis.json에서 설정하고 Peggy를 배포한 후에는 변경하지 않아야 합니다. Peggy를 배포한 후 이 값을 변경하면 브릿지가 작동하지 않습니다. 복구하려면 컨트랙트가 배포된 원래 값으로 다시 설정하면 됩니다.
+
+## `contract_source_hash`
+
+알려진 좋은 버전의 Peggy 컨트랙트
+solidity 코드의 코드 해시입니다. 이것은 올바른 버전의 컨트랙트가 배포되었는지 확인하는 데 사용할 수 있습니다. 이것은 거버넌스 작업을 위한 참조 값일 뿐이며 Peggy 코드에서 읽히지 않습니다.
+
+## `bridge_ethereum_address`
+
+Ethereum 측의 브릿지 컨트랙트 주소입니다. 이것은
+거버넌스를 위한 참조 값일 뿐이며 실제로 Peggy 모듈 코드에서 사용되지 않습니다.
+
+Ethereum 브릿지 relayer는 이 값을 사용하여 이벤트를 쿼리하고 Peggy 컨트랙트에 valset/배치를 제출하기 위해 Peggy 컨트랙트와 상호작용합니다.
+
+## `bridge_chain_id`
+
+브릿지 체인 ID는 Ethereum 체인의 고유 식별자입니다. 이것은 참조 값일 뿐이며 실제로 Peggy 코드에서 사용되지 않습니다.
+
+이러한 참조 값은 향후 Peggy 클라이언트 구현에서 일관성 검사를 허용하는 데 사용될 수 있습니다.
+
+## 서명 윈도우
+
+* `signed_valsets_window`
+* `signed_batches_window`
+* `signed_claims_window`
+
+이 값은 검증자가 배치 또는 valset에 대한 서명을 제출하거나 특정 attestation nonce에 대한 claim을 제출해야 하는 블록 단위의 시간을 나타냅니다.
+
+attestation의 경우 이 시계는 attestation이 생성될 때 시작되지만 이벤트가 통과된 후에만 슬래싱을 허용합니다.
+claim 슬래싱은 현재 활성화되어 있지 않습니다. [슬래싱 사양](./05_slashing) 참조
+
+## `target_batch_timeout`
+
+배치가 타임아웃되는 '목표' 값입니다. 이것이 목표인 이유는
+Ethereum이 확률적 체인이고 블록 빈도를 미리 확실히 알 수 없기 때문입니다.
+
+## Ethereum 타이밍
+
+* `average_block_time`
+* `average_ethereum_block_time`
+
+이 값은 각각 평균 Injective Chain 블록 시간과 Ethereum 블록 시간이며
+목표 배치 타임아웃을 계산하는 데 사용됩니다. 블록을 생성하는 데 걸리는 시간에 중대하고 장기적인 변화가 있는 경우 거버넌스가 이를 업데이트하는 것이 중요합니다.
+
+## 슬래시 비율
+
+* `slash_fraction_valset`
+* `slash_fraction_batch`
+* `slash_fraction_claim`
+* `slash_fraction_conflicting_claim`
+
+다양한 peggy 관련 슬래싱 조건에 대한 슬래싱 비율입니다. 처음 세 가지는 특정 메시지를 제출하지 않는 것, 세 번째는 claim을 제출하지 않는 것, 마지막은 다른 검증자와 다른 claim을 제출하는 것입니다.
+
+claim 슬래싱은 [슬래싱 사양](./05_slashing)에 설명된 대로 현재 비활성화되어 있습니다.
+
+## `valset_reward`
+
+Valset reward는 relayer가 Ethereum의 Peggy 컨트랙트에 valset을 중계할 때 지급되는 보상 금액입니다.

@@ -1,0 +1,218 @@
+---
+sidebar_position: 2
+title: State
+---
+
+# State
+
+Genesis state는 모듈 설정에 사용되는 모듈의 초기 상태를 정의합니다.
+
+```go
+// GenesisState defines the OCR module's genesis state.
+type GenesisState struct {
+	// params defines all the parameters of related to OCR.
+	Params Params 
+	// feed_configs stores all of the supported OCR feeds
+	FeedConfigs []*FeedConfig
+	// latest_epoch_and_rounds stores the latest epoch and round for each feedId
+	LatestEpochAndRounds []*FeedEpochAndRound
+	// feed_transmissions stores the last transmission for each feed
+	FeedTransmissions []*FeedTransmission
+	// latest_aggregator_round_ids stores the latest aggregator round ID for each feedId
+	LatestAggregatorRoundIds []*FeedLatestAggregatorRoundIDs
+	// reward_pools stores the reward pools
+	RewardPools []*RewardPool
+	// feed_observation_counts stores the feed observation counts
+	FeedObservationCounts []*FeedCounts
+	// feed_transmission_counts stores the feed transmission counts
+	FeedTransmissionCounts []*FeedCounts
+	// pending_payeeships stores the pending payeeships
+	PendingPayeeships []*PendingPayeeship
+}
+```
+## Params
+
+`Params`는 시스템 파라미터를 저장하고 ocr 모듈의 전체적인 기능을 정의하는 모듈 전체 구성입니다.
+이 모듈은 `gov` 모듈에서 기본적으로 지원하는 params update proposal을 사용하여 거버넌스로 수정할 수 있습니다.
+
+`ocr` 모듈 params store의 구조체입니다.
+```go
+type Params struct {
+	// Native denom for LINK coin in the bank keeper
+	LinkDenom string
+	// The block number interval at which payouts are made
+	PayoutBlockInterval uint64
+	// The admin for the OCR module
+	ModuleAdmin string
+}
+```
+
+## FeedConfig
+
+`FeedConfig`는 feed의 구성을 관리하며 feed당 하나씩 존재합니다.
+
+```go
+type FeedConfig struct {
+	// signers ith element is address ith oracle uses to sign a report
+	Signers []string
+	// transmitters ith element is address ith oracle uses to transmit a report via the transmit method
+	Transmitters []string
+	// f maximum number of faulty/dishonest oracles the protocol can tolerate while still working correctly
+	F uint32
+	// onchain_config contains properties relevant only for the Cosmos module.
+	OnchainConfig *OnchainConfig
+	// offchain_config_version version of the serialization format used for "offchain_config" parameter
+	OffchainConfigVersion uint64
+	// offchain_config serialized data used by oracles to configure their offchain operation
+	OffchainConfig []byte
+}
+```
+
+### FeedConfigInfo
+
+`FeedConfigInfo`는 각 transmission 이벤트에 대해 더 자주 업데이트해야 하는 정보를 저장합니다.
+
+```go
+type FeedConfigInfo struct {
+	LatestConfigDigest []byte
+	F                  uint32
+	N                  uint32
+	// config_count ordinal number of this config setting among all config settings
+	ConfigCount             uint64
+	LatestConfigBlockNumber int64
+}
+```
+
+### Transmission
+
+`Transmission`은 스토어에 transition 정보를 저장하는 단위입니다.
+
+```go
+// Transmission records the median answer from the transmit transaction at
+// time timestamp
+type Transmission struct {
+	Answer                math.LegacyDec
+	ObservationsTimestamp int64
+	TransmissionTimestamp int64
+}
+```
+
+### Report
+
+`Report`는 스토어에 report 정보를 저장하는 단위입니다.
+
+```go
+type Report struct {
+	ObservationsTimestamp int64
+	Observers             []byte
+	Observations          []math.LegacyDec
+}
+```
+
+`ReportToSign`은 observer가 서명해야 하는 정보를 저장합니다.
+
+```go
+type ReportToSign struct {
+	ConfigDigest []byte 
+	Epoch        uint64
+	Round        uint64 
+	ExtraHash    []byte
+	// Opaque report
+	Report []byte
+}
+```
+
+### OnchainConfig
+
+`OnchainConfig`는 feed config를 위해 온체인에서 관리해야 하는 구성을 저장합니다.
+
+```go
+type OnchainConfig struct {
+	// chain_id the ID of the Cosmos chain itself.
+	ChainId string
+	// feed_id is an unique ID for the target of this config
+	FeedId string
+	// lowest answer the median of a report is allowed to be
+	MinAnswer math.LegacyDec
+	// highest answer the median of a report is allowed to be
+	MaxAnswer math.LegacyDec
+	// Fixed LINK reward for each observer
+	LinkPerObservation math.Int
+	// Fixed LINK reward for transmitter
+	LinkPerTransmission math.Int
+	// Native denom for LINK coin in the bank keeper
+	LinkDenom string
+	// Enables unique reports
+	UniqueReports bool
+	// short human-readable description of observable this feed's answers pertain to
+	Description string
+	// feed administrator
+	FeedAdmin string
+	// feed billing administrator
+	BillingAdmin string
+}
+```
+
+### ContractConfig
+
+`ContractConfig`는 OCR을 저장하기 위한 contract와 관련된 구성을 저장합니다.
+
+```go
+type ContractConfig struct {
+	// config_count ordinal number of this config setting among all config settings
+	ConfigCount uint64
+	// signers ith element is address ith oracle uses to sign a report
+	Signers []string 
+	// transmitters ith element is address ith oracle uses to transmit a report via the transmit method
+	Transmitters []string
+	// f maximum number of faulty/dishonest oracles the protocol can tolerate while still working correctly
+	F uint32
+	// onchain_config serialized config that is relevant only for the module.
+	OnchainConfig []byte
+	// offchain_config_version version of the serialization format used for "offchain_config" parameter
+	OffchainConfigVersion uint64
+	// offchain_config serialized data used by oracles to configure their offchain operation
+	OffchainConfig []byte
+}
+```
+### FeedProperties
+
+`FeedProperties`는 ID별로 feed의 속성을 저장하는 단위입니다.
+
+```go
+type FeedProperties struct {
+	// feed_id is an unique ID for the target of this config
+	FeedId string
+	// f maximum number of faulty/dishonest oracles the protocol can tolerate while still working correctly
+	F uint32
+	// offchain_config_version version of the serialization format used for "offchain_config" parameter
+	OffchainConfigVersion uint64
+	// offchain_config serialized data used by oracles to configure their offchain operation
+	OffchainConfig []byte
+	// lowest answer the median of a report is allowed to be
+	MinAnswer math.LegacyDec
+	// highest answer the median of a report is allowed to be
+	MaxAnswer math.LegacyDec
+	// Fixed LINK reward for each observer
+	LinkPerObservation math.Int
+	// Fixed LINK reward for transmitter
+	LinkPerTransmission math.Int
+	// Enables unique reports
+	UniqueReports bool
+	// short human-readable description of observable this feed's answers pertain to
+	Description string
+}
+```
+
+### PendingPayeeship
+
+`PendingPayeeship`은 다른 주소에 payeeship을 위임할 때 저장되는 레코드입니다.
+제안된 payee가 이를 수락하면 이 레코드는 삭제됩니다.
+
+```go
+type PendingPayeeship struct {
+	FeedId        string
+	Transmitter   string
+	ProposedPayee string
+}
+```

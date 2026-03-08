@@ -1,0 +1,21 @@
+---
+title: Insurance
+---
+
+## 개요
+
+이 문서는 Injective Chain의 insurance 모듈에 대해 설명합니다.
+
+이 모듈은 Injective Chain의 `exchange` 모듈에서 더 높은 레버리지 거래를 지원하기 위해 파생상품 시장에 대한 보험 펀드를 제공합니다. 상위 수준에서, 각 파생상품 시장의 보험 펀드는 보험 펀드 내 기초 자산에 대한 비례 청구권(보험 펀드 share token으로 표시됨)을 각각 보유하는 무허가 underwriter 그룹에 의해 자금이 조달됩니다.
+
+각 보험 펀드는 해당 파생상품 시장에서 양의 자산을 가진 포지션이 청산될 때 성장하며, 청산 시 양의 자산의 절반이 보험 펀드로 전송됩니다. 음의 자산을 가진 포지션이 청산될 때(즉, 포지션이 파산을 초과한 경우), 보험 펀드는 부족한 자산을 충당하는 데 활용됩니다.
+
+## 목차
+
+1. [State](/developers-native/injective/insurance/01_state)
+2. [State Transitions](/developers-native/injective/insurance/02_state_transitions)
+3. [Messages](/developers-native/injective/insurance/03_messages)
+4. [End Block](/developers-native/injective/insurance/04_end_block)
+5. [Events](/developers-native/injective/insurance/05_events)
+6. [Params](/developers-native/injective/insurance/06_params)
+7. [Future Improvements](/developers-native/injective/insurance/07_future_improvements)

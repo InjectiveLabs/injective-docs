@@ -1,0 +1,78 @@
+---
+title: Parameters
+---
+
+evm 모듈에는 다음 매개변수가 포함되어 있습니다:
+
+## Params
+
+| Key            | Type        | Default Value   |
+| -------------- | ----------- |-----------------|
+| `EVMDenom`     | string      | `"inj"`         |
+| `EnableCreate` | bool        | `true`          |
+| `EnableCall`   | bool        | `true`          |
+| `ExtraEIPs`    | []int       | TBD             |
+| `ChainConfig`  | ChainConfig | See ChainConfig |
+
+## EVM denom
+
+evm denomination 매개변수는 EVM 상태 전환 및 EVM 메시지의 가스 소비에 사용되는 토큰 denomination을 정의합니다.
+
+예를 들어 Ethereum에서 `evm_denom`은 `ETH`입니다. Ethereum과의 동등성을 유지하기 위해 Injective는 기본 denomination으로 Atto를 사용합니다. 본질적으로 1 (atto) inj는 `1x10⁻¹⁸ INJ`와 같으며, 이는 1 wei가 1x10⁻¹⁸ ETH와 같은 Ethereum의 denomination과 일치합니다. 정밀도 측면에서 `INJ`와 `ETH`는 동일한 값을 공유합니다. 즉, `1 INJ = 10^18 inj`이고 `1 ETH = 10^18 wei`입니다.
+
+## Enable Create
+
+enable create 매개변수는 `vm.Create` 함수를 사용하는 상태 전환을 토글합니다. 매개변수가 비활성화되면 모든 컨트랙트 생성 기능이 방지됩니다.
+
+## Enable Transfer
+
+enable transfer는 `vm.Call` 함수를 사용하는 상태 전환을 토글합니다. 매개변수가 비활성화되면 계정 간 전송 및 스마트 컨트랙트 호출 실행이 방지됩니다.
+
+## Extra EIPs
+
+extra EIPs 매개변수는 사용자 정의 jump table을 적용하는 Ethereum VM `Config`에서 활성화 가능한 Ethereum Improvement Proposals(**[EIPs](https://ethereum.org/en/eips/)**)의 집합을 정의합니다.
+
+::: tip
+참고: 이러한 EIP 중 일부는 하드 포크 번호에 따라 chain configuration에 의해 이미 활성화되어 있습니다.
+:::
+
+지원되는 활성화 가능한 EIP는 다음과 같습니다:
+
+- **[EIP 1344](https://eips.ethereum.org/EIPS/eip-1344)**
+- **[EIP 1884](https://eips.ethereum.org/EIPS/eip-1884)**
+- **[EIP 2200](https://eips.ethereum.org/EIPS/eip-2200)**
+- **[EIP 2315](https://eips.ethereum.org/EIPS/eip-2315)**
+- **[EIP 2929](https://eips.ethereum.org/EIPS/eip-2929)**
+- **[EIP 3198](https://eips.ethereum.org/EIPS/eip-3198)**
+- **[EIP 3529](https://eips.ethereum.org/EIPS/eip-3529)**
+
+## Chain Config
+
+`ChainConfig`는 go-ethereum `ChainConfig` 매개변수와 동일한 필드를 포함하지만 `*big.Int` 유형 대신 `*sdk.Int` 유형을 사용하는 protobuf wrapper 유형입니다.
+
+기본적으로 `ConstantinopleBlock`을 제외한 모든 블록 구성 필드는 genesis(높이 0)에서 활성화됩니다.
+
+### ChainConfig Defaults
+
+| Name                | Default Value                                                        |
+| ------------------- | -------------------------------------------------------------------- |
+| HomesteadBlock      | 0                                                                    |
+| DAOForkBlock        | 0                                                                    |
+| DAOForkSupport      | `true`                                                               |
+| EIP150Block         | 0                                                                    |
+| EIP150Hash          | `0x0000000000000000000000000000000000000000000000000000000000000000` |
+| EIP155Block         | 0                                                                    |
+| EIP158Block         | 0                                                                    |
+| ByzantiumBlock      | 0                                                                    |
+| ConstantinopleBlock | 0                                                                    |
+| PetersburgBlock     | 0                                                                    |
+| IstanbulBlock       | 0                                                                    |
+| MuirGlacierBlock    | 0                                                                    |
+| BerlinBlock         | 0                                                                    |
+| LondonBlock         | 0                                                                    |
+| ArrowGlacierBlock   | 0                                                                    |
+| GrayGlacierBlock    | 0                                                                    |
+| MergeNetsplitBlock  | 0                                                                    |
+| ShanghaiTime        | 0                                                                    |
+| CancunTime          | 0                                                                    |
+| PragueTime          | 0                                                                    |

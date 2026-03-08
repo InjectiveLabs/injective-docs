@@ -1,0 +1,235 @@
+---
+title: Transactions
+---
+
+이 섹션에서는 이전 섹션에서 정의된 상태 전환을 초래하는 `sdk.Msg` 구체적 유형을 정의합니다.
+
+## `MsgEthereumTx`
+
+EVM 상태 전환은 `MsgEthereumTx`를 사용하여 달성할 수 있습니다. 이 메시지는 Ethereum 트랜잭션 데이터(`TxData`)를 `sdk.Msg`로 캡슐화합니다. 필요한 트랜잭션 데이터 필드를 포함합니다. `MsgEthereumTx`는 [`sdk.Msg`](https://github.com/cosmos/cosmos-sdk/blob/v0.39.2/types/tx_msg.go#L7-L29)와 [`sdk.Tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.39.2/types/tx_msg.go#L33-L41) 인터페이스를 모두 구현합니다. 일반적으로 SDK 메시지는 전자만 구현하는 반면, 후자는 함께 번들된 메시지 그룹입니다.
+
+```go
+type MsgEthereumTx struct {
+	// inner transaction data
+	Data *types.Any `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	// DEPRECATED: encoded storage size of the transaction
+	Size_ float64 `protobuf:"fixed64,2,opt,name=size,proto3" json:"-"`
+	// transaction hash in hex format
+	Hash string `protobuf:"bytes,3,opt,name=hash,proto3" json:"hash,omitempty" rlp:"-"`
+	// ethereum signer address in hex format. This address value is checked
+	// against the address derived from the signature (V, R, S) using the
+	// secp256k1 elliptic curve
+	From string `protobuf:"bytes,4,opt,name=from,proto3" json:"from,omitempty"`
+}
+```
+
+이 메시지 필드 검증은 다음의 경우 실패할 것으로 예상됩니다:
+
+- `From` 필드가 정의되어 있고 주소가 유효하지 않은 경우
+- `TxData` 상태 비저장 검증이 실패하는 경우
+
+트랜잭션 실행은 다음의 경우 실패할 것으로 예상됩니다:
+
+- 사용자 정의 `AnteHandler` Ethereum decorator 검사 중 하나가 실패하는 경우:
+    - 트랜잭션의 최소 가스 양 요구 사항
+    - 트랜잭션 sender 계정이 존재하지 않거나 수수료에 충분한 잔액이 없는 경우
+    - 계정 시퀀스가 트랜잭션 `Data.AccountNonce`와 일치하지 않는 경우
+    - 메시지 서명 검증이 실패하는 경우
+- EVM 컨트랙트 생성(즉, `evm.Create`)이 실패하거나 `evm.Call`이 실패하는 경우
+
+### Conversion
+
+`MsgEthreumTx`는 evm 컨트랙트를 생성하고 호출하기 위해 go-ethereum `Transaction` 및 `Message` 유형으로 변환할 수 있습니다.
+
+```go
+// AsTransaction creates an Ethereum Transaction type from the msg fields
+func (msg MsgEthereumTx) AsTransaction() *ethtypes.Transaction {
+	txData, err := UnpackTxData(msg.Data)
+	if err != nil {
+		return nil
+	}
+
+	return ethtypes.NewTx(txData.AsEthereumData())
+}
+
+// AsMessage returns the transaction as a core.Message.
+func (tx *Transaction) AsMessage(s Signer, baseFee *big.Int) (Message, error) {
+	msg := Message{
+		nonce:      tx.Nonce(),
+		gasLimit:   tx.Gas(),
+		gasPrice:   new(big.Int).Set(tx.GasPrice()),
+		gasFeeCap:  new(big.Int).Set(tx.GasFeeCap()),
+		gasTipCap:  new(big.Int).Set(tx.GasTipCap()),
+		to:         tx.To(),
+		amount:     tx.Value(),
+		data:       tx.Data(),
+		accessList: tx.AccessList(),
+		isFake:     false,
+	}
+	// If baseFee provided, set gasPrice to effectiveGasPrice.
+	if baseFee != nil {
+		msg.gasPrice = math.BigMin(msg.gasPrice.Add(msg.gasTipCap, baseFee), msg.gasFeeCap)
+	}
+	var err error
+	msg.from, err = Sender(s, tx)
+	return msg, err
+}
+```
+
+### Signing
+
+서명 검증이 유효하려면 `TxData`에 `Signer`의 `v | r | s` 값이 포함되어야 합니다. Sign은 secp256k1 ECDSA 서명을 계산하고 트랜잭션에 서명합니다. EIP155 표준에 따라 Ethereum 트랜잭션에 서명하기 위해 keyring signer와 chainID를 받습니다. 이 메서드는 트랜잭션의 Signature V, R, S 필드를 채우므로 트랜잭션을 변경합니다. msg에 대해 sender 주소가 정의되지 않았거나 sender가 keyring에 등록되지 않은 경우 함수가 실패합니다.
+
+```go
+// Sign calculates a secp256k1 ECDSA signature and signs the transaction. It
+// takes a keyring signer and the chainID to sign an Ethereum transaction according to
+// EIP155 standard.
+// This method mutates the transaction as it populates the V, R, S
+// fields of the Transaction's Signature.
+// The function will fail if the sender address is not defined for the msg or if
+// the sender is not registered on the keyring
+func (msg *MsgEthereumTx) Sign(ethSigner ethtypes.Signer, keyringSigner keyring.Signer) error {
+	from := msg.GetFrom()
+	if from.Empty() {
+		return fmt.Errorf("sender address not defined for message")
+	}
+
+	tx := msg.AsTransaction()
+	txHash := ethSigner.Hash(tx)
+
+	sig, _, err := keyringSigner.SignByAddress(from, txHash.Bytes())
+	if err != nil {
+		return err
+	}
+
+	tx, err = tx.WithSignature(ethSigner, sig)
+	if err != nil {
+		return err
+	}
+
+	msg.FromEthereumTx(tx)
+	return nil
+}
+```
+
+## TxData
+
+`MsgEthereumTx`는 go-ethereum의 3가지 유효한 Ethereum 트랜잭션 데이터 유형을 지원합니다: `LegacyTx`, `AccessListTx` 및 `DynamicFeeTx`. 이러한 유형은 protobuf 메시지로 정의되고 `MsgEthereumTx` 필드의 `proto.Any` 인터페이스 유형으로 패킹됩니다.
+
+- `LegacyTx`: [EIP-155](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md) 트랜잭션 유형
+- `DynamicFeeTx`: [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) 트랜잭션 유형. London 하드 포크 블록에 의해 활성화됨
+- `AccessListTx`: [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) 트랜잭션 유형. Berlin 하드 포크 블록에 의해 활성화됨
+
+### `LegacyTx`
+
+일반 Ethereum 트랜잭션의 트랜잭션 데이터입니다.
+
+```go
+type LegacyTx struct {
+	// nonce corresponds to the account nonce (transaction sequence).
+	Nonce uint64 `protobuf:"varint,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	// gas price defines the value for each gas unit
+	GasPrice *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=gas_price,json=gasPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"gas_price,omitempty"`
+	// gas defines the gas limit defined for the transaction.
+	GasLimit uint64 `protobuf:"varint,3,opt,name=gas,proto3" json:"gas,omitempty"`
+	// hex formatted address of the recipient
+	To string `protobuf:"bytes,4,opt,name=to,proto3" json:"to,omitempty"`
+	// value defines the unsigned integer value of the transaction amount.
+	Amount *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=value,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"value,omitempty"`
+	// input defines the data payload bytes of the transaction.
+	Data []byte `protobuf:"bytes,6,opt,name=data,proto3" json:"data,omitempty"`
+	// v defines the signature value
+	V []byte `protobuf:"bytes,7,opt,name=v,proto3" json:"v,omitempty"`
+	// r defines the signature value
+	R []byte `protobuf:"bytes,8,opt,name=r,proto3" json:"r,omitempty"`
+	// s define the signature value
+	S []byte `protobuf:"bytes,9,opt,name=s,proto3" json:"s,omitempty"`
+}
+```
+
+이 메시지 필드 검증은 다음의 경우 실패할 것으로 예상됩니다:
+
+- `GasPrice`가 유효하지 않은 경우 (`nil`, 음수 또는 int256 범위를 벗어남)
+- `Fee` (gasprice * gaslimit)가 유효하지 않은 경우
+- `Amount`가 유효하지 않은 경우 (음수 또는 int256 범위를 벗어남)
+- `To` 주소가 유효하지 않은 경우 (유효하지 않은 ethereum hex 주소)
+
+### `DynamicFeeTx`
+
+EIP-1559 dynamic fee 트랜잭션의 트랜잭션 데이터입니다.
+
+```go
+type DynamicFeeTx struct {
+	// destination EVM chain ID
+	ChainID *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"chainID"`
+	// nonce corresponds to the account nonce (transaction sequence).
+	Nonce uint64 `protobuf:"varint,2,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	// gas tip cap defines the max value for the gas tip
+	GasTipCap *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=gas_tip_cap,json=gasTipCap,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"gas_tip_cap,omitempty"`
+	// gas fee cap defines the max value for the gas fee
+	GasFeeCap *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=gas_fee_cap,json=gasFeeCap,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"gas_fee_cap,omitempty"`
+	// gas defines the gas limit defined for the transaction.
+	GasLimit uint64 `protobuf:"varint,5,opt,name=gas,proto3" json:"gas,omitempty"`
+	// hex formatted address of the recipient
+	To string `protobuf:"bytes,6,opt,name=to,proto3" json:"to,omitempty"`
+	// value defines the the transaction amount.
+	Amount *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,7,opt,name=value,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"value,omitempty"`
+	// input defines the data payload bytes of the transaction.
+	Data     []byte     `protobuf:"bytes,8,opt,name=data,proto3" json:"data,omitempty"`
+	Accesses AccessList `protobuf:"bytes,9,rep,name=accesses,proto3,castrepeated=AccessList" json:"accessList"`
+	// v defines the signature value
+	V []byte `protobuf:"bytes,10,opt,name=v,proto3" json:"v,omitempty"`
+	// r defines the signature value
+	R []byte `protobuf:"bytes,11,opt,name=r,proto3" json:"r,omitempty"`
+	// s define the signature value
+	S []byte `protobuf:"bytes,12,opt,name=s,proto3" json:"s,omitempty"`
+}
+```
+
+이 메시지 필드 검증은 다음의 경우 실패할 것으로 예상됩니다:
+
+- `GasTipCap`이 유효하지 않은 경우 (`nil`, 음수 또는 int256 오버플로우)
+- `GasFeeCap`이 유효하지 않은 경우 (`nil`, 음수 또는 int256 오버플로우)
+- `GasFeeCap`이 `GasTipCap`보다 작은 경우
+- `Fee` (gas price * gas limit)가 유효하지 않은 경우 (int256 오버플로우)
+- `Amount`가 유효하지 않은 경우 (음수 또는 int256 오버플로우)
+- `To` 주소가 유효하지 않은 경우 (유효하지 않은 ethereum hex 주소)
+- `ChainID`가 `nil`인 경우
+
+### `AccessListTx`
+
+EIP-2930 access list 트랜잭션의 트랜잭션 데이터입니다.
+
+```go
+type AccessListTx struct {
+	// destination EVM chain ID
+	ChainID *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"chainID"`
+	// nonce corresponds to the account nonce (transaction sequence).
+	Nonce uint64 `protobuf:"varint,2,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	// gas price defines the value for each gas unit
+	GasPrice *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=gas_price,json=gasPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"gas_price,omitempty"`
+	// gas defines the gas limit defined for the transaction.
+	GasLimit uint64 `protobuf:"varint,4,opt,name=gas,proto3" json:"gas,omitempty"`
+	// hex formatted address of the recipient
+	To string `protobuf:"bytes,5,opt,name=to,proto3" json:"to,omitempty"`
+	// value defines the unsigned integer value of the transaction amount.
+	Amount *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=value,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"value,omitempty"`
+	// input defines the data payload bytes of the transaction.
+	Data     []byte     `protobuf:"bytes,7,opt,name=data,proto3" json:"data,omitempty"`
+	Accesses AccessList `protobuf:"bytes,8,rep,name=accesses,proto3,castrepeated=AccessList" json:"accessList"`
+	// v defines the signature value
+	V []byte `protobuf:"bytes,9,opt,name=v,proto3" json:"v,omitempty"`
+	// r defines the signature value
+	R []byte `protobuf:"bytes,10,opt,name=r,proto3" json:"r,omitempty"`
+	// s define the signature value
+	S []byte `protobuf:"bytes,11,opt,name=s,proto3" json:"s,omitempty"`
+}
+```
+
+이 메시지 필드 검증은 다음의 경우 실패할 것으로 예상됩니다:
+
+- `GasPrice`가 유효하지 않은 경우 (`nil`, 음수 또는 int256 오버플로우)
+- `Fee` (gas price * gas limit)가 유효하지 않은 경우 (int256 오버플로우)
+- `Amount`가 유효하지 않은 경우 (음수 또는 int256 오버플로우)
+- `To` 주소가 유효하지 않은 경우 (유효하지 않은 ethereum hex 주소)
+- `ChainID`가 `nil`인 경우

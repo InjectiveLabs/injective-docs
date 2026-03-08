@@ -1,0 +1,198 @@
+---
+sidebar_position: 4
+title: 메시지
+---
+
+# 메시지
+
+이것은 Peggy 메시지 유형에 대한 참조 문서입니다. 코드 참조와 정확한 인수는 [proto 정의](https://github.com/InjectiveLabs/injective-core/blob/master/proto/injective/peggy/v1/msgs.proto)를 참조하세요.
+
+## 사용자 메시지
+
+이것은 최종 사용자가 Injective Chain peggy 모듈에 보내는 메시지입니다. 전체 입금 및 출금 프로세스에 대한 자세한 요약은 [워크플로우](./02_workflow)를 참조하세요.
+
+### SendToEth
+
+사용자가 Ethereum으로 출금하려고 할 때마다 Injective에 전송됩니다. 제출된 금액은 사용자 잔액에서 즉시 제거됩니다.
+출금은 배치에 포함될 때까지 `types.OutgoingTransferTx`로 outgoing tx 풀에 추가됩니다.
+
+```go
+type MsgSendToEth struct {
+	Sender    string    // sender's Injective address
+	EthDest   string    // receiver's Ethereum address
+	Amount    types.Coin    // amount of tokens to bridge
+	BridgeFee types.Coin    // additional fee for bridge relayers. Must be of same token type as Amount
+}
+
+```
+
+### CancelSendToEth
+
+이 메시지는 사용자가 아직 배치되지 않은 특정 출금을 취소할 수 있게 합니다. 사용자 잔액이 환불됩니다 (`Amount` + `BridgeFee`).
+
+```go
+type MsgCancelSendToEth struct {
+	TransactionId uint64    // unique tx nonce of the withdrawal
+	Sender        string    // original sender of the withdrawal
+}
+
+``` 
+
+### SubmitBadSignatureEvidence
+
+이 호출은 누구나 검증자가 존재하지 않는 valset 또는 배치에 서명했다는 증거를 제출할 수 있게 합니다. Subject에는 배치 또는 valset이 포함됩니다.
+
+```go
+type MsgSubmitBadSignatureEvidence struct {
+	Subject   *types1.Any 
+	Signature string      
+	Sender    string      
+}
+```
+
+## Batch Creator 메시지
+
+이 메시지는 `peggo`의 `Batch Creator` 하위 프로세스에 의해 전송됩니다
+
+### RequestBatch
+
+이 메시지는 일부 `Batch Creator`가 배치되었을 때 최소 배치 수수료(`PEGGO_MIN_BATCH_FEE_USD`)를 충족하는 풀링된 출금을 찾을 때마다 전송됩니다.
+이 메시지를 수신한 후 `Peggy module`은 요청된 토큰 denom의 모든 출금을 수집하고, 고유한 토큰 배치(`types.OutgoingTxBatch`)를 생성하여 `Outgoing Batch pool`에 배치합니다.
+배치된 출금은 `MsgCancelSendToEth`로 취소할 수 없습니다.
+
+
+```go
+type MsgRequestBatch struct {
+	Orchestrator string // orchestrator address interested in creating the batch. Not permissioned.  
+	Denom        string // the specific token whose withdrawals will be batched together
+}
+```
+
+
+## Oracle 메시지
+
+이 메시지는 `peggo`의 `Oracle` 하위 프로세스에 의해 전송됩니다
+
+### DepositClaim
+
+`Peggy contract`에서 `SendToInjectiveEvent`가 발생하면 Injective에 전송됩니다.
+이것은 사용자가 Ethereum에서 Injective로 개별 입금을 할 때마다 발생합니다.
+
+```go
+type MsgDepositClaim struct {
+	EventNonce     uint64   // unique nonce of the event                                
+	BlockHeight    uint64   // Ethereum block height at which the event was emitted                                
+	TokenContract  string   // contract address of the ERC20 token                                 
+	Amount         sdkmath.Int  // amount of deposited tokens 
+	EthereumSender string   // sender's Ethereum address                                 
+	CosmosReceiver string   // receiver's Injective address                                 
+	Orchestrator   string   // address of the Orchestrator which observed the event                               
+}
+```
+
+### WithdrawClaim
+
+`Peggy contract`에서 `TransactionBatchExecutedEvent`가 발생하면 Injective에 전송됩니다.
+이것은 `Relayer`가 출금 배치를 완료하기 위해 컨트랙트에서 `submitBatch`를 성공적으로 호출했을 때 발생합니다.
+
+```go
+type MsgWithdrawClaim struct {
+	EventNonce    uint64    // unique nonce of the event
+	BlockHeight   uint64    // Ethereum block height at which the event was emitted
+	BatchNonce    uint64    // nonce of the batch executed on Ethereum
+	TokenContract string    // contract address of the ERC20 token
+	Orchestrator  string    // address of the Orchestrator which observed the event
+}
+```
+
+### ValsetUpdatedClaim
+
+`Peggy contract`에서 `ValsetUpdatedEvent`가 발생하면 Injective에 전송됩니다.
+이것은 `Relayer`가 Ethereum에서 `Validator Set`을 업데이트하기 위해 컨트랙트에서 `updateValset`을 성공적으로 호출했을 때 발생합니다.
+
+```go
+
+type MsgValsetUpdatedClaim struct {
+	EventNonce   uint64 // unique nonce of the event                      
+	ValsetNonce  uint64 // nonce of the valset                           
+	BlockHeight  uint64 // Ethereum block height at which the event was emitted                           
+	Members      []*BridgeValidator // members of the Validator Set               
+	RewardAmount sdkmath.Int // Reward for relaying the valset update 
+	RewardToken  string // reward token contract address                                 
+	Orchestrator string // address of the Orchestrator which observed the event                                 
+}
+```
+
+### ERC20DeployedClaim
+
+`Peggy contract`에서 `ERC20DeployedEvent`가 발생하면 Injective에 전송됩니다.
+이것은 브릿지 가능한 새로운 토큰 자산을 발행하기 위해 컨트랙트에서 `deployERC20` 메서드가 호출될 때마다 발생합니다.
+
+```go
+type MsgERC20DeployedClaim struct {
+	EventNonce    uint64    // unique nonce of the event
+	BlockHeight   uint64    // Ethereum block height at which the event was emitted
+	CosmosDenom   string    // denom of the token
+	TokenContract string    // contract address of the token
+	Name          string    // name of the token
+	Symbol        string    // symbol of the token
+	Decimals      uint64    // number of decimals the token has
+	Orchestrator  string    // address of the Orchestrator which observed the event
+}
+```
+
+
+## Signer 메시지
+
+이 메시지는 `peggo`의 `Signer` 하위 프로세스에 의해 전송됩니다
+
+### ConfirmBatch
+
+`Signer`가 `Orchestrator`(`Validator`)가 서명하지 않은 배치를 찾으면 `Delegated Ethereum Key`로 서명을 구성하고 Injective에 확인을 보냅니다.
+`Validator`가 결국 생성된 배치에 대한 확인을 제공하는 것이 중요합니다. 그렇지 않으면 슬래싱됩니다.
+
+```go
+type MsgConfirmBatch struct {
+	Nonce         uint64    // nonce of the batch 
+	TokenContract string    // contract address of batch token
+	EthSigner     string    // Validator's delegated Ethereum address (previously registered)
+	Orchestrator  string    // address of the Orchestrator confirming the batch
+	Signature     string    // Validator's signature of the batch
+}
+```
+
+### ValsetConfirm
+
+`Signer`가 `Orchestrator`(`Validator`)가 서명하지 않은 valset 업데이트를 찾으면 `Delegated Ethereum Key`로 서명을 구성하고 Injective에 확인을 보냅니다.
+`Validator`가 결국 생성된 valset 업데이트에 대한 확인을 제공하는 것이 중요합니다. 그렇지 않으면 슬래싱됩니다.
+
+```go
+type MsgValsetConfirm struct {
+	Nonce        uint64 // nonce of the valset 
+	Orchestrator string // address of the Orchestrator confirming the valset
+	EthAddress   string // Validator's delegated Ethereum address (previously registered)
+	Signature    string // Validator's signature of the valset
+}
+```
+
+## Relayer 메시지
+
+`Relayer`는 Injective에 메시지를 보내지 않습니다. 대신 `submitBatch` 및 `updateValset` 메서드를 통해 `Peggy contract`를 업데이트하기 위해 Injective 데이터로 Ethereum 트랜잭션을 구성합니다.
+
+## 검증자 메시지
+
+이것은 검증자의 메시지 키를 사용하여 직접 전송되는 메시지입니다.
+
+### SetOrchestratorAddresses
+
+`Validator` 노드를 관리하는 `Operator`가 Injective에 전송합니다. `Orchestrator`(`peggo`) 프로세스를 시작하기 전에 Ethereum에서 `Validator`를 대표할 선택된 Ethereum 주소를 등록해야 합니다.
+선택적으로, 브릿지 프로세스(`peggo`)에서 해당 `Validator`를 대표하기 위해 추가 Injective 주소를 제공할 수 있습니다(`Orchestrator` 필드). 생략하면 `Validator`의 자체 주소가 기본값입니다.
+
+```go
+type MsgSetOrchestratorAddresses struct {
+	Sender       string // address of the Injective validator
+	Orchestrator string // optional Injective address to represent the Validator in the bridging process (Defaults to Sender if left empty)
+	EthAddress   string // the Sender's (Validator) delegated Ethereum address
+}
+```
+이 메시지는 Orchestrator의 위임 키를 설정합니다.
