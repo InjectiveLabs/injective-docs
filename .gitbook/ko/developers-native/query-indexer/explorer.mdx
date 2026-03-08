@@ -1,0 +1,178 @@
+---
+title: Explorer
+---
+
+Indexer에서 Explorer 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### 해시로 트랜잭션 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const txsHash = "...";
+
+const transaction = await indexerGrpcExplorerApi.fetchTxByHash(txsHash);
+
+console.log(transaction);
+```
+
+### 주소로 계정 트랜잭션 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const injectiveAddress = "inj...";
+
+const account = await indexerGrpcExplorerApi.fetchAccountTx({
+  injectiveAddress,
+});
+
+console.log(account);
+```
+
+### 주소로 검증인 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const validatorAddress = "injvaloper...";
+
+const validator = await indexerGrpcExplorerApi.fetchValidator(validatorAddress);
+
+console.log(validator);
+```
+
+### 검증인 업타임 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const validatorAddress = "injvaloper...";
+
+const validatorUptime = await indexerGrpcExplorerApi.fetchValidatorUptime(
+  validatorAddress
+);
+
+console.log(validatorUptime);
+```
+
+### Ethereum에서 Peggy 입금 트랜잭션 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const sender = "0x..."; /* 선택적 파라미터 */
+const receiver = "inj..."; /* 선택적 파라미터 */
+const limit = 100; /* 선택적 페이지네이션 파라미터 */
+const skip = 20; /* 선택적 페이지네이션 파라미터 */
+
+const peggyDeposits = await indexerGrpcExplorerApi.fetchPeggyDepositTxs({
+  sender,
+  receiver,
+  limit,
+  skip,
+});
+
+console.log(peggyDeposits);
+```
+
+### Ethereum으로 Peggy 출금 트랜잭션 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const receiver = "0x..."; /* 선택적 파라미터 */
+const sender = "inj..."; /* 선택적 파라미터 */
+const limit = 100; /* 선택적 페이지네이션 파라미터 */
+const skip = 20; /* 선택적 페이지네이션 파라미터 */
+
+const peggyWithdrawals = await indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs({
+  sender,
+  receiver,
+  limit,
+  skip,
+});
+
+console.log(peggyWithdrawals);
+```
+
+### 블록 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const after = 30; /* 선택적 페이지네이션 파라미터 */
+const limit = 100; /* 선택적 페이지네이션 파라미터 */
+
+const blocks = await indexerGrpcExplorerApi.fetchBlocks({
+  after,
+  limit,
+});
+
+console.log(blocks);
+```
+
+### 블록 높이로 블록 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const height = 123456;
+const block = await indexerGrpcExplorerApi.fetchBlock(height);
+
+console.log(block);
+```
+
+### IBC 전송 트랜잭션 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const sender = "osmo...";
+const receiver = "inj...";
+
+const ibcTransactions = await indexerGrpcExplorerApi.fetchIBCTransferTxs({
+  sender,
+  receiver,
+});
+
+console.log(ibcTransactions);
+```

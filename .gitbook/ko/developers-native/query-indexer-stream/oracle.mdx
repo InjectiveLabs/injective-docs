@@ -1,0 +1,36 @@
+---
+title: Oracle
+---
+
+StreamManagerV2를 사용하여 Indexer에서 Oracle 모듈 관련 데이터를 스트리밍하는 예제 코드 스니펫입니다.
+
+## StreamManagerV2를 사용한 gRPC 스트림
+
+### Oracle 가격 스트림
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcOracleStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcOracleStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'oracle-prices',
+  streamFactory: () => stream.streamPrices({ 
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (prices) => {
+    console.log(prices)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('스트림 연결됨'))
+streamManager.start()
+```

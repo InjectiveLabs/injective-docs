@@ -1,0 +1,107 @@
+---
+title: Indexer 스트리밍
+---
+
+이 섹션에서는 StreamManagerV2를 사용하여 Injective Indexer API에서 실시간 데이터를 스트리밍하는 방법을 다룹니다.
+
+## StreamManagerV2
+
+StreamManagerV2는 자동 재시도, 지수 백오프, 포괄적인 오류 처리를 갖춘 gRPC 스트림 관리를 위한 이벤트 기반 아키텍처를 제공합니다.
+
+### 주요 기능
+
+- **이벤트 기반 라이프사이클** - connect, disconnect, error, data 이벤트 처리
+- **자동 재시도** - 재시도 제한이 있는 설정 가능한 지수 백오프
+- **오류 처리** - 재시도 가능/불가능 오류 구분
+- **지속 모드** - 최대 시도 후에도 무한히 재시도 계속
+- **세밀한 제어** - 스트림 라이프사이클 시작, 중지 및 관리
+
+### 기본 사용법
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'my-stream',
+  streamFactory: () => stream.streamOrders({ 
+    marketId: '0x...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (data) => {
+    console.log(data)
+  },
+  retryConfig: {
+    enabled: true,
+    maxAttempts: 5,
+    initialDelayMs: 1000,
+    maxDelayMs: 30000,
+    backoffMultiplier: 2,
+    persistent: true
+  }
+})
+
+// 이벤트 리스너
+streamManager.on('connect', () => console.log('연결됨'))
+streamManager.on('disconnect', (reason) => console.log('연결 끊김:', reason))
+streamManager.on('error', (error) => console.error('오류:', error))
+streamManager.on('stateChange', ({ from, to }) => console.log(`상태: ${from} -> ${to}`))
+
+// 시작/중지
+streamManager.start()
+streamManager.stop()
+```
+
+### 사용 가능한 Stream 클래스
+
+- `IndexerGrpcAccountStreamV2` - 계정 잔액 및 트랜잭션 스트림
+- `IndexerGrpcAccountPortfolioStreamV2` - 포트폴리오 가치 스트림
+- `IndexerGrpcArchiverStreamV2` - Archiver 데이터 스트림
+- `IndexerGrpcAuctionStreamV2` - Auction 입찰 스트림
+- `IndexerGrpcDerivativesStreamV2` - 파생상품 마켓 스트림
+- `IndexerGrpcExplorerStreamV2` - 블록체인 Explorer 스트림
+- `IndexerGrpcMitoStreamV2` - Mito Vault 스트림
+- `IndexerGrpcOracleStreamV2` - Oracle 가격 피드 스트림
+- `IndexerGrpcSpotStreamV2` - 스팟 마켓 스트림
+- `IndexerGrpcTradingStreamV2` - 트레이딩 자동화 스트림
+
+### 재시도 설정
+
+```ts
+retryConfig: {
+  enabled: true,           // 재시도 활성화/비활성화
+  maxAttempts: 5,          // 최대 재시도 횟수 (0 = 무제한)
+  initialDelayMs: 1000,    // 초기 백오프 지연
+  maxDelayMs: 30000,       // 최대 백오프 지연
+  backoffMultiplier: 2,    // 지수 백오프 배수
+  persistent: true         // maxAttempts 후에도 최대 지연으로 계속
+}
+```
+
+### 이벤트 타입
+
+- `connect` - 스트림 연결 성공
+- `disconnect` - 스트림 연결 끊김 (이유 포함)
+- `error` - 스트림 오류 발생
+- `data` - 새 데이터 수신
+- `stateChange` - 스트림 상태 변경
+- `retry` - 재시도 시작
+- `warn` - 경고 메시지
+
+## 스트림 예제
+
+- [Account](/ko/developers-native/query-indexer-stream/account/) - 계정 업데이트 스트림
+- [Auction](/ko/developers-native/query-indexer-stream/auction/) - Auction 업데이트 스트림
+- [Derivatives](/ko/developers-native/query-indexer-stream/derivatives/) - 파생상품 마켓 업데이트 스트림
+- [Explorer](/ko/developers-native/query-indexer-stream/explorer/) - Explorer 업데이트 스트림
+- [Oracle](/ko/developers-native/query-indexer-stream/oracle/) - Oracle 가격 업데이트 스트림
+- [Portfolio](/ko/developers-native/query-indexer-stream/portfolio/) - 포트폴리오 업데이트 스트림
+- [Spot](/ko/developers-native/query-indexer-stream/spot/) - 스팟 마켓 업데이트 스트림

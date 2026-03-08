@@ -1,0 +1,37 @@
+---
+title: Account
+---
+
+StreamManagerV2를 사용하여 Indexer에서 계정 모듈 관련 데이터를 스트리밍하는 예제 코드 스니펫입니다.
+
+## StreamManagerV2를 사용한 gRPC 스트림
+
+### 서브계정 잔액 스트림
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcAccountStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcAccountStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'subaccount-balance',
+  streamFactory: () => stream.streamSubaccountBalance({ 
+    subaccountId: '0x...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (balance) => {
+    console.log(balance)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('스트림 연결됨'))
+streamManager.start()
+```

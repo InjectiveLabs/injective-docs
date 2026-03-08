@@ -1,0 +1,214 @@
+---
+title: Derivatives
+---
+
+Indexer에서 파생상품 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### 마켓 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const markets = await indexerGrpcDerivativesApi.fetchMarkets();
+
+console.log(markets);
+```
+
+### 마켓 ID로 마켓 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const marketId = "0x...";
+
+const market = await indexerGrpcDerivativesApi.fetchMarket(marketId);
+
+console.log(market);
+```
+
+### 바이너리 옵션 마켓 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const binaryOptionsMarket =
+  await indexerGrpcDerivativesApi.fetchBinaryOptionsMarkets();
+
+console.log(binaryOptionsMarket);
+```
+
+### 마켓 ID로 마켓 오더북 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const marketId = "0x...";
+
+const orderbook = await indexerGrpcDerivativesApi.fetchOrderbookV2(marketId);
+
+console.log(orderbook);
+```
+
+### 마켓 주문 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketId = '0x...' /* 선택적 파라미터 */
+const orderSide = OrderSide.Buy /* 선택적 파라미터 */
+const subaccountId = '0x...' /* 선택적 파라미터 */
+const pagination = {...} as PaginationOption /* 선택적 파라미터 */
+
+const orders = await indexerGrpcDerivativesApi.fetchOrders({
+  marketId,
+  orderSide,
+  subaccountId,
+  pagination
+})
+
+console.log(orders)
+```
+
+### 마켓 포지션 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TradeDirection, PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketIds = ['0x...'] /* 선택적 파라미터 */
+const direction = TradeDirection.Buy /* 선택적 파라미터 */
+const subaccountId = '0x...' /* 선택적 파라미터 */
+const pagination = {...} as PaginationOption /* 선택적 파라미터 */
+
+const positions = await indexerGrpcDerivativesApi.fetchPositions({
+  marketIds,
+  direction,
+  subaccountId,
+  pagination
+})
+
+console.log(positions)
+```
+
+### 마켓 거래 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TradeDirection, PaginationOption, TradeExecutionType } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketId = '0x...' /* 선택적 파라미터 */
+const executionTypes = [TradeExecutionType.Market] /* 선택적 파라미터 */
+const direction = TradeDirection.Buy /* 선택적 파라미터 */
+const subaccountId = '0x...'/* 선택적 파라미터 */
+const pagination = {...} as PaginationOption /* 선택적 파라미터 */
+
+const trades = await indexerGrpcDerivativesApi.fetchTrades({
+  marketId,
+  executionTypes,
+  direction,
+  subaccountId,
+  pagination
+})
+
+console.log(trades)
+```
+
+### 마켓의 펀딩 결제 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketIds = ['0x...'] /* 선택적 파라미터 */
+const pagination = {...} as PaginationOption /* 선택적 파라미터 */
+
+const fundingPayments = await indexerGrpcDerivativesApi.fetchFundingPayments({
+  marketIds,
+  pagination
+})
+
+console.log(fundingPayments)
+```
+
+### 마켓의 펀딩 비율 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketId = '0x...' /* 선택적 파라미터 */
+const pagination = {...} as PaginationOption /* 선택적 파라미터 */
+
+const fundingRates = await indexerGrpcDerivativesApi.fetchFundingRates({
+  marketId,
+  pagination
+})
+
+console.log(fundingRates)
+```
+
+### 여러 마켓의 오더북 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const marketIds = ["0x..."];
+
+const orderbooks = await indexerGrpcDerivativesApi.fetchOrderbooksV2(marketIds);
+
+console.log(orderbooks);
+```

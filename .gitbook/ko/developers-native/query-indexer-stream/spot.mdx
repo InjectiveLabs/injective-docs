@@ -1,0 +1,103 @@
+---
+title: Spot
+---
+
+StreamManagerV2를 사용하여 Indexer에서 스팟 마켓 모듈 관련 데이터를 스트리밍하는 예제 코드 스니펫입니다.
+
+## StreamManagerV2를 사용한 gRPC 스트림
+
+### 오더북 업데이트 스트림
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-orderbook-updates',
+  streamFactory: () => stream.streamOrderbookUpdates({ 
+    marketIds: ['0x...'],
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orderbookUpdates) => {
+    console.log(orderbookUpdates)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('스트림 연결됨'))
+streamManager.start()
+```
+
+### 스팟 주문 스트림
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-orders',
+  streamFactory: () => stream.streamOrders({
+    marketId: '0x...',
+    subaccountId: '0x...', // 선택적
+    orderSide: OrderSide.Buy, // 선택적
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orders) => {
+    console.log(orders)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('스트림 연결됨'))
+streamManager.start()
+```
+
+### 스팟 거래 스트림
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TradeDirection } from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-trades',
+  streamFactory: () => stream.streamTrades({
+    marketIds: ['0x...'], // 선택적
+    subaccountId: '0x...', // 선택적
+    direction: TradeDirection.Buy, // 선택적
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (trades) => {
+    console.log(trades)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('스트림 연결됨'))
+streamManager.start()
+```

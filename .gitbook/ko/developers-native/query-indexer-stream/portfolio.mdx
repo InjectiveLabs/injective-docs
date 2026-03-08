@@ -1,0 +1,37 @@
+---
+title: Portfolio
+---
+
+StreamManagerV2를 사용하여 Indexer에서 포트폴리오 모듈 관련 데이터를 스트리밍하는 예제 코드 스니펫입니다.
+
+## StreamManagerV2를 사용한 gRPC 스트림
+
+### 포트폴리오 스트림
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcAccountPortfolioStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcAccountPortfolioStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'portfolio-updates',
+  streamFactory: () => stream.streamAccountPortfolio({ 
+    accountAddress: 'inj...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (portfolio) => {
+    console.log(portfolio)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('스트림 연결됨'))
+streamManager.start()
+```

@@ -1,0 +1,137 @@
+---
+title: Exchange
+---
+
+체인에서 Exchange 모듈을 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### 기본 스팟/파생상품 수수료, 트레이딩 보상 등 파라미터 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcExchangeApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 수수료 할인 스케줄 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const feeDiscountSchedule =
+  await chainGrpcExchangeApi.fetchFeeDiscountSchedule();
+
+console.log(feeDiscountSchedule);
+```
+
+### Injective 주소와 연결된 수수료 할인 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const feeDiscountAccountInfo =
+  await chainGrpcExchangeApi.fetchFeeDiscountAccountInfo(injectiveAddress);
+
+console.log(feeDiscountAccountInfo);
+```
+
+### 총 보상 포인트 등 트레이딩 보상 캠페인 상세 정보 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const tradingRewardsCampaign =
+  await chainGrpcExchangeApi.fetchTradingRewardsCampaign();
+
+console.log(tradingRewardsCampaign);
+```
+
+### Injective 주소의 트레이딩 보상 포인트 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const tradeRewardsPoints = await chainGrpcExchangeApi.fetchTradeRewardsPoints(
+  injectiveAddress
+);
+
+console.log(tradeRewardsPoints);
+```
+
+### Injective 주소들의 대기 중인 트레이딩 보상 포인트 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const injectiveAddresses = ["inj..."];
+
+const pendingTradeRewardsPoints =
+  await chainGrpcExchangeApi.fetchPendingTradeRewardPoints(injectiveAddresses);
+
+console.log(pendingTradeRewardsPoints);
+```
+
+#### subaccountId, marketId, 포지션 등 현재 포지션 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+// 본인의 Injective 주소로 대체하세요
+const injectiveAddresses = ["inj1..."];
+
+const positions = await chainGrpcExchangeApi.fetchPositions(injectiveAddresses);
+
+console.log(positions);
+```
+
+### 서브계정 거래 nonce 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const subaccountId = "0x...";
+
+const subaccountTradeNonce =
+  await chainGrpcExchangeApi.fetchSubaccountTradeNonce(subaccountId);
+
+console.log(subaccountTradeNonce);
+```

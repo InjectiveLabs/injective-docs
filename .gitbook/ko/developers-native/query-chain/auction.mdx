@@ -1,0 +1,49 @@
+---
+title: Auction
+---
+
+체인에서 Auction 모듈을 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### Auction 기간 등 모듈 파라미터 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuctionApi = new ChainGrpcAuctionApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcAuctionApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 최신 라운드 등 현재 Auction 상태 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuctionApi = new ChainGrpcAuctionApi(endpoints.grpc);
+
+const latestAuctionModuleState = await chainGrpcAuctionApi.fetchModuleState();
+
+console.log(latestAuctionModuleState);
+```
+
+### 최고 입찰자 및 금액 등 현재 Auction 바스켓 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuctionApi = new ChainGrpcAuctionApi(endpoints.grpc);
+
+const currentBasket = await chainGrpcAuctionApi.fetchCurrentBasket();
+
+console.log(currentBasket);
+```

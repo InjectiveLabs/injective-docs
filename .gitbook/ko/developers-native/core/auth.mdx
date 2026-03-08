@@ -1,0 +1,129 @@
+---
+title: Auth
+---
+
+# `x/auth`
+
+## 개요
+
+이 문서는 Cosmos SDK의 auth 모듈을 설명합니다.
+
+auth 모듈은 SDK 자체가 이러한 세부 사항에 구애받지 않으므로 애플리케이션의 기본 트랜잭션 및 계정 타입을 지정하는 역할을 합니다. 모든 기본 트랜잭션 유효성 검사(서명, nonce, 보조 필드)가 수행되는 미들웨어를 포함하며, 다른 모듈이 계정을 읽고, 쓰고, 수정할 수 있도록 하는 account keeper를 노출합니다.
+
+이 모듈은 Cosmos Hub에서 사용됩니다.
+
+## 목차
+
+* [개념](#concepts)
+    * [Gas & Fees](#gas--fees)
+* [상태](#state)
+    * [계정](#accounts)
+* [AnteHandlers](#antehandlers)
+* [Keepers](#keepers)
+    * [Account Keeper](#account-keeper)
+* [매개변수](#parameters)
+* [클라이언트](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
+
+## 개념
+
+**참고:** auth 모듈은 [authz 모듈](../authz/)과 다릅니다.
+
+차이점:
+
+* `auth` - Cosmos SDK 애플리케이션의 계정 및 트랜잭션 인증을 담당하며 기본 트랜잭션 및 계정 타입을 지정합니다.
+* `authz` - 계정이 다른 계정을 대신하여 작업을 수행할 수 있도록 권한을 부여하며, 부여자가 피부여자에게 부여자를 대신하여 메시지를 실행할 수 있는 권한을 부여합니다.
+
+### Gas & Fees
+
+수수료는 네트워크 운영자에게 두 가지 목적을 제공합니다.
+
+수수료는 모든 풀 노드가 저장하는 상태의 성장을 제한하고 경제적 가치가 거의 없는 트랜잭션의 일반적인 검열을 허용합니다. 수수료는 검증인이 네트워크 사용 및 사용자 신원에 관심이 없는 안티 스팸 메커니즘으로 가장 적합합니다.
+
+수수료는 트랜잭션이 제공하는 gas 한도와 gas 가격에 의해 결정되며, `fees = ceil(gasLimit * gasPrices)`입니다. 트랜잭션은 모든 상태 읽기/쓰기, 서명 검증 및 트랜잭션 크기에 비례하는 비용에 대해 gas 비용을 발생시킵니다.
+
+## 상태
+
+### 계정
+
+계정에는 SDK 블록체인의 고유하게 식별된 외부 사용자에 대한 인증 정보가 포함되며, 공개 키, 주소, 재생 보호를 위한 계정 번호/시퀀스 번호를 포함합니다.
+
+계정은 외부적으로 인터페이스로 노출되며 내부적으로 base account 또는 vesting account로 저장됩니다.
+
+* `0x01 | Address -> ProtocolBuffer(account)`
+
+## 매개변수
+
+auth 모듈에는 다음 매개변수가 포함됩니다:
+
+| 키 | 타입 | 예시 |
+| ---------------------- | --------------- | ------- |
+| MaxMemoCharacters      |      uint64     | 256     |
+| TxSigLimit             |      uint64     | 7       |
+| TxSizeCostPerByte      |      uint64     | 10      |
+| SigVerifyCostED25519   |      uint64     | 590     |
+| SigVerifyCostSecp256k1 |      uint64     | 1000    |
+
+## 클라이언트
+
+### CLI
+
+사용자는 CLI를 사용하여 `auth` 모듈을 쿼리하고 상호작용할 수 있습니다.
+
+### 쿼리
+
+`query` 명령을 사용하여 `auth` 상태를 쿼리할 수 있습니다.
+
+```bash
+simd query auth --help
+```
+
+#### 계정
+
+`account` 명령을 사용하여 주소로 계정을 쿼리할 수 있습니다.
+
+```bash
+simd query auth account [address] [flags]
+```
+
+예시:
+
+```bash
+simd query auth account cosmos1...
+```
+
+### gRPC
+
+사용자는 gRPC 엔드포인트를 사용하여 `auth` 모듈을 쿼리할 수 있습니다.
+
+#### Account
+
+`account` 엔드포인트를 사용하여 주소로 계정을 쿼리할 수 있습니다.
+
+```bash
+cosmos.auth.v1beta1.Query/Account
+```
+
+### REST
+
+사용자는 REST 엔드포인트를 사용하여 `auth` 모듈을 쿼리할 수 있습니다.
+
+#### Account
+
+```bash
+/cosmos/auth/v1beta1/account?address={address}
+```
+
+#### Accounts
+
+```bash
+/cosmos/auth/v1beta1/accounts
+```
+
+#### Params
+
+```bash
+/cosmos/auth/v1beta1/params
+```

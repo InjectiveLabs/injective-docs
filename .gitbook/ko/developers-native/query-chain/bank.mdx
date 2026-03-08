@@ -1,0 +1,111 @@
+---
+title: Bank
+---
+
+체인에서 Bank 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### Bank 모듈 파라미터 조회
+
+```ts line highlight={2}
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcBankApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### Injective 주소의 잔액 조회
+
+```ts
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const balances = await chainGrpcBankApi.fetchBalances(injectiveAddress);
+
+console.log(balances);
+```
+
+### 기본 denom별 Cosmos 주소의 잔액 조회
+
+```ts
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc);
+
+const cosmosAddress = "cosmos1..."; /* Cosmos Hub 사용 예시 */
+const denom = "uatom";
+
+const balance = await chainGrpcBankApi.fetchBalance({
+  accountAddress: cosmosAddress,
+  denom,
+});
+
+console.log(balance);
+```
+
+### 체인의 총 공급량 조회
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcBankApi } from '@injectivelabs/sdk-ts/client/chain'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc)
+
+const pagination = {...} as PaginationOption
+
+const totalSupply = await chainGrpcBankApi.fetchTotalSupply(
+  pagination /* 선택적 페이지네이션 파라미터 */
+)
+
+console.log(totalSupply)
+```
+
+## HTTP REST 사용
+
+### 주소의 잔액 조회
+
+```ts
+import { ChainRestBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestBankApi = new ChainRestBankApi(endpoints.rest);
+
+const injectiveAddress = "inj...";
+
+const balances = await chainRestBankApi.fetchBalances(injectiveAddress);
+
+console.log(balances);
+```
+
+### 기본 denom별 Cosmos 주소의 잔액 조회
+
+```ts
+import { ChainRestBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestBankApi = new ChainRestBankApi(endpoints.rest);
+
+const cosmosAddress = "cosmos..."; /* Cosmos Hub 사용 예시 */
+const denom = "uatom";
+
+const balance = await chainRestBankApi.fetchBalance(cosmosAddress, denom);
+
+console.log(balance);
+```

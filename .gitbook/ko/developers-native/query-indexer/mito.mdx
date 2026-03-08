@@ -1,0 +1,155 @@
+---
+title: Mito
+---
+
+Indexer에서 Mito Vault 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  Mito 문서가 이동했습니다. [Mito Docs](https://docs.mito.fi/)를 방문하세요.
+</Callout>
+
+## (Outdated) gRPC 사용
+
+### 컨트랙트 주소로 Vault 조회 (TVL, 수익 등)
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const contractAddress = "0x..."; /* 선택적 파라미터 */
+const slug = "derivative-vault"; /* 선택적 파라미터 */
+
+const vault = await indexerGrpcMitoApi.fetchVault({
+  contractAddress,
+  slug,
+});
+
+console.log(vault);
+```
+
+### Vault 및 관련 상세 정보 조회
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vault = await indexerGrpcMitoApi.fetchVaults();
+
+console.log(vault);
+```
+
+### Vault 주소로 LP 토큰 가격 차트 조회
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vaultAddress = "inj...";
+const from = 50; /* 선택적 페이지네이션 파라미터 */
+const to = 150; /* 선택적 페이지네이션 파라미터 */
+
+const lpTokenPriceChart = await indexerGrpcMitoApi.fetchLpTokenPriceChart({
+  vaultAddress,
+  from,
+  to,
+});
+
+console.log(lpTokenPriceChart);
+```
+
+### Vault 주소로 TVL 차트 조회
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vaultAddress = "inj...";
+const from = 50; /* 선택적 페이지네이션 파라미터 */
+const to = 150; /* 선택적 페이지네이션 파라미터 */
+
+const tvlChart = await indexerGrpcMitoApi.fetchTVLChartRequest({
+  vaultAddress,
+  from,
+  to,
+});
+
+console.log(tvlChart);
+```
+
+### LP 토큰 보유자와 연결된 Vault 조회
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const holderAddress = "inj...";
+
+const vaults = await indexerGrpcMitoApi.fetchVaultsByHolderAddress({
+  holderAddress,
+});
+
+console.log(vaults);
+```
+
+### Vault 주소의 LP 토큰 보유자 조회
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vaultAddress = "inj...";
+
+const holders = await indexerGrpcMitoApi.fetchLPHolders({
+  vaultAddress,
+});
+
+console.log(holders);
+```
+
+### LP 보유자의 포트폴리오 조회
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const holderAddress = "inj...";
+
+const portfolio = await indexerGrpcMitoApi.fetchHolderPortfolio(holderAddress);
+
+console.log(portfolio);
+```
+
+### Pnl 순위 리더보드 조회
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const leaderboard = await indexerGrpcMitoApi.fetchLeaderboard();
+
+console.log(leaderboard);
+```

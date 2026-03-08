@@ -1,0 +1,69 @@
+---
+title: Web3 Gateway 트랜잭션
+---
+
+Indexer에서 트랜잭션 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다. [Web3Gateway](../transactions/web3-gateway/)와 상호작용할 때만 사용됩니다.
+
+## gRPC 사용
+
+### 트랜잭션 준비 응답 조회
+
+```ts
+import { EvmChainId } from '@injectivelabs/ts-types'
+import { Msgs } from '@injectivelabs/sdk-ts/core/modules'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const address = '0x...' // ethereum 주소
+const chainId = EvmChainId.Sepolia
+const message = { ... } as Msgs
+const memo = '...'
+
+const prepareTxResponse = await indexerGrpcTransactionApi.prepareTxRequest({
+  address,
+  chainId,
+  message,
+  memo
+})
+
+console.log(prepareTxResponse)
+```
+
+### Cosmos 트랜잭션 준비 응답 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const address = 'inj...'
+const message = { ... }
+
+const prepareCosmosTxResponse = await indexerGrpcTransactionApi.prepareCosmosTxRequest({
+  address,
+  message
+})
+
+console.log(prepareCosmosTxResponse)
+```
+
+### Web3Gateway Fee Payer 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcTransactionApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(
+  endpoints.indexer
+);
+
+const feePayer = await indexerGrpcTransactionApi.fetchFeePayer();
+
+console.log(feePayer);
+```

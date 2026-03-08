@@ -1,0 +1,35 @@
+---
+title: Tendermint
+---
+
+체인 노드 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## HTTP REST 사용
+
+### 최신 블록 정보 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainRestTendermintApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestTendermintApi = new ChainRestTendermintApi(endpoints.rest);
+
+const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+
+console.log(latestBlock);
+```
+
+### 체인 노드 정보 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainRestTendermintApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestTendermintApi = new ChainRestTendermintApi(endpoints.rest);
+
+const nodeInfo = await chainRestTendermintApi.fetchNodeInfo();
+
+console.log(nodeInfo);
+```
