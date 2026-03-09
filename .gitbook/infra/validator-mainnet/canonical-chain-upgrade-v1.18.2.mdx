@@ -85,13 +85,20 @@ rm -rf .injectived/wasm/wasm/cache/
     Compiled at 20260304-0125 using Go go1.23.9 (amd64)
     ```
 
-5.  Start `injectived`:
+5.  Disable JSON-RPC in your `app.toml` configuration:
+
+    ```toml
+    [json-rpc]
+    enable = false
+    ```
+
+6.  Start `injectived`:
 
     ```bash
     injectived start
     ```
 
-6.  Verify you are currently running the correct version (v1.18.2) of `peggo` after downloading the v1.18.2 release:
+7.  Verify you are currently running the correct version (v1.18.2) of `peggo` after downloading the v1.18.2 release:
 
     ```bash
     $ peggo version
@@ -99,7 +106,7 @@ rm -rf .injectived/wasm/wasm/cache/
     Compiled at 20260304-0132 using Go go1.23.9 (amd64)
     ```
 
-7.  Start peggo:
+8.  Start peggo:
 
     ```bash
     peggo orchestrator
