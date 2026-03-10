@@ -1,0 +1,2077 @@
+---
+title: Group
+---
+
+# `x/group`
+
+## 개요
+
+다음 문서는 group 모듈을 설명합니다.
+
+이 모듈은 온체인 멀티시그 계정의 생성 및 관리를 허용하고, 구성 가능한 decision policy를 기반으로 메시지 실행에 대한 투표를 가능하게 합니다.
+
+## 목차
+
+* [개념](#concepts)
+    * [Group](#group)
+    * [Group Policy](#group-policy)
+    * [Decision Policy](#decision-policy)
+    * [Proposal](#proposal)
+    * [Pruning](#pruning)
+* [상태](#state)
+    * [Group Table](#group-table)
+    * [Group Member Table](#group-member-table)
+    * [Group Policy Table](#group-policy-table)
+    * [Proposal Table](#proposal-table)
+    * [Vote Table](#vote-table)
+* [Msg Service](#msg-service)
+    * [Msg/CreateGroup](#msgcreategroup)
+    * [Msg/UpdateGroupMembers](#msgupdategroupmembers)
+    * [Msg/UpdateGroupAdmin](#msgupdategroupadmin)
+    * [Msg/UpdateGroupMetadata](#msgupdategroupmetadata)
+    * [Msg/CreateGroupPolicy](#msgcreategrouppolicy)
+    * [Msg/CreateGroupWithPolicy](#msgcreategroupwithpolicy)
+    * [Msg/UpdateGroupPolicyAdmin](#msgupdategrouppolicyadmin)
+    * [Msg/UpdateGroupPolicyDecisionPolicy](#msgupdategrouppolicydecisionpolicy)
+    * [Msg/UpdateGroupPolicyMetadata](#msgupdategrouppolicymetadata)
+    * [Msg/SubmitProposal](#msgsubmitproposal)
+    * [Msg/WithdrawProposal](#msgwithdrawproposal)
+    * [Msg/Vote](#msgvote)
+    * [Msg/Exec](#msgexec)
+    * [Msg/LeaveGroup](#msgleavegroup)
+* [이벤트](#events)
+    * [EventCreateGroup](#eventcreategroup)
+    * [EventUpdateGroup](#eventupdategroup)
+    * [EventCreateGroupPolicy](#eventcreategrouppolicy)
+    * [EventUpdateGroupPolicy](#eventupdategrouppolicy)
+    * [EventCreateProposal](#eventcreateproposal)
+    * [EventWithdrawProposal](#eventwithdrawproposal)
+    * [EventVote](#eventvote)
+    * [EventExec](#eventexec)
+    * [EventLeaveGroup](#eventleavegroup)
+    * [EventProposalPruned](#eventproposalpruned)
+* [클라이언트](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
+* [메타데이터](#metadata)
+
+## 개념
+
+### Group
+
+그룹은 단순히 연관된 가중치를 가진 계정들의 집합입니다. 그룹은 계정이 아니며 잔액이 없습니다. 그룹 자체로는 투표권이나 의결 가중치가 없습니다. 그룹에는 그룹 멤버를 추가, 제거 및 업데이트할 수 있는 권한을 가진 "관리자"가 있습니다. group policy 계정이 그룹의 관리자가 될 수 있으며, 관리자가 반드시 그룹의 멤버일 필요는 없습니다.
+
+### Group Policy
+
+Group policy는 그룹 및 decision policy와 연관된 계정입니다. Group policy는 단일 그룹이 다양한 유형의 작업에 대해 여러 decision policy를 가질 수 있기 때문에 그룹에서 추상화됩니다. 그룹 멤버십을 decision policy와 별도로 관리하면 오버헤드가 최소화되고 다양한 정책에서 멤버십이 일관되게 유지됩니다. 권장되는 패턴은 주어진 그룹에 대해 단일 마스터 group policy를 가지고, 다른 decision policy를 가진 별도의 group policy를 생성한 다음 `x/authz` 모듈을 사용하여 마스터 계정에서 해당 "하위 계정"으로 원하는 권한을 위임하는 것입니다.
+
+### Decision Policy
+
+Decision policy는 그룹 멤버가 제안에 투표할 수 있는 메커니즘이며, 집계 결과에 따라 제안이 통과되어야 하는지 여부를 결정하는 규칙입니다.
+
+모든 decision policy는 일반적으로 최소 실행 기간과 최대 투표 기간을 갖습니다. 최소 실행 기간은 제안이 실행될 수 있는 잠재적 시점까지 제출 후 경과해야 하는 최소 시간이며, 0으로 설정할 수 있습니다. 최대 투표 기간은 제출 후 제안이 집계되기 전까지 투표할 수 있는 최대 시간입니다.
+
+체인 개발자는 또한 앱 전체 최대 실행 기간을 정의하며, 이는 제안의 투표 기간 종료 후 사용자가 제안을 실행할 수 있는 최대 시간입니다.
+
+현재 group 모듈은 threshold와 percentage 두 가지 decision policy와 함께 제공됩니다. 모든 체인 개발자는 `DecisionPolicy` 인터페이스를 준수하는 한 사용자 정의 decision policy를 생성하여 이 두 가지를 확장할 수 있습니다:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/types.go#L27-L45
+```
+
+#### Threshold decision policy
+
+Threshold decision policy는 제안이 통과되기 위해 달성해야 하는 찬성 투표의 임계값(투표자 가중치 집계 기반)을 정의합니다. 이 decision policy에서 기권과 거부권은 단순히 반대로 처리됩니다.
+
+이 decision policy에는 VotingPeriod 기간과 MinExecutionPeriod 기간도 있습니다. 전자는 제안 제출 후 멤버가 투표할 수 있는 기간을 정의하며, 이후 집계가 수행됩니다. 후자는 제안이 실행될 수 있는 제안 제출 후 최소 기간을 지정합니다. 0으로 설정하면 제안은 제출 즉시 실행이 허용됩니다(`TRY_EXEC` 옵션 사용). 당연히 MinExecutionPeriod는 VotingPeriod+MaxExecutionPeriod(MaxExecution은 투표 종료 후 제안을 실행할 수 있는 기간을 지정하는 앱 정의 기간)보다 클 수 없습니다.
+
+#### Percentage decision policy
+
+Percentage decision policy는 threshold decision policy와 유사하지만, 임계값이 상수 가중치가 아닌 백분율로 정의됩니다. 그룹 멤버의 가중치가 업데이트될 수 있는 그룹에 더 적합하며, 백분율 임계값은 동일하게 유지되고 멤버 가중치가 어떻게 업데이트되는지에 의존하지 않습니다.
+
+Threshold decision policy와 마찬가지로 percentage decision policy에는 VotingPeriod와 MinExecutionPeriod 두 매개변수가 있습니다.
+
+### Proposal
+
+그룹의 모든 멤버는 group policy 계정이 결정할 제안을 제출할 수 있습니다. 제안은 제안이 통과될 경우 실행될 메시지 집합과 제안과 관련된 메타데이터로 구성됩니다.
+
+#### 투표
+
+투표 시 선택할 수 있는 네 가지 옵션이 있습니다 - 찬성, 반대, 기권, 거부권. 모든 decision policy가 네 가지 옵션을 모두 고려하는 것은 아닙니다. 투표에는 선택적 메타데이터가 포함될 수 있습니다. 현재 구현에서 투표 기간은 제안이 제출되는 즉시 시작되며, 종료는 group policy의 decision policy에 의해 정의됩니다.
+
+#### 제안 철회
+
+제안은 투표 기간 종료 전 언제든지 group policy 관리자 또는 제안자 중 한 명이 철회할 수 있습니다. 철회되면 `PROPOSAL_STATUS_WITHDRAWN`으로 표시되며, 더 이상 투표나 실행이 허용되지 않습니다.
+
+#### 중단된 제안
+
+제안의 투표 기간 중에 group policy가 업데이트되면 제안은 `PROPOSAL_STATUS_ABORTED`로 표시되며, 더 이상 투표나 실행이 허용되지 않습니다. 이는 group policy가 제안 투표 및 실행 규칙을 정의하기 때문이며, 제안의 수명 주기 동안 해당 규칙이 변경되면 제안은 오래된 것으로 표시되어야 합니다.
+
+#### 집계
+
+집계는 제안에 대한 모든 투표를 계산하는 것입니다. 제안의 수명 주기에서 한 번만 발생하지만 두 가지 요인 중 먼저 발생하는 것에 의해 트리거될 수 있습니다:
+
+* 누군가가 제안을 실행하려고 시도할 때(다음 섹션 참조), 이는 `Msg/Exec` 트랜잭션 또는 `Exec` 필드가 설정된 `Msg/{SubmitProposal,Vote}` 트랜잭션에서 발생할 수 있습니다. 제안 실행이 시도되면 제안이 통과되었는지 확인하기 위해 먼저 집계가 수행됩니다.
+* 또는 제안의 투표 기간이 막 종료된 `EndBlock`에서.
+
+집계 결과가 decision policy의 규칙을 통과하면 제안은 `PROPOSAL_STATUS_ACCEPTED`로 표시되고, 그렇지 않으면 `PROPOSAL_STATUS_REJECTED`로 표시됩니다. 어떤 경우든 더 이상 투표가 허용되지 않으며, 집계 결과는 제안의 `FinalTallyResult`에 상태로 유지됩니다.
+
+#### 제안 실행
+
+제안은 집계가 완료되고 그룹 계정의 decision policy가 집계 결과에 따라 제안 통과를 허용할 때만 실행됩니다. `PROPOSAL_STATUS_ACCEPTED` 상태로 표시됩니다. 실행은 각 제안의 투표 기간 종료 후 `MaxExecutionPeriod`(체인 개발자가 설정) 기간 내에 이루어져야 합니다.
+
+현재 설계에서는 체인에 의해 제안이 자동으로 실행되지 않으며, 대신 사용자가 현재 투표와 decision policy를 기반으로 제안 실행을 시도하기 위해 `Msg/Exec` 트랜잭션을 제출해야 합니다. 그룹 멤버뿐만 아니라 모든 사용자가 수락된 제안을 실행할 수 있으며, 실행 수수료는 제안 실행자가 지불합니다. 제안 생성 시 또는 새 투표 시 `Msg/SubmitProposal` 및 `Msg/Vote` 요청의 `Exec` 필드를 사용하여 즉시 제안 실행을 시도할 수도 있습니다. 전자의 경우 제안자의 서명이 찬성 투표로 간주됩니다. 이러한 경우 제안을 실행할 수 없으면(즉, decision policy의 규칙을 통과하지 못하면) 새 투표를 위해 여전히 열려 있으며 나중에 집계되고 실행될 수 있습니다.
+
+성공적인 제안 실행은 `ExecutorResult`가 `PROPOSAL_EXECUTOR_RESULT_SUCCESS`로 표시됩니다. 제안은 실행 후 자동으로 정리됩니다. 반면 실패한 제안 실행은 `PROPOSAL_EXECUTOR_RESULT_FAILURE`로 표시됩니다. 이러한 제안은 투표 기간 종료 후 `MaxExecutionPeriod` 이후 만료될 때까지 여러 번 재실행될 수 있습니다.
+
+### Pruning
+
+제안과 투표는 상태 비대화를 방지하기 위해 자동으로 정리됩니다.
+
+투표는 다음과 같이 정리됩니다:
+
+* 성공적인 집계 후, 즉 decision policy의 규칙을 통과한 집계 결과 후, `Msg/Exec` 또는 `Exec` 필드가 설정된 `Msg/{SubmitProposal,Vote}`에 의해 트리거될 수 있습니다.
+* 또는 제안의 투표 기간 종료 직후 `EndBlock`에서. 이는 `aborted` 또는 `withdrawn` 상태의 제안에도 적용됩니다.
+
+둘 중 먼저 발생하는 것.
+
+제안은 다음과 같이 정리됩니다:
+
+* 제안 상태가 `withdrawn` 또는 `aborted`인 `EndBlock`에서 집계 전 제안의 투표 기간 종료 시,
+* 그리고 성공적인 제안 실행 후,
+* 또는 제안의 `voting_period_end` + `max_execution_period`(앱 전체 구성으로 정의됨)가 경과한 직후 `EndBlock`에서,
+
+둘 중 먼저 발생하는 것.
+
+## 상태
+
+`group` 모듈은 기본 키와 보조 인덱스를 지원하는 테이블 스토리지를 제공하는 `orm` 패키지를 사용합니다. `orm`은 또한 `Table`과 함께 사용할 수 있는 카운터 기반의 영구적인 고유 키 생성기인 `Sequence`를 정의합니다.
+
+다음은 `group` 모듈의 일부로 저장되는 테이블과 관련 시퀀스 및 인덱스 목록입니다.
+
+### Group Table
+
+`groupTable`은 `GroupInfo`를 저장합니다: `0x0 | BigEndian(GroupId) -> ProtocolBuffer(GroupInfo)`.
+
+#### groupSeq
+
+`groupSeq`의 값은 새 그룹을 생성할 때 증가하며 새 `GroupId`에 해당합니다: `0x1 | 0x1 -> BigEndian`.
+
+두 번째 `0x1`은 ORM `sequenceStorageKey`에 해당합니다.
+
+#### groupByAdminIndex
+
+`groupByAdminIndex`는 관리자 주소로 그룹을 검색할 수 있게 합니다:
+`0x2 | len([]byte(group.Admin)) | []byte(group.Admin) | BigEndian(GroupId) -> []byte()`.
+
+### Group Member Table
+
+`groupMemberTable`은 `GroupMember`를 저장합니다: `0x10 | BigEndian(GroupId) | []byte(member.Address) -> ProtocolBuffer(GroupMember)`.
+
+`groupMemberTable`은 기본 키 테이블이며 `PrimaryKey`는 다음 인덱스에서 사용되는 `BigEndian(GroupId) | []byte(member.Address)`로 제공됩니다.
+
+#### groupMemberByGroupIndex
+
+`groupMemberByGroupIndex`는 그룹 ID로 그룹 멤버를 검색할 수 있게 합니다:
+`0x11 | BigEndian(GroupId) | PrimaryKey -> []byte()`.
+
+#### groupMemberByMemberIndex
+
+`groupMemberByMemberIndex`는 멤버 주소로 그룹 멤버를 검색할 수 있게 합니다:
+`0x12 | len([]byte(member.Address)) | []byte(member.Address) | PrimaryKey -> []byte()`.
+
+### Group Policy Table
+
+`groupPolicyTable`은 `GroupPolicyInfo`를 저장합니다: `0x20 | len([]byte(Address)) | []byte(Address) -> ProtocolBuffer(GroupPolicyInfo)`.
+
+`groupPolicyTable`은 기본 키 테이블이며 `PrimaryKey`는 다음 인덱스에서 사용되는 `len([]byte(Address)) | []byte(Address)`로 제공됩니다.
+
+#### groupPolicySeq
+
+`groupPolicySeq`의 값은 새 group policy를 생성할 때 증가하며 새 group policy 계정 `Address`를 생성하는 데 사용됩니다:
+`0x21 | 0x1 -> BigEndian`.
+
+두 번째 `0x1`은 ORM `sequenceStorageKey`에 해당합니다.
+
+#### groupPolicyByGroupIndex
+
+`groupPolicyByGroupIndex`는 그룹 ID로 group policy를 검색할 수 있게 합니다:
+`0x22 | BigEndian(GroupId) | PrimaryKey -> []byte()`.
+
+#### groupPolicyByAdminIndex
+
+`groupPolicyByAdminIndex`는 관리자 주소로 group policy를 검색할 수 있게 합니다:
+`0x23 | len([]byte(Address)) | []byte(Address) | PrimaryKey -> []byte()`.
+
+### Proposal Table
+
+`proposalTable`은 `Proposal`을 저장합니다: `0x30 | BigEndian(ProposalId) -> ProtocolBuffer(Proposal)`.
+
+#### proposalSeq
+
+`proposalSeq`의 값은 새 제안을 생성할 때 증가하며 새 `ProposalId`에 해당합니다: `0x31 | 0x1 -> BigEndian`.
+
+두 번째 `0x1`은 ORM `sequenceStorageKey`에 해당합니다.
+
+#### proposalByGroupPolicyIndex
+
+`proposalByGroupPolicyIndex`는 group policy 계정 주소로 제안을 검색할 수 있게 합니다:
+`0x32 | len([]byte(account.Address)) | []byte(account.Address) | BigEndian(ProposalId) -> []byte()`.
+
+#### ProposalsByVotingPeriodEndIndex
+
+`proposalsByVotingPeriodEndIndex`는 시간순 `voting_period_end`로 정렬된 제안을 검색할 수 있게 합니다:
+`0x33 | sdk.FormatTimeBytes(proposal.VotingPeriodEnd) | BigEndian(ProposalId) -> []byte()`.
+
+이 인덱스는 투표 기간 종료 시 제안 투표를 집계하고 `VotingPeriodEnd + MaxExecutionPeriod`에서 제안을 정리할 때 사용됩니다.
+
+### Vote Table
+
+`voteTable`은 `Vote`를 저장합니다: `0x40 | BigEndian(ProposalId) | []byte(voter.Address) -> ProtocolBuffer(Vote)`.
+
+`voteTable`은 기본 키 테이블이며 `PrimaryKey`는 다음 인덱스에서 사용되는 `BigEndian(ProposalId) | []byte(voter.Address)`로 제공됩니다.
+
+#### voteByProposalIndex
+
+`voteByProposalIndex`는 제안 ID로 투표를 검색할 수 있게 합니다:
+`0x41 | BigEndian(ProposalId) | PrimaryKey -> []byte()`.
+
+#### voteByVoterIndex
+
+`voteByVoterIndex`는 투표자 주소로 투표를 검색할 수 있게 합니다:
+`0x42 | len([]byte(voter.Address)) | []byte(voter.Address) | PrimaryKey -> []byte()`.
+
+## Msg Service
+
+### Msg/CreateGroup
+
+새 그룹은 관리자 주소, 멤버 목록 및 선택적 메타데이터를 포함하는 `MsgCreateGroup`으로 생성할 수 있습니다.
+
+메타데이터에는 앱 개발자가 선택하고 group keeper에 구성으로 전달되는 최대 길이가 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L67-L80
+```
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 메타데이터 길이가 `MaxMetadataLen` 구성보다 큰 경우
+* 멤버가 올바르게 설정되지 않은 경우(예: 잘못된 주소 형식, 중복 또는 가중치가 0인 경우).
+
+### Msg/UpdateGroupMembers
+
+그룹 멤버는 `UpdateGroupMembers`로 업데이트할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L88-L102
+```
+
+`MemberUpdates` 목록에서 기존 멤버는 가중치를 0으로 설정하여 제거할 수 있습니다.
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 서명자가 그룹의 관리자가 아닌 경우.
+* 연관된 group policy 중 하나라도 해당 decision policy의 `Validate()` 메서드가 업데이트된 그룹에 대해 실패하는 경우.
+
+### Msg/UpdateGroupAdmin
+
+`UpdateGroupAdmin`은 그룹 관리자를 업데이트하는 데 사용할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L107-L120
+```
+
+서명자가 그룹의 관리자가 아닌 경우 실패할 것으로 예상됩니다.
+
+### Msg/UpdateGroupMetadata
+
+`UpdateGroupMetadata`는 그룹 메타데이터를 업데이트하는 데 사용할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L125-L138
+```
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 새 메타데이터 길이가 `MaxMetadataLen` 구성보다 큰 경우.
+* 서명자가 그룹의 관리자가 아닌 경우.
+
+### Msg/CreateGroupPolicy
+
+새 group policy는 관리자 주소, 그룹 ID, decision policy 및 선택적 메타데이터를 포함하는 `MsgCreateGroupPolicy`로 생성할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L147-L165
+```
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 서명자가 그룹의 관리자가 아닌 경우.
+* 메타데이터 길이가 `MaxMetadataLen` 구성보다 큰 경우.
+* decision policy의 `Validate()` 메서드가 그룹에 대해 통과하지 않는 경우.
+
+### Msg/CreateGroupWithPolicy
+
+정책이 포함된 새 그룹은 관리자 주소, 멤버 목록, decision policy, 선택적으로 그룹 및 group policy 관리자를 group policy 주소로 설정하는 `group_policy_as_admin` 필드, 그리고 그룹 및 group policy에 대한 선택적 메타데이터를 포함하는 `MsgCreateGroupWithPolicy`로 생성할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L191-L215
+```
+
+`Msg/CreateGroup` 및 `Msg/CreateGroupPolicy`와 동일한 이유로 실패할 것으로 예상됩니다.
+
+### Msg/UpdateGroupPolicyAdmin
+
+`UpdateGroupPolicyAdmin`은 group policy 관리자를 업데이트하는 데 사용할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L173-L186
+```
+
+서명자가 group policy의 관리자가 아닌 경우 실패할 것으로 예상됩니다.
+
+### Msg/UpdateGroupPolicyDecisionPolicy
+
+`UpdateGroupPolicyDecisionPolicy`는 decision policy를 업데이트하는 데 사용할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L226-L241
+```
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 서명자가 group policy의 관리자가 아닌 경우.
+* 새 decision policy의 `Validate()` 메서드가 그룹에 대해 통과하지 않는 경우.
+
+### Msg/UpdateGroupPolicyMetadata
+
+`UpdateGroupPolicyMetadata`는 group policy 메타데이터를 업데이트하는 데 사용할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L246-L259
+```
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 새 메타데이터 길이가 `MaxMetadataLen` 구성보다 큰 경우.
+* 서명자가 그룹의 관리자가 아닌 경우.
+
+### Msg/SubmitProposal
+
+새 제안은 group policy 계정 주소, 제안자 주소 목록, 제안이 수락될 경우 실행할 메시지 목록 및 선택적 메타데이터를 포함하는 `MsgSubmitProposal`로 생성할 수 있습니다. 제안 생성 직후 제안 실행을 시도하기 위해 선택적 `Exec` 값을 제공할 수 있습니다. 이 경우 제안자의 서명은 찬성 투표로 간주됩니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L281-L315
+```
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 메타데이터, 제목 또는 요약 길이가 `MaxMetadataLen` 구성보다 큰 경우.
+* 제안자 중 누구도 그룹 멤버가 아닌 경우.
+
+### Msg/WithdrawProposal
+
+제안은 `address`(제안자 또는 group policy 관리자일 수 있음)와 `proposal_id`(철회할 제안)를 포함하는 `MsgWithdrawProposal`을 사용하여 철회할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L323-L333
+```
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 서명자가 group policy 관리자도 제안의 제안자도 아닌 경우.
+* 제안이 이미 종료되었거나 중단된 경우.
+
+### Msg/Vote
+
+새 투표는 제안 ID, 투표자 주소, 선택(찬성, 반대, 거부권 또는 기권) 및 선택적 메타데이터가 주어지면 `MsgVote`로 생성할 수 있습니다. 투표 직후 제안 실행을 시도하기 위해 선택적 `Exec` 값을 제공할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L338-L358
+```
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 메타데이터 길이가 `MaxMetadataLen` 구성보다 큰 경우.
+* 제안이 더 이상 투표 기간이 아닌 경우.
+
+### Msg/Exec
+
+제안은 `MsgExec`로 실행할 수 있습니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L363-L373
+```
+
+이 제안의 일부인 메시지는 다음과 같은 경우 실행되지 않습니다:
+
+* 제안이 group policy에 의해 수락되지 않은 경우.
+* 제안이 이미 성공적으로 실행된 경우.
+
+### Msg/LeaveGroup
+
+`MsgLeaveGroup`은 그룹 멤버가 그룹을 떠날 수 있게 합니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L381-L391
+```
+
+다음과 같은 경우 실패할 것으로 예상됩니다:
+
+* 그룹 멤버가 그룹의 일부가 아닌 경우.
+* 연관된 group policy 중 하나라도 해당 decision policy의 `Validate()` 메서드가 업데이트된 그룹에 대해 실패하는 경우.
+
+## 이벤트
+
+group 모듈은 다음 이벤트를 발생시킵니다:
+
+### EventCreateGroup
+
+| Type                             | Attribute Key | Attribute Value                  |
+| -------------------------------- | ------------- | -------------------------------- |
+| message                          | action        | `/cosmos.group.v1.Msg/CreateGroup` |
+| cosmos.group.v1.EventCreateGroup | group_id      | `{groupId}` |
+
+### EventUpdateGroup
+
+| Type                             | Attribute Key | Attribute Value                                            |
+| -------------------------------- | ------------- | ---------------------------------------------------------- |
+| message                          | action        | `/cosmos.group.v1.Msg/UpdateGroup{Admin\|Metadata\|Members}` |
+| cosmos.group.v1.EventUpdateGroup | group_id      | `{groupId}` |
+
+### EventCreateGroupPolicy
+
+| Type                                   | Attribute Key | Attribute Value                        |
+| -------------------------------------- | ------------- | -------------------------------------- |
+| message                                | action        | `/cosmos.group.v1.Msg/CreateGroupPolicy` |
+| cosmos.group.v1.EventCreateGroupPolicy | address       | `{groupPolicyAddress}` |
+
+### EventUpdateGroupPolicy
+
+| Type                                   | Attribute Key | Attribute Value                                                         |
+| -------------------------------------- | ------------- | ----------------------------------------------------------------------- |
+| message                                | action        | `/cosmos.group.v1.Msg/UpdateGroupPolicy{Admin\|Metadata\|DecisionPolicy}` |
+| cosmos.group.v1.EventUpdateGroupPolicy | address       | `{groupPolicyAddress}` |
+
+### EventCreateProposal
+
+| Type                                | Attribute Key | Attribute Value                     |
+| ----------------------------------- | ------------- | ----------------------------------- |
+| message                             | action        | `/cosmos.group.v1.Msg/CreateProposal` |
+| cosmos.group.v1.EventCreateProposal | proposal_id   | `{proposalId}` |
+
+### EventWithdrawProposal
+
+| Type                                  | Attribute Key | Attribute Value                       |
+| ------------------------------------- | ------------- | ------------------------------------- |
+| message                               | action        | `/cosmos.group.v1.Msg/WithdrawProposal` |
+| cosmos.group.v1.EventWithdrawProposal | proposal_id   | `{proposalId}` |
+
+### EventVote
+
+| Type                      | Attribute Key | Attribute Value           |
+| ------------------------- | ------------- | ------------------------- |
+| message                   | action        | `/cosmos.group.v1.Msg/Vote` |
+| cosmos.group.v1.EventVote | proposal_id   | `{proposalId}` |
+
+## EventExec
+
+| Type                      | Attribute Key | Attribute Value           |
+| ------------------------- | ------------- | ------------------------- |
+| message                   | action        | `/cosmos.group.v1.Msg/Exec` |
+| cosmos.group.v1.EventExec | proposal_id   | `{proposalId}` |
+| cosmos.group.v1.EventExec | logs          | `{logs_string}` |
+
+### EventLeaveGroup
+
+| Type                            | Attribute Key | Attribute Value                 |
+| ------------------------------- | ------------- | ------------------------------- |
+| message                         | action        | `/cosmos.group.v1.Msg/LeaveGroup` |
+| cosmos.group.v1.EventLeaveGroup | proposal_id   | `{proposalId}` |
+| cosmos.group.v1.EventLeaveGroup | address       | `{address}` |
+
+### EventProposalPruned
+
+| Type                                | Attribute Key | Attribute Value                 |
+|-------------------------------------|---------------|---------------------------------|
+| message                             | action        | `/cosmos.group.v1.Msg/LeaveGroup` |
+| cosmos.group.v1.EventProposalPruned | proposal_id   | `{proposalId}` |
+| cosmos.group.v1.EventProposalPruned | status        | `{ProposalStatus}` |
+| cosmos.group.v1.EventProposalPruned | tally_result  | `{TallyResult}` |
+
+
+## 클라이언트
+
+### CLI
+
+사용자는 CLI를 사용하여 `group` 모듈을 쿼리하고 상호작용할 수 있습니다.
+
+#### 쿼리
+
+`query` 명령을 사용하여 `group` 상태를 쿼리할 수 있습니다.
+
+```bash
+simd query group --help
+```
+
+##### group-info
+
+`group-info` 명령을 사용하여 주어진 그룹 ID로 그룹 정보를 쿼리할 수 있습니다.
+
+```bash
+simd query group group-info [id] [flags]
+```
+
+예시:
+
+```bash
+simd query group group-info 1
+```
+
+출력 예시:
+
+```bash
+admin: cosmos1..
+group_id: "1"
+metadata: AQ==
+total_weight: "3"
+version: "1"
+```
+
+##### group-policy-info
+
+`group-policy-info` 명령을 사용하여 group policy의 계정 주소로 group policy 정보를 쿼리할 수 있습니다.
+
+```bash
+simd query group group-policy-info [group-policy-account] [flags]
+```
+
+예시:
+
+```bash
+simd query group group-policy-info cosmos1..
+```
+
+출력 예시:
+
+```bash
+address: cosmos1..
+admin: cosmos1..
+decision_policy:
+  '@type': /cosmos.group.v1.ThresholdDecisionPolicy
+  threshold: "1"
+  windows:
+      min_execution_period: 0s
+      voting_period: 432000s
+group_id: "1"
+metadata: AQ==
+version: "1"
+```
+
+##### group-members
+
+`group-members` 명령을 사용하여 페이지네이션 플래그와 함께 그룹 ID로 그룹 멤버를 쿼리할 수 있습니다.
+
+```bash
+simd query group group-members [id] [flags]
+```
+
+예시:
+
+```bash
+simd query group group-members 1
+```
+
+출력 예시:
+
+```bash
+members:
+- group_id: "1"
+  member:
+    address: cosmos1..
+    metadata: AQ==
+    weight: "2"
+- group_id: "1"
+  member:
+    address: cosmos1..
+    metadata: AQ==
+    weight: "1"
+pagination:
+  next_key: null
+  total: "2"
+```
+
+##### groups-by-admin
+
+`groups-by-admin` 명령을 사용하여 페이지네이션 플래그와 함께 관리자 계정 주소로 그룹을 쿼리할 수 있습니다.
+
+```bash
+simd query group groups-by-admin [admin] [flags]
+```
+
+예시:
+
+```bash
+simd query group groups-by-admin cosmos1..
+```
+
+출력 예시:
+
+```bash
+groups:
+- admin: cosmos1..
+  group_id: "1"
+  metadata: AQ==
+  total_weight: "3"
+  version: "1"
+- admin: cosmos1..
+  group_id: "2"
+  metadata: AQ==
+  total_weight: "3"
+  version: "1"
+pagination:
+  next_key: null
+  total: "2"
+```
+
+##### group-policies-by-group
+
+`group-policies-by-group` 명령을 사용하여 페이지네이션 플래그와 함께 그룹 ID로 group policy를 쿼리할 수 있습니다.
+
+```bash
+simd query group group-policies-by-group [group-id] [flags]
+```
+
+예시:
+
+```bash
+simd query group group-policies-by-group 1
+```
+
+출력 예시:
+
+```bash
+group_policies:
+- address: cosmos1..
+  admin: cosmos1..
+  decision_policy:
+    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
+    threshold: "1"
+    windows:
+      min_execution_period: 0s
+      voting_period: 432000s
+  group_id: "1"
+  metadata: AQ==
+  version: "1"
+- address: cosmos1..
+  admin: cosmos1..
+  decision_policy:
+    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
+    threshold: "1"
+    windows:
+      min_execution_period: 0s
+      voting_period: 432000s
+  group_id: "1"
+  metadata: AQ==
+  version: "1"
+pagination:
+  next_key: null
+  total: "2"
+```
+
+##### group-policies-by-admin
+
+`group-policies-by-admin` 명령을 사용하여 페이지네이션 플래그와 함께 관리자 계정 주소로 group policy를 쿼리할 수 있습니다.
+
+```bash
+simd query group group-policies-by-admin [admin] [flags]
+```
+
+예시:
+
+```bash
+simd query group group-policies-by-admin cosmos1..
+```
+
+출력 예시:
+
+```bash
+group_policies:
+- address: cosmos1..
+  admin: cosmos1..
+  decision_policy:
+    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
+    threshold: "1"
+    windows:
+      min_execution_period: 0s
+      voting_period: 432000s
+  group_id: "1"
+  metadata: AQ==
+  version: "1"
+- address: cosmos1..
+  admin: cosmos1..
+  decision_policy:
+    '@type': /cosmos.group.v1.ThresholdDecisionPolicy
+    threshold: "1"
+    windows:
+      min_execution_period: 0s
+      voting_period: 432000s
+  group_id: "1"
+  metadata: AQ==
+  version: "1"
+pagination:
+  next_key: null
+  total: "2"
+```
+
+##### proposal
+
+`proposal` 명령을 사용하여 ID로 제안을 쿼리할 수 있습니다.
+
+```bash
+simd query group proposal [id] [flags]
+```
+
+예시:
+
+```bash
+simd query group proposal 1
+```
+
+출력 예시:
+
+```bash
+proposal:
+  address: cosmos1..
+  executor_result: EXECUTOR_RESULT_NOT_RUN
+  group_policy_version: "1"
+  group_version: "1"
+  metadata: AQ==
+  msgs:
+  - '@type': /cosmos.bank.v1beta1.MsgSend
+    amount:
+    - amount: "100000000"
+      denom: stake
+    from_address: cosmos1..
+    to_address: cosmos1..
+  proposal_id: "1"
+  proposers:
+  - cosmos1..
+  result: RESULT_UNFINALIZED
+  status: STATUS_SUBMITTED
+  submitted_at: "2021-12-17T07:06:26.310638964Z"
+  windows:
+    min_execution_period: 0s
+    voting_period: 432000s
+  vote_state:
+    abstain_count: "0"
+    no_count: "0"
+    veto_count: "0"
+    yes_count: "0"
+  summary: "Summary"
+  title: "Title"
+```
+
+##### proposals-by-group-policy
+
+`proposals-by-group-policy` 명령을 사용하여 페이지네이션 플래그와 함께 group policy의 계정 주소로 제안을 쿼리할 수 있습니다.
+
+```bash
+simd query group proposals-by-group-policy [group-policy-account] [flags]
+```
+
+예시:
+
+```bash
+simd query group proposals-by-group-policy cosmos1..
+```
+
+출력 예시:
+
+```bash
+pagination:
+  next_key: null
+  total: "1"
+proposals:
+- address: cosmos1..
+  executor_result: EXECUTOR_RESULT_NOT_RUN
+  group_policy_version: "1"
+  group_version: "1"
+  metadata: AQ==
+  msgs:
+  - '@type': /cosmos.bank.v1beta1.MsgSend
+    amount:
+    - amount: "100000000"
+      denom: stake
+    from_address: cosmos1..
+    to_address: cosmos1..
+  proposal_id: "1"
+  proposers:
+  - cosmos1..
+  result: RESULT_UNFINALIZED
+  status: STATUS_SUBMITTED
+  submitted_at: "2021-12-17T07:06:26.310638964Z"
+  windows:
+    min_execution_period: 0s
+    voting_period: 432000s
+  vote_state:
+    abstain_count: "0"
+    no_count: "0"
+    veto_count: "0"
+    yes_count: "0"
+  summary: "Summary"
+  title: "Title"
+```
+
+##### vote
+
+`vote` 명령을 사용하여 제안 ID와 투표자 계정 주소로 투표를 쿼리할 수 있습니다.
+
+```bash
+simd query group vote [proposal-id] [voter] [flags]
+```
+
+예시:
+
+```bash
+simd query group vote 1 cosmos1..
+```
+
+출력 예시:
+
+```bash
+vote:
+  choice: CHOICE_YES
+  metadata: AQ==
+  proposal_id: "1"
+  submitted_at: "2021-12-17T08:05:02.490164009Z"
+  voter: cosmos1..
+```
+
+##### votes-by-proposal
+
+`votes-by-proposal` 명령을 사용하여 페이지네이션 플래그와 함께 제안 ID로 투표를 쿼리할 수 있습니다.
+
+```bash
+simd query group votes-by-proposal [proposal-id] [flags]
+```
+
+예시:
+
+```bash
+simd query group votes-by-proposal 1
+```
+
+출력 예시:
+
+```bash
+pagination:
+  next_key: null
+  total: "1"
+votes:
+- choice: CHOICE_YES
+  metadata: AQ==
+  proposal_id: "1"
+  submitted_at: "2021-12-17T08:05:02.490164009Z"
+  voter: cosmos1..
+```
+
+##### votes-by-voter
+
+`votes-by-voter` 명령을 사용하여 페이지네이션 플래그와 함께 투표자 계정 주소로 투표를 쿼리할 수 있습니다.
+
+```bash
+simd query group votes-by-voter [voter] [flags]
+```
+
+예시:
+
+```bash
+simd query group votes-by-voter cosmos1..
+```
+
+출력 예시:
+
+```bash
+pagination:
+  next_key: null
+  total: "1"
+votes:
+- choice: CHOICE_YES
+  metadata: AQ==
+  proposal_id: "1"
+  submitted_at: "2021-12-17T08:05:02.490164009Z"
+  voter: cosmos1..
+```
+
+### 트랜잭션
+
+`tx` 명령을 사용하여 `group` 모듈과 상호작용할 수 있습니다.
+
+```bash
+simd tx group --help
+```
+
+#### create-group
+
+`create-group` 명령을 사용하여 연관된 가중치를 가진 멤버 계정의 집합과 관리자 계정으로 그룹을 생성할 수 있습니다.
+
+```bash
+simd tx group create-group [admin] [metadata] [members-json-file]
+```
+
+예시:
+
+```bash
+simd tx group create-group cosmos1.. "AQ==" members.json
+```
+
+#### update-group-admin
+
+`update-group-admin` 명령을 사용하여 그룹의 관리자를 업데이트할 수 있습니다.
+
+```bash
+simd tx group update-group-admin [admin] [group-id] [new-admin] [flags]
+```
+
+예시:
+
+```bash
+simd tx group update-group-admin cosmos1.. 1 cosmos1..
+```
+
+#### update-group-members
+
+`update-group-members` 명령을 사용하여 그룹의 멤버를 업데이트할 수 있습니다.
+
+```bash
+simd tx group update-group-members [admin] [group-id] [members-json-file] [flags]
+```
+
+예시:
+
+```bash
+simd tx group update-group-members cosmos1.. 1 members.json
+```
+
+#### update-group-metadata
+
+`update-group-metadata` 명령을 사용하여 그룹의 메타데이터를 업데이트할 수 있습니다.
+
+```bash
+simd tx group update-group-metadata [admin] [group-id] [metadata] [flags]
+```
+
+예시:
+
+```bash
+simd tx group update-group-metadata cosmos1.. 1 "AQ=="
+```
+
+#### create-group-policy
+
+`create-group-policy` 명령을 사용하여 그룹 및 decision policy와 연관된 계정인 group policy를 생성할 수 있습니다.
+
+```bash
+simd tx group create-group-policy [admin] [group-id] [metadata] [decision-policy] [flags]
+```
+
+예시:
+
+```bash
+simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
+```
+
+#### create-group-with-policy
+
+`create-group-with-policy` 명령을 사용하여 연관된 가중치를 가진 멤버 계정의 집합과 decision policy가 있는 관리자 계정으로 그룹을 생성할 수 있습니다. `--group-policy-as-admin` 플래그가 `true`로 설정되면 group policy 주소가 그룹 및 group policy 관리자가 됩니다.
+
+```bash
+simd tx group create-group-with-policy [admin] [group-metadata] [group-policy-metadata] [members-json-file] [decision-policy] [flags]
+```
+
+예시:
+
+```bash
+simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
+```
+
+#### update-group-policy-admin
+
+`update-group-policy-admin` 명령을 사용하여 group policy 관리자를 업데이트할 수 있습니다.
+
+```bash
+simd tx group update-group-policy-admin [admin] [group-policy-account] [new-admin] [flags]
+```
+
+예시:
+
+```bash
+simd tx group update-group-policy-admin cosmos1.. cosmos1.. cosmos1..
+```
+
+#### update-group-policy-metadata
+
+`update-group-policy-metadata` 명령을 사용하여 group policy 메타데이터를 업데이트할 수 있습니다.
+
+```bash
+simd tx group update-group-policy-metadata [admin] [group-policy-account] [new-metadata] [flags]
+```
+
+예시:
+
+```bash
+simd tx group update-group-policy-metadata cosmos1.. cosmos1.. "AQ=="
+```
+
+#### update-group-policy-decision-policy
+
+`update-group-policy-decision-policy` 명령을 사용하여 group policy의 decision policy를 업데이트할 수 있습니다.
+
+```bash
+simd  tx group update-group-policy-decision-policy [admin] [group-policy-account] [decision-policy] [flags]
+```
+
+예시:
+
+```bash
+simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"2", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
+```
+
+#### submit-proposal
+
+`submit-proposal` 명령을 사용하여 새 제안을 제출할 수 있습니다.
+
+```bash
+simd tx group submit-proposal [group-policy-account] [proposer[,proposer]*] [msg_tx_json_file] [metadata] [flags]
+```
+
+예시:
+
+```bash
+simd tx group submit-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
+```
+
+#### withdraw-proposal
+
+`withdraw-proposal` 명령을 사용하여 제안을 철회할 수 있습니다.
+
+```bash
+simd tx group withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]
+```
+
+예시:
+
+```bash
+simd tx group withdraw-proposal 1 cosmos1..
+```
+
+#### vote
+
+`vote` 명령을 사용하여 제안에 투표할 수 있습니다.
+
+```bash
+simd tx group vote proposal-id] [voter] [choice] [metadata] [flags]
+```
+
+예시:
+
+```bash
+simd tx group vote 1 cosmos1.. CHOICE_YES "AQ=="
+```
+
+#### exec
+
+`exec` 명령을 사용하여 제안을 실행할 수 있습니다.
+
+```bash
+simd tx group exec [proposal-id] [flags]
+```
+
+예시:
+
+```bash
+simd tx group exec 1
+```
+
+#### leave-group
+
+`leave-group` 명령을 사용하여 그룹 멤버가 그룹을 떠날 수 있습니다.
+
+```bash
+simd tx group leave-group [member-address] [group-id]
+```
+
+예시:
+
+```bash
+simd tx group leave-group cosmos1... 1
+```
+
+### gRPC
+
+사용자는 gRPC 엔드포인트를 사용하여 `group` 모듈을 쿼리할 수 있습니다.
+
+#### GroupInfo
+
+`GroupInfo` 엔드포인트를 사용하여 주어진 그룹 ID로 그룹 정보를 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/GroupInfo
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"group_id":1}' localhost:9090 cosmos.group.v1.Query/GroupInfo
+```
+
+출력 예시:
+
+```bash
+{
+  "info": {
+    "groupId": "1",
+    "admin": "cosmos1..",
+    "metadata": "AQ==",
+    "version": "1",
+    "totalWeight": "3"
+  }
+}
+```
+
+#### GroupPolicyInfo
+
+`GroupPolicyInfo` 엔드포인트를 사용하여 group policy의 계정 주소로 group policy 정보를 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/GroupPolicyInfo
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/GroupPolicyInfo
+```
+
+출력 예시:
+
+```bash
+{
+  "info": {
+    "address": "cosmos1..",
+    "groupId": "1",
+    "admin": "cosmos1..",
+    "version": "1",
+    "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows": {"voting_period": "120h", "min_execution_period": "0s"}},
+  }
+}
+```
+
+#### GroupMembers
+
+`GroupMembers` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 그룹 ID로 그룹 멤버를 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/GroupMembers
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1.Query/GroupMembers
+```
+
+출력 예시:
+
+```bash
+{
+  "members": [
+    {
+      "groupId": "1",
+      "member": {
+        "address": "cosmos1..",
+        "weight": "1"
+      }
+    },
+    {
+      "groupId": "1",
+      "member": {
+        "address": "cosmos1..",
+        "weight": "2"
+      }
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+#### GroupsByAdmin
+
+`GroupsByAdmin` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 관리자 계정 주소로 그룹을 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/GroupsByAdmin
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/GroupsByAdmin
+```
+
+출력 예시:
+
+```bash
+{
+  "groups": [
+    {
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "totalWeight": "3"
+    },
+    {
+      "groupId": "2",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "totalWeight": "3"
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+#### GroupPoliciesByGroup
+
+`GroupPoliciesByGroup` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 그룹 ID로 group policy를 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/GroupPoliciesByGroup
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"group_id":"1"}'  localhost:9090 cosmos.group.v1.Query/GroupPoliciesByGroup
+```
+
+출력 예시:
+
+```bash
+{
+  "GroupPolicies": [
+    {
+      "address": "cosmos1..",
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "version": "1",
+      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
+    },
+    {
+      "address": "cosmos1..",
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "version": "1",
+      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+#### GroupPoliciesByAdmin
+
+`GroupPoliciesByAdmin` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 관리자 계정 주소로 group policy를 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/GroupPoliciesByAdmin
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"admin":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/GroupPoliciesByAdmin
+```
+
+출력 예시:
+
+```bash
+{
+  "GroupPolicies": [
+    {
+      "address": "cosmos1..",
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "version": "1",
+      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
+    },
+    {
+      "address": "cosmos1..",
+      "groupId": "1",
+      "admin": "cosmos1..",
+      "version": "1",
+      "decisionPolicy": {"@type":"/cosmos.group.v1.ThresholdDecisionPolicy","threshold":"1","windows":{"voting_period": "120h", "min_execution_period": "0s"}},
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+#### Proposal
+
+`Proposal` 엔드포인트를 사용하여 ID로 제안을 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/Proposal
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1.Query/Proposal
+```
+
+출력 예시:
+
+```bash
+{
+  "proposal": {
+    "proposalId": "1",
+    "address": "cosmos1..",
+    "proposers": [
+      "cosmos1.."
+    ],
+    "submittedAt": "2021-12-17T07:06:26.310638964Z",
+    "groupVersion": "1",
+    "GroupPolicyVersion": "1",
+    "status": "STATUS_SUBMITTED",
+    "result": "RESULT_UNFINALIZED",
+    "voteState": {
+      "yesCount": "0",
+      "noCount": "0",
+      "abstainCount": "0",
+      "vetoCount": "0"
+    },
+    "windows": {
+      "min_execution_period": "0s",
+      "voting_period": "432000s"
+    },
+    "executorResult": "EXECUTOR_RESULT_NOT_RUN",
+    "messages": [
+      {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+    ],
+    "title": "Title",
+    "summary": "Summary",
+  }
+}
+```
+
+#### ProposalsByGroupPolicy
+
+`ProposalsByGroupPolicy` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 group policy의 계정 주소로 제안을 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/ProposalsByGroupPolicy
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"address":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/ProposalsByGroupPolicy
+```
+
+출력 예시:
+
+```bash
+{
+  "proposals": [
+    {
+      "proposalId": "1",
+      "address": "cosmos1..",
+      "proposers": [
+        "cosmos1.."
+      ],
+      "submittedAt": "2021-12-17T08:03:27.099649352Z",
+      "groupVersion": "1",
+      "GroupPolicyVersion": "1",
+      "status": "STATUS_CLOSED",
+      "result": "RESULT_ACCEPTED",
+      "voteState": {
+        "yesCount": "1",
+        "noCount": "0",
+        "abstainCount": "0",
+        "vetoCount": "0"
+      },
+      "windows": {
+        "min_execution_period": "0s",
+        "voting_period": "432000s"
+      },
+      "executorResult": "EXECUTOR_RESULT_NOT_RUN",
+      "messages": [
+        {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+      ],
+      "title": "Title",
+      "summary": "Summary",
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+#### VoteByProposalVoter
+
+`VoteByProposalVoter` 엔드포인트를 사용하여 제안 ID와 투표자 계정 주소로 투표를 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/VoteByProposalVoter
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1","voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/VoteByProposalVoter
+```
+
+출력 예시:
+
+```bash
+{
+  "vote": {
+    "proposalId": "1",
+    "voter": "cosmos1..",
+    "choice": "CHOICE_YES",
+    "submittedAt": "2021-12-17T08:05:02.490164009Z"
+  }
+}
+```
+
+#### VotesByProposal
+
+`VotesByProposal` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 제안 ID로 투표를 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/VotesByProposal
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}'  localhost:9090 cosmos.group.v1.Query/VotesByProposal
+```
+
+출력 예시:
+
+```bash
+{
+  "votes": [
+    {
+      "proposalId": "1",
+      "voter": "cosmos1..",
+      "choice": "CHOICE_YES",
+      "submittedAt": "2021-12-17T08:05:02.490164009Z"
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+#### VotesByVoter
+
+`VotesByVoter` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 투표자 계정 주소로 투표를 쿼리할 수 있습니다.
+
+```bash
+cosmos.group.v1.Query/VotesByVoter
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"voter":"cosmos1.."}'  localhost:9090 cosmos.group.v1.Query/VotesByVoter
+```
+
+출력 예시:
+
+```bash
+{
+  "votes": [
+    {
+      "proposalId": "1",
+      "voter": "cosmos1..",
+      "choice": "CHOICE_YES",
+      "submittedAt": "2021-12-17T08:05:02.490164009Z"
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+### REST
+
+사용자는 REST 엔드포인트를 사용하여 `group` 모듈을 쿼리할 수 있습니다.
+
+#### GroupInfo
+
+`GroupInfo` 엔드포인트를 사용하여 주어진 그룹 ID로 그룹 정보를 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/group_info/{group_id}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/group_info/1
+```
+
+출력 예시:
+
+```bash
+{
+  "info": {
+    "id": "1",
+    "admin": "cosmos1..",
+    "metadata": "AQ==",
+    "version": "1",
+    "total_weight": "3"
+  }
+}
+```
+
+#### GroupPolicyInfo
+
+`GroupPolicyInfo` 엔드포인트를 사용하여 group policy의 계정 주소로 group policy 정보를 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/group_policy_info/{address}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/group_policy_info/cosmos1..
+```
+
+출력 예시:
+
+```bash
+{
+  "info": {
+    "address": "cosmos1..",
+    "group_id": "1",
+    "admin": "cosmos1..",
+    "metadata": "AQ==",
+    "version": "1",
+    "decision_policy": {
+      "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
+      "threshold": "1",
+      "windows": {
+        "voting_period": "120h",
+        "min_execution_period": "0s"
+      }
+    },
+  }
+}
+```
+
+#### GroupMembers
+
+`GroupMembers` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 그룹 ID로 그룹 멤버를 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/group_members/{group_id}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/group_members/1
+```
+
+출력 예시:
+
+```bash
+{
+  "members": [
+    {
+      "group_id": "1",
+      "member": {
+        "address": "cosmos1..",
+        "weight": "1",
+        "metadata": "AQ=="
+      }
+    },
+    {
+      "group_id": "1",
+      "member": {
+        "address": "cosmos1..",
+        "weight": "2",
+        "metadata": "AQ=="
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+#### GroupsByAdmin
+
+`GroupsByAdmin` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 관리자 계정 주소로 그룹을 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/groups_by_admin/{admin}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/groups_by_admin/cosmos1..
+```
+
+출력 예시:
+
+```bash
+{
+  "groups": [
+    {
+      "id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "total_weight": "3"
+    },
+    {
+      "id": "2",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "total_weight": "3"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+#### GroupPoliciesByGroup
+
+`GroupPoliciesByGroup` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 그룹 ID로 group policy를 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/group_policies_by_group/{group_id}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/group_policies_by_group/1
+```
+
+출력 예시:
+
+```bash
+{
+  "group_policies": [
+    {
+      "address": "cosmos1..",
+      "group_id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "decision_policy": {
+        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
+        "threshold": "1",
+        "windows": {
+          "voting_period": "120h",
+          "min_execution_period": "0s"
+      }
+      },
+    },
+    {
+      "address": "cosmos1..",
+      "group_id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "decision_policy": {
+        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
+        "threshold": "1",
+        "windows": {
+          "voting_period": "120h",
+          "min_execution_period": "0s"
+      }
+      },
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+#### GroupPoliciesByAdmin
+
+`GroupPoliciesByAdmin` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 관리자 계정 주소로 group policy를 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/group_policies_by_admin/{admin}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/group_policies_by_admin/cosmos1..
+```
+
+출력 예시:
+
+```bash
+{
+  "group_policies": [
+    {
+      "address": "cosmos1..",
+      "group_id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "decision_policy": {
+        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
+        "threshold": "1",
+        "windows": {
+          "voting_period": "120h",
+          "min_execution_period": "0s"
+      } 
+      },
+    },
+    {
+      "address": "cosmos1..",
+      "group_id": "1",
+      "admin": "cosmos1..",
+      "metadata": "AQ==",
+      "version": "1",
+      "decision_policy": {
+        "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
+        "threshold": "1",
+        "windows": {
+          "voting_period": "120h",
+          "min_execution_period": "0s"
+      }
+      },
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+```
+
+#### Proposal
+
+`Proposal` 엔드포인트를 사용하여 ID로 제안을 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/proposal/{proposal_id}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/proposal/1
+```
+
+출력 예시:
+
+```bash
+{
+  "proposal": {
+    "proposal_id": "1",
+    "address": "cosmos1..",
+    "metadata": "AQ==",
+    "proposers": [
+      "cosmos1.."
+    ],
+    "submitted_at": "2021-12-17T07:06:26.310638964Z",
+    "group_version": "1",
+    "group_policy_version": "1",
+    "status": "STATUS_SUBMITTED",
+    "result": "RESULT_UNFINALIZED",
+    "vote_state": {
+      "yes_count": "0",
+      "no_count": "0",
+      "abstain_count": "0",
+      "veto_count": "0"
+    },
+    "windows": {
+      "min_execution_period": "0s",
+      "voting_period": "432000s"
+    },
+    "executor_result": "EXECUTOR_RESULT_NOT_RUN",
+    "messages": [
+      {
+        "@type": "/cosmos.bank.v1beta1.MsgSend",
+        "from_address": "cosmos1..",
+        "to_address": "cosmos1..",
+        "amount": [
+          {
+            "denom": "stake",
+            "amount": "100000000"
+          }
+        ]
+      }
+    ],
+    "title": "Title",
+    "summary": "Summary",
+  }
+}
+```
+
+#### ProposalsByGroupPolicy
+
+`ProposalsByGroupPolicy` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 group policy의 계정 주소로 제안을 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/proposals_by_group_policy/{address}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/proposals_by_group_policy/cosmos1..
+```
+
+출력 예시:
+
+```bash
+{
+  "proposals": [
+    {
+      "id": "1",
+      "group_policy_address": "cosmos1..",
+      "metadata": "AQ==",
+      "proposers": [
+        "cosmos1.."
+      ],
+      "submit_time": "2021-12-17T08:03:27.099649352Z",
+      "group_version": "1",
+      "group_policy_version": "1",
+      "status": "STATUS_CLOSED",
+      "result": "RESULT_ACCEPTED",
+      "vote_state": {
+        "yes_count": "1",
+        "no_count": "0",
+        "abstain_count": "0",
+        "veto_count": "0"
+      },
+      "windows": {
+        "min_execution_period": "0s",
+        "voting_period": "432000s"
+      },
+      "executor_result": "EXECUTOR_RESULT_NOT_RUN",
+      "messages": [
+        {
+          "@type": "/cosmos.bank.v1beta1.MsgSend",
+          "from_address": "cosmos1..",
+          "to_address": "cosmos1..",
+          "amount": [
+            {
+              "denom": "stake",
+              "amount": "100000000"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+#### VoteByProposalVoter
+
+`VoteByProposalVoter` 엔드포인트를 사용하여 제안 ID와 투표자 계정 주소로 투표를 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/vote_by_proposal_voter/{proposal_id}/{voter}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1beta1/vote_by_proposal_voter/1/cosmos1..
+```
+
+출력 예시:
+
+```bash
+{
+  "vote": {
+    "proposal_id": "1",
+    "voter": "cosmos1..",
+    "choice": "CHOICE_YES",
+    "metadata": "AQ==",
+    "submitted_at": "2021-12-17T08:05:02.490164009Z"
+  }
+}
+```
+
+#### VotesByProposal
+
+`VotesByProposal` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 제안 ID로 투표를 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/votes_by_proposal/{proposal_id}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/votes_by_proposal/1
+```
+
+출력 예시:
+
+```bash
+{
+  "votes": [
+    {
+      "proposal_id": "1",
+      "voter": "cosmos1..",
+      "option": "CHOICE_YES",
+      "metadata": "AQ==",
+      "submit_time": "2021-12-17T08:05:02.490164009Z"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+#### VotesByVoter
+
+`VotesByVoter` 엔드포인트를 사용하여 페이지네이션 플래그와 함께 투표자 계정 주소로 투표를 쿼리할 수 있습니다.
+
+```bash
+/cosmos/group/v1/votes_by_voter/{voter}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/group/v1/votes_by_voter/cosmos1..
+```
+
+출력 예시:
+
+```bash
+{
+  "votes": [
+    {
+      "proposal_id": "1",
+      "voter": "cosmos1..",
+      "choice": "CHOICE_YES",
+      "metadata": "AQ==",
+      "submitted_at": "2021-12-17T08:05:02.490164009Z"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+## 메타데이터
+
+group 모듈에는 사용자가 온체인 작업에 대한 추가 컨텍스트를 제공할 수 있는 네 가지 메타데이터 위치가 있습니다. 기본적으로 모든 메타데이터 필드는 255자 길이 필드를 가지며, 필요한 데이터 양에 따라 온체인 또는 오프체인에 json 형식으로 메타데이터를 저장할 수 있습니다. 여기에서 json 구조와 데이터가 저장되어야 하는 위치에 대한 권장 사항을 제공합니다. 이러한 권장 사항을 만드는 데 두 가지 중요한 요소가 있습니다. 첫째, group과 gov 모듈이 서로 일관성을 유지하며, 모든 그룹에서 만든 제안 수가 상당히 많을 수 있습니다. 둘째, 블록 탐색기 및 거버넌스 인터페이스와 같은 클라이언트 애플리케이션이 체인 전반에 걸쳐 메타데이터 구조의 일관성에 대한 신뢰를 가지는 것입니다.
+
+### Proposal
+
+위치: IPFS에 저장된 json 객체로 오프체인([gov proposal](../gov/#metadata) 반영)
+
+```json
+{
+  "title": "",
+  "authors": [""],
+  "summary": "",
+  "details": "",
+  "proposal_forum_url": "",
+  "vote_option_context": "",
+}
+```
+
+:::note
+`authors` 필드는 문자열 배열로, 메타데이터에 여러 저자를 나열할 수 있습니다.
+v0.46에서 `authors` 필드는 쉼표로 구분된 문자열입니다. 프론트엔드는 이전 버전과의 호환성을 위해 두 형식을 모두 지원하는 것이 좋습니다.
+:::
+
+### Vote
+
+위치: 255자 제한 내 json으로 온체인([gov vote](../gov/#metadata) 반영)
+
+```json
+{
+  "justification": "",
+}
+```
+
+### Group
+
+위치: IPFS에 저장된 json 객체로 오프체인
+
+```json
+{
+  "name": "",
+  "description": "",
+  "group_website_url": "",
+  "group_forum_url": "",
+}
+```
+
+### Decision policy
+
+위치: 255자 제한 내 json으로 온체인
+
+```json
+{
+  "name": "",
+  "description": "",
+}
+```

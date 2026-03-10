@@ -1,0 +1,566 @@
+---
+title: Upgrade
+---
+
+# `x/upgrade`
+
+## 개요
+
+`x/upgrade`는 실행 중인 Cosmos 체인을 새로운 (호환되지 않는) 소프트웨어 버전으로 원활하게 업그레이드할 수 있도록 하는 Cosmos SDK 모듈의 구현체입니다. 이는 미리 정의된 업그레이드 블록 높이에 도달하면 블록체인 상태 머신이 더 이상 진행되지 않도록 하는 `PreBlocker` 훅을 제공함으로써 이를 달성합니다.
+
+이 모듈은 거버넌스가 업그레이드를 어떻게 결정하는지에 대해서는 규정하지 않으며, 업그레이드를 안전하게 조정하는 메커니즘만을 제공합니다. 업그레이드에 대한 소프트웨어 지원 없이는 실행 중인 체인을 업그레이드하는 것이 위험합니다. 모든 검증인이 프로세스의 정확히 동일한 지점에서 상태 머신을 일시 중지해야 하기 때문입니다. 이것이 올바르게 수행되지 않으면 복구하기 어려운 상태 불일치가 발생할 수 있습니다.
+
+* [개념](#concepts)
+* [상태](#state)
+* [이벤트](#events)
+* [클라이언트](#client)
+  * [CLI](#cli)
+  * [REST](#rest)
+  * [gRPC](#grpc)
+* [리소스](#resources)
+
+## 개념
+
+### Plan
+
+`x/upgrade` 모듈은 실시간 업그레이드가 예정된 `Plan` 타입을 정의합니다. `Plan`은 특정 블록 높이에서 예약될 수 있습니다.
+`Plan`은 (동결된) 릴리스 후보와 적절한 업그레이드 `Handler`(아래 참조)가 합의되면 생성되며, `Plan`의 `Name`은 특정 `Handler`에 해당합니다. 일반적으로 `Plan`은 거버넌스 제안 프로세스를 통해 생성되며, 투표를 통해 통과되면 예약됩니다. `Plan`의 `Info`에는 업그레이드에 대한 다양한 메타데이터가 포함될 수 있으며, 일반적으로 검증인이 자동으로 업그레이드할 수 있는 git commit과 같은 애플리케이션별 업그레이드 정보가 온체인에 포함됩니다.
+
+```go
+type Plan struct {
+  Name   string
+  Height int64
+  Info   string
+}
+```
+
+#### Sidecar Process
+
+애플리케이션 바이너리를 실행하는 운영자가 바이너리의 자동 다운로드 및 업그레이드를 지원하는 사이드카 프로세스도 실행하는 경우, `Info`를 통해 이 프로세스를 원활하게 수행할 수 있습니다. 이 도구는 [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor#readme)입니다.
+
+### Handler
+
+`x/upgrade` 모듈은 주요 버전 X에서 주요 버전 Y로의 업그레이드를 용이하게 합니다. 이를 위해 노드 운영자는 먼저 현재 바이너리를 새 버전 Y에 해당하는 `Handler`가 있는 새 바이너리로 업그레이드해야 합니다. 이 버전은 커뮤니티 전체에서 완전히 테스트되고 승인된 것으로 가정합니다. 이 `Handler`는 새 바이너리 Y가 체인을 성공적으로 실행하기 전에 어떤 상태 마이그레이션이 발생해야 하는지를 정의합니다. 당연히 이 `Handler`는 애플리케이션에 따라 다르며 모듈별로 정의되지 않습니다. `Handler` 등록은 애플리케이션에서 `Keeper#SetUpgradeHandler`를 통해 수행됩니다.
+
+```go
+type UpgradeHandler func(Context, Plan, VersionMap) (VersionMap, error)
+```
+
+각 `EndBlock` 실행 중에 `x/upgrade` 모듈은 실행해야 하는(해당 높이에 예약된) `Plan`이 있는지 확인합니다. 있다면 해당 `Handler`가 실행됩니다. `Plan`이 실행될 것으로 예상되지만 `Handler`가 등록되지 않았거나 바이너리가 너무 일찍 업그레이드된 경우 노드는 정상적으로 패닉하고 종료됩니다.
+
+### StoreLoader
+
+`x/upgrade` 모듈은 업그레이드의 일부로 스토어 마이그레이션도 용이하게 합니다. `StoreLoader`는 새 바이너리가 체인을 성공적으로 실행하기 전에 발생해야 하는 마이그레이션을 설정합니다. 이 `StoreLoader`도 애플리케이션에 따라 다르며 모듈별로 정의되지 않습니다. 이 `StoreLoader` 등록은 애플리케이션에서 `app#SetStoreLoader`를 통해 수행됩니다.
+
+```go
+func UpgradeStoreLoader (upgradeHeight int64, storeUpgrades *store.StoreUpgrades) baseapp.StoreLoader
+```
+
+계획된 업그레이드가 있고 업그레이드 높이에 도달하면 이전 바이너리는 패닉하기 전에 `Plan`을 디스크에 기록합니다.
+
+이 정보는 `StoreUpgrades`가 올바른 높이와 예상된 업그레이드에서 원활하게 발생하도록 하는 데 중요합니다. 이를 통해 새 바이너리가 재시작할 때마다 `StoreUpgrades`를 여러 번 실행할 가능성을 제거합니다. 또한 동일한 높이에 여러 업그레이드가 계획된 경우 `Name`은 이러한 `StoreUpgrades`가 계획된 업그레이드 핸들러에서만 수행되도록 합니다.
+
+### Proposal
+
+일반적으로 `Plan`은 `MsgSoftwareUpgrade` 메시지를 포함하는 제안을 통해 거버넌스에서 제안되고 제출됩니다.
+이 제안은 표준 거버넌스 프로세스를 따릅니다. 제안이 통과되면 특정 `Handler`를 대상으로 하는 `Plan`이 지속되고 예약됩니다. 업그레이드는 새 제안에서 `Plan.Height`를 업데이트하여 지연되거나 앞당겨질 수 있습니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L29-L41
+```
+
+#### 업그레이드 제안 취소
+
+업그레이드 제안은 취소할 수 있습니다. 거버넌스가 활성화된 `MsgCancelUpgrade` 메시지 타입이 존재하며, 이를 제안에 포함하고 투표하여 통과되면 예약된 업그레이드 `Plan`이 제거됩니다.
+물론 이를 위해서는 업그레이드 자체 전에 투표를 위한 시간을 허용할 수 있도록 업그레이드가 나쁜 아이디어였음을 충분히 미리 알아야 합니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L48-L57
+```
+
+이러한 가능성이 필요한 경우 업그레이드 높이는 업그레이드 제안 시작부터 `2 * (VotingPeriod + DepositPeriod) + (SafetyDelta)` 이후여야 합니다. `SafetyDelta`는 업그레이드 제안이 성공한 후 (외부 사회적 합의로 인해) 나쁜 아이디어였음을 인식하는 데 사용 가능한 시간입니다.
+
+`MsgCancelUpgrade` 제안은 원래 `MsgSoftwareUpgrade` 제안이 아직 투표 중인 동안에도 만들 수 있습니다. 단, `VotingPeriod`가 `MsgSoftwareUpgrade` 제안 이후에 끝나야 합니다.
+
+## 상태
+
+`x/upgrade` 모듈의 내부 상태는 비교적 최소하고 간단합니다. 상태는 키 `0x0`으로 현재 활성화된 업그레이드 `Plan`(존재하는 경우)을 포함하고, 키 `0x1`으로 `Plan`이 "완료"로 표시되었는지를 포함합니다. 상태는 애플리케이션의 모든 앱 모듈의 합의 버전을 포함합니다. 버전은 big endian `uint64`로 저장되며, `string` 타입의 해당 모듈 이름이 추가된 접두사 `0x2`로 액세스할 수 있습니다. 상태는 키 `0x3`으로 액세스할 수 있는 `Protocol Version`을 유지합니다.
+
+* Plan: `0x0 -> Plan`
+* Done: `0x1 | byte(plan name)  -> BigEndian(Block Height)`
+* ConsensusVersion: `0x2 | byte(module name)  -> BigEndian(Module Consensus Version)`
+* ProtocolVersion: `0x3 -> BigEndian(Protocol Version)`
+
+`x/upgrade` 모듈은 genesis 상태를 포함하지 않습니다.
+
+## 이벤트
+
+`x/upgrade`는 자체적으로 이벤트를 발생시키지 않습니다. 모든 제안 관련 이벤트는 `x/gov` 모듈을 통해 발생됩니다.
+
+## 클라이언트
+
+### CLI
+
+사용자는 CLI를 사용하여 `upgrade` 모듈을 쿼리하고 상호작용할 수 있습니다.
+
+#### 쿼리
+
+`query` 명령을 사용하여 `upgrade` 상태를 쿼리할 수 있습니다.
+
+```bash
+simd query upgrade --help
+```
+
+##### applied
+
+`applied` 명령을 사용하여 완료된 업그레이드가 적용된 높이의 블록 헤더를 쿼리할 수 있습니다.
+
+```bash
+simd query upgrade applied [upgrade-name] [flags]
+```
+
+upgrade-name이 이전에 체인에서 실행된 경우 적용된 블록의 헤더를 반환합니다.
+이를 통해 클라이언트는 주어진 블록 범위에서 어떤 바이너리가 유효했는지 확인하고 과거 마이그레이션을 이해하는 데 더 많은 컨텍스트를 얻을 수 있습니다.
+
+예시:
+
+```bash
+simd query upgrade applied "test-upgrade"
+```
+
+출력 예시:
+
+```bash
+"block_id": {
+    "hash": "A769136351786B9034A5F196DC53F7E50FCEB53B48FA0786E1BFC45A0BB646B5",
+    "parts": {
+      "total": 1,
+      "hash": "B13CBD23011C7480E6F11BE4594EE316548648E6A666B3575409F8F16EC6939E"
+    }
+  },
+  "block_size": "7213",
+  "header": {
+    "version": {
+      "block": "11"
+    },
+    "chain_id": "testnet-2",
+    "height": "455200",
+    "time": "2021-04-10T04:37:57.085493838Z",
+    "last_block_id": {
+      "hash": "0E8AD9309C2DC411DF98217AF59E044A0E1CCEAE7C0338417A70338DF50F4783",
+      "parts": {
+        "total": 1,
+        "hash": "8FE572A48CD10BC2CBB02653CA04CA247A0F6830FF19DC972F64D339A355E77D"
+      }
+    },
+    "last_commit_hash": "DE890239416A19E6164C2076B837CC1D7F7822FC214F305616725F11D2533140",
+    "data_hash": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "validators_hash": "A31047ADE54AE9072EE2A12FF260A8990BA4C39F903EAF5636B50D58DBA72582",
+    "next_validators_hash": "A31047ADE54AE9072EE2A12FF260A8990BA4C39F903EAF5636B50D58DBA72582",
+    "consensus_hash": "048091BC7DDC283F77BFBF91D73C44DA58C3DF8A9CBC867405D8B7F3DAADA22F",
+    "app_hash": "28ECC486AFC332BA6CC976706DBDE87E7D32441375E3F10FD084CD4BAF0DA021",
+    "last_results_hash": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "evidence_hash": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "proposer_address": "2ABC4854B1A1C5AA8403C4EA853A81ACA901CC76"
+  },
+  "num_txs": "0"
+}
+```
+
+##### module versions
+
+`module_versions` 명령은 모듈 이름과 해당 합의 버전 목록을 가져옵니다.
+
+명령 뒤에 특정 모듈 이름을 지정하면 해당 모듈의 정보만 반환됩니다.
+
+```bash
+simd query upgrade module_versions [optional module_name] [flags]
+```
+
+예시:
+
+```bash
+simd query upgrade module_versions
+```
+
+출력 예시:
+
+```bash
+module_versions:
+- name: auth
+  version: "2"
+- name: authz
+  version: "1"
+- name: bank
+  version: "2"
+- name: crisis
+  version: "1"
+- name: distribution
+  version: "2"
+- name: evidence
+  version: "1"
+- name: feegrant
+  version: "1"
+- name: genutil
+  version: "1"
+- name: gov
+  version: "2"
+- name: ibc
+  version: "2"
+- name: mint
+  version: "1"
+- name: params
+  version: "1"
+- name: slashing
+  version: "2"
+- name: staking
+  version: "2"
+- name: transfer
+  version: "1"
+- name: upgrade
+  version: "1"
+- name: vesting
+  version: "1"
+```
+
+예시:
+
+```bash
+regen query upgrade module_versions ibc
+```
+
+출력 예시:
+
+```bash
+module_versions:
+- name: ibc
+  version: "2"
+```
+
+##### plan
+
+`plan` 명령은 현재 예약된 업그레이드 계획(존재하는 경우)을 가져옵니다.
+
+```bash
+regen query upgrade plan [flags]
+```
+
+예시:
+
+```bash
+simd query upgrade plan
+```
+
+출력 예시:
+
+```bash
+height: "130"
+info: ""
+name: test-upgrade
+time: "0001-01-01T00:00:00Z"
+upgraded_client_state: null
+```
+
+#### 트랜잭션
+
+upgrade 모듈은 다음 트랜잭션을 지원합니다:
+
+* `software-proposal` - 업그레이드 제안을 제출합니다:
+
+```bash
+simd tx upgrade software-upgrade v2 --title="Test Proposal" --summary="testing" --deposit="100000000stake" --upgrade-height 1000000 \
+--upgrade-info '{ "binaries": { "linux/amd64":"https://example.com/simd.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f" } }' --from cosmos1..
+```
+
+* `cancel-software-upgrade` - 이전에 제출된 업그레이드 제안을 취소합니다:
+
+```bash
+simd tx upgrade cancel-software-upgrade --title="Test Proposal" --summary="testing" --deposit="100000000stake" --from cosmos1..
+```
+
+### REST
+
+사용자는 REST 엔드포인트를 사용하여 `upgrade` 모듈을 쿼리할 수 있습니다.
+
+#### Applied Plan
+
+`AppliedPlan`은 이름으로 이전에 적용된 업그레이드 계획을 쿼리합니다.
+
+```bash
+/cosmos/upgrade/v1beta1/applied_plan/{name}
+```
+
+예시:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/upgrade/v1beta1/applied_plan/v2.0-upgrade" -H "accept: application/json"
+```
+
+출력 예시:
+
+```bash
+{
+  "height": "30"
+}
+```
+
+#### Current Plan
+
+`CurrentPlan`은 현재 업그레이드 계획을 쿼리합니다.
+
+```bash
+/cosmos/upgrade/v1beta1/current_plan
+```
+
+예시:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/upgrade/v1beta1/current_plan" -H "accept: application/json"
+```
+
+출력 예시:
+
+```bash
+{
+  "plan": "v2.1-upgrade"
+}
+```
+
+#### Module versions
+
+`ModuleVersions`는 상태에서 모듈 버전 목록을 쿼리합니다.
+
+```bash
+/cosmos/upgrade/v1beta1/module_versions
+```
+
+예시:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/upgrade/v1beta1/module_versions" -H "accept: application/json"
+```
+
+출력 예시:
+
+```bash
+{
+  "module_versions": [
+    {
+      "name": "auth",
+      "version": "2"
+    },
+    {
+      "name": "authz",
+      "version": "1"
+    },
+    {
+      "name": "bank",
+      "version": "2"
+    },
+    {
+      "name": "crisis",
+      "version": "1"
+    },
+    {
+      "name": "distribution",
+      "version": "2"
+    },
+    {
+      "name": "evidence",
+      "version": "1"
+    },
+    {
+      "name": "feegrant",
+      "version": "1"
+    },
+    {
+      "name": "genutil",
+      "version": "1"
+    },
+    {
+      "name": "gov",
+      "version": "2"
+    },
+    {
+      "name": "ibc",
+      "version": "2"
+    },
+    {
+      "name": "mint",
+      "version": "1"
+    },
+    {
+      "name": "params",
+      "version": "1"
+    },
+    {
+      "name": "slashing",
+      "version": "2"
+    },
+    {
+      "name": "staking",
+      "version": "2"
+    },
+    {
+      "name": "transfer",
+      "version": "1"
+    },
+    {
+      "name": "upgrade",
+      "version": "1"
+    },
+    {
+      "name": "vesting",
+      "version": "1"
+    }
+  ]
+}
+```
+
+### gRPC
+
+사용자는 gRPC 엔드포인트를 사용하여 `upgrade` 모듈을 쿼리할 수 있습니다.
+
+#### Applied Plan
+
+`AppliedPlan`은 이름으로 이전에 적용된 업그레이드 계획을 쿼리합니다.
+
+```bash
+cosmos.upgrade.v1beta1.Query/AppliedPlan
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"name":"v2.0-upgrade"}' \
+    localhost:9090 \
+    cosmos.upgrade.v1beta1.Query/AppliedPlan
+```
+
+출력 예시:
+
+```bash
+{
+  "height": "30"
+}
+```
+
+#### Current Plan
+
+`CurrentPlan`은 현재 업그레이드 계획을 쿼리합니다.
+
+```bash
+cosmos.upgrade.v1beta1.Query/CurrentPlan
+```
+
+예시:
+
+```bash
+grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/CurrentPlan
+```
+
+출력 예시:
+
+```bash
+{
+  "plan": "v2.1-upgrade"
+}
+```
+
+#### Module versions
+
+`ModuleVersions`는 상태에서 모듈 버전 목록을 쿼리합니다.
+
+```bash
+cosmos.upgrade.v1beta1.Query/ModuleVersions
+```
+
+예시:
+
+```bash
+grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/ModuleVersions
+```
+
+출력 예시:
+
+```bash
+{
+  "module_versions": [
+    {
+      "name": "auth",
+      "version": "2"
+    },
+    {
+      "name": "authz",
+      "version": "1"
+    },
+    {
+      "name": "bank",
+      "version": "2"
+    },
+    {
+      "name": "crisis",
+      "version": "1"
+    },
+    {
+      "name": "distribution",
+      "version": "2"
+    },
+    {
+      "name": "evidence",
+      "version": "1"
+    },
+    {
+      "name": "feegrant",
+      "version": "1"
+    },
+    {
+      "name": "genutil",
+      "version": "1"
+    },
+    {
+      "name": "gov",
+      "version": "2"
+    },
+    {
+      "name": "ibc",
+      "version": "2"
+    },
+    {
+      "name": "mint",
+      "version": "1"
+    },
+    {
+      "name": "params",
+      "version": "1"
+    },
+    {
+      "name": "slashing",
+      "version": "2"
+    },
+    {
+      "name": "staking",
+      "version": "2"
+    },
+    {
+      "name": "transfer",
+      "version": "1"
+    },
+    {
+      "name": "upgrade",
+      "version": "1"
+    },
+    {
+      "name": "vesting",
+      "version": "1"
+    }
+  ]
+}
+```
+
+## 리소스
+
+`x/upgrade` 모듈에 대해 더 알아보기 위한 (외부) 리소스 목록입니다.
+
+* [Cosmos Dev Series: Cosmos Blockchain Upgrade](https://medium.com/web3-surfers/cosmos-dev-series-cosmos-sdk-based-blockchain-upgrade-b5e99181554c) - 소프트웨어 업그레이드가 어떻게 작동하는지 자세히 설명하는 블로그 포스트입니다.

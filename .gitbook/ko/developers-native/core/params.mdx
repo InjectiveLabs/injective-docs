@@ -1,0 +1,68 @@
+---
+sidebar_position: 1
+---
+
+# `x/params`
+
+> 참고: Params 모듈은 각 모듈이 자체 매개변수를 관리하도록 하여 더 이상 사용되지 않습니다.
+
+## 개요
+
+params 패키지는 전역으로 사용 가능한 parameter store를 제공합니다.
+
+Keeper와 Subspace의 두 가지 주요 타입이 있습니다. Subspace는 paramstore의 격리된 네임스페이스로, 키가 미리 구성된 spacename으로 접두사가 붙습니다. Keeper는 모든 기존 space에 액세스할 수 있는 권한을 가집니다.
+
+Subspace는 다른 keeper가 수정할 수 없는 개인 parameter store가 필요한 개별 keeper에서 사용할 수 있습니다. params Keeper는 proposal이 통과될 경우 모든 매개변수를 수정하기 위해 `x/gov` router에 경로를 추가하는 데 사용할 수 있습니다.
+
+다음 내용은 master 및 user 모듈에 대한 params 모듈 사용 방법을 설명합니다.
+
+## 목차
+
+* [Keeper](#keeper)
+* [Subspace](#subspace)
+    * [Key](#key)
+    * [KeyTable](#keytable)
+    * [ParamSet](#paramset)
+
+## Keeper
+
+앱 초기화 단계에서 `Keeper.Subspace`를 사용하여 다른 모듈의 keeper에 대한 [subspaces](#subspace)를 할당하고 `Keeper.spaces`에 저장할 수 있습니다. 그런 다음 해당 모듈들은 `Keeper.GetSubspace`를 통해 특정 parameter store에 대한 참조를 가질 수 있습니다.
+
+예시:
+
+```go
+type ExampleKeeper struct {
+	paramSpace paramtypes.Subspace
+}
+
+func (k ExampleKeeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramSpace.SetParamSet(ctx, &params)
+}
+```
+
+## Subspace
+
+`Subspace`는 parameter store의 접두사가 붙은 하위 공간입니다. parameter store를 사용하는 각 모듈은 액세스 권한을 격리하기 위해 `Subspace`를 사용합니다.
+
+### Key
+
+Parameter key는 사람이 읽을 수 있는 영숫자 문자열입니다. `"ExampleParameter"` 키에 대한 parameter는 `[]byte("SubspaceName" + "/" + "ExampleParameter")` 아래에 저장되며, `"SubspaceName"`은 subspace의 이름입니다.
+
+Subkey는 primary parameter key와 함께 사용되는 보조 parameter key입니다. Subkey는 런타임 중에 그룹화 또는 동적 parameter key 생성에 사용할 수 있습니다.
+
+### KeyTable
+
+사용될 모든 parameter key는 컴파일 시간에 등록되어야 합니다. `KeyTable`은 본질적으로 `map[string]attribute`이며, `string`은 parameter key입니다.
+
+현재 `attribute`는 제공된 key와 value가 호환되고 등록되었는지 확인하는 parameter type을 나타내는 `reflect.Type`과 값을 검증하는 `ValueValidatorFn` 함수로 구성됩니다.
+
+primary key만 `KeyTable`에 등록해야 합니다. Subkey는 primary key의 attribute를 상속합니다.
+
+### ParamSet
+
+모듈은 종종 proto 메시지로 매개변수를 정의합니다. 생성된 구조체는 다음 메서드와 함께 사용할 `ParamSet` 인터페이스를 구현할 수 있습니다:
+
+* `KeyTable.RegisterParamSet()`: 구조체의 모든 매개변수를 등록합니다
+* `Subspace.{Get, Set}ParamSet()`: 구조체에서 Get 및 Set
+
+`GetParamSet()`을 사용하려면 구현자가 포인터여야 합니다.

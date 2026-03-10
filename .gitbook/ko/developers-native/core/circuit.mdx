@@ -1,0 +1,172 @@
+---
+title: x/circuit
+---
+
+# `x/circuit`
+
+## Concepts
+
+Circuit Breaker는 취약점이 존재할 때 체인이 중지/종료되는 것을 방지하기 위한 모듈입니다. 대신 이 모듈을 사용하면 특정 메시지 또는 모든 메시지를 비활성화할 수 있습니다. 체인을 운영할 때 앱 특정 체인이라면 체인 중지의 피해가 적지만, 체인 위에 애플리케이션이 구축되어 있다면 애플리케이션에 대한 방해로 인해 중지 비용이 높습니다.
+
+Circuit Breaker는 주소 또는 주소 집합이 메시지 실행 및/또는 mempool 포함을 차단할 권한을 가진다는 아이디어로 작동합니다. 권한이 있는 모든 주소는 해당 메시지에 대한 circuit breaker를 재설정할 수 있습니다.
+
+트랜잭션은 두 지점에서 확인되고 거부될 수 있습니다:
+
+* `CircuitBreakerDecorator` [ante handler](https://docs.cosmos.network/main/learn/advanced/baseapp#antehandler)에서:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/x/circuit/v0.1.0/x/circuit/ante/circuit.go#L27-L41
+```
+
+* [message router check](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router)를 통해:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/baseapp/msg_service_router.go#L104-L115
+```
+
+:::note
+`CircuitBreakerDecorator`는 대부분의 사용 사례에서 작동하지만, [트랜잭션의 내부 메시지를 확인하지 않습니다](https://docs.cosmos.network/main/learn/beginner/tx-lifecycle#antehandler). 따라서 일부 트랜잭션(`x/authz` 트랜잭션 또는 일부 `x/gov` 트랜잭션 등)은 ante handler를 통과할 수 있습니다. **이것은 circuit breaker에 영향을 미치지 않습니다.** message router check가 여전히 트랜잭션을 실패시키기 때문입니다.
+이 트레이드오프는 `x/circuit` 모듈에 더 많은 의존성을 도입하지 않기 위함입니다. 체인은 원하는 경우 내부 메시지를 확인하도록 `CircuitBreakerDecorator`를 재정의할 수 있습니다.
+:::
+
+## State
+
+### Accounts
+
+* AccountPermissions `0x1 | account_address  -> ProtocolBuffer(CircuitBreakerPermissions)`
+
+```go
+type level int32
+
+const (
+    // LEVEL_NONE_UNSPECIFIED는 계정에 circuit breaker 권한이 없음을 나타냅니다.
+    LEVEL_NONE_UNSPECIFIED = iota
+    // LEVEL_SOME_MSGS는 계정이 일부 Msg 타입 URL에 대해 circuit breaker를
+    // 트립하거나 재설정할 권한이 있음을 나타냅니다. 이 레벨이 선택되면
+    // limit_type_urls에 비어 있지 않은 Msg 타입 URL 목록을 제공해야 합니다.
+    LEVEL_SOME_MSGS
+    // LEVEL_ALL_MSGS는 계정이 모든 타입 URL의 Msg에 대해 circuit breaker를
+    // 트립하거나 재설정할 수 있음을 나타냅니다.
+    LEVEL_ALL_MSGS
+    // LEVEL_SUPER_ADMIN은 계정이 모든 circuit breaker 작업을 수행하고
+    // 다른 계정에 권한을 부여할 수 있음을 나타냅니다.
+    LEVEL_SUPER_ADMIN
+)
+
+type Access struct {
+	level int32
+	msgs []string // 전체 권한인 경우 msgs는 비어 있을 수 있습니다
+}
+```
+
+### Disable List
+
+비활성화된 타입 url 목록입니다.
+
+* DisableList `0x2 | msg_type_url -> []byte{}`
+
+## State Transitions
+
+### Authorize
+
+Authorize는 모듈 authority(기본값: governance 모듈 계정) 또는 `LEVEL_SUPER_ADMIN`이 있는 계정이 다른 계정에 메시지 비활성화/활성화 권한을 부여하기 위해 호출합니다. 부여할 수 있는 세 가지 권한 레벨이 있습니다. `LEVEL_SOME_MSGS`는 비활성화할 수 있는 메시지 수를 제한합니다. `LEVEL_ALL_MSGS`는 모든 메시지를 비활성화할 수 있습니다. `LEVEL_SUPER_ADMIN`은 계정이 다른 계정의 권한 부여 및 취소를 포함한 모든 circuit breaker 작업을 수행할 수 있습니다.
+
+```protobuf
+  // AuthorizeCircuitBreaker는 super-admin이 다른 계정의 circuit breaker
+  // 권한을 부여(또는 취소)할 수 있게 합니다.
+  rpc AuthorizeCircuitBreaker(MsgAuthorizeCircuitBreaker) returns (MsgAuthorizeCircuitBreakerResponse);
+```
+
+### Trip
+
+Trip은 특정 msgURL에 대한 메시지 실행을 비활성화하기 위해 권한이 있는 계정이 호출합니다. 비어 있으면 모든 메시지가 비활성화됩니다.
+
+```protobuf
+  // TripCircuitBreaker는 상태 머신에서 Msg 처리를 일시 중지합니다.
+  rpc TripCircuitBreaker(MsgTripCircuitBreaker) returns (MsgTripCircuitBreakerResponse);
+```
+
+### Reset
+
+Reset은 이전에 비활성화된 메시지의 특정 msgURL에 대한 실행을 활성화하기 위해 권한이 있는 계정이 호출합니다. 비어 있으면 모든 비활성화된 메시지가 활성화됩니다.
+
+```protobuf
+  // ResetCircuitBreaker는 TripCircuitBreaker를 사용하여 일시 중지된
+  // 상태 머신에서 Msg 처리를 재개합니다.
+  rpc ResetCircuitBreaker(MsgResetCircuitBreaker) returns (MsgResetCircuitBreakerResponse);
+```
+
+## Messages
+
+### MsgAuthorizeCircuitBreaker
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L25-L75
+```
+
+이 메시지는 다음과 같은 경우에 실패할 것으로 예상됩니다:
+
+* granter가 `LEVEL_SUPER_ADMIN` 권한 레벨이 있는 계정 또는 모듈 authority가 아닌 경우
+
+### MsgTripCircuitBreaker
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L77-L93
+```
+
+이 메시지는 다음과 같은 경우에 실패할 것으로 예상됩니다:
+
+* 서명자가 지정된 타입 url 메시지를 비활성화할 수 있는 권한 레벨이 없는 경우
+
+### MsgResetCircuitBreaker
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L95-109
+```
+
+이 메시지는 다음과 같은 경우에 실패할 것으로 예상됩니다:
+
+* 타입 url이 비활성화되지 않은 경우
+
+## Events
+
+circuit 모듈은 다음 이벤트를 발생시킵니다:
+
+### Message Events
+
+#### MsgAuthorizeCircuitBreaker
+
+| Type    | Attribute Key | Attribute Value           |
+|---------|---------------|---------------------------|
+| string  | granter       | `{granterAddress}` |
+| string  | grantee       | `{granteeAddress}` |
+| string  | permission    | `{granteePermissions}` |
+| message | module        | `circuit`                   |
+| message | action        | `authorize_circuit_breaker` |
+
+#### MsgTripCircuitBreaker
+
+| Type     | Attribute Key | Attribute Value    |
+|----------|---------------|--------------------| 
+| string   | authority     | `{authorityAddress}` |
+| []string | msg_urls      | `[]string{msg_urls}` |
+| message  | module        | `circuit`            |
+| message  | action        | `trip_circuit_breaker` |
+
+#### ResetCircuitBreaker
+
+| Type     | Attribute Key | Attribute Value    |
+|----------|---------------|--------------------| 
+| string   | authority     | `{authorityAddress}` |
+| []string | msg_urls      | `[]string{msg_urls}` |
+| message  | module        | `circuit`            |
+| message  | action        | `reset_circuit_breaker` |
+
+## Keys
+
+* `AccountPermissionPrefix` - `0x01`
+* `DisableListPrefix` -  `0x02`
+
+## Client
+
+CLI 명령어 및 gRPC/REST 엔드포인트 목록 및 설명입니다.

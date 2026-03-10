@@ -1,0 +1,972 @@
+---
+title: Distribution
+---
+
+# `x/distribution`
+
+## 개요
+
+이 _간단한_ 분배 메커니즘은 검증인과 위임자 간에 보상을 수동적으로 분배하는 기능적 방법을 설명합니다. 이 메커니즘은 능동적 보상 분배 메커니즘만큼 정확하게 자금을 분배하지 않으므로 향후 업그레이드될 예정입니다.
+
+메커니즘은 다음과 같이 작동합니다. 수집된 보상은 전역적으로 풀링되어 검증인과 위임자에게 수동적으로 분배됩니다. 각 검증인은 위임자를 대신하여 수집한 보상에 대해 위임자에게 수수료를 청구할 수 있습니다. 수수료는 전역 보상 풀과 검증인 제안자 보상 풀로 직접 수집됩니다. 수동적 회계의 특성상 보상 분배 비율에 영향을 미치는 매개변수가 변경될 때마다 보상 출금도 함께 발생해야 합니다.
+
+* 출금할 때마다 받을 자격이 있는 최대 금액을 출금해야 하며, 풀에 아무것도 남기지 않아야 합니다.
+* 기존 계정에 토큰을 본딩, 언본딩 또는 재위임할 때마다 보상의 전체 출금이 발생해야 합니다(지연 회계 규칙이 변경되기 때문).
+* 검증인이 보상에 대한 수수료를 변경할 때마다 모든 누적 수수료 보상이 동시에 출금되어야 합니다.
+
+위의 시나리오는 `hooks.md`에서 다룹니다.
+
+여기에 설명된 분배 메커니즘은 검증인과 관련 위임자 간에 다음 보상을 지연 분배하는 데 사용됩니다:
+
+* 사회적으로 분배될 다중 토큰 수수료
+* 인플레이션된 스테이킹 자산 공급
+* 위임자의 스테이크로 얻은 모든 보상에 대한 검증인 수수료
+
+수수료는 전역 풀 내에 풀링됩니다. 사용된 메커니즘은 검증인과 위임자가 독립적이고 지연적으로 보상을 출금할 수 있게 합니다.
+
+## 단점
+
+지연 계산의 일부로, 각 위임자는 각 검증인에 특정한 누적 항목을 보유하며, 이는 전역 수수료 풀에 보유된 토큰 중 자신에게 지급되어야 할 대략적인 공정한 몫을 추정하는 데 사용됩니다.
+
+```text
+entitlement = delegator-accumulation / all-delegators-accumulation
+```
+
+매 블록마다 일정하고 동일한 양의 들어오는 보상 토큰이 있다면, 이 분배 메커니즘은 능동적 분배(매 블록마다 모든 위임자에게 개별적으로 분배)와 동일할 것입니다. 그러나 이는 비현실적이므로 들어오는 보상 토큰의 변동과 다른 위임자의 보상 출금 시점에 따라 능동적 분배와의 편차가 발생합니다.
+
+들어오는 보상이 크게 증가할 것을 알고 있다면, 이 이벤트 후까지 출금하지 않는 것이 유리하며, 기존 _accum_의 가치를 높일 수 있습니다. 자세한 내용은 [#2764](https://github.com/cosmos/cosmos-sdk/issues/2764)를 참조하세요.
+
+## 스테이킹에 미치는 영향
+
+Atom 공급에 대해 수수료를 청구하면서 Atom 공급이 자동 본딩(검증인의 본딩된 스테이크에 직접 분배)되도록 허용하는 것은 BPoS 내에서 문제가 됩니다. 근본적으로 이 두 메커니즘은 상호 배타적입니다. 수수료와 자동 본딩 메커니즘이 스테이킹 토큰에 동시에 적용되면 검증인과 위임자 간의 스테이킹 토큰 분배가 매 블록마다 변경됩니다. 이는 매 블록마다 각 위임 기록에 대한 계산을 필요로 하며, 이는 계산 비용이 높은 것으로 간주됩니다.
+
+결론적으로, Atom 수수료와 언본딩된 Atom 공급 또는 수수료 없는 본딩된 Atom 공급만 가질 수 있으며, 우리는 전자를 구현하기로 선택했습니다. 공급량을 재본딩하려는 이해관계자는 주기적으로 보상을 출금하고 재본딩하는 스크립트를 설정할 수 있습니다.
+
+## 목차
+
+* [개념](#concepts)
+* [상태](#state)
+    * [FeePool](#feepool)
+    * [Validator Distribution](#validator-distribution)
+    * [Delegation Distribution](#delegation-distribution)
+    * [Params](#params)
+* [Begin Block](#begin-block)
+* [메시지](#messages)
+* [Hooks](#hooks)
+* [이벤트](#events)
+* [매개변수](#parameters)
+* [클라이언트](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+
+## 개념
+
+지분 증명(PoS) 블록체인에서 트랜잭션 수수료로 얻은 보상은 검증인에게 지급됩니다. 수수료 분배 모듈은 검증인의 구성원인 위임자에게 보상을 공정하게 분배합니다.
+
+보상은 기간별로 계산됩니다. 기간은 검증인의 위임이 변경될 때마다 업데이트됩니다. 예를 들어, 검증인이 새로운 위임을 받을 때입니다.
+단일 검증인에 대한 보상은 위임이 시작되기 전 기간의 총 보상에서 현재 총 보상을 빼서 계산할 수 있습니다.
+자세히 알아보려면 [F1 Fee Distribution paper](https://github.com/cosmos/cosmos-sdk/tree/main/docs/spec/fee_distribution/f1_fee_distr.pdf)를 참조하세요.
+
+검증인에 대한 수수료는 검증인이 제거되거나 검증인이 출금을 요청할 때 지급됩니다.
+수수료는 누적 수수료 금액을 업데이트하기 위해 모든 `BeginBlock` 작업에서 계산되고 증가합니다.
+
+위임자에 대한 보상은 위임이 변경되거나 제거되거나 출금이 요청될 때 분배됩니다.
+보상이 분배되기 전에 현재 위임 기간 동안 검증인에게 발생한 모든 슬래싱이 적용됩니다.
+
+### F1 Fee Distribution의 참조 카운팅
+
+F1 수수료 분배에서 위임자가 받는 보상은 위임이 출금될 때 계산됩니다. 이 계산은 위임을 시작할 때 종료된 기간의 토큰 지분으로 나눈 보상 합계의 항과 출금을 위해 생성된 최종 기간을 읽어야 합니다.
+
+또한, 슬래싱은 위임이 가질 토큰의 양을 변경하므로(그러나 이를 지연적으로 계산합니다, 위임자가 언본딩할 때만), 위임자가 위임한 시점과 보상을 출금한 시점 사이에 발생한 슬래싱 전후의 별도 기간에서 보상을 계산해야 합니다. 따라서 위임과 마찬가지로 슬래싱은 슬래싱 이벤트에 의해 종료된 기간을 참조합니다.
+
+더 이상 어떤 위임이나 슬래싱에서도 참조되지 않는 기간에 대해 저장된 모든 과거 보상 기록은 읽히지 않으므로 안전하게 제거될 수 있습니다(향후 위임과 향후 슬래싱은 항상 향후 기간을 참조합니다). 이는 각 과거 보상 저장 항목과 함께 `ReferenceCount`를 추적하여 구현됩니다. 과거 기록을 참조해야 할 수 있는 새 객체(위임 또는 슬래싱)가 생성될 때마다 참조 카운트가 증가합니다. 이전에 과거 기록을 참조해야 했던 객체가 삭제될 때마다 참조 카운트가 감소합니다. 참조 카운트가 0이 되면 과거 기록이 삭제됩니다.
+
+## 상태
+
+### FeePool
+
+분배에 대해 전역적으로 추적되는 모든 매개변수는 `FeePool` 내에 저장됩니다. 보상은 수집되어 보상 풀에 추가되고 여기서 검증인/위임자에게 분배됩니다.
+
+보상 풀은 인플레이션과 같은 작업에서 코인의 분수를 받을 수 있도록 소수 코인(`DecCoins`)을 보유합니다. 풀에서 코인이 분배될 때 비소수인 `sdk.Coins`로 잘립니다.
+
+* FeePool: `0x00 -> ProtocolBuffer(FeePool)`
+
+```go
+// coins with decimal
+type DecCoins []DecCoin
+
+type DecCoin struct {
+    Amount math.LegacyDec
+    Denom  string
+}
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L116-L123
+```
+
+### Validator Distribution
+
+관련 검증인에 대한 검증인 분배 정보는 다음 시점마다 업데이트됩니다:
+
+1. 검증인에 대한 위임 금액이 업데이트될 때,
+2. 위임자가 검증인에서 출금할 때, 또는
+3. 검증인이 수수료를 출금할 때.
+
+* ValidatorDistInfo: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
+
+```go
+type ValidatorDistInfo struct {
+    OperatorAddress     sdk.AccAddress
+    SelfBondRewards     sdkmath.DecCoins
+    ValidatorCommission types.ValidatorAccumulatedCommission
+}
+```
+
+### Delegation Distribution
+
+각 위임 분배는 마지막으로 수수료를 출금한 높이만 기록하면 됩니다. 위임은 속성이 변경될 때마다(즉, 본딩된 토큰 등) 수수료를 출금해야 하므로 속성은 일정하게 유지되며 위임자의 _누적_ 요소는 마지막 출금 높이와 현재 속성만 알면 수동적으로 계산할 수 있습니다.
+
+* DelegationDistInfo: `0x02 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(delegatorDist)`
+
+```go
+type DelegationDistInfo struct {
+    WithdrawalHeight int64    // last time this delegation withdrew rewards
+}
+```
+
+### Params
+
+distribution 모듈은 `0x09` 프리픽스로 상태에 매개변수를 저장하며, 거버넌스 또는 권한이 있는 주소를 통해 업데이트될 수 있습니다.
+
+* Params: `0x09 | ProtocolBuffer(Params)`
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L12-L42
+```
+
+## Begin Block
+
+각 `BeginBlock`에서 이전 블록에서 받은 모든 수수료는 distribution `ModuleAccount` 계정으로 전송됩니다. 위임자나 검증인이 보상을 출금할 때 `ModuleAccount`에서 가져갑니다. Begin block 동안 수집된 수수료에 대한 다양한 청구는 다음과 같이 업데이트됩니다:
+
+* 준비금 커뮤니티 세금이 부과됩니다.
+* 나머지는 투표 권한에 비례하여 모든 본딩된 검증인에게 분배됩니다.
+
+### 분배 체계
+
+매개변수에 대한 설명은 [params](#params)를 참조하세요.
+
+`fees`를 스테이크에 대한 인플레이션 보상을 포함하여 이전 블록에서 수집된 총 수수료라고 합시다. 모든 수수료는 블록 동안 특정 모듈 계정에 수집됩니다. `BeginBlock` 동안 `"distribution"` `ModuleAccount`로 전송됩니다. 다른 토큰 전송은 발생하지 않습니다. 대신 각 계정이 받을 자격이 있는 보상이 저장되고 `FundCommunityPool`, `WithdrawValidatorCommission` 및 `WithdrawDelegatorReward` 메시지를 통해 출금을 트리거할 수 있습니다.
+
+#### Community Pool에 대한 보상
+
+커뮤니티 풀은 `community_tax * fees`를 받으며, 검증인이 보상을 받은 후 항상 가장 가까운 정수 값으로 내림되는 나머지 먼지도 받습니다.
+
+#### 검증인에 대한 보상
+
+제안자는 추가 보상을 받지 않습니다. 모든 수수료는 제안자를 포함한 모든 본딩된 검증인에게 합의 권한에 비례하여 분배됩니다.
+
+```text
+powFrac = validator power / total bonded validator power
+voteMul = 1 - community_tax
+```
+
+모든 검증인은 `fees * voteMul * powFrac`을 받습니다.
+
+#### 위임자에 대한 보상
+
+각 검증인의 보상은 위임자에게 분배됩니다. 검증인도 분배 계산에서 일반 위임과 같이 취급되는 자기 위임을 가지고 있습니다.
+
+검증인은 수수료율을 설정합니다. 수수료율은 유연하지만 각 검증인은 최대 비율과 최대 일일 증가율을 설정합니다. 이러한 최대값은 초과할 수 없으며 검증인 수수료율의 급격한 증가로부터 위임자를 보호하여 검증인이 모든 보상을 가져가는 것을 방지합니다.
+
+운영자가 받을 자격이 있는 미지급 보상은 `ValidatorAccumulatedCommission`에 저장되고, 위임자가 받을 자격이 있는 보상은 `ValidatorCurrentRewards`에 저장됩니다. [F1 수수료 분배 체계](#concepts)는 위임자가 출금하거나 위임을 업데이트할 때 위임자당 보상을 계산하는 데 사용되므로 `BeginBlock`에서 처리되지 않습니다.
+
+#### 분배 예시
+
+이 분배 예시에서 기본 합의 엔진은 전체 본딩된 권한에 대한 상대적인 권한에 비례하여 블록 제안자를 선택합니다.
+
+모든 검증인은 제안된 블록에 pre-commit을 포함하는 데 동등하게 성능을 발휘합니다. 그런 다음 `(pre_commits included) / (total bonded validator power)`를 일정하게 유지하여 검증인에 대한 상각 블록 보상이 총 보상의 `( validator power / total bonded power) * (1 - community tax rate)`가 됩니다. 결과적으로 단일 위임자에 대한 보상은:
+
+```text
+(delegator proportion of the validator power / validator power) * (validator power / total bonded power)
+  * (1 - community tax rate) * (1 - validator commission rate)
+= (delegator proportion of the validator power / total bonded power) * (1 -
+community tax rate) * (1 - validator commission rate)
+```
+
+## 메시지
+
+### MsgSetWithdrawAddress
+
+기본적으로 출금 주소는 위임자 주소입니다. 출금 주소를 변경하려면 위임자가 `MsgSetWithdrawAddress` 메시지를 보내야 합니다.
+출금 주소 변경은 `WithdrawAddrEnabled` 매개변수가 `true`로 설정된 경우에만 가능합니다.
+
+출금 주소는 모듈 계정이 될 수 없습니다. 이러한 계정은 초기화 시 distribution keeper의 `blockedAddrs` 배열에 추가되어 출금 주소로 차단됩니다.
+
+응답:
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L49-L60
+```
+
+```go
+func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
+	if k.blockedAddrs[withdrawAddr.String()] {
+		fail with "`{withdrawAddr}` is not allowed to receive external funds"
+	}
+
+	if !k.GetWithdrawAddrEnabled(ctx) {
+		fail with `ErrSetWithdrawAddrDisabled`
+	}
+
+	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
+```
+
+### MsgWithdrawDelegatorReward
+
+위임자는 보상을 출금할 수 있습니다.
+내부적으로 distribution 모듈에서 이 트랜잭션은 관련 보상과 함께 이전 위임을 동시에 제거하며, 위임자가 단순히 동일한 값의 새 위임을 시작한 것과 같습니다.
+보상은 distribution `ModuleAccount`에서 출금 주소로 즉시 전송됩니다.
+나머지(잘린 소수점)는 커뮤니티 풀로 전송됩니다.
+위임의 시작 높이는 현재 검증인 기간으로 설정되고 이전 기간의 참조 카운트가 감소합니다.
+출금된 금액은 검증인의 `ValidatorOutstandingRewards` 변수에서 차감됩니다.
+
+F1 분배에서 총 보상은 검증인 기간당 계산되며, 위임자는 검증인의 스테이크에 비례하여 해당 보상의 일부를 받습니다.
+기본 F1에서 두 기간 사이에 모든 위임자가 받을 자격이 있는 총 보상은 다음과 같이 계산됩니다.
+`R(X)`를 기간 `X`까지의 총 누적 보상을 해당 시점에 스테이킹된 토큰으로 나눈 것이라고 합시다. 위임자 할당은 `R(X) * delegator_stake`입니다.
+그러면 기간 `A`와 `B` 사이의 스테이킹에 대한 모든 위임자의 보상은 `(R(B) - R(A)) * total stake`입니다.
+그러나 이러한 계산된 보상은 슬래싱을 고려하지 않습니다.
+
+슬래싱을 고려하려면 반복이 필요합니다.
+`F(X)`를 기간 `X`에서 발생한 슬래싱 이벤트에 대해 검증인이 슬래싱될 비율이라고 합시다.
+검증인이 기간 `P1, ..., PN`에서 슬래싱되었고, `A < P1`, `PN < B`인 경우, distribution 모듈은 개별 위임자의 보상 `T(A, B)`를 다음과 같이 계산합니다:
+
+```go
+stake := initial stake
+rewards := 0
+previous := A
+for P in P1, ..., PN`:
+    rewards = (R(P) - previous) * stake
+    stake = stake * F(P)
+    previous = P
+rewards = rewards + (R(B) - R(PN)) * stake
+```
+
+과거 보상은 모든 슬래싱을 재생한 다음 각 단계에서 위임자의 스테이크를 감쇠시켜 소급적으로 계산됩니다.
+최종 계산된 스테이크는 반올림 오류로 인한 오차 범위 내에서 위임의 실제 스테이킹된 코인과 동일합니다.
+
+응답:
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L66-L77
+```
+
+### WithdrawValidatorCommission
+
+검증인은 WithdrawValidatorCommission 메시지를 보내 누적된 수수료를 출금할 수 있습니다.
+수수료는 `BeginBlock` 동안 매 블록에서 계산되므로 출금에 반복이 필요하지 않습니다.
+출금된 금액은 검증인의 `ValidatorOutstandingRewards` 변수에서 차감됩니다.
+정수 금액만 전송할 수 있습니다. 누적된 보상에 소수점이 있는 경우 출금이 전송되기 전에 금액이 잘리고 나머지는 나중에 출금하기 위해 남겨집니다.
+
+### FundCommunityPool
+
+이 메시지는 발신자로부터 커뮤니티 풀로 코인을 직접 전송합니다.
+
+금액을 발신자에서 distribution 모듈 계정으로 전송할 수 없는 경우 트랜잭션이 실패합니다.
+
+```go
+func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
+  if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount); err != nil {
+    return err
+  }
+
+  feePool, err := k.FeePool.Get(ctx)
+  if err != nil {
+    return err
+  }
+
+  feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
+	
+  if err := k.FeePool.Set(ctx, feePool); err != nil {
+    return err
+  }
+
+  return nil
+}
+```
+
+### 일반적인 분배 작업
+
+이러한 작업은 많은 다른 메시지 동안 발생합니다.
+
+#### 위임 초기화
+
+위임이 변경될 때마다 보상이 출금되고 위임이 다시 초기화됩니다.
+위임을 초기화하면 검증인 기간이 증가하고 위임의 시작 기간을 추적합니다.
+
+```go
+// initialize starting info for a new delegation
+func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) {
+    // period has already been incremented - we want to store the period ended by this delegation action
+    previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
+
+	// increment reference count for the period we're going to track
+	k.incrementReferenceCount(ctx, val, previousPeriod)
+
+	validator := k.stakingKeeper.Validator(ctx, val)
+	delegation := k.stakingKeeper.Delegation(ctx, del, val)
+
+	// calculate delegation stake in tokens
+	// we don't store directly, so multiply delegation shares * (tokens per share)
+	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
+	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
+}
+```
+
+### MsgUpdateParams
+
+Distribution 모듈 매개변수는 `MsgUpdateParams`를 통해 업데이트할 수 있으며, 거버넌스 제안을 사용하여 수행할 수 있고 서명자는 항상 gov 모듈 계정 주소입니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L133-L147
+```
+
+메시지 처리는 다음 경우에 실패할 수 있습니다:
+
+* 서명자가 gov 모듈 계정 주소가 아닌 경우.
+
+## Hooks
+
+이 모듈에서 호출할 수 있고 호출되는 사용 가능한 hook입니다.
+
+### 위임 분배 생성 또는 수정
+
+* triggered-by: `staking.MsgDelegate`, `staking.MsgBeginRedelegate`, `staking.MsgUndelegate`
+
+#### Before
+
+* 위임 보상이 위임자의 출금 주소로 출금됩니다.
+  보상에는 현재 기간이 포함되고 시작 기간은 제외됩니다.
+* 검증인 기간이 증가합니다.
+  검증인의 권한과 지분 분배가 변경되었을 수 있기 때문에 검증인 기간이 증가합니다.
+* 위임자의 시작 기간에 대한 참조 카운트가 감소합니다.
+
+#### After
+
+위임의 시작 높이는 이전 기간으로 설정됩니다.
+`Before`-hook 때문에 이 기간은 위임자가 보상을 받은 마지막 기간입니다.
+
+### 검증인 생성됨
+
+* triggered-by: `staking.MsgCreateValidator`
+
+검증인이 생성되면 다음 검증인 변수가 초기화됩니다:
+
+* Historical rewards
+* Current accumulated rewards
+* Accumulated commission
+* Total outstanding rewards
+* Period
+
+기본적으로 모든 값은 `0`으로 설정되지만, period는 `1`로 설정됩니다.
+
+### 검증인 제거됨
+
+* triggered-by: `staking.RemoveValidator`
+
+미지급 수수료는 검증인의 자기 위임 출금 주소로 전송됩니다.
+남은 위임자 보상은 커뮤니티 수수료 풀로 전송됩니다.
+
+참고: 검증인은 남은 위임이 없을 때만 제거됩니다.
+그 시점에 모든 미지급 위임자 보상이 출금되었을 것입니다.
+남은 보상은 먼지 금액입니다.
+
+### 검증인이 슬래싱됨
+
+* triggered-by: `staking.Slash`
+* 현재 검증인 기간 참조 카운트가 증가합니다.
+  슬래싱 이벤트가 이에 대한 참조를 생성했기 때문에 참조 카운트가 증가합니다.
+* 검증인 기간이 증가합니다.
+* 슬래싱 이벤트가 나중에 사용하기 위해 저장됩니다.
+  슬래싱 이벤트는 위임자 보상을 계산할 때 참조됩니다.
+
+## 이벤트
+
+distribution 모듈은 다음 이벤트를 발생시킵니다:
+
+### BeginBlocker
+
+| Type            | Attribute Key | Attribute Value    |
+|-----------------|---------------|--------------------|
+| proposer_reward | validator     | {validatorAddress} |
+| proposer_reward | reward        | {proposerReward}   |
+| commission      | amount        | {commissionAmount} |
+| commission      | validator     | {validatorAddress} |
+| rewards         | amount        | {rewardAmount}     |
+| rewards         | validator     | {validatorAddress} |
+
+### Handlers
+
+#### MsgSetWithdrawAddress
+
+| Type                 | Attribute Key    | Attribute Value      |
+|----------------------|------------------|----------------------|
+| set_withdraw_address | withdraw_address | {withdrawAddress}    |
+| message              | module           | distribution         |
+| message              | action           | set_withdraw_address |
+| message              | sender           | {senderAddress}      |
+
+#### MsgWithdrawDelegatorReward
+
+| Type    | Attribute Key | Attribute Value           |
+|---------|---------------|---------------------------|
+| withdraw_rewards | amount        | {rewardAmount}            |
+| withdraw_rewards | validator     | {validatorAddress}        |
+| message          | module        | distribution              |
+| message          | action        | withdraw_delegator_reward |
+| message          | sender        | {senderAddress}           |
+
+#### MsgWithdrawValidatorCommission
+
+| Type       | Attribute Key | Attribute Value               |
+|------------|---------------|-------------------------------|
+| withdraw_commission | amount        | {commissionAmount}            |
+| message    | module        | distribution                  |
+| message    | action        | withdraw_validator_commission |
+| message    | sender        | {senderAddress}               |
+
+## 매개변수
+
+distribution 모듈에는 다음 매개변수가 포함됩니다:
+
+| Key                 | Type         | Example                    |
+| ------------------- | ------------ | -------------------------- |
+| communitytax        | string (dec) | "0.020000000000000000" [0] |
+| withdrawaddrenabled | bool         | true                       |
+
+* [0] `communitytax`는 양수여야 하며 1.00을 초과할 수 없습니다.
+* `baseproposerreward` 및 `bonusproposerreward`는 v0.47에서 더 이상 사용되지 않으며 사용되지 않는 매개변수입니다.
+
+:::note
+준비금 풀은 `CommunityTax`를 통해 거버넌스에서 사용하기 위해 수집된 자금 풀입니다.
+현재 Cosmos SDK에서 CommunityTax로 수집된 토큰은 계정에 기록되지만 사용할 수 없습니다.
+:::
+
+## 클라이언트
+
+## CLI
+
+사용자는 CLI를 사용하여 `distribution` 모듈을 쿼리하고 상호작용할 수 있습니다.
+
+#### 쿼리
+
+`query` 명령을 사용하여 `distribution` 상태를 쿼리할 수 있습니다.
+
+```shell
+simd query distribution --help
+```
+
+##### commission
+
+`commission` 명령을 사용하여 주소로 검증인 수수료 보상을 쿼리할 수 있습니다.
+
+```shell
+simd query distribution commission [address] [flags]
+```
+
+예시:
+
+```shell
+simd query distribution commission cosmosvaloper1...
+```
+
+예시 출력:
+
+```yml
+commission:
+- amount: "1000000.000000000000000000"
+  denom: stake
+```
+
+##### community-pool
+
+`community-pool` 명령을 사용하여 커뮤니티 풀 내의 모든 코인 잔액을 쿼리할 수 있습니다.
+
+```shell
+simd query distribution community-pool [flags]
+```
+
+예시:
+
+```shell
+simd query distribution community-pool
+```
+
+예시 출력:
+
+```yml
+pool:
+- amount: "1000000.000000000000000000"
+  denom: stake
+```
+
+##### params
+
+`params` 명령을 사용하여 `distribution` 모듈의 매개변수를 쿼리할 수 있습니다.
+
+```shell
+simd query distribution params [flags]
+```
+
+예시:
+
+```shell
+simd query distribution params
+```
+
+예시 출력:
+
+```yml
+base_proposer_reward: "0.000000000000000000"
+bonus_proposer_reward: "0.000000000000000000"
+community_tax: "0.020000000000000000"
+withdraw_addr_enabled: true
+```
+
+##### rewards
+
+`rewards` 명령을 사용하여 위임자 보상을 쿼리할 수 있습니다. 사용자는 선택적으로 검증인 주소를 포함하여 특정 검증인으로부터 얻은 보상을 쿼리할 수 있습니다.
+
+```shell
+simd query distribution rewards [delegator-addr] [validator-addr] [flags]
+```
+
+예시:
+
+```shell
+simd query distribution rewards cosmos1...
+```
+
+예시 출력:
+
+```yml
+rewards:
+- reward:
+  - amount: "1000000.000000000000000000"
+    denom: stake
+  validator_address: cosmosvaloper1..
+total:
+- amount: "1000000.000000000000000000"
+  denom: stake
+```
+
+##### slashes
+
+`slashes` 명령을 사용하여 주어진 블록 범위에 대한 모든 슬래싱을 쿼리할 수 있습니다.
+
+```shell
+simd query distribution slashes [validator] [start-height] [end-height] [flags]
+```
+
+예시:
+
+```shell
+simd query distribution slashes cosmosvaloper1... 1 1000
+```
+
+예시 출력:
+
+```yml
+pagination:
+  next_key: null
+  total: "0"
+slashes:
+- validator_period: 20,
+  fraction: "0.009999999999999999"
+```
+
+##### validator-outstanding-rewards
+
+`validator-outstanding-rewards` 명령을 사용하여 검증인과 모든 위임에 대한 모든 미지급(출금되지 않은) 보상을 쿼리할 수 있습니다.
+
+```shell
+simd query distribution validator-outstanding-rewards [validator] [flags]
+```
+
+예시:
+
+```shell
+simd query distribution validator-outstanding-rewards cosmosvaloper1...
+```
+
+예시 출력:
+
+```yml
+rewards:
+- amount: "1000000.000000000000000000"
+  denom: stake
+```
+
+##### validator-distribution-info
+
+`validator-distribution-info` 명령을 사용하여 검증인의 수수료와 자기 위임 보상을 쿼리할 수 있습니다.
+
+```shell
+simd query distribution validator-distribution-info cosmosvaloper1...
+```
+
+예시 출력:
+
+```yml
+commission:
+- amount: "100000.000000000000000000"
+  denom: stake
+operator_address: cosmosvaloper1...
+self_bond_rewards:
+- amount: "100000.000000000000000000"
+  denom: stake
+```
+
+#### 트랜잭션
+
+`tx` 명령을 사용하여 `distribution` 모듈과 상호작용할 수 있습니다.
+
+```shell
+simd tx distribution --help
+```
+
+##### fund-community-pool
+
+`fund-community-pool` 명령을 사용하여 커뮤니티 풀에 자금을 전송할 수 있습니다.
+
+```shell
+simd tx distribution fund-community-pool [amount] [flags]
+```
+
+예시:
+
+```shell
+simd tx distribution fund-community-pool 100stake --from cosmos1...
+```
+
+##### set-withdraw-addr
+
+`set-withdraw-addr` 명령을 사용하여 위임자 주소와 관련된 보상에 대한 출금 주소를 설정할 수 있습니다.
+
+```shell
+simd tx distribution set-withdraw-addr [withdraw-addr] [flags]
+```
+
+예시:
+
+```shell
+simd tx distribution set-withdraw-addr cosmos1... --from cosmos1...
+```
+
+##### withdraw-all-rewards
+
+`withdraw-all-rewards` 명령을 사용하여 위임자의 모든 보상을 출금할 수 있습니다.
+
+```shell
+simd tx distribution withdraw-all-rewards [flags]
+```
+
+예시:
+
+```shell
+simd tx distribution withdraw-all-rewards --from cosmos1...
+```
+
+##### withdraw-rewards
+
+`withdraw-rewards` 명령을 사용하여 주어진 위임 주소에서 모든 보상을 출금할 수 있으며, 주어진 위임 주소가 검증인 운영자이고 사용자가 `--commission` 플래그를 증명하면 선택적으로 검증인 수수료를 출금할 수 있습니다.
+
+```shell
+simd tx distribution withdraw-rewards [validator-addr] [flags]
+```
+
+예시:
+
+```shell
+simd tx distribution withdraw-rewards cosmosvaloper1... --from cosmos1... --commission
+```
+
+### gRPC
+
+사용자는 gRPC 엔드포인트를 사용하여 `distribution` 모듈을 쿼리할 수 있습니다.
+
+#### Params
+
+`Params` 엔드포인트를 사용하여 `distribution` 모듈의 매개변수를 쿼리할 수 있습니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/Params
+```
+
+예시 출력:
+
+```json
+{
+  "params": {
+    "communityTax": "20000000000000000",
+    "baseProposerReward": "00000000000000000",
+    "bonusProposerReward": "00000000000000000",
+    "withdrawAddrEnabled": true
+  }
+}
+```
+
+#### ValidatorDistributionInfo
+
+`ValidatorDistributionInfo`는 검증인의 수수료와 자기 위임 보상을 쿼리합니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"validator_address":"cosmosvalop1..."}' \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/ValidatorDistributionInfo
+```
+
+예시 출력:
+
+```json
+{
+  "commission": {
+    "commission": [
+      {
+        "denom": "stake",
+        "amount": "1000000000000000"
+      }
+    ]
+  },
+  "self_bond_rewards": [
+    {
+      "denom": "stake",
+      "amount": "1000000000000000"
+    }
+  ],
+  "validator_address": "cosmosvalop1..."
+}
+```
+
+#### ValidatorOutstandingRewards
+
+`ValidatorOutstandingRewards` 엔드포인트를 사용하여 검증인 주소의 보상을 쿼리할 수 있습니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"validator_address":"cosmosvalop1.."}' \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards
+```
+
+예시 출력:
+
+```json
+{
+  "rewards": {
+    "rewards": [
+      {
+        "denom": "stake",
+        "amount": "1000000000000000"
+      }
+    ]
+  }
+}
+```
+
+#### ValidatorCommission
+
+`ValidatorCommission` 엔드포인트를 사용하여 검증인의 누적 수수료를 쿼리할 수 있습니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"validator_address":"cosmosvalop1.."}' \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/ValidatorCommission
+```
+
+예시 출력:
+
+```json
+{
+  "commission": {
+    "commission": [
+      {
+        "denom": "stake",
+        "amount": "1000000000000000"
+      }
+    ]
+  }
+}
+```
+
+#### ValidatorSlashes
+
+`ValidatorSlashes` 엔드포인트를 사용하여 검증인의 슬래싱 이벤트를 쿼리할 수 있습니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"validator_address":"cosmosvalop1.."}' \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/ValidatorSlashes
+```
+
+예시 출력:
+
+```json
+{
+  "slashes": [
+    {
+      "validator_period": "20",
+      "fraction": "0.009999999999999999"
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+#### DelegationRewards
+
+`DelegationRewards` 엔드포인트를 사용하여 위임으로 누적된 총 보상을 쿼리할 수 있습니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"delegator_address":"cosmos1...","validator_address":"cosmosvalop1..."}' \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/DelegationRewards
+```
+
+예시 출력:
+
+```json
+{
+  "rewards": [
+    {
+      "denom": "stake",
+      "amount": "1000000000000000"
+    }
+  ]
+}
+```
+
+#### DelegationTotalRewards
+
+`DelegationTotalRewards` 엔드포인트를 사용하여 각 검증인으로 누적된 총 보상을 쿼리할 수 있습니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"delegator_address":"cosmos1..."}' \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/DelegationTotalRewards
+```
+
+예시 출력:
+
+```json
+{
+  "rewards": [
+    {
+      "validatorAddress": "cosmosvaloper1...",
+      "reward": [
+        {
+          "denom": "stake",
+          "amount": "1000000000000000"
+        }
+      ]
+    }
+  ],
+  "total": [
+    {
+      "denom": "stake",
+      "amount": "1000000000000000"
+    }
+  ]
+}
+```
+
+#### DelegatorValidators
+
+`DelegatorValidators` 엔드포인트를 사용하여 주어진 위임자의 모든 검증인을 쿼리할 수 있습니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"delegator_address":"cosmos1..."}' \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/DelegatorValidators
+```
+
+예시 출력:
+
+```json
+{
+  "validators": ["cosmosvaloper1..."]
+}
+```
+
+#### DelegatorWithdrawAddress
+
+`DelegatorWithdrawAddress` 엔드포인트를 사용하여 위임자의 출금 주소를 쿼리할 수 있습니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"delegator_address":"cosmos1..."}' \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress
+```
+
+예시 출력:
+
+```json
+{
+  "withdrawAddress": "cosmos1..."
+}
+```
+
+#### CommunityPool
+
+`CommunityPool` 엔드포인트를 사용하여 커뮤니티 풀 코인을 쿼리할 수 있습니다.
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    localhost:9090 \
+    cosmos.distribution.v1beta1.Query/CommunityPool
+```
+
+예시 출력:
+
+```json
+{
+  "pool": [
+    {
+      "denom": "stake",
+      "amount": "1000000000000000000"
+    }
+  ]
+}
+```

@@ -1,0 +1,396 @@
+---
+title: Feegrant
+---
+
+# `x/feegrant`
+
+## 개요
+
+이 문서는 fee grant 모듈을 설명합니다. 전체 ADR은 [Fee Grant ADR-029](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-029-fee-grant-module.md)를 참조하세요.
+
+이 모듈은 계정이 수수료 허용량을 부여하고 해당 계정의 수수료를 사용할 수 있도록 합니다. 피부여자는 충분한 수수료를 유지할 필요 없이 모든 트랜잭션을 실행할 수 있습니다.
+
+## 목차
+
+* [개념](#concepts)
+* [상태](#state)
+    * [FeeAllowance](#feeallowance)
+    * [FeeAllowanceQueue](#feeallowancequeue)
+* [메시지](#messages)
+    * [Msg/GrantAllowance](#msggrantallowance)
+    * [Msg/RevokeAllowance](#msgrevokeallowance)
+* [이벤트](#events)
+* [Msg Server](#msg-server)
+    * [MsgGrantAllowance](#msggrantallowance-1)
+    * [MsgRevokeAllowance](#msgrevokeallowance-1)
+    * [Exec fee allowance](#exec-fee-allowance)
+* [클라이언트](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+
+## 개념
+
+### Grant
+
+`Grant`는 전체 컨텍스트와 함께 grant를 기록하기 위해 KVStore에 저장됩니다. 모든 grant에는 `granter`, `grantee` 및 어떤 종류의 `allowance`가 부여되었는지가 포함됩니다. `granter`는 `grantee`(수혜자 계정 주소)에게 `grantee`의 트랜잭션 수수료 일부 또는 전부를 지불할 수 있는 권한을 부여하는 계정 주소입니다. `allowance`는 `grantee`에게 부여된 수수료 허용량의 종류(`BasicAllowance` 또는 `PeriodicAllowance`, 아래 참조)를 정의합니다. `allowance`는 `FeeAllowanceI`를 구현하는 인터페이스를 받아들이며, `Any` 타입으로 인코딩됩니다. `grantee`와 `granter`에 대해 하나의 기존 수수료 grant만 허용되며, 자기 자신에 대한 grant는 허용되지 않습니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L83-L93
+```
+
+`FeeAllowanceI`는 다음과 같습니다:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/feegrant/fees.go#L9-L32
+```
+
+### 수수료 허용량 타입
+
+현재 두 가지 타입의 수수료 허용량이 있습니다:
+
+* `BasicAllowance`
+* `PeriodicAllowance`
+* `AllowedMsgAllowance`
+
+### BasicAllowance
+
+`BasicAllowance`는 `grantee`가 `granter`의 계정에서 수수료를 사용할 수 있는 권한입니다. `spend_limit` 또는 `expiration` 중 하나가 한도에 도달하면 grant가 상태에서 제거됩니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L15-L28
+```
+
+* `spend_limit`은 `granter` 계정에서 사용할 수 있는 코인의 한도입니다. 비어 있으면 지출 한도가 없다고 가정하며, `grantee`는 만료 전까지 `granter` 계정 주소에서 사용 가능한 코인을 무제한으로 사용할 수 있습니다.
+
+* `expiration`은 이 허용량이 만료되는 선택적 시간을 지정합니다. 값이 비어 있으면 grant에 만료가 없습니다.
+
+* `spend_limit`과 `expiration`에 빈 값으로 grant가 생성되어도 여전히 유효한 grant입니다. `grantee`가 `granter`로부터 무제한의 코인을 사용하는 것을 제한하지 않으며 만료도 없습니다. `grantee`를 제한하는 유일한 방법은 grant를 취소하는 것입니다.
+
+### PeriodicAllowance
+
+`PeriodicAllowance`는 지정된 기간 동안 반복되는 수수료 허용량입니다. grant가 만료되는 시기와 기간이 재설정되는 시기를 지정할 수 있습니다. 또한 지정된 기간 동안 사용할 수 있는 최대 코인 수를 정의할 수 있습니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L34-L68
+```
+
+* `basic`은 주기적 수수료 허용량에 대한 선택적 `BasicAllowance` 인스턴스입니다. 비어 있으면 grant에 `expiration`과 `spend_limit`이 없습니다.
+
+* `period`는 특정 기간이며, 각 기간이 지나면 `period_can_spend`가 재설정됩니다.
+
+* `period_spend_limit`은 기간 동안 사용할 수 있는 최대 코인 수를 지정합니다.
+
+* `period_can_spend`는 period_reset 시간 전까지 사용할 수 있는 남은 코인 수입니다.
+
+* `period_reset`은 다음 기간 재설정이 언제 발생해야 하는지 추적합니다.
+
+### AllowedMsgAllowance
+
+`AllowedMsgAllowance`는 수수료 허용량이며, `BasicFeeAllowance`, `PeriodicAllowance` 중 하나일 수 있지만 granter가 지정한 허용된 메시지로만 제한됩니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L70-L81
+```
+
+* `allowance`는 `BasicAllowance` 또는 `PeriodicAllowance`입니다.
+
+* `allowed_messages`는 주어진 허용량을 실행할 수 있는 메시지 배열입니다.
+
+### FeeGranter 플래그
+
+`feegrant` 모듈은 fee granter로 트랜잭션을 실행하기 위해 CLI용 `FeeGranter` 플래그를 도입합니다. 이 플래그가 설정되면 `clientCtx`는 CLI를 통해 생성된 트랜잭션에 granter 계정 주소를 추가합니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/cmd.go#L249-L260
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx/tx.go#L109-L109
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/tx/builder.go#L275-L284
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L203-L224
+```
+
+예시 cmd:
+
+```go
+./simd tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --from validator-key --fee-granter=cosmos1xh44hxt7spr67hqaa7nyx5gnutrz5fraw6grxn --chain-id=testnet --fees="10stake"
+```
+
+### 부여된 수수료 공제
+
+수수료는 `x/auth` ante handler에서 grant로부터 공제됩니다. ante handler 작동 방식에 대해 자세히 알아보려면 [Auth 모듈 AnteHandlers 가이드](../auth/#antehandlers)를 참조하세요.
+
+### Gas
+
+DoS 공격을 방지하기 위해 필터링된 `x/feegrant`를 사용하면 gas가 발생합니다. SDK는 `grantee`의 트랜잭션이 모두 `granter`가 설정한 필터를 준수하는지 확인해야 합니다. SDK는 필터에서 허용된 메시지를 반복하고 필터링된 메시지당 10 gas를 청구하여 이를 수행합니다. 그런 다음 SDK는 `grantee`가 보내는 메시지를 반복하여 메시지가 필터를 준수하는지 확인하고, 메시지당 10 gas를 청구합니다. SDK는 필터를 준수하지 않는 메시지를 발견하면 반복을 중지하고 트랜잭션을 실패시킵니다.
+
+**경고**: gas는 부여된 허용량에서 청구됩니다. 허용량을 사용하여 트랜잭션을 보내기 전에 메시지가 필터(있는 경우)를 준수하는지 확인하세요.
+
+### Pruning
+
+상태에서 grant의 만료 접두사와 함께 큐가 유지되며, 매 블록마다 EndBlock에서 현재 블록 시간과 비교하여 확인하고 정리합니다.
+
+## 상태
+
+### FeeAllowance
+
+수수료 허용량은 `Grantee`(수수료 허용량 피부여자의 계정 주소)와 `Granter`(수수료 허용량 부여자의 계정 주소)를 결합하여 식별됩니다.
+
+수수료 허용량 grant는 다음과 같이 상태에 저장됩니다:
+
+* Grant: `0x00 | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> ProtocolBuffer(Grant)`
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/feegrant/feegrant.pb.go#L222-L230
+```
+
+### FeeAllowanceQueue
+
+수수료 허용량 큐 항목은 `FeeAllowancePrefixQueue`(즉, 0x01), `expiration`, `grantee`(수수료 허용량 피부여자의 계정 주소), `granter`(수수료 허용량 부여자의 계정 주소)를 결합하여 식별됩니다. Endblocker는 만료된 grant에 대해 `FeeAllowanceQueue` 상태를 확인하고 발견된 경우 `FeeAllowance`에서 정리합니다.
+
+수수료 허용량 큐 키는 다음과 같이 상태에 저장됩니다:
+
+* Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> EmptyBytes`
+
+## 메시지
+
+### Msg/GrantAllowance
+
+수수료 허용량 grant는 `MsgGrantAllowance` 메시지로 생성됩니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/tx.proto#L25-L39
+```
+
+### Msg/RevokeAllowance
+
+허용된 grant 수수료 허용량은 `MsgRevokeAllowance` 메시지로 제거할 수 있습니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/tx.proto#L41-L54
+```
+
+## 이벤트
+
+feegrant 모듈은 다음 이벤트를 발생시킵니다:
+
+## Msg Server
+
+### MsgGrantAllowance
+
+| Type    | Attribute Key | Attribute Value  |
+| ------- | ------------- | ---------------- |
+| message | action        | set_feegrant     |
+| message | granter       | {granterAddress} |
+| message | grantee       | {granteeAddress} |
+
+### MsgRevokeAllowance
+
+| Type    | Attribute Key | Attribute Value  |
+| ------- | ------------- | ---------------- |
+| message | action        | revoke_feegrant  |
+| message | granter       | {granterAddress} |
+| message | grantee       | {granteeAddress} |
+
+### Exec fee allowance
+
+| Type    | Attribute Key | Attribute Value  |
+| ------- | ------------- | ---------------- |
+| message | action        | use_feegrant     |
+| message | granter       | {granterAddress} |
+| message | grantee       | {granteeAddress} |
+
+### Prune fee allowances
+
+| Type    | Attribute Key | Attribute Value  |
+| ------- | ------------- | ---------------- |
+| message | action        |  prune_feegrant  |
+| message | pruner        | {prunerAddress}  |
+
+
+## 클라이언트
+
+### CLI
+
+사용자는 CLI를 사용하여 `feegrant` 모듈을 쿼리하고 상호작용할 수 있습니다.
+
+#### 쿼리
+
+`query` 명령을 사용하여 `feegrant` 상태를 쿼리할 수 있습니다.
+
+```shell
+simd query feegrant --help
+```
+
+##### grant
+
+`grant` 명령을 사용하여 주어진 granter-grantee 쌍에 대한 grant를 쿼리할 수 있습니다.
+
+```shell
+simd query feegrant grant [granter] [grantee] [flags]
+```
+
+예시:
+
+```shell
+simd query feegrant grant cosmos1.. cosmos1..
+```
+
+예시 출력:
+
+```yml
+allowance:
+  '@type': /cosmos.feegrant.v1beta1.BasicAllowance
+  expiration: null
+  spend_limit:
+  - amount: "100"
+    denom: stake
+grantee: cosmos1..
+granter: cosmos1..
+```
+
+##### grants
+
+`grants` 명령을 사용하여 주어진 grantee에 대한 모든 grant를 쿼리할 수 있습니다.
+
+```shell
+simd query feegrant grants [grantee] [flags]
+```
+
+예시:
+
+```shell
+simd query feegrant grants cosmos1..
+```
+
+예시 출력:
+
+```yml
+allowances:
+- allowance:
+    '@type': /cosmos.feegrant.v1beta1.BasicAllowance
+    expiration: null
+    spend_limit:
+    - amount: "100"
+      denom: stake
+  grantee: cosmos1..
+  granter: cosmos1..
+pagination:
+  next_key: null
+  total: "0"
+```
+
+#### 트랜잭션
+
+`tx` 명령을 사용하여 `feegrant` 모듈과 상호작용할 수 있습니다.
+
+```shell
+simd tx feegrant --help
+```
+
+##### grant
+
+`grant` 명령을 사용하여 다른 계정에 수수료 허용량을 부여할 수 있습니다. 수수료 허용량에는 만료 날짜, 총 지출 한도 및/또는 주기적 지출 한도가 있을 수 있습니다.
+
+```shell
+simd tx feegrant grant [granter] [grantee] [flags]
+```
+
+예시 (일회성 지출 한도):
+
+```shell
+simd tx feegrant grant cosmos1.. cosmos1.. --spend-limit 100stake
+```
+
+예시 (주기적 지출 한도):
+
+```shell
+simd tx feegrant grant cosmos1.. cosmos1.. --period 3600 --period-limit 10stake
+```
+
+##### revoke
+
+`revoke` 명령을 사용하여 부여된 수수료 허용량을 취소할 수 있습니다.
+
+```shell
+simd tx feegrant revoke [granter] [grantee] [flags]
+```
+
+예시:
+
+```shell
+simd tx feegrant revoke cosmos1.. cosmos1..
+```
+
+### gRPC
+
+사용자는 gRPC 엔드포인트를 사용하여 `feegrant` 모듈을 쿼리할 수 있습니다.
+
+#### Allowance
+
+`Allowance` 엔드포인트를 사용하여 부여된 수수료 허용량을 쿼리할 수 있습니다.
+
+```shell
+cosmos.feegrant.v1beta1.Query/Allowance
+```
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"grantee":"cosmos1..","granter":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.feegrant.v1beta1.Query/Allowance
+```
+
+예시 출력:
+
+```json
+{
+  "allowance": {
+    "granter": "cosmos1..",
+    "grantee": "cosmos1..",
+    "allowance": {"@type":"/cosmos.feegrant.v1beta1.BasicAllowance","spendLimit":[{"denom":"stake","amount":"100"}]}
+  }
+}
+```
+
+#### Allowances
+
+`Allowances` 엔드포인트를 사용하여 주어진 grantee에 대해 부여된 모든 수수료 허용량을 쿼리할 수 있습니다.
+
+```shell
+cosmos.feegrant.v1beta1.Query/Allowances
+```
+
+예시:
+
+```shell
+grpcurl -plaintext \
+    -d '{"address":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.feegrant.v1beta1.Query/Allowances
+```
+
+예시 출력:
+
+```json
+{
+  "allowances": [
+    {
+      "granter": "cosmos1..",
+      "grantee": "cosmos1..",
+      "allowance": {"@type":"/cosmos.feegrant.v1beta1.BasicAllowance","spendLimit":[{"denom":"stake","amount":"100"}]}
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```

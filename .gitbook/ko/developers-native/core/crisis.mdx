@@ -1,0 +1,98 @@
+---
+sidebar_position: 1
+---
+
+# `x/crisis`
+
+## 개요
+
+crisis 모듈은 블록체인 invariant가 깨진 상황에서 블록체인을 중지합니다. Invariant는 애플리케이션 초기화 과정에서 등록할 수 있습니다.
+
+## 목차
+
+* [State](#state)
+* [Messages](#messages)
+* [Events](#events)
+* [Parameters](#parameters)
+* [Client](#client)
+    * [CLI](#cli)
+
+## State
+
+### ConstantFee
+
+Invariant를 검증하는 데 예상되는 높은 gas 비용(최대 허용 블록 gas 한도를 초과할 가능성)으로 인해 표준 gas 소비 방법 대신 고정 수수료가 사용됩니다. 고정 수수료는 표준 gas 소비 방법으로 invariant를 실행하는 데 예상되는 gas 비용보다 크게 설정됩니다.
+
+ConstantFee 파라미터는 `0x01` 접두사가 있는 모듈 params 상태에 저장되며, governance 또는 authority가 있는 주소로 업데이트할 수 있습니다.
+
+* Params: `mint/params -> legacy_amino(sdk.Coin)`
+
+## Messages
+
+이 섹션에서는 crisis 메시지 처리와 그에 따른 상태 업데이트를 설명합니다.
+
+### MsgVerifyInvariant
+
+블록체인 invariant는 `MsgVerifyInvariant` 메시지를 사용하여 확인할 수 있습니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/crisis/v1beta1/tx.proto#L26-L42
+```
+
+이 메시지는 다음과 같은 경우에 실패할 것으로 예상됩니다:
+
+* 발신자가 고정 수수료를 지불할 충분한 코인이 없는 경우
+* invariant 라우트가 등록되지 않은 경우
+
+이 메시지는 제공된 invariant를 확인하고, invariant가 깨지면 패닉을 발생시켜 블록체인을 중지합니다. Invariant가 깨지면 트랜잭션이 블록에 커밋되지 않으므로 고정 수수료가 차감되지 않습니다(환불과 동일). 그러나 invariant가 깨지지 않으면 고정 수수료는 환불되지 않습니다.
+
+## Events
+
+crisis 모듈은 다음 이벤트를 발생시킵니다:
+
+### Handlers
+
+#### MsgVerifyInvariance
+
+| Type      | Attribute Key | Attribute Value  |
+|-----------|---------------|------------------|
+| invariant | route         | `{invariantRoute}` |
+| message   | module        | `crisis`           |
+| message   | action        | `verify_invariant` |
+| message   | sender        | `{senderAddress}` |
+
+## Parameters
+
+crisis 모듈은 다음 매개변수를 포함합니다:
+
+| Key         | Type          | Example                           |
+|-------------|---------------|-----------------------------------|
+| ConstantFee | object (coin) | `{"denom":"uatom","amount":"1000"}` |
+
+## Client
+
+### CLI
+
+사용자는 CLI를 사용하여 `crisis` 모듈을 쿼리하고 상호작용할 수 있습니다.
+
+#### Transactions
+
+`tx` 명령을 사용하여 `crisis` 모듈과 상호작용할 수 있습니다.
+
+```bash
+simd tx crisis --help
+```
+
+##### invariant-broken
+
+`invariant-broken` 명령은 invariant가 깨졌을 때 체인을 중지시키기 위한 증거를 제출합니다.
+
+```bash
+simd tx crisis invariant-broken [module-name] [invariant-route] [flags]
+```
+
+예시:
+
+```bash
+simd tx crisis invariant-broken bank total-supply --from=[keyname or address]
+```

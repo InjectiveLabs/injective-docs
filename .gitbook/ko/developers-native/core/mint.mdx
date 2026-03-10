@@ -1,0 +1,228 @@
+---
+sidebar_position: 1
+---
+
+# `x/mint`
+
+## 목차
+
+* [State](#state)
+    * [Minter](#minter)
+    * [Params](#params)
+* [Begin-Block](#begin-block)
+    * [NextInflationRate](#nextinflationrate)
+    * [NextAnnualProvisions](#nextannualprovisions)
+    * [BlockProvision](#blockprovision)
+* [Parameters](#parameters)
+* [Events](#events)
+    * [BeginBlocker](#beginblocker)
+* [Client](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
+
+## Concepts
+
+### 발행 메커니즘
+
+발행 메커니즘은 다음과 같이 설계되었습니다:
+
+* 특정 본딩 스테이크 비율을 목표로 하는 시장 수요에 의해 결정되는 유연한 인플레이션율 허용
+* 시장 유동성과 스테이킹 공급 간의 균형 유지
+
+적절한 인플레이션 보상에 대한 시장 비율을 최적으로 결정하기 위해 이동 변화율이 사용됩니다. 이동 변화율 메커니즘은 본딩된 비율이 목표 본딩 비율보다 높거나 낮으면 인플레이션율이 각각 본딩을 더 장려하거나 억제하도록 조정됩니다. 목표 본딩 비율을 100% 미만으로 설정하면 네트워크가 일부 비스테이킹 토큰을 유지하도록 장려하여 유동성을 제공하는 데 도움이 됩니다.
+
+다음과 같이 분류할 수 있습니다:
+
+* 실제 본딩된 토큰 비율이 목표 본딩 비율 아래이면 최대값에 도달할 때까지 인플레이션율이 증가합니다
+* 목표 본딩 비율(Cosmos-Hub에서 67%)이 유지되면 인플레이션율이 일정하게 유지됩니다
+* 실제 본딩된 토큰 비율이 목표 본딩 비율 위이면 최소값에 도달할 때까지 인플레이션율이 감소합니다
+
+## State
+
+### Minter
+
+Minter는 현재 인플레이션 정보를 보유하는 공간입니다.
+
+* Minter: `0x00 -> ProtocolBuffer(minter)`
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L10-L24
+```
+
+### Params
+
+mint 모듈은 params를 `0x01` 접두사와 함께 상태에 저장하며, governance 또는 authority가 있는 주소로 업데이트할 수 있습니다.
+
+* Params: `mint/params -> legacy_amino(params)`
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L26-L59
+```
+
+## Begin-Block
+
+발행 매개변수는 각 블록 시작 시 재계산되고 인플레이션이 지급됩니다.
+
+### 인플레이션율 계산
+
+인플레이션율은 `NewAppModule` 함수에 전달되는 "인플레이션 계산 함수"를 사용하여 계산됩니다. 함수가 전달되지 않으면 SDK의 기본 인플레이션 함수(`NextInflationRate`)가 사용됩니다. 커스텀 인플레이션 계산 로직이 필요한 경우 `InflationCalculationFn`의 시그니처와 일치하는 함수를 정의하고 전달하여 달성할 수 있습니다.
+
+```go
+type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec
+```
+
+#### NextInflationRate
+
+목표 연간 인플레이션율은 각 블록마다 재계산됩니다. 인플레이션은 또한 원하는 비율(67%)과의 거리에 따라 변화율(양수 또는 음수)이 적용됩니다. 가능한 최대 변화율은 연간 13%로 정의되지만, 연간 인플레이션은 7%에서 20% 사이로 제한됩니다.
+
+```go
+NextInflationRate(params Params, bondedRatio math.LegacyDec) (inflation math.LegacyDec) {
+	inflationRateChangePerYear = (1 - bondedRatio/params.GoalBonded) * params.InflationRateChange
+	inflationRateChange = inflationRateChangePerYear/blocksPerYr
+
+	// 이 다음 블록에 대한 새로운 연간 인플레이션 증가
+	inflation += inflationRateChange
+	if inflation > params.InflationMax {
+		inflation = params.InflationMax
+	}
+	if inflation < params.InflationMin {
+		inflation = params.InflationMin
+	}
+
+	return inflation
+}
+```
+
+### NextAnnualProvisions
+
+현재 총 공급량과 인플레이션율을 기반으로 연간 공급량을 계산합니다. 이 매개변수는 블록당 한 번 계산됩니다.
+
+```go
+NextAnnualProvisions(params Params, totalSupply math.LegacyDec) (provisions math.LegacyDec) {
+	return Inflation * totalSupply
+```
+
+### BlockProvision
+
+현재 연간 공급량을 기반으로 각 블록에 대해 생성되는 공급량을 계산합니다. 공급량은 `mint` 모듈의 `ModuleMinterAccount`에 의해 발행된 다음 `auth`의 `FeeCollector` `ModuleAccount`로 전송됩니다.
+
+```go
+BlockProvision(params Params) sdk.Coin {
+	provisionAmt = AnnualProvisions/ params.BlocksPerYear
+	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
+```
+
+## Parameters
+
+mint 모듈은 다음 매개변수를 포함합니다:
+
+| Key                 | Type            | Example                |
+|---------------------|-----------------|------------------------|
+| MintDenom           | string          | "uatom"                |
+| InflationRateChange | string (dec)    | "0.130000000000000000" |
+| InflationMax        | string (dec)    | "0.200000000000000000" |
+| InflationMin        | string (dec)    | "0.070000000000000000" |
+| GoalBonded          | string (dec)    | "0.670000000000000000" |
+| BlocksPerYear       | string (uint64) | "6311520"              |
+
+## Events
+
+mint 모듈은 다음 이벤트를 발생시킵니다:
+
+### BeginBlocker
+
+| Type | Attribute Key     | Attribute Value    |
+|------|-------------------|--------------------|
+| mint | bonded_ratio      | {bondedRatio}      |
+| mint | inflation         | {inflation}        |
+| mint | annual_provisions | {annualProvisions} |
+| mint | amount            | {amount}           |
+
+## Client
+
+### CLI
+
+사용자는 CLI를 사용하여 `mint` 모듈을 쿼리하고 상호작용할 수 있습니다.
+
+#### Query
+
+`query` 명령을 사용하여 `mint` 상태를 쿼리할 수 있습니다.
+
+```shell
+simd query mint --help
+```
+
+##### annual-provisions
+
+`annual-provisions` 명령을 사용하여 현재 발행 연간 공급량 값을 쿼리할 수 있습니다.
+
+```shell
+simd query mint annual-provisions [flags]
+```
+
+##### inflation
+
+`inflation` 명령을 사용하여 현재 발행 인플레이션 값을 쿼리할 수 있습니다.
+
+```shell
+simd query mint inflation [flags]
+```
+
+##### params
+
+`params` 명령을 사용하여 현재 발행 매개변수를 쿼리할 수 있습니다.
+
+```shell
+simd query mint params [flags]
+```
+
+### gRPC
+
+사용자는 gRPC 엔드포인트를 사용하여 `mint` 모듈을 쿼리할 수 있습니다.
+
+#### AnnualProvisions
+
+`AnnualProvisions` 엔드포인트를 사용하여 현재 발행 연간 공급량 값을 쿼리할 수 있습니다.
+
+```shell
+/cosmos.mint.v1beta1.Query/AnnualProvisions
+```
+
+#### Inflation
+
+`Inflation` 엔드포인트를 사용하여 현재 발행 인플레이션 값을 쿼리할 수 있습니다.
+
+```shell
+/cosmos.mint.v1beta1.Query/Inflation
+```
+
+#### Params
+
+`Params` 엔드포인트를 사용하여 현재 발행 매개변수를 쿼리할 수 있습니다.
+
+```shell
+/cosmos.mint.v1beta1.Query/Params
+```
+
+### REST
+
+사용자는 REST 엔드포인트를 사용하여 `mint` 모듈을 쿼리할 수 있습니다.
+
+#### annual-provisions
+
+```shell
+/cosmos/mint/v1beta1/annual_provisions
+```
+
+#### inflation
+
+```shell
+/cosmos/mint/v1beta1/inflation
+```
+
+#### params
+
+```shell
+/cosmos/mint/v1beta1/params
+```
