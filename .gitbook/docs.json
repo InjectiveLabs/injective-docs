@@ -173,7 +173,10 @@
               "developers-ai/index",
               "developers-ai/injective-cli-skill",
               "developers-ai/injective-evm-developer-skill",
-              "developers-ai/documentation-mcp"
+              "developers-ai/injective-mcp-servers-skill",
+              "developers-ai/injective-trading-skills",
+              "developers-ai/documentation-mcp",
+              "developers-ai/mcp"
             ]
           },
           {

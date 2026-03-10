@@ -1,0 +1,70 @@
+---
+title: Injective Trading Skills
+description: Using a set of Injective trading agent skills in your AI engineering harnesses
+---
+
+**Injective Trading Account** - Analyze any Injective wallet address.
+Query bank balances across all token types (INJ, USDT, IBC assets, Peggy ERC-20s),
+inspect trading subaccount balances, and view open perpetual positions with unrealized P&L.
+Useful for portfolio monitoring, position management, and pre-trade checks.
+Requires the Injective MCP server to be connected.
+
+**Injective Trading Autosign** - Set up AuthZ delegation on Injective for session-based auto-trading.
+Grants a scoped, time-limited permission to an ephemeral key so the AI can place and close perpetual trades
+without a wallet popup or password prompt for every order.
+Use authz_grant to enable, authz_revoke to disable.
+Requires the Injective MCP server to be connected.
+
+**Injective Trading Bridge** - Bridge tokens to and from Injective using deBridge DLN (fast, cross-chain)
+or Peggy (Ethereum canonical bridge).
+Supports inbound bridges from Arbitrum, Ethereum, Base, Polygon, BSC, Avalanche, and Optimism into Injective,
+and outbound bridges from Injective to any deBridge-supported chain.
+Get quotes before executing.
+Requires the Injective MCP server to be connected.
+
+**Injective Trading Chain Analysis** - Analyze Injective chain-level code and protocol specs.
+Read Go source from injective-core, explain exchange module features
+(position offsetting, liquidations, margin tiers, funding), and identify spec gaps.
+Use when discussing chain mechanics, reviewing Injective Go code, or explaining protocol behavior.
+
+**Injective Trading Market Data** - Access real-time market data for Injective perpetual futures markets.
+Query oracle prices, list all active markets with metadata (tick size, min notional, max leverage),
+and retrieve current spread and funding information.
+Requires the Injective MCP server to be connected.
+
+**Injective Trading Staking** - Query and manage Injective staking delegations, rewards, and validator info.
+Look up staker addresses, delegation amounts, unbonding status, and claimed rewards via Injective LCD/REST API.
+
+**Injective Trading Tokens** - Look up metadata for any Injective token or denom.
+Resolves native tokens (INJ), Peggy ERC-20 bridged tokens (USDT, USDC, WETH), IBC assets (ATOM, OSMO),
+TokenFactory tokens, and EVM ERC-20s to their human-readable symbol, decimals, and type.
+Also supports sending tokens between addresses and depositing/withdrawing from trading subaccounts.
+Requires the Injective MCP server to be connected.
+
+## Installation
+
+Install via NPX:
+
+```bash
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-account
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-autosign
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-bridge
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-chain-analysis
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-market-data
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-staking
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-tokens
+```
+
+Note that the above commands install all of the trading related skills.
+You may wish to install only a subset of them based on your objectives.
+
+## Usage
+
+After installing the skills, enter your prompts into the harness to use them.
