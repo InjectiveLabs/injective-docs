@@ -1,120 +1,70 @@
 ---
-description: >-
-  Build on Injective with generative AI software engineering.
-title: AI developers
+title: Injective Trading Skills
+description: Using a set of Injective trading agent skills in your AI engineering harnesses
 ---
 
-## Why build using generative AI tools on Injective?
+**Injective Trading Account** - Analyze any Injective wallet address.
+Query bank balances across all token types (INJ, USDT, IBC assets, Peggy ERC-20s),
+inspect trading subaccount balances, and view open perpetual positions with unrealized P&L.
+Useful for portfolio monitoring, position management, and pre-trade checks.
+Requires the Injective MCP server to be connected.
 
-With generative AI coding tools, you can build applications very quickly, including on Injective.
-However building very fast in the wrong direction is not ideal.
-You will find skills, agents, workflows, and MCP servers here that will help you with effective AI software engineering.
+**Injective Trading Autosign** - Set up AuthZ delegation on Injective for session-based auto-trading.
+Grants a scoped, time-limited permission to an ephemeral key so the AI can place and close perpetual trades
+without a wallet popup or password prompt for every order.
+Use authz_grant to enable, authz_revoke to disable.
+Requires the Injective MCP server to be connected.
 
-## What types of generative AI tools are available?
+**Injective Trading Bridge** - Bridge tokens to and from Injective using deBridge DLN (fast, cross-chain)
+or Peggy (Ethereum canonical bridge).
+Supports inbound bridges from Arbitrum, Ethereum, Base, Polygon, BSC, Avalanche, and Optimism into Injective,
+and outbound bridges from Injective to any deBridge-supported chain.
+Get quotes before executing.
+Requires the Injective MCP server to be connected.
 
-- **LLMs** -
-    Large language models (LLMs) are the base-layer technology powering almost all generative AI software engineering.
-    Almost all AI development tools are wrappers around LLMs.
-    Popular ones include Claude Opus (Anthropic), Gemini (Google), and Kimi (Moonshot AI).
-- **LLM Providers** -
-    Low- and mid-tier LLMs are possible to run on retail/ consumer hardware.
-    However the top-tier LLMs need to be accessed remotely.
-    You have 3 main options:
-    - **Local providers** - For example, using LM Studio or Ollama.
-    - **Remote providers from model developers** - For example, accessing Claude Opus via an Anthropic subscription.
-    - **Remote providers from model aggregators** - For example, accessing Claude Opus, Gemini, or Kimi via an OpenRouter subscription.
-- **Tools** -
-    These can be anything from functions, to scripts, to command-line interfaces (CLIs) that are packaged up in a manner
-    that make them understood or callable by LLMs.
-    For example, if you want the LLM to access real-time information,
-    i.e. information that was no available to it when the LLM was trained,
-    you would need to give it access to call tools for web searches or other data APIs.
-- **MCP** -
-    Model-Context-Protocol (MCP) is a protocol designed for discovery and calling of tools by LLMs.
-    They are designed to standardise the way for different LLMs and LLM providers to invoke tools.
-    Previously each LLM or LLM provider had competing standards/ protocols for doing so.
-- **Skills** -
-    These are markdown files that optionally reference supporting resources, tools, MCP servers and others.
-    They are designed specifically to work with AI engineering harnesses (but can be used in other contexts).
-    They can be recursive, for example a skill can reference other skills.
-    These are sometimes also referred to as "workflows", "subagents", and "agents".
-    In this context, workflows are usually a set of skills with a defined order;
-    and agents/ subagents are are sets of workflows and skills with no specified order,
-    where the LLM is given agency over which ones to use and in what order.
-    Note that the term "agents" is overused, with multiple definitions,
-    so the above is specific to this contexts.
-- **AI engineering IDEs** -
-    These are either dedicated IDEs or plugins within IDEs that allow you to prompt LLMs,
-    including execution of tool calls or MCPs,
-    and use their output to work on the code base that is open within the IDE.
-    Popular ones include: Roo, Cline, and Cursor.
-- **AI engineering Harnesses** -
-    These are command line interfaces (CLIs) or terminal user interfaces (TUIs) that are designed around
-    invoking LLMs for coding tasks.
-    The operate directly on the file system, and often come with baked-in optimizations and utilities for engineering tasks.
-    These tend to be more powerful than working with AI engineering IDEs,
-    as they work best when skills, workflows, and agents are used.
-    Popular ones include: Claude Code (Anthropic), Codex (OpenAI), and OpenCode (unaffiliated).
-- **AI engineering Orchestrators** -
-    These are tools that act as wrappers around harnesses.
-    Their main intent is to enable long-running loops or parallelization of harness invocation,
-    such that it becomes possible have LLMs working autonomously on longer and more complex tasks
-    without the need for constant human supervision.
-    Popular ones include: Ralph, GSD.
+**Injective Trading Chain Analysis** - Analyze Injective chain-level code and protocol specs.
+Read Go source from injective-core, explain exchange module features
+(position offsetting, liquidations, margin tiers, funding), and identify spec gaps.
+Use when discussing chain mechanics, reviewing Injective Go code, or explaining protocol behavior.
 
-## Which types of generative AI tools will work when developing on Injective?
+**Injective Trading Market Data** - Access real-time market data for Injective perpetual futures markets.
+Query oracle prices, list all active markets with metadata (tick size, min notional, max leverage),
+and retrieve current spread and funding information.
+Requires the Injective MCP server to be connected.
 
-LLMs, LLM Providers, Tools, MCP, Skills, Workflows, Agents, AI engineering IDEs, AI engineering Harnesses, AI engineering Orchestrators.
-In short, all of them!
-In fact, that is the point of this **AI Developer** section!
+**Injective Trading Staking** - Query and manage Injective staking delegations, rewards, and validator info.
+Look up staker addresses, delegation amounts, unbonding status, and claimed rewards via Injective LCD/REST API.
 
-## Skills
+**Injective Trading Tokens** - Look up metadata for any Injective token or denom.
+Resolves native tokens (INJ), Peggy ERC-20 bridged tokens (USDT, USDC, WETH), IBC assets (ATOM, OSMO),
+TokenFactory tokens, and EVM ERC-20s to their human-readable symbol, decimals, and type.
+Also supports sending tokens between addresses and depositing/withdrawing from trading subaccounts.
+Requires the Injective MCP server to be connected.
 
-### Injective CLI Skill
+## Installation
 
-How to install and use the [Injective CLI skill](/developers-ai/injective-cli-skill).
+Install via NPX:
 
-Use the `injectived` binary to query and transact against an Injective chain
-with consistent wallet handling, endpoint selection, and gas configuration.
+```bash
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-account
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-autosign
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-bridge
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-chain-analysis
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-market-data
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-staking
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-tokens
+```
 
-### Injective EVM Developer Skill
+Note that the above commands install all of the trading related skills.
+You may wish to install only a subset of them based on your objectives.
 
-How to install and use the [Injective EVM Developer skill](/developers-ai/injective-evm-developer-skill).
+## Usage
 
-When building on Injective's EVM,
-you will need regular EVM developer skills that are applicable to EVM-compatible networks.
-You will also need some specifics to Injective's EVM.
-This skill augments existing EVM developer skills to provide you with just that.
-
-### Injective MCP Servers Skill
-
-How to install and use the [Injective MCP Servers skill](/developers-ai/injective-mcp-servers-skill).
-
-### Injective Trading Skills
-
-How to install and use the [Injective Trading skills](/developers-ai/injective-trading-skills).
-
-This is a set of multiple skills which you can mix and match from,
-and are used in a variety of trading contexts:
-Account, auto-sign, bridge, chain analysis, market data, staking, and tokens.
-
-## MCP Servers
-
-### Injective Documentation MCP
-
-How to use the [Injective documentation MCP server](/developers-ai/documentation-mcp)
-to obtain up-to-date information from this documentation site.
-
-If you ask any LLM about Injective,
-it will likely give you out-of-date information, as it does with any fast moving technology.
-This is because their information is obtained from its training data,
-which is by definition "frozen in time".
-By adding this MCP to your AI development workflow,
-not only will you get up-to-date information about developing on Injective,
-you will also have citations for that information in the form of URLs from this documentation site.
-
-### Injective MCP
-
-How to use the [Injective MCP server](/developers-ai/mcp)
-to give AI tools full trading capabilities on Injective.
-Including perpetual futures, spot transfers, cross-chain bridging, and raw EVM transactions.
+After installing the skills, enter your prompts into the harness to use them.
