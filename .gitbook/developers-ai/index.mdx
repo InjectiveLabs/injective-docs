@@ -33,13 +33,16 @@ You will find skills, agents, workflows, and MCP servers here that will help you
     Model-Context-Protocol (MCP) is a protocol designed for discovery and calling of tools by LLMs.
     They are designed to standardise the way for different LLMs and LLM providers to invoke tools.
     Previously each LLM or LLM provider had competing standards/ protocols for doing so.
-- **Skills, workflows, agents** -
+- **Skills** -
     These are markdown files that optionally reference supporting resources, tools, MCP servers and others.
     They are designed specifically to work with AI engineering harnesses (but can be used in other contexts).
     They can be recursive, for example a skill can reference other skills.
-    Likewise workflows are usually a set of skills with a defined order;
-    and agents are are sets of workflows and skills.
-    Note that the term "agents" is overused, with multiple definitions, so the above does not apply in other contexts.
+    These are sometimes also referred to as "workflows", "subagents", and "agents".
+    In this context, workflows are usually a set of skills with a defined order;
+    and agents/ subagents are are sets of workflows and skills with no specified order,
+    where the LLM is given agency over which ones to use and in what order.
+    Note that the term "agents" is overused, with multiple definitions,
+    so the above is specific to this context.
 - **AI engineering IDEs** -
     These are either dedicated IDEs or plugins within IDEs that allow you to prompt LLMs,
     including execution of tool calls or MCPs,
@@ -48,13 +51,13 @@ You will find skills, agents, workflows, and MCP servers here that will help you
 - **AI engineering Harnesses** -
     These are command line interfaces (CLIs) or terminal user interfaces (TUIs) that are designed around
     invoking LLMs for coding tasks.
-    The operate directly on the file system, and often come with baked-in optimisations and utilities for engineering tasks.
+    The operate directly on the file system, and often come with baked-in optimizations and utilities for engineering tasks.
     These tend to be more powerful than working with AI engineering IDEs,
     as they work best when skills, workflows, and agents are used.
     Popular ones include: Claude Code (Anthropic), Codex (OpenAI), and OpenCode (unaffiliated).
 - **AI engineering Orchestrators** -
     These are tools that act as wrappers around harnesses.
-    Their main intent is to enable long-running loops or parallelisation of harness invocation,
+    Their main intent is to enable long-running loops or parallelization of harness invocation,
     such that it becomes possible have LLMs working autonomously on longer and more complex tasks
     without the need for constant human supervision.
     Popular ones include: Ralph, GSD.
@@ -67,14 +70,14 @@ In fact, that is the point of this **AI Developer** section!
 
 ## Skills
 
-### Injective CLI
+### Injective CLI Skill
 
 How to install and use the [Injective CLI skill](/developers-ai/injective-cli-skill).
 
 Use the `injectived` binary to query and transact against an Injective chain
 with consistent wallet handling, endpoint selection, and gas configuration.
 
-### Injective EVM Developer
+### Injective EVM Developer Skill
 
 How to install and use the [Injective EVM Developer skill](/developers-ai/injective-evm-developer-skill).
 
@@ -82,6 +85,18 @@ When building on Injective's EVM,
 you will need regular EVM developer skills that are applicable to EVM-compatible networks.
 You will also need some specifics to Injective's EVM.
 This skill augments existing EVM developer skills to provide you with just that.
+
+### Injective MCP Servers Skill
+
+How to install and use the [Injective MCP Servers skill](/developers-ai/injective-mcp-servers-skill).
+
+### Injective Trading Skills
+
+How to install and use the [Injective Trading skills](/developers-ai/injective-trading-skills).
+
+This is a set of multiple skills which you can mix and match from,
+and are used in a variety of trading contexts:
+Account, auto-sign, bridge, chain analysis, market data, staking, and tokens.
 
 ## MCP Servers
 
@@ -97,3 +112,9 @@ which is by definition "frozen in time".
 By adding this MCP to your AI development workflow,
 not only will you get up-to-date information about developing on Injective,
 you will also have citations for that information in the form of URLs from this documentation site.
+
+### Injective MCP
+
+How to use the [Injective MCP server](/developers-ai/mcp)
+to give AI tools full trading capabilities on Injective.
+Including perpetual futures, spot transfers, cross-chain bridging, and raw EVM transactions.
