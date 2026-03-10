@@ -1,57 +1,57 @@
 ---
-title: Injective Block SDK 통합
+title: Injective Block SDK Integration
 ---
 
-# Injective Block SDK 통합
+# Injective Block SDK Integration
 
-Injective는 [Block SDK](https://github.com/InjectiveLabs/block-sdk)를 통합합니다. 당사의 솔루션은 트랜잭션을 4개의 별도 레인으로 분리하는 멀티 레인 mempool을 활용합니다:
+Injective integrates the [Block SDK](https://github.com/InjectiveLabs/block-sdk). Our solution leverages a multi‑lane mempool that separates transactions into four distinct lanes:
 
-- **Oracle Lane** – oracle 메시지를 포함하는 트랜잭션용.
-- **Governance Lane** – exchange 모듈의 admin이 보낸 모든 트랜잭션용.
-- **Exchange Lane** – exchange 메시지만 포함하는 트랜잭션용.
-- **Default Lane** – 기타 모든 트랜잭션용.
+- **Oracle Lane** – for transactions that contain oracle messages.
+- **Governance Lane** – for any transaction sent by an admin of the exchange module.
+- **Exchange Lane** – for transactions that contain only exchange messages.
+- **Default Lane** – for all other transactions.
 
-## 주요 기능
+## Key Features
 
-### 1. 멀티 레인 Mempool
+### 1. Multi‑Lane Mempool
 
-- **우선순위 정렬:**  
-  레인은 우선순위별로 정렬됩니다: Oracle Lane이 가장 높은 우선순위를 가지고, 그 다음 Governance Lane, Exchange Lane, 마지막으로 Default Lane 순입니다. 이 순서는 블록 제안을 구축하고 검증할 때 중요합니다.
+- **Priority Ordering:**  
+  The lanes are ordered by priority: the Oracle Lane has the highest priority, followed by the Governance Lane, then the Exchange Lane, and finally the Default Lane. This ordering is critical when building and verifying block proposals.
 
-- **전용 레인 로직:**  
-  각 레인은 자체 match handler를 사용합니다. 우선순위 순으로 다음 레인이 있습니다:
-  1. **Oracle Lane**은 트랜잭션에 oracle 메시지가 포함되어 있는지 확인합니다.
-  2. **Governance Lane**은 첫 번째 서명자가 exchange 모듈의 admin인지 확인합니다.
-  3. **Exchange Lane**은 모든 메시지가 exchange 모듈에 속하는지 확인하고 커스텀 수수료/우선순위 로직을 사용하여 트랜잭션을 정렬합니다.
-  4. **Default Lane**은 다른 레인과 일치하지 않는 모든 트랜잭션을 수락합니다.
+- **Dedicated Lane Logic:**  
+  Each lane uses its own match handler. We have the following lanes in order of priority:
+  1. The **Oracle Lane** checks that the transaction contains an oracle message.
+  2. The **Governance Lane** checks that the first signer is an admin of the exchange module.
+  3. The **Exchange Lane** verifies that all messages belong to the exchange module and orders transactions using custom fee/priority logic.
+  4. The **Default Lane** accepts any transaction not matching the other lanes.
 
-### 2. 우선순위 기반 트랜잭션 라우팅
+### 2. Routing Transactions Based on Priority
 
-당사 통합의 핵심 개선 사항은 우선순위에 기반한 트랜잭션 라우팅을 위한 커스텀 로직입니다.
+A key enhancement in our integration is the custom logic for routing transactions based on priority.
 
-- **동일한 서명자의 트랜잭션이 이미 낮은 우선순위의 레인에 존재하는 경우:**  
-  match handler는 `false`를 반환하며, 이는 새 트랜잭션이 현재(더 높은 우선순위) 레인에 의해 캡처되지 않음을 의미합니다. 대신 더 낮은 우선순위의 레인에서 처리되도록 전달됩니다.
+- **If a transaction from the same signer already exists in a lane with lower priority:**  
+  The match handler returns `false`, meaning the new transaction is not captured by the current (higher‑priority) lane. Instead, it falls through to be processed by the lower‑priority lane.
 
-- **그 외의 경우:**  
-  새 트랜잭션은 현재 레인에서 수락됩니다.
+- **Otherwise:**  
+  The new transaction is accepted in the current lane.
 
-이 메커니즘은 account sequence 불일치를 방지합니다. **사용자로서, 새 트랜잭션을 더 높은 우선순위로 제출하더라도 이전의 낮은 우선순위 트랜잭션이 먼저 처리될 수 있다는 점을 인지해야 합니다. 또한 이로 인해 새 트랜잭션 처리가 지연될 수 있습니다.**
+This mechanism prevents account sequence mismatches. **As a user, you need to be aware that prior lower‑priority transactions may be processed first, even if you submit a new transaction with higher priority. Further, they might cause delays in processing your new transaction.**
 
-### 3. Exchange Lane 우선순위
+### 3. Exchange Lane Priority
 
-Exchange Lane은 수수료 할인, 계정 티어 및 청산 메시지에 대한 특별 처리를 기반으로 트랜잭션을 정렬하는 커스텀 우선순위 로직을 사용합니다. 주요 사항은 다음과 같습니다:
+The Exchange Lane uses custom priority logic to order transactions based on fee discounts, account tiers, and special handling for liquidation messages. Key points include:
 
-- **커스텀 Tx 우선순위 계산:**  
-  Exchange Lane은 계정의 수수료 할인 티어와 해당되는 경우 트랜잭션이 청산 메시지만 포함하는지 여부를 고려하여 트랜잭션의 우선순위를 추출합니다. 청산 메시지에는 가장 높은 우선순위가 할당됩니다.
+- **Custom Tx Priority Calculation:**  
+  The Exchange Lane extracts the transaction’s priority by considering the account’s fee discount tier and, if applicable, whether the transaction contains only liquidation messages. Liquidation messages are assigned highest priority.
 
-- **계정 티어 및 수수료 할인:**  
-  일반 exchange 트랜잭션의 경우, 레인은 트랜잭션의 서명자 데이터에서 가장 높은 계정 티어를 우선순위 척도로 계산합니다. 더 높은 티어는 더 높은 우선순위를 가집니다.
+- **Account Tier and Fee Discount:**  
+  For regular exchange transactions, the lane computes the highest account tier (from the transaction’s signer data) as a measure of priority. Higher tiers result in higher priority.
 
-### 4. Oracle 및 Governance Lane 최대 가스 한도
+### 4. Oracle and Governance Lane Max Gas Limit
 
-Oracle 및 Governance Lane의 최대 가스 한도를 초과하는 트랜잭션은
-`matching` 단계(tx가 mempool에 삽입될 때)에서 거부됩니다. 만약
-매칭 단계에서 이를 하지 않으면, 큰 트랜잭션이 레인에 들어갔다가
-나중에 `prepare` 단계(PrepareProposal에서)에서 거부될 수 있습니다.
-그러면 트랜잭션은 mempool에 무기한 남아있게 되어, 발신자 계정이
-다른 트랜잭션을 제출하지 못하게 차단됩니다.
+Transactions that exceed the max gas limit of the Oracle and Governance Lanes
+are rejected in the `matching` stage (when a tx is inserted in the mempool). If
+we didn't do this in the matching stage, a big transaction could make it into the
+lane, and be rejected later in the `prepare` stage (in PrepareProposal). The
+transaction would remain in the mempool indefinitely, thereby blocking the sender
+account from submitting any other transactions.

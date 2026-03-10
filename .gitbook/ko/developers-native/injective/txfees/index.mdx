@@ -4,134 +4,134 @@ title: Txfees
 
 # Txfees
 
-Injective의 txfees 모듈은 EIP-1559에 따른 fee market을 지원하는 데 필요한 기능을 제공합니다.
+The txfees module for Injective provides the required functionality to support fee market as per EIP-1559.
 
-EIP-1559는 네트워크 혼잡도에 따라 자동으로 조정되는 "base fee"를 도입합니다. 네트워크 활동이 증가하면 base fee가 증가하고, 활동이 감소하면 base fee가 감소합니다. 이는 단순한 최초 가격 경매 모델에 비해 더 예측 가능하고 효율적인 fee market을 만듭니다.
+EIP-1559 introduces a "base fee" that automatically adjusts based on network congestion. When network activity increases, the base fee increases, and when activity decreases, the base fee decreases. This creates a more predictable and efficient fee market compared to a simple first-price auction model.
 
-자세한 내용은 공식 EIP-1559 사양을 참조하세요: https://eips.ethereum.org/EIPS/eip-1559
+For more details, see the official EIP-1559 specification: https://eips.ethereum.org/EIPS/eip-1559
 
-## 모듈 파라미터
+## Module Parameters
 
-txfees 모듈의 파라미터는 트랜잭션 수락 규칙과 EIP-1559 fee market 동작을 모두 제어합니다. 이러한 파라미터는 거버넌스를 통해 업데이트할 수 있습니다.
+The txfees module's parameters control both transaction acceptance rules and the EIP-1559 fee market behavior. These parameters can be updated through governance.
 
-### 트랜잭션 제어 파라미터
+### Transaction Control Parameters
 
-이러한 파라미터는 EIP-1559 fee market 활성화 여부(`Mempool1559Enabled`)와 관계없이 항상 적용되는 기본 트랜잭션 검증 규칙을 정의합니다. 트랜잭션 특성에 대한 엄격한 제한을 설정하고 높은 가스 트랜잭션에 대한 2단계 수수료 시스템을 구현하여 네트워크 스팸에 대한 첫 번째 방어선을 제공합니다.
+These parameters define the basic transaction validation rules that are always enforced, regardless of whether the EIP-1559 fee market is enabled (`Mempool1559Enabled`). They provide the first line of defense against network spam by setting hard limits on transaction characteristics and implementing a two-tiered fee system for high-gas transactions.
 
-`Mempool1559Enabled`가 false인 경우, 이들은 트랜잭션 검증에 사용되는 유일한 파라미터입니다. true인 경우, 이러한 검사는 EIP-1559 fee market 규칙이 적용되기 전에 수행됩니다.
+When `Mempool1559Enabled` is false, these are the only parameters used for transaction validation. When true, these checks are performed before the EIP-1559 fee market rules are applied.
 
 #### MaxGasWantedPerTx
-- 타입: `uint64`
-- 기본값: `30,000,000`
-- 설명: 트랜잭션당 허용되는 최대 가스. 이보다 높은 가스 한도를 가진 트랜잭션은 mempool에서 거부됩니다.
+- Type: `uint64`
+- Default: `30,000,000`
+- Description: Maximum gas allowed per transaction. Transactions with gas limit higher than this will be rejected from the mempool.
 
 #### HighGasTxThreshold
-- 타입: `uint64`
-- 기본값: `2,500,000`
-- 설명: 트랜잭션이 "높은 가스"로 간주되는 가스 임계값. 트랜잭션의 가스가 이 임계값을 초과하면 최소 `MinGasPriceForHighGasTx`를 가스 가격으로 지불해야 합니다.
+- Type: `uint64`
+- Default: `2,500,000`
+- Description: Gas threshold above which a transaction is considered "high gas". When a transaction's gas exceeds this threshold, it must pay at least `MinGasPriceForHighGasTx` as the gas price.
 
 #### MinGasPriceForHighGasTx
-- 타입: `sdk.Dec`
-- 기본값: `0`
-- 설명: 높은 가스 트랜잭션에 필요한 최소 가스 가격. `HighGasTxThreshold`를 초과하는 트랜잭션은 mempool에 수락되려면 최소한 이 가스 가격을 가져야 합니다.
+- Type: `sdk.Dec`
+- Default: `0`
+- Description: Minimum gas price required for high gas transactions. Transactions above the `HighGasTxThreshold` must have at least this gas price to be accepted into the mempool.
 
-### Fee Market 파라미터
+### Fee Market Parameters
 
-이러한 파라미터는 동적 EIP-1559 fee market 동작을 제어하며 `Mempool1559Enabled`가 true인 경우에만 활성화됩니다. 네트워크 혼잡에 대응하여 base fee가 어떻게 조정되는지, 수수료 조정의 경계를 설정하고, 목표 블록 활용률을 정의합니다.
+These parameters control the dynamic EIP-1559 fee market behavior and are only active when `Mempool1559Enabled` is true. They determine how the base fee adjusts in response to network congestion, set the bounds for fee adjustments, and define the target block utilization.
 
-`Mempool1559Enabled`가 false인 경우, 이러한 파라미터(`MinGasPrice` 제외)는 사용되지 않으며 트랜잭션은 기본 트랜잭션 제어 요구 사항만 충족하면 됩니다. true인 경우, 트랜잭션은 추가로 현재 base fee 이상의 가스 가격 제공을 포함한 EIP-1559 fee market 규칙을 충족해야 합니다.
+When `Mempool1559Enabled` is false, these parameters (except `MinGasPrice`) are not used, and transactions only need to meet the basic transaction control requirements. When true, transactions must additionally satisfy the EIP-1559 fee market rules, including providing a gas price ≥ current base fee.
 
-참고: `MinGasPrice`는 EIP-1559 활성화 여부와 관계없이 항상 최소 가스 가격으로 적용됩니다.
+Note: `MinGasPrice` is always enforced as the minimum gas price, regardless of whether EIP-1559 is enabled.
 
 #### Mempool1559Enabled
-- 타입: `bool`
-- 기본값: `false`
-- 설명: mempool에서 EIP-1559 스타일의 적응형 fee market을 활성화합니다. 활성화되면 base fee가 네트워크 혼잡에 따라 자동으로 조정됩니다.
+- Type: `bool`
+- Default: `false`
+- Description: Enables EIP-1559 style adaptive fee market in the mempool. When enabled, the base fee automatically adjusts based on network congestion.
 
 #### MinGasPrice
-- 타입: `sdk.Dec`
-- 기본값: `160,000,000` (INJ)
-- 설명: 허용되는 최소 base fee. base fee는 이 값 아래로 떨어질 수 없으며, 트랜잭션 수수료의 가격 하한을 제공합니다.
+- Type: `sdk.Dec`
+- Default: `160,000,000` (INJ)
+- Description: The minimum allowed base fee. The base fee cannot drop below this value, providing a price floor for transaction fees.
 
 #### DefaultBaseFeeMultiplier
-- 타입: `sdk.Dec`
-- 기본값: `1.5`
-- 설명: 기본 base fee를 계산하기 위해 `MinGasPrice`에 적용되는 승수. 기본 base fee(`MinGasPrice` * `DefaultBaseFeeMultiplier`)는 매 리셋 간격마다 fee market을 리셋할 때 사용됩니다.
+- Type: `sdk.Dec`
+- Default: `1.5`
+- Description: Multiplier applied to `MinGasPrice` to calculate the default base fee. The default base fee (`MinGasPrice` * `DefaultBaseFeeMultiplier`) is used when resetting the fee market every reset interval.
 
 #### MaxBaseFeeMultiplier
-- 타입: `sdk.Dec`
-- 기본값: `1000`
-- 설명: 허용되는 최대 base fee를 계산하기 위해 `MinGasPrice`에 적용되는 최대 승수. 이는 수수료가 과도하게 높아지는 것을 방지합니다.
+- Type: `sdk.Dec`
+- Default: `1000`
+- Description: Maximum multiplier applied to `MinGasPrice` to calculate the maximum allowed base fee. This prevents fees from becoming excessively high.
 
 #### ResetInterval
-- 타입: `int64`
-- 기본값: `36,000` (블록, 약 8시간)
-- 설명: base fee가 기본 base fee로 리셋되는 간격. 이는 장기적인 수수료 드리프트를 방지하고 알려진 기준선으로 주기적 리셋을 보장합니다.
+- Type: `int64`
+- Default: `36,000` (blocks, approximately 8 hours)
+- Description: The interval at which the base fee is reset to the default base fee. This prevents long-term fee drift and ensures periodic resets to a known baseline.
 
 #### MaxBlockChangeRate
-- 타입: `sdk.Dec`
-- 기본값: `0.1` (10%)
-- 설명: 블록당 base fee가 변경될 수 있는 최대 비율. 이는 블록 간 수수료 변동성을 제한합니다.
-- 계산: base fee 조정은 다음 공식을 사용합니다:
+- Type: `sdk.Dec`
+- Default: `0.1` (10%)
+- Description: The maximum rate at which the base fee can change per block. This limits fee volatility between blocks.
+- Calculation: The base fee adjustment uses the following formula:
   ```
   baseFeeMultiplier = 1 + (gasUsed - targetGas) / targetGas * maxChangeRate
   newBaseFee = currentBaseFee * baseFeeMultiplier
   ```
-  여기서:
-  - `gasUsed`는 블록에서 소비된 총 가스
-  - `targetGas`는 `TargetBlockSpacePercentRate` * 블록 가스 한도로 결정됨
-  - `maxChangeRate`는 0.1 (10%)
-- 영향: 
-  - 블록이 가득 찬 경우 (gasUsed = 블록 가스 한도): Base fee 약 6% 증가
-  - 블록이 비어 있는 경우 (gasUsed = 0): Base fee 10% 감소
-  - gasUsed = targetGas인 경우: Base fee 변화 없음
-  - 비대칭 변경률(상승 6% vs 하락 10%)은 혼잡 후 수수료가 더 빨리 회복되도록 돕습니다
-- 트랜잭션 처리:
-  - CheckTx에서: 새 트랜잭션은 수락되려면 현재 base fee 이상의 가스 가격을 제공해야 함
-  - RecheckTx에서: 
-    - 낮은 base fee의 경우 (≤ 4x MinGasPrice): 현재 base fee / 2 미만의 가스 가격을 가진 트랜잭션 제거
-    - 높은 base fee의 경우 (> 4x MinGasPrice): 현재 base fee / 2.3 미만의 가스 가격을 가진 트랜잭션 제거
-  - 이 이중 임계값 접근 방식은 정상 운영 중 네트워크 안정성을 유지하면서 혼잡 시 더 빠른 회복을 허용합니다
+  Where:
+  - `gasUsed` is the total gas consumed in the block
+  - `targetGas` is determined by `TargetBlockSpacePercentRate` * block gas limit
+  - `maxChangeRate` is 0.1 (10%)
+- Impact: 
+  - When block is full (gasUsed = block gas limit): Base fee increases by ~6%
+  - When block is empty (gasUsed = 0): Base fee decreases by 10%
+  - When gasUsed = targetGas: No change in base fee
+  - The asymmetric change rates (6% up vs 10% down) help fees recover more quickly after congestion
+- Transaction Processing:
+  - In CheckTx: New transactions must provide a gas price ≥ current base fee to be accepted
+  - In RecheckTx: 
+    - For low base fees (≤ 4x MinGasPrice): Transactions with gas price < current base fee / 2 are removed
+    - For high base fees (> 4x MinGasPrice): Transactions with gas price < current base fee / 2.3 are removed
+  - This dual-threshold approach helps maintain network stability during normal operation while allowing faster recovery during congestion
 
 #### TargetBlockSpacePercentRate
-- 타입: `sdk.Dec`
-- 기본값: `0.625` (62.5%)
-- 설명: 사용되어야 하는 블록 가스 한도의 목표 백분율. 실제 사용량이 이 목표를 초과하면 base fee가 증가합니다. 사용량이 목표 미만이면 base fee가 감소합니다.
+- Type: `sdk.Dec`
+- Default: `0.625` (62.5%)
+- Description: Target percentage of the block gas limit that should be used. When actual usage exceeds this target, the base fee increases. When usage is below target, the base fee decreases.
 
-### Fee Recheck 파라미터
+### Fee Recheck Parameters
 
-이러한 파라미터는 mempool 트랜잭션 제거 메커니즘을 제어하며 `Mempool1559Enabled`가 true인 경우에만 관련됩니다. base fee가 변경됨에 따라 기존 트랜잭션이 mempool에서 언제 제거되어야 하는지 결정하며, 네트워크 안정성과 혼잡 회복의 균형을 맞추는 이중 임계값 접근 방식을 구현합니다.
+These parameters control the mempool transaction eviction mechanism and are only relevant when `Mempool1559Enabled` is true. They determine when existing transactions should be removed from the mempool as the base fee changes, implementing a dual-threshold approach that balances network stability with congestion recovery.
 
-`Mempool1559Enabled`가 false인 경우, mempool의 트랜잭션은 변경되는 base fee에 대해 재검사되지 않습니다. true인 경우, 이러한 파라미터는 Fee Market 파라미터와 함께 작동하여 네트워크 조건이 변경됨에 따라 트랜잭션이 경제적으로 유효하게 유지되도록 mempool 상태를 유지합니다.
+When `Mempool1559Enabled` is false, transactions in the mempool are not rechecked against changing base fees. When true, these parameters work in conjunction with the Fee Market Parameters to maintain mempool health by ensuring transactions remain economically viable as network conditions change.
 
-재검사 메커니즘은 낮은 base fee와 높은 base fee 시나리오에 대해 다른 임계값을 사용합니다:
-- 낮은 base fee 조건에서: 더 보수적인 제거 규칙으로 네트워크 안정성에 초점
-- 높은 base fee 조건에서: 더 공격적인 제거로 혼잡으로부터의 빠른 회복 우선시
+The recheck mechanism uses different thresholds for low and high base fee scenarios:
+- In low base fee conditions: Focuses on network stability with more conservative eviction rules
+- In high base fee conditions: Prioritizes quick recovery from congestion with more aggressive eviction
 
 #### RecheckFeeLowBaseFee
-- 타입: `sdk.Dec`
-- 기본값: `3.0`
-- 설명: base fee가 낮을 때 (≤ 4x MinGasPrice), 트랜잭션은 mempool에 남아 있으려면 현재 base fee의 최소 1/3의 수수료를 가져야 합니다. 낮은 수수료 수준에서 이 더 보수적인 승수는 트랜잭션의 너무 빠른 제거를 방지하여 네트워크 안정성을 유지하는 데 도움이 됩니다. 스팸 트랜잭션이 감지되면 base fee가 스팸 비용을 초과한 시점부터 해당 트랜잭션이 mempool에서 제거될 때까지 약 19블록이 걸립니다.
+- Type: `sdk.Dec`
+- Default: `3.0`
+- Description: When the base fee is low (≤ 4x MinGasPrice), transactions must have fees at least 1/3 of the current base fee to remain in the mempool. This more conservative multiplier at lower fee levels helps maintain network stability by preventing too rapid eviction of transactions. If spam transactions are detected, it takes approximately 19 blocks from when the base fee exceeds the spam cost until those transactions are evicted from the mempool.
 
 #### RecheckFeeHighBaseFee
-- 타입: `sdk.Dec`
-- 기본값: `2.3`
-- 설명: base fee가 높을 때 (> 4x MinGasPrice), 트랜잭션은 mempool에 남아 있으려면 현재 base fee의 최소 1/2.3의 수수료를 가져야 합니다.
+- Type: `sdk.Dec`
+- Default: `2.3`
+- Description: When the base fee is high (> 4x MinGasPrice), transactions must have fees at least 1/2.3 of the current base fee to remain in the mempool.
 
 #### RecheckFeeBaseFeeThresholdMultiplier
-- 타입: `sdk.Dec`
-- 기본값: `4.0`
-- 설명: 재검사 목적으로 높은 base fee와 낮은 base fee 체계 사이의 임계값을 결정하기 위해 `MinGasPrice`에 적용되는 승수. 임계값은 `MinGasPrice` * `RecheckFeeBaseFeeThresholdMultiplier`입니다.
+- Type: `sdk.Dec`
+- Default: `4.0`
+- Description: Multiplier applied to `MinGasPrice` to determine the threshold between high and low base fee regimes for recheck purposes. The threshold is `MinGasPrice` * `RecheckFeeBaseFeeThresholdMultiplier`.
 
-## 모듈 파라미터 수정
+## Modifying Module Parameters
 
-txfees 모듈 파라미터는 거버넌스 제안을 통해 수정할 수 있습니다. 이는 이러한 중요한 파라미터에 대한 모든 변경이 커뮤니티에 의해 승인되도록 보장합니다. 이러한 파라미터를 수정하는 방법은 다음과 같습니다:
+The txfees module parameters can be modified through governance proposals. This ensures that any changes to these critical parameters are approved by the community. Here's how to modify these parameters:
 
-### 거버넌스 제안을 통해
+### Through Governance Proposal
 
-파라미터는 거버넌스 제안에 래핑된 `MsgUpdateParams` 트랜잭션을 사용하여 업데이트할 수 있습니다. 제안은 거버넌스 모듈 계정에 의해 제출되어야 합니다.
+Parameters can be updated using a `MsgUpdateParams` transaction wrapped in a governance proposal. The proposal must be submitted by the governance module account.
 
-여러 파라미터 업데이트 예시:
+Example of updating multiple parameters:
 ```json
 {
   "title": "Update Txfees Parameters",
@@ -155,30 +155,30 @@ txfees 모듈 파라미터는 거버넌스 제안을 통해 수정할 수 있습
 }
 ```
 
-### 파라미터 검증
+### Parameter Validation
 
-파라미터 업데이트 시:
-1. 업데이트 메시지에 모든 파라미터가 제공되어야 합니다 (변경되지 않은 파라미터는 현재 값을 유지해야 함)
-2. 파라미터는 적용되기 전에 검증됩니다:
-   - 숫자 값은 양수여야 함
-   - 승수와 비율은 유효한 소수여야 함
-   - 임계값은 논리적 관계를 유지해야 함 (예: `MinGasPrice` ≤ 기본 base fee ≤ 최대 base fee)
+When updating parameters:
+1. All parameters must be provided in the update message (unchanged parameters should keep their current values)
+2. Parameters are validated before being applied:
+   - Numeric values must be positive
+   - Multipliers and rates must be valid decimals
+   - Thresholds must maintain logical relationships (e.g., `MinGasPrice` ≤ default base fee ≤ max base fee)
 
-### 현재 파라미터 쿼리
+### Query Current Parameters
 
-gRPC 엔드포인트를 사용하여 현재 파라미터 값을 쿼리할 수 있습니다:
+You can query current parameter values using the gRPC endpoint:
 ```bash
 /injective/txfees/v1beta1/params
 ```
 
-CLI를 사용하여 현재 EIP-1559 base fee를 쿼리할 수도 있습니다:
+You can also query the current EIP-1559 base fee using the CLI:
 ```bash
 injectived query txfees base-fee
 ```
 
-### 현재 Base Fee 쿼리
+### Query Current Base Fee
 
-현재 EIP-1559 base fee는 여러 인터페이스를 통해 쿼리할 수 있습니다:
+The current EIP-1559 base fee can be queried through multiple interfaces:
 
 #### CLI
 ```bash
@@ -186,7 +186,7 @@ injectived query txfees base-fee
 ```
 
 #### gRPC
-`GetEipBaseFee` RPC 메서드를 사용하여 base fee를 쿼리할 수 있습니다:
+The base fee can be queried using the `GetEipBaseFee` RPC method:
 
 ```protobuf
 // Request
@@ -203,20 +203,20 @@ message EipBaseFee {
 }
 ```
 
-`grpcurl` 사용 예시:
+Example using `grpcurl`:
 ```bash
 grpcurl -plaintext localhost:9090 injective.txfees.v1beta1.Query/GetEipBaseFee
 
-# IBC relayers 및 지갑과의 호환성을 위한 Osmosis 스타일 경로
+# Osmosis-like path for compatibility with IBC relayers and wallets
 grpcurl -plaintext localhost:9090 osmosis.txfees.v1beta1.Query/GetEipBaseFee
 ```
 
 
 
-서비스 정의:
+Service Definition:
 ```protobuf
 service Query {
-  // 현재 fee market EIP base fee를 반환합니다
+  // Returns the current fee market EIP base fee
   rpc GetEipBaseFee(QueryEipBaseFeeRequest) returns (QueryEipBaseFeeResponse) {
     option (google.api.http).get = "/injective/txfees/v1beta1/cur_eip_base_fee";
   }
@@ -228,8 +228,8 @@ service Query {
 curl -X GET "http://localhost:1317/injective/txfees/v1beta1/cur_eip_base_fee"
 ```
 
-#### 응답 형식
-응답에는 INJ 단위의 현재 base fee가 포함됩니다. 예시:
+#### Response Format
+The response will contain the current base fee in INJ units. Example:
 ```json
 {
   "base_fee": {
@@ -238,4 +238,4 @@ curl -X GET "http://localhost:1317/injective/txfees/v1beta1/cur_eip_base_fee"
 }
 ```
 
-참고: base fee는 소수점 문자열로 반환됩니다. `Mempool1559Enabled`가 false인 경우 `MinGasPrice` 값을 반환합니다.
+Note: The base fee is returned as a decimal string. When `Mempool1559Enabled` is false, this will return the `MinGasPrice` value.

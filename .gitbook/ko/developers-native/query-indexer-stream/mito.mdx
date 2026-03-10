@@ -1,0 +1,162 @@
+---
+title: Mito
+---
+
+Example code snippets to stream from the indexer for Mito vault module related data using StreamManagerV2.
+
+## Using gRPC Stream with StreamManagerV2
+
+### Stream vault transfers
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcMitoStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcMitoStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'mito-transfers',
+  streamFactory: () => stream.streamTransfers({ 
+    vault: 'inj...', // optional
+    account: 'inj...', // optional
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (transfers) => {
+    console.log(transfers)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### Stream vault updates
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcMitoStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcMitoStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'mito-vault',
+  streamFactory: () => stream.streamVault({ 
+    vault: 'inj...', // optional
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (vaultUpdate) => {
+    console.log(vaultUpdate)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### Stream vault holder subscriptions
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcMitoStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcMitoStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'mito-vault-holder-subscriptions',
+  streamFactory: () => stream.streamVaultHolderSubscriptions({ 
+    holderAddress: 'inj...',
+    vaultAddress: 'inj...', // optional
+    stakingContractAddress: 'inj...', // optional
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (subscriptions) => {
+    console.log(subscriptions)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### Stream staking rewards by account
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcMitoStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcMitoStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'mito-staking-rewards',
+  streamFactory: () => stream.streamStakingRewardsByAccount({ 
+    staker: 'inj...',
+    stakingContractAddress: 'inj...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (rewards) => {
+    console.log(rewards)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### Stream historical staking
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcMitoStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcMitoStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'mito-historical-staking',
+  streamFactory: () => stream.streamHistoricalStaking({ 
+    staker: 'inj...',
+    stakingContractAddress: 'inj...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (historicalStaking) => {
+    console.log(historicalStaking)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```

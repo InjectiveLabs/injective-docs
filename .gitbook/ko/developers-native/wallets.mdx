@@ -1,0 +1,27 @@
+---
+title: 지갑
+---
+
+Injective는 키에 Ethereum의 ECDSA secp256k1 곡선을 사용하는 자체 커스텀 `Account` 타입을 정의합니다. 간단히 말해서 Injective의 Account는 Ethereum 계정과 네이티브(호환)됩니다. 이를 통해 사용자는 Ethereum 네이티브 지갑을 사용하여 Injective와 상호 작용할 수 있습니다.
+
+Injective는 CosmosSDK 위에 구축되어 있습니다. 이는 (Cosmos가 키에 다른 곡선을 사용하기 때문에 일부 수정이 필요하지만) 사용자가 Cosmos 네이티브 지갑을 사용하여 Injective와 상호 작용할 수도 있음을 의미합니다.
+
+## 기술적 설명
+
+Injective와 일반적인 암호화폐에서 계정(지갑)이 어떻게 작동하는지 간략하게 설명하겠습니다.
+
+* 모든 것은 **SeedPhrase**(또는 니모닉)에서 시작됩니다. **SeedPhrase**는 특정 순서의 12개 또는 24개 일반 단어 목록입니다.
+* **SeedPhrase**에서 인덱싱을 사용하여 **무한한** 수의 **PrivateKey**를 파생할 수 있습니다(첫 번째 private key는 인덱스 0에서 시작). 이것이 새로운 **SeedPhrase**를 생성하지 않고도 Metamask, Keplr 또는 기타 인기 있는 지갑에 여러 계정을 추가할 수 있는 이유입니다_(파생 자체는 이 간략한 설명에 비해 다소 복잡하므로 지금은 생략하겠습니다)._
+* **seed phrase**에서 **PrivateKey**가 파생된 후 이 **PrivateKey**를 사용하여 **PublicKey**를 파생할 수 있습니다. **하나의 PrivateKey는 항상 하나의 PublicKey에 해당합니다!**
+* **PublicKey**가 있으면 **PublicAddress**를 파생할 수 있습니다. 이러한 공개 주소는 다양한 파생 체계와 표현(_base64_, _hex_, _bech32_ 등)을 사용하여 파생할 수 있습니다.
+
+위의 설명으로 **PublicKey**가 있으면 Ethereum 주소(hex 형식으로 표현, `0x...`)와 Injective 주소(bech32 형식으로 표현, `inj1...`)를 모두 파생할 수 있음을 이해할 수 있습니다.
+
+## 토픽
+
+| 토픽                                                   | 설명                                                     |
+| ------------------------------------------------------- | --------------------------------------------------------------- |
+| [Injective의 계정](./wallets/accounts/)             | Injective의 계정/지갑 정의                        |
+| [지갑 연결](./wallets/connections/)             | Metamask 또는 Keplr를 사용한 직접 연결                     |
+| [Wallet Strategy](./wallets/strategy/)            | WalletStrategy를 사용하여 다양한 지갑으로 연결     |
+| [오프체인(임의) 데이터](./wallets/offchain-data/) | Cosmos의 ADR-036을 사용한 오프체인 데이터 서명 및 검증 |

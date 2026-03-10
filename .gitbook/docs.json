@@ -1545,8 +1545,8 @@
                           "ko/developers-native/injective/wasmx/99_errors"
                         ]
                       },
-                      "ko/developers-native/injective/lanes",
-                      "ko/developers-native/injective/txfees"
+                      "ko/developers-native/injective/lanes/index",
+                      "ko/developers-native/injective/txfees/index"
                     ]
                   },
                   {
@@ -1600,7 +1600,10 @@
                       "ko/developers-native/query-indexer-stream/oracle",
                       "ko/developers-native/query-indexer-stream/portfolio",
                       "ko/developers-native/query-indexer-stream/spot",
-                      "ko/developers-native/query-indexer-stream/explorer"
+                      "ko/developers-native/query-indexer-stream/explorer",
+                      "ko/developers-native/query-indexer-stream/archiver",
+                      "ko/developers-native/query-indexer-stream/mito",
+                      "ko/developers-native/query-indexer-stream/trading"
                     ]
                   },
                   "ko/developers-native/query-ethereum",
@@ -1608,9 +1611,24 @@
                     "group": "Core Modules",
                     "pages": [
                       "ko/developers-native/core/index",
-                      "ko/developers-native/core/auth",
-                      "ko/developers-native/core/authz",
-                      "ko/developers-native/core/bank"
+                      "ko/developers-native/core/auth/index",
+                      "ko/developers-native/core/authz/index",
+                      "ko/developers-native/core/bank/index",
+                      "ko/developers-native/core/consensus/index",
+                      "ko/developers-native/core/crisis/index",
+                      "ko/developers-native/core/distribution/index",
+                      "ko/developers-native/core/evidence/index",
+                      "ko/developers-native/core/feegrant/index",
+                      "ko/developers-native/core/gov/index",
+                      "ko/developers-native/core/group/index",
+                      "ko/developers-native/core/mint/index",
+                      "ko/developers-native/core/nft/index",
+                      "ko/developers-native/core/params/index",
+                      "ko/developers-native/core/slashing/index",
+                      "ko/developers-native/core/staking/index",
+                      "ko/developers-native/core/upgrade/index",
+                      "ko/developers-native/core/circuit/index",
+                      "ko/developers-native/core/genutil/index"
                     ]
                   }
                 ]
@@ -1642,7 +1660,36 @@
                     "pages": [
                       "ko/infra/validator-mainnet/index",
                       "ko/infra/validator-mainnet/peggo",
-                      "ko/infra/validator-mainnet/canonical-chain-upgrade"
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-v1.18.2",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-v1.18.0",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.17.2",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.17.1",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.17.0",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.16.4",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.16.2",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.16.1",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.16.0",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.15.0",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.14.1",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.14.0",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.13.3",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.13.2",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-1.13.0",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-v1.12.1",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-v1.12.0",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-v1.11.0",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-v1.10.0",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10009",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10008",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10007-rc1",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10006-rc1",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10005-rc1",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10004-rc1-patch",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10004-rc1",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10003-rc1",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10002-rc2",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-10002-rc1"
                     ]
                   },
                   {

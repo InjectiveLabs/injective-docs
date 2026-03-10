@@ -1,0 +1,46 @@
+---
+title: 트랜잭션
+---
+
+_사전 읽기 자료:_ [Cosmos SDK Transactions](https://docs.cosmos.network/main/learn/advanced/transactions)
+
+Injective에서 상태 변경은 트랜잭션을 통해 수행됩니다. 사용자는 트랜잭션을 생성하고 서명한 후 Injective에 브로드캐스트합니다.
+
+브로드캐스트 후 모든 검증이 성공적으로 통과된 경우에만(서명 검증, 파라미터 검증 등 포함) 트랜잭션은 합의 프로세스를 통해 네트워크가 승인한 블록에 포함됩니다.
+
+### Messages
+
+Messages는 사용자가 수행하려는 상태 변경을 지정하기 위해 트랜잭션에 포함되는 명령입니다. 모든 트랜잭션에는 최소 하나의 메시지가 있어야 합니다. Messages는 속한 모듈의 범위 내에서 상태 전환을 트리거하는 모듈별 객체입니다. 동일한 트랜잭션 내에 여러 메시지를 패킹할 수 있습니다.
+
+`@injectivelabs/sdk-ts`에서 내보내는 추상화 클래스(_MsgBase_)가 있으며 모든 메시지는 몇 가지 매핑 기능이 있는 `MsgBase` 인터페이스를 확장합니다:
+
+* `toData` → Message를 단순 Object 표현으로 변환
+* `toProto` → Message의 proto 표현 반환
+* `toDirectSign` → Message를 proto 표현으로 변환
+* `toAmino` → Message를 amino 표현 + 타입으로 변환
+* `toWeb3` → `toAmino`의 대안, Message 경로 타입의 차이점
+* `toEip712Types` → Message의 EIP712 타입 생성
+* `toEip712` → Message EIP712 값 생성
+* `toJSON` → 메시지를 JSON 표현으로 변환
+
+### Transaction Context
+
+Message(들) 외에도 모든 트랜잭션에는 컨텍스트가 있습니다. 이러한 세부 정보에는 `fees`, `accountDetails`, `memo`, `signatures` 등이 포함됩니다.
+
+### Transaction Flow
+
+Injective에 브로드캐스트하려는 모든 트랜잭션은 동일한 흐름을 가집니다. 흐름은 트랜잭션 준비, 서명 및 브로드캐스트의 세 단계로 구성됩니다.
+
+
+
+### 토픽
+
+| 토픽                                             | 설명                                                |
+| ------------------------------------------------- | ---------------------------------------------------------- |
+| [Ethereum 접근 방식 사용](./transactions/ethereum/)        | EIP712 타입 데이터 준비/서명 후 브로드캐스트              |
+| [Cosmos 접근 방식 사용](./transactions/cosmos/) | Cosmos 트랜잭션 준비/서명/브로드캐스트                 |
+| [Private Key 사용](./transactions/private-key/)             | private key로 Cosmos 트랜잭션 준비/서명/브로드캐스트 |
+| [Web3Gateway 마이크로서비스](./transactions/web3-gateway/)       | 수수료 위임을 지원하는 마이크로서비스               |
+| [Msg Broadcaster](./transactions/msgbroadcaster/)              | 메시지 브로드캐스트 추상화                      |
+
+**사용 가능한 메시지(및 예제)는 Wiki의 Core Modules 섹션에서 찾을 수 있습니다.**
