@@ -806,7 +806,10 @@
                   "cn/developers-ai/index",
                   "cn/developers-ai/injective-cli-skill",
                   "cn/developers-ai/injective-evm-developer-skill",
-                  "cn/developers-ai/documentation-mcp"
+                  "cn/developers-ai/injective-mcp-servers-skill",
+                  "cn/developers-ai/injective-trading-skills",
+                  "cn/developers-ai/documentation-mcp",
+                  "cn/developers-ai/mcp"
                 ]
               },
               {
