@@ -1,0 +1,43 @@
+---
+title: Insurance Funds
+---
+
+Indexer에서 Insurance Fund 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### Injective 주소의 환매 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcInsuranceFundApi = new IndexerGrpcInsuranceFundApi(
+  endpoints.indexer
+);
+
+const injectiveAddress = "inj...";
+
+const redemptions = await indexerGrpcInsuranceFundApi.fetchRedemptions({
+  injectiveAddress,
+});
+
+console.log(redemptions);
+```
+
+### Insurance Fund 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcInsuranceFundApi = new IndexerGrpcInsuranceFundApi(
+  endpoints.indexer
+);
+
+const insuranceFunds = await indexerGrpcInsuranceFundApi.fetchInsuranceFunds();
+
+console.log(insuranceFunds);
+```

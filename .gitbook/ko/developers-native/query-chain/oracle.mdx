@@ -1,0 +1,21 @@
+---
+title: Oracle
+---
+
+Oracle API를 통해 체인을 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### Oracle 관련 파라미터 조회
+
+```ts
+import { ChainGrpcOracleApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcOracleApi = new ChainGrpcOracleApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcOracleApi.fetchModuleParams();
+
+console.log(moduleParams);
+```

@@ -1,0 +1,113 @@
+---
+title: GraphQL 엔드포인트 쿼리
+---
+
+이 가이드는 `@injectivelabs/utils`의 `HttpClient`를 사용하여 GraphQL 엔드포인트를 쿼리하는 방법을 보여줍니다.
+
+## 설정
+
+```ts
+import { HttpClient } from '@injectivelabs/utils'
+
+const client = new HttpClient('YOUR_GRAPHQL_ENDPOINT')
+```
+
+## 인증
+
+GraphQL 엔드포인트가 인증을 요구하는 경우 헤더를 설정하세요:
+
+```ts
+client.setConfig({
+  headers: { 
+    authorization: 'Bearer YOUR_API_KEY' 
+  }
+})
+```
+
+## 쿼리 수행
+
+GraphQL 쿼리를 `query`와 선택적 `variables`를 포함한 JSON 문자열로 구성하세요:
+
+```ts
+const query = JSON.stringify({
+  query: `
+    query GetData($id: ID!) {
+      entity(id: $id) {
+        id
+        name
+        value
+      }
+    }
+  `,
+  variables: {
+    id: '123'
+  }
+})
+
+const response = await client.post<string, { data: { data: YourResponseType } }>('', query)
+
+console.log(response.data.data)
+```
+
+## 전체 예제
+
+```ts
+import { HttpClient } from '@injectivelabs/utils'
+
+interface Token {
+  id: string
+  symbol: string
+  name: string
+}
+
+interface TokensResponse {
+  tokens: Token[]
+}
+
+const client = new HttpClient('YOUR_GRAPHQL_ENDPOINT')
+
+// 필요한 경우 인증 헤더 설정
+client.setConfig({
+  headers: { 
+    authorization: 'Bearer YOUR_API_KEY' 
+  }
+})
+
+const query = JSON.stringify({
+  query: `
+    query GetTokens($first: Int!) {
+      tokens(first: $first, orderBy: symbol) {
+        id
+        symbol
+        name
+      }
+    }
+  `,
+  variables: {
+    first: 10
+  }
+})
+
+const response = await client.post<string, { data: { data: TokensResponse } }>('', query)
+
+console.log(response.data.data.tokens)
+```
+
+## 오류 처리
+
+GraphQL 응답은 200 상태 코드에서도 오류를 포함할 수 있습니다. 항상 오류를 확인하세요:
+
+```ts
+interface GraphQLResponse<T> {
+  data?: T
+  errors?: Array<{ message: string }>
+}
+
+const response = await client.post<string, { data: GraphQLResponse<YourResponseType> }>('', query)
+
+if (response.data.errors && response.data.errors.length > 0) {
+  throw new Error(response.data.errors[0].message)
+}
+
+const data = response.data.data
+```

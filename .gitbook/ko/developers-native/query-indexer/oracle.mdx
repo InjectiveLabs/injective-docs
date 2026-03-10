@@ -1,0 +1,61 @@
+---
+title: Oracle
+---
+
+Indexer에서 Oracle 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### Oracle 목록 조회
+
+```ts
+import { IndexerGrpcOracleApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcOracleApi = new IndexerGrpcOracleApi(endpoints.indexer);
+
+const oracleList = await indexerGrpcOracleApi.fetchOracleList();
+
+console.log(oracleList);
+```
+
+### Oracle에서 가격 조회
+
+Base 및 Quote oracle 심볼은 항상 마켓 자체에서 가져옵니다. `pyth` oracle의 경우 해시와 같이 일반 심볼과 다른 표현일 수 있습니다.
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import {
+  IndexerGrpcOracleApi,
+  IndexerGrpcDerivativesApi,
+} from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer);
+const indexerGrpcOracleApi = new IndexerGrpcOracleApi(endpoints.indexer);
+
+// 파생상품 마켓 목록 조회
+const markets = await indexerGrpcDerivativesApi.fetchMarkets();
+
+// 티커로 특정 마켓 찾기
+const market = markets.find((market) => market.ticker === "INJ/USDT PERP");
+
+if (!market) {
+  throw new Error("마켓을 찾을 수 없습니다");
+}
+
+// 이 값들은 indexer에서 가져온
+// 마켓 객체의 일부입니다 (i.e `oracleBase`, `oracleQuote`)
+const baseSymbol = market.oracleBase;
+const quoteSymbol = market.oracleQuote;
+const oracleType = market.oracleType;
+
+const oraclePrice = await indexerGrpcOracleApi.fetchOraclePriceNoThrow({
+  baseSymbol,
+  quoteSymbol,
+  oracleType,
+});
+
+console.log(oraclePrice);
+```

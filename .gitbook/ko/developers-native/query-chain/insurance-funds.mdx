@@ -1,0 +1,94 @@
+---
+title: Insurance Funds
+---
+
+체인에서 Insurance Fund 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### 기본 환매 예고 기간 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcInsuranceFundApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### Insurance Fund 및 관련 메타데이터 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const insuranceFunds = await chainGrpcInsuranceFundApi.fetchInsuranceFunds();
+
+console.log(insuranceFunds);
+```
+
+### 마켓 ID로 Insurance Fund 및 관련 메타데이터 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const marketId = "0x...";
+const insuranceFund = await chainGrpcInsuranceFundApi.fetchInsuranceFund(
+  marketId
+);
+
+console.log(insuranceFund);
+```
+
+### 특정 마켓에 대한 Injective 주소의 예상 환매 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const marketId = "0x...";
+const injectiveAddress = "inj...";
+
+const estimatedRedemptions =
+  await chainGrpcInsuranceFundApi.fetchEstimatedRedemptions({
+    marketId,
+    address: injectiveAddress,
+  });
+
+console.log(estimatedRedemptions);
+```
+
+### 특정 마켓에 대한 Injective 주소의 대기 중인 환매 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const marketId = "0x...";
+const injectiveAddress = "inj...";
+
+const pendingRedemptions =
+  await chainGrpcInsuranceFundApi.fetchPendingRedemptions({
+    marketId,
+    address: injectiveAddress,
+  });
+
+console.log(pendingRedemptions);
+```

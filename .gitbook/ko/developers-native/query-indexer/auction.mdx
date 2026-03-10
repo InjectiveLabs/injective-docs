@@ -1,0 +1,37 @@
+---
+title: Auction
+---
+
+Indexer에서 Auction 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### 라운드별 Auction 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAuctionApi = new IndexerGrpcAuctionApi(endpoints.indexer);
+
+const round = 1;
+
+const auction = await indexerGrpcAuctionApi.fetchAuction(round);
+
+console.log(auction);
+```
+
+### Auction 목록 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAuctionApi = new IndexerGrpcAuctionApi(endpoints.indexer);
+
+const auction = await indexerGrpcAuctionApi.fetchAuctions();
+
+console.log(auction);
+```

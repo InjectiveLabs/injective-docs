@@ -1,0 +1,25 @@
+---
+title: Portfolio
+---
+
+Indexer에서 포트폴리오 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### Injective 주소로 포트폴리오 조회 (bank 잔액 및 서브계정 잔액 포함)
+
+```ts lines highlight={1}
+import { IndexerGrpcPortfolioApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcPortfolioApi = new IndexerGrpcPortfolioApi(endpoints.indexer);
+
+const injectiveAddress = "inj...";
+
+const portfolio = await indexerGrpcPortfolioApi.fetchAccountPortfolioBalances(
+  injectiveAddress
+);
+
+console.log(portfolio);
+```

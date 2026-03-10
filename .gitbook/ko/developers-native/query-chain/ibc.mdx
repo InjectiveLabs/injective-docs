@@ -1,0 +1,36 @@
+---
+title: IBC
+---
+
+체인에서 IBC 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### IBC 해시에서 denom trace 조회
+
+```ts
+import { ChainGrpcIbcApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcIbcApi = new ChainGrpcIbcApi(endpoints.grpc);
+const hash = "...";
+
+const denomTrace = await chainGrpcIbcApi.fetchDenomTrace(hash);
+
+console.log(denomTrace);
+```
+
+### denom trace 목록 조회
+
+```ts
+import { ChainGrpcIbcApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcIbcApi = new ChainGrpcIbcApi(endpoints.grpc);
+
+const denomTraces = await chainGrpcIbcApi.fetchDenomsTrace();
+
+console.log(denomTraces);
+```

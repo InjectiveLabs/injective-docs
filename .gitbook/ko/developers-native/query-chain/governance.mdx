@@ -1,0 +1,121 @@
+---
+title: Governance
+---
+
+체인에서 Governance 모듈을 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### 투표 기간, 최대 입금 기간, 집계 상세 정보 등 파라미터 조회
+
+```ts
+import { ChainGrpcGovApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcGovApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 상태별 제안 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ProposalStatusMap } from '@injectivelabs/sdk-ts/client/chain'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcGovApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)
+
+const status = 3 as ProposalStatusMap[keyof ProposalStatusMap]
+const pagination = {...} as PaginationOption
+
+const proposals = await chainGrpcGovApi.fetchProposals({
+  status,
+  pagination /* 선택적 페이지네이션 파라미터 */
+})
+
+console.log(proposals)
+```
+
+### 제안 ID로 제안 상세 정보 조회
+
+```ts
+import { ChainGrpcGovApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc);
+
+const proposalId = 123;
+
+const proposalDetails = await chainGrpcGovApi.fetchProposal(proposalId);
+
+console.log(proposalDetails);
+```
+
+### 제안 ID로 제안 입금 조회
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcGovApi } from '@injectivelabs/sdk-ts/client/chain'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)
+
+const proposalId = 123
+const pagination = {...} as PaginationOption
+
+const proposalDeposits = await chainGrpcGovApi.fetchProposalDeposits({
+  proposalId,
+  pagination /* 선택적 페이지네이션 파라미터 */
+})
+
+console.log(proposalDeposits)
+```
+
+### 제안 ID로 제안 투표 조회
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcGovApi } from '@injectivelabs/sdk-ts/client/chain'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)
+
+const proposalId = 123
+
+const proposalVotes = await chainGrpcGovApi.fetchProposalVotes({
+  proposalId,
+  pagination: /* 선택적 페이지네이션 옵션 */
+})
+
+console.log(proposalVotes)
+```
+
+### 제안 ID로 제안 집계 조회
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcGovApi } from '@injectivelabs/sdk-ts/client/chain'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcGovApi = new ChainGrpcGovApi(endpoints.grpc)
+
+const proposalId = 123
+const pagination = {...} as PaginationOption
+
+const proposalTally = await chainGrpcGovApi.fetchProposalTally({
+  proposalId,
+  pagination /* 선택적 페이지네이션 옵션 */
+})
+
+console.log(proposalTally)
+```

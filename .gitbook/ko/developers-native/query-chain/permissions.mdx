@@ -1,0 +1,99 @@
+---
+title: Permissions
+---
+
+체인에서 Permissions 모듈 관련 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### 모든 네임스페이스 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const allNamespaces = await chainGrpcPermissionsApi.fetchAllNamespaces();
+
+console.log(allNamespaces);
+```
+
+### denom으로 네임스페이스 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const subdenom = "NINJA";
+const includeRoles = true;
+
+const namespace = await chainGrpcPermissionsApi.fetchNamespaceByDenom({
+  subdenom,
+  includeRoles: includeRoles,
+});
+
+console.log(namespace);
+```
+
+### denom을 기준으로 주소에 연결된 모든 역할 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+const subdenom = "NINJA";
+
+const addressRoles = await chainGrpcPermissionsApi.fetchAddressRoles({
+  injectiveAddress,
+  denom: subdenom,
+});
+
+console.log(addressRoles);
+```
+
+### denom의 특정 역할에 연결된 모든 주소 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const subdenom = "NINJA";
+const role = "role";
+
+const addressesByRole = await chainGrpcPermissionsApi.fetchAddressesByRole({
+  subdenom,
+  role: role,
+});
+
+console.log(addressesByRole);
+```
+
+### 특정 Injective 주소의 바우처 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcPermissionsApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPermissionsApi = new ChainGrpcPermissionsApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const vouchers = await chainGrpcPermissionsApi.fetchVouchersForAddress(
+  injectiveAddress
+);
+
+console.log(vouchers);
+```

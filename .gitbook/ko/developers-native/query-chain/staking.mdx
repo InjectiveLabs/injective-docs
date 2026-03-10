@@ -1,0 +1,211 @@
+---
+title: Staking
+---
+
+체인의 Staking 모듈을 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### unbonding 시간, bond denom 등 Staking 모듈 파라미터 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcStakingApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 풀의 unbonded 및 bonded 토큰 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const pool = await chainGrpcStakingApi.fetchPool();
+
+console.log(pool);
+```
+
+### 검증인 및 관련 메타데이터 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const validators = await chainGrpcStakingApi.fetchValidators();
+
+console.log(validators);
+```
+
+### 검증인 주소로 검증인 및 관련 메타데이터 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const validatorAddress = "injvaloper...";
+
+const validator = await chainGrpcStakingApi.fetchValidator(validatorAddress);
+
+console.log(validator);
+```
+
+### 검증인에 연결된 위임 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const validatorAddress = 'injvaloper...'
+const pagination = {...} as PaginationOption
+
+const delegations = await chainGrpcStakingApi.fetchValidatorDelegationsNoThrow({
+  validatorAddress,
+  pagination /* 선택적 페이지네이션 옵션 */
+})
+
+console.log(delegations)
+```
+
+### 검증인에 연결된 unbonding 위임 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const validatorAddress = 'injvaloper...'
+const pagination = {...} as PaginationOption
+
+const unbondingDelegations = await chainGrpcStakingApi.fetchValidatorUnbondingDelegationsNoThrow({
+  validatorAddress,
+  pagination /* 선택적 페이지네이션 옵션 */
+})
+
+console.log(unbondingDelegations)
+```
+
+### 특정 검증인에 대한 Injective 주소의 위임 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+const validatorAddress = "injvaloper...";
+
+const delegation = await chainGrpcStakingApi.fetchDelegation({
+  injectiveAddress,
+  validatorAddress,
+});
+
+console.log(delegation);
+```
+
+### Injective 주소의 위임 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const delegations = await chainGrpcStakingApi.fetchDelegationsNoThrow({
+  injectiveAddress,
+  pagination /* 선택적 페이지네이션 옵션 */
+})
+
+console.log(delegations)
+```
+
+### 검증인의 위임자 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const validatorAddress = 'injvaloper...'
+const pagination = {...} as PaginationOption
+
+const delegators = await chainGrpcStakingApi.fetchDelegatorsNoThrow({
+  validatorAddress,
+  pagination /* 선택적 페이지네이션 옵션 */
+})
+
+console.log(delegators)
+```
+
+### Injective 주소의 unbonding 위임 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const unbondingDelegations = await chainGrpcStakingApi.fetchUnbondingDelegationsNoThrow({
+  injectiveAddress,
+  pagination /* 선택적 페이지네이션 옵션 */
+})
+
+console.log(unbondingDelegations)
+```
+
+### Injective 주소의 재위임 조회
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const unbondingDelegations = await chainGrpcStakingApi.fetchReDelegationsNoThrow({
+  injectiveAddress,
+  pagination /* 선택적 페이지네이션 옵션 */
+})
+
+console.log(unbondingDelegations)
+```

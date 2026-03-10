@@ -1,0 +1,49 @@
+---
+title: Mint
+---
+
+체인에서 Mint 모듈을 쿼리하는 예제 코드 스니펫입니다.
+
+## gRPC 사용
+
+### Mint 모듈 관련 파라미터 조회
+
+```ts
+import { ChainGrpcMintApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcMintApi = new ChainGrpcMintApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcMintApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 인플레이션 조회
+
+```ts
+import { ChainGrpcMintApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcMintApi = new ChainGrpcMintApi(endpoints.grpc);
+
+const inflation = await chainGrpcMintApi.fetchInflation();
+
+console.log(inflation);
+```
+
+### 연간 발행량 조회
+
+```ts
+import { ChainGrpcMintApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcMintApi = new ChainGrpcMintApi(endpoints.grpc);
+
+const annualProvisions = await chainGrpcMintApi.fetchAnnualProvisions();
+
+console.log(annualProvisions);
+```

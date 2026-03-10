@@ -1550,9 +1550,67 @@
                     ]
                   },
                   {
+                    "group": "체인 쿼리",
+                    "pages": [
+                      "ko/developers-native/query-chain/index",
+                      "ko/developers-native/query-chain/auction",
+                      "ko/developers-native/query-chain/auth",
+                      "ko/developers-native/query-chain/bank",
+                      "ko/developers-native/query-chain/distribution",
+                      "ko/developers-native/query-chain/exchange",
+                      "ko/developers-native/query-chain/governance",
+                      "ko/developers-native/query-chain/ibc",
+                      "ko/developers-native/query-chain/mint",
+                      "ko/developers-native/query-chain/insurance-funds",
+                      "ko/developers-native/query-chain/oracle",
+                      "ko/developers-native/query-chain/peggy",
+                      "ko/developers-native/query-chain/permissions",
+                      "ko/developers-native/query-chain/staking",
+                      "ko/developers-native/query-chain/tendermint",
+                      "ko/developers-native/query-chain/wasm",
+                      "ko/developers-native/query-chain/wasmx",
+                      "ko/developers-native/query-chain/token-factory"
+                    ]
+                  },
+                  {
+                    "group": "Indexer 쿼리",
+                    "pages": [
+                      "ko/developers-native/query-indexer/index",
+                      "ko/developers-native/query-indexer/account",
+                      "ko/developers-native/query-indexer/auction",
+                      "ko/developers-native/query-indexer/derivatives",
+                      "ko/developers-native/query-indexer/explorer",
+                      "ko/developers-native/query-indexer/insurance-funds",
+                      "ko/developers-native/query-indexer/markets",
+                      "ko/developers-native/query-indexer/leaderboard",
+                      "ko/developers-native/query-indexer/mito",
+                      "ko/developers-native/query-indexer/oracle",
+                      "ko/developers-native/query-indexer/portfolio",
+                      "ko/developers-native/query-indexer/spot",
+                      "ko/developers-native/query-indexer/transaction"
+                    ]
+                  },
+                  {
+                    "group": "Indexer 스트리밍",
+                    "pages": [
+                      "ko/developers-native/query-indexer-stream/index",
+                      "ko/developers-native/query-indexer-stream/account",
+                      "ko/developers-native/query-indexer-stream/auction",
+                      "ko/developers-native/query-indexer-stream/derivatives",
+                      "ko/developers-native/query-indexer-stream/oracle",
+                      "ko/developers-native/query-indexer-stream/portfolio",
+                      "ko/developers-native/query-indexer-stream/spot",
+                      "ko/developers-native/query-indexer-stream/explorer"
+                    ]
+                  },
+                  "ko/developers-native/query-ethereum",
+                  {
                     "group": "Core Modules",
                     "pages": [
-                      "ko/developers-native/core/index"
+                      "ko/developers-native/core/index",
+                      "ko/developers-native/core/auth",
+                      "ko/developers-native/core/authz",
+                      "ko/developers-native/core/bank"
                     ]
                   }
                 ]

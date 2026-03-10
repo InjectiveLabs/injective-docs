@@ -1,0 +1,21 @@
+---
+title: Authz
+---
+
+# `x/authz`
+
+## 개요
+
+`x/authz`는 한 계정(부여자)이 다른 계정(피부여자)에게 권한을 부여하여 피부여자가 부여자를 대신하여 메시지를 실행할 수 있도록 하는 모듈입니다.
+
+## 권한 타입
+
+- **GenericAuthorization** - 모든 메시지 타입에 대한 일반 권한
+- **SendAuthorization** - 토큰 전송 권한
+- **StakeAuthorization** - 스테이킹 작업 권한
+
+## 메시지
+
+- `MsgGrant` - 권한 부여
+- `MsgRevoke` - 권한 취소
+- `MsgExec` - 권한을 사용하여 메시지 실행

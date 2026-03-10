@@ -1,0 +1,65 @@
+---
+title: Explorer
+---
+
+StreamManagerV2를 사용하여 Indexer에서 Explorer 모듈 관련 데이터를 스트리밍하는 예제 코드 스니펫입니다.
+
+## StreamManagerV2를 사용한 gRPC 스트림
+
+### 블록 스트림
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.explorer)
+
+const streamManager = new StreamManagerV2({
+  id: 'explorer-blocks',
+  streamFactory: () => stream.streamBlocks({ 
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (blocks) => {
+    console.log(blocks)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('스트림 연결됨'))
+streamManager.start()
+```
+
+### 트랜잭션 스트림
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.explorer)
+
+const streamManager = new StreamManagerV2({
+  id: 'explorer-transactions',
+  streamFactory: () => stream.streamTransactions({ 
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (transactions) => {
+    console.log(transactions)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('스트림 연결됨'))
+streamManager.start()
+```

@@ -1,0 +1,37 @@
+---
+title: Markets
+---
+
+Indexer에서 모든 마켓 데이터를 쿼리하는 예제 코드 스니펫입니다.
+
+## HTTP REST 사용
+
+### 마켓 기록 조회
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestMarketChronosApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestMarketChronosApi = new IndexerRestMarketChronosApi(
+  `${endpoints.chronos}/api/chronos/v1/market`
+);
+
+const SelectList = {
+  Hour: "60",
+  Day: "1d",
+  Week: "7d",
+};
+
+const marketIds = ["0x"];
+const countback = 154; // 시간 단위
+const resolution = SelectList.Day;
+
+const marketsHistory = await indexerRestMarketChronosApi.fetchMarketsHistory({
+  marketIds,
+  resolution,
+  countback,
+});
+
+console.log(marketsHistory);
+```
