@@ -1,0 +1,70 @@
+---
+title: Injective Trading Skills
+description: 在你的 AI 工程 harness 中使用 Injective trading agent skills 集合
+---
+
+**Injective Trading Account** - 分析任何 Injective 钱包地址。
+查询所有代币类型的 bank 余额（INJ、USDT、IBC 资产、Peggy ERC-20），
+检查 trading subaccount 余额，并查看 perpetual 持仓及未实现盈亏。
+适用于投资组合监控、仓位管理和交易前检查。
+需要连接 Injective MCP server。
+
+**Injective Trading Autosign** - 在 Injective 上设置 AuthZ 委托以进行基于会话的自动交易。
+向临时密钥授予有范围、有时限的权限，使 AI 可以下单和平仓 perpetual 交易，
+而无需每次订单都弹出钱包或输入密码。
+使用 authz_grant 启用，authz_revoke 禁用。
+需要连接 Injective MCP server。
+
+**Injective Trading Bridge** - 使用 deBridge DLN（快速跨链）或 Peggy（Ethereum 规范桥）
+将代币桥接到 Injective 或从 Injective 桥接出去。
+支持从 Arbitrum、Ethereum、Base、Polygon、BSC、Avalanche 和 Optimism 入桥到 Injective，
+以及从 Injective 出桥到任何 deBridge 支持的链。
+执行前可获取报价。
+需要连接 Injective MCP server。
+
+**Injective Trading Chain Analysis** - 分析 Injective 链级代码和协议规范。
+读取 injective-core 的 Go 源码，解释 exchange module 功能
+（position offsetting、liquidations、margin tiers、funding），并识别规范差异。
+适用于讨论链机制、审查 Injective Go 代码或解释协议行为。
+
+**Injective Trading Market Data** - 访问 Injective perpetual futures 市场的实时市场数据。
+查询 oracle 价格，列出所有活跃市场及其元数据（tick size、min notional、max leverage），
+并获取当前价差和 funding 信息。
+需要连接 Injective MCP server。
+
+**Injective Trading Staking** - 查询和管理 Injective staking 委托、奖励和验证者信息。
+通过 Injective LCD/REST API 查找 staker 地址、委托金额、解绑状态和已领取的奖励。
+
+**Injective Trading Tokens** - 查找任何 Injective 代币或 denom 的元数据。
+解析原生代币（INJ）、Peggy ERC-20 桥接代币（USDT、USDC、WETH）、IBC 资产（ATOM、OSMO）、
+TokenFactory 代币和 EVM ERC-20，获取其人类可读的 symbol、decimals 和类型。
+还支持在地址之间发送代币，以及从 trading subaccounts 存取资金。
+需要连接 Injective MCP server。
+
+## 安装
+
+通过 NPX 安装:
+
+```bash
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-account
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-autosign
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-bridge
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-chain-analysis
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-market-data
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-staking
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-tokens
+```
+
+请注意，以上命令会安装所有 trading 相关的 skills。
+你可能只想根据你的目标安装其中的一部分。
+
+## 使用方法
+
+安装 skills 后，在 harness 中输入你的 prompts 即可使用它们。
