@@ -1,0 +1,93 @@
+---
+title: x/genutil
+---
+
+# `x/genutil`
+
+## Concepts
+
+`genutil` 패키지는 블록체인 애플리케이션 내에서 사용하기 위한 다양한 genesis 유틸리티 기능을 포함합니다. 구체적으로:
+
+* Genesis 트랜잭션 관련 (gentx)
+* gentx 수집 및 생성을 위한 명령어
+* gentx의 `InitChain` 처리
+* Genesis 파일 생성
+* Genesis 파일 검증
+* Genesis 파일 마이그레이션
+* CometBFT 관련 초기화
+    * app genesis를 CometBFT genesis로 변환
+
+## Genesis
+
+Genutil은 애플리케이션 genesis를 정의하는 데이터 구조를 포함합니다.
+애플리케이션 genesis는 consensus genesis(예: CometBFT genesis)와 애플리케이션 관련 genesis 데이터로 구성됩니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/x/genutil/types/genesis.go#L24-L34
+```
+
+애플리케이션 genesis는 consensus 엔진을 올바른 형식으로 변환할 수 있습니다:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/x/genutil/types/genesis.go#L126-L136
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/server/start.go#L397-L407
+```
+
+## Client
+
+### CLI
+
+genutil 명령어는 `genesis` 하위 명령어 아래에서 사용할 수 있습니다.
+
+#### add-genesis-account
+
+`genesis.json`에 genesis 계정을 추가합니다. 자세한 내용은 [여기](https://docs.cosmos.network/main/run-node/run-node#adding-genesis-accounts)를 참조하세요.
+
+#### collect-gentxs
+
+genesis tx를 수집하고 `genesis.json` 파일을 출력합니다.
+
+```shell
+simd genesis collect-gentxs
+```
+
+이렇게 하면 모든 검증인의 데이터를 포함하는 새로운 `genesis.json` 파일이 생성됩니다(단일 검증인 genesis 파일과 구별하기 위해 "super genesis 파일"이라고도 합니다).
+
+#### gentx
+
+자체 위임을 포함하는 genesis tx를 생성합니다.
+
+```shell
+simd genesis gentx [key_name] [amount] --chain-id [chain-id]
+```
+
+이렇게 하면 새 체인의 genesis 트랜잭션이 생성됩니다. 여기서 `amount`는 최소 `1000000000stake`여야 합니다.
+너무 많거나 너무 적으면 노드 시작 시 오류가 발생합니다.
+
+#### migrate
+
+genesis를 지정된 대상(SDK) 버전으로 마이그레이션합니다.
+
+```shell
+simd genesis migrate [target-version]
+```
+
+:::tip
+`migrate` 명령어는 확장 가능하며 `MigrationMap`을 사용합니다. 이 맵은 대상 버전에서 genesis 마이그레이션 함수로의 매핑입니다.
+기본 `MigrationMap`을 사용하지 않는 경우에도 체인의 SDK 버전에 해당하는 기본 `MigrationMap`을 호출하고 자체 genesis 마이그레이션을 앞뒤에 추가하는 것이 좋습니다.
+:::
+
+#### validate-genesis
+
+기본 위치 또는 인수로 전달된 위치의 genesis 파일을 검증합니다.
+
+```shell
+simd genesis validate-genesis
+```
+
+:::warning
+validate genesis는 genesis가 **현재 애플리케이션 바이너리**에서 유효한지만 검증합니다. 이전 버전의 애플리케이션에서 genesis를 검증하려면 `migrate` 명령어를 사용하여 genesis를 현재 버전으로 마이그레이션하세요.
+:::

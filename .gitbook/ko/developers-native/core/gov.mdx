@@ -1,0 +1,2433 @@
+---
+title: Gov
+---
+
+# `x/gov`
+
+## 개요
+
+이 문서는 2016년 6월 [Cosmos Whitepaper](https://cosmos.network/about/whitepaper)에서 처음 설명된 Cosmos SDK의 Governance 모듈을 명세합니다.
+
+이 모듈은 Cosmos SDK 기반 블록체인이 온체인 거버넌스 시스템을 지원할 수 있도록 합니다. 이 시스템에서 체인의 네이티브 스테이킹 토큰 보유자는 1 토큰 1 투표 기준으로 제안에 투표할 수 있습니다. 다음은 현재 모듈이 지원하는 기능 목록입니다:
+
+* **제안 제출:** 사용자는 예치금과 함께 제안을 제출할 수 있습니다. 최소 예치금에 도달하면 제안은 투표 기간에 진입합니다. 최소 예치금은 예치 기간 내에 여러 사용자(제안자 포함)로부터 예치금을 수집하여 도달할 수 있습니다.
+* **투표:** 참가자들은 MinDeposit에 도달하여 투표 기간에 진입한 제안에 투표할 수 있습니다.
+* **상속 및 패널티:** 위임자가 직접 투표하지 않으면 검증인의 투표를 상속받습니다.
+* **예치금 청구:** 제안에 예치한 사용자는 제안이 승인되거나 거부된 경우 예치금을 돌려받을 수 있습니다. 제안이 거부권 행사되었거나 투표 기간에 진입하지 못한 경우(예치 기간 내에 최소 예치금에 도달하지 못함) 예치금은 소각됩니다.
+
+이 모듈은 Cosmos Hub(일명 [gaia](https://github.com/cosmos/gaia))에서 사용됩니다.
+향후 추가될 수 있는 기능은 [향후 개선 사항](#future-improvements)에 설명되어 있습니다.
+
+## 목차
+
+다음 명세는 *ATOM*을 네이티브 스테이킹 토큰으로 사용합니다. 이 모듈은 *ATOM*을 체인의 네이티브 스테이킹 토큰으로 대체하여 모든 Proof-Of-Stake 블록체인에 적용할 수 있습니다.
+
+* [개념](#concepts)
+    * [제안 제출](#proposal-submission)
+    * [예치금](#deposit)
+    * [투표](#vote)
+    * [소프트웨어 업그레이드](#software-upgrade)
+* [상태](#state)
+    * [제안](#proposals)
+    * [매개변수 및 기본 타입](#parameters-and-base-types)
+    * [예치금](#deposit-1)
+    * [ValidatorGovInfo](#validatorgovinfo)
+    * [저장소](#stores)
+    * [제안 처리 큐](#proposal-processing-queue)
+    * [레거시 제안](#legacy-proposal)
+* [메시지](#messages)
+    * [제안 제출](#proposal-submission-1)
+    * [예치금](#deposit-2)
+    * [투표](#vote-1)
+* [이벤트](#events)
+    * [EndBlocker](#endblocker)
+    * [핸들러](#handlers)
+* [매개변수](#parameters)
+* [클라이언트](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
+* [메타데이터](#metadata)
+    * [Proposal](#proposal-3)
+    * [Vote](#vote-5)
+* [향후 개선 사항](#future-improvements)
+
+## 개념
+
+*면책 조항: 이것은 진행 중인 작업입니다. 메커니즘은 변경될 수 있습니다.*
+
+거버넌스 프로세스는 아래에 설명된 몇 가지 단계로 나뉩니다:
+
+* **제안 제출:** 예치금과 함께 블록체인에 제안이 제출됩니다.
+* **투표:** 예치금이 특정 값(`MinDeposit`)에 도달하면 제안이 확정되고 투표가 시작됩니다. 본딩된 Atom 보유자는 `TxGovVote` 트랜잭션을 전송하여 제안에 투표할 수 있습니다.
+* **실행** 일정 기간 후 투표가 집계되고 결과에 따라 제안의 메시지가 실행됩니다.
+
+### 제안 제출
+
+#### 제안 제출 권한
+
+모든 계정은 `MsgSubmitProposal` 트랜잭션을 전송하여 제안을 제출할 수 있습니다.
+제안이 제출되면 고유한 `proposalID`로 식별됩니다.
+
+#### 제안 메시지
+
+제안에는 제안이 통과되면 자동으로 실행되는 `sdk.Msg` 배열이 포함됩니다. 메시지는 거버넌스 `ModuleAccount` 자체에 의해 실행됩니다. 정족수에 도달한 후 거버넌스 모듈에 메시지 실행 권한을 부여하려면 `x/upgrade`와 같은 모듈은 해당 msg server 내에 화이트리스트를 추가해야 합니다. 거버넌스 모듈은 `MsgServiceRouter`를 사용하여 이러한 메시지가 올바르게 구성되었고 실행할 경로가 있는지 확인하지만 전체 유효성 검사를 수행하지는 않습니다.
+
+### 예치금
+
+스팸을 방지하기 위해 제안은 `MinDeposit` 매개변수에 정의된 코인으로 예치금과 함께 제출해야 합니다.
+
+제안이 제출될 때 양수 예치금을 동반해야 하지만 `MinDeposit`보다 작을 수 있습니다. 제출자가 전체 예치금을 직접 지불할 필요는 없습니다. 새로 생성된 제안은 *비활성 제안 큐*에 저장되고 예치금이 `MinDeposit`을 통과할 때까지 거기에 남아 있습니다. 다른 토큰 보유자는 `Deposit` 트랜잭션을 전송하여 제안의 예치금을 증가시킬 수 있습니다. 제안이 예치 종료 시간(예치금이 더 이상 수락되지 않는 시간) 전에 `MinDeposit`을 통과하지 못하면 제안이 삭제됩니다: 제안은 상태에서 제거되고 예치금은 소각됩니다(x/gov `EndBlocker` 참조). 제안 예치금이 예치 종료 시간 전에 `MinDeposit` 임계값을 통과하면(제안 제출 중에도) 제안은 *활성 제안 큐*로 이동하고 투표 기간이 시작됩니다.
+
+예치금은 에스크로에 보관되며 제안이 완료(통과 또는 거부)될 때까지 거버넌스 `ModuleAccount`에 의해 보유됩니다.
+
+#### 예치금 환불 및 소각
+
+제안이 완료되면 예치금의 코인은 제안의 최종 집계에 따라 환불되거나 소각됩니다:
+
+* 제안이 승인되거나 거부되었지만 거부권 행사되지 *않은* 경우 각 예치금은 해당 예치자에게 자동으로 환불됩니다(거버넌스 `ModuleAccount`에서 이전).
+* 제안이 1/3 이상의 거부권으로 거부되면 예치금은 거버넌스 `ModuleAccount`에서 소각되고 제안 정보와 예치금 정보가 상태에서 제거됩니다.
+* 모든 환불되거나 소각된 예치금은 상태에서 제거됩니다. 예치금을 소각하거나 환불할 때 이벤트가 발생합니다.
+
+### 투표
+
+#### 참가자
+
+*참가자*는 제안에 투표할 권한이 있는 사용자입니다. Cosmos Hub에서 참가자는 본딩된 Atom 보유자입니다. 본딩되지 않은 Atom 보유자와 다른 사용자는 거버넌스에 참여할 권한이 없습니다. 그러나 제안을 제출하고 예치할 수는 있습니다.
+
+*참가자*가 본딩된 Atom과 본딩되지 않은 Atom을 모두 가지고 있을 때 투표권은 본딩된 Atom 보유량에서만 계산됩니다.
+
+#### 투표 기간
+
+제안이 `MinDeposit`에 도달하면 즉시 `Voting period`에 진입합니다. `Voting period`는 투표가 시작되는 순간과 투표가 종료되는 순간 사이의 간격으로 정의됩니다. `Voting period`의 초기 값은 2주입니다.
+
+#### 옵션 세트
+
+제안의 옵션 세트는 참가자가 투표할 때 선택할 수 있는 선택지 세트를 의미합니다.
+
+초기 옵션 세트에는 다음 옵션이 포함됩니다:
+
+* `Yes`
+* `No`
+* `NoWithVeto`
+* `Abstain`
+
+`NoWithVeto`는 `No`로 계산되지만 `Veto` 투표도 추가합니다. `Abstain` 옵션을 통해 투표자는 제안에 찬성하거나 반대하지 않지만 투표 결과를 수락한다는 신호를 보낼 수 있습니다.
+
+*참고: UI에서 긴급 제안의 경우 `NoWithVeto` 투표를 하는 '긴급하지 않음' 옵션을 추가해야 할 수 있습니다.*
+
+#### 가중 투표
+
+[ADR-037](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-037-gov-split-vote.md)은 스테이커가 투표를 여러 투표 옵션으로 분할할 수 있는 가중 투표 기능을 도입합니다. 예를 들어 투표권의 70%를 Yes에, 30%를 No에 사용할 수 있습니다.
+
+해당 주소를 소유한 엔티티가 단일 개인이 아닐 수 있는 경우가 많습니다. 예를 들어 회사는 다르게 투표하고 싶은 여러 이해관계자가 있을 수 있으므로 투표권을 분할하는 것이 합리적입니다. 현재 거래소가 "패스스루 투표"를 수행하고 사용자에게 토큰에 대한 투표권을 부여하는 것은 불가능합니다. 그러나 이 시스템을 통해 거래소는 사용자에게 투표 선호도를 조사한 다음 조사 결과에 비례하여 온체인에서 투표할 수 있습니다.
+
+온체인에서 가중 투표를 나타내기 위해 다음 Protobuf 메시지를 사용합니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L34-L47
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L181-L201
+```
+
+가중 투표가 유효하려면 `options` 필드에 중복 투표 옵션이 포함되지 않아야 하며 모든 옵션의 가중치 합계가 1이어야 합니다.
+
+### 정족수
+
+정족수는 결과가 유효하기 위해 제안에 투표해야 하는 투표권의 최소 비율로 정의됩니다.
+
+### 신속 제안
+
+제안을 신속 처리하여 더 짧은 투표 기간과 더 높은 집계 임계값을 사용하도록 할 수 있습니다. 신속 제안이 더 짧은 투표 기간 내에 임계값을 충족하지 못하면 신속 제안은 일반 제안으로 전환되고 일반 투표 조건에서 투표가 다시 시작됩니다.
+
+#### 임계값
+
+임계값은 제안이 승인되기 위한 `Yes` 투표(`Abstain` 투표 제외)의 최소 비율로 정의됩니다.
+
+처음에 임계값은 `Abstain` 투표를 제외한 `Yes` 투표의 50%로 설정됩니다. 모든 투표의 1/3 이상이 `NoWithVeto` 투표인 경우 거부권 행사 가능성이 있습니다. 이 두 값은 모두 거버넌스로 수정 가능한 온체인 매개변수 `TallyParams`에서 파생됩니다.
+이는 다음 조건이 모두 충족되면 제안이 승인됨을 의미합니다:
+
+* 본딩된 토큰이 존재합니다.
+* 정족수에 도달했습니다.
+* `Abstain` 투표의 비율이 1/1 미만입니다.
+* `Abstain` 투표를 포함하여 `NoWithVeto` 투표의 비율이 1/3 미만입니다.
+* 투표 기간 종료 시 `Abstain` 투표를 제외한 `Yes` 투표의 비율이 1/2 초과입니다.
+
+신속 제안의 경우 기본적으로 임계값은 *일반 제안*보다 높으며 66.7%입니다.
+
+#### 상속
+
+위임자가 투표하지 않으면 검증인의 투표를 상속받습니다.
+
+* 위임자가 검증인보다 먼저 투표하면 검증인의 투표를 상속받지 않습니다.
+* 위임자가 검증인 후에 투표하면 자신의 투표로 검증인의 투표를 무시합니다. 제안이 긴급한 경우 위임자가 반응하여 검증인의 투표를 무시할 기회를 갖기 전에 투표가 종료될 수 있습니다. 이것은 문제가 되지 않습니다. 제안은 투표 기간 종료 시 집계될 때 총 투표권의 2/3 이상이 필요하기 때문입니다. 1/3 + 1의 검증 권한만으로도 트랜잭션을 검열할 수 있으므로 이 임계값을 초과하는 범위에서는 이미 비공모가 가정되어 있습니다.
+
+#### 미투표 검증인에 대한 패널티
+
+현재 검증인은 투표하지 않은 것에 대해 패널티를 받지 않습니다.
+
+#### 거버넌스 주소
+
+나중에 특정 모듈의 트랜잭션만 서명할 수 있는 권한이 있는 키를 추가할 수 있습니다. MVP의 경우 `Governance address`는 계정 생성 시 생성된 메인 검증인 주소가 됩니다. 이 주소는 합의 메시지에 서명하는 CometBFT PrivKey와 다른 PrivKey에 해당합니다. 따라서 검증인은 민감한 CometBFT PrivKey로 거버넌스 트랜잭션에 서명할 필요가 없습니다.
+
+#### 소각 매개변수
+
+제안의 예치금을 소각할지 예치자에게 반환할지 정의하는 세 가지 매개변수가 있습니다.
+
+* `BurnVoteVeto`는 제안이 거부권 행사되면 제안 예치금을 소각합니다.
+* `BurnVoteQuorum`은 투표가 정족수에 도달하지 못하면 제안 예치금을 소각합니다.
+* `BurnProposalDepositPrevote`는 투표 단계에 진입하지 못하면 제안 예치금을 소각합니다.
+
+> 참고: 이러한 매개변수는 거버넌스를 통해 수정할 수 있습니다.
+
+## 상태
+
+### 헌법
+
+`Constitution`은 제네시스 상태에 있습니다. 특정 블록체인의 목적과 예상되는 규범을 설명하는 데 사용되는 문자열 필드입니다. 헌법 필드를 사용할 수 있는 몇 가지 예:
+
+* 체인의 목적을 정의하고 향후 개발을 위한 기반을 마련
+* 위임자에 대한 기대치 설정
+* 검증인에 대한 기대치 설정
+* 재단이나 기업과 같은 "현실 세계" 엔티티와 체인의 관계 정의
+
+이것은 기술적 기능보다 사회적 기능이므로 제네시스 헌법에 있으면 유용할 수 있는 몇 가지 항목을 살펴보겠습니다:
+
+* 거버넌스에 어떤 제한이 있는 경우?
+    * 커뮤니티가 더 이상 원하지 않는 고래의 지갑을 슬래시해도 괜찮은가? (참조: Juno Proposal 4 및 16)
+    * 거버넌스가 승인되지 않은 MEV를 사용하는 검증인을 "사회적으로 슬래시"할 수 있는가? (참조: commonwealth.im/osmosis)
+    * 경제적 비상사태 시 검증인은 무엇을 해야 하는가?
+        * 2022년 5월 Terra 붕괴에서 검증인들은 거버넌스 토큰이 무가치해졌기 때문에 거버넌스에서 승인되지 않은 코드가 포함된 새 바이너리를 실행하기로 선택했습니다.
+* 체인의 구체적인 목적은 무엇인가?
+    * 가장 좋은 예는 Cosmos hub로, 여러 창립 그룹이 네트워크의 목적에 대해 다른 해석을 가지고 있습니다.
+
+이 제네시스 항목 "constitution"은 거버넌스 시스템을 사용하여 헌법을 비준해야 하는 기존 체인을 위해 설계되지 않았습니다. 대신 새로운 체인을 위한 것입니다. 검증인이 노드를 운영하는 동안 목적과 기대치에 대해 훨씬 더 명확한 아이디어를 가질 수 있게 합니다. 마찬가지로 커뮤니티 구성원의 경우 헌법은 "체인 팀"과 검증인 각각에게 무엇을 기대할 수 있는지에 대한 아이디어를 제공합니다.
+
+이 헌법은 불변으로 설계되어 제네시스에만 배치되지만, 헌법을 거버넌스로 변경할 수 있는 cosmos-sdk에 대한 풀 리퀘스트로 시간이 지남에 따라 변경될 수 있습니다. 원래 헌법을 수정하려는 커뮤니티는 거버넌스 메커니즘과 "신호 제안"을 사용하여 정확히 그렇게 해야 합니다.
+
+**cosmos chain 헌법의 이상적인 사용 시나리오**
+
+체인 개발자로서 주요 사용자 그룹에게 명확성을 제공하기로 결정합니다:
+
+* 검증인
+* 토큰 보유자
+* 개발자(본인)
+
+어려운 질문이 발생했을 때 헌법이 커뮤니티에 지침을 제공할 수 있도록 제네시스에 일부 Markdown을 불변으로 저장하는 데 헌법을 사용합니다.
+
+### 제안
+
+`Proposal` 객체는 투표를 집계하고 일반적으로 제안 상태를 추적하는 데 사용됩니다.
+제안이 통과되면 거버넌스 모듈이 해결하고 실행하려고 시도하는 임의의 `sdk.Msg` 배열을 포함합니다. `Proposal`은 고유한 id로 식별되며 제안의 수명 주기를 추적하는 일련의 타임스탬프를 포함합니다: `submit_time`, `deposit_end_time`, `voting_start_time`, `voting_end_time`
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L51-L99
+```
+
+제안은 일반적으로 목적을 설명하기 위해 메시지 세트 이상이 필요하며 관심 있는 참가자가 제안에 대해 토론하고 논의할 수 있는 수단이 필요합니다.
+대부분의 경우 **온체인 거버넌스 프로세스를 지원하는 오프체인 시스템을 갖추는 것이 권장됩니다**.
+이를 수용하기 위해 제안에는 제안에 컨텍스트를 추가하는 데 사용할 수 있는 특수 **`metadata`** 필드(문자열)가 포함됩니다. `metadata` 필드는 네트워크에 대한 사용자 정의 사용을 허용하지만, 이 필드에는 URL 또는 [IPFS](https://docs.ipfs.io/concepts/content-addressing/)와 같은 시스템을 사용하는 CID 형식이 포함될 것으로 예상됩니다. 네트워크 간 상호 운용성을 지원하기 위해 SDK는 `metadata`가 다음 `JSON` 템플릿을 나타낼 것을 권장합니다:
+
+```json
+{
+  "title": "...",
+  "description": "...",
+  "forum": "...", // a link to the discussion platform (i.e. Discord)
+  "other": "..." // any extra data that doesn't correspond to the other fields
+}
+```
+
+이를 통해 클라이언트가 여러 네트워크를 훨씬 쉽게 지원할 수 있습니다.
+
+metadata의 최대 길이는 앱 개발자가 선택하며 gov keeper에 config로 전달됩니다. SDK의 기본 최대 길이는 255자입니다.
+
+#### 거버넌스를 사용하는 모듈 작성
+
+다양한 매개변수 변경과 같이 거버넌스를 사용하여 수행하려는 체인 또는 개별 모듈의 많은 측면이 있습니다. 이것은 매우 간단합니다. 먼저 메시지 타입과 `MsgServer` 구현을 작성합니다. 거버넌스 모듈 계정으로 생성자에서 채워질 keeper에 `authority` 필드를 추가합니다: `govKeeper.GetGovernanceAccount().GetAddress()`. 그런 다음 `msg_server.go`의 메서드에서 메시지의 서명자가 `authority`와 일치하는지 확인합니다. 이렇게 하면 모든 사용자가 해당 메시지를 실행하는 것을 방지합니다.
+
+### 매개변수 및 기본 타입
+
+`Parameters`는 투표가 실행되는 규칙을 정의합니다. 주어진 시간에 하나의 활성 매개변수 세트만 있을 수 있습니다. 거버넌스가 값을 수정하거나 매개변수 필드를 추가/제거하여 매개변수 세트를 변경하려면 새 매개변수 세트를 만들고 이전 세트를 비활성화해야 합니다.
+
+#### DepositParams
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L152-L162
+```
+
+#### VotingParams
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L164-L168
+```
+
+#### TallyParams
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L170-L182
+```
+
+매개변수는 전역 `GlobalParams` KVStore에 저장됩니다.
+
+추가로 몇 가지 기본 타입을 소개합니다:
+
+```go
+type Vote byte
+
+const (
+    VoteYes         = 0x1
+    VoteNo          = 0x2
+    VoteNoWithVeto  = 0x3
+    VoteAbstain     = 0x4
+)
+
+type ProposalType  string
+
+const (
+    ProposalTypePlainText       = "Text"
+    ProposalTypeSoftwareUpgrade = "SoftwareUpgrade"
+)
+
+type ProposalStatus byte
+
+
+const (
+    StatusNil           ProposalStatus = 0x00
+    StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit on it but not vote
+    StatusVotingPeriod  ProposalStatus = 0x02  // MinDeposit is reached, participants can vote
+    StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed
+    StatusRejected      ProposalStatus = 0x04  // Proposal has been rejected
+    StatusFailed        ProposalStatus = 0x05  // Proposal passed but failed execution
+)
+```
+
+### 예치금
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L38-L49
+```
+
+### ValidatorGovInfo
+
+이 타입은 집계 시 임시 맵에서 사용됩니다
+
+```go
+  type ValidatorGovInfo struct {
+    Minus     sdk.Dec
+    Vote      Vote
+  }
+```
+
+## 저장소
+
+:::note
+저장소는 multi-store의 KVStore입니다. 저장소를 찾는 키는 목록의 첫 번째 매개변수입니다
+:::
+
+4개의 매핑을 저장하기 위해 하나의 KVStore `Governance`를 사용합니다:
+
+* `proposalID|'proposal'`에서 `Proposal`로의 매핑.
+* `proposalID|'addresses'|address`에서 `Vote`로의 매핑. 이 매핑을 통해 `proposalID:addresses`에서 범위 쿼리를 수행하여 제안에 투표한 모든 주소와 투표를 쿼리할 수 있습니다.
+* `ParamsKey|'Params'`에서 `Params`로의 매핑. 이 맵을 통해 모든 x/gov 매개변수를 쿼리할 수 있습니다.
+* `VotingPeriodProposalKeyPrefix|proposalID`에서 단일 바이트로의 매핑. 이를 통해 매우 낮은 가스 비용으로 제안이 투표 기간에 있는지 여부를 알 수 있습니다.
+
+의사 코드 목적으로 저장소에서 읽거나 쓰는 데 사용할 두 가지 함수가 있습니다:
+
+* `load(StoreKey, Key)`: multistore에서 키 `StoreKey`에서 찾은 저장소의 키 `Key`에 저장된 항목을 검색
+* `store(StoreKey, Key, value)`: multistore에서 키 `StoreKey`에서 찾은 저장소의 키 `Key`에 값 `Value`를 쓰기
+
+### 제안 처리 큐
+
+**저장소:**
+
+* `ProposalProcessingQueue`: `MinDeposit`에 도달한 모든 `ProposalID`를 포함하는 큐 `queue[proposalID]`. 각 `EndBlock` 동안 투표 기간이 종료된 모든 제안이 처리됩니다. 완료된 제안을 처리하기 위해 애플리케이션은 투표를 집계하고, 각 검증인의 투표를 계산하고, 검증인 세트의 모든 검증인이 투표했는지 확인합니다. 제안이 승인되면 예치금이 환불됩니다. 마지막으로 제안 콘텐츠 `Handler`가 실행됩니다.
+
+`ProposalProcessingQueue`의 의사 코드:
+
+```go
+  in EndBlock do
+
+    for finishedProposalID in GetAllFinishedProposalIDs(block.Time)
+      proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
+
+      validators = Keeper.getAllValidators()
+      tmpValMap := map(sdk.AccAddress)ValidatorGovInfo
+
+      // Initiate mapping at 0. This is the amount of shares of the validator's vote that will be overridden by their delegator's votes
+      for each validator in validators
+        tmpValMap(validator.OperatorAddr).Minus = 0
+
+      // Tally
+      voterIterator = rangeQuery(Governance, <proposalID|'addresses'>) //return all the addresses that voted on the proposal
+      for each (voterAddress, vote) in voterIterator
+        delegations = stakingKeeper.getDelegations(voterAddress) // get all delegations for current voter
+
+        for each delegation in delegations
+          // make sure delegation.Shares does NOT include shares being unbonded
+          tmpValMap(delegation.ValidatorAddr).Minus += delegation.Shares
+          proposal.updateTally(vote, delegation.Shares)
+
+        _, isVal = stakingKeeper.getValidator(voterAddress)
+        if (isVal)
+          tmpValMap(voterAddress).Vote = vote
+
+      tallyingParam = load(GlobalParams, 'TallyingParam')
+
+      // Update tally if validator voted
+      for each validator in validators
+        if tmpValMap(validator).HasVoted
+          proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
+
+
+
+      // Check if proposal is accepted or rejected
+      totalNonAbstain := proposal.YesVotes + proposal.NoVotes + proposal.NoWithVetoVotes
+      if (proposal.Votes.YesVotes/totalNonAbstain > tallyingParam.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < tallyingParam.Veto)
+        //  proposal was accepted at the end of the voting period
+        //  refund deposits (non-voters already punished)
+        for each (amount, depositor) in proposal.Deposits
+          depositor.AtomBalance += amount
+
+        stateWriter, err := proposal.Handler()
+        if err != nil
+            // proposal passed but failed during state execution
+            proposal.CurrentStatus = ProposalStatusFailed
+         else
+            // proposal pass and state is persisted
+            proposal.CurrentStatus = ProposalStatusAccepted
+            stateWriter.save()
+      else
+        // proposal was rejected
+        proposal.CurrentStatus = ProposalStatusRejected
+
+      store(Governance, <proposalID|'proposal'>, proposal)
+```
+
+### 레거시 제안
+
+:::warning
+레거시 제안은 더 이상 사용되지 않습니다. 거버넌스 모듈에 메시지 실행 권한을 부여하여 새 제안 흐름을 사용하세요.
+:::
+
+레거시 제안은 거버넌스 제안의 이전 구현입니다.
+모든 메시지를 포함할 수 있는 제안과 달리 레거시 제안은 사전 정의된 제안 세트를 제출할 수 있습니다.
+이러한 제안은 타입에 의해 정의되고 gov v1beta1 라우터에 등록된 핸들러에 의해 처리됩니다.
+
+제안 제출 방법에 대한 자세한 내용은 [클라이언트 섹션](#client)을 참조하세요.
+
+## 메시지
+
+### 제안 제출
+
+모든 계정에서 `MsgSubmitProposal` 트랜잭션을 통해 제안을 제출할 수 있습니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L42-L69
+```
+
+`MsgSubmitProposal` 메시지의 `messages` 필드에 전달된 모든 `sdk.Msgs`는 앱의 `MsgServiceRouter`에 등록되어야 합니다. 이러한 각 메시지에는 하나의 서명자, 즉 gov 모듈 계정이 있어야 합니다. 그리고 마지막으로 metadata 길이는 gov keeper에 전달된 `maxMetadataLen` config보다 크지 않아야 합니다.
+`initialDeposit`은 엄격하게 양수여야 하며 `MinDeposit` 매개변수의 허용된 denom을 준수해야 합니다.
+
+**상태 수정:**
+
+* 새 `proposalID` 생성
+* 새 `Proposal` 생성
+* `Proposal`의 속성 초기화
+* 발신자의 잔액을 `InitialDeposit`만큼 감소
+* `MinDeposit`에 도달한 경우:
+    * `proposalID`를 `ProposalProcessingQueue`에 푸시
+* `Proposer`에서 거버넌스 `ModuleAccount`로 `InitialDeposit` 전송
+
+### 예치금
+
+제안이 제출되면 `Proposal.TotalDeposit < ActiveParam.MinDeposit`인 경우 Atom 보유자는 `MsgDeposit` 트랜잭션을 전송하여 제안의 예치금을 늘릴 수 있습니다.
+
+예치금은 다음 조건이 충족되면 수락됩니다:
+
+* 제안이 존재함
+* 제안이 투표 기간에 있지 않음
+* 예치된 코인이 `MinDeposit` 매개변수의 허용된 denom을 준수함
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L134-L147
+```
+
+**상태 수정:**
+
+* 발신자의 잔액을 `deposit`만큼 감소
+* 발신자의 `deposit`을 `proposal.Deposits`에 추가
+* 발신자의 `deposit`만큼 `proposal.TotalDeposit` 증가
+* `MinDeposit`에 도달한 경우:
+    * `proposalID`를 `ProposalProcessingQueueEnd`에 푸시
+* `proposer`에서 거버넌스 `ModuleAccount`로 `Deposit` 전송
+
+### 투표
+
+`ActiveParam.MinDeposit`에 도달하면 투표 기간이 시작됩니다. 그 시점부터 본딩된 Atom 보유자는 `MsgVote` 트랜잭션을 전송하여 제안에 투표할 수 있습니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L92-L108
+```
+
+**상태 수정:**
+
+* 발신자의 `Vote` 기록
+
+:::note
+이 메시지의 가스 비용은 EndBlocker에서 투표의 향후 집계를 고려해야 합니다.
+:::
+
+## 이벤트
+
+거버넌스 모듈은 다음 이벤트를 발생시킵니다:
+
+### EndBlocker
+
+| Type              | Attribute Key   | Attribute Value  |
+|-------------------|-----------------|------------------|
+| inactive_proposal | proposal_id     | `{proposalID}` |
+| inactive_proposal | proposal_result | `{proposalResult}` |
+| active_proposal   | proposal_id     | `{proposalID}` |
+| active_proposal   | proposal_result | `{proposalResult}` |
+
+### 핸들러
+
+#### MsgSubmitProposal
+
+| Type                | Attribute Key       | Attribute Value |
+|---------------------|---------------------|-----------------|
+| submit_proposal     | proposal_id         | `{proposalID}` |
+| submit_proposal [0] | voting_period_start | `{proposalID}` |
+| proposal_deposit    | amount              | `{depositAmount}` |
+| proposal_deposit    | proposal_id         | `{proposalID}` |
+| message             | module              | `governance`      |
+| message             | action              | `submit_proposal` |
+| message             | sender              | `{senderAddress}` |
+
+* [0] 제출 중에 투표 기간이 시작되는 경우에만 발생하는 이벤트입니다.
+
+#### MsgVote
+
+| Type          | Attribute Key | Attribute Value |
+|---------------|---------------|-----------------|
+| proposal_vote | option        | `{voteOption}` |
+| proposal_vote | proposal_id   | `{proposalID}` |
+| message       | module        | `governance`      |
+| message       | action        | `vote`            |
+| message       | sender        | `{senderAddress}` |
+
+#### MsgVoteWeighted
+
+| Type          | Attribute Key | Attribute Value       |
+|---------------|---------------|-----------------------|
+| proposal_vote | option        | `{weightedVoteOptions}` |
+| proposal_vote | proposal_id   | `{proposalID}` |
+| message       | module        | `governance`            |
+| message       | action        | `vote`                  |
+| message       | sender        | `{senderAddress}` |
+
+#### MsgDeposit
+
+| Type                 | Attribute Key       | Attribute Value |
+|----------------------|---------------------|-----------------|
+| proposal_deposit     | amount              | `{depositAmount}` |
+| proposal_deposit     | proposal_id         | `{proposalID}` |
+| proposal_deposit [0] | voting_period_start | `{proposalID}` |
+| message              | module              | `governance`      |
+| message              | action              | `deposit`         |
+| message              | sender              | `{senderAddress}` |
+
+* [0] 제출 중에 투표 기간이 시작되는 경우에만 발생하는 이벤트입니다.
+
+## 매개변수
+
+거버넌스 모듈에는 다음 매개변수가 포함됩니다:
+
+| Key                           | Type             | Example                                 |
+|-------------------------------|------------------|-----------------------------------------|
+| min_deposit                   | array (coins)    | `[{"denom":"uatom","amount":"10000000"}]` |
+| max_deposit_period            | string (time ns) | `"172800000000000"` (17280s)              |
+| voting_period                 | string (time ns) | `"172800000000000"` (17280s)              |
+| quorum                        | string (dec)     | `"0.334000000000000000"`                  |
+| threshold                     | string (dec)     | `"0.500000000000000000"`                  |
+| veto                          | string (dec)     | `"0.334000000000000000"`                  |
+| expedited_threshold           | string (time ns) | `"0.667000000000000000"`                  |
+| expedited_voting_period       | string (time ns) | `"86400000000000"` (8600s)                |
+| expedited_min_deposit         | array (coins)    | `[{"denom":"uatom","amount":"50000000"}]` |
+| burn_proposal_deposit_prevote | bool             | `false`                                    |
+| burn_vote_quorum              | bool             | `false`                                   |
+| burn_vote_veto                | bool             | `true`                                    |
+| min_initial_deposit_ratio                | string             | `"0.1"`                                    |
+
+
+**참고**: 거버넌스 모듈에는 다른 모듈과 달리 객체인 매개변수가 포함되어 있습니다. 매개변수의 하위 집합만 변경하려는 경우 전체 매개변수 객체 구조가 아닌 해당 항목만 포함하면 됩니다.
+
+## 클라이언트
+
+### CLI
+
+사용자는 CLI를 사용하여 `gov` 모듈을 쿼리하고 상호작용할 수 있습니다.
+
+#### 쿼리
+
+`query` 명령을 사용하여 `gov` 상태를 쿼리할 수 있습니다.
+
+```bash
+simd query gov --help
+```
+
+##### deposit
+
+`deposit` 명령을 사용하여 지정된 제안에 대한 지정된 예치자의 예치금을 쿼리할 수 있습니다.
+
+```bash
+simd query gov deposit [proposal-id] [depositer-addr] [flags]
+```
+
+예시:
+
+```bash
+simd query gov deposit 1 cosmos1..
+```
+
+예시 출력:
+
+```bash
+amount:
+- amount: "100"
+  denom: stake
+depositor: cosmos1..
+proposal_id: "1"
+```
+
+##### deposits
+
+`deposits` 명령을 사용하여 지정된 제안의 모든 예치금을 쿼리할 수 있습니다.
+
+```bash
+simd query gov deposits [proposal-id] [flags]
+```
+
+예시:
+
+```bash
+simd query gov deposits 1
+```
+
+예시 출력:
+
+```bash
+deposits:
+- amount:
+  - amount: "100"
+    denom: stake
+  depositor: cosmos1..
+  proposal_id: "1"
+pagination:
+  next_key: null
+  total: "0"
+```
+
+##### param
+
+`param` 명령을 사용하여 `gov` 모듈의 지정된 매개변수를 쿼리할 수 있습니다.
+
+```bash
+simd query gov param [param-type] [flags]
+```
+
+예시:
+
+```bash
+simd query gov param voting
+```
+
+예시 출력:
+
+```bash
+voting_period: "172800000000000"
+```
+
+##### params
+
+`params` 명령을 사용하여 `gov` 모듈의 모든 매개변수를 쿼리할 수 있습니다.
+
+```bash
+simd query gov params [flags]
+```
+
+예시:
+
+```bash
+simd query gov params
+```
+
+예시 출력:
+
+```bash
+deposit_params:
+  max_deposit_period: 172800s
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+params:
+  expedited_min_deposit:
+  - amount: "50000000"
+    denom: stake
+  expedited_threshold: "0.670000000000000000"
+  expedited_voting_period: 86400s
+  max_deposit_period: 172800s
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+  min_initial_deposit_ratio: "0.000000000000000000"
+  proposal_cancel_burn_rate: "0.500000000000000000"
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+  voting_period: 172800s
+tally_params:
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+voting_params:
+  voting_period: 172800s
+```
+
+##### proposal
+
+`proposal` 명령을 사용하여 지정된 제안을 쿼리할 수 있습니다.
+
+```bash
+simd query gov proposal [proposal-id] [flags]
+```
+
+예시:
+
+```bash
+simd query gov proposal 1
+```
+
+예시 출력:
+
+```bash
+deposit_end_time: "2022-03-30T11:50:20.819676256Z"
+final_tally_result:
+  abstain_count: "0"
+  no_count: "0"
+  no_with_veto_count: "0"
+  yes_count: "0"
+id: "1"
+messages:
+- '@type': /cosmos.bank.v1beta1.MsgSend
+  amount:
+  - amount: "10"
+    denom: stake
+  from_address: cosmos1..
+  to_address: cosmos1..
+metadata: AQ==
+status: PROPOSAL_STATUS_DEPOSIT_PERIOD
+submit_time: "2022-03-28T11:50:20.819676256Z"
+total_deposit:
+- amount: "10"
+  denom: stake
+voting_end_time: null
+voting_start_time: null
+```
+
+##### proposals
+
+`proposals` 명령을 사용하여 선택적 필터로 모든 제안을 쿼리할 수 있습니다.
+
+```bash
+simd query gov proposals [flags]
+```
+
+예시:
+
+```bash
+simd query gov proposals
+```
+
+예시 출력:
+
+```bash
+pagination:
+  next_key: null
+  total: "0"
+proposals:
+- deposit_end_time: "2022-03-30T11:50:20.819676256Z"
+  final_tally_result:
+    abstain_count: "0"
+    no_count: "0"
+    no_with_veto_count: "0"
+    yes_count: "0"
+  id: "1"
+  messages:
+  - '@type': /cosmos.bank.v1beta1.MsgSend
+    amount:
+    - amount: "10"
+      denom: stake
+    from_address: cosmos1..
+    to_address: cosmos1..
+  metadata: AQ==
+  status: PROPOSAL_STATUS_DEPOSIT_PERIOD
+  submit_time: "2022-03-28T11:50:20.819676256Z"
+  total_deposit:
+  - amount: "10"
+    denom: stake
+  voting_end_time: null
+  voting_start_time: null
+- deposit_end_time: "2022-03-30T14:02:41.165025015Z"
+  final_tally_result:
+    abstain_count: "0"
+    no_count: "0"
+    no_with_veto_count: "0"
+    yes_count: "0"
+  id: "2"
+  messages:
+  - '@type': /cosmos.bank.v1beta1.MsgSend
+    amount:
+    - amount: "10"
+      denom: stake
+    from_address: cosmos1..
+    to_address: cosmos1..
+  metadata: AQ==
+  status: PROPOSAL_STATUS_DEPOSIT_PERIOD
+  submit_time: "2022-03-28T14:02:41.165025015Z"
+  total_deposit:
+  - amount: "10"
+    denom: stake
+  voting_end_time: null
+  voting_start_time: null
+```
+
+##### proposer
+
+`proposer` 명령을 사용하여 지정된 제안의 제안자를 쿼리할 수 있습니다.
+
+```bash
+simd query gov proposer [proposal-id] [flags]
+```
+
+예시:
+
+```bash
+simd query gov proposer 1
+```
+
+예시 출력:
+
+```bash
+proposal_id: "1"
+proposer: cosmos1..
+```
+
+##### tally
+
+`tally` 명령을 사용하여 지정된 제안 투표의 집계를 쿼리할 수 있습니다.
+
+```bash
+simd query gov tally [proposal-id] [flags]
+```
+
+예시:
+
+```bash
+simd query gov tally 1
+```
+
+예시 출력:
+
+```bash
+abstain: "0"
+"no": "0"
+no_with_veto: "0"
+"yes": "1"
+```
+
+##### vote
+
+`vote` 명령을 사용하여 지정된 제안에 대한 투표를 쿼리할 수 있습니다.
+
+```bash
+simd query gov vote [proposal-id] [voter-addr] [flags]
+```
+
+예시:
+
+```bash
+simd query gov vote 1 cosmos1..
+```
+
+예시 출력:
+
+```bash
+option: VOTE_OPTION_YES
+options:
+- option: VOTE_OPTION_YES
+  weight: "1.000000000000000000"
+proposal_id: "1"
+voter: cosmos1..
+```
+
+##### votes
+
+`votes` 명령을 사용하여 지정된 제안의 모든 투표를 쿼리할 수 있습니다.
+
+```bash
+simd query gov votes [proposal-id] [flags]
+```
+
+예시:
+
+```bash
+simd query gov votes 1
+```
+
+예시 출력:
+
+```bash
+pagination:
+  next_key: null
+  total: "0"
+votes:
+- option: VOTE_OPTION_YES
+  options:
+  - option: VOTE_OPTION_YES
+    weight: "1.000000000000000000"
+  proposal_id: "1"
+  voter: cosmos1..
+```
+
+#### 트랜잭션
+
+`tx` 명령을 사용하여 `gov` 모듈과 상호작용할 수 있습니다.
+
+```bash
+simd tx gov --help
+```
+
+##### deposit
+
+`deposit` 명령을 사용하여 지정된 제안에 토큰을 예치할 수 있습니다.
+
+```bash
+simd tx gov deposit [proposal-id] [deposit] [flags]
+```
+
+예시:
+
+```bash
+simd tx gov deposit 1 10000000stake --from cosmos1..
+```
+
+##### draft-proposal
+
+`draft-proposal` 명령을 사용하여 모든 타입의 제안을 초안할 수 있습니다.
+이 명령은 완료 후 `submit-proposal`에서 사용할 `draft_proposal.json`을 반환합니다.
+`draft_metadata.json`은 [IPFS](#metadata)에 업로드해야 합니다.
+
+```bash
+simd tx gov draft-proposal
+```
+
+##### submit-proposal
+
+`submit-proposal` 명령을 사용하여 메시지 및 메타데이터와 함께 거버넌스 제안을 제출할 수 있습니다.
+메시지, 메타데이터 및 예치금은 JSON 파일에 정의됩니다.
+
+```bash
+simd tx gov submit-proposal [path-to-proposal-json] [flags]
+```
+
+예시:
+
+```bash
+simd tx gov submit-proposal /path/to/proposal.json --from cosmos1..
+```
+
+여기서 `proposal.json`은 다음을 포함합니다:
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/cosmos.bank.v1beta1.MsgSend",
+      "from_address": "cosmos1...", // The gov module module address
+      "to_address": "cosmos1...",
+      "amount":[{"denom": "stake","amount": "10"}]
+    }
+  ],
+  "metadata": "AQ==",
+  "deposit": "10stake",
+  "title": "Proposal Title",
+  "summary": "Proposal Summary"
+}
+```
+
+:::note
+기본적으로 metadata, summary 및 title은 모두 255자 길이 필드로 제한되며 애플리케이션 개발자가 재정의할 수 있습니다.
+:::
+
+:::tip
+metadata가 지정되지 않은 경우 title은 255자로, summary는 title 길이의 40배로 제한됩니다.
+:::
+
+##### submit-legacy-proposal
+
+`submit-legacy-proposal` 명령을 사용하여 초기 예치금과 함께 거버넌스 레거시 제안을 제출할 수 있습니다.
+
+```bash
+simd tx gov submit-legacy-proposal [command] [flags]
+```
+
+예시:
+
+```bash
+simd tx gov submit-legacy-proposal --title="Test Proposal" --description="testing" --type="Text" --deposit="100000000stake" --from cosmos1..
+```
+
+예시 (`param-change`):
+
+```bash
+simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
+```
+
+```json
+{
+  "title": "Test Proposal",
+  "description": "testing, testing, 1, 2, 3",
+  "changes": [
+    {
+      "subspace": "staking",
+      "key": "MaxValidators",
+      "value": 100
+    }
+  ],
+  "deposit": "10000000stake"
+}
+```
+
+#### cancel-proposal
+
+제안이 취소되면 제안의 예치금 중 `deposits * proposal_cancel_ratio`가 소각되거나 `ProposalCancelDest` 주소로 전송됩니다. `ProposalCancelDest`가 비어 있으면 예치금이 소각됩니다. `remaining deposits`는 예치자에게 전송됩니다.
+
+```bash
+simd tx gov cancel-proposal [proposal-id] [flags]
+```
+
+예시:
+
+```bash
+simd tx gov cancel-proposal 1 --from cosmos1...
+```
+
+##### vote
+
+`vote` 명령을 사용하여 지정된 거버넌스 제안에 투표를 제출할 수 있습니다.
+
+```bash
+simd tx gov vote [command] [flags]
+```
+
+예시:
+
+```bash
+simd tx gov vote 1 yes --from cosmos1..
+```
+
+##### weighted-vote
+
+`weighted-vote` 명령을 사용하여 지정된 거버넌스 제안에 가중 투표를 제출할 수 있습니다.
+
+```bash
+simd tx gov weighted-vote [proposal-id] [weighted-options] [flags]
+```
+
+예시:
+
+```bash
+simd tx gov weighted-vote 1 yes=0.5,no=0.5 --from cosmos1..
+```
+
+### gRPC
+
+사용자는 gRPC 엔드포인트를 사용하여 `gov` 모듈을 쿼리할 수 있습니다.
+
+#### Proposal
+
+`Proposal` 엔드포인트를 사용하여 지정된 제안을 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+cosmos.gov.v1beta1.Query/Proposal
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Proposal
+```
+
+예시 출력:
+
+```bash
+{
+  "proposal": {
+    "proposalId": "1",
+    "content": {"@type":"/cosmos.gov.v1beta1.TextProposal","description":"testing, testing, 1, 2, 3","title":"Test Proposal"},
+    "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+    "finalTallyResult": {
+      "yes": "0",
+      "abstain": "0",
+      "no": "0",
+      "noWithVeto": "0"
+    },
+    "submitTime": "2021-09-16T19:40:08.712440474Z",
+    "depositEndTime": "2021-09-18T19:40:08.712440474Z",
+    "totalDeposit": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ],
+    "votingStartTime": "2021-09-16T19:40:08.712440474Z",
+    "votingEndTime": "2021-09-18T19:40:08.712440474Z",
+    "title": "Test Proposal",
+    "summary": "testing, testing, 1, 2, 3"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+cosmos.gov.v1.Query/Proposal
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Proposal
+```
+
+예시 출력:
+
+```bash
+{
+  "proposal": {
+    "id": "1",
+    "messages": [
+      {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"10"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+    ],
+    "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+    "finalTallyResult": {
+      "yesCount": "0",
+      "abstainCount": "0",
+      "noCount": "0",
+      "noWithVetoCount": "0"
+    },
+    "submitTime": "2022-03-28T11:50:20.819676256Z",
+    "depositEndTime": "2022-03-30T11:50:20.819676256Z",
+    "totalDeposit": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ],
+    "votingStartTime": "2022-03-28T14:25:26.644857113Z",
+    "votingEndTime": "2022-03-30T14:25:26.644857113Z",
+    "metadata": "AQ==",
+    "title": "Test Proposal",
+    "summary": "testing, testing, 1, 2, 3"
+  }
+}
+```
+
+#### Proposals
+
+`Proposals` 엔드포인트를 사용하여 선택적 필터로 모든 제안을 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+cosmos.gov.v1beta1.Query/Proposals
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Proposals
+```
+
+예시 출력:
+
+```bash
+{
+  "proposals": [
+    {
+      "proposalId": "1",
+      "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+      "finalTallyResult": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "noWithVeto": "0"
+      },
+      "submitTime": "2022-03-28T11:50:20.819676256Z",
+      "depositEndTime": "2022-03-30T11:50:20.819676256Z",
+      "totalDeposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000010"
+        }
+      ],
+      "votingStartTime": "2022-03-28T14:25:26.644857113Z",
+      "votingEndTime": "2022-03-30T14:25:26.644857113Z"
+    },
+    {
+      "proposalId": "2",
+      "status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+      "finalTallyResult": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "noWithVeto": "0"
+      },
+      "submitTime": "2022-03-28T14:02:41.165025015Z",
+      "depositEndTime": "2022-03-30T14:02:41.165025015Z",
+      "totalDeposit": [
+        {
+          "denom": "stake",
+          "amount": "10"
+        }
+      ],
+      "votingStartTime": "0001-01-01T00:00:00Z",
+      "votingEndTime": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+
+```
+
+v1 사용:
+
+```bash
+cosmos.gov.v1.Query/Proposals
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Proposals
+```
+
+예시 출력:
+
+```bash
+{
+  "proposals": [
+    {
+      "id": "1",
+      "messages": [
+        {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"10"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+      ],
+      "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+      "finalTallyResult": {
+        "yesCount": "0",
+        "abstainCount": "0",
+        "noCount": "0",
+        "noWithVetoCount": "0"
+      },
+      "submitTime": "2022-03-28T11:50:20.819676256Z",
+      "depositEndTime": "2022-03-30T11:50:20.819676256Z",
+      "totalDeposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000010"
+        }
+      ],
+      "votingStartTime": "2022-03-28T14:25:26.644857113Z",
+      "votingEndTime": "2022-03-30T14:25:26.644857113Z",
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
+    },
+    {
+      "id": "2",
+      "messages": [
+        {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"10"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
+      ],
+      "status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+      "finalTallyResult": {
+        "yesCount": "0",
+        "abstainCount": "0",
+        "noCount": "0",
+        "noWithVetoCount": "0"
+      },
+      "submitTime": "2022-03-28T14:02:41.165025015Z",
+      "depositEndTime": "2022-03-30T14:02:41.165025015Z",
+      "totalDeposit": [
+        {
+          "denom": "stake",
+          "amount": "10"
+        }
+      ],
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
+    }
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
+```
+
+#### Vote
+
+`Vote` 엔드포인트를 사용하여 지정된 제안에 대한 투표를 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+cosmos.gov.v1beta1.Query/Vote
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1","voter":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Vote
+```
+
+예시 출력:
+
+```bash
+{
+  "vote": {
+    "proposalId": "1",
+    "voter": "cosmos1..",
+    "option": "VOTE_OPTION_YES",
+    "options": [
+      {
+        "option": "VOTE_OPTION_YES",
+        "weight": "1000000000000000000"
+      }
+    ]
+  }
+}
+```
+
+v1 사용:
+
+```bash
+cosmos.gov.v1.Query/Vote
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1","voter":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Vote
+```
+
+예시 출력:
+
+```bash
+{
+  "vote": {
+    "proposalId": "1",
+    "voter": "cosmos1..",
+    "option": "VOTE_OPTION_YES",
+    "options": [
+      {
+        "option": "VOTE_OPTION_YES",
+        "weight": "1.000000000000000000"
+      }
+    ]
+  }
+}
+```
+
+#### Votes
+
+`Votes` 엔드포인트를 사용하여 지정된 제안의 모든 투표를 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+cosmos.gov.v1beta1.Query/Votes
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Votes
+```
+
+예시 출력:
+
+```bash
+{
+  "votes": [
+    {
+      "proposalId": "1",
+      "voter": "cosmos1..",
+      "options": [
+        {
+          "option": "VOTE_OPTION_YES",
+          "weight": "1000000000000000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+cosmos.gov.v1.Query/Votes
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Votes
+```
+
+예시 출력:
+
+```bash
+{
+  "votes": [
+    {
+      "proposalId": "1",
+      "voter": "cosmos1..",
+      "options": [
+        {
+          "option": "VOTE_OPTION_YES",
+          "weight": "1.000000000000000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+#### Params
+
+`Params` 엔드포인트를 사용하여 `gov` 모듈의 모든 매개변수를 쿼리할 수 있습니다.
+
+{/* TODO: #10197 Querying governance params outputs nil values */}
+
+레거시 v1beta1 사용:
+
+```bash
+cosmos.gov.v1beta1.Query/Params
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"params_type":"voting"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Params
+```
+
+예시 출력:
+
+```bash
+{
+  "votingParams": {
+    "votingPeriod": "172800s"
+  },
+  "depositParams": {
+    "maxDepositPeriod": "0s"
+  },
+  "tallyParams": {
+    "quorum": "MA==",
+    "threshold": "MA==",
+    "vetoThreshold": "MA=="
+  }
+}
+```
+
+v1 사용:
+
+```bash
+cosmos.gov.v1.Query/Params
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"params_type":"voting"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Params
+```
+
+예시 출력:
+
+```bash
+{
+  "votingParams": {
+    "votingPeriod": "172800s"
+  }
+}
+```
+
+#### Deposit
+
+`Deposit` 엔드포인트를 사용하여 지정된 제안에 대한 지정된 예치자의 예치금을 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+cosmos.gov.v1beta1.Query/Deposit
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    '{"proposal_id":"1","depositor":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Deposit
+```
+
+예시 출력:
+
+```bash
+{
+  "deposit": {
+    "proposalId": "1",
+    "depositor": "cosmos1..",
+    "amount": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ]
+  }
+}
+```
+
+v1 사용:
+
+```bash
+cosmos.gov.v1.Query/Deposit
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    '{"proposal_id":"1","depositor":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Deposit
+```
+
+예시 출력:
+
+```bash
+{
+  "deposit": {
+    "proposalId": "1",
+    "depositor": "cosmos1..",
+    "amount": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ]
+  }
+}
+```
+
+#### deposits
+
+`Deposits` 엔드포인트를 사용하여 지정된 제안의 모든 예치금을 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+cosmos.gov.v1beta1.Query/Deposits
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/Deposits
+```
+
+예시 출력:
+
+```bash
+{
+  "deposits": [
+    {
+      "proposalId": "1",
+      "depositor": "cosmos1..",
+      "amount": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+cosmos.gov.v1.Query/Deposits
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/Deposits
+```
+
+예시 출력:
+
+```bash
+{
+  "deposits": [
+    {
+      "proposalId": "1",
+      "depositor": "cosmos1..",
+      "amount": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+#### TallyResult
+
+`TallyResult` 엔드포인트를 사용하여 지정된 제안의 집계를 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+cosmos.gov.v1beta1.Query/TallyResult
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1beta1.Query/TallyResult
+```
+
+예시 출력:
+
+```bash
+{
+  "tally": {
+    "yes": "1000000",
+    "abstain": "0",
+    "no": "0",
+    "noWithVeto": "0"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+cosmos.gov.v1.Query/TallyResult
+```
+
+예시:
+
+```bash
+grpcurl -plaintext \
+    -d '{"proposal_id":"1"}' \
+    localhost:9090 \
+    cosmos.gov.v1.Query/TallyResult
+```
+
+예시 출력:
+
+```bash
+{
+  "tally": {
+    "yes": "1000000",
+    "abstain": "0",
+    "no": "0",
+    "noWithVeto": "0"
+  }
+}
+```
+
+### REST
+
+사용자는 REST 엔드포인트를 사용하여 `gov` 모듈을 쿼리할 수 있습니다.
+
+#### proposal
+
+`proposals` 엔드포인트를 사용하여 지정된 제안을 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1
+```
+
+예시 출력:
+
+```bash
+{
+  "proposal": {
+    "proposal_id": "1",
+    "content": null,
+    "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+    "final_tally_result": {
+      "yes": "0",
+      "abstain": "0",
+      "no": "0",
+      "no_with_veto": "0"
+    },
+    "submit_time": "2022-03-28T11:50:20.819676256Z",
+    "deposit_end_time": "2022-03-30T11:50:20.819676256Z",
+    "total_deposit": [
+      {
+        "denom": "stake",
+        "amount": "10000000010"
+      }
+    ],
+    "voting_start_time": "2022-03-28T14:25:26.644857113Z",
+    "voting_end_time": "2022-03-30T14:25:26.644857113Z"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+/cosmos/gov/v1/proposals/{proposal_id}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals/1
+```
+
+예시 출력:
+
+```bash
+{
+  "proposal": {
+    "id": "1",
+    "messages": [
+      {
+        "@type": "/cosmos.bank.v1beta1.MsgSend",
+        "from_address": "cosmos1..",
+        "to_address": "cosmos1..",
+        "amount": [
+          {
+            "denom": "stake",
+            "amount": "10"
+          }
+        ]
+      }
+    ],
+    "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+    "final_tally_result": {
+      "yes_count": "0",
+      "abstain_count": "0",
+      "no_count": "0",
+      "no_with_veto_count": "0"
+    },
+    "submit_time": "2022-03-28T11:50:20.819676256Z",
+    "deposit_end_time": "2022-03-30T11:50:20.819676256Z",
+    "total_deposit": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ],
+    "voting_start_time": "2022-03-28T14:25:26.644857113Z",
+    "voting_end_time": "2022-03-30T14:25:26.644857113Z",
+    "metadata": "AQ==",
+    "title": "Proposal Title",
+    "summary": "Proposal Summary"
+  }
+}
+```
+
+#### proposals
+
+`proposals` 엔드포인트를 사용하여 선택적 필터로 모든 제안을 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+/cosmos/gov/v1beta1/proposals
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals
+```
+
+예시 출력:
+
+```bash
+{
+  "proposals": [
+    {
+      "proposal_id": "1",
+      "content": null,
+      "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+      "final_tally_result": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "no_with_veto": "0"
+      },
+      "submit_time": "2022-03-28T11:50:20.819676256Z",
+      "deposit_end_time": "2022-03-30T11:50:20.819676256Z",
+      "total_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ],
+      "voting_start_time": "2022-03-28T14:25:26.644857113Z",
+      "voting_end_time": "2022-03-30T14:25:26.644857113Z"
+    },
+    {
+      "proposal_id": "2",
+      "content": null,
+      "status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+      "final_tally_result": {
+        "yes": "0",
+        "abstain": "0",
+        "no": "0",
+        "no_with_veto": "0"
+      },
+      "submit_time": "2022-03-28T14:02:41.165025015Z",
+      "deposit_end_time": "2022-03-30T14:02:41.165025015Z",
+      "total_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10"
+        }
+      ],
+      "voting_start_time": "0001-01-01T00:00:00Z",
+      "voting_end_time": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+/cosmos/gov/v1/proposals
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals
+```
+
+예시 출력:
+
+```bash
+{
+  "proposals": [
+    {
+      "id": "1",
+      "messages": [
+        {
+          "@type": "/cosmos.bank.v1beta1.MsgSend",
+          "from_address": "cosmos1..",
+          "to_address": "cosmos1..",
+          "amount": [
+            {
+              "denom": "stake",
+              "amount": "10"
+            }
+          ]
+        }
+      ],
+      "status": "PROPOSAL_STATUS_VOTING_PERIOD",
+      "final_tally_result": {
+        "yes_count": "0",
+        "abstain_count": "0",
+        "no_count": "0",
+        "no_with_veto_count": "0"
+      },
+      "submit_time": "2022-03-28T11:50:20.819676256Z",
+      "deposit_end_time": "2022-03-30T11:50:20.819676256Z",
+      "total_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000010"
+        }
+      ],
+      "voting_start_time": "2022-03-28T14:25:26.644857113Z",
+      "voting_end_time": "2022-03-30T14:25:26.644857113Z",
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
+    },
+    {
+      "id": "2",
+      "messages": [
+        {
+          "@type": "/cosmos.bank.v1beta1.MsgSend",
+          "from_address": "cosmos1..",
+          "to_address": "cosmos1..",
+          "amount": [
+            {
+              "denom": "stake",
+              "amount": "10"
+            }
+          ]
+        }
+      ],
+      "status": "PROPOSAL_STATUS_DEPOSIT_PERIOD",
+      "final_tally_result": {
+        "yes_count": "0",
+        "abstain_count": "0",
+        "no_count": "0",
+        "no_with_veto_count": "0"
+      },
+      "submit_time": "2022-03-28T14:02:41.165025015Z",
+      "deposit_end_time": "2022-03-30T14:02:41.165025015Z",
+      "total_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10"
+        }
+      ],
+      "voting_start_time": null,
+      "voting_end_time": null,
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "2"
+  }
+}
+```
+
+#### voter vote
+
+`votes` 엔드포인트를 사용하여 지정된 제안에 대한 투표를 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/votes/cosmos1..
+```
+
+예시 출력:
+
+```bash
+{
+  "vote": {
+    "proposal_id": "1",
+    "voter": "cosmos1..",
+    "option": "VOTE_OPTION_YES",
+    "options": [
+      {
+        "option": "VOTE_OPTION_YES",
+        "weight": "1.000000000000000000"
+      }
+    ]
+  }
+}
+```
+
+v1 사용:
+
+```bash
+/cosmos/gov/v1/proposals/{proposal_id}/votes/{voter}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals/1/votes/cosmos1..
+```
+
+예시 출력:
+
+```bash
+{
+  "vote": {
+    "proposal_id": "1",
+    "voter": "cosmos1..",
+    "options": [
+      {
+        "option": "VOTE_OPTION_YES",
+        "weight": "1.000000000000000000"
+      }
+    ],
+    "metadata": ""
+  }
+}
+```
+
+#### votes
+
+`votes` 엔드포인트를 사용하여 지정된 제안의 모든 투표를 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/votes
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/votes
+```
+
+예시 출력:
+
+```bash
+{
+  "votes": [
+    {
+      "proposal_id": "1",
+      "voter": "cosmos1..",
+      "option": "VOTE_OPTION_YES",
+      "options": [
+        {
+          "option": "VOTE_OPTION_YES",
+          "weight": "1.000000000000000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+/cosmos/gov/v1/proposals/{proposal_id}/votes
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals/1/votes
+```
+
+예시 출력:
+
+```bash
+{
+  "votes": [
+    {
+      "proposal_id": "1",
+      "voter": "cosmos1..",
+      "options": [
+        {
+          "option": "VOTE_OPTION_YES",
+          "weight": "1.000000000000000000"
+        }
+      ],
+      "metadata": ""
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+#### params
+
+`params` 엔드포인트를 사용하여 `gov` 모듈의 모든 매개변수를 쿼리할 수 있습니다.
+
+{/* TODO: #10197 Querying governance params outputs nil values */}
+
+레거시 v1beta1 사용:
+
+```bash
+/cosmos/gov/v1beta1/params/{params_type}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/params/voting
+```
+
+예시 출력:
+
+```bash
+{
+  "voting_params": {
+    "voting_period": "172800s"
+  },
+  "deposit_params": {
+    "min_deposit": [
+    ],
+    "max_deposit_period": "0s"
+  },
+  "tally_params": {
+    "quorum": "0.000000000000000000",
+    "threshold": "0.000000000000000000",
+    "veto_threshold": "0.000000000000000000"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+/cosmos/gov/v1/params/{params_type}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/params/voting
+```
+
+예시 출력:
+
+```bash
+{
+  "voting_params": {
+    "voting_period": "172800s"
+  },
+  "deposit_params": {
+    "min_deposit": [
+    ],
+    "max_deposit_period": "0s"
+  },
+  "tally_params": {
+    "quorum": "0.000000000000000000",
+    "threshold": "0.000000000000000000",
+    "veto_threshold": "0.000000000000000000"
+  }
+}
+```
+
+#### deposits
+
+`deposits` 엔드포인트를 사용하여 지정된 제안에 대한 지정된 예치자의 예치금을 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/deposits/cosmos1..
+```
+
+예시 출력:
+
+```bash
+{
+  "deposit": {
+    "proposal_id": "1",
+    "depositor": "cosmos1..",
+    "amount": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ]
+  }
+}
+```
+
+v1 사용:
+
+```bash
+/cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals/1/deposits/cosmos1..
+```
+
+예시 출력:
+
+```bash
+{
+  "deposit": {
+    "proposal_id": "1",
+    "depositor": "cosmos1..",
+    "amount": [
+      {
+        "denom": "stake",
+        "amount": "10000000"
+      }
+    ]
+  }
+}
+```
+
+#### proposal deposits
+
+`deposits` 엔드포인트를 사용하여 지정된 제안의 모든 예치금을 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/deposits
+```
+
+예시 출력:
+
+```bash
+{
+  "deposits": [
+    {
+      "proposal_id": "1",
+      "depositor": "cosmos1..",
+      "amount": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+/cosmos/gov/v1/proposals/{proposal_id}/deposits
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals/1/deposits
+```
+
+예시 출력:
+
+```bash
+{
+  "deposits": [
+    {
+      "proposal_id": "1",
+      "depositor": "cosmos1..",
+      "amount": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```
+
+#### tally
+
+`tally` 엔드포인트를 사용하여 지정된 제안의 집계를 쿼리할 수 있습니다.
+
+레거시 v1beta1 사용:
+
+```bash
+/cosmos/gov/v1beta1/proposals/{proposal_id}/tally
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1beta1/proposals/1/tally
+```
+
+예시 출력:
+
+```bash
+{
+  "tally": {
+    "yes": "1000000",
+    "abstain": "0",
+    "no": "0",
+    "no_with_veto": "0"
+  }
+}
+```
+
+v1 사용:
+
+```bash
+/cosmos/gov/v1/proposals/{proposal_id}/tally
+```
+
+예시:
+
+```bash
+curl localhost:1317/cosmos/gov/v1/proposals/1/tally
+```
+
+예시 출력:
+
+```bash
+{
+  "tally": {
+    "yes": "1000000",
+    "abstain": "0",
+    "no": "0",
+    "no_with_veto": "0"
+  }
+}
+```
+
+## 메타데이터
+
+gov 모듈에는 사용자가 온체인 작업에 대한 추가 컨텍스트를 제공할 수 있는 두 가지 메타데이터 위치가 있습니다. 기본적으로 모든 메타데이터 필드는 255자 길이 필드이며, 필요한 데이터 양에 따라 온체인 또는 오프체인에 json 형식으로 저장할 수 있습니다. 여기서는 json 구조와 데이터 저장 위치에 대한 권장 사항을 제공합니다. 이러한 권장 사항을 만들 때 두 가지 중요한 요소가 있습니다. 첫째, gov와 group 모듈이 서로 일관성이 있어야 하며, 모든 그룹의 제안 수가 상당히 많을 수 있습니다. 둘째, 블록 탐색기 및 거버넌스 인터페이스와 같은 클라이언트 애플리케이션이 체인 간 메타데이터 구조의 일관성에 대해 신뢰할 수 있어야 합니다.
+
+### Proposal
+
+위치: [IPFS](https://docs.ipfs.io/concepts/content-addressing/)에 json 객체로 오프체인 저장 ([group proposal](../group/#metadata) 미러)
+
+```json
+{
+  "title": "",
+  "authors": [""],
+  "summary": "",
+  "details": "",
+  "proposal_forum_url": "",
+  "vote_option_context": "",
+}
+```
+
+:::note
+`authors` 필드는 문자열 배열로, 메타데이터에 여러 저자를 나열할 수 있습니다.
+v0.46에서 `authors` 필드는 쉼표로 구분된 문자열입니다. 프론트엔드는 이전 버전과의 호환성을 위해 두 형식을 모두 지원하는 것이 좋습니다.
+:::
+
+### Vote
+
+위치: 255자 제한 내에서 json으로 온체인 저장 ([group vote](../group/#metadata) 미러)
+
+```json
+{
+  "justification": "",
+}
+```
+
+## 향후 개선 사항
+
+현재 문서는 거버넌스 모듈의 최소 실행 가능 제품만 설명합니다. 향후 개선 사항에는 다음이 포함될 수 있습니다:
+
+* **`BountyProposals`:** 승인되면 `BountyProposal`은 오픈 바운티를 생성합니다. `BountyProposal`은 완료 시 얼마나 많은 Atom이 지급될지 지정합니다. 이 Atom은 `reserve pool`에서 가져옵니다. `BountyProposal`이 거버넌스에 의해 승인된 후 누구나 바운티를 청구하기 위해 코드와 함께 `SoftwareUpgradeProposal`을 제출할 수 있습니다. `BountyProposal`이 승인되면 `reserve pool`의 해당 자금이 잠겨 지불이 항상 이행될 수 있습니다. `SoftwareUpgradeProposal`을 오픈 바운티에 연결하려면 `SoftwareUpgradeProposal` 제출자가 `Proposal.LinkedProposal` 속성을 사용합니다. 오픈 바운티에 연결된 `SoftwareUpgradeProposal`이 거버넌스에 의해 승인되면 예약된 자금이 자동으로 제출자에게 전송됩니다.
+* **복잡한 위임:** 위임자는 검증인 외에 다른 대표를 선택할 수 있습니다. 궁극적으로 대표 체인은 항상 검증인으로 끝나지만 위임자는 검증인의 투표를 상속받기 전에 선택한 대표의 투표를 상속받을 수 있습니다. 즉, 다른 지정된 대표가 투표하지 않은 경우에만 검증인의 투표를 상속받습니다.
+* **제안 검토를 위한 더 나은 프로세스:** `proposal.Deposit`에 두 부분이 있으며, 하나는 안티 스팸용(MVP와 동일)이고 다른 하나는 제3자 감사인에게 보상하기 위한 것입니다.

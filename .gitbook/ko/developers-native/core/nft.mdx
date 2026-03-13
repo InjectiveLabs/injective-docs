@@ -1,0 +1,89 @@
+---
+sidebar_position: 1
+---
+
+# `x/nft`
+
+## 목차
+
+## 개요
+
+`x/nft`는 [ADR 043](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-043-nft-module.md)에 따른 Cosmos SDK 모듈 구현으로, nft 분류 생성, nft 생성, nft 전송, nft 업데이트 및 모듈을 통합하여 다양한 쿼리를 지원합니다. ERC721 사양과 완전히 호환됩니다.
+
+* [Concepts](#concepts)
+    * [Class](#class)
+    * [NFT](#nft)
+* [State](#state)
+    * [Class](#class-1)
+    * [NFT](#nft-1)
+    * [NFTOfClassByOwner](#nftofclassbyowner)
+    * [Owner](#owner)
+    * [TotalSupply](#totalsupply)
+* [Messages](#messages)
+    * [MsgSend](#msgsend)
+* [Events](#events)
+
+## Concepts
+
+### Class
+
+`x/nft` 모듈은 nft 클래스의 공통 특성을 설명하는 `Class` 구조체를 정의합니다. 이 클래스 아래에서 다양한 nft를 생성할 수 있으며, 이는 Ethereum의 erc721 컨트랙트와 동일합니다. 설계는 [ADR 043](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-043-nft-module.md)에 정의되어 있습니다.
+
+### NFT
+
+NFT의 전체 이름은 Non-Fungible Tokens입니다. NFT의 대체 불가능한 특성으로 인해 고유한 것을 나타내는 데 사용될 수 있습니다. 이 모듈이 구현한 nft는 Ethereum ERC721 표준과 완전히 호환됩니다.
+
+## State
+
+### Class
+
+Class는 주로 `id`, `name`, `symbol`, `description`, `uri`, `uri_hash`, `data`로 구성되며, `id`는 클래스의 고유 식별자로 Ethereum ERC721 컨트랙트 주소와 유사합니다. 나머지는 선택 사항입니다.
+
+* Class: `0x01 | classID | -> ProtocolBuffer(Class)`
+
+### NFT
+
+NFT는 주로 `class_id`, `id`, `uri`, `uri_hash`, `data`로 구성됩니다. 이 중 `class_id`와 `id`는 nft의 고유성을 식별하는 두 가지 튜플입니다. `uri`와 `uri_hash`는 선택 사항으로, nft의 오프체인 저장 위치를 식별하며, `data`는 Any 타입입니다. `x/nft` 모듈을 사용하는 모든 체인은 이 필드를 확장하여 커스터마이즈할 수 있습니다.
+
+* NFT: `0x02 | classID | 0x00 | nftID |-> ProtocolBuffer(NFT)`
+
+### NFTOfClassByOwner
+
+NFTOfClassByOwner는 주로 classID와 owner를 사용하여 모든 nft를 쿼리하는 기능을 구현하며, 다른 불필요한 기능은 없습니다.
+
+* NFTOfClassByOwner: `0x03 | owner | 0x00 | classID | 0x00 | nftID |-> 0x01`
+
+### Owner
+
+NFT에 nft의 소유자를 나타내는 추가 필드가 없으므로 nft의 소유권을 저장하기 위해 추가 키-값 쌍이 사용됩니다. nft의 전송과 함께 키-값 쌍이 동기적으로 업데이트됩니다.
+
+* OwnerKey: `0x04 | classID | 0x00  | nftID |-> owner`
+
+### TotalSupply
+
+TotalSupply는 특정 클래스 아래의 모든 nft 수를 추적합니다. 해당 클래스에서 Mint 작업이 수행되면 supply가 1 증가하고, burn 작업 시 supply가 1 감소합니다.
+
+* OwnerKey: `0x05 | classID |-> totalSupply`
+
+## Messages
+
+이 섹션에서는 NFT 모듈의 메시지 처리를 설명합니다.
+
+:::warning
+`ClassID`와 `NftID`의 유효성 검사는 앱 개발자에게 맡겨집니다.
+SDK는 이러한 필드에 대한 유효성 검사를 제공하지 않습니다.
+:::
+
+### MsgSend
+
+`MsgSend` 메시지를 사용하여 nft의 소유권을 전송할 수 있습니다. 이것은 `x/nft` 모듈이 제공하는 기능입니다. 물론 `Transfer` 메서드를 사용하여 자체 전송 로직을 구현할 수 있지만, 전송 권한에 추가적인 주의가 필요합니다.
+
+메시지 처리는 다음과 같은 경우에 실패합니다:
+
+* 제공된 `ClassID`가 존재하지 않는 경우
+* 제공된 `Id`가 존재하지 않는 경우
+* 제공된 `Sender`가 nft의 소유자가 아닌 경우
+
+## Events
+
+nft 모듈은 [Protobuf 참조](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.nft.v1beta1)에 정의된 proto 이벤트를 발생시킵니다.

@@ -1,0 +1,986 @@
+---
+title: Staking
+---
+
+## 개요
+
+이 문서는 2016년 6월 [Cosmos Whitepaper](https://cosmos.network/about/whitepaper)에서 처음 설명된 Cosmos SDK의 Staking 모듈을 명세합니다.
+
+이 모듈은 Cosmos SDK 기반 블록체인이 고급 Proof-of-Stake (PoS) 시스템을 지원할 수 있게 합니다. 이 시스템에서 체인의 네이티브 스테이킹 토큰 보유자는 검증자가 될 수 있고 검증자에게 토큰을 위임할 수 있어, 궁극적으로 시스템의 유효 검증자 세트를 결정합니다.
+
+이 모듈은 Cosmos 네트워크의 첫 번째 Hub인 Cosmos Hub에서 사용됩니다.
+
+## 목차
+
+* [상태](#상태)
+    * [Pool](#pool)
+    * [LastTotalPower](#lasttotalpower)
+    * [ValidatorUpdates](#validatorupdates)
+    * [UnbondingID](#unbondingid)
+    * [Params](#params)
+    * [Validator](#validator)
+    * [Delegation](#delegation)
+    * [UnbondingDelegation](#unbondingdelegation)
+    * [Redelegation](#redelegation)
+    * [Queues](#queues)
+    * [HistoricalInfo](#historicalinfo)
+* [상태 전이](#상태-전이)
+    * [Validators](#validators)
+    * [Delegations](#delegations)
+    * [Slashing](#slashing)
+    * [Shares 계산 방법](#shares-계산-방법)
+* [메시지](#메시지)
+    * [MsgCreateValidator](#msgcreatevalidator)
+    * [MsgEditValidator](#msgeditvalidator)
+    * [MsgDelegate](#msgdelegate)
+    * [MsgUndelegate](#msgundelegate)
+    * [MsgCancelUnbondingDelegation](#msgcancelunbondingdelegation)
+    * [MsgBeginRedelegate](#msgbeginredelegate)
+    * [MsgUpdateParams](#msgupdateparams)
+* [Begin-Block](#begin-block)
+    * [Historical Info 추적](#historical-info-추적)
+* [End-Block](#end-block)
+    * [Validator Set 변경](#validator-set-변경)
+    * [Queues](#queues-1)
+* [Hooks](#hooks)
+* [이벤트](#이벤트)
+    * [EndBlocker](#endblocker)
+    * [Msg's](#msgs)
+* [매개변수](#매개변수)
+* [클라이언트](#클라이언트)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
+
+## 상태
+
+### Pool
+
+Pool은 bond denomination의 bonded 및 not-bonded 토큰 공급량을 추적하는 데 사용됩니다.
+
+### LastTotalPower
+
+LastTotalPower는 이전 end block 동안 기록된 bonded 토큰의 총량을 추적합니다.
+"Last" 접두사가 붙은 스토어 항목은 EndBlock까지 변경되지 않은 상태로 유지되어야 합니다.
+
+* LastTotalPower: `0x12 -> ProtocolBuffer(math.Int)`
+
+### ValidatorUpdates
+
+ValidatorUpdates는 모든 블록 끝에서 ABCI에 반환되는 검증자 업데이트를 포함합니다.
+값은 모든 블록에서 덮어씁니다.
+
+* ValidatorUpdates `0x61 -> []abci.ValidatorUpdate`
+
+### UnbondingID
+
+UnbondingID는 최신 unbonding 작업의 ID를 저장합니다. unbonding 작업에 대한 고유 ID를 생성할 수 있게 합니다. 즉, 새로운 unbonding 작업(검증자 unbonding, unbonding delegation, redelegation)이 시작될 때마다 UnbondingID가 증가합니다.
+
+* UnbondingID: `0x37 -> uint64`
+
+### Params
+
+staking 모듈은 `0x51` 접두사로 상태에 params를 저장하며, governance 또는 authority가 있는 주소로 업데이트할 수 있습니다.
+
+* Params: `0x51 | ProtocolBuffer(Params)`
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L310-L333
+```
+
+### Validator
+
+Validators는 세 가지 상태 중 하나를 가질 수 있습니다
+
+* `Unbonded`: 검증자가 active set에 없습니다. 블록에 서명할 수 없고 보상을 받지 않습니다. 위임을 받을 수 있습니다.
+* `Bonded`: 검증자가 충분한 bonded 토큰을 받으면 [`EndBlock`](#validator-set-변경) 중에 자동으로 active set에 참여하고 상태가 `Bonded`로 업데이트됩니다. 블록에 서명하고 보상을 받습니다. 추가 위임을 받을 수 있습니다. 잘못된 행동에 대해 슬래싱될 수 있습니다. 이 검증자에게 위임을 해제하는 위임자는 체인별 매개변수인 UnbondingTime 기간을 기다려야 하며, 이 기간 동안 토큰이 bonded 상태였던 기간에 소스 검증자가 저지른 위반에 대해 여전히 슬래싱될 수 있습니다.
+* `Unbonding`: 검증자가 active set을 떠날 때, 선택에 의해서든 slashing, jailing 또는 tombstoning으로 인해서든, 모든 위임의 unbonding이 시작됩니다. 모든 위임은 토큰이 `BondedPool`에서 계정으로 이동하기 전에 UnbondingTime을 기다려야 합니다.
+
+:::warning
+Tombstoning은 영구적이며, 한 번 tombstone 상태가 된 검증자의 합의 키는 tombstoning이 발생한 체인 내에서 재사용할 수 없습니다.
+:::
+
+Validators 객체는 주로 검증자 운영자의 SDK 검증자 주소인 `OperatorAddr`로 저장되고 접근되어야 합니다. slashing 및 검증자 세트 업데이트에 필요한 조회를 수행하기 위해 검증자 객체당 두 개의 추가 인덱스가 유지됩니다. 세 번째 특별 인덱스(`LastValidatorPower`)도 유지되지만, 블록 내에서 검증자 레코드를 미러링하는 처음 두 인덱스와 달리 각 블록 내내 일정하게 유지됩니다.
+
+* Validators: `0x21 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(validator)`
+* ValidatorsByConsAddr: `0x22 | ConsAddrLen (1 byte) | ConsAddr -> OperatorAddr`
+* ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddrLen (1 byte) | OperatorAddr -> OperatorAddr`
+* LastValidatorsPower: `0x11 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(ConsensusPower)`
+* ValidatorsByUnbondingID: `0x38 | UnbondingID ->  0x21 | OperatorAddrLen (1 byte) | OperatorAddr`
+
+`Validators`는 기본 인덱스입니다 - 각 운영자가 하나의 연결된 검증자만 가질 수 있도록 보장하며, 해당 검증자의 공개 키는 향후 변경될 수 있습니다. 위임자는 변경되는 공개 키에 대한 우려 없이 검증자의 불변 운영자를 참조할 수 있습니다.
+
+`ValidatorsByUnbondingID`는 현재 unbonding에 해당하는 unbonding ID로 검증자를 조회할 수 있는 추가 인덱스입니다.
+
+`ValidatorByConsAddr`는 slashing을 위한 조회를 가능하게 하는 추가 인덱스입니다.
+CometBFT가 증거를 보고할 때 검증자 주소를 제공하므로, 운영자를 찾기 위해 이 맵이 필요합니다. `ConsAddr`는 검증자의 `ConsPubKey`에서 파생할 수 있는 주소에 해당합니다.
+
+`ValidatorsByPower`는 현재 active set을 빠르게 결정하기 위해 잠재적 검증자의 정렬된 목록을 제공하는 추가 인덱스입니다. 여기서 ConsensusPower는 기본적으로 validator.Tokens/10^6입니다. `Jailed`가 true인 모든 검증자는 이 인덱스 내에 저장되지 않습니다.
+
+`LastValidatorsPower`는 마지막 블록의 bonded 검증자의 히스토리 목록을 제공하는 특별 인덱스입니다. 이 인덱스는 블록 중에는 일정하게 유지되지만 [`EndBlock`](#end-block)에서 발생하는 검증자 세트 업데이트 프로세스 중에 업데이트됩니다.
+
+각 검증자의 상태는 `Validator` struct에 저장됩니다:
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L82-L138
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L26-L80
+```
+
+### Delegation
+
+Delegations는 `DelegatorAddr` (위임자의 주소)와 `ValidatorAddr`을 결합하여 식별됩니다. 위임자는 스토어에 다음과 같이 인덱싱됩니다:
+
+* Delegation: `0x31 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(delegation)`
+
+스테이크 보유자는 검증자에게 코인을 위임할 수 있습니다; 이 경우 자금은 `Delegation` 데이터 구조에 보관됩니다. 하나의 위임자가 소유하며 하나의 검증자에 대한 shares와 연결됩니다. 트랜잭션의 발신자가 bond의 소유자입니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L198-L216
+```
+
+#### Delegator Shares
+
+검증자에게 토큰을 위임하면 동적 환율을 기반으로 여러 위임자 shares가 발급됩니다. 환율은 검증자에게 위임된 총 토큰 수와 지금까지 발행된 shares 수에서 다음과 같이 계산됩니다:
+
+`Shares per Token = validator.TotalShares() / validator.Tokens()`
+
+받은 shares 수만 DelegationEntry에 저장됩니다. 위임자가 Undelegates를 할 때 받는 토큰 양은 현재 보유한 shares 수와 역환율에서 계산됩니다:
+
+`Tokens per Share = validator.Tokens() / validatorShares()`
+
+이러한 `Shares`는 단순히 회계 메커니즘입니다. 대체 가능한 자산이 아닙니다. 이 메커니즘의 이유는 슬래싱 관련 회계를 단순화하기 위함입니다. 모든 위임 항목의 토큰을 반복적으로 슬래싱하는 대신, Validator의 총 bonded 토큰을 슬래싱하여 발행된 각 위임자 share의 가치를 효과적으로 줄일 수 있습니다.
+
+### UnbondingDelegation
+
+`Delegation`의 Shares는 unbond될 수 있지만, 일정 기간 동안 `UnbondingDelegation`으로 존재해야 하며, 이 기간 동안 비잔틴 행동이 감지되면 shares가 감소될 수 있습니다.
+
+`UnbondingDelegation`은 스토어에 다음과 같이 인덱싱됩니다:
+
+* UnbondingDelegation: `0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(unbondingDelegation)`
+* UnbondingDelegationsFromValidator: `0x33 | ValidatorAddrLen (1 byte) | ValidatorAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* UnbondingDelegationByUnbondingId: `0x38 | UnbondingId -> 0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr`
+
+`UnbondingDelegation`은 쿼리에서 주어진 위임자의 모든 unbonding delegations을 조회하는 데 사용됩니다.
+
+`UnbondingDelegationsFromValidator`는 슬래싱에서 슬래싱되어야 하는 주어진 검증자와 연결된 모든 unbonding delegations을 조회하는 데 사용됩니다.
+
+`UnbondingDelegationByUnbondingId`는 포함된 unbonding delegation 항목의 unbonding ID로 unbonding delegations을 조회할 수 있는 추가 인덱스입니다.
+
+unbonding이 시작될 때마다 UnbondingDelegation 객체가 생성됩니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L218-L261
+```
+
+### Redelegation
+
+`Delegation`의 bonded 토큰 가치는 소스 검증자에서 다른 검증자(대상 검증자)로 즉시 재위임될 수 있습니다. 그러나 이 경우 소스 검증자가 저지른 비잔틴 오류에 토큰이 기여한 경우 shares가 슬래싱될 수 있도록 `Redelegation` 객체에서 추적되어야 합니다.
+
+`Redelegation`은 스토어에 다음과 같이 인덱싱됩니다:
+
+* Redelegations: `0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr -> ProtocolBuffer(redelegation)`
+* RedelegationsBySrc: `0x35 | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* RedelegationsByDst: `0x36 | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* RedelegationByUnbondingId: `0x38 | UnbondingId -> 0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr`
+
+`Redelegations`은 쿼리에서 주어진 위임자의 모든 redelegations을 조회하는 데 사용됩니다.
+
+`RedelegationsBySrc`는 `ValidatorSrcAddr`를 기반으로 슬래싱에 사용됩니다.
+
+`RedelegationsByDst`는 `ValidatorDstAddr`를 기반으로 슬래싱에 사용됩니다.
+
+여기서 첫 번째 맵은 쿼리에 사용되며, 주어진 위임자의 모든 redelegations을 조회합니다. 두 번째 맵은 `ValidatorSrcAddr`를 기반으로 슬래싱에 사용되고, 세 번째 맵은 `ValidatorDstAddr`를 기반으로 슬래싱에 사용됩니다.
+
+`RedelegationByUnbondingId`는 포함된 redelegation 항목의 unbonding ID로 redelegations을 조회할 수 있는 추가 인덱스입니다.
+
+redelegation이 발생할 때마다 redelegation 객체가 생성됩니다. "redelegation hopping"을 방지하기 위해 다음 상황에서는 redelegations이 발생할 수 없습니다:
+
+* (재)위임자가 이미 검증자(`Validator X`라고 부르겠습니다)로 대상으로 하는 진행 중인 미성숙 redelegation이 있는 경우
+* 그리고 (재)위임자가 이 새 redelegation의 소스 검증자가 `Validator X`인 _새로운_ redelegation을 생성하려고 시도하는 경우
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L263-L308
+```
+
+### Queues
+
+모든 큐 객체는 타임스탬프로 정렬됩니다. 모든 큐에서 사용되는 시간은 먼저 UTC로 변환되고, 가장 가까운 나노초로 반올림된 다음 정렬됩니다. 사용되는 정렬 가능한 시간 형식은 RFC3339Nano의 약간 수정된 버전이며 형식 문자열 `"2006-01-02T15:04:05.000000000"`을 사용합니다. 특히 이 형식은:
+
+* 모든 0을 오른쪽 패딩
+* 시간대 정보 삭제 (이미 UTC를 사용)
+
+모든 경우에서 저장된 타임스탬프는 큐 요소의 만기 시간을 나타냅니다.
+
+#### UnbondingDelegationQueue
+
+unbonding delegations의 진행 상황을 추적하기 위해 unbonding delegations 큐가 유지됩니다.
+
+* UnbondingDelegation: `0x41 | format(time) -> []DVPair`
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L162-L172
+```
+
+#### RedelegationQueue
+
+redelegations의 진행 상황을 추적하기 위해 redelegation 큐가 유지됩니다.
+
+* RedelegationQueue: `0x42 | format(time) -> []DVVTriplet`
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L179-L191
+```
+
+#### ValidatorQueue
+
+unbonding 검증자의 진행 상황을 추적하기 위해 검증자 큐가 유지됩니다.
+
+* ValidatorQueueTime: `0x43 | format(time) -> []sdk.ValAddress`
+
+각 키로 저장된 객체는 검증자 객체에 접근할 수 있는 검증자 운영자 주소의 배열입니다. 일반적으로 주어진 타임스탬프와 연결된 검증자 레코드는 하나만 있을 것으로 예상되지만, 동일한 위치에 여러 검증자가 큐에 있을 수 있습니다.
+
+### HistoricalInfo
+
+HistoricalInfo 객체는 staking keeper가 staking 모듈 매개변수 `HistoricalEntries`에 정의된 가장 최근 `n`개의 historical info를 유지하도록 각 블록에서 저장되고 정리됩니다.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L17-L24
+```
+
+각 BeginBlock에서 staking keeper는 현재 Header와 현재 블록을 커밋한 Validators를 `HistoricalInfo` 객체에 유지합니다. Validators는 결정론적 순서를 보장하기 위해 주소로 정렬됩니다.
+매개변수에 정의된 수의 historical 항목만 존재하도록 가장 오래된 HistoricalEntries가 정리됩니다.
+
+## 상태 전이
+
+### Validators
+
+검증자의 상태 전이는 active `ValidatorSet`의 변경 사항을 확인하기 위해 매 [`EndBlock`](#validator-set-변경)마다 수행됩니다.
+
+검증자는 `Unbonded`, `Unbonding` 또는 `Bonded` 상태일 수 있습니다. `Unbonded`와 `Unbonding`은 총칭하여 `Not Bonded`라고 합니다. 검증자는 `Bonded`에서 `Unbonded`로의 직접 이동을 제외하고 모든 상태 간에 직접 이동할 수 있습니다.
+
+#### Not bonded에서 Bonded로
+
+다음 전이는 검증자의 `ValidatorPowerIndex` 순위가 `LastValidator`를 초과할 때 발생합니다.
+
+* `validator.Status`를 `Bonded`로 설정
+* `validator.Tokens`를 `NotBondedTokens`에서 `BondedPool` `ModuleAccount`로 전송
+* `ValidatorByPowerIndex`에서 기존 레코드 삭제
+* `ValidatorByPowerIndex`에 새로 업데이트된 레코드 추가
+* 이 검증자에 대한 `Validator` 객체 업데이트
+* 존재하는 경우 이 검증자에 대한 `ValidatorQueue` 레코드 삭제
+
+#### Bonded에서 Unbonding으로
+
+검증자가 unbonding 프로세스를 시작할 때 다음 작업이 발생합니다:
+
+* `validator.Tokens`를 `BondedPool`에서 `NotBondedTokens` `ModuleAccount`로 전송
+* `validator.Status`를 `Unbonding`으로 설정
+* `ValidatorByPowerIndex`에서 기존 레코드 삭제
+* `ValidatorByPowerIndex`에 새로 업데이트된 레코드 추가
+* 이 검증자에 대한 `Validator` 객체 업데이트
+* 이 검증자에 대한 `ValidatorQueue`에 새 레코드 삽입
+
+#### Unbonding에서 Unbonded로
+
+검증자는 `ValidatorQueue` 객체가 bonded에서 unbonded로 이동할 때 unbonding에서 unbonded로 이동합니다
+
+* 이 검증자에 대한 `Validator` 객체 업데이트
+* `validator.Status`를 `Unbonded`로 설정
+
+#### Jail/Unjail
+
+검증자가 jailed되면 CometBFT 세트에서 효과적으로 제거됩니다.
+이 프로세스는 역으로도 가능합니다. 다음 작업이 발생합니다:
+
+* `Validator.Jailed` 설정 및 객체 업데이트
+* jailed된 경우 `ValidatorByPowerIndex`에서 레코드 삭제
+* unjailed된 경우 `ValidatorByPowerIndex`에 레코드 추가
+
+Jailed 검증자는 다음 스토어에 존재하지 않습니다:
+
+* power store (합의 권한에서 주소로)
+
+### Delegations
+
+#### Delegate
+
+위임이 발생하면 검증자와 위임 객체 모두 영향을 받습니다
+
+* 위임된 토큰과 검증자의 환율을 기반으로 위임자 shares 결정
+* 전송 계정에서 토큰 제거
+* 위임 객체에 shares 추가 또는 생성된 검증자 객체에 추가
+* 새 위임자 shares 추가 및 `Validator` 객체 업데이트
+* `validator.Status`가 `Bonded`인지 여부에 따라 위임자 계정에서 `BondedPool` 또는 `NotBondedPool` `ModuleAccount`로 `delegation.Amount` 전송
+* `ValidatorByPowerIndex`에서 기존 레코드 삭제
+* `ValidatorByPowerIndex`에 새로 업데이트된 레코드 추가
+
+#### Begin Unbonding
+
+Undelegate 및 Complete Unbonding 상태 전이의 일부로 Unbond Delegation이 호출될 수 있습니다.
+
+* 위임자에서 unbonded shares 차감
+* `UnbondingDelegationEntry`에 unbonded 토큰 추가
+* 위임 업데이트 또는 더 이상 shares가 없으면 위임 제거
+* 위임이 검증자의 운영자이고 더 이상 shares가 없으면 검증자 jail 트리거
+* 위임자 shares 및 관련 코인이 제거된 상태로 검증자 업데이트
+* 검증자 상태가 `Bonded`인 경우 unbonded shares의 `Coins` 가치를 `BondedPool`에서 `NotBondedPool` `ModuleAccount`로 전송
+* unbonded이고 더 이상 위임 shares가 없으면 검증자 제거
+* 고유한 `unbondingId`를 가져와 `UnbondingDelegationByUnbondingId`의 `UnbondingDelegationEntry`에 매핑
+* `AfterUnbondingInitiated(unbondingId)` hook 호출
+* 완료 시간이 `UnbondingTime`으로 설정된 unbonding delegation을 `UnbondingDelegationQueue`에 추가
+
+#### `UnbondingDelegation` Entry 취소
+
+`cancel unbond delegation`이 발생하면 `validator`, `delegation` 및 `UnbondingDelegationQueue` 상태가 업데이트됩니다.
+
+* cancel unbonding delegation 금액이 `UnbondingDelegation` entry `balance`와 같으면 `UnbondingDelegationQueue`에서 `UnbondingDelegation` entry가 삭제됩니다.
+* `cancel unbonding delegation 금액이 `UnbondingDelegation` entry balance보다 작으면 `UnbondingDelegationQueue`의 `UnbondingDelegation` entry가 새 balance로 업데이트됩니다.
+* cancel `amount`는 원래 `validator`에게 [Delegated](#delegations)됩니다.
+
+#### Complete Unbonding
+
+즉시 완료되지 않는 undelegations의 경우, unbonding delegation 큐 요소가 만기되면 다음 작업이 발생합니다:
+
+* `UnbondingDelegation` 객체에서 entry 제거
+* `NotBondedPool` `ModuleAccount`에서 위임자 `Account`로 토큰 전송
+
+#### Begin Redelegation
+
+Redelegations은 위임, 소스 및 대상 검증자에 영향을 줍니다.
+
+* 소스 검증자에서 `unbond` 위임을 수행하여 unbonded shares 가치의 토큰 검색
+* unbonded 토큰을 사용하여 대상 검증자에게 `Delegate`
+* `sourceValidator.Status`가 `Bonded`이고 `destinationValidator`가 아닌 경우, 새로 위임된 토큰을 `BondedPool`에서 `NotBondedPool` `ModuleAccount`로 전송
+* 그렇지 않고 `sourceValidator.Status`가 `Bonded`가 아니고 `destinationValidator`가 `Bonded`인 경우, 새로 위임된 토큰을 `NotBondedPool`에서 `BondedPool` `ModuleAccount`로 전송
+* 관련 `Redelegation`의 새 entry에 토큰 양 기록
+
+redelegation이 시작되어 완료될 때까지 위임자는 "pseudo-unbonding" 상태에 있으며, redelegation이 시작되기 전에 발생한 위반에 대해 여전히 슬래싱될 수 있습니다.
+
+#### Complete Redelegation
+
+redelegations이 완료되면 다음이 발생합니다:
+
+* `Redelegation` 객체에서 entry 제거
+
+### Slashing
+
+#### Slash Validator
+
+검증자가 슬래싱되면 다음이 발생합니다:
+
+* 총 `slashAmount`는 `slashFactor` (체인 매개변수) \* `TokensFromConsensusPower`, 위반 시점에 검증자에게 bonded된 총 토큰 수로 계산됩니다.
+* 위반이 unbonding 또는 redelegation이 검증자에서 시작되기 전에 발생한 모든 unbonding delegation 및 pseudo-unbonding redelegation은 initialBalance의 `slashFactor` 백분율로 슬래싱됩니다.
+* redelegations 및 unbonding delegations에서 슬래싱된 각 금액은 총 슬래시 금액에서 차감됩니다.
+* `remaingSlashAmount`는 검증자 상태에 따라 `BondedPool` 또는 `NonBondedPool`의 검증자 토큰에서 슬래싱됩니다. 이는 토큰의 총 공급량을 줄입니다.
+
+증거 제출이 필요한 위반(예: 이중 서명)으로 인한 슬래시의 경우, 슬래시는 위반이 발생한 블록이 아니라 증거가 포함된 블록에서 발생합니다.
+다시 말해, 검증자는 소급하여 슬래싱되지 않고 잡힐 때만 슬래싱됩니다.
+
+#### Slash Unbonding Delegation
+
+검증자가 슬래싱되면 위반 시점 이후에 unbonding을 시작한 해당 검증자의 unbonding delegations도 슬래싱됩니다. 검증자의 모든 unbonding delegation의 모든 entry가 `slashFactor`로 슬래싱됩니다. 슬래싱되는 금액은 위임의 `InitialBalance`에서 계산되며 결과적으로 음수 잔액이 되지 않도록 제한됩니다. 완료된(또는 성숙한) unbondings은 슬래싱되지 않습니다.
+
+#### Slash Redelegation
+
+검증자가 슬래싱되면 위반 이후에 시작된 검증자의 모든 redelegations도 슬래싱됩니다. Redelegations은 `slashFactor`로 슬래싱됩니다.
+위반 전에 시작된 Redelegations은 슬래싱되지 않습니다.
+슬래싱되는 금액은 위임의 `InitialBalance`에서 계산되며 결과적으로 음수 잔액이 되지 않도록 제한됩니다.
+성숙한 redelegations(pseudo-unbonding이 완료된)은 슬래싱되지 않습니다.
+
+### Shares 계산 방법
+
+주어진 시점에서 각 검증자는 토큰 수 `T`를 가지고 발행된 shares 수 `S`를 가집니다.
+각 위임자 `i`는 shares 수 `S_i`를 보유합니다.
+토큰 수는 검증자에게 위임된 모든 토큰과 보상을 더하고 슬래시를 뺀 합입니다.
+
+위임자는 shares 비율에 비례하여 기본 토큰의 일부를 받을 권리가 있습니다.
+따라서 위임자 `i`는 검증자 토큰의 `T * S_i / S`를 받을 권리가 있습니다.
+
+위임자가 검증자에게 새 토큰을 위임하면 기여에 비례하는 shares 수를 받습니다.
+따라서 위임자 `j`가 `T_j` 토큰을 위임하면 `S_j = S * T_j / T` shares를 받습니다.
+이제 총 토큰 수는 `T + T_j`이고 총 shares 수는 `S + S_j`입니다.
+`j`의 shares 비율은 기여한 총 토큰 비율과 같습니다: `(S + S_j) / S = (T + T_j) / T`.
+
+특별한 경우는 초기 위임으로, `T = 0`이고 `S = 0`이므로 `T_j / T`는 정의되지 않습니다.
+초기 위임의 경우 `T_j` 토큰을 위임하는 위임자 `j`는 `S_j = T_j` shares를 받습니다.
+따라서 보상을 받지 않고 슬래싱되지 않은 검증자는 `T = S`를 가집니다.
+
+## 메시지
+
+이 섹션에서는 staking 메시지의 처리와 상태에 대한 해당 업데이트를 설명합니다. 각 메시지로 생성/수정된 모든 상태 객체는 [상태](#상태) 섹션에 정의되어 있습니다.
+
+### MsgCreateValidator
+
+검증자는 `MsgCreateValidator` 메시지를 사용하여 생성됩니다.
+검증자는 운영자의 초기 위임과 함께 생성되어야 합니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L20-L21
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L50-L73
+```
+
+이 메시지는 다음 경우에 실패할 것으로 예상됩니다:
+
+* 이 운영자 주소를 가진 다른 검증자가 이미 등록된 경우
+* 이 pubkey를 가진 다른 검증자가 이미 등록된 경우
+* 초기 자기 위임 토큰의 denom이 bonding denom으로 지정되지 않은 경우
+* 커미션 매개변수가 잘못된 경우, 즉:
+    * `MaxRate`가 > 1 또는 < 0인 경우
+    * 초기 `Rate`가 음수이거나 > `MaxRate`인 경우
+    * 초기 `MaxChangeRate`가 음수이거나 > `MaxRate`인 경우
+* 설명 필드가 너무 큰 경우
+
+이 메시지는 적절한 인덱스에 `Validator` 객체를 생성하고 저장합니다.
+추가로 초기 토큰 위임 토큰 `Delegation`으로 자기 위임이 이루어집니다. 검증자는 항상 unbonded로 시작하지만 첫 번째 end-block에서 bonded될 수 있습니다.
+
+### MsgEditValidator
+
+검증자의 `Description`, `CommissionRate`는 `MsgEditValidator` 메시지를 사용하여 업데이트할 수 있습니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L23-L24
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L78-L97
+```
+
+이 메시지는 다음 경우에 실패할 것으로 예상됩니다:
+
+* 초기 `CommissionRate`가 음수이거나 > `MaxRate`인 경우
+* `CommissionRate`가 이전 24시간 이내에 이미 업데이트된 경우
+* `CommissionRate`가 > `MaxChangeRate`인 경우
+* 설명 필드가 너무 큰 경우
+
+이 메시지는 업데이트된 `Validator` 객체를 저장합니다.
+
+### MsgDelegate
+
+이 메시지 내에서 위임자는 코인을 제공하고, 그 대가로 `Delegation.Shares`에 할당되는 검증자의 (새로 생성된) 위임자-shares를 일정량 받습니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L26-L28
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L102-L114
+```
+
+이 메시지는 다음 경우에 실패할 것으로 예상됩니다:
+
+* 검증자가 존재하지 않는 경우
+* `Amount` `Coin`의 denomination이 `params.BondDenom`에 정의된 것과 다른 경우
+* 환율이 유효하지 않은 경우, 즉 검증자에게 토큰이 없지만(슬래싱으로 인해) 미결제 shares가 있는 경우
+* 위임된 금액이 허용된 최소 위임보다 작은 경우
+
+제공된 주소에 대한 기존 `Delegation` 객체가 아직 존재하지 않으면 이 메시지의 일부로 생성되고, 그렇지 않으면 기존 `Delegation`이 새로 받은 shares를 포함하도록 업데이트됩니다.
+
+위임자는 현재 환율로 새로 발행된 shares를 받습니다.
+환율은 검증자의 기존 shares 수를 현재 위임된 토큰 수로 나눈 값입니다.
+
+검증자는 `ValidatorByPower` 인덱스에서 업데이트되고, 위임은 `Validators` 인덱스의 검증자 객체에서 추적됩니다.
+
+jailed 검증자에게 위임하는 것이 가능하며, 유일한 차이점은 unjail될 때까지 power 인덱스에 추가되지 않는다는 것입니다.
+
+![Delegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/delegation_sequence.svg)
+
+### MsgUndelegate
+
+`MsgUndelegate` 메시지는 위임자가 검증자에서 토큰을 위임 해제할 수 있게 합니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L34-L36
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L140-L152
+```
+
+이 메시지는 undelegation의 완료 시간이 포함된 응답을 반환합니다:
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L154-L158
+```
+
+이 메시지는 다음 경우에 실패할 것으로 예상됩니다:
+
+* 위임이 존재하지 않는 경우
+* 검증자가 존재하지 않는 경우
+* 위임에 `Amount` 가치의 shares보다 적은 shares가 있는 경우
+* 기존 `UnbondingDelegation`이 `params.MaxEntries`에 정의된 최대 entries를 가진 경우
+* `Amount`의 denomination이 `params.BondDenom`에 정의된 것과 다른 경우
+
+이 메시지가 처리될 때 다음 작업이 발생합니다:
+
+* 검증자의 `DelegatorShares`와 위임의 `Shares`가 모두 메시지 `SharesAmount`만큼 감소
+* shares의 토큰 가치를 계산하고 검증자 내에 보유된 해당 양의 토큰 제거
+* 제거된 토큰으로, 검증자가:
+    * `Bonded` - 현재 시간으로부터 전체 unbonding 기간 후의 완료 시간을 가진 `UnbondingDelegation`의 entry에 추가(존재하지 않으면 `UnbondingDelegation` 생성). shares의 토큰 가치만큼 BondedTokens를 줄이고 NotBondedTokens를 늘리도록 풀 shares 업데이트.
+    * `Unbonding` - 검증자와 동일한 완료 시간(`UnbondingMinTime`)을 가진 `UnbondingDelegation`의 entry에 추가(존재하지 않으면 `UnbondingDelegation` 생성).
+    * `Unbonded` - 메시지 `DelegatorAddr`로 코인 전송
+* 위임에 더 이상 `Shares`가 없으면 스토어에서 위임 객체 제거
+    * 이 상황에서 위임이 검증자의 자기 위임인 경우 검증자도 jail
+
+![Unbond sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/unbond_sequence.svg)
+
+### MsgCancelUnbondingDelegation
+
+`MsgCancelUnbondingDelegation` 메시지는 위임자가 `unbondingDelegation` entry를 취소하고 이전 검증자에게 다시 위임할 수 있게 합니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L38-L42
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L160-L175
+```
+
+이 메시지는 다음 경우에 실패할 것으로 예상됩니다:
+
+* `unbondingDelegation` entry가 이미 처리된 경우
+* `cancel unbonding delegation` 금액이 `unbondingDelegation` entry balance보다 큰 경우
+* `cancel unbonding delegation` 높이가 위임자의 `unbondingDelegationQueue`에 존재하지 않는 경우
+
+이 메시지가 처리될 때 다음 작업이 발생합니다:
+
+* `unbondingDelegation` Entry balance가 0인 경우
+    * 이 조건에서 `unbondingDelegation` entry가 `unbondingDelegationQueue`에서 제거됩니다.
+    * 그렇지 않으면 `unbondingDelegationQueue`가 새 `unbondingDelegation` entry balance 및 초기 balance로 업데이트됩니다
+* 검증자의 `DelegatorShares`와 위임의 `Shares`가 모두 메시지 `Amount`만큼 증가합니다.
+
+### MsgBeginRedelegate
+
+redelegation 명령은 위임자가 즉시 검증자를 전환할 수 있게 합니다. unbonding 기간이 지나면 EndBlocker에서 redelegation이 자동으로 완료됩니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L30-L32
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L119-L132
+```
+
+이 메시지는 redelegation의 완료 시간이 포함된 응답을 반환합니다:
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L133-L138
+```
+
+이 메시지는 다음 경우에 실패할 것으로 예상됩니다:
+
+* 위임이 존재하지 않는 경우
+* 소스 또는 대상 검증자가 존재하지 않는 경우
+* 위임에 `Amount` 가치의 shares보다 적은 shares가 있는 경우
+* 소스 검증자가 성숙하지 않은 수신 redelegation을 가진 경우(즉, redelegation이 전이적일 수 있음)
+* 기존 `Redelegation`이 `params.MaxEntries`에 정의된 최대 entries를 가진 경우
+* `Amount` `Coin`의 denomination이 `params.BondDenom`에 정의된 것과 다른 경우
+
+이 메시지가 처리될 때 다음 작업이 발생합니다:
+
+* 소스 검증자의 `DelegatorShares`와 위임의 `Shares`가 모두 메시지 `SharesAmount`만큼 감소
+* shares의 토큰 가치를 계산하고 소스 검증자 내에 보유된 해당 양의 토큰 제거.
+* 소스 검증자가:
+    * `Bonded` - 현재 시간으로부터 전체 unbonding 기간 후의 완료 시간을 가진 `Redelegation`의 entry에 추가(존재하지 않으면 `Redelegation` 생성). shares의 토큰 가치만큼 BondedTokens를 줄이고 NotBondedTokens를 늘리도록 풀 shares 업데이트(이것은 다음 단계에서 효과적으로 역전될 수 있음).
+    * `Unbonding` - 검증자와 동일한 완료 시간(`UnbondingMinTime`)을 가진 `Redelegation`의 entry에 추가(존재하지 않으면 `Redelegation` 생성).
+    * `Unbonded` - 이 단계에서 필요한 작업 없음
+* 토큰 가치를 대상 검증자에게 위임하여, 토큰을 bonded 상태로 다시 이동할 수 있음.
+* 소스 위임에 더 이상 `Shares`가 없으면 스토어에서 소스 위임 객체 제거
+    * 이 상황에서 위임이 검증자의 자기 위임인 경우 검증자도 jail.
+
+![Begin redelegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/begin_redelegation_sequence.svg)
+
+### MsgUpdateParams
+
+`MsgUpdateParams`는 staking 모듈 매개변수를 업데이트합니다.
+params는 서명자가 gov 모듈 계정 주소인 governance 제안을 통해 업데이트됩니다.
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L182-L195
+```
+
+메시지 처리는 다음 경우에 실패할 수 있습니다:
+
+* 서명자가 staking keeper에 정의된 authority(일반적으로 gov 모듈 계정)가 아닌 경우.
+
+## Begin-Block
+
+각 abci begin block 호출에서 historical info는 `HistoricalEntries` 매개변수에 따라 저장되고 정리됩니다.
+
+### Historical Info 추적
+
+`HistoricalEntries` 매개변수가 0이면 `BeginBlock`은 아무 작업도 수행하지 않습니다.
+
+그렇지 않으면 최신 historical info가 `historicalInfoKey|height` 키 아래에 저장되고, `height - HistoricalEntries`보다 오래된 모든 항목이 삭제됩니다.
+대부분의 경우, 이로 인해 블록당 단일 항목이 정리됩니다.
+그러나 `HistoricalEntries` 매개변수가 더 낮은 값으로 변경된 경우 정리해야 하는 여러 항목이 스토어에 있을 것입니다.
+
+## End-Block
+
+각 abci end block 호출에서 큐 및 검증자 세트 변경을 업데이트하는 작업이 실행됩니다.
+
+### Validator Set 변경
+
+staking 검증자 세트는 매 블록 끝에 실행되는 상태 전이에 의해 이 프로세스 중에 업데이트됩니다. 이 프로세스의 일부로 업데이트된 모든 검증자는 합의 계층에서 CometBFT 메시지를 검증하는 역할을 하는 CometBFT 검증자 세트에 포함되도록 CometBFT로 다시 반환됩니다. 작업은 다음과 같습니다:
+
+* 새 검증자 세트는 `ValidatorsByPower` 인덱스에서 검색된 상위 `params.MaxValidators` 수의 검증자로 취해집니다
+* 이전 검증자 세트와 새 검증자 세트를 비교합니다:
+    * 누락된 검증자는 unbonding을 시작하고 `Tokens`가 `BondedPool`에서 `NotBondedPool` `ModuleAccount`로 전송됩니다
+    * 새 검증자는 즉시 bonded되고 `Tokens`가 `NotBondedPool`에서 `BondedPool` `ModuleAccount`로 전송됩니다
+
+모든 경우에, bonded 검증자 세트를 떠나거나 들어오거나 balance를 변경하고 bonded 검증자 세트 내에 남아있는 모든 검증자는 CometBFT로 다시 전달되는 새로운 합의 권한을 보고하는 업데이트 메시지를 발생시킵니다.
+
+`LastTotalPower`와 `LastValidatorsPower`는 마지막 블록 끝의 총 권한과 검증자 권한 상태를 보유하며, `ValidatorsByPower`에서 발생한 변경 사항과 `EndBlock` 중에 계산되는 총 새 권한을 확인하는 데 사용됩니다.
+
+### Queues
+
+staking 내에서 특정 상태 전이는 즉각적이지 않고 일정 기간(일반적으로 unbonding 기간) 동안 발생합니다. 이러한 전이가 성숙하면 상태 작업을 완료하기 위해 특정 작업이 수행되어야 합니다. 이는 각 블록 끝에서 확인/처리되는 큐를 사용하여 달성됩니다.
+
+#### Unbonding Validators
+
+검증자가 bonded 검증자 세트에서 쫓겨날 때(jail되거나 충분한 bonded 토큰이 없어서) 모든 위임과 함께 unbonding 프로세스를 시작합니다(이 검증자에게 여전히 위임된 상태로). 이 시점에서 검증자는 "unbonding validator"라고 하며, unbonding 기간이 지나면 "unbonded validator"가 됩니다.
+
+각 블록에서 검증자 큐는 성숙한 unbonding 검증자(즉, 완료 시간 ≤ 현재 시간이고 완료 높이 ≤ 현재 블록 높이인)를 확인해야 합니다. 이 시점에서 남은 위임이 없는 모든 성숙한 검증자는 상태에서 삭제됩니다. 남은 위임이 있는 다른 모든 성숙한 unbonding 검증자의 경우 `validator.Status`가 `types.Unbonding`에서 `types.Unbonded`로 전환됩니다.
+
+Unbonding 작업은 `PutUnbondingOnHold(unbondingId)` 메서드를 통해 외부 모듈에 의해 보류될 수 있습니다. 결과적으로 보류 중인 unbonding 작업(예: unbonding delegation)은 성숙해도 완료될 수 없습니다. `unbondingId`를 가진 unbonding 작업이 최종적으로 완료되려면(성숙 후) `PutUnbondingOnHold(unbondingId)`에 대한 모든 호출이 `UnbondingCanComplete(unbondingId)` 호출과 일치해야 합니다.
+
+#### Unbonding Delegations
+
+다음 절차로 `UnbondingDelegations` 큐 내의 모든 성숙한 `UnbondingDelegations.Entries`의 unbonding을 완료합니다:
+
+* 위임자의 지갑 주소로 balance 코인 전송
+* `UnbondingDelegation.Entries`에서 성숙한 entry 제거
+* 남은 항목이 없으면 스토어에서 `UnbondingDelegation` 객체 제거.
+
+#### Redelegations
+
+다음 절차로 `Redelegations` 큐 내의 모든 성숙한 `Redelegation.Entries`의 unbonding을 완료합니다:
+
+* `Redelegation.Entries`에서 성숙한 entry 제거
+* 남은 항목이 없으면 스토어에서 `Redelegation` 객체 제거.
+
+## Hooks
+
+다른 모듈은 staking 내에서 특정 이벤트가 발생했을 때 실행할 작업을 등록할 수 있습니다. 이러한 이벤트는 staking 이벤트의 바로 `Before` 또는 `After`에 실행되도록 등록할 수 있습니다(hook 이름에 따라). staking에 등록할 수 있는 hook은 다음과 같습니다:
+
+* `AfterValidatorCreated(Context, ValAddress) error`
+    * 검증자가 생성될 때 호출
+* `BeforeValidatorModified(Context, ValAddress) error`
+    * 검증자의 상태가 변경될 때 호출
+* `AfterValidatorRemoved(Context, ConsAddress, ValAddress) error`
+    * 검증자가 삭제될 때 호출
+* `AfterValidatorBonded(Context, ConsAddress, ValAddress) error`
+    * 검증자가 bonded될 때 호출
+* `AfterValidatorBeginUnbonding(Context, ConsAddress, ValAddress) error`
+    * 검증자가 unbonding을 시작할 때 호출
+* `BeforeDelegationCreated(Context, AccAddress, ValAddress) error`
+    * 위임이 생성될 때 호출
+* `BeforeDelegationSharesModified(Context, AccAddress, ValAddress) error`
+    * 위임의 shares가 수정될 때 호출
+* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
+    * 위임이 생성되거나 수정될 때 호출
+* `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
+    * 위임이 제거될 때 호출
+* `AfterUnbondingInitiated(Context, UnbondingID)`
+    * unbonding 작업(검증자 unbonding, unbonding delegation, redelegation)이 시작될 때 호출
+
+## 이벤트
+
+staking 모듈은 다음 이벤트를 발생시킵니다:
+
+### EndBlocker
+
+| Type                  | Attribute Key         | Attribute Value           |
+| --------------------- | --------------------- | ------------------------- |
+| complete_unbonding    | amount                | {totalUnbondingAmount}    |
+| complete_unbonding    | validator             | {validatorAddress}        |
+| complete_unbonding    | delegator             | {delegatorAddress}        |
+| complete_redelegation | amount                | {totalRedelegationAmount} |
+| complete_redelegation | source_validator      | {srcValidatorAddress}     |
+| complete_redelegation | destination_validator | {dstValidatorAddress}     |
+| complete_redelegation | delegator             | {delegatorAddress}        |
+
+## Msg's
+
+### MsgCreateValidator
+
+| Type             | Attribute Key | Attribute Value    |
+| ---------------- | ------------- | ------------------ |
+| create_validator | validator     | {validatorAddress} |
+| create_validator | amount        | {delegationAmount} |
+| message          | module        | staking            |
+| message          | action        | create_validator   |
+| message          | sender        | {senderAddress}    |
+
+### MsgEditValidator
+
+| Type           | Attribute Key       | Attribute Value     |
+| -------------- | ------------------- | ------------------- |
+| edit_validator | commission_rate     | {commissionRate}    |
+| edit_validator | min_self_delegation | {minSelfDelegation} |
+| message        | module              | staking             |
+| message        | action              | edit_validator      |
+| message        | sender              | {senderAddress}     |
+
+### MsgDelegate
+
+| Type     | Attribute Key | Attribute Value    |
+| -------- | ------------- | ------------------ |
+| delegate | validator     | {validatorAddress} |
+| delegate | amount        | {delegationAmount} |
+| message  | module        | staking            |
+| message  | action        | delegate           |
+| message  | sender        | {senderAddress}    |
+
+### MsgUndelegate
+
+| Type    | Attribute Key       | Attribute Value    |
+| ------- | ------------------- | ------------------ |
+| unbond  | validator           | {validatorAddress} |
+| unbond  | amount              | {unbondAmount}     |
+| unbond  | completion_time [0] | {completionTime}   |
+| message | module              | staking            |
+| message | action              | begin_unbonding    |
+| message | sender              | {senderAddress}    |
+
+* [0] 시간은 RFC3339 표준으로 포맷됩니다
+
+### MsgCancelUnbondingDelegation
+
+| Type                          | Attribute Key       | Attribute Value                     |
+| ----------------------------- | ------------------  | ------------------------------------|
+| cancel_unbonding_delegation   | validator           | {validatorAddress}                  |
+| cancel_unbonding_delegation   | delegator           | {delegatorAddress}                  |
+| cancel_unbonding_delegation   | amount              | {cancelUnbondingDelegationAmount}   |
+| cancel_unbonding_delegation   | creation_height     | {unbondingCreationHeight}           |
+| message                       | module              | staking                             |
+| message                       | action              | cancel_unbond                       |
+| message                       | sender              | {senderAddress}                     |
+
+### MsgBeginRedelegate
+
+| Type       | Attribute Key         | Attribute Value       |
+| ---------- | --------------------- | --------------------- |
+| redelegate | source_validator      | {srcValidatorAddress} |
+| redelegate | destination_validator | {dstValidatorAddress} |
+| redelegate | amount                | {unbondAmount}        |
+| redelegate | completion_time [0]   | {completionTime}      |
+| message    | module                | staking               |
+| message    | action                | begin_redelegate      |
+| message    | sender                | {senderAddress}       |
+
+* [0] 시간은 RFC3339 표준으로 포맷됩니다
+
+## 매개변수
+
+staking 모듈은 다음 매개변수를 포함합니다:
+
+| Key               | Type             | Example                |
+|-------------------|------------------|------------------------|
+| UnbondingTime     | string (time ns) | "259200000000000"      |
+| MaxValidators     | uint16           | 100                    |
+| KeyMaxEntries     | uint16           | 7                      |
+| HistoricalEntries | uint16           | 3                      |
+| BondDenom         | string           | "stake"                |
+| MinCommissionRate | string           | "0.000000000000000000" |
+
+## 클라이언트
+
+### CLI
+
+사용자는 CLI를 사용하여 `staking` 모듈을 쿼리하고 상호작용할 수 있습니다.
+
+#### 쿼리
+
+`query` 명령을 사용하여 `staking` 상태를 쿼리할 수 있습니다.
+
+```bash
+simd query staking --help
+```
+
+##### delegation
+
+`delegation` 명령을 사용하여 개별 위임자가 개별 검증자에게 한 위임을 쿼리할 수 있습니다.
+
+사용법:
+
+```bash
+simd query staking delegation [delegator-addr] [validator-addr] [flags]
+```
+
+예시:
+
+```bash
+simd query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+```
+
+##### delegations
+
+`delegations` 명령을 사용하여 개별 위임자가 모든 검증자에게 한 위임을 쿼리할 수 있습니다.
+
+사용법:
+
+```bash
+simd query staking delegations [delegator-addr] [flags]
+```
+
+##### params
+
+`params` 명령을 사용하여 staking 매개변수로 설정된 값을 쿼리할 수 있습니다.
+
+사용법:
+
+```bash
+simd query staking params [flags]
+```
+
+##### validator
+
+`validator` 명령을 사용하여 개별 검증자에 대한 세부 정보를 쿼리할 수 있습니다.
+
+사용법:
+
+```bash
+simd query staking validator [validator-addr] [flags]
+```
+
+##### validators
+
+`validators` 명령을 사용하여 네트워크의 모든 검증자에 대한 세부 정보를 쿼리할 수 있습니다.
+
+사용법:
+
+```bash
+simd query staking validators [flags]
+```
+
+#### 트랜잭션
+
+`tx` 명령을 사용하여 `staking` 모듈과 상호작용할 수 있습니다.
+
+```bash
+simd tx staking --help
+```
+
+##### create-validator
+
+`create-validator` 명령을 사용하여 자기 위임으로 초기화된 새 검증자를 생성할 수 있습니다.
+
+사용법:
+
+```bash
+simd tx staking create-validator [path/to/validator.json] [flags]
+```
+
+##### delegate
+
+`delegate` 명령을 사용하여 검증자에게 liquid 토큰을 위임할 수 있습니다.
+
+사용법:
+
+```bash
+simd tx staking delegate [validator-addr] [amount] [flags]
+```
+
+##### redelegate
+
+`redelegate` 명령을 사용하여 한 검증자에서 다른 검증자로 illiquid 토큰을 재위임할 수 있습니다.
+
+사용법:
+
+```bash
+simd tx staking redelegate [src-validator-addr] [dst-validator-addr] [amount] [flags]
+```
+
+##### unbond
+
+`unbond` 명령을 사용하여 검증자에서 shares를 unbond할 수 있습니다.
+
+사용법:
+
+```bash
+simd tx staking unbond [validator-addr] [amount] [flags]
+```
+
+### gRPC
+
+사용자는 gRPC 엔드포인트를 사용하여 `staking` 모듈을 쿼리할 수 있습니다.
+
+#### Validators
+
+`Validators` 엔드포인트는 주어진 상태와 일치하는 모든 검증자를 쿼리합니다.
+
+```bash
+cosmos.staking.v1beta1.Query/Validators
+```
+
+#### Validator
+
+`Validator` 엔드포인트는 주어진 검증자 주소에 대한 검증자 정보를 쿼리합니다.
+
+```bash
+cosmos.staking.v1beta1.Query/Validator
+```
+
+#### Delegation
+
+`Delegation` 엔드포인트는 주어진 검증자 위임자 쌍에 대한 위임 정보를 쿼리합니다.
+
+```bash
+cosmos.staking.v1beta1.Query/Delegation
+```
+
+#### Pool
+
+`Pool` 엔드포인트는 풀 정보를 쿼리합니다.
+
+```bash
+cosmos.staking.v1beta1.Query/Pool
+```
+
+#### Params
+
+`Params` 엔드포인트는 매개변수 정보를 쿼리합니다.
+
+```bash
+cosmos.staking.v1beta1.Query/Params
+```
+
+### REST
+
+사용자는 REST 엔드포인트를 사용하여 `staking` 모듈을 쿼리할 수 있습니다.
+
+#### DelegatorDelegations
+
+```bash
+/cosmos/staking/v1beta1/delegations/{delegator_addr}
+```
+
+#### Validators
+
+```bash
+/cosmos/staking/v1beta1/validators
+```
+
+#### Validator
+
+```bash
+/cosmos/staking/v1beta1/validators/{validator_addr}
+```
+
+#### Pool
+
+```bash
+/cosmos/staking/v1beta1/pool
+```
+
+#### Params
+
+```bash
+/cosmos/staking/v1beta1/params
+```

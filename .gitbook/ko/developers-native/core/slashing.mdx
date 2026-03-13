@@ -1,0 +1,755 @@
+---
+title: Slashing
+---
+
+## 개요
+
+이 섹션은 Cosmos SDK의 slashing 모듈을 명세하며, 2016년 6월 [Cosmos Whitepaper](https://cosmos.network/about/whitepaper)에서 처음 개략적으로 설명된 기능을 구현합니다.
+
+slashing 모듈은 Cosmos SDK 기반 블록체인이 스테이크에 가치를 가진 프로토콜 인정 행위자의 귀책 가능한 행위에 대해 페널티("슬래싱")를 부과하여 이를 억제할 수 있도록 합니다.
+
+페널티에는 다음이 포함될 수 있지만 이에 국한되지 않습니다:
+
+* 스테이크의 일부 소각
+* 일정 기간 동안 향후 블록에 대한 투표 능력 제거
+
+이 모듈은 Cosmos 생태계의 첫 번째 허브인 Cosmos Hub에서 사용됩니다.
+
+## 목차
+
+* [개념](#개념)
+    * [상태들](#상태들)
+    * [Tombstone 상한](#tombstone-상한)
+    * [위반 타임라인](#위반-타임라인)
+* [상태](#상태)
+    * [서명 정보 (Liveness)](#서명-정보-liveness)
+    * [Params](#params)
+* [메시지](#메시지)
+    * [Unjail](#unjail)
+* [BeginBlock](#beginblock)
+    * [Liveness 추적](#liveness-추적)
+* [Hooks](#hooks)
+* [이벤트](#이벤트)
+* [Staking Tombstone](#staking-tombstone)
+* [매개변수](#매개변수)
+* [CLI](#cli)
+    * [쿼리](#쿼리)
+    * [트랜잭션](#트랜잭션)
+    * [gRPC](#grpc)
+    * [REST](#rest)
+
+## 개념
+
+### 상태들
+
+주어진 시점에 상태 머신에는 여러 검증자가 등록되어 있습니다. 각 블록마다 jail 상태가 아닌 상위 `MaxValidators` (`x/staking`에서 정의됨) 검증자가 _bonded_ 상태가 되어 블록을 제안하고 투표할 수 있습니다. _bonded_ 상태인 검증자는 _at stake_ 상태이며, 이는 프로토콜 위반을 저지르면 자신과 위임자의 스테이크 전부 또는 일부가 위험에 처한다는 것을 의미합니다.
+
+각 검증자에 대해 검증자의 liveness 및 기타 위반 관련 속성에 대한 정보를 포함하는 `ValidatorSigningInfo` 레코드를 유지합니다.
+
+### Tombstone 상한
+
+초기에 발생할 가능성이 높은 비악의적 프로토콜 위반의 영향을 완화하기 위해, Cosmos Hub는 각 검증자에 대해 _tombstone_ 상한을 구현하여 검증자가 이중 서명 위반에 대해 한 번만 슬래싱될 수 있도록 합니다. 예를 들어, HSM을 잘못 구성하여 많은 이전 블록에 이중 서명을 하더라도 첫 번째 이중 서명에 대해서만 처벌받습니다(그리고 즉시 tombstone 상태가 됩니다). 이는 여전히 상당히 비용이 많이 들고 피하는 것이 바람직하지만, tombstone 상한은 의도치 않은 잘못된 구성의 경제적 영향을 다소 완화합니다.
+
+Liveness 위반은 상한이 없습니다. 서로 누적될 수 없기 때문입니다. Liveness 버그는 위반이 발생하는 즉시 "감지"되고 검증자는 즉시 jail에 들어가므로, unjail 없이는 여러 liveness 위반을 저지를 수 없습니다.
+
+### 위반 타임라인
+
+`x/slashing` 모듈이 CometBFT 합의를 통해 제출된 증거를 처리하는 방식을 설명하기 위해 다음 예시를 고려하세요:
+
+**정의**:
+
+_[_ : 타임라인 시작  
+_]_ : 타임라인 끝  
+_C<sub>n</sub>_ : 위반 `n` 발생  
+_D<sub>n</sub>_ : 위반 `n` 발견  
+_V<sub>b</sub>_ : 검증자 bonded  
+_V<sub>u</sub>_ : 검증자 unbonded
+
+#### 단일 이중 서명 위반
+
+\[----------C<sub>1</sub>----D<sub>1</sub>,V<sub>u</sub>-----\]
+
+단일 위반이 발생한 후 나중에 발견되며, 이 시점에서 검증자는 unbonded되고 위반에 대한 전체 금액이 슬래싱됩니다.
+
+#### 다중 이중 서명 위반
+
+\[----------C<sub>1</sub>--C<sub>2</sub>---C<sub>3</sub>---D<sub>1</sub>,D<sub>2</sub>,D<sub>3</sub>V<sub>u</sub>-----\]
+
+여러 위반이 발생한 후 나중에 발견되며, 이 시점에서 검증자는 jail에 들어가고 단일 위반에 대해서만 슬래싱됩니다. 검증자가 tombstone 상태가 되기 때문에 검증자 세트에 다시 참여할 수 없습니다.
+
+## 상태
+
+### 서명 정보 (Liveness)
+
+모든 블록에는 CometBFT가 제공하는 `LastCommitInfo`로 알려진 이전 블록에 대한 검증자의 precommit 세트가 포함됩니다. `LastCommitInfo`는 총 투표 권한의 +2/3 이상의 precommit을 포함하면 유효합니다.
+
+제안자는 `LastCommitInfo`에 포함된 투표 권한과 +2/3 사이의 차이에 비례하여 추가 수수료를 받음으로써 CometBFT `LastCommitInfo`에 모든 검증자의 precommit을 포함하도록 인센티브를 받습니다 ([fee distribution](../distribution/#begin-block) 참조).
+
+```go
+type LastCommitInfo struct {
+	Round int32
+	Votes []VoteInfo
+}
+```
+
+검증자는 일정 수의 블록 동안 `LastCommitInfo`에 포함되지 않으면 자동으로 jail에 들어가고, 슬래싱될 수 있으며, unbonded됩니다.
+
+검증자의 liveness 활동에 대한 정보는 `ValidatorSigningInfo`를 통해 추적됩니다.
+스토어에서 다음과 같이 인덱싱됩니다:
+
+* `ValidatorSigningInfo`:
+  `0x01 | ConsAddrLen (1 byte) | ConsAddress -> ProtocolBuffer(ValSigningInfo)`
+* `MissedBlocksBitArray`:
+  `0x02 | ConsAddrLen (1 byte) | ConsAddress | LittleEndianUint64(signArrayIndex) -> VarInt(didMiss)`
+  (varint는 숫자 인코딩 형식입니다)
+
+첫 번째 매핑을 통해 검증자의 합의 주소를 기반으로 최근 서명 정보를 쉽게 조회할 수 있습니다.
+
+두 번째 매핑(`MissedBlocksBitArray`)은 `SignedBlocksWindow` 크기의 비트 배열로 작동하여 비트 배열의 주어진 인덱스에서 검증자가 블록을 놓쳤는지 여부를 알려줍니다.
+비트 배열의 인덱스는 리틀 엔디안 uint64로 제공됩니다.
+결과는 `0` 또는 `1`을 취하는 `varint`이며, `0`은 검증자가 해당 블록을 놓치지 않았음(서명함)을 나타내고, `1`은 블록을 놓쳤음(서명하지 않음)을 나타냅니다.
+
+`MissedBlocksBitArray`는 미리 명시적으로 초기화되지 않습니다. 새로 bonded된 검증자의 첫 번째 `SignedBlocksWindow` 블록을 진행하면서 키가 추가됩니다. `SignedBlocksWindow` 매개변수는 검증자 liveness를 추적하는 데 사용되는 슬라이딩 윈도우의 크기(블록 수)를 정의합니다.
+
+검증자 liveness 추적을 위해 저장되는 정보는 다음과 같습니다:
+
+```protobuf
+// ValidatorSigningInfo defines a validator's signing info for monitoring their
+// liveness activity.
+message ValidatorSigningInfo {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Height at which validator was first a candidate OR was unjailed
+  int64 start_height = 2;
+  // Index which is incremented each time the validator was a bonded
+  // in a block and may have signed a precommit or not. This in conjunction with the
+  // `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
+  int64 index_offset = 3;
+  // Timestamp until which the validator is jailed due to liveness downtime.
+  google.protobuf.Timestamp jailed_until = 4
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // Whether or not a validator has been tombstoned (killed out of validator set). It is set
+  // once the validator commits an equivocation or for any other configured misbehiavor.
+  bool tombstoned = 5;
+  // A counter kept to avoid unnecessary array reads.
+  // Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`.
+  int64 missed_blocks_counter = 6;
+}
+```
+
+참조: [https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L13-L35)
+
+### Params
+
+slashing 모듈은 `0x00` 접두사를 사용하여 상태에 params를 저장하며, 거버넌스 또는 권한이 있는 주소로 업데이트할 수 있습니다.
+
+* Params: `0x00 | ProtocolBuffer(Params)`
+
+```protobuf
+// Params represents the parameters used for by the slashing module.
+message Params {
+  option (amino.name) = "cosmos-sdk/x/slashing/Params";
+
+  int64 signed_blocks_window  = 1;
+  bytes min_signed_per_window = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  google.protobuf.Duration downtime_jail_duration = 3
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdduration) = true];
+  bytes slash_fraction_double_sign = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  bytes slash_fraction_downtime = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+```
+
+참조: [https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L59](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1beta1/slashing.proto#L37-L59)
+
+## 메시지
+
+이 섹션에서는 `slashing` 모듈의 메시지 처리에 대해 설명합니다.
+
+### Unjail
+
+검증자가 다운타임으로 인해 자동으로 unbonded되었고 다시 온라인에 접속하여 bonded 세트에 다시 참여하려면 `MsgUnjail`을 전송해야 합니다:
+
+```protobuf
+// MsgUnjail is an sdk.Msg used for unjailing a jailed validator, thus returning
+// them into the bonded validator set, so they can begin receiving provisions
+// and rewards again.
+message MsgUnjail {
+  string validator_addr = 1;
+}
+```
+
+아래는 `MsgSrv/Unjail` RPC의 의사 코드입니다:
+
+```go
+unjail(tx MsgUnjail)
+    validator = getValidator(tx.ValidatorAddr)
+    if validator == nil
+      fail with "No validator found"
+
+    if getSelfDelegation(validator) == 0
+      fail with "validator must self delegate before unjailing"
+
+    if !validator.Jailed
+      fail with "Validator not jailed, cannot unjail"
+
+    info = GetValidatorSigningInfo(operator)
+    if info.Tombstoned
+      fail with "Tombstoned validator cannot be unjailed"
+    if block time < info.JailedUntil
+      fail with "Validator still jailed, cannot unjail until period has expired"
+
+    validator.Jailed = false
+    setValidator(validator)
+
+    return
+```
+
+검증자가 상위 `n = MaximumBondedValidators`에 들어갈 충분한 스테이크를 가지고 있다면 자동으로 rebonded되고, 여전히 검증자에게 위임된 모든 위임자도 rebonded되어 다시 프로비전과 보상을 수집하기 시작합니다.
+
+## BeginBlock
+
+### Liveness 추적
+
+각 블록의 시작 시 각 검증자에 대해 `ValidatorSigningInfo`를 업데이트하고 슬라이딩 윈도우에서 liveness 임계값 아래로 떨어졌는지 확인합니다. 이 슬라이딩 윈도우는 `SignedBlocksWindow`에 의해 정의되며, 이 윈도우의 인덱스는 검증자의 `ValidatorSigningInfo`에 있는 `IndexOffset`에 의해 결정됩니다. 각 블록이 처리될 때마다 검증자의 서명 여부와 관계없이 `IndexOffset`이 증가합니다. 인덱스가 결정되면 `MissedBlocksBitArray`와 `MissedBlocksCounter`가 그에 따라 업데이트됩니다.
+
+마지막으로, 검증자가 liveness 임계값 아래로 떨어졌는지 확인하기 위해 놓친 최대 블록 수인 `maxMissed`를 가져옵니다. 이는 `SignedBlocksWindow - (MinSignedPerWindow * SignedBlocksWindow)`이며, liveness를 결정할 수 있는 최소 높이인 `minHeight`도 가져옵니다. 현재 블록이 `minHeight`보다 크고 검증자의 `MissedBlocksCounter`가 `maxMissed`보다 크면, `SlashFractionDowntime`에 따라 슬래싱되고, `DowntimeJailDuration` 동안 jail에 들어가며, 다음 값들이 초기화됩니다: `MissedBlocksBitArray`, `MissedBlocksCounter`, `IndexOffset`.
+
+**참고**: Liveness 슬래싱은 tombstoning으로 이어지지 **않습니다**.
+
+```go
+height := block.Height
+
+for vote in block.LastCommitInfo.Votes {
+  signInfo := GetValidatorSigningInfo(vote.Validator.Address)
+
+  // This is a relative index, so we counts blocks the validator SHOULD have
+  // signed. We use the 0-value default signing info if not present, except for
+  // start height.
+  index := signInfo.IndexOffset % SignedBlocksWindow()
+  signInfo.IndexOffset++
+
+  // Update MissedBlocksBitArray and MissedBlocksCounter. The MissedBlocksCounter
+  // just tracks the sum of MissedBlocksBitArray. That way we avoid needing to
+  // read/write the whole array each time.
+  missedPrevious := GetValidatorMissedBlockBitArray(vote.Validator.Address, index)
+  missed := !signed
+
+  switch {
+  case !missedPrevious && missed:
+    // array index has changed from not missed to missed, increment counter
+    SetValidatorMissedBlockBitArray(vote.Validator.Address, index, true)
+    signInfo.MissedBlocksCounter++
+
+  case missedPrevious && !missed:
+    // array index has changed from missed to not missed, decrement counter
+    SetValidatorMissedBlockBitArray(vote.Validator.Address, index, false)
+    signInfo.MissedBlocksCounter--
+
+  default:
+    // array index at this index has not changed; no need to update counter
+  }
+
+  if missed {
+    // emit events...
+  }
+
+  minHeight := signInfo.StartHeight + SignedBlocksWindow()
+  maxMissed := SignedBlocksWindow() - MinSignedPerWindow()
+
+  // If we are past the minimum height and the validator has missed too many
+  // jail and slash them.
+  if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
+    validator := ValidatorByConsAddr(vote.Validator.Address)
+
+    // emit events...
+
+    // We need to retrieve the stake distribution which signed the block, so we
+    // subtract ValidatorUpdateDelay from the block height, and subtract an
+    // additional 1 since this is the LastCommit.
+    //
+    // Note, that this CAN result in a negative "distributionHeight" up to
+    // -ValidatorUpdateDelay-1, i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
+    // That's fine since this is just used to filter unbonding delegations & redelegations.
+    distributionHeight := height - sdk.ValidatorUpdateDelay - 1
+
+    SlashWithInfractionReason(vote.Validator.Address, distributionHeight, vote.Validator.Power, SlashFractionDowntime(), stakingtypes.Downtime)
+    Jail(vote.Validator.Address)
+
+    signInfo.JailedUntil = block.Time.Add(DowntimeJailDuration())
+
+    // We need to reset the counter & array so that the validator won't be
+    // immediately slashed for downtime upon rebonding.
+    signInfo.MissedBlocksCounter = 0
+    signInfo.IndexOffset = 0
+    ClearValidatorMissedBlockBitArray(vote.Validator.Address)
+  }
+
+  SetValidatorSigningInfo(vote.Validator.Address, signInfo)
+}
+```
+
+## Hooks
+
+이 섹션에서는 모듈의 `hooks`에 대해 설명합니다. Hooks는 이벤트가 발생할 때 자동으로 실행되는 작업입니다.
+
+### Staking hooks
+
+slashing 모듈은 `x/staking`에 정의된 `StakingHooks`를 구현하며, 검증자 정보의 기록 유지를 위해 사용됩니다. 앱 초기화 시 이러한 hooks는 staking 모듈 구조체에 등록되어야 합니다.
+
+다음 hooks는 slashing 상태에 영향을 미칩니다:
+
+* `AfterValidatorBonded`는 다음 섹션에서 설명하는 대로 `ValidatorSigningInfo` 인스턴스를 생성합니다.
+* `AfterValidatorCreated`는 검증자의 합의 키를 저장합니다.
+* `AfterValidatorRemoved`는 검증자의 합의 키를 제거합니다.
+
+### Validator Bonded
+
+새 검증자가 처음으로 성공적으로 bonded되면, 현재 블록의 `StartHeight`를 가진 새 `ValidatorSigningInfo` 구조체를 생성합니다.
+
+검증자가 검증자 세트에서 벗어났다가 다시 bonded되면, 새로운 bonded 높이가 설정됩니다.
+
+```go
+onValidatorBonded(address sdk.ValAddress)
+
+  signingInfo, found = GetValidatorSigningInfo(address)
+  if !found {
+    signingInfo = ValidatorSigningInfo {
+      StartHeight         : CurrentHeight,
+      IndexOffset         : 0,
+      JailedUntil         : time.Unix(0, 0),
+      Tombstone           : false,
+      MissedBloskCounter  : 0
+    } else {
+      signingInfo.StartHeight = CurrentHeight
+    }
+
+    setValidatorSigningInfo(signingInfo)
+  }
+
+  return
+```
+
+## 이벤트
+
+slashing 모듈은 다음 이벤트를 발생시킵니다:
+
+### MsgServer
+
+#### MsgUnjail
+
+| Type    | Attribute Key | Attribute Value    |
+| ------- | ------------- | ------------------ |
+| `message` | `module`        | `slashing`           |
+| `message` | `sender`        | `{validatorAddress}` |
+
+### Keeper
+
+### BeginBlocker: HandleValidatorSignature
+
+| Type  | Attribute Key | Attribute Value             |
+| ----- | ------------- | --------------------------- |
+| `slash` | `address`       | `{validatorConsensusAddress}` |
+| `slash` | `power`         | `{validatorPower}`            |
+| `slash` | `reason`        | `{slashReason}`               |
+| `slash` | `jailed [0]`    | `{validatorConsensusAddress}` |
+| `slash` | `burned coins`  | `{math.Int}`                   |
+
+* [0] 검증자가 jail에 들어간 경우에만 포함됩니다.
+
+| Type     | Attribute Key | Attribute Value             |
+| -------- | ------------- | --------------------------- |
+| `liveness` | `address`       | `{validatorConsensusAddress}` |
+| `liveness` | `missed_blocks` | `{missedBlocksCounter}`       |
+| `liveness` | `height`        | `{blockHeight}`               |
+
+#### Slash
+
+* `HandleValidatorSignature`의 `"slash"` 이벤트와 동일하지만 `jailed` 속성이 없습니다.
+
+#### Jail
+
+| Type  | Attribute Key | Attribute Value    |
+| ----- | ------------- | ------------------ |
+| `slash` | `jailed`        | `{validatorAddress}` |
+
+## Staking Tombstone
+
+### 개요
+
+`slashing` 모듈의 현재 구현에서, 합의 엔진이 검증자의 합의 위반을 상태 머신에 알리면 검증자는 부분적으로 슬래싱되고 "jail 기간" 동안 검증자 세트에 다시 참여할 수 없는 기간에 들어갑니다. 그러나 합의 위반과 ABCI의 특성으로 인해, 위반 발생과 위반 증거가 상태 머신에 도달하는 사이에 지연이 있을 수 있습니다 (이것이 unbonding 기간이 존재하는 주요 이유 중 하나입니다).
+
+> 참고: tombstone 개념은 위반 발생과 증거가 상태 머신에 도달하는 사이에 지연이 있는 위반에만 적용됩니다. 예를 들어, 검증자 이중 서명의 증거는 예측할 수 없는 증거 gossip 레이어 지연과 검증자가 이중 서명을 선택적으로 공개할 수 있는 능력(예: 자주 온라인에 접속하지 않는 라이트 클라이언트에게)으로 인해 상태 머신에 도달하는 데 시간이 걸릴 수 있습니다.
+> 반면 Liveness 슬래싱은 위반이 발생하는 즉시 감지되므로 슬래싱 기간이 필요하지 않습니다. 검증자는 즉시 jail 기간에 들어가며, unjail할 때까지 다른 liveness 위반을 저지를 수 없습니다. 향후에는 지연이 있는 다른 유형의 비잔틴 위반이 있을 수 있습니다 (예: 유효하지 않은 제안의 증거를 트랜잭션으로 제출). 구현될 때, 이러한 향후 유형의 비잔틴 위반이 tombstoning을 초래할지 여부를 결정해야 합니다 (그렇지 않은 경우, 슬래시 금액은 슬래싱 기간에 의해 상한이 설정되지 않습니다).
+
+현재 시스템 설계에서, 검증자가 합의 위반으로 jail에 들어가면 `JailPeriod` 후에 트랜잭션을 전송하여 스스로 `unjail`하고 검증자 세트에 다시 참여할 수 있습니다.
+
+`slashing` 모듈의 "설계 목표" 중 하나는 증거가 실행되기 전(그리고 검증자가 jail에 들어가기 전)에 여러 위반이 발생하면, 단일 최악의 위반에 대해서만 처벌받아야 하고 누적되지 않아야 한다는 것입니다.
+예를 들어, 이벤트 순서가 다음과 같은 경우:
+
+1. 검증자 A가 위반 1을 저지름 (30% 슬래시)
+2. 검증자 A가 위반 2를 저지름 (40% 슬래시)
+3. 검증자 A가 위반 3을 저지름 (35% 슬래시)
+4. 위반 1의 증거가 상태 머신에 도달 (그리고 검증자가 jail에 들어감)
+5. 위반 2의 증거가 상태 머신에 도달
+6. 위반 3의 증거가 상태 머신에 도달
+
+가장 높은 위반 2의 슬래시만 적용되어야 합니다. 이는 검증자의 합의 키가 손상된 경우, 해커가 많은 블록에 이중 서명을 하더라도 한 번만 처벌받도록 하기 위한 것입니다. 
+unjailing은 검증자의 operator 키로 수행해야 하므로, 합의 키를 다시 보호한 다음 operator 키를 사용하여 준비가 되었음을 알릴 수 있습니다. 최대 위반만 추적하는 이 기간을 "슬래싱 기간"이라고 합니다.
+
+검증자가 unjailing으로 다시 참여하면 새로운 슬래싱 기간이 시작됩니다. unjailing 후 새로운 위반을 저지르면, 이전 슬래싱 기간의 최악의 위반 위에 누적적으로 슬래싱됩니다.
+
+그러나 위반이 슬래싱 기간에 따라 그룹화되지만, 위반 후 `unbondingPeriod`까지 증거를 제출할 수 있으므로 이전 슬래싱 기간에 대한 증거 제출을 허용해야 합니다.
+예를 들어, 이벤트 순서가 다음과 같은 경우:
+
+1. 검증자 A가 위반 1을 저지름 (30% 슬래시)
+2. 검증자 A가 위반 2를 저지름 (40% 슬래시)
+3. 위반 1의 증거가 상태 머신에 도달 (그리고 검증자 A가 jail에 들어감)
+4. 검증자 A가 unjail함
+
+이제 새로운 슬래싱 기간에 있지만, 위반 2의 증거가 아직 들어올 수 있으므로 이전 위반에 대한 문을 열어 두어야 합니다. 슬래싱 기간의 수가 증가하면 모든 단일 슬래싱 기간에 대한 최고 위반 금액을 추적해야 하므로 복잡성이 증가합니다.
+
+> 참고: 현재 `slashing` 모듈 사양에 따르면, 검증자가 unbonded된 후 rebonded될 때마다 새로운 슬래싱 기간이 생성됩니다. 이는 아마도 jailed/unjailed로 변경되어야 합니다. 자세한 내용은 이슈 [#3205](https://github.com/cosmos/cosmos-sdk/issues/3205)를 참조하세요. 이후 내용에서는 검증자가 unjail될 때만 새로운 슬래싱 기간이 시작된다고 가정합니다.
+
+슬래싱 기간의 최대 수는 `len(UnbondingPeriod) / len(JailPeriod)`입니다.
+Gaia의 `UnbondingPeriod`와 `JailPeriod`의 현재 기본값은 각각 3주와 2일입니다. 이는 검증자당 동시에 최대 11개의 슬래싱 기간이 추적될 수 있음을 의미합니다. `JailPeriod >= UnbondingPeriod`로 설정하면 1개의 슬래싱 기간만 추적하면 됩니다(즉, 슬래싱 기간을 추적할 필요가 없습니다).
+
+현재 jail 기간 구현에서, 검증자가 unjail하면 검증자에게 위임된 모든 위임자(unbond/redelegate하지 않은)는 검증자와 함께 유지됩니다. 합의 안전 위반이 매우 심각하기 때문에(liveness 위반보다 훨씬 더), 위임자가 검증자에게 "자동으로 rebond"하지 않는 것이 현명합니다.
+
+#### 제안: 무한 jail
+
+합의 안전 위반을 저지른 검증자의 "jail 시간"을 `infinite` (즉, tombstone 상태)로 설정하는 것을 제안합니다. 이는 본질적으로 검증자를 검증자 세트에서 퇴출시키고 검증자 세트에 다시 참여하는 것을 허용하지 않습니다. 모든 위임자(operator 자신 포함)는 unbond하거나 redelegate해야 합니다. 검증자 operator는 원한다면 새로운 operator 키와 합의 키로 새 검증자를 만들 수 있지만, 위임을 다시 "얻어야" 합니다.
+
+tombstone 시스템을 구현하고 슬래싱 기간 추적을 제거하면 `slashing` 모듈이 훨씬 간단해집니다. 특히 `staking` 모듈에서 소비하는 `slashing` 모듈에 정의된 모든 hooks를 제거할 수 있습니다(`slashing` 모듈은 여전히 `staking`에 정의된 hooks를 소비합니다).
+
+#### 단일 슬래시 금액
+
+수행할 수 있는 또 다른 최적화는 CometBFT 합의에 대한 모든 ABCI 위반이 동일한 수준에서 슬래싱된다고 가정하면, "최대 슬래시"를 추적할 필요가 없다는 것입니다. ABCI 위반이 발생하면 최대값을 찾기 위해 잠재적인 미래 위반을 비교하는 것에 대해 걱정할 필요가 없습니다.
+
+현재 유일한 CometBFT ABCI 위반은:
+
+* 부당한 precommit (이중 서명)
+
+가까운 미래에 다음 위반을 포함할 계획입니다:
+
+* unbonding 단계에서 precommit에 서명 (라이트 클라이언트 이분법을 안전하게 만드는 데 필요)
+
+이러한 위반은 모두 귀책 가능한 비잔틴 위반이므로 동일하게 슬래싱하려 할 것이며, 따라서 위의 변경을 적용할 수 있습니다.
+
+> 참고: 이 변경은 현재 CometBFT 합의에 적합할 수 있지만, 다른 합의 알고리즘이나 다른 수준에서 처벌하려는 CometBFT의 향후 버전(예: 부분 슬래싱)에는 적합하지 않을 수 있습니다.
+
+## 매개변수
+
+slashing 모듈에는 다음 매개변수가 포함되어 있습니다:
+
+| Key                     | Type           | Example                |
+| ----------------------- | -------------- | ---------------------- |
+| `SignedBlocksWindow`      | `string (int64)` | `"100"`                  |
+| `MinSignedPerWindow`      | `string (dec)`   | `"0.500000000000000000"` |
+| `DowntimeJailDuration`    | `string (ns)`    | `"600000000000"`         |
+| `SlashFractionDoubleSign` | `string (dec)`   | `"0.050000000000000000"` |
+| `SlashFractionDowntime`   | `string (dec)`   | `"0.010000000000000000"` |
+
+## CLI
+
+사용자는 CLI를 사용하여 `slashing` 모듈을 쿼리하고 상호 작용할 수 있습니다.
+
+### 쿼리
+
+`query` 명령을 통해 사용자는 `slashing` 상태를 쿼리할 수 있습니다.
+
+```shell
+simd query slashing --help
+```
+
+#### params
+
+`params` 명령을 통해 사용자는 slashing 모듈의 제네시스 매개변수를 쿼리할 수 있습니다.
+
+```shell
+simd query slashing params [flags]
+```
+
+예시:
+
+```shell
+simd query slashing params
+```
+
+출력 예시:
+
+```yml
+downtime_jail_duration: 600s
+min_signed_per_window: "0.500000000000000000"
+signed_blocks_window: "100"
+slash_fraction_double_sign: "0.050000000000000000"
+slash_fraction_downtime: "0.010000000000000000"
+```
+
+#### signing-info
+
+`signing-info` 명령을 통해 사용자는 합의 공개 키를 사용하여 검증자의 서명 정보를 쿼리할 수 있습니다.
+
+```shell
+simd query slashing signing-infos [flags]
+```
+
+예시:
+
+```shell
+simd query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"Auxs3865HpB/EfssYOzfqNhEJjzys6jD5B6tPgC8="}'
+
+```
+
+출력 예시:
+
+```yml
+address: cosmosvalcons1nrqsld3aw6lh6t082frdqc84uwxn0t958c
+index_offset: "2068"
+jailed_until: "1970-01-01T00:00:00Z"
+missed_blocks_counter: "0"
+start_height: "0"
+tombstoned: false
+```
+
+#### signing-infos
+
+`signing-infos` 명령을 통해 사용자는 모든 검증자의 서명 정보를 쿼리할 수 있습니다.
+
+```shell
+simd query slashing signing-infos [flags]
+```
+
+예시:
+
+```shell
+simd query slashing signing-infos
+```
+
+출력 예시:
+
+```yml
+info:
+- address: cosmosvalcons1nrqsld3aw6lh6t082frdqc84uwxn0t958c
+  index_offset: "2075"
+  jailed_until: "1970-01-01T00:00:00Z"
+  missed_blocks_counter: "0"
+  start_height: "0"
+  tombstoned: false
+pagination:
+  next_key: null
+  total: "0"
+```
+
+### 트랜잭션
+
+`tx` 명령을 통해 사용자는 `slashing` 모듈과 상호 작용할 수 있습니다.
+
+```bash
+simd tx slashing --help
+```
+
+#### unjail
+
+`unjail` 명령을 통해 사용자는 이전에 다운타임으로 jail에 들어간 검증자를 unjail할 수 있습니다.
+
+```bash
+simd tx slashing unjail --from mykey [flags]
+```
+
+예시:
+
+```bash
+simd tx slashing unjail --from mykey
+```
+
+### gRPC
+
+사용자는 gRPC 엔드포인트를 사용하여 `slashing` 모듈을 쿼리할 수 있습니다.
+
+#### Params
+
+`Params` 엔드포인트를 통해 사용자는 slashing 모듈의 매개변수를 쿼리할 수 있습니다.
+
+```shell
+cosmos.slashing.v1beta1.Query/Params
+```
+
+예시:
+
+```shell
+grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/Params
+```
+
+출력 예시:
+
+```json
+{
+  "params": {
+    "signedBlocksWindow": "100",
+    "minSignedPerWindow": "NTAwMDAwMDAwMDAwMDAwMDAw",
+    "downtimeJailDuration": "600s",
+    "slashFractionDoubleSign": "NTAwMDAwMDAwMDAwMDAwMDA=",
+    "slashFractionDowntime": "MTAwMDAwMDAwMDAwMDAwMDA="
+  }
+}
+```
+
+#### SigningInfo
+
+SigningInfo는 주어진 cons 주소의 서명 정보를 쿼리합니다.
+
+```shell
+cosmos.slashing.v1beta1.Query/SigningInfo
+```
+
+예시:
+
+```shell
+grpcurl -plaintext -d '{"cons_address":"cosmosvalcons1nrqsld3aw6lh6t082frdqc84uwxn0t958c"}' localhost:9090 cosmos.slashing.v1beta1.Query/SigningInfo
+```
+
+출력 예시:
+
+```json
+{
+  "valSigningInfo": {
+    "address": "cosmosvalcons1nrqsld3aw6lh6t082frdqc84uwxn0t958c",
+    "indexOffset": "3493",
+    "jailedUntil": "1970-01-01T00:00:00Z"
+  }
+}
+```
+
+#### SigningInfos
+
+SigningInfos는 모든 검증자의 서명 정보를 쿼리합니다.
+
+```shell
+cosmos.slashing.v1beta1.Query/SigningInfos
+```
+
+예시:
+
+```shell
+grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/SigningInfos
+```
+
+출력 예시:
+
+```json
+{
+  "info": [
+    {
+      "address": "cosmosvalcons1nrqslkwd3pz096lh6t082frdqc84uwxn0t958c",
+      "indexOffset": "2467",
+      "jailedUntil": "1970-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+### REST
+
+사용자는 REST 엔드포인트를 사용하여 `slashing` 모듈을 쿼리할 수 있습니다.
+
+#### Params
+
+```shell
+/cosmos/slashing/v1beta1/params
+```
+
+예시:
+
+```shell
+curl "localhost:1317/cosmos/slashing/v1beta1/params"
+```
+
+출력 예시:
+
+```json
+{
+  "params": {
+    "signed_blocks_window": "100",
+    "min_signed_per_window": "0.500000000000000000",
+    "downtime_jail_duration": "600s",
+    "slash_fraction_double_sign": "0.050000000000000000",
+    "slash_fraction_downtime": "0.010000000000000000"
+}
+```
+
+#### signing_info
+
+```shell
+/cosmos/slashing/v1beta1/signing_infos/%s
+```
+
+예시:
+
+```shell
+curl "localhost:1317/cosmos/slashing/v1beta1/signing_infos/cosmosvalcons1nrqslkwd3pz096lh6t082frdqc84uwxn0t958c"
+```
+
+출력 예시:
+
+```json
+{
+  "val_signing_info": {
+    "address": "cosmosvalcons1nrqslkwd3pz096lh6t082frdqc84uwxn0t958c",
+    "start_height": "0",
+    "index_offset": "4184",
+    "jailed_until": "1970-01-01T00:00:00Z",
+    "tombstoned": false,
+    "missed_blocks_counter": "0"
+  }
+}
+```
+
+#### signing_infos
+
+```shell
+/cosmos/slashing/v1beta1/signing_infos
+```
+
+예시:
+
+```shell
+curl "localhost:1317/cosmos/slashing/v1beta1/signing_infos
+```
+
+출력 예시:
+
+```json
+{
+  "info": [
+    {
+      "address": "cosmosvalcons1nrqslkwd3pz096lh6t082frdqc84uwxn0t958c",
+      "start_height": "0",
+      "index_offset": "4169",
+      "jailed_until": "1970-01-01T00:00:00Z",
+      "tombstoned": false,
+      "missed_blocks_counter": "0"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
+```

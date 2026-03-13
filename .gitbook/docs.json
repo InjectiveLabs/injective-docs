@@ -1616,7 +1616,22 @@
                       "ko/developers-native/core/index",
                       "ko/developers-native/core/auth",
                       "ko/developers-native/core/authz",
-                      "ko/developers-native/core/bank"
+                      "ko/developers-native/core/bank",
+                      "ko/developers-native/core/consensus",
+                      "ko/developers-native/core/crisis",
+                      "ko/developers-native/core/distribution",
+                      "ko/developers-native/core/evidence",
+                      "ko/developers-native/core/feegrant",
+                      "ko/developers-native/core/gov",
+                      "ko/developers-native/core/group",
+                      "ko/developers-native/core/mint",
+                      "ko/developers-native/core/nft",
+                      "ko/developers-native/core/params",
+                      "ko/developers-native/core/slashing",
+                      "ko/developers-native/core/staking",
+                      "ko/developers-native/core/upgrade",
+                      "ko/developers-native/core/circuit",
+                      "ko/developers-native/core/genutil"
                     ]
                   }
                 ]
