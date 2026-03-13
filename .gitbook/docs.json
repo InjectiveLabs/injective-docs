@@ -1239,7 +1239,54 @@
               "ko/developers-ai/index",
               "ko/developers-ai/injective-cli-skill",
               "ko/developers-ai/injective-evm-developer-skill",
-              "ko/developers-ai/documentation-mcp"
+              "ko/developers-ai/injective-mcp-servers-skill",
+              "ko/developers-ai/injective-trading-skills",
+              "ko/developers-ai/documentation-mcp",
+              "ko/developers-ai/mcp"
+            ]
+          },
+          {
+            "group": "인프라",
+            "icon": "network-wired",
+            "expanded": false,
+            "pages": [
+              "ko/infra/index",
+              {
+                "group": "노드와 상호작용",
+                "expanded": false,
+                "pages": [
+                  "ko/infra/interact-node/index",
+                  "ko/infra/interact-node/command-line",
+                  "ko/infra/interact-node/grpc",
+                  "ko/infra/interact-node/go",
+                  "ko/infra/interact-node/rest"
+                ]
+              },
+              "ko/infra/run-node",
+              "ko/infra/set-up-keyring",
+              "ko/infra/join-a-network",
+              "ko/infra/cosmovisor",
+              "ko/infra/upgrade-node",
+              {
+                "group": "메인넷 검증자",
+                "pages": [
+                  "ko/infra/validator-mainnet/index",
+                  "ko/infra/validator-mainnet/peggo",
+                  "ko/infra/validator-mainnet/canonical-chain-upgrade"
+                ]
+              },
+              {
+                "group": "테스트넷 검증자",
+                "pages": [
+                  "ko/infra/validator-testnet/index",
+                  "ko/infra/validator-testnet/peggo"
+                ]
+              },
+              "ko/infra/public-endpoints",
+              "ko/infra/premium-endpoints",
+              "ko/infra/archival-setup",
+              "redirects/https_injective_notion_site_indexer_service_setup_guide",
+              "redirects/https_api_injective_network_swagger"
             ]
           },
           {
@@ -1634,50 +1681,6 @@
                       "ko/developers-native/core/genutil"
                     ]
                   }
-                ]
-              },
-              {
-                "group": "인프라",
-                "icon": "network-wired",
-                "expanded": false,
-                "pages": [
-                  "ko/infra/index",
-                  {
-                    "group": "노드와 상호작용",
-                    "expanded": false,
-                    "pages": [
-                      "ko/infra/interact-node/index",
-                      "ko/infra/interact-node/command-line",
-                      "ko/infra/interact-node/grpc",
-                      "ko/infra/interact-node/go",
-                      "ko/infra/interact-node/rest"
-                    ]
-                  },
-                  "ko/infra/run-node",
-                  "ko/infra/set-up-keyring",
-                  "ko/infra/join-a-network",
-                  "ko/infra/cosmovisor",
-                  "ko/infra/upgrade-node",
-                  {
-                    "group": "메인넷 검증자",
-                    "pages": [
-                      "ko/infra/validator-mainnet/index",
-                      "ko/infra/validator-mainnet/peggo",
-                      "ko/infra/validator-mainnet/canonical-chain-upgrade"
-                    ]
-                  },
-                  {
-                    "group": "테스트넷 검증자",
-                    "pages": [
-                      "ko/infra/validator-testnet/index",
-                      "ko/infra/validator-testnet/peggo"
-                    ]
-                  },
-                  "ko/infra/public-endpoints",
-                  "ko/infra/premium-endpoints",
-                  "ko/infra/archival-setup",
-                  "redirects/https_injective_notion_site_indexer_service_setup_guide",
-                  "redirects/https_api_injective_network_swagger"
                 ]
               },
               "ko/faq",
