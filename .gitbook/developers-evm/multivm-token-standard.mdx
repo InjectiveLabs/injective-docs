@@ -26,6 +26,7 @@ The system comprises two main components:
   * Developed in Go, this precompile is embedded directly in the Injective EVM.
   * It provides a Solidity interface that proxies ERC20 operations—such as mint, burn, and transfer—to the bank module.
 * [**ERC20 Module**](/developers-evm/erc20-module/):
+  * This module is a way to bring existing on-chain denoms into EVM world. The users who wish to create new MTS-based ERC20 tokens should use `Bank` precompile directly.
   * This module maps native bank denoms (e.g., INJ, IBC tokens, Peggy assets) to an ERC20 contract within the EVM.
   * It deploys MTS-compliant ERC20 contracts that always reflect the canonical token balance as maintained by the bank module.
 
@@ -33,11 +34,21 @@ The system comprises two main components:
 
 ### Creating an MTS-Compliant Token
 
+#### New ERC20 tokens ("erc20:..." denoms)
+
 1. [**Using Our Prebuilt Templates**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
    * Start with the provided Solidity templates, such as `BankERC20.sol`, `MintBurnBankERC20.sol`, or `FixedSupplyBankERC20.sol`.
 2. [**Deploying the Contract**](/developers-evm/smart-contracts/):
    * Deploy your MTS token contract on the Injective EVM network.
    * The contract automatically interacts with the Bank Precompile to update the canonical state.
+
+#### Existing Cosmos denoms (Tokenfactory, IBC, Peggy)
+
+1. Create a token pair inside erc20 module via `MsgCreateTokenPair`:
+  * Chain will upload EVM Smart Contract for you based on the existing denom configuration.
+2. Use custom ERC20 implementation for Smart Contract during pair creation (tokenfactory denoms only):
+  * Upload your custom ERC20 Smart Contract on chain first.
+  * Provide the address of the contract inside `MsgCreateTokenPair`.
 
 ### Interoperability and Cross-Chain Integration
 
