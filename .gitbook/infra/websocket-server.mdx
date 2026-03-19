@@ -1,0 +1,343 @@
+---
+title: WebSocket server
+description: Stream real-time Injective chain events over WebSocket using the Chain Stream WebSocket server
+---
+
+The WebSocket server provides a real-time streaming interface for Injective chain events. It wraps the gRPC Chain Stream server, allowing you to subscribe to blockchain updates using standard WebSocket connections instead of gRPC streams.
+
+## Prerequisites
+
+- A running Injective node with the Chain Stream gRPC server enabled
+- The `[injective-websocket]` section configured in your node's `app.toml`
+
+## Configuration
+
+Configure the WebSocket server in your node's `app.toml` under the `[injective-websocket]` section.
+
+| Option | Type | Default | Description |
+| ------ | ---- | ------- | ----------- |
+| `address` | string | `""` (disabled) | Address and port to bind the WebSocket server (e.g., `"0.0.0.0:9998"`). Leave empty to disable. |
+| `max-open-connections` | int | `0` (unlimited) | Maximum simultaneous WebSocket connections. Set a reasonable limit in production. |
+| `read-timeout` | duration | `10s` | Maximum time to wait for reading a complete client request. |
+| `write-timeout` | duration | `10s` | Maximum time to wait for writing a response to the client. |
+| `max-body-bytes` | int64 | `1000000` (1MB) | Maximum HTTP request body size in bytes. |
+| `max-header-bytes` | int | `1048576` (1MB) | Maximum HTTP header size in bytes. |
+| `max-request-batch-size` | int | `10` | Maximum RPC calls allowed in a single batch request. |
+
+### Example configuration
+
+```toml app.toml
+###############################################################################
+###                  Injective Websocket Configuration                      ###
+###############################################################################
+
+[injective-websocket]
+
+# Address defines the websocket server address to bind to.
+# Leave empty to disable the websocket server.
+address = "0.0.0.0:9998"
+
+# MaxOpenConnections sets the maximum number of simultaneous connections.
+# Set to 0 for unlimited (not recommended for production).
+max-open-connections = 100
+
+# ReadTimeout defines the HTTP read timeout.
+read-timeout = "10s"
+
+# WriteTimeout defines the HTTP write timeout.
+write-timeout = "10s"
+
+# MaxBodyBytes defines the maximum allowed HTTP body size (in bytes).
+max-body-bytes = 1000000
+
+# MaxHeaderBytes defines the maximum allowed HTTP header size (in bytes).
+max-header-bytes = 1048576
+
+# MaxRequestBatchSize defines the maximum number of RPC calls per batch request.
+max-request-batch-size = 10
+```
+
+<Note>
+  The WebSocket server requires the Chain Stream server to be enabled. Ensure the following is also configured in your `app.toml`:
+
+  ```toml
+  chainstream-server = "0.0.0.0:9999"
+  chainstream-server-buffer-capacity = 100
+  chainstream-publisher-buffer-capacity = 100
+  ```
+</Note>
+
+## Connecting to the server
+
+Connect to the WebSocket endpoint at:
+
+```
+ws://<node-address>:<port>/injstream-ws
+```
+
+```javascript example.js
+const ws = new WebSocket('ws://localhost:9998/injstream-ws');
+
+ws.onopen = () => {
+  console.log('Connected to Injective WebSocket');
+};
+
+ws.onmessage = (event) => {
+  const response = JSON.parse(event.data);
+  console.log('Received:', response);
+};
+
+ws.onerror = (error) => {
+  console.error('WebSocket error:', error);
+};
+
+ws.onclose = () => {
+  console.log('Disconnected from WebSocket');
+};
+```
+
+## Subscribing to events
+
+Send a JSON-RPC 2.0 request with the `subscribe` method. Each request must include:
+
+- `jsonrpc` — Always `"2.0"`
+- `id` — A positive integer used to identify responses for this subscription
+- `method` — `"subscribe"`
+- `params.req.subscription_id` — A client-provided unique identifier for this subscription
+- `params.req.filter` — An object containing your subscription filters
+
+<Tabs>
+  <Tab title="Oracle prices">
+    ```javascript
+    const subscribeRequest = {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'subscribe',
+      params: {
+        req: {
+          subscription_id: 'my-oracle-prices',
+          filter: {
+            oracle_price_filter: {
+              symbol: ['*']  // Use '*' to subscribe to all symbols
+            }
+          }
+        }
+      }
+    };
+
+    ws.send(JSON.stringify(subscribeRequest));
+    ```
+  </Tab>
+  <Tab title="Spot orders">
+    ```javascript
+    const subscribeRequest = {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'subscribe',
+      params: {
+        req: {
+          subscription_id: 'spot-orders-market-1',
+          filter: {
+            spot_orders_filter: {
+              market_ids: ['0x0611780ba69656949525013d947713300f56c37b6175e02f26bffa495c3208fe'],
+              subaccount_ids: ['*']
+            }
+          }
+        }
+      }
+    };
+
+    ws.send(JSON.stringify(subscribeRequest));
+    ```
+  </Tab>
+  <Tab title="Multiple event types">
+    ```javascript
+    const subscribeRequest = {
+      jsonrpc: '2.0',
+      id: 3,
+      method: 'subscribe',
+      params: {
+        req: {
+          subscription_id: 'my-trading-stream',
+          filter: {
+            spot_orders_filter: {
+              market_ids: ['*'],
+              subaccount_ids: ['0xeb8cf88b739fe12e303e31fb88fc37751e17cf3d000000000000000000000000']
+            },
+            derivative_orders_filter: {
+              market_ids: ['*'],
+              subaccount_ids: ['0xeb8cf88b739fe12e303e31fb88fc37751e17cf3d000000000000000000000000']
+            },
+            oracle_price_filter: {
+              symbol: ['BTCUSD', 'ETHUSD']
+            },
+            positions_filter: {
+              subaccount_ids: ['0xeb8cf88b739fe12e303e31fb88fc37751e17cf3d000000000000000000000000'],
+              market_ids: ['*']
+            }
+          }
+        }
+      }
+    };
+
+    ws.send(JSON.stringify(subscribeRequest));
+    ```
+  </Tab>
+</Tabs>
+
+A successful subscription returns:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "success"
+}
+```
+
+After subscribing, you will receive stream updates with the same `id`.
+
+## Unsubscribing from events
+
+Send a request with the `unsubscribe` method and the `subscription_id` you used when subscribing:
+
+```javascript
+const unsubscribeRequest = {
+  jsonrpc: '2.0',
+  id: 100,
+  method: 'unsubscribe',
+  params: {
+    req: {
+      subscription_id: 'my-oracle-prices'
+    }
+  }
+};
+
+ws.send(JSON.stringify(unsubscribeRequest));
+```
+
+A successful unsubscribe returns:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 100,
+  "result": "success"
+}
+```
+
+<Info>
+  The `subscription_id` must match exactly the ID you provided when creating the subscription.
+</Info>
+
+## Available filters
+
+You can subscribe to any combination of the following event types. At least one filter must be specified. Use `"*"` as a wildcard to match all values for a parameter.
+
+| Filter | Description | Parameters |
+| ------ | ----------- | ---------- |
+| `bank_balances_filter` | Bank balance changes | `accounts` |
+| `subaccount_deposits_filter` | Subaccount deposit changes | `subaccount_ids` |
+| `spot_trades_filter` | Spot market trades | `market_ids`, `subaccount_ids` |
+| `derivative_trades_filter` | Derivative market trades | `market_ids`, `subaccount_ids` |
+| `spot_orders_filter` | Spot order updates | `market_ids`, `subaccount_ids` |
+| `derivative_orders_filter` | Derivative order updates | `market_ids`, `subaccount_ids` |
+| `spot_orderbooks_filter` | Spot orderbook updates | `market_ids` |
+| `derivative_orderbooks_filter` | Derivative orderbook updates | `market_ids` |
+| `positions_filter` | Position updates | `subaccount_ids`, `market_ids` |
+| `oracle_price_filter` | Oracle price updates | `symbol` |
+| `order_failures_filter` | Order failure notifications | `accounts` |
+| `conditional_order_trigger_failures_filter` | Conditional order trigger failures | `subaccount_ids`, `market_ids` |
+
+## Response format
+
+Stream responses follow the JSON-RPC 2.0 format. Each response contains updates for a single block. Only fields matching your subscription filters contain data.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "block_height": "12345678",
+    "block_time": "1702123456789",
+    "bank_balances": [],
+    "subaccount_deposits": [],
+    "spot_trades": [],
+    "derivative_trades": [],
+    "spot_orders": [],
+    "derivative_orders": [],
+    "spot_orderbook_updates": [],
+    "derivative_orderbook_updates": [],
+    "positions": [],
+    "oracle_prices": [],
+    "gas_price": "160000000",
+    "order_failures": [],
+    "conditional_order_trigger_failures": []
+  }
+}
+```
+
+## Security considerations
+
+The WebSocket server has certain security limitations to be aware of when deploying to production.
+
+<AccordionGroup>
+  <Accordion title="No origin validation">
+    The server accepts connections from any origin. Deploy behind a reverse proxy that validates the `Origin` header to mitigate Cross-Site WebSocket Hijacking.
+
+    ```nginx
+    location /injstream-ws {
+        if ($http_origin !~* "^https://(app\.injective\.network|your-domain\.com)$") {
+            return 403;
+        }
+
+        proxy_pass http://127.0.0.1:9998;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+    ```
+  </Accordion>
+  <Accordion title="No TLS/SSL support">
+    The server only supports unencrypted `ws://` connections. Use a TLS-terminating reverse proxy to provide `wss://` connections.
+
+    ```nginx
+    server {
+        listen 443 ssl;
+        server_name your-domain.com;
+
+        ssl_certificate /path/to/cert.pem;
+        ssl_certificate_key /path/to/key.pem;
+
+        location /injstream-ws {
+            proxy_pass http://127.0.0.1:9998;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+    }
+    ```
+  </Accordion>
+  <Accordion title="No authentication">
+    The server does not implement authentication. Use a reverse proxy with authentication middleware, API key validation, or network-level access controls (firewalls, VPNs).
+  </Accordion>
+  <Accordion title="No per-client rate limiting">
+    While `max-open-connections` limits total connections, there is no per-client rate limiting. Implement rate limiting at the proxy level:
+
+    ```nginx
+    limit_conn_zone $binary_remote_addr zone=ws_conn:10m;
+    limit_conn ws_conn 10;  # Max 10 connections per IP
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Operational notes
+
+- When a connection closes, all associated subscriptions are automatically cancelled
+- The server sends ping frames periodically to detect stale connections
+- The `subscription_id` must be unique within your connection — different connections can reuse the same IDs
+- Implement reconnection logic with exponential backoff on the client side
+- Use specific filters rather than wildcards (`*`) when possible to reduce data volume
+- Always set `max-open-connections` to a reasonable limit in production
