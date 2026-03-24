@@ -1,0 +1,118 @@
+---
+title: Hardhat を使用した smart contract との対話
+---
+
+## 前提条件
+
+Hardhat プロジェクトがセットアップ済みで、smart contract のデプロイが正常に完了している必要があります。
+その方法については、[Hardhat を使用した smart contract のデプロイ](./deploy-hardhat/) チュートリアルを参照してください。
+
+任意ですが、強く推奨します：smart contract の検証も正常に完了していることを確認してください。
+その方法については、[Hardhat を使用した smart contract の検証](./verify-hardhat/) チュートリアルを参照してください。
+
+## Hardhat コンソールの起動
+
+以下のコマンドを使用して、対話型 Javascript REPL を起動します。
+
+```shell
+npx hardhat console --network inj_testnet
+```
+
+これで、シェルは通常のシェル（bash、zsh など）の代わりに NodeJs REPL になります。
+この REPL で、`Counter` smart contract のインスタンスを作成します。
+そのためには、`ethers.getContractFactory(...)` と `contract.attach('0x...');` を使用します。
+例えば、smart contract が `0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b` にデプロイされた場合、コマンドは以下のようになります：
+
+```js
+const Counter = await ethers.getContractFactory('Counter');
+const counter = await Counter.attach('0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b');
+```
+
+この REPL では、シェルプロンプトとして `> ` が表示されます。
+各プロンプトの結果はこのプレフィックスなしで出力されます。
+ターミナルの内容は以下のようになります：
+
+```js
+> const Counter = await ethers.getContractFactory('Counter');
+undefined
+> const counter = await Counter.attach('0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b');
+undefined
+```
+
+これで `counter` を使用して smart contract と対話できます。
+
+## 関数の呼び出し - クエリ
+
+クエリは読み取り専用の操作です。
+そのため、smart contract の状態は**更新されません**。
+*状態の変更*が不要なため、ウォレット、署名、トランザクション手数料（gas）は必要ありません。
+
+以下のコマンドを使用して `value()` 関数をクエリします。
+
+```js
+await counter.value();
+```
+
+以下の出力が表示されます。
+
+```js
+0n
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`0n` は `0` を意味し、`n` サフィックスはそれが
+[`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) ではなく
+[`BigInt`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) であることを示します。
+
+これは、Solidity の `uint256`（smart contract の `value()` 関数の戻り値の型）が
+`Number` では表現できないためです。
+`Number` の最大整数値は `2^53 - 1` です。
+そのため、代わりに `BigInt` を使用する必要があります。
+</Callout>
+
+## 関数の呼び出し - トランザクション
+
+トランザクションは書き込み操作です。
+そのため、smart contract の**状態が更新されます**。
+*状態の変更*が発生する可能性があるため、トランザクションはウォレットで署名する必要があり、トランザクション手数料（gas）を支払う必要があります。
+
+以下のコマンドを使用して `increment(num)` 関数のトランザクションを実行します。
+
+```js
+await counter.increment(1, { gasPrice: 160e6, gasLimit: 2e6 });
+```
+<Callout icon="info" color="#07C1FF" iconType="regular">
+gas price は *wei* で表記されます。
+1 wei = 10^-18 INJ です。
+</Callout>
+
+成功すると、以下のような結果が生成されます：
+
+```js
+ContractTransactionResponse { ...
+```
+
+状態を更新した後、新しい状態をクエリできます。
+結果には状態の変更が反映されます。
+
+```js
+await counter.value();
+```
+
+今回は `0 + 1 = 1` なので、結果は `1n` になります。
+
+```js
+1n
+```
+
+## Hardhat コンソールの停止
+
+`Ctrl+C` を2回連続で押すか、`.exit` コマンドを入力します。
+
+## 次のステップ
+
+おめでとうございます。Hardhat を使用した Injective での EVM smart contract 開発ガイド全体を完了しました！
+
+smart contract は、技術に詳しくないユーザーにユーザーエクスペリエンスを提供しません。
+そのようなユーザーに対応するには、分散型アプリケーションを構築する必要があります。
+その方法については、[はじめての dApp](../dapps/) ガイドをご覧ください！

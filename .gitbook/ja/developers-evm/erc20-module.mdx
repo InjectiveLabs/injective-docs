@@ -1,0 +1,21 @@
+---
+title: ERC20 Module
+---
+
+### ERC20 Module
+
+ERC20 moduleは、**既存の**bank denom（例：IBCブリッジされたトークン、USDC、tokenfactory、およびPeggy）をInjective EVMと統合することを可能にします。このモジュールはストレージ内にトークンペア間のマッピングを維持し、ERC20トークンと対応するbank denomの間の関連付けを作成します。既存のbank denomに対して新しいトークンペアが生成されると、モジュールはBank precompileとやり取りするERC20 contractをデプロイし、ストレージマッピングを参照してERC20アドレスを対応するbank denomに紐付けます。このモジュールにはいくつかの重要な目的があります：
+
+1. **ストレージ**：bank denom ↔ ERC20アドレス間のマッピング
+2. **新しいメッセージタイプ**：チェーンメッセージを発行して新しいトークンペアマッピングを確立することをユーザーに可能にします
+
+#### 新しいトークンペアの作成
+
+現在、3種類のbank denomがトークンペアを関連付けることができ、それぞれに固有のルールがあります：
+
+* **Tokenfactory (`factory/...`)**\
+  denomの管理者またはガバナンスのみがトークンペアを作成できます。送信者はカスタム実装として既存のERC20 contractアドレスを指定できます。省略された場合、`MintBurnBankERC20.sol`の新しいインスタンスがデプロイされ、`msg.sender`がオーナーとなり、contractを通じてmintおよびburnが可能になります。
+* **IBC (`ibc/...`)**\
+  IBC denomは、任意のユーザーがトークンペア作成を通じてEVMに統合できますが、カスタムERC20アドレスのオプションはありません。これらは常に、オーナーなしの`FixedSupplyBankERC20.sol`の新しいインスタンスをデプロイします。
+* **Peggy (`peggy0x...`)**\
+  Peggy denomは、任意のユーザーがトークンペア作成を通じてEVMに統合できますが、カスタムERC20アドレスのオプションはありません。これらは常に、オーナーなしの`FixedSupplyBankERC20.sol`の新しいインスタンスをデプロイします。

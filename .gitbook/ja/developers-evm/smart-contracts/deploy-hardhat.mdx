@@ -1,0 +1,58 @@
+---
+title: Hardhat を使用した smart contract のデプロイ
+---
+
+## 前提条件
+
+Hardhat プロジェクトがセットアップ済みで、smart contract のコンパイルが正常に完了している必要があります。
+その方法については、[Hardhat のセットアップと smart contract のコンパイル](./compile-hardhat/) チュートリアルを参照してください。
+
+任意ですが、強く推奨します：smart contract のテストも正常に完了していることを確認してください。
+その方法については、[Hardhat を使用した smart contract のテスト](./test-hardhat/) チュートリアルを参照してください。
+
+## デプロイスクリプトの編集
+
+コンピュータ上でコンパイルした smart contract を Injective Testnet 上に存在させるには、ネットワークにデプロイする必要があります。
+
+そのために、`hardhat.config.js` で指定された値を使用して Hardhat によって事前設定された `ethers` インスタンスを利用するスクリプトを使用します。
+
+ファイルを開きます: `script/deploy.js`
+
+```js
+async function main() {
+    const Counter = await ethers.getContractFactory('Counter');
+    const counter = await Counter.deploy({
+        gasPrice: 160e6,
+        gasLimit: 2e6,
+    });
+    await counter.waitForDeployment();
+    const address = await counter.getAddress();
+
+    console.log('Counter smart contract deployed to:', address);
+}
+```
+
+smart contract のコンパイル後に `artifacts/contracts/Counter.sol/Counter.json` を確認したことを思い出してください。このスクリプトでは、`ethers.getContractFactory('Counter')` がそのファイルを取得し、ABI と EVM bytecode を抽出します。
+続く行では、その情報を使用してデプロイトランザクションを構築し、ネットワークに送信します。
+成功すると、smart contract がデプロイされたアドレスが出力されます。例：
+[`0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b`](https://testnet.blockscout.injective.network/address/0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b)
+
+他の EVM ネットワークでは、トランザクション（デプロイトランザクションを含む）で gas price と gas limit を指定する必要はありません。ただし、現在 Injective ではこれが必要です。
+
+## デプロイスクリプトの実行
+
+以下のコマンドを実行して smart contract をデプロイします：
+
+```shell
+npx hardhat run script/deploy.js --network inj_testnet
+```
+
+デプロイされたアドレスをコピーし、[`https://testnet.blockscout.injective.network`](https://testnet.blockscout.injective.network/) にアクセスして、検索フィールドにアドレスを貼り付けます。
+デプロイしたばかりの smart contract のブロックエクスプローラーページが表示されます。
+
+「Contract」タブをクリックすると、そのコントラクトの EVM bytecode が表示され、コンパイル後のアーティファクトディレクトリにある EVM bytecode と一致することが確認できます。
+
+## 次のステップ
+
+smart contract のデプロイが完了しました。次は smart contract の検証を行いましょう！
+次のチュートリアル [Hardhat を使用した smart contract の検証](./verify-hardhat/) に進んでください。

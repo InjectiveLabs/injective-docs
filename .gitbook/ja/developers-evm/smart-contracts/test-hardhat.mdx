@@ -1,0 +1,89 @@
+---
+title: Hardhat を使用した smart contract のテスト
+---
+
+## 前提条件
+
+Hardhat プロジェクトがセットアップ済みで、smart contract のコンパイルが正常に完了している必要があります。
+その方法については、[Hardhat のセットアップと smart contract のコンパイル](./compile-hardhat/) チュートリアルを参照してください。
+
+## テスト仕様の編集
+
+テスト対象の smart contract が最小限であるため、必要なテストケースも最小限です。
+
+テストの前に、smart contract をデプロイする必要があります。
+これは `before` ブロックで行われます。
+smart contract は単独では実行できず、実行するには EVM 内に存在する必要があるためです。
+Hardhat では、デフォルトでテストはエミュレートされたインメモリ EVM インスタンス内で実行されます。このインスタンスは一時的なものであるため、デプロイは形式的なものです。
+
+ファイルを開きます: `test/Counter.test.js`
+
+```js
+const { expect } = require('chai');
+
+describe('Counter', function () {
+  let counter;
+
+  before(async function () {
+    Counter = await ethers.getContractFactory('Counter');
+    counter = await Counter.deploy();
+    await counter.waitForDeployment();
+  });
+
+  it('should start with a count of 0', async function () {
+    expect(await counter.value()).to.equal(0);
+  });
+
+  it('should increment the count starting from zero', async function () {
+    await counter.increment(100);
+    expect(await counter.value()).to.equal(100);
+  });
+
+  it('should increment the count starting from non-zero', async function () {
+    await counter.increment(23);
+    expect(await counter.value()).to.equal(123);
+  });
+});
+
+```
+
+3つのテストケースがあることがわかります：
+
+- 初期の `value()` を確認します。
+- `increment(num)` を呼び出し、`value()` が更新されたことを確認します。
+- 再度 `increment(num)` を呼び出し、`value()` が再び更新されたことを確認します。
+
+## smart contract に対するテストの実行
+
+以下のコマンドで、先ほど確認したテストを実行します。
+
+```shell
+npx hardhat test
+```
+
+以下のコマンドはテストを実行しますが、エミュレートされた EVM インスタンス内では**実行しません**。
+代わりに、smart contract は Injective Testnet（パブリックネットワーク）にデプロイされ、テストはそれに対して実行されます。
+これはほとんどの場合**推奨されません**。特定の／高度なユースケースでのみ必要です。
+
+```shell
+npx hardhat test --network inj_testnet
+```
+
+## テスト出力の確認
+
+すべてのテストが計画通りに動作した場合、以下のような出力が表示されます：
+
+```text
+  Counter
+    ✔ should start with a count of 0
+    ✔ should increment the count starting from zero
+    ✔ should increment the count starting from non-zero
+  3 passing (41ms)
+```
+
+この後に、gas に関する追加レポートを含むテーブルが続きます。gas は複雑さとトランザクションコストの指標です。
+
+## 次のステップ
+
+smart contract のテストが完了しました。次は smart contract のデプロイを行いましょう！
+次のチュートリアル [Hardhat を使用した smart contract のデプロイ](./deploy-hardhat/) に進んでください。
