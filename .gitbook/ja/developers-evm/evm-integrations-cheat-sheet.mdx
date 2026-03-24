@@ -1,0 +1,132 @@
+---
+title: "EVM統合チートシート"
+description: Injective EVM Mainnetで本番アプリケーションを構築しようとしていますか？統合を素早く進めるための便利なリファレンスです。新規デプロイメントとクロスチェーンデプロイメントの両方に適しています。
+---
+
+# ネットワーク設定
+
+- Chain ID: `1776`
+
+リファレンス: [EVMネットワーク情報 | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
+
+<Warning>
+inEVMは**非推奨**となっているため、使用**しないで**ください。
+</Warning>
+
+# エクスプローラー
+
+- [https://blockscout.injective.network/](https://blockscout.injective.network/) → EVMトランザクションのみ表示可能
+- [https://injscan.com/](https://injscan.com/) → EVMとCosmosの両方のトランザクションを表示可能
+
+リファレンス: [EVMネットワーク情報 | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
+
+# RPCエンドポイント
+
+- 統合パートナーに推奨
+    - アプリケーションのニーズに合わせてカスタマイズ可能
+    - カスタマイズ可能なレート制限、履歴データクエリのカットオフなし
+    - フリーミアム/有料オプション
+    - 接続方法：
+        - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj)
+        - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
+- 統合パートナーには非推奨
+    - アプリケーションのニーズに合わせたカスタマイズ不可
+    - 厳しいレート制限、履歴データクエリのカットオフあり
+    - 無料オプション
+    - 接続方法：
+        - JSON-RPCエンドポイント: `https://sentry.evm-rpc.injective.network/`
+        - WSエンドポイント: `wss://sentry.evm-ws.injective.network`
+
+リファレンス: [EVMネットワーク情報 | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
+
+<Warning>
+inEVMは**非推奨**となっているため、使用**しないで**ください。
+</Warning>
+
+# コントラクトアドレス
+
+|   |   |   |
+|---|---|---|
+|USDT|MTS USDT|`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`|
+|wETH|wrapped ETH|`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`|
+|wINJ|wrapped INJ|`0x0000000088827d2d103ee2d9A6b781773AE03FfB`|
+|USDC||`0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989`|
+|MultiCall||`0xcA11bde05977b3631167028862bE2a173976CA11`|
+
+正規のソースとして以下のリファレンスページをご使用ください。
+
+リファレンス: [EVMネットワーク情報 | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
+
+# ブリッジ
+
+[Injective Bridge](https://bridge.injective.network)
+
+ガイド：
+- [MetaMaskを使用してEthereumからInjectiveにブリッジする方法](https://injective.com/blog/how-to-bridge-from-ethereum-to-injective-using-metamask/)
+- [Phantomを使用してSolanaからInjectiveにブリッジする方法](https://injective.com/blog/how-to-bridge-from-solana-to-injective-using-phantom/)
+- [Wormholeを使用してInjectiveにブリッジする方法](https://injective.com/blog/how-to-bridge-to-injective-using-wormhole/)
+- [Keplrを使用してCosmosからInjectiveにブリッジする方法](https://injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/)
+
+# データ
+
+## エクスプローラー
+
+- エクスプローラー: [`blockscout.injective.network`](https://blockscout.injective.network/)
+- エクスプローラーAPI: [`blockscout-api.injective.network/api`](https://blockscout-api.injective.network/api)
+
+## オラクル
+
+- API3:
+    - 価格フィード: [Api3 Market | Injective EVM](https://market.api3.org/injective)
+- Pyth:
+    - ドキュメント: [Pyth EVM Real Time Data Pull Integration](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/evm)
+    - リファレンスドキュメント: [Pyth EVM Smart Contract Addresses](https://docs.pyth.network/price-feeds/core/contract-addresses/evm)
+- Chainlink:
+    - ドキュメント: [Chainlink Data Streams](https://docs.chain.link/data-streams)
+
+# ウォレット
+
+## `injectived`
+
+プログラマティックな制御に適しています（例：アプリケーション/dApp運用アカウント）。
+
+インストールクイックスタート：
+
+```shell
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.17.2-1765930431/linux-amd64.zip # replace with latest version of injective
+unzip linux-amd64.zip
+sudo mv injectived peggo /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib
+```
+
+<Tip>
+上記コマンドの`wget`ダウンロードURLは、最新リリース版のものに置き換える必要があります。
+正確なコマンド（URLを含む）は[Mainnet Validator](/infra/validator-mainnet)セクションで確認できます。
+</Tip>
+
+<Tip>
+Dockerを使用したインストールやソースからのコンパイルなど、
+その他のオプションは以下のリファレンスページで利用可能です。
+</Tip>
+
+リファレンス: [injectived | Injective | Docs](/developers/injectived)
+
+## MetaMask
+
+EVM DAppとインタラクションする必要があるリテールユーザーに適しています。
+
+インストール：
+
+- お使いのブラウザ用のブラウザ拡張機能を[https://metamask.io/en-GB](https://metamask.io/en-GB)から取得します。
+- [https://blockscout.injective.network/](https://blockscout.injective.network/)にアクセスし、ページ下部までスクロールします。
+- 「Add Injective」ボタンをクリックします。
+- MetaMaskのユーザーインターフェースのプロンプトに従います。
+
+リファレンス: [Injectiveウォレットの作成方法（MetaMask）](https://injective.com/blog/how-to-create-an-injective-wallet-2/#to-connect-to-injective-with-metamask)
+
+## Keplr
+
+- Keplr: [https://www.keplr.app](https://www.keplr.app)
+- 統合用Keplr APIドキュメント: [https://docs.keplr.app/api/intro](https://docs.keplr.app/api/intro)
+
+リファレンス: [Injectiveウォレットの作成方法（Keplr）](https://injective.com/blog/how-to-create-an-injective-wallet-2#to-connect-to-injective-with-keplr)
