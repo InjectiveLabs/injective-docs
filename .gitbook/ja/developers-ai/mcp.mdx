@@ -1,0 +1,100 @@
+---
+title: Injective MCP Server
+description: Model Context Protocol（MCP）を使用してAIアシスタントをInjectiveに接続する
+---
+
+Injective MCP serverは、Injectiveでの完全なトレーディング機能を提供します。
+perpetual futures、spotトランスファー、クロスチェーンブリッジ、rawなEVMトランザクションを含みます。
+
+これはAIツールにInjectiveでのトレーディング能力を与えるため、非常に強力です。
+このサーバーは[Injective Trading Skills](/developers-ai/injective-trading-skills)で広く使用されるように設計されています。
+AIツールにこのMCP serverの使用方法を教えるには、
+[Injective MCP Servers Skill](/developers-ai/injective-mcp-servers-skill)を使用してください。
+
+## MCPとは？
+
+[MCP](https://modelcontextprotocol.io/introduction)は、AIアシスタントが外部データソースやツールに接続できるようにする**オープンスタンダード**です。
+トレーニングデータのみに頼るのではなく、AIアシスタントはMCPを使用してドキュメントからリアルタイムで
+信頼性の高い情報に直接アクセスできます。
+
+## なぜInjective MCP serverを使用するのか？
+
+AIツールをInjective MCP serverに接続すると、以下が可能になります：
+
+- より情報に基づいたトレードのための一般的なクエリやリサーチタスクの実行
+- 自律的なトレーディング（独自のトレーディングロジック/指示を持ち込み可能）
+
+これはInjectiveでのトレーディングに特に有用で、
+AIが話し言葉でトレーディング意図を表現する手助けをします。
+
+## MCP serverの詳細
+
+| プロパティ | 値 |
+|----------|-------|
+| Endpoint | localhost |
+| Transport | stdio |
+| 利用可能なツール | 複数、[MCP serverの使用](#mcp-serverの使用)を参照 |
+
+## MCP serverへの接続
+
+<Tabs>
+  <Tab title="すべてのMCPクライアント">
+    MCP対応クライアントの場合、サーバーをローカルでセットアップして実行します：
+
+    ```shell
+    git clone https://github.com/InjectiveLabs/mcp-server injective-mcp-server
+    cd injective-mcp-server
+    npm install && npm run build
+    ```
+  </Tab>
+
+  <Tab title="Claude Desktop">
+    Claude Desktopの設定ファイルに以下を追加します：
+
+    <Tabs>
+      <Tab title="macOS">
+        `~/Library/Application Support/Claude/claude_desktop_config.json`を編集：
+
+        ```json
+        {
+            "mcpServers": {
+                "injective": {
+                    "command": "node",
+                    "args": ["/path/to/injective-mcp-server/dist/mcp/server.js"],
+                    "env": {
+                        "INJECTIVE_NETWORK": "mainnet"
+                    }
+                }
+            }
+        }
+        ```
+      </Tab>
+      <Tab title="Windows">
+        `%APPDATA%\Claude\claude_desktop_config.json`を編集：
+
+        ```json
+        {
+            "mcpServers": {
+                "injective": {
+                    "command": "node",
+                    "args": ["/path/to/injective-mcp-server/dist/mcp/server.js"],
+                    "env": {
+                        "INJECTIVE_NETWORK": "mainnet"
+                    }
+                }
+            }
+        }
+        ```
+      </Tab>
+    </Tabs>
+
+    設定を保存した後、Claude Desktopを再起動してください。Injective Docsツールがclaudeの利用可能なツールに表示されます。
+  </Tab>
+</Tabs>
+
+## MCP serverの使用
+
+接続後、AIツールにInjectiveでのクエリとトランザクションの実行を依頼できます。
+
+利用可能なすべてのツールのリストは
+[`github.com/InjectiveLabs/mcp-server`](https://github.com/InjectiveLabs/mcp-server?tab=readme-ov-file#tools)で確認できます。
