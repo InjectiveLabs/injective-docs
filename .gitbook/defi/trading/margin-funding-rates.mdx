@@ -21,19 +21,33 @@ For **short position holders**, the funding dynamic flips. Positive funding rate
 
 ## How Funding is Calculated
 
-Funding is calculated as: $\mathrm{FundingRate = cap(TWAP + HourlyInterestRate)}$
+Funding is calculated as:
 
-_where_ $\mathrm{TWAP = \frac{Cumulative\ Price}{(LastTimestamp + 3600 - NextFundingTimestamp)*24}}$
+$FundingRate = cap(TWAP + HourlyInterestRate,\ HourlyFundingRateCap)$
 
-and _Cumulative Price_ is the sum of the deltas of the last traded price and the mark price, as described herein. The system constantly calculates a _Premium_, which represents how far the contract is trading from the mark price. This is calculated as a percentage difference:
+_where_
 
-$\text{Premium} = \frac{\text{Trade Price} - \text{Mark Price}}{\text{Mark Price}}$
+$TWAP = \frac{CumulativePrice}{(LastTimestamp + FundingInterval - NextFundingTimestamp) \times 24}$
 
-where _Trade Price_ is the volume-weighted average price (VWAP) of trades in a particular block.
+The denominator represents the number of seconds between the start of the funding interval and the last trade,
+multiplied by 24 to normalize from a daily to hourly basis. If no trades occurred during the entire funding interval, the TWAP is zero and only the `HourlyInterestRate` contributes to the funding rate.
 
-Using this figure, a _Cumulative Price_ is accumulated throughout the hour. As each trade occurs, the current _Premium_ is multiplied by the time passed (in seconds) since the last update:
+The system computes a _Premium_ each block,
+representing how far the contract is trading from the mark price as a percentage:
 
-$\text{New Cumulative Price} = \text{Old Cumulative Price} + (\text{Premium} \times \Delta t)$
+$Premium = \frac{VWAP - MarkPrice}{MarkPrice}$
+
+where _VWAP_ is the volume-weighted average price of all trades executed in that block,
+across market buy executions, market sell executions, limit order matches, and atomic order executions.
+
+Using this figure, a _Cumulative Price_ is accumulated throughout the hour.
+At the end of each block where trades occur, the current _Premium_ is multiplied by the time passed (in seconds)
+since the last update:
+
+$CumulativePrice_{new} = CumulativePrice_{old} + Premium \times \Delta t$
+
+Blocks with no trades do not update the cumulative price or the last timestamp.
+The premium is not carried forward - the TWAP denominator only counts time up to the last trade within the interval.
 
 **Example :**
 
