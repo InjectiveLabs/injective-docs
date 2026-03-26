@@ -1,0 +1,11 @@
+---
+title: Token Factory
+---
+
+TokenFactoryトークンは、Cosmos SDKのBankモジュールにネイティブに統合されたトークンです。名前は`factory/{creatorAddress}/{subdenom}`の形式を取ります。トークンは作成者アドレスで名前空間化されているため、名前の衝突を解決する必要がなく、パーミッションレスなトークン作成が可能です。
+
+この統合により、CW20規格とは異なり、スマートコントラクトに直接クエリする必要なく、すべての資産の総供給量の追跡とクエリがサポートされます。このため、TokenFactory規格の使用が推奨されます。HelixやMitoなどの製品は、bankトークンのみを使用するInjective exchangeモジュール上に構築されています。TokenFactoryトークンは、injectived CLIやスマートコントラクトを通じて作成できます。Wormholeを介してInjectiveにブリッジされたトークンもTokenFactoryトークンです。
+
+Injectiveでのトークン作成の詳細については、[トークンローンチ](../../developers-defi/token-launch/)をご覧ください。
+
+TokenFactory規格の詳細については、[Token Factoryモジュール](../../developers-native/injective/tokenfactory/)をご覧ください。

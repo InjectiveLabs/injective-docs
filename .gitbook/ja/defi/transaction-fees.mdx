@@ -1,0 +1,48 @@
+---
+title: GasとFee
+---
+
+## GasとFee
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Injectiveにおける`Gas`と`Fee`の違いについて学びましょう。
+
+前提知識 → [Cosmos SDK Gas](https://docs.cosmos.network/main/build/modules/auth#gas--fees)
+</Callout>
+
+Gasは、ステートマシン上で特定の操作を実行するために必要な計算量を表します。
+
+InjectiveはGasの概念を利用して、実行中の操作のリソース使用量を追跡します。Injective上の操作は、チェーンのストアに対する読み取りまたは書き込みとして表現されます。
+
+Feeはメッセージ実行中にユーザーに計算され、請求されます。このFeeは、メッセージ実行で消費されたすべてのGasの合計から計算されます：
+
+```
+fee = gas * gas price
+```
+
+Gasは、操作に過剰な計算能力が必要とならないようにし、悪意のあるユーザーによるネットワークスパムを防止するために使用されます。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**最低Gas価格：**バリデーターによって設定された最低Gas価格は現在`160,000,000inj`です。`inj`で支払われる金額を求めるには、Gas価格にGas量を掛けて1e18で割ります（INJは18桁の小数を持ちます）。
+
+**例：**`gasWanted`が104,519の場合、`gasFees` = 160,000,000 \* 104,519 / 1e18 = 0.000016723`inj`
+</Callout>
+
+### Cosmos SDK `Gas`
+
+Cosmos SDKでは、Gasはメインの`GasMeter`と`BlockGasMeter`で追跡されます：
+
+* `GasMeter`：状態遷移につながる実行中に消費されたGasを追跡します。トランザクション実行ごとにリセットされます。
+* `BlockGasMeter`：ブロック内で消費されたGasを追跡し、Gasが事前に定義された制限を超えないようにします。この制限はTendermintコンセンサスパラメーターで定義され、ガバナンスパラメーター変更プロポーザルを通じて変更できます。
+
+Cosmos SDKにおけるGasの詳細については、[こちら](https://docs.cosmos.network/main/learn/beginner/gas-fees)をご覧ください。
+
+Cosmosでは、トランザクションによってトリガーされない操作でも状態遷移を引き起こすことがあります。具体的な例としては、`BeginBlock`と`EndBlock`の操作、およびトランザクションからの状態遷移を実行する前にストアの読み取りと書き込みを行う可能性のある`AnteHandler`チェックがあります。
+
+#### `BeginBlock`と`EndBlock`
+
+これらの操作はTendermint CoreのApplication Blockchain Interface（ABCI）によって定義され、各Cosmos SDKモジュールによって定義されます。名前が示すように、それぞれブロック処理の開始時と終了時に実行されます（つまり、トランザクション実行の前と後）。
+
+#### `AnteHandler`
+
+Cosmos SDK [`AnteHandler`](https://docs.cosmos.network/v0.45/modules/auth/03_antehandlers.html)は、トランザクション実行前に基本的なチェックを行います。これらのチェックは通常、署名検証、トランザクションフィールドの検証、トランザクション手数料などです。

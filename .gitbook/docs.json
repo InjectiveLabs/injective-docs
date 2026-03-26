@@ -1693,6 +1693,83 @@
             ]
           }
         ]
+      },
+      {
+        "language": "ja",
+        "groups": [
+          {
+            "group": "INJECTIVE",
+            "pages": [
+              {
+                "group": "DeFi",
+                "icon": "coins",
+                "expanded": false,
+                "pages": [
+                  "ja/defi/index",
+                  {
+                    "group": "ウォレット",
+                    "pages": [
+                      "ja/defi/wallet/index",
+                      "ja/defi/wallet/create",
+                      "ja/defi/wallet/accounts"
+                    ]
+                  },
+                  {
+                    "group": "トレーディング",
+                    "pages": [
+                      "ja/defi/trading/index",
+                      "ja/defi/trading/order-types",
+                      "ja/defi/trading/fees",
+                      "ja/defi/trading/24-5-equity-feeds",
+                      "ja/defi/trading/margin",
+                      "ja/defi/trading/margin-liquidation",
+                      "ja/defi/trading/margin-funding-rates",
+                      "ja/defi/trading/margin-performing-liquidations",
+                      "ja/defi/trading/derivatives",
+                      "ja/defi/trading/derivatives-perpetuals",
+                      "ja/defi/trading/derivatives-expiry-futures",
+                      "ja/defi/trading/derivatives-election-perpetual",
+                      "ja/defi/trading/derivatives-pre-launch-futures",
+                      "ja/defi/trading/derivatives-index-perpetual-futures",
+                      "ja/defi/trading/derivatives-iassets"
+                    ]
+                  },
+                  {
+                    "group": "トークン規格",
+                    "pages": [
+                      "ja/defi/tokens/index",
+                      "ja/defi/tokens/inj-coin",
+                      "ja/defi/tokens/token-factory",
+                      "ja/defi/tokens/cw20-standard"
+                    ]
+                  },
+                  "ja/defi/bridge",
+                  "ja/defi/staking",
+                  "ja/defi/governance",
+                  "ja/defi/community-buyback",
+                  "ja/defi/transactions",
+                  "ja/defi/transaction-fees",
+                  {
+                    "group": "Open Liquidity Program",
+                    "pages": [
+                      "ja/defi/open-liquidity-program/introduction",
+                      "ja/defi/open-liquidity-program/epochs",
+                      "ja/defi/open-liquidity-program/eligibility",
+                      "ja/defi/open-liquidity-program/scoring",
+                      "ja/defi/open-liquidity-program/formula-parameters",
+                      "ja/defi/open-liquidity-program/reward-allocations",
+                      "ja/defi/open-liquidity-program/flexible-reward-allocations",
+                      "ja/defi/open-liquidity-program/reward-disbursements",
+                      "ja/defi/open-liquidity-program/performance-tracking",
+                      "ja/defi/open-liquidity-program/volatility-response-modifications",
+                      "ja/defi/open-liquidity-program/fee-tiers"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   },

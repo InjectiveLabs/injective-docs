@@ -1,0 +1,121 @@
+---
+title: アカウント
+---
+
+このセクションでは、Injectiveの組み込みアカウントシステムについて説明します。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+このドキュメントでは、Injectiveの組み込みアカウントシステムについて説明します。
+
+前提知識：
+
+* [Cosmos SDK Accounts](https://docs.cosmos.network/main/basics/accounts)
+* [Ethereum Accounts](https://ethereum.org/en/whitepaper/#ethereum-accounts)
+</Callout>
+
+Injectiveは、EthereumのECDSA secp256k1曲線を使用するカスタム`Account`タイプを定義しています。これは、完全な[BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)パスのための[EIP84](https://github.com/ethereum/EIPs/issues/84)を満たします。InjectiveベースのアカウントのルートHDパスは`m/44'/60'/0'/0`です。
+
+### アドレスと公開鍵
+
+Injectiveでは、デフォルトで3種類の`Addresses`/`PubKeys`が利用可能です：
+
+* **アカウント**用のアドレスと鍵。ユーザー（つまり`message`の送信者）を識別します。**`eth_secp256k1`**曲線を使用して導出されます。
+* **バリデーターオペレーター**用のアドレスと鍵。バリデーターのオペレーターを識別します。**`eth_secp256k1`**曲線を使用して導出されます。
+* **コンセンサスノード**用のアドレスと鍵。コンセンサスに参加するバリデーターノードを識別します。**`ed25519`**曲線を使用して導出されます。
+
+|                    | アドレス bech32 プレフィックス | Pubkey bech32 プレフィックス | 曲線           | アドレスバイト長 | Pubkeyバイト長 |
+| ------------------ | --------------------- | -------------------- | --------------- | ------------------- | ------------------ |
+| アカウント           | `inj`                 | `injpub`             | `eth_secp256k1` | `20`                | `33`（圧縮）  |
+| バリデーターオペレーター | `injvaloper`          | `injvaloperpub`      | `eth_secp256k1` | `20`                | `33`（圧縮）  |
+| コンセンサスノード    | `injvalcons`          | `injvalconspub`      | `ed25519`       | `20`                | `32`               |
+
+### クライアント向けアドレスフォーマット
+
+`EthAccount`は、EthereumのWeb3ツールとの互換性のために、[Bech32](https://en.bitcoin.it/wiki/Bech32)フォーマットとhexフォーマットの両方で表現できます。
+
+Bech32フォーマットは、CLIおよびRESTクライアントを通じたCosmos-SDKクエリとトランザクションのデフォルトフォーマットです。hexフォーマットは、Cosmos `sdk.AccAddress`のEthereum `common.Address`表現です。
+
+* アドレス（Bech32）：`inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku`
+* アドレス（[EIP55](https://eips.ethereum.org/EIPS/eip-55) Hex）：`0xAF79152AC5dF276D9A8e1E2E22822f9713474902`
+* 圧縮公開鍵：`{"@type":"/injective.crypto.v1beta1.ethsecp256k1.PubKey","key":"ApNNebT58zlZxO2yjHiRTJ7a7ufjIzeq5HhLrbmtg9Y/"}`
+
+Cosmos CLIまたはRESTクライアントを使用してアカウントアドレスをクエリできます：
+
+```bash
+# 注：--output (-o) フラグは出力フォーマットをJSONまたはYAML（テキスト）で定義します
+injectived q auth account $(injectived keys show <MYKEY> -a) -o text
+|
+  '@type': /injective.types.v1beta1.EthAccount
+  base_account:
+    account_number: "3"
+    address: inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku
+    pub_key: null
+    sequence: "0"
+  code_hash: xdJGAYb3IzySfn2y3McDwOUAtlPKgic7e/rYBF2FpHA=
+```
+
+```bash
+# GET /cosmos/auth/v1beta1/accounts/{address}
+curl -X GET "http://localhost:10337/cosmos/auth/v1beta1/accounts/inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku" -H "accept: application/json"
+```
+
+アカウントAPIの完全なドキュメントについては、[Swagger API](https://lcd.injective.network/swagger/)リファレンスをご覧ください。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Cosmos SDK Keyringの出力（つまり`injectived keys`）は、Bech32フォーマットのアドレスのみをサポートします。
+</Callout>
+
+### 秘密鍵/ニーモニックからInjectiveアカウントを導出する
+
+以下は、秘密鍵および/またはニーモニックフレーズからInjectiveアカウントを導出する例です：
+
+```js
+import { Wallet } from 'ethers'
+import { Address as EthereumUtilsAddress } from 'ethereumjs-util'
+
+const mnemonic = "indoor dish desk flag debris potato excuse depart ticket judge file exit"
+const privateKey = "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890"
+const defaultDerivationPath = "m/44'/60'/0'/0/0"
+const defaultBech32Prefix = 'inj'
+const isPrivateKey: boolean = true /* 例示のため */
+
+const wallet = isPrivateKey ? Wallet.fromMnemonic(mnemonic, defaultDerivationPath) : new Wallet(privateKey)
+const ethereumAddress = wallet.address
+const addressBuffer = EthereumUtilsAddress.fromString(ethereumAddress.toString()).toBuffer()
+const injectiveAddress = bech32.encode(defaultBech32Prefix, bech32.toWords(addressBuffer))
+```
+
+以下は、秘密鍵から公開鍵を導出する例です：
+
+```js
+import secp256k1 from 'secp256k1'
+
+const privateKey = "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890"
+const privateKeyHex = Buffer.from(privateKey.toString(), 'hex')
+const publicKeyByte = secp256k1.publicKeyCreate(privateKeyHex)
+
+const buf1 = Buffer.from([10])
+const buf2 = Buffer.from([publicKeyByte.length])
+const buf3 = Buffer.from(publicKeyByte)
+
+const publicKey = Buffer.concat([buf1, buf2, buf3]).toString('base64')
+const type = '/injective.crypto.v1beta1.ethsecp256k1.PubKey'
+```
+
+## サブアカウント
+
+Injectiveのサブアカウントにより、1つのメインウォレットアドレスで複数の独立した取引アカウントを管理できます。これは、特にプロフェッショナルトレーダーやマーケットメイカーなどのパワーユーザーにとって有用です。
+
+<Tip>
+サブアカウントの技術的な実装の詳細については、[Trading Account](/developers/concepts/trading-account)の開発者ドキュメントをご覧ください。
+</Tip>
+
+### 主な機能と説明
+
+- **プログラマティックアクセス**：この機能は、InjectiveのネイティブAPIを介したプログラマティック取引に対して高いアクセス性を提供するように設計されており、金融アプリケーション開発者に対応しています。
+- **高度なアカウント管理**：サブアカウント機能は、ユーザー（例：機関投資家やアルゴリズムトレーダー）が単一のプライマリInjectiveアドレス内で資金と取引戦略を分離できる高度なアカウント管理機能を提供します。
+- **分離と整理**：あるサブアカウント内の資金と注文は他のサブアカウントから分離されており、リスク管理、異なるトレーディングボットの運用、または異なる戦略の同時適用にとって重要です。
+- **シームレスな転送**：ユーザーは、Injectiveネットワーク上の特定のメッセージを使用して、メインアカウント残高とさまざまなサブアカウント間、および異なるサブアカウント間で資産を簡単に転送できます。
+- **Exchangeモジュールとの統合**：サブアカウント機能はInjectiveのコアexchangeモジュールの一部であり、スポット、パーペチュアル、先物、およびオプション市場向けのオンチェーンオーダーブックとマッチングエンジンを含みます。
+
+サブアカウントは、単一のユーザーアカウントによって制御される、分離されたリンク済みの「ポートフォリオ」のように機能します。これにより、InjectiveのDeFiエコシステムの参加者に柔軟性と運用上の制御が提供されます。
