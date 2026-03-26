@@ -1,0 +1,100 @@
+---
+title: Hardhat を使用した smart contract の検証
+---
+
+## 前提条件
+
+Hardhat プロジェクトがセットアップ済みで、smart contract のデプロイが正常に完了している必要があります。
+その方法については、[Hardhat を使用した smart contract のデプロイ](./deploy-hardhat/) チュートリアルを参照してください。
+
+## smart contract の検証とは？
+
+検証プロセスは、smart contract 自体やネットワークの他の状態に影響を与えません。
+
+これは、特定のアドレスにデプロイされた smart contract の元のソースコードをネットワークエクスプローラーに提供する標準化されたプロセスです。ネットワークエクスプローラーはそのソースコードを**独自にコンパイル**し、結果の bytecode が smart contract のデプロイトランザクションに含まれる bytecode と実際に**一致する**ことを検証します。
+
+検証に合格（一致）すると、ブロックエクスプローラーはその smart contract のページ内で拡張モードを「アンロック」します。
+より詳細な smart contract の情報が表示されるようになります：
+* 完全なソースコード（Solidity）
+* ABI（JSON）
+* トランザクションとイベントがより詳細に表示されます（ABI を使用してパースされます）
+
+さらに、ユーザーがウォレットを接続すると、ネットワークエクスプローラー内で直接関数を呼び出して smart contract にクエリを実行したり、状態を更新するトランザクションを送信したりできます。
+
+{/* TODO consider moving this section to FAQs */}
+
+## smart contract 検証の設定編集
+
+`hardhat.config.js` を開き、`etherscan` と `sourcify` の要素を確認します。
+
+```js
+  etherscan: {
+    apiKey: {
+      inj_testnet: 'nil',
+    },
+    customChains: [
+      {
+        network: 'inj_testnet',
+        chainId: 1439,
+        urls: {
+          apiURL: 'https://testnet.blockscout-api.injective.network/api',
+          browserURL: 'https://testnet.blockscout.injective.network/',
+        },
+      },
+    ],
+  },
+  sourcify: {
+    enabled: false,
+  },
+```
+
+Sourcify と Etherscan は、それぞれ異なる検証用 API を持つ人気のブロックエクスプローラーです。
+Injective は Blockscout を使用しており、Etherscan API と互換性があります。
+そのため、設定では Sourcify は無効になっています。
+Etherscan の設定内では、`apiKey` の値は不要なので、空でない任意の値で問題ありません。
+`customChains` 内の `inj_testnet` ネットワークには、Injective Testnet の適切な値がすでに設定されています。
+
+## 検証コマンドの実行
+
+以下のコマンドを入力します：
+
+```shell
+npx hardhat verify --network inj_testnet ${SC_ADDRESS}
+```
+
+`${SC_ADDRESS}` を smart contract をデプロイしたアドレスに置き換えてください。
+
+例えば、smart contract のアドレスが `0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b` の場合、コマンドは以下のようになります：
+
+```shell
+npx hardhat verify --network inj_testnet 0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b
+```
+
+## 検証結果の確認
+
+ターミナルに以下のような出力が表示されます：
+
+```text
+Successfully submitted source code for contract
+contracts/Counter.sol:Counter at 0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b
+for verification on the block explorer. Waiting for verification result...
+
+Successfully verified contract Counter on the block explorer.
+https://testnet.blockscout.injective.network/address/0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b#code
+```
+
+より興味深い結果は、ネットワークエクスプローラーにアクセスすることで確認できます。
+検証出力に表示されたネットワークエクスプローラーの URL にアクセスします。
+次に「Contract」タブを選択します。
+次に「Code」サブタブを選択します。
+以前は「ByteCode」のみが利用可能でしたが、現在は「Code」「Compiler」「ABI」も利用可能になっています。
+
+「Contract」タブ内で、
+「Read/Write contract」サブタブを選択します。
+以前はこれが存在しませんでしたが、
+現在はブロックエクスプローラーから直接すべての smart contract 関数を操作できます。
+
+## 次のステップ
+
+smart contract のデプロイと検証が完了しました。次は smart contract との対話を行いましょう！
+次のチュートリアル [Hardhat を使用した smart contract との対話](./interact-hardhat/) に進んでください。

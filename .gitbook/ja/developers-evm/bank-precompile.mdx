@@ -1,0 +1,50 @@
+---
+title: Bank Precompile
+---
+
+# Bank Precompile
+
+Bank Precompileは、固定アドレス`0x0000000000000000000000000000000000000064`に存在するシステムsmart contractです。
+
+EVM開発者に対して、Injectiveの**bank module**（`x/bank`）と直接やり取りするためのgas効率の良いネイティブな手段を提供します。これにより、ERC-20トークンを効果的にオンチェーンに取り込むことができます。Bank precompileを使用するすべてのERC-20 contractは、オンチェーンでは`erc20:0x...`というdenomとして表現されます。技術的には、トークンはオンチェーンにのみ存在し、EVMは別のコピーを保持するのではなく、チェーンの状態へのビューを提供するということを意味します。従来のブリッジングでは2つのトークンバージョンが存在しユーザーの操作で切り替える必要がありますが、Bank precompileはオンチェーンのbank denomまたはERC-20の`transfer()`メソッドのいずれを使用した転送でもリアルタイムにデュアル環境の反映を提供します。
+
+Bank precompileを基盤としたERC-20実装、precompileインターフェース、および抽象contractが[InjectiveのSolidity Contractsリポジトリ](https://github.com/InjectiveLabs/solidity-contracts)で利用可能です。主要なcontractは以下の通りです：
+
+* **Bank.sol** – precompileインターフェース
+* **BankERC20.sol** – Bank precompileを基盤とした抽象ERC20実装
+* **FixedSupplyBankERC20.sol** – 固定供給量の分散型ERC20（オーナーなし、mintおよびburnなし）
+* **MintBurnBankERC20.sol** – トークンのmintとburnが許可されたオーナー付きERC20
+
+これらの実装はOpenZeppelinのERC20 contractに基づいています。開発者はBank precompileを利用して自由にカスタムERC20 contractを作成できます。
+
+## ERC20 Contractのデプロイ
+
+**ℹ️ 注意：**
+
+denomスパムを防止するため、ERC20 moduleを介したERC20 contractのデプロイは**有料操作**であり、デプロイ手数料として**1 INJ**が必要です。ERC20 contractのデプロイトランザクションにこの金額が含まれていることを確認してください。含まれていない場合、操作は拒否されます。
+
+## Bank Precompileインターフェース
+
+```solidity
+interface IBankModule {
+    function mint(address,uint256) external payable returns (bool);
+    function balanceOf(address,address) external view returns (uint256);
+    function burn(address,uint256) external payable returns (bool);
+    function transfer(address,address,uint256) external payable returns (bool);
+    function totalSupply(address) external view returns (uint256);
+    function metadata(address) external view returns (string memory,string memory,uint8);
+    function setMetadata(string memory,string memory,uint8) external payable returns (bool);
+}
+```
+
+## 使用例
+
+[Wrapped INJ (wINJ)](/developers-evm/wrapped-inj#is-winj-the-same-as-weth "Is wINJ the same as wETH?") 
+は、[MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard)を実装するために
+Bank EVM precompileを活用しています。
+
+## 開発を始める
+
+Bank、Exchange、Staking precompilesを使用したcontractの構築方法を示すデモをいくつか用意しました。これらの例では、最も一般的なEthereum開発フレームワークである**Foundry**を使用してInjective EVMとやり取りする方法も示しています。
+
+Bank precompileのデモは[こちら](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/erc20)をご覧いただき、対応するREADMEに従ってください。

@@ -1,0 +1,168 @@
+---
+title: Exchange Precompile
+---
+
+Exchange Precompileは、固定アドレス`0x0000000000000000000000000000000000000065`に存在するシステムsmart contractです。Solidity開発者に対して、Injectiveチェーンのexchange moduleと直接やり取りするためのgas効率の良いネイティブな手段を提供します。このprecompileを活用することで、smart contractは以下のようなさまざまなexchange関連のアクションをシームレスに実行できます：
+
+* サブアカウントへの資金の入金および出金。
+* スポットおよびデリバティブ注文の発注またはキャンセル。
+* サブアカウント残高およびオープンポジションのクエリ。
+* 他のアカウントまたはcontractに対する認可グラントの管理。
+
+#### Precompileの呼び出し：直接アクセス vs プロキシアクセス
+
+Exchange Precompileとのやり取りには、主に2つの方法があります：
+
+**1. 直接アクセス（自己呼び出しContract）**
+
+このモードでは、smart contractが自身の代わりにprecompileとやり取りします。contract自体が、自身の資金を使用し、自身のポジションを管理して、exchange moduleで操作を実行するアクターとなります。
+
+_例：_
+
+```
+exchange.deposit(address(this), subaccountID, denom, amount);  
+```
+
+この方法はシンプルで、contractが自身のリソースを管理する権限を本質的に持っているため、**明示的な認可グラントは不要**です。
+
+**2. プロキシアクセス（別のユーザーに代わって呼び出す）**
+
+Smart contractは、外部ユーザーアカウントに代わってexchange操作を実行する仲介者として設計することもできます。このシナリオでは、contractがprecompileを呼び出し、第三者のアドレスを送信者または操作対象のアカウントとして指定します。
+
+_例：_
+
+```
+exchange.deposit(userAddress, subaccountID, denom, amount);  
+```
+
+これを成功させるには、smart contract（`grantee`）がユーザー（`userAddress`、`granter`）から指定されたアクションを実行するための**明示的な認可が必要**です。この認可は、precompileが提供する`approve`および`revoke`メソッドを使用して管理されます。**ユーザーの資金のセキュリティを確保するため、これらの認可は慎重に扱うことが重要です。**
+
+特定のアクションを代わりに実行するようcontractを認可するには：
+
+```
+exchange.approve(grantee, msgTypes, spendLimit, duration);  
+```
+
+* `grantee`：認可されるcontractのアドレス。
+* `msgTypes`：`grantee`が実行を許可されるメッセージタイプの配列（例：`MsgCreateDerivativeLimitOrder`、`MsgDeposit`）。完全なリストは`ExchangeTypes.sol`またはInjective Protocolのprotobuf定義を参照してください。
+* `spendLimit`：メッセージタイプごとまたはグラント全体で、`grantee`が利用できるトークンの最大量を定義する`Cosmos.Coin`構造体の配列。
+* `duration`：認可が有効な期間（秒単位）。
+
+以前に付与された認可を取り消すには：
+
+```
+exchange.revoke(grantee, msgTypes);  
+```
+
+認可が現在存在するかどうかを確認するには：
+
+```
+exchange.allowance(grantee, granter, msgType);  
+```
+
+#### 例：直接メソッド
+
+以下の`ExchangeDemo` contractは、smart contractが直接アクセスメソッドを使用する方法を示しています。自身のサブアカウントと資金を使用して、資金の入金、資金の出金、デリバティブ指値注文の作成、サブアカウントポジションのクエリなどの基本的なexchangeアクションを実行します。
+
+`Exchange.sol`および`ExchangeTypes.sol`ファイルには、precompileとやり取りするために必要なインターフェース定義とデータ構造が含まれています。これらは通常、公式のInjective Solidity contractsリポジトリで入手可能であるか、プロジェクトの依存関係として含めることができます。
+
+```solidity
+// SPDX-License-Identifier: MIT  
+pragma solidity ^0.8.4;  
+  
+import "../src/Exchange.sol"; // Contains IExchangeModule interface  
+import "../src/ExchangeTypes.sol"; // Contains necessary structs like DerivativeOrder  
+  
+contract ExchangeDemo {  
+    address constant exchangeContract = 0x0000000000000000000000000000000000000065;  
+    IExchangeModule exchange = IExchangeModule(exchangeContract);  
+  
+    /***************************************************************************  
+     * Calling the precompile directly (contract acts on its own behalf)  
+    ****************************************************************************/  
+  
+    /**  
+     * @notice Deposits funds from the contract's balance into one of its exchange subaccounts.  
+     * @param subaccountID The target subaccount ID (derived from the contract's address).  
+     * @param denom The denomination of the asset to deposit (e.g., "inj").  
+     * @param amount The quantity of the asset to deposit.  
+     * @return success Boolean indicating if the deposit was successful.  
+     */  
+    function deposit(  
+        string calldata subaccountID,  
+        string calldata denom,  
+        uint256 amount  
+    ) external returns (bool) {  
+        try exchange.deposit(address(this), subaccountID, denom, amount) returns (bool success) {  
+            return success;  
+        } catch Error(string memory reason) {  
+            revert(string(abi.encodePacked("Deposit error: ", reason)));  
+        } catch {  
+            revert("Unknown error during deposit");  
+        }  
+    }  
+  
+    /**  
+     * @notice Withdraws funds from one of the contract's exchange subaccounts to its main balance.  
+     * @param subaccountID The source subaccount ID.  
+     * @param denom The denomination of the asset to withdraw.  
+     * @param amount The quantity of the asset to withdraw.  
+     * @return success Boolean indicating if the withdrawal was successful.  
+     */  
+    function withdraw(  
+        string calldata subaccountID,  
+        string calldata denom,  
+        uint256 amount  
+    ) external returns (bool) {  
+        try exchange.withdraw(address(this), subaccountID, denom, amount) returns (bool success) {  
+            return success;  
+        } catch Error(string memory reason) {  
+            revert(string(abi.encodePacked("Withdraw error: ", reason)));  
+        } catch {  
+            revert("Unknown error during withdraw");  
+        }  
+    }  
+  
+    /**  
+     * @notice Queries the derivative positions for a given subaccount of this contract.  
+     * @param subaccountID The subaccount ID to query.  
+     * @return positions An array of DerivativePosition structs.  
+     */  
+    function subaccountPositions(  
+        string calldata subaccountID  
+    ) external view returns (IExchangeModule.DerivativePosition[] memory positions) {  
+        // Note: View functions calling precompiles might behave differently based on node configuration  
+        // For on-chain state, this is fine. For off-chain queries, direct gRPC/API queries are often preferred.  
+        return exchange.subaccountPositions(subaccountID);  
+    }  
+  
+    /**  
+     * @notice Creates a new derivative limit order from the contract's subaccount.  
+     * @param order The DerivativeOrder struct containing order details.  
+     * @return response The response struct containing details like order hash.  
+     */  
+    function createDerivativeLimitOrder(  
+        IExchangeModule.DerivativeOrder calldata order  
+    ) external returns (IExchangeModule.CreateDerivativeLimitOrderResponse memory response) {  
+        try exchange.createDerivativeLimitOrder(address(this), order) returns (IExchangeModule.CreateDerivativeLimitOrderResponse memory resp) {  
+            return resp;  
+        } catch Error(string memory reason) {  
+            revert(string(abi.encodePacked("CreateDerivativeLimitOrder error: ", reason)));  
+        } catch {  
+            revert("Unknown error during createDerivativeLimitOrder");  
+        }  
+    }  
+}  
+```
+
+#### 開発を始める
+
+この`ExchangeDemo` smart contractのビルド、デプロイ、およびやり取りの詳細な手順（サブアカウントの設定や資金調達を含む）については、[solidity-contracts](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange)リポジトリの包括的なデモを参照してください。
+
+#### まとめ
+
+Exchange Precompileは、洗練されたプロトコル統合型の取引ロジックをInjective上のsmart contractに直接組み込むことを可能にする強力なツールです。contractが独自のポートフォリオを管理する場合でも、他のユーザー向けの多機能な取引インターフェースとして機能する場合（`approve`および`revoke`を使用したプロキシパターン経由）でも、このprecompileはSolidityを使用してコアexchange moduleとやり取りするためのクリーンで安全かつ効率的な方法を提供します。
+
+自己完結型のcontractロジックには直接呼び出しを優先し、より広範なInjectiveエコシステム向けの再利用可能なcontractインターフェースを構築する際には、堅牢な認可を備えたプロキシパターンを慎重に実装することを忘れないでください。
+
+\

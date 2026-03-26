@@ -1,0 +1,82 @@
+---
+title: Precompiles
+---
+
+### InjectiveにおけるPrecompilesとは？
+
+Injectiveでは、precompilesはプロトコルレベルでEVM（Ethereum Virtual Machine）レイヤーに直接組み込まれた、特別で高度に最適化されたsmart contractです。ユーザーがデプロイする標準的なSolidity smart contractとは異なり、precompilesはチェーンのコアロジックの一部です。Solidityではなく Goで記述され、固定アドレスでEVMに公開されているため、他のsmart contractと同様にSolidity smart contractから呼び出すことができます。
+
+Injectiveチェーンのネイティブ関数にEthereumスタイルのインターフェースが付与されたものと考えてください。
+
+### なぜ必要なのか？（EVMとネイティブモジュールの橋渡し）
+
+Injective EVMは単独で動作しているわけではありません。Bank module（トークン管理用）、Exchange module（オンチェーンオーダーブック用）、Staking moduleなど、Injectiveの強力なネイティブCosmos SDKモジュールと深く統合されています。
+
+Precompilesは、EVMの世界（Solidity contractが存在する場所）とこれらのネイティブInjective機能との間の重要な**橋渡し**として機能します。precompilesがなければ、EVM smart contractは孤立し、より広範なInjectiveエコシステムの豊富な機能と流動性を活用できなくなります。
+
+例えば、ネイティブ環境とEVM環境間で統一されたトークン残高を保証する[MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard)モデルは、**Bank Precompile**に大きく依存しています。
+
+### 開発者にとってのメリット
+
+* **ネイティブ機能へのアクセス：** オンチェーンオーダーブック、ネイティブstaking、ガバナンス、MTSのためのBank moduleなど、Injective独自のモジュールと直接やり取りできます。
+* **パフォーマンスの向上：** precompilesを介して実行される操作は、最適化されたネイティブコードとして実行されるため、複雑なネイティブロジックを純粋にSolidityで再現しようとするよりも大幅に高速でgas効率が良くなります。
+* **シームレスな相互運用性：** EVMとInjectiveのCosmos固有の機能の両方の強みを活かした、真に統合されたアプリケーションを構築できます。
+* **開発の簡素化：** 使い慣れたSolidityインターフェースを通じて複雑なネイティブ機能とやり取りでき、基盤となるCosmosの複雑さの多くを抽象化できます。
+
+Bank precompileを基盤としたERC-20実装、precompileインターフェース、および抽象contractが[InjectiveのSolidity Contractsリポジトリ](https://github.com/InjectiveLabs/solidity-contracts)で利用可能です。主要なcontractは以下の通りです：
+
+* [**Bank.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/Bank.sol) – precompileインターフェース
+* [**BankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/BankERC20.sol) – Bank precompileを基盤とした抽象ERC20実装
+* [**FixedSupplyBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/FixedSupplyBankERC20.sol) – 固定供給量の分散型ERC20（オーナーなし、mintおよびburnなし）
+* [**MintBurnBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/MintBurnBankERC20.sol) – トークンのmintとburnが許可されたオーナー付きERC20
+
+これらの実装はOpenZeppelinのERC20 contractに基づいています。開発者はBank precompileを利用して自由にカスタムERC20 contractを作成できます。
+
+### 開発を始めるためのデモ
+
+Bank、Exchange、Staking precompilesを使用したcontractの構築方法を示すデモをいくつか用意しました。これらの例では、最も一般的なEthereum開発フレームワークである**Foundry**を使用してInjective EVMとやり取りする方法も示しています。
+
+Foundryの`cast`ツールを活用することで、ターミナルから直接contractをデプロイし、Injectiveチェーンとやり取りすることが簡単にできます。これにより、ビルダーはInjectiveのネイティブモジュールを活用した強力なアプリケーションを素早く実験、テスト、デプロイすることができます。
+
+以下のデモで確認できる内容：
+
+- トークン管理、取引、stakingのためにprecompilesを呼び出すSolidity contractの記述方法。
+- Foundryスクリプトと`cast`コマンドを使用して、これらのcontractをInjective EVMにデプロイしやり取りする方法。
+- EVMロジックとInjectiveのネイティブ機能を橋渡しするためのベストプラクティス。
+
+[Injective Solidity Contractsリポジトリ](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos)をクローンし、各デモディレクトリのステップバイステップガイドに従って開発を始めましょう。
+
+* [Bank Precompile Demo](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/erc20)
+* [Exchange Precompile Demo](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange)
+* [Staking Precompile Demo](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/staking)
+
+### Precompileアドレス
+
+| 名前                               | 目的                       | EVMアドレス |
+| ---------------------------------- | ----------------------------- | ----------- |
+| [Bank](/developers-evm/bank-precompile)         | トークン管理              | `0x64`      |
+| [Exchange](/developers-evm/exchange-precompile) | オンチェーンオーダーブック           | `0x65`      |
+| Staking                            | オンチェーンのネイティブstakingトークン | `0x66`      |
+
+## non-contract addressエラー
+
+Foundryを使用して、Injective MainnetまたはInjective Testnetをローカルに「fork」し、
+その環境でsmart contractを実行した場合、
+以下のようなエラーが表示されることがあります：
+
+```text
+[Revert] call to non-contract address 0x0000000000000000000000000000000000000064
+```
+
+これは、Foundryが実際にInjective上で実行されるのではなく、
+Injectiveをローカルで*シミュレート*しているために発生します。
+そのため、Injective固有のシミュレーションではなく、
+*汎用的なEVM*シミュレーションを実行しています。
+その違いは、Injectiveのネイティブ機能が存在しないことにあり、
+したがってprecompilesを認識できないことです。
+
+この修正はシンプルです：
+Injectiveのprecompilesを含むようにパッチされたバージョンのFoundryを使用してください：
+[github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)。
+
+これには、x86_64 LinuxおよびmacOS ARM64向けのビルド済みバイナリが含まれています。

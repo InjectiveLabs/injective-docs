@@ -1,0 +1,144 @@
+---
+title: Hardhat のセットアップと smart contract のコンパイル
+---
+
+## 前提条件
+
+最新バージョンの NodeJs がインストールされていることを確認してください。
+以下のコマンドで確認できます：
+
+```shell
+node -v
+```
+
+このガイドは以下のバージョンで作成されました：
+
+```text
+v22.16.0
+```
+
+NodeJs がまだインストールされていない場合は、以下を使用してインストールしてください：
+
+- Linux または Mac: [NVM](https://github.com/nvm-sh/nvm)
+- Windows: [NVM for Windows](https://github.com/coreybutler/nvm-windows)
+
+ウォレットと、Testnet INJ が入金されたアカウントが必要です。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+[Injective Testnet faucet](https://testnet.faucet.injective.network/) から EVM testnet の資金をリクエストできます。
+</Callout>
+
+アカウントを作成したら、このチュートリアルを完了するために必要になるため、秘密鍵をアクセスしやすい場所にコピーしておいてください。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+秘密鍵は慎重に取り扱う必要があります。
+ここでの手順は、ローカル開発および Testnet での使用には十分と考えられます。
+ただし、Mainnet で使用する秘密鍵に対しては十分なセキュリティとは**言えません**。
+Mainnet では鍵のセキュリティに関するベストプラクティスに従い、Mainnet と他のネットワーク間で同じ鍵やアカウントを再利用しないでください。
+</Callout>
+
+## 新しい Hardhat プロジェクトのセットアップ
+
+git を使用してデモリポジトリをクローンします。プロジェクトはすでに完全にセットアップされています。
+
+```shell
+git clone https://github.com/injective-dev/hardhat-inj
+```
+
+npm から依存関係をインストールします：
+
+```shell
+npm install
+```
+
+## プロジェクト構成の概要
+
+npm がダウンロードとインストールを行っている間に、コードエディタ／IDE でリポジトリを開き、ディレクトリ構造を確認しましょう。
+
+```text
+hardhat-inj/
+  contracts/
+    Counter.sol → smart contract の Solidity コード
+  script/
+    deploy.js → デプロイスクリプト
+  test/
+    Counter.test.js → テストケース
+  hardhat.config.js → 設定ファイル
+  .example.env
+```
+
+`hardhat.config.js` ファイルは、Injective EVM Testnet に接続するようにあらかじめ設定されています。
+次に進む前に必要なのは、Injective Testnet アカウントの秘密鍵を設定することだけです。
+
+```shell
+cp .example.env .env
+```
+
+`.env` ファイルを編集して秘密鍵を追加します。
+必要に応じて、代替の JSON-RPC エンドポイントに更新することもできます。
+
+```shell
+PRIVATE_KEY=your private key without 0x prefix
+INJ_TESTNET_RPC_URL=https://k8s.testnet.json-rpc.injective.network/
+
+```
+
+## smart contract の編集
+
+このデモに含まれている smart contract は非常にシンプルです。以下の機能があります：
+
+- 数値である `value` を1つ保存します。
+- `value()` クエリメソッドを公開します。
+- `increment(num)` トランザクションメソッドを公開します。
+
+ファイルを開きます: `contracts/Counter.sol`
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+contract Counter {
+    uint256 public value = 0;
+
+    function increment(uint256 num) external {
+        value += num;
+    }
+}
+
+```
+
+## smart contract のコンパイル
+
+以下のコマンドを実行します：
+
+```shell
+npx hardhat compile
+```
+
+Hardhat は `hardhat.config.js` ファイルで設定されたバージョンの Solidity コンパイラ（`solc`）を自動的にダウンロードして実行します。
+
+## コンパイル出力の確認
+
+コンパイラが完了すると、プロジェクトディレクトリに追加のディレクトリが表示されます：
+
+```text
+hardhat-inj/
+  artifacts/
+    build-info/
+      ...
+    contracts/
+      Counter.sol/
+        Counter.json → このファイルを開きます
+        ...
+  cache/
+    ...
+```
+
+`Counter.json` ファイル（`artifacts/contracts/Counter.sol/Counter.json`）を開きます。
+その中に、`abi` と `bytecode` フィールドを含むコンパイラの出力が表示されます。
+これらのアーティファクトは、以降のすべてのステップ（テスト、デプロイ、検証、操作）で使用されます。
+
+## 次のステップ
+
+Hardhat プロジェクトのセットアップと smart contract のコンパイルが完了しました。次は smart contract のテストを行いましょう！
+次のチュートリアル [Hardhat を使用した smart contract のテスト](./test-hardhat/) に進んでください。

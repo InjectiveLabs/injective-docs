@@ -1,0 +1,150 @@
+---
+title: Foundry のセットアップと smart contract のコンパイル
+---
+
+## 前提条件
+
+以下のコマンドを実行して、Foundry がインストールされていることを確認してください：
+
+```shell
+forge --version
+```
+
+このチュートリアルで使用したバージョンは `1.2.3-stable` です。チュートリアルに沿って進める際は、このバージョン以降を使用してください。
+
+まだ Foundry をインストールしていない場合は、以下のコマンドを実行してインストールしてください：
+
+```shell
+curl -L https://foundry.paradigm.xyz | bash
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Foundry のインストール方法は他にもあります。
+[Foundry インストールドキュメント](https://getfoundry.sh/introduction/installation)を参照してください。
+</Callout>
+
+ウォレットと、Testnet INJ で資金が入ったアカウントが必要です。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+[Injective Testnet faucet](https://testnet.faucet.injective.network/) から EVM testnet の資金をリクエストできます。
+</Callout>
+
+アカウントを作成したら、このチュートリアルを完了するために必要になるため、秘密鍵をアクセスしやすい場所にコピーしておいてください。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+秘密鍵は慎重に取り扱ってください。
+ここでの手順はローカル開発および Testnet には十分と考えられます。
+しかし、Mainnet で使用する秘密鍵にはセキュリティが**十分ではありません**。
+Mainnet ではキーセキュリティのベストプラクティスに従い、Mainnet と他のネットワーク間で同じキー/アカウントを再利用しないようにしてください。
+</Callout>
+
+## 新しい Foundry プロジェクトのセットアップ
+
+git を使用してデモリポジトリをクローンします。プロジェクトは既に完全にセットアップされています。
+
+```shell
+git clone https://github.com/injective-dev/foundry-inj
+cd foundry-inj
+```
+
+このプロジェクトで使用されるユーティリティ関数を提供する `forge-std` ライブラリをインストールします。
+
+```shell
+forge install foundry-rs/forge-std
+```
+
+## プロジェクト構成の確認
+
+コードエディタ/IDE でリポジトリを開き、ディレクトリ構造を確認してください。
+
+```text
+foundry-inj/
+  src/
+    Counter.sol → smart contract の Solidity コード
+  test/
+    Counter.t.sol → テストケース
+  foundry.toml → 設定ファイル
+```
+
+`foundry.toml` ファイルは、Injective EVM Testnet に接続するよう既に設定されています。
+次に進む前に必要なのは、Injective Testnet アカウントの秘密鍵を設定することだけです。
+
+以下のコマンドを入力して秘密鍵をインポートし、`injTest` という名前のアカウントとして保存します：
+
+```shell
+cast wallet import injTest --interactive
+```
+
+これにより、秘密鍵の入力を求められ、さらにこのアカウントを使用するたびに入力する必要があるパスワードの設定も求められます。
+先ほど作成して資金を入金したアカウントの秘密鍵を使用してください（例：Injective Testnet faucet 経由）。
+秘密鍵やパスワードを入力またはペーストしても、ターミナルには何も表示されないことに注意してください。
+出力は以下のようになります：
+
+```text
+Enter private key:
+Enter password:
+`injTest` keystore was saved successfully. Address: 0x58f936cb685bd6a7dc9a21fa83e8aaaf8edd5724
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+これにより、秘密鍵の暗号化されたバージョンが `~/.foundry/keystores` に保存され、
+以降のコマンドでは `--account` CLI フラグを使用してアクセスできます。
+</Callout>
+
+## smart contract の編集
+
+このデモに含まれている smart contract は非常にシンプルです。以下の機能があります：
+
+- 数値である `value` を1つ格納します。
+- `value()` クエリメソッドを公開します。
+- `increment(num)` トランザクションメソッドを公開します。
+
+ファイルを開いてください：`src/Counter.sol`
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+contract Counter {
+    uint256 public value = 0;
+
+    function increment(uint256 num) external {
+        value += num;
+    }
+}
+
+```
+
+## smart contract のコンパイル
+
+以下のコマンドを実行してください：
+
+```shell
+forge build
+```
+
+Foundry は `foundry.toml` ファイルで設定された Solidity コンパイラ（`solc`）のバージョンを自動的にダウンロードして実行します。
+
+## コンパイル出力の確認
+
+コンパイラが完了すると、プロジェクトディレクトリに追加のディレクトリが表示されます：
+
+```text
+foundry-inj/
+  cache/
+    ...
+  out/
+    build-info/
+      ...
+    Counter.sol/
+        Counter.json → このファイルを開いてください
+```
+
+`Counter.json` ファイル（`out/Counter.sol/Counter.json`）を開いてください。
+その中に、`abi` と `bytecode` フィールドを含むコンパイラの出力が表示されます。
+これらのアーティファクトは、以降のすべてのステップ（テスト、デプロイ、検証、およびインタラクション）で使用されます。
+
+## 次のステップ
+
+Foundry プロジェクトのセットアップと smart contract のコンパイルが完了しました。次は smart contract のテストを行いましょう！
+次のチュートリアル [Foundry を使用した smart contract のテスト](./test-foundry/) に進んでください。
