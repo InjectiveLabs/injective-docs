@@ -1,20 +1,53 @@
 ---
 title: Oracle Precompile
+description: Approaches for querying price data on Injective, including native oracle queries, off-chain Pyth, and on-chain Pyth via EVM.
 ---
 
-import { Callout } from "@/components/ui";
+<Info>
+  The Oracle Precompile is not yet available.
+  In the meantime, you can query prices using one of the approaches described below.
+</Info>
 
-<Callout type="warning">
-  The Oracle Precompile is not yet available. In the meantime, you can query
-  prices directly from the Pyth contract deployed on Injective's EVM. Note that
-  not all price feeds are available — see the supported feeds below.
-</Callout>
+Injective offers multiple ways to access oracle price data depending on your architecture and requirements.
+The following approaches range from integrating with Pyth off-chain,
+to reading Pyth prices on-chain through Injective's EVM.
 
-## Querying Pyth Prices on Injective EVM
+## Approach 1: Off-chain price feeds with Pyth
 
-Pyth is deployed at `0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320` on Injective's EVM. You can use it to query prices for the supported feeds listed below.
+If your application fetches prices off-chain (for example, in a backend service or bot),
+you can query Pyth's HTTP API directly without any on-chain interaction.
 
-### Supported Feeds
+Refer to the Pyth documentation on [fetching price updates](https://docs.pyth.network/price-feeds/core/fetch-price-updates)
+for details on available endpoints, request formats, and response schemas.
+
+This approach is ideal for off-chain trading systems, analytics dashboards,
+or any service that requires price data without submitting transactions.
+
+## Approach 2: On-chain price feeds with Pyth (EVM)
+
+For smart contracts that need to read prices on-chain, you can interact with the Pyth contract deployed on Injective's EVM.
+This uses Pyth's pull-based oracle model, where price updates are fetched off-chain and submitted on-chain before reading.
+
+### Contract addresses
+
+To obtain the Pyth contract address for Injective EVM, refer to the Pyth contract addresses page and locate the **Injective EVM** entry:
+
+- [Mainnet contract addresses](https://docs.pyth.network/price-feeds/core/contract-addresses/evm#mainnets)
+- [Testnet contract addresses](https://docs.pyth.network/price-feeds/core/contract-addresses/evm#testnets)
+
+Currently, Pyth is deployed at `0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320` on Injective's EVM mainnet.
+
+<Warning>
+  Always consult the official documentation to obtain up-to-date addresses.
+</Warning>
+
+### Price feed IDs
+
+Each asset pair has a unique price feed ID. You can look up feed IDs on
+the [Pyth price feed IDs](https://docs.pyth.network/price-feeds/core/price-feeds/price-feed-ids) page.
+For example, search for `INJ/USD`.
+
+### Supported feeds
 
 | Asset    | Price Feed ID                                                        |
 | -------- | -------------------------------------------------------------------- |
@@ -24,6 +57,19 @@ Pyth is deployed at `0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320` on Injective's 
 | XRP/USD  | `0xec5d399846a9209f3fe5881d70aae9268c94339ff9817e8d18ff19fa05eea1c8` |
 | USDT/USD | `0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b` |
 | USDC/USD | `0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a` |
+
+<Warning>
+  Always consult the official documentation to obtain up-to-date addresses.
+</Warning>
+
+### Integration guide
+
+For a complete walkthrough of integrating Pyth price feeds into your Solidity contracts using the pull model,
+follow the [Pyth EVM pull integration tutorial](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/evm).
+
+### Example
+
+The following example demonstrates how to read the INJ/USD price from the Pyth contract on Injective's EVM:
 
 ```typescript
 import { ethers } from "ethers";
@@ -102,7 +148,9 @@ async function main() {
     const priceFeedId =
       "0x7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592"; // INJ/USD
 
-    const price = await pyth.getPriceUnsafe(priceFeedId);
+    // const price = await pyth.getPriceUnsafe(priceFeedId);
+    const maxAge = 60; // 60s
+    const price = await pyth.getPriceNoOlderThan(priceFeedId, maxAge);
 
     console.log(
       "Human readable price:",
@@ -120,9 +168,11 @@ async function main() {
 main().catch(console.error);
 ```
 
-<Callout type="info">
+<Warning>
   `getPriceUnsafe` returns the last pushed price without a staleness check. For
   production use, prefer `getPriceNoOlderThan(priceFeedId, maxAge)` — but note
   this requires the price to have been pushed on-chain recently, otherwise the
-  call will revert. See the [Pyth documentation](https://docs.pyth.network/price-feeds/use-real-time-data/evm) for more details on the pull model.
-</Callout>
+  call will revert.
+  See the [Pyth documentation](https://docs.pyth.network/price-feeds/use-real-time-data/evm)
+  for more details on the pull model.
+</Warning>
