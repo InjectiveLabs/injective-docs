@@ -49,6 +49,10 @@ To obtain the Pyth contract address for Injective EVM, refer to the Pyth contrac
 
 Currently, Pyth is deployed at `0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320` on Injective's EVM mainnet.
 
+<Warning>
+  Always consult the official documentation to obtain up-to-date addresses.
+</Warning>
+
 ### Price feed IDs
 
 Each asset pair has a unique price feed ID. You can look up feed IDs on
@@ -65,6 +69,10 @@ For example, search for `INJ/USD`.
 | XRP/USD  | `0xec5d399846a9209f3fe5881d70aae9268c94339ff9817e8d18ff19fa05eea1c8` |
 | USDT/USD | `0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b` |
 | USDC/USD | `0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a` |
+
+<Warning>
+  Always consult the official documentation to obtain up-to-date addresses.
+</Warning>
 
 ### Integration guide
 
@@ -152,7 +160,9 @@ async function main() {
     const priceFeedId =
       "0x7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592"; // INJ/USD
 
-    const price = await pyth.getPriceUnsafe(priceFeedId);
+    // const price = await pyth.getPriceUnsafe(priceFeedId);
+    const maxAge = 60; // 60s
+    const price = await pyth.getPriceNoOlderThan(priceFeedId, maxAge);
 
     console.log(
       "Human readable price:",
