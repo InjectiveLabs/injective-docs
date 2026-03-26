@@ -1,0 +1,115 @@
+---
+description: >-
+  生成AIソフトウェアエンジニアリングでInjectiveを構築する。
+title: AI開発者
+---
+
+## なぜInjectiveで生成AIツールを使って構築するのか？
+
+生成AIコーディングツールを使用すると、Injectiveを含むアプリケーションを非常に迅速に構築できます。
+しかし、間違った方向に非常に速く構築することは理想的ではありません。
+ここでは、効果的なAIソフトウェアエンジニアリングに役立つskill、agent、workflow、MCP serverを紹介します。
+
+## どのような種類の生成AIツールが利用可能か？
+
+- **LLM** -
+    大規模言語モデル（LLM）は、ほぼすべての生成AIソフトウェアエンジニアリングを支える基盤技術です。
+    ほぼすべてのAI開発ツールはLLMのラッパーです。
+    代表的なものには、Claude Opus（Anthropic）、Gemini（Google）、Kimi（Moonshot AI）があります。
+- **LLMプロバイダー** -
+    低・中位のLLMは消費者向けハードウェアで実行可能です。
+    しかし、トップクラスのLLMはリモートでアクセスする必要があります。
+    主に3つの選択肢があります：
+    - **ローカルプロバイダー** - 例：LM StudioやOllamaの使用。
+    - **モデル開発元のリモートプロバイダー** - 例：AnthropicのサブスクリプションでClaude Opusにアクセス。
+    - **モデルアグリゲーターのリモートプロバイダー** - 例：OpenRouterのサブスクリプションでClaude Opus、Gemini、Kimiにアクセス。
+- **ツール** -
+    関数、スクリプト、コマンドラインインターフェース（CLI）など、LLMが理解または呼び出せるようにパッケージ化されたものです。
+    例えば、LLMにリアルタイム情報（LLMのトレーニング時に利用できなかった情報）にアクセスさせたい場合、
+    Web検索やその他のデータAPIを呼び出すツールへのアクセスを与える必要があります。
+- **MCP** -
+    Model-Context-Protocol（MCP）は、LLMによるツールの検出と呼び出しのために設計されたプロトコルです。
+    異なるLLMやLLMプロバイダーがツールを呼び出す方法を標準化するために設計されています。
+    以前は、各LLMやLLMプロバイダーがそれぞれ独自の標準/プロトコルを持っていました。
+- **Skill** -
+    オプションでサポートリソース、ツール、MCP serverなどを参照するmarkdownファイルです。
+    AIエンジニアリングハーネスで動作するように特別に設計されています（他のコンテキストでも使用可能）。
+    再帰的に使用でき、例えばskillが他のskillを参照することができます。
+    「workflow」、「subagent」、「agent」と呼ばれることもあります。
+    このコンテキストでは、workflowは通常、定義された順序を持つskillのセットです。
+    agent/subagentは、順序が指定されていないworkflowとskillのセットで、
+    LLMがどれを使用するかとその順序について裁量権を持ちます。
+    「agent」という用語は多用されており、複数の定義があるため、
+    上記はこのコンテキストに固有のものです。
+- **AIエンジニアリングIDE** -
+    専用のIDE、またはIDE内のプラグインで、LLMにプロンプトを送信し、
+    ツール呼び出しやMCPの実行を含め、
+    その出力をIDE内で開いているコードベースの作業に使用できます。
+    代表的なものには：Roo、Cline、Cursorがあります。
+- **AIエンジニアリングハーネス** -
+    コーディングタスクのためにLLMを呼び出すことを中心に設計されたコマンドラインインターフェース（CLI）またはターミナルユーザーインターフェース（TUI）です。
+    ファイルシステム上で直接動作し、エンジニアリングタスク用の最適化やユーティリティが組み込まれていることが多いです。
+    skill、workflow、agentを使用する際に最適に動作するため、
+    AIエンジニアリングIDEよりも強力な傾向があります。
+    代表的なものには：Claude Code（Anthropic）、Codex（OpenAI）、OpenCode（無所属）があります。
+- **AIエンジニアリングオーケストレーター** -
+    ハーネスのラッパーとして機能するツールです。
+    主な目的は、ハーネス呼び出しの長時間実行ループや並列化を可能にし、
+    常に人間が監視する必要なく、LLMがより長く複雑なタスクに自律的に取り組めるようにすることです。
+    代表的なものには：Ralph、GSDがあります。
+
+## Injectiveで開発する際、どの種類の生成AIツールが使えるか？
+
+LLM、LLMプロバイダー、ツール、MCP、Skill、Workflow、Agent、AIエンジニアリングIDE、AIエンジニアリングハーネス、AIエンジニアリングオーケストレーター。
+つまり、すべてが使えます！
+それこそが、この**AI開発者**セクションの目的です！
+
+## Skill
+
+### Injective CLI Skill
+
+[Injective CLI skill](/developers-ai/injective-cli-skill)のインストールと使用方法。
+
+`injectived`バイナリを使用して、一貫したウォレット処理、エンドポイント選択、gas設定で
+Injectiveチェーンに対するクエリとトランザクションを実行します。
+
+### Injective EVM Developer Skill
+
+[Injective EVM Developer skill](/developers-ai/injective-evm-developer-skill)のインストールと使用方法。
+
+InjectiveのEVM上で構築する場合、
+EVM互換ネットワークに適用可能な一般的なEVM開発スキルが必要です。
+また、InjectiveのEVMに固有の知識も必要です。
+このskillは、既存のEVM開発スキルを拡張して、それらを提供します。
+
+### Injective MCP Servers Skill
+
+[Injective MCP Servers skill](/developers-ai/injective-mcp-servers-skill)のインストールと使用方法。
+
+### Injective Trading Skills
+
+[Injective Trading skills](/developers-ai/injective-trading-skills)のインストールと使用方法。
+
+これは複数のskillのセットで、目的に応じて組み合わせて使用できます。
+Account、auto-sign、bridge、chain analysis、market data、staking、tokensの各コンテキストで使用されます。
+
+## MCP Server
+
+### Injective Documentation MCP
+
+このドキュメントサイトから最新情報を取得するための
+[Injective Documentation MCP server](/developers-ai/documentation-mcp)の使用方法。
+
+LLMにInjectiveについて質問すると、
+高速に発展する技術と同様に、古い情報を返す可能性が高いです。
+これは、その情報がトレーニングデータから取得されており、
+定義上「時間が凍結された」ものだからです。
+このMCPをAI開発ワークフローに追加することで、
+Injectiveでの開発に関する最新情報を取得できるだけでなく、
+このドキュメントサイトのURLの形で引用情報も得られます。
+
+### Injective MCP
+
+Injectiveでの完全なトレーディング機能をAIツールに提供する
+[Injective MCP server](/developers-ai/mcp)の使用方法。
+perpetual futures、spotトランスファー、クロスチェーンブリッジ、rawなEVMトランザクションを含みます。
