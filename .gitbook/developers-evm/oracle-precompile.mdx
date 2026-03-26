@@ -9,22 +9,10 @@ description: Approaches for querying price data on Injective, including native o
 </Info>
 
 Injective offers multiple ways to access oracle price data depending on your architecture and requirements.
-The following approaches range from querying Injective's native oracle module directly, to integrating with Pyth off-chain,
+The following approaches range from integrating with Pyth off-chain,
 to reading Pyth prices on-chain through Injective's EVM.
 
-## Approach 1: Query the native oracle module
-
-You can query price data directly from Injective's native [oracle module](/developers-native/injective/oracle/index),
-which aggregates feeds from multiple providers including Band, Coinbase, and Pyth.
-
-The [injective-price-oracle](https://github.com/InjectiveLabs/injective-price-oracle) repository
-provides a reference implementation for querying the native oracle module programmatically.
-This approach is well-suited for applications that need access to Injective-native price feeds without relying on third-party EVM contracts.
-
-For full details on the oracle module's state, messages, and supported providers,
-see the [oracle module documentation](/developers-native/injective/oracle/index).
-
-## Approach 2: Off-chain price feeds with Pyth
+## Approach 1: Off-chain price feeds with Pyth
 
 If your application fetches prices off-chain (for example, in a backend service or bot),
 you can query Pyth's HTTP API directly without any on-chain interaction.
@@ -35,7 +23,7 @@ for details on available endpoints, request formats, and response schemas.
 This approach is ideal for off-chain trading systems, analytics dashboards,
 or any service that requires price data without submitting transactions.
 
-## Approach 3: On-chain price feeds with Pyth (EVM)
+## Approach 2: On-chain price feeds with Pyth (EVM)
 
 For smart contracts that need to read prices on-chain, you can interact with the Pyth contract deployed on Injective's EVM.
 This uses Pyth's pull-based oracle model, where price updates are fetched off-chain and submitted on-chain before reading.
