@@ -1,0 +1,58 @@
+---
+title: Hardhatを使用したスマートコントラクトのデプロイ
+---
+
+## 前提条件
+
+Hardhatプロジェクトがセットアップ済みで、スマートコントラクトのコンパイルが成功している必要があります。
+その方法については [Hardhatのセットアップとスマートコントラクトのコンパイル](./compile-hardhat/) チュートリアルを参照してください。
+
+任意ですが強く推奨: スマートコントラクトのテストも成功している必要があります。
+その方法については [Hardhatを使用したスマートコントラクトのテスト](./test-hardhat/) チュートリアルを参照してください。
+
+## デプロイスクリプトの編集
+
+コンピュータ上でコンパイルしたスマートコントラクトをInjectiveテストネット上に存在させるためには、ネットワークにデプロイする必要があります。
+
+そのために、`hardhat.config.js` で指定された値を使用してHardhatが事前設定した `ethers` インスタンスを使用するスクリプトを利用します。
+
+ファイルを開きます: `script/deploy.js`
+
+```js
+async function main() {
+    const Counter = await ethers.getContractFactory('Counter');
+    const counter = await Counter.deploy({
+        gasPrice: 160e6,
+        gasLimit: 2e6,
+    });
+    await counter.waitForDeployment();
+    const address = await counter.getAddress();
+
+    console.log('Counter smart contract deployed to:', address);
+}
+```
+
+スマートコントラクトのコンパイル後に `artifacts/contracts/Counter.sol/Counter.json` を確認したことを覚えていますか？このスクリプトでは、`ethers.getContractFactory('Counter')` がそのファイルを取得し、ABIとEVM bytecodeを抽出します。
+続く行でその情報を使用してデプロイトランザクションを構築し、ネットワークに送信します。
+成功した場合、スマートコントラクトがデプロイされたアドレスが出力されます。例:
+[`0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b`](https://testnet.blockscout.injective.network/address/0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b)
+
+他のEVMネットワークでは、トランザクション（デプロイトランザクションを含む）でgas priceとgas limitを指定する必要はありません。しかし、現在Injectiveではこれが必要です。
+
+## デプロイスクリプトの実行
+
+以下のコマンドでスマートコントラクトをデプロイします：
+
+```shell
+npx hardhat run script/deploy.js --network inj_testnet
+```
+
+デプロイされたアドレスをコピーし、[`https://testnet.blockscout.injective.network`](https://testnet.blockscout.injective.network/) にアクセスして、検索フィールドにアドレスを貼り付けます。
+デプロイしたスマートコントラクトのブロックエクスプローラーページが表示されます。
+
+"Contract" タブをクリックすると、そのコントラクトのEVM bytecodeが表示され、コンパイル後のアーティファクトディレクトリのEVM bytecodeと一致するはずです。
+
+## 次のステップ
+
+スマートコントラクトのデプロイが完了したので、次はスマートコントラクトの検証です！
+[Hardhatを使用したスマートコントラクトの検証](./verify-hardhat/) チュートリアルに進みましょう。

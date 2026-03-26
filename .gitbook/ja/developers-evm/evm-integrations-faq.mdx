@@ -1,0 +1,110 @@
+---
+title: "EVM統合FAQ"
+description: Injective EVMとの統合に関するよくある質問。
+---
+
+## Injective EVMは...をサポートしていますか？
+
+**Injective EVMは（EVM機能）をサポートしていますか？**
+
+A: 一般的に、答えは「はい」です。
+より具体的な質問については以下をご覧ください。
+
+**Injective EVMはこれらの特定のopcodesをサポートしていますか？**
+
+A: はい。opcode実装において同等性を持っています。
+より正確には：カスタムopcodesの追加や、既存のopcodesの動作変更は行っていません。
+
+**Injective EVMはERC20、ERC721、ERC1155をサポートしていますか？**
+
+A: はい。Solidityベースのスマートコントラクト標準はすべて動作するはずです。
+これらは標準的なEVM以上の特別な機能を*必要としない*ためです。
+
+補足：ファンジブルトークンを実装する場合、
+ERC20およびその拡張であるその他のトークンについては、
+MultiVM Token Standard (MTS) トークンとして実装することを強く推奨します。
+これにより、同じトークンがInjective EVM上だけでなく、
+Injectiveネイティブ（特にCosmos Denomとして）でもファンジブルトークンとして機能できます。
+将来InjectiveがOther VMを追加した場合、MTSトークンはそれらでも動作します。
+MTSの詳細：
+[一般記事](https://injective.com/blog/multivm-token-standard-wrapped-inj)、
+[テクニカルリファレンス](/developers-evm/multivm-token-standard)。
+
+**Injective EVMはEIP-1559をサポートしていますか？**
+
+A: はい。
+
+## Injective EVMで...を使用できますか？
+
+A: 一般的に、答えは「はい」です。
+より具体的な質問については以下をご覧ください。
+
+**Injective EVMで（EVMツール/ライブラリ）を使用できますか？**
+
+A:
+
+- viem - はい
+- ethers.js - はい
+- hardhat - はい
+- foundry - はい
+
+**InjectiveのEVM precompileを使用してInjective EVMでFoundryを使用できますか？**
+
+A: Injectiveの[EVM precompile](/developers-evm/precompiles)は、
+汎用的なEVMでは利用できないInjectiveネイティブ関数にアクセスします。
+これは、例えばFoundryを使用して以下に接続する場合：
+
+- Injective EVMテストネット - 動作します
+- `localhost`シミュレーションEVMネットワーク - 動作しません
+
+後者の問題に対処するため、InjectiveのprecompileをサポートするFoundryツールのフォーク版を作成しました（MTSに必要な`BankERC20.sol`用のBank precompileから開始）。
+SolidityテストやデプロイメントスクリプトをFoundryプロジェクトとして使用する場合、
+`forge`/`cast`がローカルシミュレーションを実行できるようにこれが必要です。
+
+x86_64 LinuxおよびmacOS ARM64用のプリビルドバイナリを含む最新リリースは、
+[github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)で確認できます。
+
+<Warning>
+このフォーク版FoundryでInjectiveのprecompileサポートを有効にするには、設定ファイル`foundry.toml`内で`injective = true`を設定するか、環境変数`FOUNDRY_INJECTIVE=true`を使用する必要があります。
+</Warning>
+
+## InjectiveではどのようなEVM開発インフラストラクチャが利用可能ですか？
+
+回答については[EVM統合チートシート](/developers-evm/evm-integrations-cheat-sheet)を参照してください。
+
+## JSON-RPCドロップレスポンスを解決するにはどうすればよいですか？
+
+A: RPCに公開エンドポイントを使用している場合、
+レート制限によりこの問題が発生する可能性があります。
+これらのエンドポイントは非常に軽い使用向けに設計されています。
+複雑なアプリケーションをデプロイした場合、
+代わりに商用グレードのRPCエンドポイントの使用を検討してください。
+
+推奨RPCプロバイダーは[EVM統合チートシート](/developers-evm/evm-integrations-cheat-sheet)で確認できます。
+
+## `inj...`アドレスと`0x...`アドレスは互換性がありますか？
+
+A: はい。実際には同じもので、異なるフォーマットで表示されているだけです。
+
+これら2つのフォーマット間の変換のサンプルコードについては、
+[アドレスの変換](https://docs.injective.network/developers/convert-addresses)を参照してください。
+
+## InjectiveはどのEVM hardforkをサポートしていますか？
+
+A: EVM用のライブ設定データは以下の通りです：
+[sentry.lcd.injective.network/injective/evm/v1/params](https://sentry.lcd.injective.network/injective/evm/v1/params)
+
+`chain_config`の下に、EVM hardfork名（サフィックス付き）に対応するキーがあります。
+これらは、どのhardforkが有効化されているかを示します。
+これらのキーの値は、有効化されたブロック番号です。
+Mainnetローンチ時点では、すべて`0`に設定されています。
+つまり、「genesis」EVMブロックから有効化されています。
+将来のEVM hardforkでは、有効化される（またはされた）
+ゼロ以外のブロック番号を持つ新しいキーが追加されます。
+
+<Tip>
+EVM統合についてさらに質問がありますか？
+
+[Injective Discord](https://discord.com/invite/injective)
+コミュニティに参加して質問してください！
+</Tip>

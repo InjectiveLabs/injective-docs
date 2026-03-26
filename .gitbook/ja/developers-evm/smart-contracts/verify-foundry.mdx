@@ -1,0 +1,80 @@
+---
+title: Foundryを使用したスマートコントラクトの検証
+---
+
+## 前提条件
+
+Foundryプロジェクトがセットアップ済みで、スマートコントラクトのデプロイが成功している必要があります。
+その方法については [Foundryを使用したスマートコントラクトのデプロイ](./deploy-foundry/) チュートリアルを参照してください。
+
+## スマートコントラクトの検証とは？
+
+検証プロセスは、スマートコントラクト自体やネットワークの他の状態に影響を与えません。
+
+代わりに、特定のアドレスにデプロイされたスマートコントラクトの元のソースコードをネットワークエクスプローラーに提供する標準化されたプロセスです。ネットワークエクスプローラーはそのソースコードを**独立してコンパイル**し、結果のbytecodeがスマートコントラクトのデプロイトランザクションのbytecodeと実際に**一致**することを検証します。
+
+検証が合格（一致）した場合、ブロックエクスプローラーはその特定のスマートコントラクトのページで拡張モードを「アンロック」します。
+以下を含むより詳細なスマートコントラクト情報が表示されます：
+* 完全なソースコード (Solidity)
+* ABI (JSON)
+* トランザクションとイベントがより詳細に表示されます (ABIを使用してパース)
+
+また、ユーザーがウォレットを接続すると、ネットワークエクスプローラー内でスマートコントラクトの関数を呼び出してクエリを実行したり、トランザクションを送信して状態を更新したりすることができます。
+
+{/* TODO consider moving this section to FAQs */}
+
+## 検証コマンドの実行
+
+以下のコマンドを入力します：
+
+```shell
+forge verify-contract \
+  --rpc-url injectiveEvm \
+  --verifier blockscout \
+  --verifier-url 'https://testnet.blockscout-api.injective.network/api/' \
+  ${SC_ADDRESS} \
+  src/Counter.sol:Counter
+```
+
+`${SC_ADDRESS}` をスマートコントラクトをデプロイしたアドレスに置き換えてください。
+
+例えば、スマートコントラクトアドレスが `0x213bA803265386C10CE04a2cAa0f31FF3440b9cF` の場合、コマンドは以下のようになります：
+
+```shell
+forge verify-contract \
+  --rpc-url injectiveEvm \
+  --verifier blockscout \
+  --verifier-url 'https://testnet.blockscout-api.injective.network/api/' \
+  0x213bA803265386C10CE04a2cAa0f31FF3440b9cF \
+  src/Counter.sol:Counter
+```
+
+## 検証結果の確認
+
+ターミナルに以下のような出力が表示されます：
+
+```text
+Start verifying contract `0x213bA803265386C10CE04a2cAa0f31FF3440b9cF` deployed on 1439
+Submitting verification for [src/Counter.sol:Counter] 0x213bA803265386C10CE04a2cAa0f31FF3440b9cF.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `213ba803265386c10ce04a2caa0f31ff3440b9cf686b778c`
+        URL: https://testnet.blockscout-api.injective.network/address/0x213ba803265386c10ce04a2caa0f31ff3440b9cf
+```
+
+より興味深いのは、ネットワークエクスプローラーを訪問することです。
+検証出力のネットワークエクスプローラーURLにアクセスします。
+そして "Contract" タブを選択します。
+次に "Code" サブタブを選択します。
+以前は "ByteCode" のみが利用可能でしたが、
+現在は "Code"、"Compiler"、"ABI" も利用可能です。
+
+"Contract" タブ内で、
+"Read/Write contract" サブタブを選択します。
+以前はこれは存在しませんでしたが、
+現在はブロックエクスプローラーから直接すべてのスマートコントラクト関数とインタラクションできます。
+
+## 次のステップ
+
+スマートコントラクトのデプロイと検証が完了したので、次はスマートコントラクトとのインタラクションです！
+[Foundryを使用したスマートコントラクトとのインタラクション](./interact-foundry/) チュートリアルに進みましょう。

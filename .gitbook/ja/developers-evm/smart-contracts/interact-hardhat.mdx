@@ -1,0 +1,118 @@
+---
+title: Hardhatを使用したスマートコントラクトとのインタラクション
+---
+
+## 前提条件
+
+Hardhatプロジェクトがセットアップ済みで、スマートコントラクトのデプロイが成功している必要があります。
+その方法については [Hardhatを使用したスマートコントラクトのデプロイ](./deploy-hardhat/) チュートリアルを参照してください。
+
+任意ですが強く推奨: スマートコントラクトの検証も成功している必要があります。
+その方法については [Hardhatを使用したスマートコントラクトの検証](./verify-hardhat/) チュートリアルを参照してください。
+
+## Hardhatコンソールの起動
+
+以下のコマンドで対話型Javascript REPLを起動します。
+
+```shell
+npx hardhat console --network inj_testnet
+```
+
+シェルが通常のシェル（bash、zshなど）ではなくNodeJs REPLになります。
+このREPLで、`Counter` スマートコントラクトのインスタンスを作成します。
+`ethers.getContractFactory(...)` と `contract.attach('0x...');` を使用します。
+例えば、スマートコントラクトが `0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b` にデプロイされた場合、コマンドは以下のようになります：
+
+```js
+const Counter = await ethers.getContractFactory('Counter');
+const counter = await Counter.attach('0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b');
+```
+
+REPLでは `> ` がシェルプロンプトとして表示されます。
+各プロンプトの結果はこのプレフィックスなしで出力されます。
+ターミナルの内容は以下のようになります：
+
+```js
+> const Counter = await ethers.getContractFactory('Counter');
+undefined
+> const counter = await Counter.attach('0x98798cc92651B1876e9Cc91EcBcfe64cac720a1b');
+undefined
+```
+
+これで `counter` を使用してスマートコントラクトとインタラクションできます。
+
+## 関数の呼び出し - クエリ
+
+クエリは読み取り専用の操作です。
+そのため、スマートコントラクトの状態は**更新されません**。
+*状態変更なし*のため、ウォレット、署名、トランザクション手数料（gas）は不要です。
+
+以下のコマンドで `value()` 関数をクエリします。
+
+```js
+await counter.value();
+```
+
+以下が出力されます。
+
+```js
+0n
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`0n` は `0` を意味し、`n` サフィックスは
+[`BigInt`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
+であり、[`Number`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) ではないことを示します。
+
+これは、Solidityの `uint256`（スマートコントラクトの `value()` 関数の戻り値の型）を
+`Number` で表現することができないためです。
+`Number` の最大整数値は `2^53 - 1` です。
+そのため `BigInt` を使用する必要があります。
+</Callout>
+
+## 関数の呼び出し - トランザクション
+
+トランザクションは書き込み操作です。
+そのため、スマートコントラクトの**状態が更新されます**。
+*状態変更*が発生する可能性があるため、トランザクションはウォレットで署名され、トランザクション手数料（gas）を支払う必要があります。
+
+以下のコマンドで `increment(num)` 関数のトランザクションを実行します。
+
+```js
+await counter.increment(1, { gasPrice: 160e6, gasLimit: 2e6 });
+```
+<Callout icon="info" color="#07C1FF" iconType="regular">
+gas priceは *wei* 単位で指定します。
+1 wei = 10^-18 INJ。
+</Callout>
+
+成功した場合、以下のような結果が表示されます：
+
+```js
+ContractTransactionResponse { ...
+```
+
+状態を更新した後、新しい状態をクエリできます。
+結果は状態変更を反映します。
+
+```js
+await counter.value();
+```
+
+今回の結果は `1n` です。`0 + 1 = 1` だからです。
+
+```js
+1n
+```
+
+## Hardhatコンソールの停止
+
+`Ctrl+C` を2回連続で押すか、`.exit` コマンドを入力します。
+
+## 次のステップ
+
+おめでとうございます！Hardhatを使用したInjectiveでのEVMスマートコントラクト開発の全ガイドが完了しました！
+
+スマートコントラクトは、技術者でないユーザーにユーザーエクスペリエンスを提供しません。
+彼らに対応するためには、分散型アプリケーションを構築する必要があります。
+その方法については、[初めてのdApp](../dapps/) ガイドをご覧ください！

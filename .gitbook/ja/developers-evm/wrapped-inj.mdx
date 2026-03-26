@@ -1,0 +1,121 @@
+---
+title: Wrapped INJ (wINJ)
+---
+
+# Wrapped INJ (wINJ)
+
+## ラップされた暗号通貨とは？
+
+Injectiveでは、INJはネットワーク上のトランザクション手数料の支払いに使用される暗号通貨です。
+
+しかし、一部のdApp（DEXを含む）はインターフェースでERC20トークンのみを受け付けるため、INJはそれらでは**動作しません**。
+
+解決策は、INJをラップするERC20トークンを作成することです。これを「wrapped INJ」と呼びます。
+そのトークンシンボルは**wINJ**です。
+したがって、ERC20トークンを受け付けるdAppはwINJも受け付けます。
+
+wINJトークンの動作メカニズムは簡単です：
+
+- Mint: INJを入金する際にトータルサプライを増加させます。
+- Burn: INJを引き出す際にトータルサプライを減少させます。
+
+wINJは、INJと1対1で担保されたERC20トークンと考えることができ、異なる技術的インターフェースを持ちながら同等の価値として扱うことができます。
+
+## wINJはwETHと同じですか？
+
+Ethereumに詳しい方は、これがwrapped Ether (wETH) と同じように聞こえると思われるかもしれません。
+その通りで、ここまではwINJはwETHと同じように動作します。
+
+しかし、InjectiveネットワークはMultiVMテクニカルアーキテクチャで設計されていることに注意してください。
+これは、wINJがwETHのように*標準的な*ERC20実装を使用して実装された場合、
+wINJはInjectiveネットワークのEVM以外の部分（例：Cosmosトランザクション）とインタラクションする際に**アクセスできない**ことを意味します。
+
+これはまさに、Injectiveの
+[MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard)
+が設計された制限のタイプです。
+
+具体的には、
+[この行](https://github.com/InjectiveLabs/solidity-contracts/blob/b152129a/src/WINJ9.sol#L9C10-L9C15)に注目してください：
+
+```solidity
+contract WINJ9 is BankERC20, IWINJ9 {
+```
+
+ERC20実装で一般的なように、スマートコントラクト内に`uint256`値として残高を保存する代わりに、
+wINJスマートコントラクトは`Bank` precompileを使用します。
+マジックは
+[`BankERC20`の`_update`関数](https://github.com/InjectiveLabs/solidity-contracts/blob/b152129a/src/BankERC20.sol#L50-L81)で起こり、
+`Bank`モジュールの`mint`、`burn`、または`transfer`関数が
+[EVM precompile](/developers-evm/bank-precompile "InjectiveのネイティブBankモジュール用EVM precompile")を介して呼び出されます。
+
+これらの残高は`Bank` precompileから保存/取得されるため、
+InjectiveのMultiVMアーキテクチャの他の場所からアクセスできます。
+例えば、Cosmos SDKを使用してwINJ残高をクエリできます。
+EVMトランザクションを通じて更新した後でも、またその逆も同様です。
+これを「ネイティブチェーン残高」と呼びます。
+
+[wINJの完全なデモ](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/winj9)をご覧ください。
+
+## wINJをプログラムで使用する方法
+
+- Injective Mainnetのアドレス: `0x0000000088827d2d103ee2d9A6b781773AE03FfB`
+- Injective Testnetのアドレス: `0x0000000088827d2d103ee2d9A6b781773AE03FfB`
+
+INJをwINJに変換するには、このスマートコントラクトの`deposit`関数を呼び出します：
+
+- 関数シグネチャ: `deposit() public payable`
+- パラメータとして金額を指定する必要はありません。トランザクションに`value`を設定すると、`payable`が`msg.value`として取得します。
+
+wINJをINJに変換するには、このスマートコントラクトの`withdraw`関数を呼び出します：
+
+- 関数シグネチャ: `withdraw(uint256 wad) public`
+- 受け取りたいINJの金額を`wad`パラメータとして設定します。
+
+その他の関数（例：転送）は標準のERC20と同じです。
+
+## ネットワークエクスプローラーでwINJを使用する方法
+
+- Injective MainnetのエクスプローラーURL: [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB?tab=contract)
+- Injective TestnetのエクスプローラーURL: [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://testnet.blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB?tab=contract)
+
+INJをwINJに変換するには、このスマートコントラクトの`deposit`関数を呼び出します：
+
+- エクスプローラーページのwINJトークンの「Contract」タブ、次に「Read/Write contract」サブタブに移動します。
+- `deposit()`関数を見つけ、`>`シンボルをクリックして展開します。
+- 「Send native INJ (uint256)」フィールドに変換したいINJの金額を入力します。
+  - この数値は自動的に`10^18`が乗算されるため、手動で変換する必要はありません。
+- 「Write」ボタンを押します。
+- ウォレットでトランザクションを確認し、署名して送信します。
+- ウォレットに、選択した金額のINJ減少とwINJ増加が反映されるはずです。
+  - INJの減少はわずかに多くなります。トランザクション手数料の支払いに使用されるためです。
+
+wINJをINJに変換するには、このスマートコントラクトの`withdraw`関数を呼び出します：
+
+- エクスプローラーページのwINJトークンの「Contract」タブ、次に「Read/Write contract」サブタブに移動します。
+- `withdraw()`関数を見つけ、`>`シンボルをクリックして展開します。
+- 「wad (uint256)」フィールドに変換したいwINJの金額を入力します。
+  - この数値は自動的に`10^18`が乗算されるため、手動で変換する必要はありません。
+- 「Write」ボタンを押します。
+- ウォレットでトランザクションを確認し、署名して送信します。
+- ウォレットに、選択した金額のINJ増加とwINJ減少が反映されるはずです。
+  - INJの増加はわずかに少なくなります。トランザクション手数料の支払いに使用されるためです。
+
+# Injective DoでwINJを使用する方法
+
+- [Injective Do](https://do.injective.network/)にアクセスします。
+- 右上の「Connect」ボタンを押します。
+- ウォレットを選択します。
+- ウォレットで「Allow」を選択し、Injective Do dAppへの接続を許可します。
+- 右上（以前「Connect」ボタンがあった場所）にウォレットアドレスが表示されるはずです。
+- 上部のナビゲーションバーで「EVM」を選択します。
+- ドロップダウンメニューで「Wrap/Unwrap」を選択します。
+- INJをwINJに変換する場合
+  - 上部の「Wrap」タブを押します。
+  - 「Amount」フィールドに変換したい金額を入力します。
+  - 下部の「Wrap」ボタンを押します。
+  - トランザクションが完了したら、ウォレットのINJおよびwINJ残高を確認します。
+- wINJをINJに変換する場合
+  - 上部の「Unwrap」タブを押します。
+  - 「Amount」フィールドに変換したい金額を入力します。
+  - 下部の「Unwrap」ボタンを押します。
+  - トランザクションが完了したら、ウォレットのINJおよびwINJ残高を確認します。

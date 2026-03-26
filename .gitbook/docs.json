@@ -1693,6 +1693,63 @@
             ]
           }
         ]
+      },
+      {
+        "language": "ja",
+        "groups": [
+          {
+            "group": "INJECTIVE",
+            "pages": [
+              {
+                "group": "EVM開発者",
+                "icon": "rectangle-code",
+                "expanded": false,
+                "pages": [
+                  "ja/developers-evm/index",
+                  "ja/developers-evm/network-information",
+                  {
+                    "group": "初めてのEVMスマートコントラクト",
+                    "pages": [
+                      "ja/developers-evm/smart-contracts/index",
+                      "ja/developers-evm/smart-contracts/compile-hardhat",
+                      "ja/developers-evm/smart-contracts/test-hardhat",
+                      "ja/developers-evm/smart-contracts/deploy-hardhat",
+                      "ja/developers-evm/smart-contracts/verify-hardhat",
+                      "ja/developers-evm/smart-contracts/interact-hardhat",
+                      "ja/developers-evm/smart-contracts/compile-foundry",
+                      "ja/developers-evm/smart-contracts/test-foundry",
+                      "ja/developers-evm/smart-contracts/deploy-foundry",
+                      "ja/developers-evm/smart-contracts/verify-foundry",
+                      "ja/developers-evm/smart-contracts/interact-foundry"
+                    ]
+                  },
+                  {
+                    "group": "初めてのEVM dApp",
+                    "pages": [
+                      "ja/developers-evm/dapps/index",
+                      "ja/developers-evm/dapps/connect-with-metamask",
+                      "ja/developers-evm/dapps/connect-with-walletconnect"
+                    ]
+                  },
+                  "ja/developers-evm/evm-equivalence",
+                  "ja/developers-evm/multivm-token-standard",
+                  "ja/developers-evm/permissioned-multivm-token",
+                  "ja/developers-evm/wrapped-inj",
+                  "ja/developers-evm/precompiles",
+                  "ja/developers-evm/bank-precompile",
+                  "ja/developers-evm/exchange-precompile",
+                  "ja/developers-evm/erc20-module",
+                  "ja/developers-evm/infrastructure-and-tooling",
+                  "ja/developers-evm/add-injective-to-your-dapp",
+                  "ja/developers-evm/evm-integrations-cheat-sheet",
+                  "ja/developers-evm/evm-integrations-faq",
+                  "redirects/https_testnet_faucet_injective_network",
+                  "redirects/https_testnet_blockscout_injective_network_blocks"
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   },

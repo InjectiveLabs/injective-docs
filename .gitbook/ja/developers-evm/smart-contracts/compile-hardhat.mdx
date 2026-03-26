@@ -1,0 +1,144 @@
+---
+title: Hardhatのセットアップとスマートコントラクトのコンパイル
+---
+
+## 前提条件
+
+最新バージョンのNodeJsがインストールされていることを確認してください。
+以下のコマンドで確認できます：
+
+```shell
+node -v
+```
+
+このガイドでは以下のバージョンを使用しています：
+
+```text
+v22.16.0
+```
+
+NodeJsがまだインストールされていない場合は、以下を使用してインストールしてください：
+
+- LinuxまたはMac: [NVM](https://github.com/nvm-sh/nvm)
+- Windows: [NVM for Windows](https://github.com/coreybutler/nvm-windows)
+
+ウォレットと、テストネットINJで資金提供されたアカウントが必要です。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+EVMテストネット資金は [Injectiveテストネットfaucet](https://testnet.faucet.injective.network/) からリクエストできます。
+</Callout>
+
+アカウント作成後、秘密鍵をアクセス可能な場所にコピーしておいてください。このチュートリアルを完了するために必要です。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+秘密鍵の取り扱いには注意が必要です。
+ここに記載されている手順は、ローカル開発とテストネットには十分です。
+しかし、メインネットで使用する秘密鍵には**十分なセキュリティではありません**。
+メインネットでは鍵のセキュリティに関するベストプラクティスに従い、メインネットと他のネットワーク間で同じ鍵/アカウントを再利用しないでください。
+</Callout>
+
+## 新しいHardhatプロジェクトのセットアップ
+
+gitを使用してデモリポジトリをクローンします。プロジェクトはすでに完全にセットアップされています。
+
+```shell
+git clone https://github.com/injective-dev/hardhat-inj
+```
+
+npmから依存関係をインストールします：
+
+```shell
+npm install
+```
+
+## プロジェクト構造の確認
+
+npmのダウンロードとインストールを待つ間に、コードエディタ/IDEでリポジトリを開き、ディレクトリ構造を確認しましょう。
+
+```text
+hardhat-inj/
+  contracts/
+    Counter.sol → スマートコントラクトのSolidityコード
+  script/
+    deploy.js → デプロイスクリプト
+  test/
+    Counter.test.js → テストケース
+  hardhat.config.js → 設定ファイル
+  .example.env
+```
+
+`hardhat.config.js` ファイルは、Injective EVMテストネットに接続するよう事前に設定されています。
+続行する前に、Injectiveテストネットアカウントの秘密鍵を提供するだけです。
+
+```shell
+cp .example.env .env
+```
+
+`.env` ファイルを編集して秘密鍵を追加します。
+必要に応じて、代替のJSON-RPCエンドポイントに更新することもできます。
+
+```shell
+PRIVATE_KEY=0xプレフィックスなしの秘密鍵
+INJ_TESTNET_RPC_URL=https://k8s.testnet.json-rpc.injective.network/
+
+```
+
+## スマートコントラクトの編集
+
+このデモに含まれるスマートコントラクトは非常にシンプルです。以下の機能を持っています：
+
+- 数値である `value` を1つ保存します。
+- `value()` クエリメソッドを公開します。
+- `increment(num)` トランザクションメソッドを公開します。
+
+ファイルを開きます: `contracts/Counter.sol`
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+contract Counter {
+    uint256 public value = 0;
+
+    function increment(uint256 num) external {
+        value += num;
+    }
+}
+
+```
+
+## スマートコントラクトのコンパイル
+
+以下のコマンドを実行します：
+
+```shell
+npx hardhat compile
+```
+
+Hardhatは、`hardhat.config.js` ファイルで設定されたSolidityコンパイラ (`solc`) のバージョンを自動的にダウンロードして実行します。
+
+## コンパイル出力の確認
+
+コンパイラが完了すると、プロジェクトディレクトリに追加のディレクトリが表示されます：
+
+```text
+hardhat-inj/
+  artifacts/
+    build-info/
+      ...
+    contracts/
+      Counter.sol/
+        Counter.json → このファイルを開く
+        ...
+  cache/
+    ...
+```
+
+`Counter.json` ファイル (`artifacts/contracts/Counter.sol/Counter.json`) を開きます。
+その中に、`abi` と `bytecode` フィールドを含むコンパイラ出力が表示されます。
+これらのアーティファクトは、後のすべてのステップ（テスト、デプロイ、検証、インタラクション）で使用されます。
+
+## 次のステップ
+
+Hardhatプロジェクトのセットアップとスマートコントラクトのコンパイルが完了したので、次はスマートコントラクトのテストです！
+[Hardhatを使用したスマートコントラクトのテスト](./test-hardhat/) チュートリアルに進みましょう。
