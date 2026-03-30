@@ -8,7 +8,8 @@
     "metatags": {
       "og:type": "website",
       "og:site_name": "Injective Docs",
-      "canonical": "https://docs.injective.network/"
+      "canonical": "https://docs.injective.network/",
+      "indexnow-verification": "a1b2c383e83a6368fb4defb4ae2ae3099226564e5f6"
     }
   },
   "search": {
