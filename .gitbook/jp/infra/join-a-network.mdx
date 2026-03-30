@@ -1,0 +1,376 @@
+---
+title: ネットワークへの参加
+---
+
+このガイドでは、ローカルにスタンドアロンネットワークをセットアップするプロセスと、メインネットまたはテストネットでノードを実行する方法について説明します。
+
+各ネットワークのハードウェア要件は、それぞれのタブで確認できます。
+
+<Tabs>
+<Tab title="ローカルネットワーク">
+ローカルノードを簡単にセットアップするには、`setup.sh`スクリプトをダウンロードして実行します。これにより、ローカルInjectiveネットワークが初期化されます。
+
+```bash
+wget https://raw.githubusercontent.com/InjectiveLabs/injective-chain-releases/master/scripts/setup.sh
+chmod +x ./setup.sh # スクリプトを実行可能にする
+./setup.sh
+```
+
+以下のコマンドでノードを起動します：
+
+```bash
+injectived start # このコマンドの実行後、ブロックの生成が開始されます
+```
+
+スクリプトの動作の詳細説明やセットアッププロセスをより細かく制御したい場合は、以下を参照してください。
+
+#### チェーンの初期化
+
+Injectiveノードを実行する前に、チェーンとノードのgenesisファイルを初期化する必要があります：
+
+```bash
+# <moniker>引数はノードのカスタムユーザー名です。人間が読める形式にしてください。
+injectived init <moniker> --chain-id=injective-1
+```
+
+上記のコマンドにより、ノードの実行に必要なすべての設定ファイルとデフォルトのgenesisファイルが作成されます。genesisファイルはネットワークの初期状態を定義します。すべての設定ファイルはデフォルトで`~/.injectived`にありますが、`--home`フラグを渡すことでこのフォルダの場所を上書きできます。`~/.injectived`以外のディレクトリを使用する場合は、`injectived`コマンドを実行するたびに`--home`フラグで場所を指定する必要があります。既存のgenesisファイルがある場合は、`--overwrite`または`-o`フラグで上書きできます。
+
+`~/.injectived`フォルダは以下の構造を持ちます：
+
+```bash
+.                                   # ~/.injectived
+  |- data                           # ノードが使用するデータベースを含みます。
+  |- config/
+      |- app.toml                   # アプリケーション関連の設定ファイル。
+      |- config.toml                # Tendermint関連の設定ファイル。
+      |- genesis.json               # genesisファイル。
+      |- node_key.json              # p2pプロトコルでのノード認証に使用する秘密鍵。
+      |- priv_validator_key.json    # コンセンサスプロトコルでバリデーターとして使用する秘密鍵。
+```
+
+#### `genesis.json`ファイルの修正
+
+この時点で、`genesis.json`ファイルの修正が必要です：
+
+* stakingの`bond_denom`、crisisの`denom`、govの`denom`、mintの`denom`の値を`"inj"`に変更します。これはInjectiveのネイティブトークンです。
+
+以下のコマンドを実行することで簡単に変更できます：
+
+```bash
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+cat $HOME/.injectived/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="inj"' > $HOME/.injectived/config/tmp_genesis.json && mv $HOME/.injectived/config/tmp_genesis.json $HOME/.injectived/config/genesis.json
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+上記のコマンドは、デフォルトの`.injectived`ディレクトリを使用している場合にのみ動作します。特定のディレクトリの場合は、上記のコマンドを修正するか、`genesis.json`ファイルを手動で編集して変更を反映してください。
+</Callout>
+
+#### バリデーターアカウントのキーの作成
+
+チェーンを開始する前に、少なくとも1つのアカウントでstateを初期化する必要があります。そのためには、まず`test` keyringバックエンドで`my_validator`という名前の新しいアカウントをkeyringに作成します（別の名前や別のバックエンドを選択しても構いません）：
+
+```bash
+injectived keys add my_validator --keyring-backend=test
+
+# 生成されたアドレスを後で使用するために変数に格納します。
+MY_VALIDATOR_ADDRESS=$(injectived keys show my_validator -a --keyring-backend=test)
+```
+
+ローカルアカウントを作成したら、チェーンのgenesisファイルでそのアカウントに`inj`トークンを付与します。これにより、チェーンのgenesis時点からこのアカウントの存在がチェーンに認識されます：
+
+```bash
+injectived add-genesis-account $MY_VALIDATOR_ADDRESS 100000000000000000000000000inj --chain-id=injective-1
+```
+
+`$MY_VALIDATOR_ADDRESS`は、keyring内の`my_validator`キーのアドレスを保持する変数です。Injectiveのトークンは`{amount}{denom}`形式です：`amount`は18桁精度の10進数で、`denom`はdenomination key付きの一意のトークン識別子（例：`inj`）です。ここでは`inj`トークンを付与しています。`inj`は`injectived`でstakingに使用されるトークン識別子です。
+
+#### チェーンへのバリデーターの追加
+
+アカウントにトークンが付与されたら、チェーンにバリデーターを追加する必要があります。バリデーターは、チェーンに新しいブロックを追加するためにコンセンサスプロセスに参加する特別なフルノードです。任意のアカウントがバリデーターオペレーターになる意向を宣言できますが、十分なdelegationを持つアカウントのみがアクティブセットに入ることができます。このガイドでは、上記の`init`コマンドで作成したローカルノードをチェーンのバリデーターとして追加します。バリデーターは、`gentx`と呼ばれるgenesisファイルに含まれる特別なトランザクションを通じて、チェーンの最初の起動前に宣言できます：
+
+```bash
+# gentxを作成します。
+injectived genesis gentx my_validator 1000000000000000000000inj --chain-id=injective-1 --keyring-backend=test
+
+# gentxをgenesisファイルに追加します。
+injectived genesis collect-gentxs
+```
+
+`gentx`は以下の3つのことを行います：
+
+1. 作成した`validator`アカウントをバリデーターオペレーターアカウント（バリデーターを制御するアカウント）として登録します。
+2. 指定された`amount`のstakingトークンをセルフデリゲートします。
+3. オペレーターアカウントを、ブロックの署名に使用されるTendermintノードのpubkeyにリンクします。`--pubkey`フラグが指定されていない場合、上記の`injectived init`コマンドで作成されたローカルノードのpubkeyがデフォルトで使用されます。
+
+`gentx`の詳細については、以下のコマンドを使用してください：
+
+```bash
+injectived genesis gentx --help
+```
+
+#### `app.toml`と`config.toml`を使用したノードの設定
+
+2つの設定ファイルが`~/.injectived/config`内に自動生成されます：
+
+* `config.toml`: Tendermintの設定に使用されます（詳細は[Tendermintのドキュメント](https://docs.tendermint.com/v0.34/tendermint-core/configuration.html)を参照）。
+* `app.toml`: Cosmos SDK（Injectiveの基盤）によって生成され、stateプルーニング戦略、テレメトリ、gRPCおよびRESTサーバーの設定、state sync等の設定に使用されます。
+
+両ファイルには詳細なコメントが記載されています。ノードの調整については直接ファイルを参照してください。
+
+調整する設定の一例として、`app.toml`内の`minimum-gas-prices`フィールドがあります。これは、バリデーターノードがトランザクションの処理に受け入れる最低ガス価格を定義します。空の場合は、何らかの値（例：`10inj`）を設定してください。そうしないとノードは起動時に停止します。このチュートリアルでは、最低ガス価格を0に設定します：
+
+```toml
+ # バリデーターがトランザクションの処理に受け入れる最低ガス価格。
+ # トランザクションの手数料は、この設定で指定された任意のdenominationの
+ # 最低額を満たす必要があります（例：0.25token1;0.0001token2）。
+ minimum-gas-prices = "0inj"
+```
+
+#### Localnetの実行
+
+すべてのセットアップが完了したら、ノードを起動できます：
+
+```bash
+injectived start # このコマンドの実行後、ブロックの生成が開始されます
+```
+
+このコマンドでは単一のノードを実行できます。チェーンとの対話には十分ですが、複数のノードを同時に実行してコンセンサスの動作を確認することもできます。
+</Tab>
+
+<Tab title="テストネット">
+#### ハードウェア仕様
+
+ノードオペレーターは、最適なパフォーマンスを達成するためにベアメタルサーバーにデプロイすることを推奨します。また、バリデーターノードは推奨されるハードウェア仕様、特にCPU要件を満たし、高いアップタイムを確保する必要があります。
+
+|       _最小要件_       |    _推奨_   |
+| :-------------------: | :-------------------: |
+|    RAMメモリ 128GB   |    RAMメモリ 128GB   |
+|      CPU 12コア     |      CPU 16コア     |
+| CPUベースクロック 3.7GHz | CPUベースクロック 4.2GHz |
+|    ストレージ 2TB NVMe   |    ストレージ 2TB NVMe   |
+|     ネットワーク 1Gbps+    |     ネットワーク 1Gbps+    |
+
+#### `injectived`と`peggo`のインストール
+
+最新のリリースについては[Injective releases repo](https://github.com/InjectiveLabs/testnet/releases)を参照してください。非バリデーターノードオペレーターは`peggo`をインストールする必要はありません。
+
+```bash
+wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv peggo /usr/bin
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib 
+```
+
+#### 新しいInjectiveチェーンノードの初期化
+
+Injectiveノードを実行する前に、チェーンとノードのgenesisファイルを初期化する必要があります：
+
+```bash
+# <moniker>引数はノードのカスタムユーザー名です。人間が読める形式にしてください。
+export MONIKER=<moniker>
+# Injectiveテストネットのchain-idは"injective-888"です
+injectived init $MONIKER --chain-id injective-888
+```
+
+`init`コマンドを実行すると、`~/.injectived`に`injectived`のデフォルト設定ファイルが作成されます。
+
+#### テストネットに参加するための設定の準備
+
+テストネットのgenesisファイルとアプリケーション設定ファイルでデフォルト設定を更新し、シードノードでpersistent peersを設定する必要があります。
+
+```bash
+git clone https://github.com/InjectiveLabs/testnet.git
+
+# genesisファイルを設定ディレクトリにコピー
+aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
+mv genesis.json ~/.injectived/config/
+
+# 設定ファイルを設定ディレクトリにコピー
+cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
+cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
+```
+
+genesisのチェックサムを検証することもできます - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+```
+
+#### `injectived`用の`systemd`サービスの設定
+
+`/etc/systemd/system/injectived.service`の設定を編集します：
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+systemdサービスの起動と再起動
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# システム起動時の自動起動を有効にする
+sudo systemctl enable injectived
+
+# ログを確認する場合
+journalctl -u injectived -f
+```
+
+#### ネットワークとの同期
+
+スナップショットをダウンロードしてネットワークと同期するには、[Polkachu Injective Testnet Node Snapshot](https://polkachu.com/testnets/injective/snapshots)を参照してください。
+
+**サポート**
+
+ご質問がある場合は、[Discord](https://discord.gg/injective)、[Telegram](https://t.me/joininjective)、または[メール](mailto:contact@injectivelabs.org)でInjectiveチームに連絡できます。
+</Tab>
+
+<Tab title="メインネット">
+#### ハードウェア仕様
+
+ノードオペレーターは、最適なパフォーマンスを達成するためにベアメタルサーバーにデプロイすることを推奨します。また、バリデーターノードは推奨されるハードウェア仕様、特にCPU要件を満たし、高いアップタイムを確保する必要があります。
+
+|       _最小要件_       |    _推奨_   |
+| :-------------------: | :-------------------: |
+|    RAMメモリ 128GB   |    RAMメモリ 128GB   |
+|      CPU 12コア     |      CPU 16コア     |
+| CPUベースクロック 3.7GHz | CPUベースクロック 4.2GHz |
+|    ストレージ 2TB NVMe   |    ストレージ 2TB NVMe   |
+|     ネットワーク 1Gbps+    |     ネットワーク 1Gbps+    |
+
+#### `injectived`と`peggo`のインストール
+
+最新のリリースについては[Injective chain releases repo](https://github.com/InjectiveLabs/injective-chain-releases/releases/)を参照してください。非バリデーターノードオペレーターは`peggo`をインストールする必要はありません。
+
+```bash
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv peggo /usr/bin
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib 
+```
+
+#### 新しいInjectiveノードの初期化
+
+Injectiveノードを実行する前に、チェーンとノードのgenesisファイルを初期化する必要があります：
+
+```bash
+# <moniker>引数はノードのカスタムユーザー名です。人間が読める形式にしてください。
+export MONIKER=<moniker>
+# Injectiveメインネットのchain-idは"injective-1"です
+injectived init $MONIKER --chain-id injective-1
+```
+
+`init`コマンドを実行すると、`~/.injectived`に`injectived`のデフォルト設定ファイルが作成されます。
+
+#### メインネットに参加するための設定の準備
+
+メインネットのgenesisファイルとアプリケーション設定ファイルでデフォルト設定を更新し、シードノードでpersistent peersを設定する必要があります。
+
+```bash
+git clone https://github.com/InjectiveLabs/mainnet-config
+
+# genesisファイルを設定ディレクトリにコピー
+cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
+
+# 設定ファイルを設定ディレクトリにコピー
+cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
+```
+
+genesisのチェックサムを検証することもできます - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+```
+
+次に、`~/.injectived/config/config.toml`の`seeds`フィールドを`mainnet-config/10001/seeds.txt`の内容で更新し、`timeout_commit`を`300ms`に更新します。
+
+```bash
+cat mainnet-config/10001/seeds.txt
+nano ~/.injectived/config/config.toml
+```
+
+#### `injectived`用の`systemd`サービスの設定
+
+`/etc/systemd/system/injectived.service`の設定を編集します：
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+systemdサービスの起動と再起動：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# システム起動時の自動起動を有効にする
+sudo systemctl enable injectived
+
+# ログを確認する場合
+journalctl -u injectived -f
+```
+
+スナップショットデータを正しいディレクトリにロードする前にサービスを停止し、ロード後に開始する必要があります。
+
+```bash
+# ノードを停止する
+sudo systemctl stop injectived
+
+# ノードを起動する
+sudo systemctl start injectived
+```
+
+#### ネットワークとの同期
+
+**オプション1. State-Sync**
+
+_近日追加予定_
+
+**オプション2. スナップショット**
+
+**プルーニング済み**
+
+1. [Polkachu](https://polkachu.com/tendermint_snapshots/injective)
+2. [HighStakes](https://tools.highstakes.ch/files/injective.tar.gz)
+3. [Imperator](https://www.imperator.co/services/chain-services/mainnets/injective)
+4. [Bware Labs](https://bwarelabs.com/snapshots)
+5. [AutoStake](https://autostake.com/networks/injective/#validator)
+
+Injectiveの`mainnet-config seeds.txt`リストが機能しない場合（ノードがブロックの同期に失敗する場合）、ChainLayer、Polkachu、およびAutostakeがピアリスト（`config.toml`の`persistent_peers`フィールドで使用可能）またはアドレスブック（より高速なピア検出用）を管理しています。
+
+**サポート**
+
+ご質問がある場合は、[Discord](https://discord.gg/injective)、[Telegram](https://t.me/joininjective)、または[メール](mailto:contact@injectivelabs.org)でInjectiveチームに連絡できます。
+</Tab>
+</Tabs>
