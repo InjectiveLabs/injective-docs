@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "generate:core-specs": "./scripts/injective-core-specs.sh"
+    "generate:core-specs": "./scripts/injective-core-specs.sh",
+    "updated-at-markdown-frontmatter": "./scripts/updated-at-markdown-frontmatter.js"
   },
   "dependencies": {
     "dotenv": "16.4.5"
