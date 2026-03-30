@@ -1,5 +1,6 @@
 ---
 title: Upgrade to {/* $VERSION */}
+updatedAt: "2025-12-03"
 ---
 
 {/* $DATE (e.g. Tuesday, August 19th, 2025) */}

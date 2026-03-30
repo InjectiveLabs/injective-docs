@@ -1,3 +1,7 @@
+---
+updatedAt: "2025-10-29"
+---
+
 # State
 
 This section gives you an overview of the objects stored in the `x/evm` module state, functionalities that are derived from the go-ethereum `StateDB` interface, and its implementation through the Keeper as well as the state implementation at genesis.

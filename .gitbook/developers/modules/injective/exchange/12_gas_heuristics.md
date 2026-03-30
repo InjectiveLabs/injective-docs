@@ -1,6 +1,7 @@
 ---
 sidebar_position: 13
 title: Gas Heuristics
+updatedAt: "2025-10-03"
 ---
 
 This doc contains suggested `gasWanted` values for specific Exchange messages. Values were obtained heuristically 
