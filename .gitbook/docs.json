@@ -2,6 +2,21 @@
   "theme": "mint",
   "$schema": "https://mintlify.com/docs.json",
   "name": "Injective Docs",
+  "description": "Injective is a high-performance, interoperable layer-one blockchain for building premier Web3 financial applications.",
+  "seo": {
+    "indexing": "all",
+    "metatags": {
+      "og:type": "website",
+      "og:site_name": "Injective Docs",
+      "canonical": "https://docs.injective.network/"
+    }
+  },
+  "search": {
+    "prompt": "Search Injective docs..."
+  },
+  "metadata": {
+    "timestamp": true
+  },
   "colors": {
     "primary": "#4D3DFF",
     "light": "#EEEFFF",
@@ -652,7 +667,23 @@
           "references"
             ]
           }
-        ]
+        ],
+        "footer": {
+          "socials": {
+            "x": "https://x.com/injective",
+            "youtube": "https://youtube.com/@injective_"
+          },
+          "links": [
+            {
+              "header": "Resources",
+              "items": [
+                { "label": "Blog", "href": "https://injective.com/blog" },
+                { "label": "Build", "href": "https://injective.com/build" },
+                { "label": "7 days of Injective", "href": "https://youtube.com/watch?v=bE9JbFpsDFM&list=PLTS_stt4XpDBGDXxrx4crxijAemFr3Mix" }
+              ]
+            }
+          ]
+        }
       },
       {
         "language": "cn",
