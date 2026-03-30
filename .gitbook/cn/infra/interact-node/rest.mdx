@@ -1,5 +1,6 @@
 ---
 title: 使用 REST 端点与节点交互
+updatedAt: "2026-02-13"
 ---
 
 Cosmos SDK 上的所有 gRPC 服务都通过 gRPC-gateway 提供更便捷的基于 REST 的查询。URL 路径的格式基于 Protobuf 服务方法的完全限定名称，但可能包含一些小的自定义，以使最终 URL 看起来更符合惯例。例如，`cosmos.bank.v1beta1.Query/AllBalances` 方法的 REST 端点是 `GET /cosmos/bank/v1beta1/balances/{address}`。请求参数作为查询参数传递。
