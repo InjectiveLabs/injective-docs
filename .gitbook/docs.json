@@ -291,6 +291,7 @@
                   "developers-evm/precompiles",
                   "developers-evm/bank-precompile",
                   "developers-evm/exchange-precompile",
+                  "developers-evm/oracle-precompile",
                   "developers-evm/erc20-module",
                   "developers-evm/infrastructure-and-tooling",
                   "developers-evm/add-injective-to-your-dapp",
@@ -895,6 +896,7 @@
                   "cn/developers-evm/precompiles",
                   "cn/developers-evm/bank-precompile",
                   "cn/developers-evm/exchange-precompile",
+                  "cn/developers-evm/oracle-precompile",
                   "cn/developers-evm/erc20-module",
                   "cn/developers-evm/infrastructure-and-tooling",
                   "cn/developers-evm/add-injective-to-your-dapp",
@@ -1328,6 +1330,7 @@
                   "ko/developers-evm/precompiles",
                   "ko/developers-evm/bank-precompile",
                   "ko/developers-evm/exchange-precompile",
+                  "ko/developers-evm/oracle-precompile",
                   "ko/developers-evm/erc20-module",
                   "ko/developers-evm/infrastructure-and-tooling",
                   "ko/developers-evm/add-injective-to-your-dapp",
@@ -1697,6 +1700,10 @@
           {
             "group": "INJECTIVE",
             "pages": [
+              "jp/index",
+              "jp/faq",
+              "jp/glossary",
+              "jp/references",
               {
                 "group": "EVM開発者",
                 "icon": "rectangle-code",
@@ -1729,19 +1736,27 @@
                     ]
                   },
                   "jp/developers-evm/evm-equivalence",
-                  "jp/developers-evm/multivm-token-standard",
-                  "jp/developers-evm/permissioned-multivm-token",
-                  "jp/developers-evm/wrapped-inj",
-                  "jp/developers-evm/precompiles",
-                  "jp/developers-evm/bank-precompile",
-                  "jp/developers-evm/exchange-precompile",
-                  "jp/developers-evm/erc20-module",
-                  "jp/developers-evm/infrastructure-and-tooling",
                   "jp/developers-evm/add-injective-to-your-dapp",
+                  "jp/developers-evm/infrastructure-and-tooling",
+                  {
+                    "group": "MultiVMトークン規格",
+                    "pages": [
+                      "jp/developers-evm/multivm-token-standard",
+                      "jp/developers-evm/permissioned-multivm-token",
+                      "jp/developers-evm/wrapped-inj",
+                      "jp/developers-evm/erc20-module"
+                    ]
+                  },
+                  {
+                    "group": "Precompiles",
+                    "pages": [
+                      "jp/developers-evm/precompiles",
+                      "jp/developers-evm/bank-precompile",
+                      "jp/developers-evm/exchange-precompile"
+                    ]
+                  },
                   "jp/developers-evm/evm-integrations-cheat-sheet",
-                  "jp/developers-evm/evm-integrations-faq",
-                  "redirects/https_testnet_faucet_injective_network",
-                  "redirects/https_testnet_blockscout_injective_network_blocks"
+                  "jp/developers-evm/evm-integrations-faq"
                 ]
               }
             ]

@@ -1,0 +1,128 @@
+---
+title: Oracle Precompile
+---
+
+import { Callout } from "@/components/ui";
+
+<Callout type="warning">
+  The Oracle Precompile is not yet available. In the meantime, you can query
+  prices directly from the Pyth contract deployed on Injective's EVM. Note that
+  not all price feeds are available — see the supported feeds below.
+</Callout>
+
+## Querying Pyth Prices on Injective EVM
+
+Pyth is deployed at `0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320` on Injective's EVM. You can use it to query prices for the supported feeds listed below.
+
+### Supported Feeds
+
+| Asset    | Price Feed ID                                                        |
+| -------- | -------------------------------------------------------------------- |
+| INJ/USD  | `0x7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592` |
+| BTC/USD  | `0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43` |
+| ETH/USD  | `0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace` |
+| XRP/USD  | `0xec5d399846a9209f3fe5881d70aae9268c94339ff9817e8d18ff19fa05eea1c8` |
+| USDT/USD | `0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b` |
+| USDC/USD | `0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a` |
+
+```typescript
+import { ethers } from "ethers";
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const provider = new ethers.JsonRpcProvider(
+  "https://sentry.evm-rpc.injective.network",
+);
+
+const IPythABI = [
+  {
+    inputs: [{ internalType: "bytes[]", name: "updateData", type: "bytes[]" }],
+    name: "getUpdateFee",
+    outputs: [{ internalType: "uint256", name: "feeAmount", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes[]", name: "updateData", type: "bytes[]" }],
+    name: "updatePriceFeeds",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "id", type: "bytes32" },
+      { internalType: "uint256", name: "age", type: "uint256" },
+    ],
+    name: "getPriceNoOlderThan",
+    outputs: [
+      {
+        components: [
+          { internalType: "int64", name: "price", type: "int64" },
+          { internalType: "uint64", name: "conf", type: "uint64" },
+          { internalType: "int32", name: "expo", type: "int32" },
+          { internalType: "uint256", name: "publishTime", type: "uint256" },
+        ],
+        internalType: "struct PythStructs.Price",
+        name: "price",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes32", name: "id", type: "bytes32" }],
+    name: "getPriceUnsafe",
+    outputs: [
+      {
+        components: [
+          { internalType: "int64", name: "price", type: "int64" },
+          { internalType: "uint64", name: "conf", type: "uint64" },
+          { internalType: "int32", name: "expo", type: "int32" },
+          { internalType: "uint256", name: "publishTime", type: "uint256" },
+        ],
+        internalType: "struct PythStructs.Price",
+        name: "price",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
+
+const pyth = new ethers.Contract(
+  "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+  IPythABI,
+  provider,
+);
+
+async function main() {
+  try {
+    const priceFeedId =
+      "0x7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592"; // INJ/USD
+
+    const price = await pyth.getPriceUnsafe(priceFeedId);
+
+    console.log(
+      "Human readable price:",
+      price.expo > 0
+        ? toHumanReadable(price.price.toString(), price.expo.toString()).toFixed(2)
+        : toHumanReadable(price.price.toString(), (-price.expo).toString()).toFixed(4),
+    );
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await provider.destroy();
+  }
+}
+
+main().catch(console.error);
+```
+
+<Callout type="info">
+  `getPriceUnsafe` returns the last pushed price without a staleness check. For
+  production use, prefer `getPriceNoOlderThan(priceFeedId, maxAge)` — but note
+  this requires the price to have been pushed on-chain recently, otherwise the
+  call will revert. See the [Pyth documentation](https://docs.pyth.network/price-feeds/use-real-time-data/evm) for more details on the pull model.
+</Callout>
