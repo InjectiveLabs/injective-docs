@@ -5,36 +5,55 @@
 // Use ALL=1 to force run on all files,
 // otherwise will only run on files that have changes from the `main` branch
 
-const { execSync } = require('child_process');
-const fs = require('fs');
+import { exec as childProcessExec }  from 'node:child_process';
+import fs from'node:fs/promises';
+import util from 'node:util';
+
+const execAsync = util.promisify(childProcessExec);
 
 const ALL_MODE = process.env.ALL === '1';
 
-function exec(cmd, options = {}) {
+async function fileExists(filePath) {
   try {
-    return execSync(cmd, { 
+    const fullFilePath = path.resolve(SRC_DIR, filePath);
+    await fs.access(fullFilePath, fs.constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function exec(cmd, options = {}) {
+  try {
+    const { stdout, stderr } = await execAsync(cmd, {
       encoding: 'utf-8', 
       cwd: process.cwd(),
       ...options 
-    }).trim();
+    });
+    if (stderr) {
+      if (options.ignoreError) return '';
+      throw new Error(`Command failed: ${cmd}\n${stderr}`);
+    }
+    return stdout.trim();
   } catch (e) {
+    console.error(e);
     if (options.ignoreError) return '';
     throw new Error(`Command failed: ${cmd}\n${e.stderr || e.message}`);
   }
 }
 
-function getMarkdownFiles() {
+async function getMarkdownFiles() {
   const allFiles = ALL_MODE 
-    ? exec("git ls-files .gitbook/**/*.md .gitbook/**/*.mdx ':!:.gitbook/redirects/*'")
-    : exec("git diff --name-only main...HEAD -- ':(exclude).gitbook/redirects/*' '*.md' '*.mdx'");
+    ? await exec("git ls-files .gitbook/**/*.md .gitbook/**/*.mdx ':!:.gitbook/redirects/*'")
+    : await exec("git diff --name-only main...HEAD -- ':(exclude).gitbook/redirects/*' '*.md' '*.mdx'");
   
   if (!allFiles) return [];
   
-  return allFiles.split('\n').filter(f => f.trim() && fs.existsSync(f));
+  return allFiles.split('\n').filter(async (f) => f.trim() && await fileExists(f));
 }
 
-function getLastCommitDate(file) {
-  const dateStr = exec(`git log --follow -1 --format="%ai" -- ${JSON.stringify(file)}`);
+async function getLastCommitDate(file) {
+  const dateStr = await exec(`git log --follow -1 --format="%ai" -- ${JSON.stringify(file)}`);
   if (!dateStr) throw new Error(`No git history for ${file}`);
   return dateStr.split(' ')[0];
 }
@@ -69,31 +88,31 @@ function updateFrontMatter(content, date) {
   return content.replace(frontMatterRegex, `---\n${newFm}\n---`);
 }
 
-function processFile(file) {
+async function processFile(file) {
   console.log(`Processing: ${file}`);
   
-  const date = getLastCommitDate(file);
-  const content = fs.readFileSync(file, 'utf-8');
+  const date = await getLastCommitDate(file);
+  const content = await fs.readFile(file, 'utf-8');
   const updated = updateFrontMatter(content, date);
   
   if (content !== updated) {
-    fs.writeFileSync(file, updated, 'utf-8');
+    await fs.writeFile(file, updated, 'utf-8');
     console.log(`  ✓ Updated updatedAt: ${date}`);
   } else {
     console.log(`  → No changes needed`);
   }
 }
 
-function main() {
+async function main() {
   try {
-    exec('git rev-parse --git-dir', { ignoreError: false });
+    await exec('git rev-parse --git-dir', { ignoreError: false });
   } catch (e) {
     // fail fast if not in a git repo
     console.error('Error: Not a git repository');
     process.exit(1);
   }
   
-  const files = getMarkdownFiles();
+  const files = await getMarkdownFiles();
   
   if (files.length === 0) {
     // fail fast if nothing to be done
@@ -105,7 +124,7 @@ function main() {
   
   for (const file of files) {
     try {
-      processFile(file);
+      await processFile(file);
     } catch (e) {
       console.error(`  ✗ Error: ${e.message}`);
       errors++;
