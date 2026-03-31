@@ -1,3 +1,7 @@
+---
+updatedAt: "2025-10-29"
+---
+
 # State Transitions
 
 The `x/evm` module allows for users to submit Ethereum transactions (`Tx`) and execute their containing messages to evoke state transitions on the given state.

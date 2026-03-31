@@ -681,7 +681,7 @@
             {
               "header": "About",
               "items": [
-                { "label": "Maintained by Injective Labs' Developer Relations Team", "href": "https://injective.com/" }
+                { "label": "Documentation maintained by Injective Labs' Developer Relations Team", "href": "https://injective.com/" }
               ]
             },
             {
@@ -696,7 +696,7 @@
         }
       },
       {
-        "language": "cn",
+        "language": "zh-Hans",
         "groups": [
           {
             "group": "INJECTIVE",

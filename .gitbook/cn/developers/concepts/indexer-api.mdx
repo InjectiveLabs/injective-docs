@@ -1,5 +1,6 @@
 ---
 title: Indexer API
+updatedAt: "2026-02-13"
 ---
 
 Indexer API 是一组微服务，提供从 Injective 链索引的数据。Injective 链在交易被包含时发出事件，Indexer API 中有一个事件监听器监听这些事件，处理它们，并将数据存储在 MongoDB 中。直接查询链是一个昂贵的（且性能较低的）API 调用，而从 MongoDB 提供数据的 API 查询则更高效，这就是 Indexer API 存在的原因。

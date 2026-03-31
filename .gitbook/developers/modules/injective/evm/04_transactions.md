@@ -1,3 +1,7 @@
+---
+updatedAt: "2025-10-29"
+---
+
 # Transactions
 
 This section defines the `sdk.Msg` concrete types that result in the state transitions defined on the previous section.
