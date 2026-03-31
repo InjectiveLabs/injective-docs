@@ -415,7 +415,7 @@
   - [genutil](developers-native/core/genutil)
 
 - [Injective FAQ](faq)
-- [Glossary](glossary): Pocket size cheat sheet for Injective. Use this glossary to learn about terms specific to Injective.
+- [Glossary](glossary): Pocket-sized cheat sheet for Injective. Use this glossary to learn about terms specific to Injective.
 - [References](references): Important references and links for the Injective Ecosystem
 - [About These Docs](contributing): The Injective developer documentation is written and maintained by Injective Labs' Developer Relations team.
 
