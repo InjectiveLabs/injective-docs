@@ -6,11 +6,41 @@ description: >-
 updatedAt: "2025-12-04"
 ---
 
-Here you can find a comprehensive overview of Injective's **exchange module**,
-as well as tutorials, guides, reward programs, leaderboard competitions,
-and general resources for developers and API traders.
+This section provides comprehensive documentation for developers, traders, and
+market makers building and participating in Injective's decentralized finance ecosystem.
+Whether you're integrating wallets, creating trading strategies, launching tokens, or providing liquidity,
+you'll find the technical specifications, guides, and resources needed to interact with
+Injective's on-chain exchange module and financial primitives.
 
-- [Wallet](/defi/wallet/)
-- [Trading](/defi/trading/)
-- [Token Standards](/defi/tokens/)
-- [Open Liquidity Program (OLP)](/defi/open-liquidity-program/)
+Injective is purpose-built for finance, offering the world's first truly on-chain orderbook environment that
+brings shared liquidity across all DeFi applications.
+Unlike traditional DEXs that rely on automated market makers (AMMs),
+Injective uses a fully decentralized central limit orderbook (CLOB) that achieves
+capital-efficient price discovery and instant finality.
+With sub-second block times, zero gas fees for makers, and cross-chain interoperability via IBC and Ethereum bridges,
+Injective eliminates the trade-offs between performance and decentralization,
+enabling sophisticated trading strategies and institutional-grade financial applications that were previously impossible in DeFi.
+
+## Key Concepts
+
+| Term | Definition |
+|------|------------|
+| **Exchange Module** | Injective's core on-chain orderbook module that enables fully decentralized trading of spot and derivative markets with shared liquidity across all dApps. |
+| **Denom** | The unique identifier for assets on Injective (e.g., `inj`, `peggy{ERC20}`, `ibc/{hash}`), used within the Bank module for transfers, trading, and staking. |
+| **Open Liquidity Program (OLP)** | Injective's market-maker incentive program that rewards participants with INJ for providing orderbook liquidity, with minimal barriers to entry. |
+| **Token Factory** | A permissionless module allowing any account to create new native tokens with the format `factory/{creator}/{subdenom}`, enabling custom asset issuance. |
+| **EIP-712** | The Ethereum signing standard used by Injective to enable seamless transaction signing with Ethereum wallets like MetaMask while broadcasting to the Cosmos chain. |
+
+## Navigation
+
+- **[Wallet](/defi/wallet/)** —
+  Learn about supported wallet types including Ethereum-native (MetaMask, Ledger), Cosmos-native (Keplr, Leap),
+  and Injective-native wallets, plus how account management and transaction signing work on Injective.
+- **[Trading](/defi/trading/)** — Explore Injective's on-chain exchange capabilities including spot markets, perpetual futures,
+  expiry futures, margin trading, order types, and the fee structure for makers and takers.
+- **[Token Standards](/defi/tokens/)** — Understand the different token types on Injective including native INJ,
+  Peggy assets from Ethereum, IBC assets from Cosmos chains, CW20 tokens,
+  and how to create custom tokens using the Token Factory module.
+- **[Open Liquidity Program (OLP)](/defi/open-liquidity-program/)** —
+  Discover how to earn INJ rewards by providing liquidity to Injective's orderbook, including eligibility requirements,
+  scoring methodology, epochs, and reward disbursements.

@@ -3,13 +3,29 @@ title: Overview
 updatedAt: "2025-12-04"
 ---
 
-## What are Modules?​
+This section is for developers building on Injective using native Cosmos SDK modules and Go-based tooling.
+Whether you're developing custom modules, querying chain state, constructing transactions,
+or integrating with Injective's core financial primitives,
+you'll find comprehensive technical documentation for the native development path.
 
-Modules are foundational components in Injective’s blockchain architecture, each built to provide specific functionalities. A module is essentially a self-contained unit with well-defined logic and services, allowing Injective to efficiently manage diverse operations across the network.
+Injective extends the Cosmos SDK with purpose-built modules for decentralized finance,
+creating a modular architecture where each component handles specific responsibilities while inter-operating seamlessly.
+The `exchange` module, Injective's centerpiece, enables fully on-chain orderbook trading that rivals centralized exchanges,
+while modules like `tokenfactory` allow permissionless asset creation and `peggy` facilitates trustless Ethereum bridging.
+This modular design allows developers to compose powerful applications by leveraging existing infrastructure: staking for consensus,
+governance for protocol upgrades, and the native bank module for unified token balances across EVM and Cosmos environments.
+For developers, this means access to institutional-grade financial primitives through clean Go APIs, gRPC endpoints,
+and comprehensive message types that can be composed into sophisticated trading strategies and DeFi applications.
 
-<figure><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXemhQaBIt08mqak4lODzMNP73IvSnPLjfRohlMwLMn51Ut9kTGOKrCRqolsy4j1I0ca3zFe8-a6xrOalOkpc2HWJYuDESKFVKJdc6xv6NNCY4IY-n3MuY8t4Dz_qujBI4aQg7KpHetfP3b_XPg0wALZq8Dr?key=SrpUIxF4ydd4ZLyJCcX74Q" alt="" width="563" /><figcaption></figcaption></figure>
+## Key Concepts
 
-Modules work like building blocks that can be combined to expand the blockchain’s capabilities. This approach reduces the friction and technical complexity of implementing core features, making development easier. Each module operates independently but communicates with others through inter-module messaging, making Injective’s architecture modular and adaptable. This allows Injective to continuously evolve, delivering targeted upgrades and functionality without overhauling the entire system.
+| Term | Definition |
+|------|------------|
+| **Cosmos SDK Module** | Self-contained units of blockchain logic (e.g., `exchange`, `bank`, `staking`) that provide specific functionalities and communicate through inter-module messaging. |
+| **Exchange Module** | Injective's core module enabling fully decentralized spot and derivative trading with on-chain orderbook management, order matching, and settlement. |
+| **Keeper** | Core component of a module that manages state and exposes business logic through defined interfaces, handling read/write operations and state transitions. |
+| **Message (Msg)** | Transaction types that trigger state changes in modules, such as `MsgSend` for transfers or `MsgCreateSpotLimitOrder` for trading. |
+| **Query** | Read-only operations that retrieve chain state without modifying it, exposed through gRPC, REST, and CLI interfaces. |
 
 ## Explore Modules
 
@@ -21,7 +37,7 @@ Modules work like building blocks that can be combined to expand the blockchain�
     cta="Click here"
     icon="panel-left-close"
     img="">
-    `injective` module
+    `injective` module. Injective-specific modules including Exchange (on-chain orderbook), TokenFactory (permissionless token creation), Peggy (Ethereum bridge), Oracle (price feeds), Insurance Funds, Auction, and WASMx (CosmWasm integration).
   </Card>
   <Card
     title="Core"
@@ -30,6 +46,18 @@ Modules work like building blocks that can be combined to expand the blockchain�
     cta="Click here"
     icon="panel-left-close"
     img="">
-    `core` module
+    `core` module. Standard Cosmos SDK modules including Bank (token transfers), Staking (validator delegation), Governance (on-chain proposals), Auth (accounts), Distribution (rewards), and IBC (cross-chain interoperability).
   </Card>
 </Columns>
+
+## Additional Resources
+
+- **[Transaction Examples](/developers-native/examples/)** —
+  Code samples for common operations across all modules including bank transfers, exchange trading, staking, governance,
+  and IBC transfers.
+- **[Query Chain](/developers-native/query-chain/)** —
+  Reference for querying chain state directly via gRPC and RPC endpoints for all modules.
+- **[Query Indexer](/developers-native/query-indexer/)** —
+  Guide to using the Injective Indexer for efficient historical data queries including trades, orders, and portfolio data.
+- **[Transactions](/developers-native/transactions/)** —
+  Documentation for constructing and broadcasting transactions using various signer types (Ethereum, Cosmos, private keys).

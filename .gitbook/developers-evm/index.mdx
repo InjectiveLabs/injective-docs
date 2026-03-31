@@ -6,11 +6,32 @@ description: >-
 updatedAt: "2025-12-04"
 ---
 
-Welcome, EVM developers! Native EVM support on Injective lets you deploy Solidity smart contracts.
-It also opens up possibilities such as interacting with the exchange module, building dApps, and much more.
-You can now build in Injective with familiar tools, libraries, and workflows!
+This section is for EVM developers who want to build on Injective using familiar EVM tooling and workflows.
+Whether you're deploying Solidity smart contracts, integrating WalletCOnnect/MetaMask, or building full-stack dApps,
+you'll find comprehensive guides for using Hardhat, Foundry,and other standard Ethereum development tools.
+All while gaining access to Injective's unique native modules like the on-chain orderbook and staking.
 
-## Start Building on EVM
+Injective brings the best of both worlds to EVM developers:
+Complete compatibility with Ethereum tooling combined with access to powerful native Cosmos modules.
+Unlike typical EVM-compatible chains that operate in isolation,
+Injective's precompiles act as bridges between Solidity and the native Injective modules.
+This means your smart contracts can directly interact with the on-chain orderbook, stake tokens, participate in governance,
+and leverage the MultiVM Token Standard for unified liquidity,
+all while using MetaMask, Hardhat, Foundry, or any standard Ethereum tool.
+With gas costs a fraction of Ethereum's and sub-second block times,
+Injective offers a superior developer experience without sacrificing the familiar workflows Ethereum developers know.
+
+## Key Concepts
+
+| Term | Definition |
+|------|------------|
+| **EVM Equivalence** | Injective's native EVM maintains 1:1 compatibility with Ethereum, supporting the latest `geth` version while offering significantly lower gas costs. |
+| **Precompiles** | Special Go-based contracts embedded at fixed EVM addresses (e.g., `0x64` for Bank) that bridge Solidity to Injective's native modules (Cosmos SDK), enabling access to exchange, staking, and bank functionality. |
+| **MultiVM Token Standard (MTS)** | A unified token model where tokens share one canonical balance across EVM and Cosmos environments, eliminating the need for bridging or wrapping between VMs. |
+| **Bank Precompile** | The EVM interface at `0x64` that proxies ERC20 operations (mint, burn, transfer) to the native bank module, enabling MTS-compliant tokens with unified balances. |
+| **Bank Module** | A native module (Cosmos SDK) that maps native bank denoms (INJ, IBC, Peggy assets) to MTS-compliant ERC20 contracts within the EVM. |
+
+## Navigation
 
 <Columns cols={2}>
   <Card
