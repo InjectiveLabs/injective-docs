@@ -19,6 +19,11 @@
   "metadata": {
     "timestamp": true
   },
+  "integrations": {
+    "gtm": {
+      "tagId": "GTM-T4827WQD"
+    }
+  },
   "colors": {
     "primary": "#4D3DFF",
     "light": "#EEEFFF",
