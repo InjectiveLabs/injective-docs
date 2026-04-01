@@ -684,9 +684,11 @@
           },
           "links": [
             {
-              "header": "About",
+              "header": "About docs",
               "items": [
-                { "label": "Documentation maintained by Injective Labs' Developer Relations Team", "href": "https://injective.com/" }
+                { "label": "Maintained by Injective Labs' Developer Relations Team", "href": "https://injective.com/" },
+                { "label": "Open an issue", "href": "https://github.com/InjectiveLabs/injective-docs/issues" },
+                { "label": "Submit a PR", "href": "https://github.com/InjectiveLabs/injective-docs/pulls" }
               ]
             },
             {
