@@ -127,8 +127,8 @@
                 "expanded": false,
                 "pages": [
                   "developers/index",
-                  "developers/convert-addresses",
                   "developers/network-information",
+                  "developers/convert-addresses",
                   {
                     "group": "injectived",
                     "pages": [
