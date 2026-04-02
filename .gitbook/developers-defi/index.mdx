@@ -3,16 +3,137 @@ title: Overview
 updatedAt: "2025-12-04"
 ---
 
-Injective marks the forefront of exchange-focused layer-1 blockchains offering decentralized perpetual swaps, futures, and spot trading. It fully taps into the possibilities of decentralized derivatives and borderless DeFi. Every component is designed to embody complete trustlessness, resistance to censorship, public verifiability, and resilience against front-running.
+Injective marks the forefront of exchange-focused layer-1 blockchains offering decentralized perpetual swaps,
+futures, and spot trading.
+It fully taps into the possibilities of decentralized derivatives and borderless DeFi.
+Every component is designed to embody complete trustlessness, resistance to censorship, public verifiability,
+and resilience against front-running.
 
-Injective enables traders to create and trade arbitrary spot and derivatives markets. Injective also enables on-chain limit orderbook management, on-chain trade execution, on-chain order matching, on-chain transaction settlement, and on-chain trading incentive distribution through the logic codified by the Injective Chain's [Exchange Module](/developers-native/injective/exchange).
+Injective enables traders to create and trade arbitrary spot and derivatives markets.
+Injective also enables on-chain limit orderbook management, on-chain trade execution, on-chain order matching,
+on-chain transaction settlement, and on-chain trading incentive distribution through the logic
+codified by the Injective Chain's [Exchange Module](/developers-native/injective/exchange).
+
+Unlike other DeFi platforms that rely on automated market makers (AMMs),
+Injective offers a fully on-chain orderbook with matching engine capabilities built directly into the protocol layer.
+This means exchanges built on Injective share a global
+unified liquidity pool while maintaining their own UI and user relationships—allowing them to
+earn trading fees from orders they originate.
+With native support for perpetual swaps, futures, spots, and binary options,
+combined with permissionless market creation and sub-second block times,
+developers can launch sophisticated trading platforms without building backend infrastructure
+or worrying about liquidity fragmentation.
+
+## What This Section Covers
+
+This section is designed for developers building decentralized finance applications,
+exchanges, and trading infrastructure on Injective.
+Whether you're launching new tokens and markets, building algorithmic trading strategies, integrating price oracles,
+or managing token metadata, these guides provide the practical knowledge needed to leverage Injective's native DeFi primitives.
+
+## Key Concepts
+
+| Term | Description |
+|------|-------------|
+| **Exchange Module** | Injective's native on-chain module that handles limit orderbook management, trade execution, order matching, and settlement entirely on-chain. |
+| **Denom** | The native token representation format on Injective (e.g., `factory/{creator}/{subdenom}`, `peggy{ethereumAddress}`). All assets in the Bank module use this format. |
+| **Oracle Provider** | An external party registered through governance that relays price feeds to the chain, enabling custom markets like perpetuals and binary options. |
+| **Token Factory** | A native module allowing permissionless creation of new tokens with the `factory/{creator}/{subdenom}` format. |
+| **Tick Size** | The minimum increment for price and quantity in trading markets, calculated based on asset value and decimals. |
 
 ## Build an Orderbook DEX on Injective
 
-As an incentive mechanism to encourage exchanges to build on Injective and source trading activity, exchanges that originate orders into the shared orderbook of Injective's exchange protocol ([read more](/developers-native/injective/exchange)) are rewarded with $β=40%β=40%$ of the trading fee from orders that they source. The exchange protocol implements a global minimum trading fee of $$rm=0.1%rm​=0.1%$$ for makers and $$rt=0.2%rt​=0.2%$$ for takers.
+As an incentive mechanism to encourage exchanges to build on Injective and source trading activity,
+exchanges that originate orders into the shared orderbook of Injective's exchange protocol
+([read more](/developers-native/injective/exchange)) are rewarded with a percentage of the trading fees
+from orders that they source.
+The exchange protocol implements a global minimum trading fees for makers and for takers.
 
-The goal of Injective's incentive mechanism is to allow exchanges competing amongst each other to provide a better user experience and to better serve users, broadening access to DeFi for users all around the world.
+The goal of Injective's incentive mechanism is to allow exchanges competing among each other to provide
+a better user experience and to better serve users, broadening access to DeFi for users all around the world.
 
 An exchange can easily set up a client (such as a UI on web or mobile) and an API provider.
 
 Head to our [DEX tutorial](/developers/dapps/example-dex) to bootstrap your DEX with a few clicks!
+
+## Core DeFi Guides
+
+<Columns cols={2}>
+  <Card
+    title="Launch a Token"
+    href="/developers-defi/token-launch/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/launch-token-hero.png">
+    Learn how to launch tokens on Injective through bridging, Token Factory, or programmatic methods using CLI, TypeScript, or CosmWasm.
+  </Card>
+  <Card
+    title="Launch a Market"
+    href="/developers-defi/market-launch/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    Permissionlessly create spot trading pairs on Injective by bridging assets and submitting a governance proposal on the Injective Hub.
+  </Card>
+  <Card
+    title="Denom Metadata"
+    href="/developers-defi/denom-and-bank/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    Fetch and map token metadata (decimals, symbols, logos) from the injective-lists repository for bank balances and market data.
+  </Card>
+  <Card
+    title="Injective Trader"
+    href="/developers-defi/injective-trader/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    A professional-grade Python framework for developing and deploying algorithmic trading strategies with built-in risk management and analytics.
+  </Card>
+</Columns>
+
+## Advanced Topics
+
+<Columns cols={2}>
+  <Card
+    title="Provider Oracle"
+    href="/developers-defi/provider-oracle/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/code-hero.png">
+    Register as an oracle provider and relay price feeds to power perpetual markets, expiry futures, and binary options on Injective.
+  </Card>
+  <Card
+    title="Testnet Faucet Integration"
+    href="/developers-defi/testnet-faucet-integration/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    Integrate the testnet faucet into your dApp to provide users with test INJ tokens via a simple POST request.
+  </Card>
+  <Card
+    title="Min Price Tick Size"
+    href="/developers-defi/calculate-min-price-tick-size/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    Calculate the minimum price tick size for markets based on the base asset's USD value and decimal precision.
+  </Card>
+  <Card
+    title="Min Quantity Tick Size"
+    href="/developers-defi/min-quantity-tick-size/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    Calculate the minimum quantity tick size for markets based on the quote asset's USD value and desired minimum notional value.
+  </Card>
+</Columns>
