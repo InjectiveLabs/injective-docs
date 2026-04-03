@@ -114,7 +114,8 @@ Cosmovisorは以下を行います：
    cp /path/to/new/libwasmvm.x86_64.so $DAEMON_HOME/cosmovisor/upgrades/<upgrade_name>/bin
    ```
 
-> **ヒント:** GitHubから`injectived`バイナリパッケージをダウンロードした場合、`libwasmvm.x86_64.so`をアップグレードの`bin`ディレクトリにコピーします。後でsystemdサービスにこのディレクトリを`LD_LIBRARY_PATH`に追加する環境変数が設定されます。
+> **ヒント：**GitHubから`injectived`バイナリをダウンロードした場合は、`libwasmvm.x86_64.so`も同じ`bin`ディレクトリにコピーしてください。
+> systemd設定でこのディレクトリを`LD_LIBRARY_PATH`に追加する必要があります。
 
 3. **アップグレードプロセス**
 

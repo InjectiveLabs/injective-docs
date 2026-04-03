@@ -2,7 +2,8 @@
 title: RESTエンドポイントを使用したノードとの対話
 ---
 
-Cosmos SDK上のすべてのgRPCサービスは、gRPC-gatewayを通じてより便利なRESTベースのクエリとして利用できます。URLパスの形式はProtobufサービスメソッドの完全修飾名に基づいていますが、最終的なURLがより慣用的に見えるようにカスタマイズされている場合があります。例えば、`cosmos.bank.v1beta1.Query/AllBalances`メソッドのRESTエンドポイントは`GET /cosmos/bank/v1beta1/balances/{address}`です。リクエスト引数はクエリパラメータとして渡されます。
+Cosmos SDK上のすべてのgRPCサービスは、gRPC-gatewayを通じてより扱いやすいRESTベースのクエリとして利用できます。
+URLパスの形式はProtobufサービスメソッドの完全修飾名に基づいていますが、最終的なURLはより一般的なREST形式になるようカスタマイズされる場合があります。例えば、`cosmos.bank.v1beta1.Query/AllBalances`メソッドのRESTエンドポイントは`GET /cosmos/bank/v1beta1/balances/{address}`です。リクエスト引数はクエリパラメータとして渡されます。
 
 以下の例では、ローカルプライベートネットワーク内のノードとRESTエンドポイントを使用して対話することを想定しています。ドメインをパブリックネットワークに変更することもできます。
 
