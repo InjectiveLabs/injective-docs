@@ -1,0 +1,137 @@
+---
+title: メインネットデプロイ
+description: Injective MainnetへのCosmWasmスマートコントラクトのデプロイとインスタンス化のガバナンスプロセス
+---
+
+このガイドでは、Injective MainnetにCosmWasmスマートコントラクトをデプロイおよびインスタンス化するためのガバナンスプロセスについて説明します。
+
+### コードアップロードプロポーザルの提出
+
+このセクションでは、スマートコントラクトコードプロポーザルの提出方法と投票方法を説明します。
+
+Injectiveネットワーク参加者はスマートコントラクトのデプロイを提案し、ガバナンスで投票して承認できます。`wasmd`の認可設定はオンチェーンガバナンスによって管理されるため、コントラクトのデプロイは完全にガバナンスによって決定されます。このため、ガバナンスプロポーザルがInjectiveメインネットにコントラクトをアップロードするための最初のステップとなります。
+
+`injectived`を使用してチェーンにコードをアップロードするガバナンスプロポーザルを開始する例：
+
+```bash
+injectived tx wasm submit-proposal wasm-store artifacts/cw_controller.wasm
+--title="Proposal Title" \
+--summary="Proposal Summary" \
+--instantiate-everybody true \
+--broadcast-mode=sync \
+--chain-id=injective-1 \
+--node=https://sentry.tm.injective.network:443 \
+--deposit=100000000000000000000inj \
+--gas=20000000 \
+--gas-prices=160000000inj \
+--from [YOUR_KEY] \
+--yes \
+--output json
+```
+
+`injectived tx gov submit-proposal wasm-store`コマンドはWasmバイナリプロポーザルを提出します。ガバナンスで承認されるとコードがデプロイされます。
+
+インスタンス化パーミッションを設定する2つの重要なフラグ`instantiate-everybody`と`instantiate-only-address`について説明します。デフォルトでは、誰でもコントラクトをインスタンス化できます。
+
+```bash
+--instantiate-everybody boolean # 誰でもコードからコントラクトをインスタンス化できる（任意）
+--instantiate-only-address string # このアドレスのみがコードからコントラクトインスタンスをインスタンス化できる
+```
+
+### コントラクトのインスタンス化（ガバナンス不要）
+
+ほとんどの場合、インスタンス化のために別のガバナンスプロポーザルを提出する必要はありません。`injectived tx wasm instantiate`で単にインスタンス化してください。ガバナンスプロポーザルが必要なのはコントラクトのアップロードのみです。`--instantiate-everybody`フラグが`false`に設定され、かつ`--instantiate-only-address`フラグがガバナンスモジュールに設定されている場合を除き、ガバナンスを経由する必要はありません。`--instantiate-everybody`のデフォルト値は`true`であり、この場合`injectived tx wasm instantiate`でパーミッションレスにインスタンス化できます。
+
+```bash
+injectived tx wasm instantiate [code_id_int64] [json_encoded_init_args] --label [text] --admin [address,optional] --amount [coins,optional]  [flags]
+```
+
+```bash
+Flags:
+  -a, --account-number uint      署名アカウントのアカウント番号（オフラインモードのみ）
+      --admin string             管理者のアドレスまたはキー名
+      --amount string            インスタンス化時にコントラクトに送信するコイン
+      --aux                      トランザクション送信の代わりにaux signer dataを生成
+  -b, --broadcast-mode string    トランザクションブロードキャストモード (sync|async)（デフォルト "sync"）
+      --chain-id string          ネットワークチェーンID
+      --dry-run                  --gasフラグを無視してトランザクションのシミュレーションを実行するが、ブロードキャストはしない
+      --fee-granter string       トランザクションの手数料を付与するFee granter
+      --fee-payer string         署名者からの控除の代わりにトランザクションの手数料を支払うFee payer
+      --fees string              トランザクションと共に支払う手数料（例：10uatom）
+      --from string              署名に使用するプライベートキーの名前またはアドレス
+      --gas string               トランザクションごとのガスリミット（デフォルト 200000）
+      --gas-adjustment float     txシミュレーションが返す見積もりに乗算する調整係数（デフォルト 1）
+      --gas-prices string        トランザクション手数料を決定するためのガス価格（例：0.1uatom）
+      --generate-only            未署名トランザクションを構築してSTDOUTに出力
+  -h, --help                     instantiateのヘルプ
+      --keyring-backend string   キーリングバックエンドの選択（デフォルト "os"）
+      --keyring-dir string       クライアントKeyringディレクトリ
+      --label string             リストでこのコントラクトを識別する人間が読める名前
+      --ledger                   接続されたLedgerデバイスを使用
+      --no-admin                 管理者を設定しない場合は明示的に設定が必要
+      --node string              Tendermint RPCインターフェースの<host>:<port>（デフォルト "tcp://localhost:26657"）
+      --note string              トランザクションに説明を追加するためのノート
+      --offline                  オフラインモード
+  -o, --output string            出力フォーマット（デフォルト "json"）
+  -s, --sequence uint            署名アカウントのシーケンス番号（オフラインモードのみ）
+      --sign-mode string         署名モードの選択 (direct|amino-json|direct-aux)
+      --timeout-height uint      特定の高さを超えてtxがコミットされるのを防ぐブロックタイムアウト高さ
+      --tip string               ターゲットチェーンのfee payerに転送される金額
+  -y, --yes                      txブロードキャストプロンプトの確認をスキップ
+```
+
+`injectived tx wasm instantiate`の例：
+
+```bash
+injectived tx wasm instantiate \
+150 \
+'{"bank": "inj1egl894wme0d4d029hlv3kuqs0mc9atep2s89h8"}' \
+--label="LABEL" \
+--from=inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c \
+--chain-id=injective-1 \
+--yes \
+--gas-prices 160000000inj \
+--gas=10000000 \
+--no-admin \
+--node=https://sentry.tm.injective.network:443 \
+```
+
+### コントラクトのインスタンス化（ガバナンス経由）
+
+前述の通り、メインネットでのコントラクトインスタンス化パーミッションはコードアップロード時に使用されたフラグに依存します。デフォルトではパーミッションレスに設定されており、genesisの`wasmd` Injectiveセットアップで確認できます：
+
+```json
+"wasm": {
+            "codes": [],
+            "contracts": [],
+            "gen_msgs": [],
+            "params": {
+                "code_upload_access": {
+                    "address": "",
+                    "permission": "Everybody"
+                },
+                "instantiate_default_permission": "Everybody"
+            },
+            "sequences": []
+        }
+```
+
+ただし、`--instantiate-everybody`フラグが`false`に設定されている場合、コントラクトのインスタンス化はガバナンスを経由する必要があります。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Injectiveテストネットは開発者が容易にコントラクトをデプロイできるよう、デフォルトでパーミッションレスです。
+</Callout>
+
+#### コントラクトインスタンス化プロポーザル
+
+```bash
+ injectived tx gov submit-proposal instantiate-contract [code_id_int64] [json_encoded_init_args] --label [text] --title [text] --description [text] --run-as [address] --admin [address,optional] --amount [coins,optional] [flags]
+```
+
+### コントラクトマイグレーション
+
+マイグレーションとは、既存のスマートコントラクトのコードを入れ替える、または「アップグレード」するプロセスです。
+
+コントラクトをインスタンス化する際、オプションのadminフィールドを設定できます。空のまま残すとコントラクトは不変になります。adminを設定すると（外部アカウントまたはガバナンスコントラクト）、そのアカウントがマイグレーションをトリガーできます。adminはadminロールの再割り当てや、コントラクトを完全に不変にすることもできます。ただし、旧コントラクトから新コントラクトにマイグレーションする際、新コントラクトは以前の状態のエンコード方法を把握している必要があることに注意してください。
+
+マイグレーションの技術的な詳細については、[CosmWasmマイグレーションドキュメント](https://docs.cosmwasm.com/docs/smart-contracts/migration)を参照してください。

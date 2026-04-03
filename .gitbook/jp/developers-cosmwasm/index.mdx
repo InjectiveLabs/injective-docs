@@ -1,0 +1,72 @@
+---
+title: 概要
+description: CosmWasmを使用したInjective上での開発に関するガイド
+---
+
+このセクションでは、Cosmosエコシステム向けのWebAssemblyベースのスマートコントラクトプラットフォームであるCosmWasmを使用してInjective上で開発を行う開発者向けの情報を提供します。
+Rustコントラクトの作成、Injectiveのネイティブモジュールとの統合、ガバナンスを通じたメインネットへのデプロイまで、CosmWasm開発ライフサイクル全体にわたる包括的なガイドを参照できます。
+
+InjectiveはWebAssemblyコントラクトと高性能な金融インフラストラクチャの間の橋渡しを行うことで、CosmWasm開発を向上させます。
+コントラクトが単独で動作する標準的なCosmWasmチェーンとは異なり、Injectiveの`Any`メッセージシステムにより、Rustコントラクトとネイティブモジュール間の直接通信が可能になります。これにより、コントラクトからオンチェーンオーダーブックへの注文、Oracleの価格フィードのクエリ、TokenFactoryアセットの作成、オークションへの参加が実現します。
+CW20 Adapterはさらに相互運用性を拡張し、CW20トークンをネイティブdenomに変換することでInjective Exchangeでシームレスに取引できるようにします。
+`injective-test-tube`を使用することで、開発者はモックではなく実際のチェーンロジックに対してコントラクトの統合テストを行い、実際の環境での正確性を保証できます。Injectiveのサブ秒ブロックタイムとパーミッションレスなテストネットにより、CosmWasm開発者はInjectiveの金融プリミティブの全機能を活用した高度なDeFiアプリケーションを構築するための本番グレードの環境を利用できます。
+
+## 主要コンセプト
+
+| 用語 | 定義 |
+|------|------|
+| **CosmWasm** | Cosmos向けに構築されたWebAssemblyベースのスマートコントラクトプラットフォーム。Rustで安全でポータブルなコントラクトを決定論的に実行できます。 |
+| **CW20 Adapter** | CW20トークンをネイティブTokenFactory denomに変換するブリッジコントラクト。CW20トークンがInjective Exchangeやその他のネイティブモジュールと連携できるようにします。 |
+| **Any Messages** | CosmWasmコントラクトがInjective Exchange、Oracle、TokenFactoryなどのネイティブモジュールと連携するためのProtobufエンコードメッセージ（CosmWasm 2.0以降）。 |
+| **injective-test-tube** | CosmWasmコントラクトを実際のモジュール動作（モックではなく）に対してテストするために、Injectiveチェーンロジックをインメモリで実行する統合テストライブラリ。 |
+| **WASMx** | ガバナンスプロポーザルを通じたメインネットへのコードアップロードやパーミッション管理を含む、CosmWasmコントラクトデプロイメントを管理するInjectiveのモジュール。 |
+
+## 開発を始める
+
+<Columns cols={2}>
+  <Card
+    title="初めてのCosmWasmスマートコントラクト"
+    href="/developers-cosmwasm/smart-contracts/your-first-smart-contract"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="">
+    Rustベースの初めてのCosmWasmコントラクトの作成、コンパイル、テスト、デプロイ、操作に関する初心者向けの完全ガイド。
+  </Card>
+  <Card
+    title="ローカル開発ガイド"
+    href="/developers-cosmwasm/local-development-guide/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="">
+    ローカルInjectiveノードのセットアップ、rust-optimizerを使用したCW20コントラクトのコンパイル、迅速な反復とテストのためのローカルネットワークへのデプロイ。
+  </Card>
+  <Card
+    title="メインネットデプロイガイド"
+    href="/developers-cosmwasm/mainnet-deployment-guide/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="">
+    プロポーザルの提出、インスタンス化パーミッション、コントラクトマイグレーションを含むInjective Mainnetへのコントラクトアップロードのガバナンスプロセス。
+  </Card>
+  <Card
+    title="Injectiveモジュールの使用"
+    href="/developers-cosmwasm/cosmwasm-any/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="">
+    CosmWasmコントラクトからInjectiveのネイティブモジュール（Exchange、Oracle、TokenFactory）と連携するためのAnyメッセージとクエリの使用方法。
+  </Card>
+</Columns>
+
+## その他のリソース
+
+- **[CW20 Adapter](/developers-cosmwasm/cw20-adapter/)** —
+  CW20トークンをInjectiveのネイティブBankモジュールおよびExchangeにブリッジするAdapterコントラクトの技術ドキュメント。
+- **[Injective Test Tube](/developers-cosmwasm/injective-test-tube/)** —
+  InjectiveチェーンロジックをインメモリでCosmWasmテストに対して実行する統合テストフレームワーク。
+- **[スマートコントラクトの例](/developers-cosmwasm/smart-contracts/)** —
+  Injective Name Service、Neptune Service、CW20からマーケットオーダーへのワークフローを含むリファレンス実装。

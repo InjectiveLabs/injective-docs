@@ -1,0 +1,279 @@
+---
+title: ローカル開発
+description: ローカルInjectiveネットワークでのCW20スマートコントラクトのデプロイガイド
+---
+
+このガイドでは、コンピュータ上で動作するローカルInjectiveネットワークに`cw20`スマートコントラクトをデプロイする方法を説明します。
+
+CosmWasmの[仕様とコントラクトのコレクション](https://github.com/CosmWasm/cw-plus)から`cw20-base`コントラクトを使用します。`cw20-base`は`cw20`互換コントラクトの基本実装で、カスタムコントラクトにインポートして構築できます。cw20仕様とすべてのExtensionの完全な実装が含まれています。`cw20-base`はそのままデプロイするか、他のコントラクトからインポートして使用できます。
+
+### 前提条件
+
+以下の手順に従ってGo、Rust、その他のCosmWasm依存関係をインストールしてください：
+
+1. [Go](https://docs.cosmwasm.com/docs/getting-started/installation#go)
+2. [Rust](https://docs.cosmwasm.com/docs/getting-started/installation#rust)
+
+開始前に、[`rustup`](https://rustup.rs/)と最新バージョンの`rustc`および`cargo`がインストールされていることを確認してください。現在、Rust v1.58.1以降でテストしています。
+
+また、`wasm32-unknown-unknown`ターゲットと`cargo-generate` Rustクレートもインストールする必要があります。
+
+以下のコマンドでバージョンを確認できます：
+
+```bash
+rustc --version
+cargo --version
+rustup target list --installed
+# wasm32が上記に表示されない場合、以下を実行
+rustup target add wasm32-unknown-unknown
+# cargo-generateをインストールするには、以下を実行
+cargo install cargo-generate
+```
+
+### injectived
+
+`injectived`がローカルにインストールされていることを確認してください。[injectivedのインストール](/developers/injectived/install/)ガイドに従って`injectived`とその他の前提条件をローカルで実行できるようにしてください。
+
+`injectived`をインストールしたら、[ローカルチェーンインスタンスを起動](/developers/injectived/install/#start-injectived)してください。
+
+### CosmWasmコントラクトのコンパイル
+
+このステップでは、すべてのCW本番テンプレートコントラクトを取得し、[CosmWasm Rust Optimizer](https://github.com/CosmWasm/rust-optimizer)のDockerイメージ（複数コントラクト用の`workspace-optimizer`）を使用してコンパイルします。最新バージョンは[こちら](https://hub.docker.com/r/cosmwasm/workspace-optimizer/tags)（x86）または[こちら](https://hub.docker.com/r/cosmwasm/workspace-optimizer-arm64/tags)（ARM）を確認してください。このプロセスには時間とCPUリソースが必要です。
+
+```bash
+git clone https://github.com/CosmWasm/cw-plus
+cd cw-plus
+```
+
+ARM以外（非Apple Silicon）のデバイス：
+
+```bash
+docker run --rm -v "$(pwd)":/code \
+--mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+cosmwasm/workspace-optimizer:0.12.12
+```
+
+Apple Siliconデバイス（M1、M2など）の場合：
+
+```bash
+docker run --rm -v "$(pwd)":/code \
+--mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+cosmwasm/workspace-optimizer-arm64:0.12.12
+```
+
+Dockerスクリプトはリポジトリ内のすべてのCWコントラクトをビルドおよび最適化し、コンパイル済みコントラクトは`artifacts`ディレクトリに配置されます。これで`cw20_base.wasm`コントラクト（ARMデバイスでコンパイルした場合は`cw20_base-aarch64.wasm`）をデプロイできます。
+
+### CosmWasmコントラクトのチェーンへのアップロード
+
+```bash
+# CosmWasm/cw-plusリポジトリ内で
+yes 12345678 | injectived tx wasm store artifacts/cw20_base.wasm --from=genesis --chain-id="injective-1" --yes --gas-prices=500000000inj --gas=20000000
+```
+
+**出力：**
+
+```
+code: 0
+codespace: ""
+data: ""
+events: []
+gas_used: "0"
+gas_wanted: "0"
+height: "0"
+info: ""
+logs: []
+raw_log: '[]'
+timestamp: ""
+tx: null
+txhash: 4CFB63A47570C4CFBE8E669273B26BEF6EAFF922C07480CA42180C52219CE784
+```
+
+次に`txhash`でトランザクションをクエリして、コントラクトが正常にデプロイされたことを確認します。
+
+```bash
+injectived query tx 4CFB63A47570C4CFBE8E669273B26BEF6EAFF922C07480CA42180C52219CE784
+```
+
+**出力：**
+
+```bash
+code: 0
+codespace: ""
+data: 0A460A1E2F636F736D7761736D2E7761736D2E76312E4D736753746F7265436F64651224080112205F8201CF5E2D7E6C15DB11ADF03D62DDDDC92B8D4FAE98C4F3C1C37F378E15D9
+...
+```
+
+出力を詳しく見ると、コントラクトの`code_id`が1であることがわかります。
+
+コントラクトコードはアップロードしましたが、まだインスタンス化する必要があります。
+
+### コントラクトのインスタンス化
+
+コントラクトをインスタンス化する前に、CW-20コントラクトの`instantiate`関数シグネチャを確認しましょう。
+
+```rust
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn instantiate(
+    mut deps: DepsMut,
+    _env: Env,
+    _info: MessageInfo,
+    msg: InstantiateMsg,
+) -> Result<Response, ContractError> {
+```
+
+特に、トークン名、シンボル、デシマル、その他の詳細を含む`InstantiateMsg`パラメータに注目してください。
+
+```rust
+#[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq)]
+pub struct InstantiateMsg {
+    pub name: String,
+    pub symbol: String,
+    pub decimals: u8,
+    pub initial_balances: Vec<Cw20Coin>,
+    pub mint: Option<MinterResponse>,
+    pub marketing: Option<InstantiateMarketingInfo>,
+}
+```
+
+コントラクトのインスタンス化の最初のステップは、初期CW20トークン割り当てを受け取るアドレスを選択することです。この場合、キーがすでにセットアップされているgenesisアドレスを使用できますが、新しいアドレスとキーを生成しても構いません。
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+選択したアドレスのプライベートキーを持っていることを確認してください。そうでないと、そのアドレスからのトークン転送をテストできません。また、選択したアドレスはチェーン上の有効なアドレス（過去に資金を受け取ったことがある）である必要があり、コントラクト実行時のガス支払い用の残高が必要です。
+</Callout>
+
+genesisアドレスを確認するには：
+
+```bash
+yes 12345678 | injectived keys show genesis
+```
+
+**出力：**
+
+```bash
+- name: genesis
+  type: local
+  address: inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3
+  pubkey: '{"@type":"/injective.crypto.v1beta1.ethsecp256k1.PubKey","key":"ArtVkg9feLXjD4p6XRtWxVpvJUDhrcqk/5XYLsQI4slb"}'
+  mnemonic: ""
+```
+
+`code_id` `1`とJSONエンコードされた初期化引数（選択したアドレス付き）およびlabelを指定してCLIコマンドを実行し、コントラクトをインスタンス化します：
+
+```bash
+CODE_ID=1
+INIT='{"name":"Albcoin","symbol":"ALB","decimals":6,"initial_balances":[{"address":"inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3","amount":"69420"}],"mint":{"minter":"inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3"},"marketing":{}}'
+yes 12345678 | injectived tx wasm instantiate $CODE_ID $INIT --label="Albcoin Token" --from=genesis --chain-id="injective-1" --yes --gas-prices=500000000inj --gas=20000000 --no-admin
+```
+
+インスタンス化されたコントラクトのアドレスは`http://localhost:10337/swagger/#/Query/ContractsByCode`で取得できます。
+
+コントラクト情報のメタデータは`http://localhost:10337/swagger/#/Query/ContractInfo`またはCLIクエリで取得できます。
+
+```bash
+CONTRACT=$(injectived query wasm list-contract-by-code $CODE_ID --output json | jq -r '.contracts[-1]')
+injectived query wasm contract $CONTRACT
+```
+
+**出力：**
+
+```bash
+injectived query wasm contract $CONTRACT
+address: inj14hj2tavq8fpesdwxxcu44rty3hh90vhujaxlnz
+contract_info:
+  admin: ""
+  code_id: "1"
+  created:
+    block_height: "95"
+    tx_index: "0"
+  creator: inj10rdsxdgr8l8s0gvu8rynhu22nnxkfytg58cwm8
+  extension: null
+  ibc_port_id: ""
+  label: Albcoin Token
+```
+
+### コントラクトのクエリ
+
+コントラクトの全状態は以下でクエリできます：
+
+```bash
+injectived query wasm contract-state all $CONTRACT
+```
+
+**出力：**
+
+```bash
+models:
+- key: 000762616C616E6365696E6A31306366793565367174327A793535713277327578327675713836327A63796634666D66706A33
+  value: IjY5NDIwIg==
+- key: 636F6E74726163745F696E666F
+  value: eyJjb250cmFjdCI6ImNyYXRlcy5pbzpjdzIwLWJhc2UiLCJ2ZXJzaW9uIjoiMS4wLjEifQ==
+- key: 6D61726B6574696E675F696E666F
+  value: eyJwcm9qZWN0IjpudWxsLCJkZXNjcmlwdGlvbiI6bnVsbCwibG9nbyI6bnVsbCwibWFya2V0aW5nIjpudWxsfQ==
+- key: 746F6B656E5F696E666F
+  value: eyJuYW1lIjoiQWxiY29pbiIsInN5bWJvbCI6IkFMQiIsImRlY2ltYWxzIjo2LCJ0b3RhbF9zdXBwbHkiOiI2OTQyMCIsIm1pbnQiOnsibWludGVyIjoiaW5qMTBjZnk1ZTZxdDJ6eTU1cTJ3MnV4MnZ1cTg2MnpjeWY0Zm1mcGozIiwiY2FwIjpudWxsfX0=
+pagination:
+  next_key: null
+  total: "0"
+```
+
+個々のユーザーのトークン残高は以下でクエリできます：
+
+```bash
+BALANCE_QUERY='{"balance": {"address": "inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3"}}'
+injectived query wasm contract-state smart $CONTRACT "$BALANCE_QUERY" --output json
+```
+
+**出力：**
+
+```bash
+{"data":{"balance":"69420"}}
+```
+
+### トークンの転送
+
+```bash
+TRANSFER='{"transfer":{"recipient":"inj1dzqd00lfd4y4qy2pxa0dsdwzfnmsu27hgttswz","amount":"420"}}'
+yes 12345678 | injectived tx wasm execute $CONTRACT "$TRANSFER" --from genesis --chain-id="injective-1" --yes --gas-prices=500000000inj --gas=20000000
+```
+
+残高転送が成功したことを確認します：
+
+```bash
+# 最初のアドレスの残高クエリ
+BALANCE_QUERY='{"balance": {"address": "inj10cfy5e6qt2zy55q2w2ux2vuq862zcyf4fmfpj3"}}'
+injectived query wasm contract-state smart $CONTRACT "$BALANCE_QUERY" --output json
+```
+
+**出力：**
+
+```bash
+{"data":{"balance":"69000"}}
+```
+
+受信者が資金を受け取ったことを確認します：
+
+```bash
+# 受信者アドレスの残高クエリ
+BALANCE_QUERY='{"balance": {"address": "inj1dzqd00lfd4y4qy2pxa0dsdwzfnmsu27hgttswz"}}'
+injectived query wasm contract-state smart $CONTRACT "$BALANCE_QUERY" --output json
+```
+
+**出力：**
+
+```bash
+{"data":{"balance":"420"}}
+```
+
+## テストネット開発
+
+`local`と`testnet`の開発/デプロイの主な違いは以下の通りです：
+
+* [Injective Testnet Faucet](https://testnet.faucet.injective.network)を使用してテストネット資金をアドレスに取得できます
+* [Injective Testnet Explorer](https://testnet.explorer.injective.network/smart-contracts/code/)を使用してトランザクションをクエリし詳細を確認できます
+* `injectived`使用時にnodeフラグでテストネットRPCを指定する必要があります：`--node=https://testnet.sentry.tm.injective.network:443`
+* `chainId`として`injective-1`の代わりに`injective-888`を使用します：`--chain-id="injective-888"`
+* [Injective Testnet Explorer](https://testnet.explorer.injective.network/smart-contracts/code/)を使用して、アップロードされたスマートコントラクトの`codeId`の確認やインスタンス化されたスマートコントラクトの検索ができます
+
+`injectived`の使用方法と`testnet`に対するクエリ/トランザクション送信については、[injectivedの使用](/developers/injectived/use/)ガイドを参照してください。
