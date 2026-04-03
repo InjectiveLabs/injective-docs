@@ -6,7 +6,7 @@ title: Bank Precompile
 
 Bank Precompileは、固定アドレス`0x0000000000000000000000000000000000000064`に存在するシステムスマートコントラクトです。
 
-EVM開発者に、Injectiveの**bankモジュール**（`x/bank`）と直接インタラクションするためのgas効率が良くネイティブな手段を提供します。これにより、ERC-20トークンを効果的にオンチェーンに導入できます。Bank precompileを使用するERC-20コントラクトは、オンチェーンで`erc20:0x...` denomとして表現されます。技術的には、トークンはオンチェーンにのみ存在し、EVMはチェーン状態へのビューを提供するだけで、別のコピーを維持しません。2つのトークンバージョンの切り替えにユーザーアクションが必要な従来のブリッジとは異なり、Bank precompileはオンチェーンのbank denomまたはERC-20 `transfer()`メソッドのいずれかを使用した転送に対してリアルタイムのデュアル環境反映を提供します。
+EVM開発者に、Injectiveの**bankモジュール**（`x/bank`）と直接連携するための、gas効率の高いネイティブな手段を提供します。これにより、ERC-20トークンを効果的にオンチェーンに導入できます。Bank precompileを使用するERC-20コントラクトは、オンチェーンで`erc20:0x...` denomとして表現されます。技術的には、トークンはオンチェーンにのみ存在し、EVMはチェーン状態へのビューを提供するだけで、別のコピーを維持しません。2つのトークンバージョンの切り替えにユーザーアクションが必要な従来のブリッジとは異なり、Bank precompileはオンチェーンのbank denomまたはERC-20 `transfer()`メソッドのいずれかを使用した転送に対してリアルタイムのデュアル環境反映を提供します。
 
 Bank precompileに基づくERC-20実装の一連のコントラクト、precompileインターフェース、抽象コントラクトが[InjectiveのSolidity Contractsリポジトリ](https://github.com/InjectiveLabs/solidity-contracts)で利用可能です。主要なコントラクトは以下の通りです：
 
@@ -44,6 +44,6 @@ interface IBankModule {
 
 ## ビルドを開始する
 
-Bank、Exchange、Staking precompileを使用したコントラクトの構築方法を示すデモを用意しました。これらの例では、最も一般的なEthereum開発フレームワークである**Foundry**を使用してInjective EVMとインタラクションする方法も示しています。
+Bank、Exchange、Staking precompileを使用したコントラクトの構築方法を示すデモを用意しました。これらの例では、最も一般的なEthereum開発フレームワークである**Foundry**を使用してInjective EVMと連携する方法も示しています。
 
 Bank precompileのデモは[こちら](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/erc20)から、対応するREADMEに従ってください。

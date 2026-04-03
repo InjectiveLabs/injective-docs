@@ -26,7 +26,7 @@ Foundryのインストールには他のオプションもあります。
 ウォレットと、テストネットINJで資金提供されたアカウントが必要です。
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-EVMテストネット資金は [Injectiveテストネットfaucet](https://testnet.faucet.injective.network/) からリクエストできます。
+EVMテストネット資金は [Injectiveテストネットfaucet](https://testnet.faucet.injective.network/) から取得できます。
 </Callout>
 
 アカウント作成後、秘密鍵をアクセス可能な場所にコピーしておいてください。このチュートリアルを完了するために必要です。
@@ -67,7 +67,7 @@ foundry-inj/
 ```
 
 `foundry.toml` ファイルは、Injective EVMテストネットに接続するよう事前に設定されています。
-続行する前に、Injectiveテストネットアカウントの秘密鍵を提供するだけです。
+続行する前に、Injectiveテストネットアカウントの秘密鍵を設定してください。
 
 以下のコマンドを入力して秘密鍵をインポートし、`injTest` という名前のアカウントに保存します：
 
@@ -142,7 +142,7 @@ foundry-inj/
 
 `Counter.json` ファイル (`out/Counter.sol/Counter.json`) を開きます。
 その中に、`abi` と `bytecode` フィールドを含むコンパイラ出力が表示されます。
-これらのアーティファクトは、後のすべてのステップ（テスト、デプロイ、検証、インタラクション）で使用されます。
+これらのアーティファクトは、後のすべてのステップ（テスト、デプロイ、検証、操作）で使用されます。
 
 ## 次のステップ
 

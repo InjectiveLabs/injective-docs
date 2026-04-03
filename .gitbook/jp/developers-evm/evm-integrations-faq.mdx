@@ -17,7 +17,7 @@ A: はい。opcode実装において同等性を持っています。
 
 **Injective EVMはERC20、ERC721、ERC1155をサポートしていますか？**
 
-A: はい。Solidityベースのスマートコントラクト標準はすべて動作するはずです。
+A: はい。Solidityベースのスマートコントラクト標準はすべて動作します。
 これらは標準的なEVM以上の特別な機能を*必要としない*ためです。
 
 補足：ファンジブルトークンを実装する場合、
@@ -25,7 +25,7 @@ ERC20およびその拡張であるその他のトークンについては、
 MultiVM Token Standard (MTS) トークンとして実装することを強く推奨します。
 これにより、同じトークンがInjective EVM上だけでなく、
 Injectiveネイティブ（特にCosmos Denomとして）でもファンジブルトークンとして機能できます。
-将来InjectiveがOther VMを追加した場合、MTSトークンはそれらでも動作します。
+将来Injectiveが他のVMを追加した場合、MTSトークンはそれらでも動作します。
 MTSの詳細：
 [一般記事](https://injective.com/blog/multivm-token-standard-wrapped-inj)、
 [テクニカルリファレンス](/developers-evm/multivm-token-standard)。
@@ -59,7 +59,7 @@ A: Injectiveの[EVM precompile](/developers-evm/precompiles)は、
 
 後者の問題に対処するため、InjectiveのprecompileをサポートするFoundryツールのフォーク版を作成しました（MTSに必要な`BankERC20.sol`用のBank precompileから開始）。
 SolidityテストやデプロイメントスクリプトをFoundryプロジェクトとして使用する場合、
-`forge`/`cast`がローカルシミュレーションを実行できるようにこれが必要です。
+`forge`/`cast`がローカルシミュレーションを実行できるようにこのフォーク版が必要です。
 
 x86_64 LinuxおよびmacOS ARM64用のプリビルドバイナリを含む最新リリースは、
 [github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)で確認できます。

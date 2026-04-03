@@ -2,7 +2,7 @@
 title: Exchange Precompile
 ---
 
-Exchange Precompileは、固定アドレス`0x0000000000000000000000000000000000000065`に存在するシステムスマートコントラクトです。Solidity開発者に、Injectiveチェーンのexchangeモジュールと直接インタラクションするためのgas効率が良くネイティブな手段を提供します。このprecompileを活用することで、スマートコントラクトは以下のようなexchange関連のアクションをシームレスに実行できます：
+Exchange Precompileは、固定アドレス`0x0000000000000000000000000000000000000065`に存在するシステムスマートコントラクトです。Solidity開発者に、Injectiveチェーンのexchangeモジュールと直接連携するための、gas効率の高いネイティブな手段を提供します。このprecompileを活用することで、スマートコントラクトは以下のようなexchange関連のアクションをシームレスに実行できます：
 
 * サブアカウントへの資金の入金と引き出し。
 * スポットおよびデリバティブ注文の作成またはキャンセル。
@@ -64,7 +64,7 @@ exchange.allowance(grantee, granter, msgType);
 
 以下の`ExchangeDemo`コントラクトは、スマートコントラクトが直接アクセスメソッドを使用する方法を示しています。資金の入金、資金の引き出し、デリバティブ指値注文の作成、サブアカウントポジションのクエリなどの基本的なexchangeアクションを、すべて自身のサブアカウントと資金を使用して実行します。
 
-`Exchange.sol`および`ExchangeTypes.sol`ファイルには、precompileとインタラクションするために必要なインターフェース定義とデータ構造が含まれています。これらは通常、公式のInjective Solidityコントラクトリポジトリで利用可能であるか、プロジェクトの依存関係として含めることができます。
+`Exchange.sol`および`ExchangeTypes.sol`ファイルには、precompileと連携するために必要なインターフェース定義とデータ構造が含まれています。これらは通常、公式のInjective Solidityコントラクトリポジトリで利用可能であるか、プロジェクトの依存関係として含めることができます。
 
 ```solidity
 // SPDX-License-Identifier: MIT  

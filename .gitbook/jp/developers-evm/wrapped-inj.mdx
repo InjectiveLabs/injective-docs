@@ -28,7 +28,7 @@ Ethereumに詳しい方は、これがwrapped Ether (wETH) と同じように聞
 
 しかし、InjectiveネットワークはMultiVMテクニカルアーキテクチャで設計されていることに注意してください。
 これは、wINJがwETHのように*標準的な*ERC20実装を使用して実装された場合、
-wINJはInjectiveネットワークのEVM以外の部分（例：Cosmosトランザクション）とインタラクションする際に**アクセスできない**ことを意味します。
+wINJはInjectiveネットワークのEVM以外の部分（例：Cosmosトランザクション）と連携する際に**アクセスできない**ことを意味します。
 
 これはまさに、Injectiveの
 [MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard)
@@ -43,8 +43,8 @@ contract WINJ9 is BankERC20, IWINJ9 {
 
 ERC20実装で一般的なように、スマートコントラクト内に`uint256`値として残高を保存する代わりに、
 wINJスマートコントラクトは`Bank` precompileを使用します。
-マジックは
-[`BankERC20`の`_update`関数](https://github.com/InjectiveLabs/solidity-contracts/blob/b152129a/src/BankERC20.sol#L50-L81)で起こり、
+処理の中核は
+[`BankERC20`の`_update`関数](https://github.com/InjectiveLabs/solidity-contracts/blob/b152129a/src/BankERC20.sol#L50-L81)で行われ、
 `Bank`モジュールの`mint`、`burn`、または`transfer`関数が
 [EVM precompile](/developers-evm/bank-precompile "InjectiveのネイティブBankモジュール用EVM precompile")を介して呼び出されます。
 
