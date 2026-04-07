@@ -1,6 +1,9 @@
 ---
 title: Injective MCP Server
-description: Connect AI assistants to Injective using the Model Context Protocol (MCP)
+description: >-
+    Connect AI agents and AI assistants to Injective queries and transactions over MCP
+    for natural language operations on the Injective network.
+updatedAt: "2026-03-26"
 ---
 
 The Injective MCP server provides full trading capabilities on Injective.
@@ -94,9 +97,34 @@ as the AI can help you express your trading intent in spoken language.
   </Tab>
 </Tabs>
 
+<Warning>
+  You **must** have NodeJs available on your `PATH`.
+  You can verify this using the following command (Linux/ Mac):
+
+  ```shell
+  which node
+  ```
+
+  This should output the absolute path at which the NodeJs binary can be found,
+  for example: `/Users/bguiz/.nvm/versions/node/v22.16.0/bin/node`.
+
+  Additionally you **must** have a recent version of NodeJs installed.
+  You can verify this using the following command:
+
+  ```shell
+  node -v
+  ```
+
+  The version number that is output should be newer than `v22`,
+  for example: `v22.16.0`.
+  If not, use [`nvm`](https://github.com/nvm-sh/nvm) (Linux/ Mac)
+  or [`nvm-windows`](https://github.com/coreybutler/nvm-windows) (Windows) to manage your installation.
+</Warning>
+
 ## Using the MCP server
 
 Once connected, you can ask your AI tool to perform queries and transactions on Injective.
 
 A list of all the available tools is available at
-[`github.com/InjectiveLabs/mcp-server`](https://github.com/InjectiveLabs/mcp-server?tab=readme-ov-file#tools).
+[`github.com/InjectiveLabs/mcp-server`](https://github.com/InjectiveLabs/mcp-server#tools).
+Alternatively, your MCP client can list all available tools and their descriptions.

@@ -3,9 +3,35 @@ description: >-
   The goal of this section is to help developers build their projects on
   Injective
 title: Developers
+updatedAt: "2026-03-04"
 ---
 
-Injective is the only blockchain specifically designed for cross-chain trading, derivatives, DeFi, and Web3 applications. Positioned to become the premier global destination for DeFi ecosystem builders, Injective offers a multitude of advantages for developers, empowering them to build more powerful applications in less time.
+Injective is the only blockchain specifically designed for cross-chain trading, derivatives, DeFi, and Web3 applications.
+Positioned to become the premier global destination for DeFi ecosystem builders,
+Injective offers a multitude of advantages for developers, empowering them to build more powerful applications in less time.
+
+This section provides comprehensive guides, tools, and resources for developers building on Injective.
+Whether you're creating smart contracts in Solidity or CosmWasm, developing decentralized exchanges,
+integrating with native modules, or building full-stack dApps,
+this documentation will help you get started quickly and leverage Injective's unique DeFi-focused infrastructure.
+
+Injective combines the best of both Ethereum and Cosmos ecosystems by offering dual smart contract environments:
+EVM for Solidity developers and CosmWasm for Rust developers—while providing native DeFi modules
+that eliminate the need to rebuild core financial infrastructure from scratch.
+With ultra-fast 650ms block times, $0.0003 transaction costs, MEV-resistant infrastructure,
+and seamless interoperability with 23+ networks including Ethereum and Solana,
+developers can build sophisticated cross-chain financial applications without compromising on performance,
+security, or user experience.
+
+## Key Concepts
+
+| Term | Description |
+|------|-------------|
+| **injectived** | The command-line interface and node daemon that connects to and interacts with the Injective blockchain. |
+| **Denom** | The native asset representation format on Injective (e.g., `factory/{creator}/{subdenom}` or `peggy{ethereumAddress}`). |
+| **Trading Account** | An isolated subaccount that decouples funds from the Bank module for executing trades. One address can have unlimited trading accounts. |
+| **Token Factory** | A native module allowing users and contracts to create new native tokens and swap between native tokens and CW20 tokens. |
+| **Indexer API** | A high-performance data indexing service that provides fast queries, streaming updates, and historical data from the chain. |
 
 ## Why Build on Injective?
 
@@ -51,7 +77,7 @@ Injective is the only blockchain specifically designed for cross-chain trading, 
   </Card>
 </Columns>
 
-## What Are You Interested In?
+## Developer Paths
 
 <Columns cols={2}>
   <Card
@@ -61,16 +87,16 @@ Injective is the only blockchain specifically designed for cross-chain trading, 
     cta="Click here"
     icon="panel-left-close"
     img="/img/dev-hero.png">
-    Build smart contracts and dApps on Injective's Ethereum Virtual Machine
+    Deploy Solidity smart contracts and build dApps using familiar Ethereum tooling on Injective's EVM-compatible execution layer.
   </Card>
   <Card
-    title="Cosmwasm"
+    title="CosmWasm"
     href="/developers-cosmwasm/"
     arrow="true"
     cta="Click here"
     icon="panel-left-close"
     img="/img/launch-token-hero.png">
-    Build smart contracts and dApps on Injective's CosmWasm module
+    Build secure, efficient smart contracts using Rust and the CosmWasm framework with enhanced performance and safety guarantees.
   </Card>
   <Card
     title="DeFi"
@@ -79,7 +105,7 @@ Injective is the only blockchain specifically designed for cross-chain trading, 
     cta="Click here"
     icon="panel-left-close"
     img="/img/trader-hero.png">
-    Build decentralized finance applications, for example a DEX like Helix
+    Leverage Injective's native financial primitives to build DEXs, derivatives platforms, lending protocols, and other DeFi applications.
   </Card>
   <Card
     title="Native Modules"
@@ -88,6 +114,38 @@ Injective is the only blockchain specifically designed for cross-chain trading, 
     cta="Click here"
     icon="panel-left-close"
     img="/img/trader-hero.png">
-    Build using Injective's native modules. (low-level)
+    Access low-level chain functionality including the exchange, oracle, auction, and token factory modules for advanced use cases.
+  </Card>
+</Columns>
+
+## Additional Resources
+
+<Columns cols={3}>
+  <Card
+    title="Building dApps"
+    href="/developers/dapps/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    Step-by-step guides for configuring UI frameworks (React, Nuxt, Webpack) and building example dApps on Injective.
+  </Card>
+  <Card
+    title="Technical Concepts"
+    href="/developers/concepts/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/code-hero.png">
+    Deep dives into core concepts like trading accounts, token standards, gRPC, and the Indexer API architecture.
+  </Card>
+  <Card
+    title="injectived CLI"
+    href="/developers/injectived/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    Install, configure, and use the Injective node daemon for chain interaction, validator operations, and advanced commands.
   </Card>
 </Columns>

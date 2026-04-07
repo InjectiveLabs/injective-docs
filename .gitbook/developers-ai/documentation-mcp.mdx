@@ -1,12 +1,16 @@
 ---
 title: Injective Documentation MCP Server
-description: Connect AI assistants to Injective documentation using the Model Context Protocol (MCP)
+description: >-
+    Connect AI agents and AI assistants to Injective documentation over MCP
+    for context aware and up-to-date access to Injective's knowledge base.
+updatedAt: "2026-03-10"
 ---
 
 The Injective documentation provides a Model Context Protocol (MCP) server that allows AI assistants like
 Claude, Cursor, and other MCP-compatible tools to **search and retrieve information** from the Injective docs.
 
-This is powerful not only for documentation search, but also useful when **used in combination** with other MCP servers and with AI agents.
+This is powerful not only for documentation search, but also useful when **used in combination**
+with other MCP servers and with AI agents.
 For example, you could add vibe code Injective applications by connecting your agentic development tools, such as Cursor,
 using this MCP server to **add Injective-specific knowledge** to the LLM's general-purpose software writing abilities.
 Details on how to configure your developer tools are included below.
@@ -30,7 +34,8 @@ When you connect an AI assistant to the Injective MCP server, it can:
 - Answer questions with up-to-date information
 - Provide direct links to relevant documentation pages
 
-This is particularly useful when building on Injective, as the AI can help you find the right documentation for your specific use case.
+This is particularly useful when building on Injective, as the AI can help you find the right documentation
+for your specific use case.
 
 ## MCP server details
 
@@ -115,7 +120,7 @@ The assistant will automatically use the `SearchInjectiveDocs` tool to find rele
 **Example prompts:**
 
 - "How do I create a wallet on Injective?"
-- "Show me how to deploy a CosmWasm smart contract"
+- "Show me how to deploy an EVM smart contract"
 - "What are the network endpoints for Injective mainnet?"
 - "How do I use the Token Factory module?"
 - "Explain how margin trading works on Injective"
@@ -137,8 +142,10 @@ Searches across the Injective documentation to find relevant information.
 **Returns:**
 
 Contextual content with titles and direct links to documentation pages.
-The tool performs a semantic search across the entire Injective documentation corpus, matching your query against page content, headings, and code examples.
-Results are ranked by relevance and returned with extracted snippets that best answer your query, along with source URLs for further reading.
+The tool performs a semantic search across the entire Injective documentation corpus,
+matching your query against page content, headings, and code examples.
+Results are ranked by relevance and returned with extracted snippets that best answer your query,
+along with source URLs for further reading.
 
 **Example:**
 

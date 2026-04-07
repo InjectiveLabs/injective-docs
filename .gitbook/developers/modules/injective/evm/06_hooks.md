@@ -1,3 +1,7 @@
+---
+updatedAt: "2025-10-29"
+---
+
 # Hooks
 
 The `x/evm` module implements an `EvmHooks` interface that extend and customize the `Tx` processing logic externally.

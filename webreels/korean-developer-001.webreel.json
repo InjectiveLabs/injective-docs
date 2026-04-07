@@ -1,0 +1,56 @@
+{
+  "$schema": "https://webreel.dev/schema/v1.json",
+  "outDir": "./webreels",
+  "defaultDelay": 10,
+  "videos": {
+    "korean-developer-004": {
+      "url": "https://docs.injective.network/developers/",
+      "viewport": { "width": 1920, "height": 1080 },
+      "waitFor": "#localization-select-trigger",
+      "steps": [
+        // { "action": "wait", "selector": "button[aria-label='Toggle dark mode']", "timeout": 500 },
+        // { "action": "click", "selector": "button[aria-label='Toggle dark mode']", "delay": 0 },
+        { "action": "hover", "selector": "button#localization-select-trigger", "within": "#navbar" },
+        { "action": "click", "selector": "button#localization-select-trigger", "within": "#navbar" },
+        { "action": "pause", "ms": 10 },
+        { "action": "hover", "text": "한국어", "within": "#localization-select-content" },
+        { "action": "click", "text": "한국어", "within": "#localization-select-content" },
+        { "action": "pause", "ms": 600 },
+        { "action": "hover", "selector": "a[href='/ko/developers']" },
+        { "action": "click", "selector": "a[href='/ko/developers']" },
+        { "action": "hover", "text": "왜 Injective에서 구축해야 할까요?" },
+        { "action": "scroll", "y": 300, "delay": 10 },
+        { "action": "scroll", "y": 100, "delay": 40 },
+        // { "action": "click", "selector": "a[href='/ko/developers']", "within": "#navbar-transition" },
+
+        // { "action": "hover", "selector": "a[href='/developers-ai']", "within": "#navbar-transition" },
+        // { "action": "click", "selector": "a[href='/developers-ai']", "within": "#navigation-items" },
+        // { "action": "hover", "text": "Why build using generative AI tools on Injective?", "within": "#content" },
+        // { "action": "scroll", "y": 50, "delay": 10 },
+        // { "action": "scroll", "y": 50, "delay": 40 },
+        // { "action": "hover", "text": "What types of generative AI tools are available?", "within": "#content" },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "scroll", "y": 200, "delay": 60 },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "scroll", "y": 200, "delay": 60 },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "scroll", "y": 200, "delay": 50 },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "scroll", "y": 200, "delay": 60 },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "hover", "text": "Which types of generative AI tools will work when developing on Injective?", "within": "#content" },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "scroll", "y": 100, "delay": 30 },
+        // { "action": "hover", "selector": "#skills", "within": "#content" },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "scroll", "y": 200, "delay": 60 },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "scroll", "y": 200, "delay": 60 },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "hover", "selector": "#mcp-servers", "within": "#content" },
+        // { "action": "scroll", "y": 100, "delay": 10 },
+        // { "action": "scroll", "y": 200, "delay": 60 }
+      ]
+    }
+  }
+}
