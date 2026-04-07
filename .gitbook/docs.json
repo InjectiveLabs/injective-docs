@@ -1754,6 +1754,20 @@
             "group": "INJECTIVE",
             "pages": [
               "jp/index",
+              {
+                "group": "AI開発者",
+                "icon": "brain",
+                "expanded": false,
+                "pages": [
+                  "ja/developers-ai/index",
+                  "ja/developers-ai/injective-cli-skill",
+                  "ja/developers-ai/injective-evm-developer-skill",
+                  "ja/developers-ai/injective-mcp-servers-skill",
+                  "ja/developers-ai/injective-trading-skills",
+                  "ja/developers-ai/documentation-mcp",
+                  "ja/developers-ai/mcp"
+                ]
+              },
               "jp/faq",
               "jp/glossary",
               "jp/references"

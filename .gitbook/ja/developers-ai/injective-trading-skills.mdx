@@ -1,0 +1,69 @@
+---
+title: Injective Trading Skills
+description: AIエンジニアリングハーネスでInjective Trading Agent Skillのセットを使用する
+---
+
+**Injective Trading Account** - 任意のInjectiveウォレットアドレスを分析します。
+すべてのトークンタイプ（INJ、USDT、IBCアセット、Peggy ERC-20）のbank残高をクエリし、
+トレーディングsubaccount残高を確認し、未実現P&Lを含むオープンなperpetualポジションを表示します。
+ポートフォリオモニタリング、ポジション管理、プレトレードチェックに役立ちます。
+Injective MCP serverの接続が必要です。
+
+**Injective Trading Autosign** - セッションベースの自動トレーディングのためにInjectiveでAuthZデリゲーションを設定します。
+一時的なキーにスコープ付きの期限付き権限を付与し、AIが注文ごとにウォレットポップアップやパスワードプロンプトなしで
+perpetualトレードの発注とクローズを行えるようにします。
+有効にするにはauthz_grant、無効にするにはauthz_revokeを使用します。
+Injective MCP serverの接続が必要です。
+
+**Injective Trading Bridge** - deBridge DLN（高速、クロスチェーン）またはPeggy（Ethereumカノニカルブリッジ）を使用して
+Injectiveとの間でトークンをブリッジします。
+Arbitrum、Ethereum、Base、Polygon、BSC、Avalanche、OptimismからInjectiveへのインバウンドブリッジ、
+およびInjectiveからdeBridge対応チェーンへのアウトバウンドブリッジをサポートします。
+実行前に見積もりを取得してください。
+Injective MCP serverの接続が必要です。
+
+**Injective Trading Chain Analysis** - Injectiveのチェーンレベルのコードとプロトコル仕様を分析します。
+injective-coreからGoソースを読み取り、exchangeモジュールの機能
+（ポジションオフセッティング、清算、マージンティア、ファンディング）を説明し、仕様のギャップを特定します。
+チェーンメカニクスの議論、Injective Goコードのレビュー、プロトコル動作の説明に使用します。
+
+**Injective Trading Market Data** - Injective perpetual futuresマーケットのリアルタイムマーケットデータにアクセスします。
+Oracle価格のクエリ、メタデータ付きのすべてのアクティブマーケットのリスト表示（tick size、最小notional、最大レバレッジ）、
+現在のスプレッドとファンディング情報の取得を行います。
+Injective MCP serverの接続が必要です。
+
+**Injective Trading Staking** - Injectiveのステーキングデリゲーション、報酬、バリデーター情報のクエリと管理を行います。
+Injective LCD/REST APIを通じて、ステーカーアドレス、デリゲーション額、アンボンディングステータス、請求済み報酬を検索します。
+
+**Injective Trading Tokens** - 任意のInjectiveトークンまたはdenomのメタデータを検索します。
+ネイティブトークン（INJ）、Peggy ERC-20ブリッジトークン（USDT、USDC、WETH）、IBCアセット（ATOM、OSMO）、
+TokenFactoryトークン、EVM ERC-20を人間が読めるシンボル、decimals、タイプに解決します。
+アドレス間でのトークン送信やトレーディングsubaccountへの入出金もサポートします。
+Injective MCP serverの接続が必要です。
+
+## インストール
+
+NPX経由でインストール：
+
+```bash
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-account
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-autosign
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-bridge
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-chain-analysis
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-market-data
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-staking
+npx skills add https://github.com/InjectiveLabs/agent-skills \
+    --skill injective-trading-tokens
+```
+
+上記のコマンドにより、すべてのトレーディング関連skillがインストールされます。目的に応じて、一部のskillのみをインストールすることも可能です。
+
+## 使用方法
+
+skillをインストールした後、ハーネスにプロンプトを入力して使用してください。
