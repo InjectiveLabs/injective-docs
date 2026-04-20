@@ -12,9 +12,17 @@ You can also find the hardware requirements for each network in the respective t
 To easily set up a local node, download and run the `setup.sh` script from the [injective-core](https://github.com/InjectiveFoundation/injective-core) repository. Use the script version that matches your installed `injectived` version.
 
 ```bash
-# Replace v1.18.3 with the version matching your injectived binary
+# Replace the version tag with the one matching your injectived binary
 wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.18.3/setup.sh
 chmod +x ./setup.sh # Make the script executable
+./setup.sh
+```
+
+For example, to use the script for v1.17.2:
+
+```bash
+wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.17.2/setup.sh
+chmod +x ./setup.sh
 ./setup.sh
 ```
 

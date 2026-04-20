@@ -12,9 +12,17 @@ updatedAt: "2026-02-26"
 로컬 노드를 쉽게 설정하려면 [injective-core](https://github.com/InjectiveFoundation/injective-core) 저장소에서 `setup.sh` 스크립트를 다운로드하고 실행하세요. 설치된 `injectived` 버전에 맞는 스크립트 버전을 사용하세요.
 
 ```bash
-# v1.18.3을 설치된 injectived 바이너리 버전으로 교체하세요
+# 버전 태그를 설치된 injectived 바이너리 버전으로 교체하세요
 wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.18.3/setup.sh
 chmod +x ./setup.sh # 스크립트를 실행 가능하게 만들기
+./setup.sh
+```
+
+예를 들어, v1.17.2용 스크립트를 사용하려면:
+
+```bash
+wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.17.2/setup.sh
+chmod +x ./setup.sh
 ./setup.sh
 ```
 
