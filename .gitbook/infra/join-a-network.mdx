@@ -9,13 +9,18 @@ You can also find the hardware requirements for each network in the respective t
 
 <Tabs>
 <Tab title="Local Network">
-To easily set up a local node, download and run the `setup.sh` script. This will initialize your local Injective network.
+To easily set up a local node, download and run the `setup.sh` script from the [injective-core](https://github.com/InjectiveFoundation/injective-core) repository. Use the script version that matches your installed `injectived` version.
 
 ```bash
-wget https://raw.githubusercontent.com/InjectiveLabs/injective-chain-releases/master/scripts/setup.sh
+# Replace v1.18.3 with the version matching your injectived binary
+wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.18.3/setup.sh
 chmod +x ./setup.sh # Make the script executable
 ./setup.sh
 ```
+
+<Callout icon="warning" color="#FFA500" iconType="regular">
+The `setup.sh` script in the legacy [injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases) repository is outdated and only compatible with `injectived` v1.14.1. Always use the script from the [InjectiveFoundation/injective-core](https://github.com/InjectiveFoundation/injective-core) repository that corresponds to your chain version.
+</Callout>
 
 Start the node by running:
 
@@ -258,10 +263,11 @@ Node operators should deploy bare metal servers to achieve optimal performance. 
 
 #### Install `injectived` and `peggo`
 
-See the [Injective chain releases repo](https://github.com/InjectiveLabs/injective-chain-releases/releases/) for the most recent releases. Non-validator node operators do not need to install `peggo`.
+See the [Injective core releases](https://github.com/InjectiveFoundation/injective-core/releases) for the most recent releases. Non-validator node operators do not need to install `peggo`.
 
 ```bash
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
+# Replace the URL with the latest release from https://github.com/InjectiveFoundation/injective-core/releases
+wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv peggo /usr/bin
 sudo mv injectived /usr/bin
