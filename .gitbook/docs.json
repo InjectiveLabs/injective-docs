@@ -363,6 +363,7 @@
                   "developers-defi/market-launch",
                   "developers-defi/denom-and-bank",
                   "developers-defi/provider-oracle",
+                  "developers-defi/usdc-stablecoin",
                   {
                     "group": "Injective Trader",
                     "expanded": false,
