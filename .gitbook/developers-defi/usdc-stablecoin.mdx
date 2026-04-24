@@ -1,0 +1,123 @@
+---
+title: USDC on Injective
+description: >-
+  USDC stablecoin contract addresses, CCTP integration details, and testnet faucet
+  information for building with USDC on Injective.
+updatedAt: "2026-04-23"
+---
+
+USDC is available on Injective as a **native stablecoin** through
+[Circle's Cross-Chain Transfer Protocol (CCTP)](https://www.circle.com/cross-chain-transfer-protocol).
+USDC on Injective implements the [MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard),
+which means the same token is accessible across both the EVM and Cosmos protocols on Injective networks, without bridging.
+
+You can use USDC for trading on Injective's on-chain order book, as collateral for derivatives markets,
+for cross-chain transfers via CCTP, and as a settlement currency in DeFi applications built on Injective.
+
+## Contract addresses
+
+<Tabs>
+
+<Tab title="Mainnet" icon="server">
+
+| Contract | Address |
+| --- | --- |
+| USDC | *Coming soon* |
+
+<Info>
+USDC CCTP on Injective Mainnet: *Coming soon*
+</Info>
+
+</Tab>
+
+<Tab title="Testnet" icon="flask-vial">
+
+| Contract | Address |
+| --- | --- |
+| USDC | [`0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d`](https://testnet.blockscout.injective.network/token/0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d) |
+| USDC CCTP `TokenMessengerV2` | [`0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA`](https://testnet.blockscout.injective.network/address/0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA) |
+| USDC CCTP `MessageTransmitterV2` | [`0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275`](https://testnet.blockscout.injective.network/address/0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275) |
+| USDC CCTP `TokenMinterV2` | [`0xb43db544E2c27092c107639Ad201b3dEfAbcF192`](https://testnet.blockscout.injective.network/address/0xb43db544E2c27092c107639Ad201b3dEfAbcF192) |
+| USDC CCTP `MessageV2` | [`0xbaC0179bB358A8936169a63408C8481D582390C4`](https://testnet.blockscout.injective.network/address/0xbaC0179bB358A8936169a63408C8481D582390C4) |
+
+<Info>
+USDC CCTP domain ID for Injective Testnet: `29`
+</Info>
+
+</Tab>
+
+</Tabs>
+
+## Testnet faucets
+
+Use the following faucets to obtain testnet USDC and INJ for development:
+
+| Faucet | Purpose | URL |
+| --- | --- | --- |
+| Circle USDC Faucet | USDC | [`faucet.circle.com`](https://faucet.circle.com/) |
+| Injective Faucet | INJ | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+| Google Cloud Faucet | INJ | [`cloud.google.com/application/web3/faucet/injective/testnet`](https://cloud.google.com/application/web3/faucet/injective/testnet) |
+
+## Frequently asked questions
+
+<Accordion title="What is USDC on Injective?">
+  USDC on Injective is a native deployment of Circle's USD Coin stablecoin.
+  It is backed 1:1 by US dollar reserves held by Circle and is transferred to Injective through the Cross-Chain Transfer Protocol (CCTP).
+  USDC on Injective follows the MultiVM Token Standard (MTS),
+  making it usable across both the EVM and Cosmos protocols of the Injective blockchain network.
+</Accordion>
+
+<Accordion title="Where can I verify the smart contract addresses for USDC, and USDC CCTP?">
+  The information provided above is for your convenience only.
+  You should always consult Circle's documentation as the *canonical source* for smart contract addresses,
+  and USDC CCTP domain IDs.
+
+  References:
+  - [USDC smart contract addresses](https://developers.circle.com/stablecoins/usdc-contract-addresses)
+  - [USDC CCTP smart contract addresses for EVM-compatible blockchains](https://developers.circle.com/cctp/references/contract-addresses)
+</Accordion>
+
+<Accordion title="How do you get USDC on Injective Testnet?">
+  On Injective Testnet, you can obtain Testnet USDC from the [Circle Faucet](https://faucet.circle.com/).
+  You will likely also need to use the [Injective Testnet Faucet](https://testnet.faucet.injective.network/) to obtain Testnet INJ,
+  in order to pay for transactions.
+  You may also use [Circle's CCTP](https://www.circle.com/cross-chain-transfer-protocol)
+  to transfer USDC from other supported networks.
+</Accordion>
+
+<Accordion title="How do you get USDC on Injective Mainnet?">
+  **Coming soon**:
+  On Injective Mainnet, you will be able to transfer USDC to Injective from other supported networks using
+  [Circle's CCTP](https://www.circle.com/cross-chain-transfer-protocol).
+</Accordion>
+
+<Accordion title="What is CCTP on Injective?">
+  The Cross-Chain Transfer Protocol (CCTP) is Circle's native cross-chain infrastructure that enables
+  USDC to be transferred between blockchain networks.
+  On Injective, CCTP V2 contracts (`TokenMessengerV2`, `MessageTransmitterV2`, `TokenMinterV2`, and `MessageV2`)
+  handle the minting and burning of USDC for cross-chain transfers.
+</Accordion>
+
+<Accordion title="Can USDC be used across both EVM and Cosmos on Injective?">
+  Yes.
+  USDC on Injective follows the [MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard),
+  which means the same token balance is accessible from both EVM smart contracts and Cosmos-based modules.
+  There is no need to bridge or wrap USDC when moving between the two execution environments.
+</Accordion>
+
+## Related resources
+
+<CardGroup cols={2}>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/developers-evm/multivm-token-standard">
+    Learn how tokens work across EVM and Cosmos on Injective.
+  </Card>
+  <Card title="EVM Network Information" icon="network-wired" href="/developers-evm/network-information">
+    RPC endpoints, chain IDs, and other EVM network details.
+  </Card>
+  <Card title="USDC Smart Contracts Addresses" icon="location" href="https://developers.circle.com/stablecoins/usdc-contract-addresses">
+    The official/canonical reference for Circle smart contract deployments for USDC.
+  </Card>
+  <Card title="USDC CCTP Smart Contracts Addresses" icon="stamp" href="https://developers.circle.com/cctp/references/contract-addresses">
+    The official/canonical reference for Circle smart contract deployments for USDC CCTP.
+  </Card>
+</CardGroup>
