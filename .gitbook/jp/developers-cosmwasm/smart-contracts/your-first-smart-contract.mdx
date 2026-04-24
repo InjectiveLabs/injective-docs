@@ -34,7 +34,7 @@ cargo install cargo-generate
 
 スマートコントラクト開発者として、コントラクトのインターフェースを構成する3つの関数を定義する必要があります：
 
-* `instantiate()`：コントラクトのインスタンス化時に呼び出されるコンストラクタで、初期状態を提供します
+* `instantiate()`：コントラクトのインスタンス化時に呼び出されるコンストラクタ関数であり、初期状態を設定します。
 * `execute()`：ユーザーがスマートコントラクトのメソッドを呼び出す際に実行されます
 * `query()`：ユーザーがスマートコントラクトからデータを取得する際に呼び出されます
 
@@ -42,7 +42,7 @@ cargo install cargo-generate
 
 ## テンプレートから始める
 
-作業ディレクトリで、以下のコマンドを実行して推奨のフォルダ構成とビルドオプションでスマートコントラクトをすぐに開始できます：
+作業ディレクトリで以下のコマンドを実行すると、推奨されるフォルダ構成とビルド設定を備えたテンプレートから開発を開始できます：
 
 ```bash
 cargo generate --git https://github.com/CosmWasm/cw-template.git --branch 1.0 --name my-first-contract
@@ -403,7 +403,7 @@ git-fetch-with-cli = true
 
 `injectived`はInjectiveに接続してInjectiveブロックチェーンとの対話を可能にするコマンドラインインターフェースおよびデーモンです。
 
-CLIを使用してスマートコントラクトとローカルで対話する場合は、`injectived`をインストールする必要があります。[injectiveインストールガイド](/developers/injectived/install)のインストール手順に従ってください。
+CLIを使用してスマートコントラクトとローカルで対話する場合は、`injectived`をインストールする必要があります。[Injectiveのインストールガイド](/developers/injectived/install)の手順に従ってください。
 
 または、このチュートリアルを簡単にするためにDockerイメージが用意されています。
 
@@ -699,7 +699,7 @@ yes 12345678 | injectived tx wasm execute inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcp
 ```
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-**yes 12345678 |** は自動的にパスフレーズを**injectived tx wasm execute**の入力にパイプ（渡す）するため、手動で入力する必要はありません。
+**yes 12345678 |** は、自動的にパスフレーズを **injectived tx wasm execute** の入力にパイプする（渡す）ため、手動で入力する必要はありません。
 </Callout>
 
 カウンターをリセットするには：
