@@ -1,8 +1,46 @@
 ---
 title: Trading
+description: >-
+    Documentation for Injective's on-chain orderbook exchange, covering
+    spot markets, perpetual futures, expiry futures, and order types.
+updatedAt: "2025-11-21"
 ---
 
-* [Order Types](/defi/trading/order-types/)
-* [Trading Fees and Rebates](/defi/trading/fees/)
-* [Margin Trading](/defi/trading/margin/)
-* [Derivatives](/defi/trading/derivatives/)
+This section provides comprehensive documentation for traders and developers building on Injective's exchange infrastructure.
+Whether you're executing trades via API, integrating orderbook functionality into your dApp,
+or learning about margin requirements and derivatives, you'll find detailed specifications for
+order types, fee structures, and trading instruments.
+
+Injective redefines decentralized trading by combining the efficiency of centralized exchanges
+with the transparency and security of blockchain.
+Through Frequent Batch Auctions (FBA), Injective eliminates miner extractable value (MEV) and front-running
+by aggregating orders into discrete batches that execute at a single clearing price.
+Unlike traditional DEXs that rely on liquidity pools with constant product formulas,
+Injective's on-chain CLOB enables precise limit orders, advanced order types, and institutional-grade execution.
+The innovative negative maker fee model—where liquidity providers earn rebates instead of paying fees—creates powerful incentives
+for market makers, resulting in tighter spreads and deeper liquidity than typical decentralized exchanges.
+
+## Key Concepts
+
+| Term | Definition |
+|------|------------|
+| **Central Limit Orderbook (CLOB)** | A fully on-chain order matching system that enables transparent price discovery and shared liquidity across all Injective dApps, unlike AMM-based DEXs. |
+| **Frequent Batch Auctions (FBA)** | Injective's order execution mechanism that aggregates orders over discrete time intervals and clears them at a uniform price, eliminating MEV and front-running. |
+| **Negative Maker Fees** | A fee structure where liquidity providers (makers) receive rebates instead of paying fees—currently -0.01% on eligible pairs—incentivizing deep orderbook liquidity. |
+| **Perpetual Futures** | Derivative contracts without expiry dates that track the price of an underlying asset, typically using funding rates to align the contract price with spot markets. |
+| **Initial/Maintenance Margin** | The collateral required to open (initial) and keep open (maintenance) a leveraged position; falling below maintenance triggers liquidation to protect the protocol. |
+
+## Navigation
+
+- **[Order Types](/defi/trading/order-types/)** —
+  Reference guide for all supported order types including market, limit, stop-loss, take-profit, post-only, and atomic orders,
+  with details on execution behavior.
+- **[Trading Fees and Rebates](/defi/trading/fees/)** —
+  Detailed breakdown of the fee structure including negative maker fees (-0.01%), taker fees, fee recipient rebates (40%),
+  and tier-based discounts for high-volume traders.
+- **[Margin Trading](/defi/trading/margin/)** —
+  Explains how leveraged trading works on Injective, covering initial margin requirements, maintenance margin,
+  liquidation mechanics, and funding rates for perpetual positions.
+- **[Derivatives](/defi/trading/derivatives/)** —
+  Overview of the derivative instruments available on Injective including perpetuals, expiry futures, election perpetuals,
+  pre-launch futures, index perpetuals, and iAssets.

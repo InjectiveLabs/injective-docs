@@ -1,3 +1,7 @@
+---
+updatedAt: "2025-10-29"
+---
+
 # Client
 
 A user can query and interact with the `evm` module using the CLI, JSON-RPC, gRPC or REST.

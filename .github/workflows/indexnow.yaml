@@ -1,0 +1,21 @@
+name: Notify IndexNow on Deploy
+on:
+  deployment_status:
+    if: github.ref == 'refs/heads/main'
+    types: [completed]
+
+jobs:
+  ping:
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping IndexNow
+        run: |
+          curl -X POST "https://api.indexnow.org/IndexNow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d '{
+              "host": "docs.injective.network",
+              "key": "83e83a6368fb4defb4ae2ae309922656",
+              "keyLocation": "https://docs.injective.network/83e83a6368fb4defb4ae2ae309922656.json",
+              "urlList": ["https://docs.injective.network/sitemap.xml"]
+            }'

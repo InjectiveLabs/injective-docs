@@ -2,6 +2,28 @@
   "theme": "mint",
   "$schema": "https://mintlify.com/docs.json",
   "name": "Injective Docs",
+  "description": "Injective is a high-performance, interoperable layer-one blockchain for building premier Web3 financial applications.",
+  "seo": {
+    "indexing": "all",
+    "metatags": {
+      "og:type": "website",
+      "og:site_name": "Injective Docs",
+      "canonical": "https://docs.injective.network",
+      "indexnow-verification": "83e83a6368fb4defb4ae2ae309922656",
+      "msvalidate.01": "C0245176149C1961102F102F1E76F150"
+    }
+  },
+  "search": {
+    "prompt": "Search Injective docs..."
+  },
+  "metadata": {
+    "timestamp": true
+  },
+  "integrations": {
+    "gtm": {
+      "tagId": "GTM-T4827WQD"
+    }
+  },
   "colors": {
     "primary": "#4D3DFF",
     "light": "#EEEFFF",
@@ -105,8 +127,8 @@
                 "expanded": false,
                 "pages": [
                   "developers/index",
-                  "developers/convert-addresses",
                   "developers/network-information",
+                  "developers/convert-addresses",
                   {
                     "group": "injectived",
                     "pages": [
@@ -207,6 +229,7 @@
                       "infra/validator-mainnet/index",
                       "infra/validator-mainnet/peggo",
                       "infra/validator-mainnet/canonical-chain-upgrade",
+                      "infra/validator-mainnet/canonical-chain-upgrade-v1.18.3",
                       "infra/validator-mainnet/canonical-chain-upgrade-v1.18.2",
                       "infra/validator-mainnet/canonical-chain-upgrade-v1.18.0",
                       "infra/validator-mainnet/canonical-chain-upgrade-1.17.2",
@@ -302,7 +325,7 @@
                 ]
               },
               {
-                "group": "Cosmwasm Developers",
+                "group": "CosmWasm Developers",
                 "icon": "comet",
                 "expanded": false,
                 "pages": [
@@ -340,6 +363,7 @@
                   "developers-defi/market-launch",
                   "developers-defi/denom-and-bank",
                   "developers-defi/provider-oracle",
+                  "developers-defi/usdc-stablecoin",
                   {
                     "group": "Injective Trader",
                     "expanded": false,
@@ -649,13 +673,44 @@
               },
               "faq",
               "glossary",
-              "references"
+              "references",
+              "contributing"
             ]
           }
-        ]
+        ],
+        "footer": {
+          "socials": {
+            "website": "https://injective.com/",
+            "github": "https://github.com/InjectiveLabs/",
+            "x": "https://x.com/injective",
+            "youtube": "https://youtube.com/@injective_",
+            "discord": "https://discord.gg/injective",
+            "telegram": "https://t.me/+8Y_0HOFLhnRlZDU9",
+            "linkedin": "https://www.linkedin.com/company/injectivelabs",
+            "reddit": "https://www.reddit.com/r/injective"
+          },
+          "links": [
+            {
+              "header": "About docs",
+              "items": [
+                { "label": "Maintained by Injective Labs' Developer Relations Team", "href": "https://injective.com/" },
+                { "label": "Open an issue", "href": "https://github.com/InjectiveLabs/injective-docs/issues" },
+                { "label": "Submit a PR", "href": "https://github.com/InjectiveLabs/injective-docs/pulls" }
+              ]
+            },
+            {
+              "header": "Resources",
+              "items": [
+                { "label": "Blog", "href": "https://injective.com/blog" },
+                { "label": "Build", "href": "https://injective.com/build" },
+                { "label": "7 days of Injective", "href": "https://youtube.com/watch?v=bE9JbFpsDFM&list=PLTS_stt4XpDBGDXxrx4crxijAemFr3Mix" }
+              ]
+            }
+          ]
+        }
       },
       {
-        "language": "cn",
+        "language": "zh-Hans",
         "groups": [
           {
             "group": "INJECTIVE",
@@ -1701,6 +1756,20 @@
             "group": "INJECTIVE",
             "pages": [
               "jp/index",
+              {
+                "group": "AI開発者",
+                "icon": "brain",
+                "expanded": false,
+                "pages": [
+                  "ja/developers-ai/index",
+                  "ja/developers-ai/injective-cli-skill",
+                  "ja/developers-ai/injective-evm-developer-skill",
+                  "ja/developers-ai/injective-mcp-servers-skill",
+                  "ja/developers-ai/injective-trading-skills",
+                  "ja/developers-ai/documentation-mcp",
+                  "ja/developers-ai/mcp"
+                ]
+              },
               "jp/faq",
               "jp/glossary",
               "jp/references",
