@@ -12,7 +12,9 @@
 # Webreels
 /.webreel
 /webreels/*.mp4
+/webreels/*.png
 /webreels/*.webm
+/webreels/*.bak
 
 # Misc
 .env

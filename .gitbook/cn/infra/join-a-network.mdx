@@ -1,5 +1,6 @@
 ---
 title: 加入网络
+updatedAt: "2026-02-13"
 ---
 
 本指南将引导你完成在本地设置独立网络以及在 Mainnet 或 Testnet 上运行节点的过程。
@@ -8,13 +9,26 @@ title: 加入网络
 
 <Tabs>
 <Tab title="本地网络">
-要轻松设置本地节点，请下载并运行 `setup.sh` 脚本。这将初始化你的本地 Injective 网络。
+要轻松设置本地节点，请从 [injective-core](https://github.com/InjectiveFoundation/injective-core) 仓库下载并运行 `setup.sh` 脚本。请使用与已安装的 `injectived` 版本匹配的脚本版本。
 
 ```bash
-wget https://raw.githubusercontent.com/InjectiveLabs/injective-chain-releases/master/scripts/setup.sh
+# 将版本标签替换为与你的 injectived 二进制文件匹配的版本
+wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.18.3/setup.sh
 chmod +x ./setup.sh # 使脚本可执行
 ./setup.sh
 ```
+
+例如，使用 v1.17.2 的脚本：
+
+```bash
+wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.17.2/setup.sh
+chmod +x ./setup.sh
+./setup.sh
+```
+
+<Callout icon="warning" color="#FFA500" iconType="regular">
+旧版 [injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases) 仓库中的 `setup.sh` 脚本已过时，仅兼容 `injectived` v1.14.1。请始终使用 [InjectiveFoundation/injective-core](https://github.com/InjectiveFoundation/injective-core) 仓库中与你的链版本对应的脚本。
+</Callout>
 
 通过运行以下命令启动节点：
 
@@ -257,10 +271,11 @@ journalctl -u injectived -f
 
 #### 安装 `injectived` 和 `peggo`
 
-请参阅 [Injective chain releases repo](https://github.com/InjectiveLabs/injective-chain-releases/releases/) 获取最新版本。非 validator 节点运营者不需要安装 `peggo`。
+请参阅 [Injective core releases](https://github.com/InjectiveFoundation/injective-core/releases) 获取最新版本。非 validator 节点运营者不需要安装 `peggo`。
 
 ```bash
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
+# 将 URL 替换为 https://github.com/InjectiveFoundation/injective-core/releases 中的最新版本
+wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv peggo /usr/bin
 sudo mv injectived /usr/bin

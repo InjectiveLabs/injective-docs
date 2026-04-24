@@ -1,5 +1,6 @@
 ---
 title: 네트워크 참여
+updatedAt: "2026-02-26"
 ---
 
 이 가이드는 로컬에서 독립형 네트워크를 설정하고 메인넷 또는 테스트넷에서 노드를 실행하는 과정을 안내합니다.
@@ -8,13 +9,26 @@ title: 네트워크 참여
 
 <Tabs>
 <Tab title="로컬 네트워크">
-로컬 노드를 쉽게 설정하려면 `setup.sh` 스크립트를 다운로드하고 실행하세요. 이렇게 하면 로컬 Injective 네트워크가 초기화됩니다.
+로컬 노드를 쉽게 설정하려면 [injective-core](https://github.com/InjectiveFoundation/injective-core) 저장소에서 `setup.sh` 스크립트를 다운로드하고 실행하세요. 설치된 `injectived` 버전에 맞는 스크립트 버전을 사용하세요.
 
 ```bash
-wget https://raw.githubusercontent.com/InjectiveLabs/injective-chain-releases/master/scripts/setup.sh
+# 버전 태그를 설치된 injectived 바이너리 버전으로 교체하세요
+wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.18.3/setup.sh
 chmod +x ./setup.sh # 스크립트를 실행 가능하게 만들기
 ./setup.sh
 ```
+
+예를 들어, v1.17.2용 스크립트를 사용하려면:
+
+```bash
+wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.17.2/setup.sh
+chmod +x ./setup.sh
+./setup.sh
+```
+
+<Callout icon="warning" color="#FFA500" iconType="regular">
+레거시 [injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases) 저장소의 `setup.sh` 스크립트는 더 이상 사용되지 않으며 `injectived` v1.14.1에서만 호환됩니다. 항상 체인 버전에 맞는 [InjectiveFoundation/injective-core](https://github.com/InjectiveFoundation/injective-core) 저장소의 스크립트를 사용하세요.
+</Callout>
 
 다음을 실행하여 노드를 시작합니다:
 
@@ -257,10 +271,11 @@ journalctl -u injectived -f
 
 #### `injectived` 및 `peggo` 설치
 
-가장 최근 릴리스는 [Injective 체인 릴리스 저장소](https://github.com/InjectiveLabs/injective-chain-releases/releases/)를 참조하세요. 검증자가 아닌 노드 운영자는 `peggo`를 설치할 필요가 없습니다.
+가장 최근 릴리스는 [Injective core releases](https://github.com/InjectiveFoundation/injective-core/releases)를 참조하세요. 검증자가 아닌 노드 운영자는 `peggo`를 설치할 필요가 없습니다.
 
 ```bash
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
+# https://github.com/InjectiveFoundation/injective-core/releases 에서 최신 릴리스 URL로 교체하세요
+wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv peggo /usr/bin
 sudo mv injectived /usr/bin

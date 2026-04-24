@@ -1,0 +1,46 @@
+---
+description: 公開前の資産投機
+title: Pre-Launch Futures
+---
+
+多くの資産は公開ローンチ時に大量の取引活動を生み出しますが、一般的に公開前は取引できません。高まる関心を捉え、投資家が公開リリース前に資産を投機できるようにするため、InjectiveはPre-Launch Futures（PLF）を作成しました。Injective上の最初のPre-Launch Futures市場はExpiry Futures契約に基づいていますが、PLF[^1]はPerpetual Futures契約の形態を取ることもできます。
+
+### Pre-Launch Futuresの仕組み
+
+Expiry Futuresでは、清算価格と決済価格を追跡するためにMark Priceが必要です。Mark Priceは通常、原資産のスポット価格に基づいているため、トークンのローンチ前にはスポット価格が存在しないPre-Launch Futuresには通常のOracle価格フィードを使用できません。Expiry FuturesベースのPLF[^2]は、公開ローンチ日の前後に取引されるよう設計されており、市場の満期日前にスポット価格が存在するようになります（Perpetual FuturesベースのPLF[^3]には適用されません）。これにより、資産が公開取引されると、Mark Priceを公開スポット価格に設定でき、満期時にスポット価格で最終的に決済することが可能になります。ただし、清算価格を決定するために、それ以前にもMark Priceが必要です。
+
+これを解決するために、Pre-Launch Futuresは当初、直近24時間の1分ごとの最終取引価格の指数加重移動平均（EWMA）をMark Priceとして使用します。
+
+### Mark Priceメカニズム
+
+Mark Priceは2つの価格フィードに基づいています：1）EWMA（Exponentially Weighted Moving Average）価格フィードと2）CEX API価格フィードです。使用されるCEXは、Binance、OKX、またはBybitのうち、原資産を最初に上場した取引所です。
+
+タイムラインの各フェーズにおいて、異なる価格フィードが使用されます。
+
+* 資産がCEXに上場される前 → EWMA価格フィード
+* 資産がCEXに上場されてから24時間以内 → EWMA価格フィード
+* 資産がCEXに上場されてから24時間後 → CEX API価格フィード
+
+この設計は、EWMA価格フィードとCEX API価格フィードの間に大きな差がある場合に、Mark Priceの急激な歪みを防ぐために使用されます。
+
+**EWMA価格の計算に使用される計算式：**
+
+$$\mathrm{Price_t = \sum \limits_{i=0}^{1439} [(t-i_{minutes} < t_{init} ?\ assumed\ price : last\ traded\ price _{t-i_{minutes}}) \cdot e^{-i/1440} ] \cdot \frac{1-e^{-1/1440} }{ 1-e^{-1}}}$$
+
+各変数の説明：
+
+* `t_init` は、原資産市場における最初の取引時刻です。
+* `assumed price` は、原資産の想定価格です。この価格は、原資産市場における最初の取引から24時間前に `last traded price` が存在しない場合に使用されます。つまり、最初の24時間が経過し、原資産市場で取引が行われた後は、assumed priceはMark Priceに影響を与えなくなります。
+  * TIA/USDT Pre Launch Futuresで使用されるassumed priceは `2.5` です。
+  * PYTH/USDT PLFで使用されるassumed priceは `0.3` です。
+  * JUP/USDT PLFで使用されるassumed priceは `0.55` です。
+  * ZRO/USDT PLFで使用されるassumed priceは `5` です。
+  * W/USDT PLFで使用されるassumed priceは `2` です。
+  * OMNI/USDT PLFで使用されるassumed priceは `40` です。
+* `last traded price` は、原資産市場における最終取引価格です。
+
+[^1]: Pre-Launch Futures
+
+[^2]: Pre-Launch Futures
+
+[^3]: Pre-Launch Futures

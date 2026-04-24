@@ -1,5 +1,6 @@
 ---
 title: Application Blockchain Interface (ABCI)
+updatedAt: "2026-03-07"
 ---
 
 Application Blockchain Interface (ABCI)를 통해 애플리케이션은 Tendermint Core Consensus 엔진과 상호 작용할 수 있습니다. 애플리케이션은 Tendermint와 여러 개의 별도 ABCI 연결을 유지합니다. `x/evm`과 가장 관련이 있는 것은 [Commit에서의 Consensus 연결](https://docs.tendermint.com/v0.35/spec/abci/apps.html#consensus-connection)입니다. 이 연결은 블록 실행을 담당하며 `InitChain`(`InitGenesis` 포함), `BeginBlock`, `DeliverTx`, `EndBlock`, `Commit` 함수를 호출합니다. `InitChain`은 새 블록체인이 처음 시작될 때만 호출되고 `DeliverTx`는 블록의 각 트랜잭션에 대해 호출됩니다.

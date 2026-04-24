@@ -1,0 +1,48 @@
+{
+  "$schema": "https://webreel.dev/schema/v1.json",
+  "outDir": "./webreels",
+  "defaultDelay": 25,
+  "videos": {
+    "ai-developer": {
+      "url": "https://docs.injective.network/developers-ai/",
+      "viewport": { "width": 1920, "height": 1080 },
+      "waitFor": "#navigation-items",
+      "steps": [
+        { "action": "hover", "text": "AI Developers", "within": "#navigation-items" },
+        { "action": "pause", "ms": 10 },
+        // { "action": "hover", "selector": "a[href='/developers-ai']", "within": "#navigation-items" },
+        { "action": "click", "selector": "a[href='/developers-ai']", "within": "#navigation-items" },
+        // { "action": "hover", "selector": "a[href='/developers-ai/injective-cli-skill']", "within": "#navigation-items" },
+        { "action": "click", "selector": "a[href='/developers-ai/injective-cli-skill']", "within": "#navigation-items" },
+        { "action": "scroll", "y": 200, "delay": 10 },
+        { "action": "scroll", "y": 300, "delay": 10 },
+        { "action": "scroll", "y": -500, "delay": 10 },
+        // { "action": "hover", "selector": "a[href='/developers-ai/injective-evm-developer-skill']", "within": "#navigation-items" },
+        { "action": "click", "selector": "a[href='/developers-ai/injective-evm-developer-skill']", "within": "#navigation-items" },
+        { "action": "scroll", "y": 200, "delay": 10 },
+        { "action": "scroll", "y": 300, "delay": 10 },
+        { "action": "scroll", "y": -500, "delay": 10 },
+        // { "action": "hover", "selector": "a[href='/developers-ai/injective-mcp-servers-skill']", "within": "#navigation-items" },
+        { "action": "click", "selector": "a[href='/developers-ai/injective-mcp-servers-skill']", "within": "#navigation-items" },
+        { "action": "scroll", "y": 200, "delay": 10 },
+        { "action": "scroll", "y": 300, "delay": 10 },
+        { "action": "scroll", "y": -500, "delay": 10 },
+        // { "action": "hover", "selector": "a[href='/developers-ai/injective-trading-skills']", "within": "#navigation-items" },
+        { "action": "click", "selector": "a[href='/developers-ai/injective-trading-skills']", "within": "#navigation-items" },
+        { "action": "scroll", "y": 200, "delay": 10 },
+        { "action": "scroll", "y": 300, "delay": 10 },
+        { "action": "scroll", "y": -500, "delay": 10 },
+        // { "action": "hover", "selector": "a[href='/developers-ai/documentation-mcp']", "within": "#navigation-items" },
+        { "action": "click", "selector": "a[href='/developers-ai/documentation-mcp']", "within": "#navigation-items" },
+        { "action": "scroll", "y": 200, "delay": 10 },
+        { "action": "scroll", "y": 300, "delay": 10 },
+        { "action": "scroll", "y": -500, "delay": 10 },
+        // { "action": "hover", "selector": "a[href='/developers-ai/mcp']", "within": "#navigation-items" },
+        { "action": "click", "selector": "a[href='/developers-ai/mcp']", "within": "#navigation-items" },
+        { "action": "scroll", "y": 200, "delay": 10 },
+        { "action": "scroll", "y": 300, "delay": 10 },
+        { "action": "scroll", "y": -500, "delay": 10 }
+      ]
+    }
+  }
+}

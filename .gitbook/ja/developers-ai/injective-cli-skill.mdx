@@ -1,0 +1,31 @@
+---
+title: Injective CLI Agent Skill
+description: AIエンジニアリングハーネスでInjective CLI Agent Skillを使用する
+---
+
+`injectived`バイナリを使用して、一貫したウォレット処理、エンドポイント選択、gas設定で
+Injectiveチェーンに対するクエリとトランザクションを実行します。
+
+## インストール
+
+skillのインストール：
+
+```bash
+uvx upd-skill InjectiveLabs/injective-cli
+```
+
+skillのグローバルインストール：
+
+```bash
+uvx upd-skill InjectiveLabs/injective-cli --global
+```
+
+NPX経由でインストール：
+
+```bash
+npx skills add https://github.com/InjectiveLabs/agent-skills --skill injective-cli
+```
+
+## 使用方法
+
+skillをインストールした後、ハーネスにプロンプトを入力してこのskillを使用してください。
