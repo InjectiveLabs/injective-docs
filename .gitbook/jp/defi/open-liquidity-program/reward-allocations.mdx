@@ -1,0 +1,113 @@
+---
+description: "OLP報酬配分（Epoch 43以降）"
+title: "報酬配分"
+---
+
+## 市場報酬配分
+
+報酬は[対象市場](/defi/open-liquidity-program/eligible-markets)に3つの異なる方法で配分されます：
+
+1. 静的配分
+2. 動的要素を含む最低配分
+3. フレキシブル報酬配分
+
+### 静的市場報酬配分（事前配分）
+
+INJ報酬の13.33%がBTC/USDT PERP市場、ETH/USDT PERP市場、INJ/USDT PERP市場のそれぞれに事前配分され、5%がINJ/USDTスポット市場に事前配分されます。各epochの残りのINJは、最低配分100 INJで、残りの対象市場それぞれに配分されます。
+
+<table>
+<thead>
+<tr>
+<th align="left">市場</th>
+<th align="right">配分</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BTC/USDT Perp</td>
+<td align="right">13.33%</td>
+</tr>
+<tr>
+<td>ETH/USDT Perp</td>
+<td align="right">13.33%</td>
+</tr>
+<tr>
+<td>INJ/USDT Perp</td>
+<td align="right">13.33%</td>
+</tr>
+<tr>
+<td>INJ/USDT Spot</td>
+<td align="right">5%</td>
+</tr>
+<tr>
+<td>その他の対象市場</td>
+<td align="right">計算式ベースの配分</td>
+</tr>
+</tbody>
+</table>
+
+<Info>
+  静的配分は、対象リストに追加される市場が増えるにつれて変更される場合があります
+</Info>
+
+### 動的市場報酬配分
+
+残りの報酬は、以下のスキームに基づいて対象市場（BTC/ETH/INJ Perpを除く）に配分されます。
+
+まず、各epochは新たに開始され、すべてのペアが前のepochの取引量や流動性に関係なく、そのepochで利用可能な最大報酬を獲得する均等な機会を持ちます。各ペアはepochの1日目に、最低100 INJから可能な範囲で開始されます。
+
+この変更前は、最低報酬が400 INJ、最大報酬が約900 INJであり、低ボリュームのペアと大幅に高いボリュームのペア間の報酬蓄積に十分な差異がありませんでした。この変更により、流動性プロバイダーは人気のある市場のボリュームに対して報酬を受けます。
+
+各市場の報酬の範囲はepoch全体を通じて進行し、epochの最終日に当該市場の真の報酬に収束します。範囲$[Rewards_{min};Rewards_{max}]$は市場ごとに以下のように定義されます：
+
+$$
+MinVolume=Min(Market\ traded\ volume\ since\ beginning\ of\ epoch) \\
+MaxVolume=Max(Market\ traded\ volume\ since\ beginning\ of\ epoch)
+$$
+
+ここで
+
+$$
+Rewards_{min_{market\ i}}=100+\frac{Volume_{market_{i}}-MinVolume}{MaxVolume-MinVolume}(Rewards_{max}-100)
+$$
+
+かつ$Rewards_{max}$は引き続きこのページ下部のとおり計算されます。したがって、最高取引量の市場は$Rewards_{max}$を受け取り、最低取引量の市場は最低報酬100 INJとなります。
+
+$Rewards_{min}$は報酬範囲の下限に過ぎず、最高取引量の市場で範囲が$[Rewards_{max};Rewards_{max}]$となる場合を除き、報酬と等しくなることはありません。その場合、報酬は$Rewards_{max}$に等しくなります。これは100 INJから$Rewards_{max}$までの線形関数です。
+
+この範囲が定義された上で、市場の報酬を計算する手順は以下のとおりです：
+
+1. $Rewards_{Market_{i}}=Rewards_{min_{market\ i}}$から開始します
+2. 残りの報酬_RR_を、$RR=TAR-\sum_{i}Rewards_{min_{market\ i}}$として上記の計算式を使用して配分します。
+3. 計算された報酬が$Rewards_{max}$を超える場合、上記の計算式に従ってすべての市場に再配分します。
+4. 残りの報酬がなくなるまで反復します。
+
+**Epochの途中で追加された市場**
+
+epochの途中で対象リストに追加された市場の場合、事前配分は日割り計算されます。例えば、ARB/USDTがepochの15日目に追加された場合、その市場はepochの報酬の半分を受け取ります（28日中14日間が残っているため）。
+
+### 市場配分上限
+
+動的報酬配分を持つ各市場には、以下の計算式に基づくハードキャップが適用されます。ここで、$n$はBTC、ETH、INJ Perpを除く対象市場の数です：
+
+$$
+Rewards_{max} = TAR\ *\ \frac{1 - TPR}{n}*2
+$$
+
+ここで、_TPR_は事前配分された報酬の合計割合（小数で表現、現在0.375）に等しく、_n_は事前配分されていないペアの数です。
+
+上限を超える報酬配分は、[動的配分計算式](/defi/open-liquidity-program/reward-allocations#dynamic-market-reward-allocations)に従って他の対象市場に再配分されます。
+
+## 報酬配分
+
+個々の機関流動性プロバイダーへの報酬は、以下の方程式に基づいて配分されます：
+
+$$
+Rewards_{MM_i} = \sum_{Market}\left(Rewards_{Market} * \frac {TS_{MM_i, \ Market}} {\sum_{MM} TS_{MM,\ Market}} \right)
+$$
+
+**各機関流動性プロバイダーは、市場内での比例的な**[Total Score](/defi/open-liquidity-program/scoring#total-score)**に基づいて、ガバナンス承認を条件として報酬を受け取ります。**
+
+<Info>
+  各epochの終了時に合計が1 INJ未満の報酬は、支払いプロセスのオーバーヘッドを削減するため無視されます。
+</Info>

@@ -1,0 +1,21 @@
+---
+title: トークン規格
+---
+
+Injectiveは、dAppを作成する際に使用できるさまざまなトークン規格を提供しています。このドキュメントでは、異なるタイプのトークンと、各トークンの使用に関する推奨事項とガイダンスを説明します。
+
+## Denom
+
+denomは、InjectiveのBankモジュール内で資産がどのように表現されるかを示します。これらの資産は、取引、exchangeモジュールでの新しいマーケットの作成、オークションへの参加、別のアドレスへの転送などに使用できます。
+
+denomの起源とInjectiveでの作成方法に応じて、異なるタイプのdenomがあります：
+
+* **Native denom** - このタイプのdenomは1つだけで、Injectiveのネイティブコインを表す`inj` denomです。
+* **Peggy denom** - これらのdenomは、Peggyブリッジを使用してEthereumからInjectiveにブリッジされた資産を表します。形式：`peggy{ERC20_CONTRACT_ADDRESS}`
+* **IBC denom** - これらのdenomは、IBCを通じて他のIBC互換チェーンからブリッジされた資産を表します。形式：`ibc/{hash}`
+* **Insurance Fund Denom** - これらのdenomは、Injectiveで作成された保険基金のトークンシェアを表します。形式：`share{id}`
+* **Factory Denom** - これらの`tokenfactory` denomにより、任意のアカウントが`factory/{creator address}/{subdenom}`という名前で新しいトークンを作成できます。トークンは作成者アドレスで名前空間化されているため、名前の衝突を解決する必要がなく、パーミッションレスなトークン作成が可能です。これらのdenomの特別なユースケースは、CosmwasmのCW20トークンをInjectiveネイティブのBankモジュールで表現することです。形式：`factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`（`CW20_ADAPTER_CONTRACT`はCW20とネイティブBankモジュールを変換するアダプタコントラクトアドレス）
+
+これらのdenomタイプの詳細については、このドキュメントの後半で説明します。
+
+[denomメタデータ](/developers/assets/token-metadata/)の取得方法を学びましょう。

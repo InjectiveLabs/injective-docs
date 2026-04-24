@@ -1,0 +1,42 @@
+---
+description: "OLP報酬の資格取得と維持方法"
+title: "資格要件"
+---
+
+## Clean Slate Qualification
+
+Injectiveアドレスは、以下の基準を満たすことでOLPの資格を取得できます：
+
+- **アドレスは、資格取得プロセスの開始前にTrade & Earn（T&E）プログラムからオプトアウトしている必要があります**。アドレスは資格取得プロセス中にT&E報酬を獲得しません。プログラムによるオプトアウトの例については、[Python](https://github.com/InjectiveLabs/sdk-python/blob/master/examples/chain_client/24_MsgRewardsOptOut.py)、[Go](https://github.com/InjectiveLabs/sdk-go/blob/master/examples/chain/24_MsgRegisterAsDMM/example.go)、[TS](https://github.com/InjectiveLabs/injective-ts/wiki/04CoreModulesExchange#msgrewardsoptout)を参照してください。
+  - 注意：資格取得プロセスの対象となるのは、オプトアウト完了翌日の00:00 UTCからです。アドレスがT&Eからのオプトアウトに成功したかどうかを確認するには、[このリスト](https://lcd.injective.network/injective/exchange/v1beta1/opted_out_of_rewards_accounts)を参照してください。
+- アドレスのメイカーボリュームが、[**対象市場**](./eligible-markets/)の**1日の合計exchangeメイカーボリュームの少なくとも0.25%を3日連続で**占める必要があります。セルフトレーディングは厳格に禁止されています。
+
+これらの要件が両方とも満たされた場合、アドレスは4日目の00:00 UTCにOLP報酬の資格を取得します。資格取得後、特別な状況（システムの悪用、ウォッシュトレーディングなど）によりアドレスが除外されない限り、epochの残りの期間を通じて報酬の資格が維持されます。資格取得前のアクティビティは報酬にカウントされないことにご注意ください。
+
+<Info>
+  メイカーボリュームを増やすために、取引戦略を単一のアドレスに集約することが賢明です。そうしないと、必要な閾値よりもメイカーボリュームが少ないアドレスは、複数アドレスの合計ボリュームが閾値を超えていても報酬の資格を得ることができません。
+
+  単一のアドレスから複数の戦略を実行しながら取引[手数料割引](https://helixapp.com/fee-discounts)を維持する方法については、[`Injective authzモジュールのドキュメント`](https://docs.injective.network/develop/modules/Core/authz/)を参照してください。
+</Info>
+
+## 次のEpochの資格維持・事前資格
+
+現在のepochで資格を取得した後、次のepochに自動的に資格を得るためには、**アドレスは資格取得日からepoch最終日までの[対象市場](./eligible-markets/)（KAVA報酬市場を除く）の合計exchangeメイカーボリュームの少なくとも0.25%を占める必要があります**。
+
+- 例：アドレス`inj1a`はOLP報酬の資格がない状態でepoch 21に入ります。`inj1a`はepoch 21の1日目、2日目、3日目にそれぞれ[対象市場](./eligible-markets/)の1日の合計exchangeメイカーボリュームの1%、0.1%、0.2%を占めました。4日目、5日目、6日目には、`inj1a`は該当するボリュームのそれぞれ0.5%を占めました。`inj1a`はepochの7日目に資格を取得します。epoch 22の資格を維持するためには、`inj1a`はepoch 21の7日目から28日目までの累積該当メイカーボリュームの少なくとも0.25%を占める必要があります。この期間（7日目から28日目）の[対象市場](./eligible-markets/)の累積メイカーボリュームが$100Mだった場合、`inj1a`は同期間中にそれらの市場で累積メイカーボリューム$250,000を占める必要があります。
+
+前のepochの事前資格によりepoch全体を通じて資格があった場合、そのアドレスはepoch全体の[対象市場](./eligible-markets/)のメイカーボリュームの少なくとも0.25%を占める必要があります。
+
+- 例：アドレス`inj1a`はepoch 21での資格維持により事前資格を得た状態でepoch 22に入ります。epoch 22の[対象市場](./eligible-markets.md)の累積メイカーボリュームが合計$200Mだったとします。この場合、`inj1a`はepoch 23の自動資格を維持するために、epoch 22の終了までに$200Mのうち少なくとも$500,000の[対象市場](./eligible-markets.md)ボリュームを貢献する必要があります。
+
+## 資格喪失
+
+**epochにおいて該当するメイカーボリュームの少なくとも0.25%を占めることができなかったアドレスは、次のepochの開始時にOLPから資格喪失となります**。アドレスがプログラムに再参加を希望する場合、[Clean Slate Qualificationプロセス](./eligibility/#clean-slate-qualification)を再度行う必要があります（ただし、T&Eから再度オプトアウトする必要はありません）。アドレスが資格を持たない日に提供された流動性は、再資格取得後に遡及的に報酬が付与されることはありませんのでご注意ください。
+
+<Info>
+  資格喪失は各epochの終了時に発生します。つまり、次のepochの資格に関係なく、アドレスはepoch内で引き続き報酬を蓄積します。
+</Info>
+
+## 資格の追跡
+
+[OLPダッシュボード](https://trading.injective.network/program/liquidity/eligibility)をご利用ください。

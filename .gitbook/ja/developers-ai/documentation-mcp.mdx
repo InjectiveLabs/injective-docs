@@ -1,0 +1,165 @@
+---
+title: Injective Documentation MCP Server
+description: Model Context Protocol（MCP）を使用してAIアシスタントをInjectiveドキュメントに接続する
+---
+
+Injectiveドキュメントは、Claude、Cursor、その他のMCP対応ツールなどのAIアシスタントが
+Injectiveドキュメントから**情報を検索・取得**できるModel Context Protocol（MCP）サーバーを提供しています。
+
+これはドキュメント検索だけでなく、他のMCP serverやAI agentと**組み合わせて使用**する場合にも有用です。
+例えば、Cursorなどのエージェント開発ツールを接続し、
+このMCP serverを使用してLLMの汎用ソフトウェア作成能力に**Injective固有の知識を追加**することで、
+Injectiveアプリケーションをバイブコーディングできます。
+開発者ツールの設定方法の詳細は以下に記載しています。
+
+AIツールにこのMCP serverの使用方法を教えるには、
+[Injective MCP Servers Skill](/developers-ai/injective-mcp-servers-skill)を使用してください。
+
+## MCPとは？
+
+[MCP](https://modelcontextprotocol.io/introduction)は、AIアシスタントが外部データソースやツールに接続できるようにする**オープンスタンダード**です。
+トレーニングデータのみに頼るのではなく、AIアシスタントはMCPを使用してドキュメントからリアルタイムで
+信頼性の高い情報に直接アクセスできます。
+
+## なぜInjective Documentation MCP serverを使用するのか？
+
+AIアシスタントをInjective MCP serverに接続すると、以下が可能になります：
+
+- Injectiveドキュメント全体を検索
+- コード例、APIリファレンス、ガイドを検索
+- 最新情報で質問に回答
+- 関連するドキュメントページへの直接リンクを提供
+
+これはInjectiveで構築する際に特に有用で、AIが特定のユースケースに適したドキュメントを見つける手助けをします。
+
+## MCP serverの詳細
+
+| プロパティ | 値 |
+|----------|-------|
+| Endpoint | `https://docs.injective.network/mcp` |
+| Transport | HTTP (Streamable HTTP) |
+| 利用可能なツール | `SearchInjectiveDocs` |
+
+## MCP serverへの接続
+
+<Tabs>
+  <Tab title="すべてのMCPクライアント">
+    MCP対応クライアントの場合、エンドポイントURLを直接使用します：
+
+    ```
+    https://docs.injective.network/mcp
+    ```
+
+    サーバーはStreamable HTTPトランスポートを使用しており、ほとんどの最新MCPクライアントでサポートされています。
+  </Tab>
+  <Tab title="Cursor">
+    CursorのSettingsでMCP serverを追加します：
+
+    1. Cursor Settingsを開く
+    2. **Features** → **MCP Servers**に移動
+    3. **Add new MCP server**をクリック
+    4. 以下を入力：
+       - **Name**: `injective-docs`
+       - **Type**: `command`
+       - **Command**: `npx mcp-remote https://docs.injective.network/mcp`
+  </Tab>
+  <Tab title="Claude Desktop">
+    Claude Desktopの設定ファイルに以下を追加します：
+
+    <Tabs>
+      <Tab title="macOS">
+        `~/Library/Application Support/Claude/claude_desktop_config.json`を編集：
+
+        ```json
+        {
+          "mcpServers": {
+            "injective-docs": {
+              "command": "npx",
+              "args": [
+                "mcp-remote",
+                "https://docs.injective.network/mcp"
+              ]
+            }
+          }
+        }
+        ```
+      </Tab>
+      <Tab title="Windows">
+        `%APPDATA%\Claude\claude_desktop_config.json`を編集：
+
+        ```json
+        {
+          "mcpServers": {
+            "injective-docs": {
+              "command": "npx",
+              "args": [
+                "mcp-remote",
+                "https://docs.injective.network/mcp"
+              ]
+            }
+          }
+        }
+        ```
+      </Tab>
+    </Tabs>
+
+    設定を保存した後、Claude Desktopを再起動してください。Injective Docsツールがclaudeの利用可能なツールに表示されます。
+  </Tab>
+</Tabs>
+
+## MCP serverの使用
+
+接続後、AIアシスタントにInjectiveに関する質問をできます。
+アシスタントは自動的に`SearchInjectiveDocs`ツールを使用して関連情報を検索します。
+
+**プロンプト例：**
+
+- 「Injectiveでウォレットを作成するには？」
+- 「CosmWasmスマートコントラクトのデプロイ方法を教えて」
+- 「Injective mainnetのネットワークエンドポイントは？」
+- 「Token Factoryモジュールの使い方は？」
+- 「Injectiveでのマージントレーディングの仕組みを説明して」
+
+AIがドキュメントを検索し、関連ページへのリンク付きで回答を提供します。
+
+## MCPツールリファレンス
+
+### `SearchInjectiveDocs`
+
+Injectiveドキュメント全体を検索して関連情報を見つけます。
+
+**パラメーター：**
+
+| パラメーター | 型 | 必須 | 説明 |
+|-----------|------|------|------|
+| `query` | string | はい | 関連ドキュメントを検索するための検索クエリ |
+
+**戻り値：**
+
+タイトルとドキュメントページへの直接リンクを含むコンテキストコンテンツ。
+このツールはInjectiveドキュメント全体にわたるセマンティック検索を実行し、ページコンテンツ、見出し、コード例に対してクエリをマッチングします。
+結果は関連性でランク付けされ、クエリに最適な抽出スニペットとソースURLが返されます。
+
+**例：**
+
+リクエスト：
+```json
+{
+  "tool": "SearchInjectiveDocs",
+  "arguments": {
+    "query": "how to create a token using token factory"
+  }
+}
+```
+
+レスポンス：
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "# Token Factory\n\nThe Token Factory module allows you to create and manage custom tokens on Injective...\n\n## Creating a Token\n\nTo create a new token, use the `tokenfactory/create-denom` message...\n\nSource: https://docs.injective.network/developers/concepts/token-factory"
+    }
+  ]
+}
+```

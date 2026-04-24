@@ -1,0 +1,118 @@
+---
+title: WalletConnectで接続する
+---
+
+WalletConnectは、ウォレットとWeb3アプリケーションを安全にリンクするオープンソースのチェーンに依存しないプロトコルです。ブリッジサーバーを使用して暗号化されたメッセージを中継し、QRコードのスキャンやディープリンクを介してユーザーが秘密鍵を公開せずに接続できるようにします。
+
+### WalletConnectの統合手順
+
+#### 前提条件
+
+[WalletConnect Cloud](https://cloud.walletconnect.com)に登録し、**プロジェクトID**を取得します。
+
+***
+
+#### 依存関係のインストール
+
+```bash
+npm install ethers wagmi viem @walletconnect/ethereum-provider
+```
+
+Injective EVMネットワーク設定のセットアップ
+
+```javascript
+// lib/injectiveChain.ts
+import { defineChain } from 'viem'
+
+export const injectiveEvm = defineChain({
+  id: 1439,
+  name: 'Injective EVM',
+  nativeCurrency: {
+    name: 'INJ',
+    symbol: 'INJ',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: { http: ['https://k8s.testnet.json-rpc.injective.network'] },
+  },
+  blockExplorers: {
+    default: { name: 'InjectiveScan', url: 'https://testnet.blockscout.injective.network/blocks' },
+  },
+})
+```
+
+Wagmi + WalletConnectのセットアップ
+
+```javascript
+ // lib/wagmi.ts
+import { walletConnect } from '@wagmi/connectors'
+import { createConfig, http } from '@wagmi/core'
+import { injectiveEvm } from './injectiveChain'
+
+export const wagmiConfig = createConfig({
+  chains: [injectiveEvm],
+  connectors: [
+    walletConnect({
+      projectId: 'your-walletconnect-project-id', // From WalletConnect Cloud
+      showQrModal: true,
+    }),
+  ],
+  transports: {
+    [injectiveEvm.id]: http(injectiveEvm.rpcUrls.default.http[0]),
+  },
+})
+
+```
+
+プロジェクトへの統合
+
+```javascript
+'use client'
+
+import Image from 'next/image'
+import { wagmiConfig } from './providers'
+import { useConnect, useAccount, WagmiProvider } from 'wagmi'
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
+
+export const queryClient = new QueryClient()
+
+function WalletConnector() {
+  const { connectors, connect, isPending } = useConnect()
+  const { address, isConnected } = useAccount()
+  const wcConnector = connectors.find(c => c.id === 'walletConnect')
+
+  return (
+    <div style={{ textAlign: 'center', marginTop: '100px' }}>
+      {isConnected ? (
+        <p>Connected to {address}</p>
+      ) : (
+        <button
+          onClick={() => wcConnector && connect({ connector: wcConnector })}
+          disabled={isPending || !wcConnector}
+          style={{ padding: '12px 24px', fontSize: '16px' }}
+        >
+          Connect Wallet (WalletConnect)
+        </button>
+      )}
+    </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <WalletConnector />
+      </QueryClientProvider>
+    </WagmiProvider>
+  )
+}
+
+```
+
+***
+
+その他の情報
+
+* WalletConnectドキュメント: [https://docs.walletconnect.com](https://docs.walletconnect.com)
+* WalletConnect公式サンプル: [https://github.com/WalletConnect/web-examples](https://github.com/WalletConnect/web-examples)

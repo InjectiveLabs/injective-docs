@@ -1,5 +1,6 @@
 ---
 title: Upgrade to {/* $VERSION */}
+updatedAt: "2025-12-03"
 ---
 
 {/* $DATE (e.g. Tuesday, August 19th, 2025) */}
@@ -82,7 +83,8 @@ rm -rf .injectived/wasm/wasm/cache/
 
 4.  Verify you are currently running the correct version (`{/* $VERSION */}`) of `injectived` after downloading the `{/* $VERSION */}` release:
 
-    {/* $INJECTIVED_OUTPUT */}
+    {/* $INJECTIVED_OUTPUT - obtain using the following command
+        docker run -it --rm -v $HOME/.injectived:/root/.injectived injectivelabs/injective-core:$VERSION injectived --home /root/.injectived version */}
     {/* e.g.
     ```bash
     $ injectived version
@@ -99,7 +101,8 @@ rm -rf .injectived/wasm/wasm/cache/
 
 6.  Verify you are currently running the correct version (`{/* $VERSION */}`) of `peggo` after downloading the `{/* $VERSION */}` release:
 
-    {/* $PEGGO_OUTPUT */}
+    {/* $PEGGO_OUTPUT - obtain using the following command
+        docker run -it --rm -v $HOME/.injectived:/root/.injectived injectivelabs/injective-core:$VERSION peggo version */}
     {/* e.g.
     ```bash
     $ peggo version
