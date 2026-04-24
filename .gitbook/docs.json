@@ -1199,156 +1199,156 @@
                   "ko/defi/community-buyback",
                   "ko/defi/transactions",
                   "ko/defi/transaction-fees",
-              {
-                "group": "Open Liquidity Program",
-                "pages": [
-                  "ko/defi/open-liquidity-program/introduction",
-                  "ko/defi/open-liquidity-program/epochs",
-                  "ko/defi/open-liquidity-program/eligibility",
-                  "ko/defi/open-liquidity-program/scoring",
-                  "ko/defi/open-liquidity-program/formula-parameters",
-                  "ko/defi/open-liquidity-program/reward-allocations",
-                  "ko/defi/open-liquidity-program/flexible-reward-allocations",
-                  "ko/defi/open-liquidity-program/reward-disbursements",
-                  "ko/defi/open-liquidity-program/performance-tracking",
-                  "ko/defi/open-liquidity-program/volatility-response-modifications",
-                  "ko/defi/open-liquidity-program/fee-tiers"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "개발자",
-            "icon": "laptop-code",
-            "expanded": false,
-            "pages": [
-              "ko/developers/index",
-              "ko/developers/convert-addresses",
-              "ko/developers/network-information",
-              {
-                "group": "AI 개발",
-                "pages": [
-                  "ko/developers/ai/mcp"
+                  {
+                    "group": "Open Liquidity Program",
+                    "pages": [
+                      "ko/defi/open-liquidity-program/introduction",
+                      "ko/defi/open-liquidity-program/epochs",
+                      "ko/defi/open-liquidity-program/eligibility",
+                      "ko/defi/open-liquidity-program/scoring",
+                      "ko/defi/open-liquidity-program/formula-parameters",
+                      "ko/defi/open-liquidity-program/reward-allocations",
+                      "ko/defi/open-liquidity-program/flexible-reward-allocations",
+                      "ko/defi/open-liquidity-program/reward-disbursements",
+                      "ko/defi/open-liquidity-program/performance-tracking",
+                      "ko/defi/open-liquidity-program/volatility-response-modifications",
+                      "ko/defi/open-liquidity-program/fee-tiers"
+                    ]
+                  }
                 ]
               },
               {
-                "group": "injectived",
-                "pages": [
-                  "ko/developers/injectived/index",
-                  "ko/developers/injectived/install",
-                  "ko/developers/injectived/use",
-                  "ko/developers/injectived/advanced",
-                  "ko/developers/testnet-proposals"
-                ]
-              },
-              {
-                "group": "개념",
-                "pages": [
-                  "ko/developers/concepts/index",
-                  "ko/developers/concepts/sentry-node",
-                  "ko/developers/concepts/indexer-api",
-                  "ko/developers/concepts/trading-account",
-                  "ko/developers/concepts/grpc-protobuf",
-                  "ko/developers/concepts/token-factory",
-                  "ko/developers/concepts/calculation-min-price-tick-size",
-                  "ko/developers/concepts/calculation-min-quantity-tick-size",
-                  "ko/developers/concepts/cosmjs-support",
-                  "ko/developers/concepts/networks"
-                ]
-              },
-              {
-                "group": "자산",
-                "pages": [
-                  "ko/developers/assets/index",
-                  "ko/developers/assets/denom",
-                  "ko/developers/assets/token-metadata",
-                  "ko/developers/assets/injective-list",
-                  "ko/developers/assets/token-create"
-                ]
-              },
-              {
-                "group": "dApp",
-                "pages": [
-                  "ko/developers/dapps/index",
-                  "ko/developers/dapps/configure-nuxt",
-                  "ko/developers/dapps/configure-react",
-                  "ko/developers/dapps/run-examples",
-                  "ko/developers/dapps/example-smart-contract",
-                  "ko/developers/dapps/example-dex",
-                  "ko/developers/dapps/example-webpack"
-                ]
-              },
-              "redirects/https_testnet_faucet_injective_network",
-              "redirects/https_sentry_lcd_injective_network_swagger",
-              "redirects/https_docs_ts_injective_network",
-              "redirects/https_github_com_InjectiveLabs_sdk_go",
-              "redirects/https_github_com_InjectiveLabs_sdk_python",
-              "redirects/https_github_com_InjectiveLabs_cw_injective",
-              "redirects/https_github_com_InjectiveLabs_injective_rust",
-              "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
-              "redirects/https_api_injective_exchange"
-            ]
-          },
-          {
-            "group": "AI 개발자",
-            "icon": "brain",
-            "expanded": false,
-            "pages": [
-              "ko/developers-ai/index",
-              "ko/developers-ai/injective-cli-skill",
-              "ko/developers-ai/injective-evm-developer-skill",
-              "ko/developers-ai/injective-mcp-servers-skill",
-              "ko/developers-ai/injective-trading-skills",
-              "ko/developers-ai/documentation-mcp",
-              "ko/developers-ai/mcp"
-            ]
-          },
-          {
-            "group": "인프라",
-            "icon": "network-wired",
-            "expanded": false,
-            "pages": [
-              "ko/infra/index",
-              {
-                "group": "노드와 상호작용",
+                "group": "개발자",
+                "icon": "laptop-code",
                 "expanded": false,
                 "pages": [
-                  "ko/infra/interact-node/index",
-                  "ko/infra/interact-node/command-line",
-                  "ko/infra/interact-node/grpc",
-                  "ko/infra/interact-node/go",
-                  "ko/infra/interact-node/rest"
+                  "ko/developers/index",
+                  "ko/developers/convert-addresses",
+                  "ko/developers/network-information",
+                  {
+                    "group": "AI 개발",
+                    "pages": [
+                      "ko/developers/ai/mcp"
+                    ]
+                  },
+                  {
+                    "group": "injectived",
+                    "pages": [
+                      "ko/developers/injectived/index",
+                      "ko/developers/injectived/install",
+                      "ko/developers/injectived/use",
+                      "ko/developers/injectived/advanced",
+                      "ko/developers/testnet-proposals"
+                    ]
+                  },
+                  {
+                    "group": "개념",
+                    "pages": [
+                      "ko/developers/concepts/index",
+                      "ko/developers/concepts/sentry-node",
+                      "ko/developers/concepts/indexer-api",
+                      "ko/developers/concepts/trading-account",
+                      "ko/developers/concepts/grpc-protobuf",
+                      "ko/developers/concepts/token-factory",
+                      "ko/developers/concepts/calculation-min-price-tick-size",
+                      "ko/developers/concepts/calculation-min-quantity-tick-size",
+                      "ko/developers/concepts/cosmjs-support",
+                      "ko/developers/concepts/networks"
+                    ]
+                  },
+                  {
+                    "group": "자산",
+                    "pages": [
+                      "ko/developers/assets/index",
+                      "ko/developers/assets/denom",
+                      "ko/developers/assets/token-metadata",
+                      "ko/developers/assets/injective-list",
+                      "ko/developers/assets/token-create"
+                    ]
+                  },
+                  {
+                    "group": "dApp",
+                    "pages": [
+                      "ko/developers/dapps/index",
+                      "ko/developers/dapps/configure-nuxt",
+                      "ko/developers/dapps/configure-react",
+                      "ko/developers/dapps/run-examples",
+                      "ko/developers/dapps/example-smart-contract",
+                      "ko/developers/dapps/example-dex",
+                      "ko/developers/dapps/example-webpack"
+                    ]
+                  },
+                  "redirects/https_testnet_faucet_injective_network",
+                  "redirects/https_sentry_lcd_injective_network_swagger",
+                  "redirects/https_docs_ts_injective_network",
+                  "redirects/https_github_com_InjectiveLabs_sdk_go",
+                  "redirects/https_github_com_InjectiveLabs_sdk_python",
+                  "redirects/https_github_com_InjectiveLabs_cw_injective",
+                  "redirects/https_github_com_InjectiveLabs_injective_rust",
+                  "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
+                  "redirects/https_api_injective_exchange"
                 ]
               },
-              "ko/infra/run-node",
-              "ko/infra/set-up-keyring",
-              "ko/infra/join-a-network",
-              "ko/infra/cosmovisor",
-              "ko/infra/upgrade-node",
               {
-                "group": "메인넷 검증자",
+                "group": "AI 개발자",
+                "icon": "brain",
+                "expanded": false,
                 "pages": [
-                  "ko/infra/validator-mainnet/index",
-                  "ko/infra/validator-mainnet/peggo",
-                  "ko/infra/validator-mainnet/canonical-chain-upgrade"
+                  "ko/developers-ai/index",
+                  "ko/developers-ai/injective-cli-skill",
+                  "ko/developers-ai/injective-evm-developer-skill",
+                  "ko/developers-ai/injective-mcp-servers-skill",
+                  "ko/developers-ai/injective-trading-skills",
+                  "ko/developers-ai/documentation-mcp",
+                  "ko/developers-ai/mcp"
                 ]
               },
               {
-                "group": "테스트넷 검증자",
+                "group": "인프라",
+                "icon": "network-wired",
+                "expanded": false,
                 "pages": [
-                  "ko/infra/validator-testnet/index",
-                  "ko/infra/validator-testnet/peggo"
+                  "ko/infra/index",
+                  {
+                    "group": "노드와 상호작용",
+                    "expanded": false,
+                    "pages": [
+                      "ko/infra/interact-node/index",
+                      "ko/infra/interact-node/command-line",
+                      "ko/infra/interact-node/grpc",
+                      "ko/infra/interact-node/go",
+                      "ko/infra/interact-node/rest"
+                    ]
+                  },
+                  "ko/infra/run-node",
+                  "ko/infra/set-up-keyring",
+                  "ko/infra/join-a-network",
+                  "ko/infra/cosmovisor",
+                  "ko/infra/upgrade-node",
+                  {
+                    "group": "메인넷 검증자",
+                    "pages": [
+                      "ko/infra/validator-mainnet/index",
+                      "ko/infra/validator-mainnet/peggo",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade"
+                    ]
+                  },
+                  {
+                    "group": "테스트넷 검증자",
+                    "pages": [
+                      "ko/infra/validator-testnet/index",
+                      "ko/infra/validator-testnet/peggo"
+                    ]
+                  },
+                  "ko/infra/public-endpoints",
+                  "ko/infra/premium-endpoints",
+                  "ko/infra/archival-setup",
+                  "redirects/https_injective_notion_site_indexer_service_setup_guide",
+                  "redirects/https_api_injective_network_swagger"
                 ]
               },
-              "ko/infra/public-endpoints",
-              "ko/infra/premium-endpoints",
-              "ko/infra/archival-setup",
-              "redirects/https_injective_notion_site_indexer_service_setup_guide",
-              "redirects/https_api_injective_network_swagger"
-            ]
-          },
-          {
-            "group": "EVM 개발자",
+              {
+                "group": "EVM 개발자",
                 "icon": "rectangle-code",
                 "expanded": false,
                 "pages": [
@@ -1772,7 +1772,74 @@
               },
               "jp/faq",
               "jp/glossary",
-              "jp/references"
+              "jp/references",
+              {
+                "group": "DeFi",
+                "icon": "coins",
+                "expanded": false,
+                "pages": [
+                  "jp/defi/index",
+                  {
+                    "group": "ウォレット",
+                    "pages": [
+                      "jp/defi/wallet/index",
+                      "jp/defi/wallet/create",
+                      "jp/defi/wallet/accounts"
+                    ]
+                  },
+                  {
+                    "group": "トレーディング",
+                    "pages": [
+                      "jp/defi/trading/index",
+                      "jp/defi/trading/order-types",
+                      "jp/defi/trading/fees",
+                      "jp/defi/trading/24-5-equity-feeds",
+                      "jp/defi/trading/margin",
+                      "jp/defi/trading/margin-liquidation",
+                      "jp/defi/trading/margin-funding-rates",
+                      "jp/defi/trading/margin-performing-liquidations",
+                      "jp/defi/trading/derivatives",
+                      "jp/defi/trading/derivatives-perpetuals",
+                      "jp/defi/trading/derivatives-expiry-futures",
+                      "jp/defi/trading/derivatives-election-perpetual",
+                      "jp/defi/trading/derivatives-pre-launch-futures",
+                      "jp/defi/trading/derivatives-index-perpetual-futures",
+                      "jp/defi/trading/derivatives-iassets"
+                    ]
+                  },
+                  {
+                    "group": "トークン規格",
+                    "pages": [
+                      "jp/defi/tokens/index",
+                      "jp/defi/tokens/inj-coin",
+                      "jp/defi/tokens/token-factory",
+                      "jp/defi/tokens/cw20-standard"
+                    ]
+                  },
+                  "jp/defi/bridge",
+                  "jp/defi/staking",
+                  "jp/defi/governance",
+                  "jp/defi/community-buyback",
+                  "jp/defi/transactions",
+                  "jp/defi/transaction-fees",
+                  {
+                    "group": "Open Liquidity Program",
+                    "pages": [
+                      "jp/defi/open-liquidity-program/introduction",
+                      "jp/defi/open-liquidity-program/eligibility",
+                      "jp/defi/open-liquidity-program/scoring",
+                      "jp/defi/open-liquidity-program/reward-allocations",
+                      "jp/defi/open-liquidity-program/flexible-reward-allocations",
+                      "jp/defi/open-liquidity-program/reward-disbursements",
+                      "jp/defi/open-liquidity-program/epochs",
+                      "jp/defi/open-liquidity-program/formula-parameters",
+                      "jp/defi/open-liquidity-program/performance-tracking",
+                      "jp/defi/open-liquidity-program/volatility-response-modifications",
+                      "jp/defi/open-liquidity-program/fee-tiers"
+                    ]
+                  }
+                ]
+              }
             ]
           }
         ]

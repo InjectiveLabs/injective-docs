@@ -1,0 +1,47 @@
+---
+title: ウォレット
+---
+
+Injectiveウォレットを使用すると、Injective上の資産を監視できます。資産は、Injective上のネイティブトークン、およびEthereum、Solana、Polygon、その他のIBC対応チェーンからブリッジされた資産が含まれます。[Injective Hubステーキングウォークスルー](https://injective.com/blog/injective-hub/)をご覧ください。
+
+Injectiveでは、さまざまなウォレットがサポートされています。ユーザーは、EthereumまたはCosmosネイティブのウォレットを使用してInjective上でトランザクションを実行できます。
+
+### 概要
+
+Injectiveの`Account`タイプはEthereumのECDSA secp256k1曲線を使用しています。簡単に言えば、InjectiveのAccountはEthereumのアカウントとネイティブ（互換）であり、MetaMaskなどのEthereumネイティブウォレットがInjectiveとやり取りできます。KeplrやLeapなどの人気のCosmosウォレットもInjectiveと統合されています。
+
+#### Ethereumベースのウォレット
+
+上記のとおり、Ethereumベースのウォレットを使用してInjectiveと連携できます。現在、最も人気のEthereumベースのウォレットがInjectiveでサポートされています：
+
+1. [MetaMask](https://metamask.io/)
+2. [Ledger](https://www.ledger.com/)
+3. [Trezor](https://trezor.io/)
+4. [Torus](https://tor.us/index.html)
+
+Ethereumネイティブウォレットを使用してInjectiveでトランザクションに署名するプロセスは次のとおりです：
+
+1. トランザクションをEIP712 TypedDataに変換、
+2. Ethereumネイティブウォレットを使用してEIP712 TypedDataに署名、
+3. トランザクションをネイティブのCosmosトランザクションにパックし（署名を含む）、チェーンにブロードキャスト。
+
+このプロセスはエンドユーザーからは抽象化されています。以前にEthereumネイティブウォレットを使用したことがある場合、ユーザーエクスペリエンスは同じです。
+
+#### Cosmosベースのウォレット
+
+Injectiveは、CosmosおよびIBCと互換性のある主要なウォレットをサポートしています：
+
+1. [Cosmostation](https://cosmostation.io/)
+2. [Keplr](https://www.keplr.app/)
+3. [Leap](https://www.leapwallet.io/)
+
+#### Injectiveネイティブウォレット
+
+現在、[Ninji Wallet](https://ninji.xyz/)が唯一のInjectiveネイティブウォレットです。このウォレットは、Injectiveエコシステムとの相乗効果を得るように特別に設計されています。
+
+#### CEXベースのウォレット
+
+Injectiveをサポートする中央集権型取引所（CEX）が開発したウォレットもいくつかあります。これらのCEXのアクティブユーザーであれば、そのウォレットを使用することで、よりシームレスなWeb3体験を得られます。現在、InjectiveをサポートするCEXベースのウォレットは以下のとおりです：
+
+1. [Bitget Wallet](https://web3.bitget.com/en/)
+2. [OKX Wallet](https://www.okx.com/web3)

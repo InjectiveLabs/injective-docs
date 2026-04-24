@@ -1,0 +1,19 @@
+---
+title: Index Perpetual Futures
+---
+
+Index Perpetual Futures契約（Index Perp）は、暗号資産市場で広く使用されているデリバティブ金融商品の一種です。Index Perpは、単一の資産ではなくインデックスの価格を追跡するPerpetual Futures契約です。暗号資産の文脈では、このインデックスは通常、暗号資産のバスケットを表すか、またはBUIDL/USDT Index Perpのケースのように、トークンのスマートコントラクトによって決定されるオンチェーンプロダクトの総供給量を表します。
+
+従来の先物契約とは異なり、これらの契約には満期日がなく、無期限に保有することができます。取引はUSDTで決済されます。他のPerpと同様に、Index Perpはファンディングレートメカニズムを使用して、契約価格を原資産のインデックス価格に近い状態に維持します。
+
+### Index Perpetual Futuresの仕組み
+
+* 契約はインデックス（例：BlackrockのBUIDLファンドの総供給量）を追跡します。
+* トレーダーは最大5倍のレバレッジで、インデックスをロング（買い）またはショート（売り）することができます。
+* 契約価格をインデックスに一致させるため、ロング保有者とショート保有者の間で定期的なファンディングペイメントが発生します。
+
+Futures契約では、清算価格と決済価格を追跡するためにMark Priceが必要です。Mark Priceは通常、原資産のスポット価格に基づいているため、インデックス価格が一般的なOracleフィードに存在しないIndex Perpには通常のOracle価格フィードを使用できません。しかし、清算価格を決定するためにはMark Priceが依然として必要です。これを解決するために、Index Perpは独自のOracleフィードをMark Priceとして使用します。
+
+### Mark Priceメカニズム
+
+Injective上のIndex PerpのMark Priceは、Storkが提供する独自のOracleフィードに基づいています。BUIDL/USDT Index Perp（NAV（Net Asset Value）Index Perpの一種）の例では、StorkはEthereum上の[スマートコントラクト](https://etherscan.io/token/0x7712c34205737192402172409a8f7ccef8aa2aec)に基づいてBUIDLファンドの総供給量を照会します。その後、Mark Priceの急激な変動を防ぐために1時間のTWAP（時間加重平均価格）を適用します。その価格はより人間が読みやすい形式にスケールダウンされ（実際のNAVは10^5で除算されます。例えば、BUIDLファンドの供給量が5億の場合、BUIDL/USDT Index PERPの価格は5000となります）、Mark Priceとして使用されます。
