@@ -1,0 +1,291 @@
+---
+title: MetaMaskで接続する
+---
+
+## MetaMaskをInjective EVMテストネットに接続する
+
+MetaMaskは、Injective EVMを含むEVM互換ネットワークに接続できるブラウザウォレット拡張機能です。
+
+### MetaMaskのインストール方法
+
+[MetaMaskダウンロードページ](https://metamask.io/download)から公式MetaMask拡張機能をインストールします。
+
+### Injective EVMテストネットをMetaMaskに追加する
+
+1. ブラウザの**MetaMaskアイコン**をクリックしてウォレットのロックを解除します。
+2. 上部の**ネットワークセレクター**をクリックします（デフォルトは「Ethereum Mainnet」）。
+3. **「ネットワークを追加」**または**「ネットワークを手動で追加」**を選択してカスタムネットワークフォームを開きます。
+
+#### Injective EVMテストネットパラメータ
+
+以下の詳細を入力します：
+
+```json
+Network Name: Injective EVM Testnet
+Chain ID: 1439
+RPC URL: https://k8s.testnet.json-rpc.injective.network/
+Currency Symbol: INJ
+Block Explorer URL: https://testnet.blockscout.injective.network/blocks
+```
+
+> _注: Block Explorer URLはオプションで、BlockScoutを使用しています。_
+
+### Injective EVMテストネットに切り替える
+
+ネットワークが追加されたら、ネットワークセレクターを使用して**Injective EVMテストネット**に切り替えます。
+
+### ウォレットに資金を追加する（オプション）
+
+テストネットINJが必要ですか？[Injectiveテストネットfaucet](https://testnet.faucet.injective.network)にアクセスしてください。
+
+テストネットブロックに含まれると、資金が表示されます。
+
+***
+
+### 準備完了！
+
+MetaMaskが**Injective EVMテストネット**に接続されました。以下のことが可能です：
+
+* **Foundry**、**Hardhat**、**Remix**などのツールを使用してスマートコントラクトをデプロイする。
+* テストネットのdAppやコントラクトと連携する。
+* Blockscoutエクスプローラーでトランザクションを確認する。
+
+> **ヒント:** RPC URLとChain IDは常に正確に確認してください。設定ミスを避けるために重要です。
+
+***
+
+### ethers.jsでMetaMaskを接続する
+
+[`ethers`](https://docs.ethers.org/)を使用してプログラムからMetaMaskに接続することもできます。
+
+#### サンプルコード
+
+```ts
+import { ethers } from 'ethers';
+
+export const INJECTIVE_EVM_PARAMS = {
+  chainId: '0x59f', // 1439 in hexadecimal
+  chainName: 'Injective EVM',
+  rpcUrls: ['https://k8s.testnet.json-rpc.injective.network/'],
+  nativeCurrency: {
+    name: 'Injective',
+    symbol: 'INJ',
+    decimals: 18,
+  },
+  blockExplorerUrls: ['https://testnet.blockscout.injective.network/blocks'],
+};
+
+export async function connectMetaMask() {
+  if (typeof window.ethereum === 'undefined') {
+    alert('MetaMask not installed!');
+    return;
+  }
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+  try {
+    await window.ethereum.request({
+      method: 'wallet_addEthereumChain',
+      params: [INJECTIVE_EVM_PARAMS],
+    });
+
+    await provider.send('eth_requestAccounts', []);
+    const signer = provider.getSigner();
+    const address = await signer.getAddress();
+
+    console.log('Connected address:', address);
+    return { provider, signer, address };
+  } catch (err) {
+    console.error('MetaMask connection failed:', err);
+  }
+}
+```
+
+### ethers.jsを使用してスマートコントラクトと連携する
+
+counterコントラクトABIのサンプルコード：
+
+```tsx
+// abi/counterAbi.ts
+[
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "reason",
+				"type": "string"
+			}
+		],
+		"name": "UserRevert",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "newValue",
+				"type": "uint256"
+			}
+		],
+		"name": "ValueSet",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "increment",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "number",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "newNumber",
+				"type": "uint256"
+			}
+		],
+		"name": "setNumber",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "reason",
+				"type": "string"
+			}
+		],
+		"name": "userRevert",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
+```
+
+```javascript
+import { ethers } from 'ethers'
+import { counterAbi } from './abi/counterAbi'
+import { INJECTIVE_EVM_PARAMS } from './config' // From separate file
+
+// Replace with your deployed contract address
+const contractAddress = '0xYourContractAddressHere'
+
+async function connectAndInteract() {
+  if (!window.ethereum) {
+    alert('MetaMask is not installed!')
+    return
+  }
+
+  // Request Injective EVM Network be added to MetaMask
+  await window.ethereum.request({
+    method: 'wallet_addEthereumChain',
+    params: [
+      {
+        chainId: INJECTIVE_EVM_PARAMS.chainHex,
+        chainName: INJECTIVE_EVM_PARAMS.chainName,
+        rpcUrls: [INJECTIVE_EVM_PARAMS.rpcUrl],
+        nativeCurrency: INJECTIVE_EVM_PARAMS.nativeCurrency,
+        blockExplorerUrls: [INJECTIVE_EVM_PARAMS.blockExplorer],
+      },
+    ],
+  })
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum)
+  await provider.send('eth_requestAccounts', [])
+  const signer = provider.getSigner()
+  const userAddress = await signer.getAddress()
+  console.log('Connected as:', userAddress)
+
+  // Contract instance
+  const contract = new ethers.Contract(contractAddress, counterAbi, signer)
+
+  // Send transaction to increment
+  const tx = await contract.increment()
+  console.log('Transaction sent:', tx.hash)
+
+  const receipt = await tx.wait()
+  console.log('Transaction mined in block:', receipt.blockNumber)
+}
+
+connectAndInteract().catch(console.error)
+```
+
+### viemを使用してスマートコントラクトと連携する
+
+サンプルコード
+
+```javascript
+import { counterAbi } from './abi/counterAbi'
+import { INJECTIVE_EVM_PARAMS } from './config'
+import { createPublicClient, http } from 'viem'
+import { createWalletClient, custom, defineChain, formatEther } from 'viem'
+
+// Replace with your deployed contract address
+const contractAddress = '0xYourContractAddressHere'
+
+async function connectAndInteract() {
+  if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
+    alert('MetaMask is not installed!')
+    return
+  }
+
+  const client = createWalletClient({
+    chain: INJECTIVE_EVM_PARAMS,
+    transport: custom(window.ethereum),
+  })
+
+  // Create a PublicClient for reading contract state
+  const publicClient = createPublicClient({
+    chain: injectiveEvm,
+    transport: http(),
+  })
+
+  const [account] = await client.requestAddresses()
+  console.log('Connected account:', account)
+
+  // Send transaction to increment using wallet client
+  const hash = await client.writeContract({
+    address: contractAddress,
+    abi: counterAbi,
+    functionName: 'increment',
+    account,
+  })
+
+  console.log('Transaction sent with hash:', hash)
+}
+
+connectAndInteract().catch(console.error)
+```

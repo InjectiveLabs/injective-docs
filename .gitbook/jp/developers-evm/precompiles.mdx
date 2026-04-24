@@ -1,0 +1,79 @@
+---
+title: Precompiles
+---
+
+### InjectiveにおけるPrecompileとは？
+
+Injectiveでは、precompileはプロトコルレベルでEVM（Ethereum Virtual Machine）レイヤーに直接組み込まれた、特別高度に最適化されたスマートコントラクトです。ユーザーがデプロイする標準的なSolidityスマートコントラクトとは異なり、precompileはチェーンのコアロジックの一部です。Solidityではなく Goで記述され、固定アドレスでEVMに公開されるため、Solidityスマートコントラクトから他のスマートコントラクトと同様に呼び出すことができます。
+
+precompileは、Ethereumスタイルのインターフェースが付与されたInjectiveチェーンのネイティブ関数と考えてください。
+
+### なぜ必要なのか？（EVMとネイティブモジュールのブリッジ）
+
+Injective EVMはサイロ内で動作しているわけではありません。Bankモジュール（トークン管理用）、Exchangeモジュール（オンチェーンオーダーブック用）、Stakingモジュールなど、InjectiveのパワフルなネイティブCosmos SDKモジュールと深く統合されています。
+
+Precompileは、EVMの世界（Solidityコントラクトが存在する場所）とこれらのInjectiveネイティブ機能の間の重要な**ブリッジ**として機能します。precompileがなければ、EVMスマートコントラクトは孤立し、より広いInjectiveエコシステムの豊富な機能と流動性を活用できなくなります。
+
+例えば、ネイティブ環境とEVM環境間で統一されたトークン残高を保証する[MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard)モデルは、**Bank Precompile**に大きく依存しています。
+
+### 開発者にとってのメリット
+
+* **ネイティブ機能へのアクセス:** オンチェーンオーダーブック、ネイティブstaking、governance、MTSのためのbankモジュールなど、Injectiveのユニークなモジュールと直接連携できます。
+* **パフォーマンスの向上:** precompileを介して実行される操作は、複雑なネイティブロジックを純粋にSolidityで再現しようとするよりも大幅に高速でgas効率が良く、最適化されたネイティブコードとして実行されます。
+* **シームレスな相互運用性:** EVMとInjectiveのCosmos ネイティブ機能の両方の強みを活かした、真に統合されたアプリケーションを構築できます。
+* **開発の簡素化:** 馴染みのあるSolidityインターフェースを通じて複雑なネイティブ機能と連携し、基盤となるCosmosの複雑さの多くを抽象化します。
+
+Bank precompileに基づくERC-20実装の一連のコントラクト、precompileインターフェース、抽象コントラクトが[InjectiveのSolidity Contractsリポジトリ](https://github.com/InjectiveLabs/solidity-contracts)で利用可能です。主要なコントラクトは以下の通りです：
+
+* [**Bank.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/Bank.sol) – precompileインターフェース
+* [**BankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/BankERC20.sol) – Bank precompileに基づく抽象ERC20実装
+* [**FixedSupplyBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/FixedSupplyBankERC20.sol) – 固定サプライの分散型ERC20（オーナーなし、mintおよびburnなし）
+* [**MintBurnBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/MintBurnBankERC20.sol) – オーナーがmintとburnを許可されたERC20
+
+これらの実装はOpenZeppelinのERC20コントラクトに基づいています。開発者はBank precompileを利用したカスタムERC20コントラクトを自由に作成できます。
+
+### 始めるためのデモ
+
+Bank、Exchange、Staking precompileを使用したコントラクトの構築方法を示すデモを用意しました。これらの例では、最も一般的なEthereum開発フレームワークである**Foundry**を使用してInjective EVMと連携する方法も示しています。
+
+Foundryの`cast`ツールを活用することで、ターミナルから直接コントラクトをデプロイし、Injectiveチェーンと連携できます。これにより、ビルダーはInjectiveのネイティブモジュールを活用したパワフルなアプリケーションを素早く実験、テスト、デプロイできます。
+
+以下のデモで確認できること：
+
+- トークン管理、トレーディング、stakingのためにprecompileを呼び出すSolidityコントラクトの書き方。
+- Foundryスクリプトと`cast`コマンドを使用して、Injective EVMでこれらのコントラクトをデプロイし、連携する方法。
+- EVMロジックとInjectiveのネイティブ機能をブリッジするためのベストプラクティス。
+
+[Injective Solidity Contractsリポジトリ](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos)をクローンし、各デモディレクトリのステップバイステップガイドに従って開発を開始してください。
+
+* [Bank Precompileデモ](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/erc20)
+* [Exchange Precompileデモ](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange)
+* [Staking Precompileデモ](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/staking)
+
+### Precompileアドレス
+
+| 名前 | 用途 | EVMアドレス |
+| ---------------------------------- | ----------------------------- | ----------- |
+| [Bank](/developers-evm/bank-precompile) | トークン管理 | `0x64` |
+| [Exchange](/developers-evm/exchange-precompile) | オンチェーンオーダーブック | `0x65` |
+| Staking | ネイティブstakingトークンのオンチェーン管理 | `0x66` |
+
+## non-contract addressエラー
+
+Foundryを使用して、Injective MainnetまたはInjective Testnetをローカルに「fork」し、
+その環境でスマートコントラクトを実行すると、
+以下のようなエラーが表示される場合があります：
+
+```text
+[Revert] call to non-contract address 0x0000000000000000000000000000000000000064
+```
+
+これは、FoundryがInjectiveを実際に実行するのではなく、ローカルで*シミュレーション*しているために発生します。
+そのため、Injective固有のEVMシミュレーションではなく、*汎用的なEVM*シミュレーションを実行しています。
+違いは、Injectiveのネイティブ機能が存在しないため、precompileを認識できないことにあります。
+
+修正は簡単です：
+Injectiveのprecompileを含むようにパッチされたFoundryバージョンを使用してください：
+[github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)。
+
+これらにはx86_64 LinuxおよびmacOS ARM64用のプリビルドバイナリが含まれています。

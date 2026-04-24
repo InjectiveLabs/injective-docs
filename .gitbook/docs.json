@@ -1839,6 +1839,61 @@
                     ]
                   }
                 ]
+              },
+              {
+                "group": "EVM開発者",
+                "icon": "rectangle-code",
+                "expanded": false,
+                "pages": [
+                  "jp/developers-evm/index",
+                  "jp/developers-evm/network-information",
+                  {
+                    "group": "初めてのEVMスマートコントラクト",
+                    "pages": [
+                      "jp/developers-evm/smart-contracts/index",
+                      "jp/developers-evm/smart-contracts/compile-hardhat",
+                      "jp/developers-evm/smart-contracts/test-hardhat",
+                      "jp/developers-evm/smart-contracts/deploy-hardhat",
+                      "jp/developers-evm/smart-contracts/verify-hardhat",
+                      "jp/developers-evm/smart-contracts/interact-hardhat",
+                      "jp/developers-evm/smart-contracts/compile-foundry",
+                      "jp/developers-evm/smart-contracts/test-foundry",
+                      "jp/developers-evm/smart-contracts/deploy-foundry",
+                      "jp/developers-evm/smart-contracts/verify-foundry",
+                      "jp/developers-evm/smart-contracts/interact-foundry"
+                    ]
+                  },
+                  {
+                    "group": "初めてのEVM dApp",
+                    "pages": [
+                      "jp/developers-evm/dapps/index",
+                      "jp/developers-evm/dapps/connect-with-metamask",
+                      "jp/developers-evm/dapps/connect-with-walletconnect"
+                    ]
+                  },
+                  "jp/developers-evm/evm-equivalence",
+                  "jp/developers-evm/add-injective-to-your-dapp",
+                  "jp/developers-evm/infrastructure-and-tooling",
+                  {
+                    "group": "MultiVMトークン規格",
+                    "pages": [
+                      "jp/developers-evm/multivm-token-standard",
+                      "jp/developers-evm/permissioned-multivm-token",
+                      "jp/developers-evm/wrapped-inj",
+                      "jp/developers-evm/erc20-module"
+                    ]
+                  },
+                  {
+                    "group": "Precompiles",
+                    "pages": [
+                      "jp/developers-evm/precompiles",
+                      "jp/developers-evm/bank-precompile",
+                      "jp/developers-evm/exchange-precompile"
+                    ]
+                  },
+                  "jp/developers-evm/evm-integrations-cheat-sheet",
+                  "jp/developers-evm/evm-integrations-faq"
+                ]
               }
             ]
           }
