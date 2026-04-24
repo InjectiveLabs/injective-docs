@@ -1,0 +1,16 @@
+---
+title: gRPC & Protobuf
+updatedAt: "2025-10-30"
+---
+
+gRPCは、あらゆる環境で実行できる最新のオープンソース高性能Remote Procedure Call（RPC）フレームワークです。ロードバランシング、トレーシング、ヘルスチェック、認証のプラグ可能なサポートにより、データセンター内およびデータセンター間でサービスを効率的に接続できます。また、分散コンピューティングのラストマイルで、デバイス、モバイルアプリケーション、ブラウザをバックエンドサービスに接続する際にも適用できます。
+
+Protobufは、gRPCで最も一般的に使用されるIDL（Interface Definition Language）です。基本的に、protoファイルの形式でデータと関数のコントラクトを保存する場所です。
+
+```proto
+message Person {
+    required string name = 1;
+    required int32 id = 2;
+    optional string email = 3;
+}
+```

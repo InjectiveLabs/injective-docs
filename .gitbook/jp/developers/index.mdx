@@ -1,0 +1,150 @@
+---
+description: >-
+  このセクションの目的は、開発者がInjective上でプロジェクトを構築できるように支援することです
+title: Developers
+updatedAt: "2026-03-04"
+---
+
+Injectiveは、クロスチェーントレーディング、デリバティブ、DeFi、Web3アプリケーションに特化して設計された唯一のブロックチェーンです。
+DeFiエコシステムビルダーにとって世界的な拠点となるべく位置づけられているInjectiveは、
+開発者により強力なアプリケーションをより短時間で構築できるよう、多くの利点を提供します。
+
+このセクションでは、Injective上で開発を行う開発者向けに、包括的なガイド、ツール、リソースを提供します。
+SolidityやCosmWasmでスマートコントラクトを作成する場合、分散型取引所を開発する場合、
+ネイティブモジュールと統合する場合、フルスタックのdAppを構築する場合、
+このドキュメントを活用することで、すぐに開発を開始し、InjectiveのDeFi特化型インフラストラクチャを活用できます。
+
+Injectiveは、EthereumとCosmosの両エコシステムの長所を組み合わせ、デュアルスマートコントラクト環境を提供します:
+Solidity開発者向けのEVMと、Rust開発者向けのCosmWasmです。さらに、ネイティブDeFiモジュールを備えているため、
+コアとなる金融インフラストラクチャをゼロから再構築する必要がありません。
+超高速の650msブロックタイム、$0.0003のトランザクションコスト、MEV耐性のあるインフラストラクチャ、
+そしてEthereumやSolanaを含む23以上のネットワークとのシームレスな相互運用性により、
+開発者はパフォーマンス、セキュリティ、ユーザーエクスペリエンスを妥協することなく、
+洗練されたクロスチェーン金融アプリケーションを構築できます。
+
+## 主要な概念
+
+| 用語 | 説明 |
+|------|-------------|
+| **injectived** | Injectiveブロックチェーンに接続し、対話するためのコマンドラインインターフェースおよびノードデーモンです。 |
+| **Denom** | Injective上のネイティブアセット表現形式です（例: `factory/{creator}/{subdenom}` または `peggy{ethereumAddress}`）。 |
+| **Trading Account** | トレードを実行するためにBankモジュールから資金を分離した独立したサブアカウントです。1つのアドレスで無制限の数のトレーディングアカウントを持つことができます。 |
+| **Token Factory** | ユーザーやコントラクトが新しいネイティブトークンを作成し、ネイティブトークンとCW20トークン間でスワップできるネイティブモジュールです。 |
+| **Indexer API** | チェーンから高速クエリ、ストリーミング更新、履歴データを提供する高性能なデータインデックスサービスです。 |
+
+## なぜInjective上で構築するのか？
+
+<Columns cols={2}>
+  <Card
+    title="DeFi向けに最適化"
+    arrow="true"
+    icon="panel-left-close"
+    img="">
+    ⇾ 特化したモジュール<br />
+    ⇾ 低レイテンシーのインフラストラクチャ<br />
+    ⇾ 迅速な開発<br />
+    ⇾ より高い機能性<br />
+    ⇾ 新たな可能性の解放
+  </Card>
+  <Card
+    title="商用グレードのスケーラビリティ"
+    arrow="true"
+    icon="panel-left-close"
+    img="">
+    ⇾ 25,000+ TPS<br />
+    ⇾ 650msのブロックタイム<br />
+    ⇾ 即時ファイナリティ<br />
+    ⇾ MEV耐性<br />
+    ⇾ トランザクションあたり$0.0003
+  </Card>
+  <Card
+    title="高い相互運用性"
+    arrow="true"
+    icon="panel-left-close"
+    img="">
+    ⇾ EthereumとSolanaを含む23以上のネットワークとのネイティブな相互運用性<br />
+    ⇾ IBC対応、110以上のチェーン
+  </Card>
+  <Card
+    title="直感的な開発者体験"
+    arrow="true"
+    icon="panel-left-close"
+    img="">
+    ⇾ ネイティブに統合された実行レイヤー<br />
+    ⇾ WASM + EVM<br />
+    ⇾ Rust、Golang、Solidityによって駆動
+  </Card>
+</Columns>
+
+## 開発者向けパス
+
+<Columns cols={2}>
+  <Card
+    title="EVM"
+    href="/jp/developers-evm/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    Solidityスマートコントラクトをデプロイし、InjectiveのEVM互換実行レイヤー上で使い慣れたEthereumツールを使用してdAppを構築します。
+  </Card>
+  <Card
+    title="CosmWasm"
+    href="/developers-cosmwasm/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/launch-token-hero.png">
+    RustとCosmWasmフレームワークを使用して、パフォーマンスと安全性が向上した、セキュアで効率的なスマートコントラクトを構築します。
+  </Card>
+  <Card
+    title="DeFi"
+    href="/developers-defi/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    Injectiveのネイティブ金融プリミティブを活用して、DEX、デリバティブプラットフォーム、レンディングプロトコル、その他のDeFiアプリケーションを構築します。
+  </Card>
+  <Card
+    title="Native Modules"
+    href="/developers-native/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    Exchange、Oracle、Auction、Token Factoryモジュールなど、高度なユースケース向けの低レベルチェーン機能にアクセスします。
+  </Card>
+</Columns>
+
+## その他のリソース
+
+<Columns cols={3}>
+  <Card
+    title="dAppの構築"
+    href="/jp/developers/dapps/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    UIフレームワーク（React、Nuxt、Webpack）の設定と、Injective上でのサンプルdApp構築のためのステップバイステップガイドです。
+  </Card>
+  <Card
+    title="技術概念"
+    href="/jp/developers/concepts/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/code-hero.png">
+    トレーディングアカウント、トークン規格、gRPC、Indexer APIアーキテクチャなど、コア概念の詳細な解説です。
+  </Card>
+  <Card
+    title="injectived CLI"
+    href="/jp/developers/injectived/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    Injectiveノードデーモンをインストール、構成、使用して、チェーンとの対話、バリデーター操作、高度なコマンドを実行します。
+  </Card>
+</Columns>

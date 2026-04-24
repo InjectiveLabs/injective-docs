@@ -1,0 +1,31 @@
+---
+title: マーケットの最小数量ティックサイズ計算
+updatedAt: "2025-12-23"
+---
+
+オーダー価格のマーケット最小数量ティックサイズです。マーケットのminQuantityTickSizeが`0.001`で、数量`0.0011`のオーダー送信があった場合、拒否されます。
+
+derivateマーケットは、UIとチェーンの間でminQuantityTickSizeの形式が同じであるため、フォーマット変換は不要であることに注意してください。
+
+## Spotマーケット
+
+1.  UI人間可読形式からチェーン形式への変換:
+    18のベースdecimalと6のquote decimalを持つINJ/USDTマーケットを例に、値をチェーン形式に変換する方法は次のとおりです:
+
+```js
+import { toChainFormat } from "@injectivelabs/utils";
+
+const chainFormat = toChainFormat(value, baseDecimals).toFixed();
+```
+
+2. チェーン形式からUI人間可読形式への変換:
+   18のベースdecimalと6のquote decimalを持つINJ/USDTマーケットを例に、値をUI人間可読形式に変換する方法は次のとおりです:
+
+```js
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const humanReadableFormat = toHumanReadable(
+  minQuantityTickSize,
+  baseDecimals
+).toFixed();
+```

@@ -1,0 +1,106 @@
+---
+title: CosmJs Support
+updatedAt: "2025-11-28"
+---
+Injectiveは`@cosmjs`パッケージでネイティブにサポートされていません。Injectiveと対話するには、`@injectivelabs`パッケージを使用することを強くお勧めします。
+`@cosmjs`パッケージに慣れている場合は、`@cosmjs`のクラスと同じように動作する類似のインターフェース/クラスをエクスポートしていますが、Injectiveのサポートも含まれています。
+繰り返しになりますが、推奨されるアプローチはInjectiveの標準的なアプローチを使用することであることに注意してください。詳細は[Cosmos transactions](../../developers-native/transactions/cosmos/)で学ぶことができます。
+## Keplrを使用した使用方法
+`@cosmjs`パッケージの代替となる`@injectivelabs`をKeplrで使用する例は次のとおりです:
+```ts
+import {
+  PrivateKey,
+  InjectiveStargate,
+} from "@injectivelabs/sdk-ts/cosmjs";
+import { OfflineDirectSigner } from "@cosmjs/proto-signing";
+import { assertIsBroadcastTxSuccess } from '@cosmjs/stargate'
+(async () => {
+  // Keplrを有効化
+  await window.keplr.enable(chainId);
+  // オフライン署名者を取得
+  const offlineSigner = window.getOfflineSigner(chainId);
+  const [account] = await offlineSigner.getAccounts();
+  // stargateクライアントを初期化
+  const client =
+    await InjectiveStargate.InjectiveSigningStargateClient.connectWithSigner(
+      "https://lcd-cosmoshub.keplr.app/rest",
+      offlineSigner,
+    );
+  })
+  const amount = {
+    denom: "inj",
+    amount: amount.toString(),
+  };
+  const fee = {
+    amount: [
+      {
+        denom: "inj",
+        amount: "5000000000000000",
+      },
+    ],
+    gas: "200000",
+  };
+  const result = await client.sendTokens(
+    account.address,
+    recipient,
+    [amount],
+    fee,
+    ""
+  );
+  assertIsBroadcastTxSuccess(result);
+  if (result.code !== undefined && result.code !== 0) {
+    alert("Failed to send tx: " + result.log || result.rawLog);
+  } else {
+    alert("Succeed to send tx:" + result.transactionHash);
+  }
+})()
+```
+## CLI/Node環境での使用方法
+`@cosmjs`パッケージの代替となる`@injectivelabs`をnodeまたはCLI環境で使用する例は次のとおりです。
+繰り返しになりますが、推奨されるアプローチはInjectiveの標準的なアプローチに従うために[MsgBroadcasterWithPk](../../developers-native/transactions/private-key/#example-with-msgbroadcasterwithpk)抽象化を使用することであることに注意してください。
+```ts
+import {
+  PrivateKey,
+  InjectiveStargate,
+  InjectiveDirectEthSecp256k1Wallet,
+} from "@injectivelabs/sdk-ts/cosmjs";
+import { getStdFee } from "@injectivelabs/utils";
+import { OfflineDirectSigner } from "@cosmjs/proto-signing";
+import { Network, getNetworkInfo } from "@injectivelabs/networks";
+(async () => {
+  const network = getNetworkInfo(Network.Testnet);
+  const privateKeyHash = process.env.PRIVATE_KEY as string;
+  const privateKey = PrivateKey.fromHex(privateKeyHash);
+  const injectiveAddress = privateKey.toBech32();
+  const wallet = (await InjectiveDirectEthSecp256k1Wallet.fromKey(
+    Buffer.from(privateKeyHash, "hex")
+  )) as OfflineDirectSigner;
+  const [account] = await wallet.getAccounts();
+  const client =
+    await InjectiveStargate.InjectiveSigningStargateClient.connectWithSigner(
+      network.rpc as string,
+      wallet
+    );
+  const recipient = injectiveAddress;
+  const amount = {
+    denom: "inj",
+    amount: "1000000000",
+  };
+  const txResponse = await client.sendTokens(
+    account.address,
+    recipient,
+    [amount],
+    getStdFee(),
+    "Have fun with your star coins"
+  );
+  if (txResponse.code !== 0) {
+    console.log(`Transaction failed: ${txResponse.rawLog}`);
+  } else {
+    console.log(
+      `Broadcasted transaction hash: ${JSON.stringify(
+        txResponse.transactionHash
+      )}`
+    );
+  }
+})();
+```

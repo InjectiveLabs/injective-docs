@@ -1,0 +1,26 @@
+---
+title: Testnet Proposals
+updatedAt: "2025-10-30"
+---
+
+`testnet`でプロポーザルを提出したい場合を考えてみましょう。プロポーザルの投票期間が短いため、プロポーザルが直ちに投票段階に進まないようにするため、プロポーザルのデポジットを下げることをお勧めします。基本的に、`min_deposit`の値よりわずかに少ない金額にする必要があります。
+
+プロポーザルを提出したら、チームに連絡する必要があります:
+
+1. [Injective Discordサーバー](https://discord.gg/injective)に参加し、該当するチャンネルを見つけてください。
+2. [Injective Developer Telegramチャンネル](https://t.me/+8Y_0HOFLhnRlZDU9)に参加してください。
+
+以下は`GrantProviderPrivilegeProposal`の例です。
+
+```bash
+injectived tx oracle grant-provider-privilege-proposal YOUR_PROVIDER \
+  YOUR_ADDRESS_HERE \
+  --title="TITLE OF THE PROPOSAL" \
+  --description="Registering PROVIDER as an oracle provider" \
+  --chain-id=injective-888 \
+  --from=local_key \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas-prices=160000000inj \
+  --gas=20000000 \
+  --deposit="40000000000000000000inj" <-- use this amount
+```
