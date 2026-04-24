@@ -1846,13 +1846,13 @@
                 "icon": "brain",
                 "expanded": false,
                 "pages": [
-                  "ja/developers-ai/index",
-                  "ja/developers-ai/injective-cli-skill",
-                  "ja/developers-ai/injective-evm-developer-skill",
-                  "ja/developers-ai/injective-mcp-servers-skill",
-                  "ja/developers-ai/injective-trading-skills",
-                  "ja/developers-ai/documentation-mcp",
-                  "ja/developers-ai/mcp"
+                  "jp/developers-ai/index",
+                  "jp/developers-ai/injective-cli-skill",
+                  "jp/developers-ai/injective-evm-developer-skill",
+                  "jp/developers-ai/injective-mcp-servers-skill",
+                  "jp/developers-ai/injective-trading-skills",
+                  "jp/developers-ai/documentation-mcp",
+                  "jp/developers-ai/mcp"
                 ]
               },
               {
