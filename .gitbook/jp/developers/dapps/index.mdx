@@ -1,0 +1,57 @@
+---
+title: dApp の構築
+updatedAt: "2025-12-27"
+---
+
+Injective は、金融のために構築された Layer-1 ブロックチェーンです。Injective は、堅牢な Web3 アプリケーションを構築するための高度な機能を提供するオープンかつパーミッションレスなスマートコントラクトレイヤーに加え、分散型金融アプリケーションを構築するための即時利用可能なプリミティブを開発者に提供します。
+
+Injective は Ethereum、Solana、および CosmosHub、Osmosis などのすべての IBC 対応 cosmos chain を含むいくつかの有名なブロックチェーンネットワークとネイティブに相互運用可能です。相互運用性により、Injective は複数のチェーンからアセットをブリッジすることをユーザーに可能にするだけでなく、oracle prices などの任意のデータの転送も可能にします。
+
+このセクションでは、`@injectivelabs` パッケージと連携するように異なる UI フレームワークを設定する方法を探り、Injective 上で分散型アプリケーションの構築を始めることができるようにします。また、Injective 上で構築されたサンプル（シンプルな）dApp もご紹介します。
+
+セキュリティ上の理由から、NPM パッケージの安定版パッケージバージョンを使用することをお勧めします。
+
+**安定版パッケージバージョン**
+
+![](https://img.shields.io/npm/v/%40injectivelabs/sdk-ts/latest?label=%40injectivelabs%2Fsdk-ts) ![](https://img.shields.io/npm/v/%40injectivelabs/wallet-strategy/latest?label=%40injectivelabs%2Fwallet-strategy) ![](https://img.shields.io/npm/v/%40injectivelabs/networks/latest?label=%40injectivelabs%2Fnetworks) ![](https://img.shields.io/npm/v/%40injectivelabs/ts-types/latest?label=%40injectivelabs%2Fts-types) ![](https://img.shields.io/npm/v/%40injectivelabs/utils/latest?label=%40injectivelabs%2Futils)
+
+**最新パッケージバージョン:**
+
+![](https://img.shields.io/npm/v/%40injectivelabs/sdk-ts/next?label=%40injectivelabs%2Fsdk-ts) ![](https://img.shields.io/npm/v/%40injectivelabs/wallet-strategy/next?label=%40injectivelabs%2Fwallet-strategy) ![](https://img.shields.io/npm/v/%40injectivelabs/networks/next?label=%40injectivelabs%2Fnetworks) ![](https://img.shields.io/npm/v/%40injectivelabs/ts-types/next?label=%40injectivelabs%2Fts-types) ![](https://img.shields.io/npm/v/%40injectivelabs/utils/next?label=%40injectivelabs%2Futils)
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  最新バージョンは `next` タグを使用して公開されています。安定版バージョンには
+  `latest` タグを使用するか、最新の安定版バージョンについては npm registry を確認してください。
+</Callout>
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  Injective EVM 上で dApp を構築する方法をお探しの場合は、
+  [your first EVM dApp](/developers-evm/dapps/) のガイドをご確認ください。
+</Callout>
+
+### Create Injective dApp CLI ツール
+
+Injective での開発を始める最も簡単な方法は、私たちの CLI ツールを使用することです。これを行うには、単純にこのコマンドを入力して、ターミナルの指示に従ってください！
+
+```bash
+$ npx @injectivelabs/create-injective-app
+```
+
+### 設定
+
+| トピック                                                   | 説明                 |
+| ------------------------------------------------------- | --------------------------- |
+| [Nuxt の設定](/developers/dapps/configure-nuxt/)   | Nuxt 3.x + Vite の設定 |
+| [React の設定](/developers/dapps/configure-react/) | React 18 + Vite の設定 |
+
+### dApp
+
+| トピック                                                              | 説明                                              |
+| ------------------------------------------------------------------ | -------------------------------------------------------- |
+| [DEX](/developers/dapps/example-dex/)                              | Injective 上で分散型取引所を構築する    |
+| [シンプルなスマートコントラクト](/developers/dapps/example-smart-contract/) | Injective 上でシンプルなスマートコントラクトアプリを構築する |
+| [Webpack](/developers/dapps/example-webpack/)                      | Webpack と Injective を使用したシンプルな HTML の例           |
+
+{/*
+| [Bridge](/developers/dapps/example-bridge/) | Injective と Ethereum の間のシンプルなブリッジを構築する |
+*/}

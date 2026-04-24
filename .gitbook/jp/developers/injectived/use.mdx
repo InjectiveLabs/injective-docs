@@ -1,0 +1,193 @@
+---
+title: injectived の使用
+updatedAt: "2025-11-27"
+---
+
+以下のページでは、Injective に接続するコマンドラインインターフェースである `injectived` で何ができるかを説明します。`injectived` を使用することで、スマートコントラクトのアップロード、データのクエリ、ステーキング活動の管理、governance proposal の処理などを通じて、Injective ブロックチェーンと対話できます。
+
+## 前提条件
+
+### injectived がインストールされていることを確認する
+
+詳細については、[Install injectived](/developers/injectived/install/) を参照してください。`injectived` が正常にインストールされていれば、以下のコマンドを実行できるはずです:
+
+```bash
+injectived version
+```
+
+home dir を正しく使用するようにコマンドを調整してください。
+
+```bash
+injectived keys list --home ~/.injective
+```
+
+### Dockerized CLI の使用
+
+Docker から実行する場合、home dir をコンテナにマウントする必要があります。
+
+```bash
+docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys list --home /root/.injective
+```
+
+Dockerized CLI を使用して key を追加するのは簡単です。
+
+```bash
+docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys add my_key --home /root/.injective
+```
+
+このコマンドの内訳は以下のとおりです:
+
+* docker が `injectivelabs/injective-core:v1.14.1` イメージを実行します
+* `injectived` はコンテナ内から CLI を実行するためのコマンドです
+* `keys add` は key を追加するためのコマンドです
+* `my_key` は key の名前です
+* `--home /root/.injective` はコンテナ内の CLI 用の home directory です
+* `-v ~/.injective:/root/.injective` はホストの `~/.injective` dir をコンテナの `/root/.injective` dir に単純にマウントします。
+
+これによりキーペアが作成され、コンテナの `/root/.injective/keyring-file` dir に保存されます。これはホストの `~/.injective/keyring-file` dir と同じです。
+
+以下のコマンドですべての key をリスト表示できます:
+
+```bash
+docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys list --home /root/.injective
+```
+
+### RPC endpoint の使用
+
+Injective ブロックチェーンにアクセスする前に、ノードを実行する必要があります。独自の full node を実行するか、他の誰かのノードに接続するかのいずれかを選択できます。
+
+状態をクエリし、トランザクションを送信するには、ピア接続のネットワーク全体へのアクセスポイントであるノードに接続する必要があります。独自の full node を実行するか、他の誰かのノードに接続するかのいずれかを選択できます。
+
+[独自のノードを実行する](/infra/join-a-network/) のは上級ユーザー向けです。ほとんどのユーザーには、パブリックノードへの接続を推奨します。
+
+RPC endpoint を設定するには、以下のコマンドを使用できます:
+
+```bash
+injectived config set client node https://sentry.tm.injective.network:443
+injectived config set client chain-id injective-1
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+testnet のみで、以下を使用できます: `https://k8s.testnet.tm.injective.network:443` (chain-id `injective-888`)
+</Callout>
+
+それでは状態をクエリしてみましょう:
+
+```bash
+injectived q bank balances inj1yu75ch9u6twffwp94gdtf4sa7hqm6n7egsu09s
+
+balances:
+- amount: "28748617927330656"
+  denom: inj
+```
+
+### 一般的なヘルプ
+
+`injectived` についてのより一般的な情報については、以下を実行してください:
+
+```bash
+injectived --help
+```
+
+特定の `injectived` コマンドに関する詳細情報については、コマンドの後に `-h` または `--help` フラグを追加してください。例:
+
+```bash
+injectived query --help.
+```
+
+### `injectived` クライアントの設定
+
+`injectived` のより多くのオプションを設定するには、`~/.injective/config/` ディレクトリ内の `config.toml` ファイルを編集してください。Keyring ファイルは、keyring-backend が `file` に設定されている場合、`~/.injective/keyring-file` ディレクトリに配置されます。keyring-backend を `test` または `os` に設定することも可能です。test の場合、`~/.injective/keyring-test` としてファイルに保存されますが、パスワード保護はされません。
+
+ファイル内のすべてのオプションは CLI を使用して設定できます: `injectived config set client <option> <value>`
+
+## トランザクションの生成、署名、ブロードキャスト
+
+以下のコマンドを実行すると、送信者のアカウントから受信者のアカウントに INJ トークンが送信されます。`1000inj` は送信する INJ トークンの量で、`1 INJ = 10^18 inj` であるため、`1000inj` は非常に少額です。
+
+```bash
+injectived tx bank send MY_WALLET RECEIVER_WALLET 1000inj --from MY_WALLET
+```
+
+以下の手順が実行されます:
+
+* 1 つの `Msg`（`x/bank` の `MsgSend`）を持つトランザクションを生成し、生成されたトランザクションをコンソールに出力します。
+* `$MY_WALLET` アカウントからトランザクションを送信する確認をユーザーに求めます。
+* keyring から `$MY_WALLET` を取得します。これは、前のステップで CLI の keyring を設定したため可能です。
+* 生成されたトランザクションを keyring のアカウントで署名します。
+* 署名されたトランザクションをネットワークにブロードキャストします。これは、CLI がパブリックな Injective ノードの RPC endpoint に接続しているため可能です。
+
+CLI は必要なすべてのステップを使いやすいユーザーエクスペリエンスにまとめています。ただし、すべてのステップを個別に実行することも可能です。
+
+### （のみ）トランザクションの生成
+
+トランザクションの生成は、任意の `tx` コマンドに `--generate-only` フラグを追加するだけで実行できます。例:
+
+```bash
+injectived tx bank send MY_WALLET RECEIVER_WALLET 1000inj --from MY_WALLET --generate-only
+```
+
+これにより、署名されていないトランザクションが JSON としてコンソールに出力されます。上記のコマンドに `> unsigned_tx.json` を追加することで、署名されていないトランザクションをファイルに保存することもできます（署名者間でより簡単に受け渡すため）。
+
+### 事前生成されたトランザクションの署名
+
+CLI を使用してトランザクションに署名するには、署名されていないトランザクションがファイルに保存されている必要があります。署名されていないトランザクションが現在のディレクトリの `unsigned_tx.json` というファイルにあると仮定します（それを行う方法については前の段落を参照）。次に、以下のコマンドを実行するだけです:
+
+```bash
+injectived tx sign unsigned_tx.json --from=MY_WALLET
+```
+
+このコマンドは、署名されていないトランザクションをデコードし、すでに keyring に設定した `MY_WALLET` の key で `SIGN_MODE_DIRECT` を使用して署名します。署名されたトランザクションは JSON としてコンソールに出力され、上記と同様に、コマンドラインに `> signed_tx.json` を追加することでファイルに保存できます。
+
+```bash
+injectived tx sign unsigned_tx.json --from=MY_WALLET > signed_tx.json
+```
+
+`tx sign` コマンドで考慮すべき便利なフラグ:
+
+* `--sign-mode`: `amino-json` を使用して `SIGN_MODE_LEGACY_AMINO_JSON` でトランザクションに署名できます
+* `--offline`: オフラインモードで署名します。これは `tx sign` コマンドが、署名に必要な署名者の account number と sequence を取得するためにノードに接続しないことを意味します。この場合、`--account-number` と `--sequence` フラグを手動で指定する必要があります。これは、インターネットにアクセスできない安全な環境での署名、つまりオフライン署名に便利です。
+
+### 複数の署名者による署名（Multi Sig）
+
+複数の署名者による署名は `tx multi-sign` コマンドで行います。このコマンドは、すべての署名者が `SIGN_MODE_LEGACY_AMINO_JSON` を使用することを前提とします。フローは `tx sign` コマンドのフローと似ていますが、署名されていないトランザクションファイルに署名するのではなく、各署名者は前の署名者が署名したファイルに署名します。`tx multi-sign` コマンドは既存のトランザクションに署名を追加します。署名者は `GetSigners()` メソッドを使用して取得できるトランザクションによって指定された**同じ順序**で署名することが重要です。
+
+例えば、`unsigned_tx.json` から始めて、トランザクションに 4 人の署名者がいると仮定すると、以下を実行します:
+
+```bash
+# signer1 に未署名の tx に署名してもらう。
+injectived tx multi-sign unsigned_tx.json signer_key_1 > partial_tx_1.json
+# これで signer1 は partial_tx_1.json を signer2 に送ります。
+# Signer2 は自分の署名を追加します:
+injectived tx multi-sign partial_tx_1.json signer_key_2 > partial_tx_2.json
+# Signer2 は partial_tx_2.json ファイルを signer3 に送り、signer3 は自分の署名を追加できます:
+injectived tx multi-sign partial_tx_2.json signer_key_3 > partial_tx_3.json
+```
+
+### トランザクションのブロードキャスト
+
+トランザクションのブロードキャストは以下のコマンドを使用して行います:
+
+```bash
+injectived tx broadcast tx_signed.json
+```
+
+オプションで `--broadcast-mode` フラグを渡して、ノードから受け取るレスポンスを指定できます:
+
+* `block`: CLI は tx がブロックに含まれるまで待ちます。
+* `sync`: CLI は CheckTx 実行レスポンスのみを待ち、トランザクション結果を手動でクエリして、含まれたことを確認してください。
+* `async`: CLI はすぐに戻ります（トランザクションは失敗する可能性があります）- 使用しないでください。
+
+トランザクション結果をクエリするには、以下のコマンドを使用できます:
+
+```bash
+injectived tx query TX_HASH
+```
+
+## 追加のトラブルシューティング
+
+設定が正しく設定されていない場合があります。コマンドラインに以下を追加することで、正しいノード RPC endpoint を強制することができます。他の人とコマンドを共有する際は、コマンドラインにすべてのフラグを明示的に設定することをお勧めします。（chain-id、node、keyring-backend など）
+
+```bash
+injectived --node https://sentry.tm.injective.network:443
+```

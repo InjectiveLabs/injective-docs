@@ -1,0 +1,98 @@
+---
+title: React の設定
+updatedAt: "2025-10-30"
+---
+
+## React - ユーザーインターフェースを構築するためのライブラリ
+
+React は現在、最も人気のある UI フレームワークの 1 つです。Crypto wallet と対話するために必要となる `@injectivelabs` パッケージといくつかの polyfill を使って React + Vite ビルダーを設定する方法をご案内します。
+
+### 1. React のインストール
+
+[Vite Docs](https://vitejs.dev/guide/) の Getting Started ガイドに従って、アプリケーションを設定してください。
+
+```bash
+$ npm create vite@latest
+```
+
+### 2. @injectivelabs パッケージのインストール
+
+yarn を使って @injectivelabs パッケージをインストールできます。
+
+```bash
+$ yarn add @injectivelabs/sdk-ts @injectivelabs/networks @injectivelabs/ts-types @injectivelabs/utils
+
+## Wallet Connection が必要な場合
+$ yarn add @injectivelabs/wallet-strategy
+```
+
+これらは `injective-ts` monorepo から最もよく使用されるパッケージです。
+
+### 3. Vite の設定と polyfill の追加
+
+まず、必要な polyfill パッケージと buffer を追加します
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+crypto 関連の分散型アプリケーションの主要な依存関係の 1 つは `Buffer` です。プロジェクトに `Buffer` を必ず追加するために、これを依存関係としてインストールし、global/window オブジェクトにインポートできます。
+
+以下に `vite.config.ts` の例を共有します。
+</Callout>
+
+```bash
+$ yarn add @bangjelkoski/node-stdlib-browser
+$ yarn add -D @bangjelkoski/vite-plugin-node-polyfills
+$ yarn add buffer
+```
+
+最後に、`main.tsx` ファイルの先頭に `buffer` をインポートするようにしてください
+
+```typescript
+import { Buffer } from "buffer";
+
+if (!window.Buffer) {
+    window.Buffer = Buffer; // オプション、Buffer がグローバルであることを期待するパッケージ向け
+}
+```
+
+### 4. state management の使用
+
+React には多くの state manager があります。使用するものを選んでインストールしてください。サードパーティのソリューションをインストールする必要なく、state management に組み込みの `Context API` を使用できます。推奨されるサードパーティの state manager は `Redux` と `Zustand` です。
+
+```bash
+$ yarn add zustand
+```
+
+### 5. vite.config.ts
+
+最後のステップは、先ほどインストールした `node-polyfills` を使用するように Vite を設定することです。
+
+`vite.config.ts` を開いて、`plugins` 配列内に `node-polyfills` を追加してください。
+
+設定は以下のようになるはずです:
+
+```ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import { nodePolyfills } from "@bangjelkoski/vite-plugin-node-polyfills";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react(), nodePolyfills({ protocolImports: true })],
+  define: {
+    global: "globalThis",
+  },
+  resolve: {
+    alias: {
+      // その他
+      buffer: "buffer/",
+    },
+  },
+  optimizeDeps: {
+    include: ["buffer"],
+  },
+});
+```
+
+### 8. アプリの起動
+
+最後に、`yarn dev` を使用してローカルでアプリを起動するか、`yarn build` を使用して本番用にビルドできます。これは Netlify、Vercel などの任意の静的ページホスティングにデプロイできます。

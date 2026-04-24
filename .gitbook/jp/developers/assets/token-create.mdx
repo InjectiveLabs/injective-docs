@@ -1,0 +1,22 @@
+---
+title: トークンの作成
+updatedAt: "2025-11-27"
+---
+
+Injective 上で独自のトークンを作成する最も簡単な方法は、`tokenfactory` モジュールを使用することです。`tokenfactory` モジュールは、任意のアカウントが `factory/{creator address}/{subdenom}` という名前の新しいトークンを作成することを可能にします。トークンは creator address で名前空間が分けられているため、これにより名前衝突を解決する必要がなく、トークンの発行をパーミッションレスにすることが可能です。
+
+1 つのアカウントは、作成される各 denom に一意の subdenom を提供することで、複数の denom を作成できます。denom が作成されると、元の作成者にはアセットに対する「admin」権限が付与されます。これにより、次のことが可能になります:
+
+* 自分の denom を任意のアカウントに mint する
+* 自分の denom を任意のアカウントから burn する
+* 任意の 2 つのアカウント間で自分の denom の転送を作成する
+* admin を変更する。将来的にはより多くの admin 機能が追加される可能性があります。Admin は authz モジュールを使用して他のアカウントと admin 権限を共有できます。ChangeAdmin 機能により、マスター admin アカウントを変更することが可能で、ゼロアドレス `inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49` に設定することもできます。これは、どのアカウントもそのアセットに対する admin 権限を持たないことを意味します。
+* トークンメタデータをオンチェーンで設定する
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+factory denom の特別なユースケースとして `CW20_ADAPTER` があります。このアダプターを使用することで、CW20 として表現されたアセットを bank denom に変換でき、market のローンチやチェーン上での簡単な送金などに使用できます。
+
+CW20 アセットの denom は常に `factory/{CW20_ADAPTER_CONTRACT_ADDRESS}/{CW20_ASSET_ADDRESS}` という形式であり、mainnet では `CW20_ADAPTER_CONTRACT_ADDRESS=inj14ejqjyq8um4p3xfqj74yld5waqljf88f9eneuk` です。
+</Callout>
+
+denom の作成を開始するには、[TokenFactory Core Module page](/developers-native/examples/token-factory/) にアクセスして例を参照してください。

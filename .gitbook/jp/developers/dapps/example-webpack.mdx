@@ -1,0 +1,38 @@
+---
+title: Webpack を使用したシンプルな HTML の例
+updatedAt: "2025-10-30"
+---
+
+この [例](https://github.com/InjectiveLabs/injective-ts-webpack-example) は [Cosmos transaction handling セクション](../../developers-native/transactions/cosmos/) に基づいています。
+
+## 例の実行
+
+プロジェクトのリポジトリをクローンします:
+
+```
+git clone https://github.com/InjectiveLabs/injective-ts-webpack-example.git
+```
+
+npm がインストールされていることを確認し、依存関係をインストールします:
+
+```
+cd injective-ts-webpack-example && npm install
+```
+
+例を実行します:
+
+```
+npm start
+....
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: http://localhost:8080/, http://[::1]:8080/
+....
+```
+
+ブラウザで http://localhost:8080/ にアクセスします。Keplr wallet をセットアップして Injective testnet に接続していれば、「Confirm Transaction」のポップアップウィンドウが表示されるはずです。
+
+## どのように動作するか？
+
+Transaction ロジックは `src/sendTx.tx` にあり、これは `src/index.html` によって読み込まれます。Webpack はすべてをまとめて、ローカルサーバー endpoint で配信するために使用されます。
+
+`webpack.config.js` ファイルは、`./src/sendTx.ts` から始まる TypeScript アプリケーションをバンドルするように Webpack を設定し、`ts-loader` を使用して TypeScript ファイルをトランスパイルし、`.js` と `.json` ファイルを適切に処理するルールを含めます。`fallback` オプションを使用して Node.js のコアモジュールのブラウザ互換バージョンを解決し、ブラウザ環境で `buffer`、`crypto`、`stream` などのモジュールを有効にします。設定は `HtmlWebpackPlugin` を使用して `src/index.html` に基づいた HTML ファイルを生成し、`ProvidePlugin` を使用して `Buffer` と `process` 変数をグローバルに自動的にロードします。バンドルされた出力は `bundle.js` という名前で `dist` ディレクトリに配置され、`devServer` は開発目的で `./dist` からコンテンツを配信するようにセットアップされます。

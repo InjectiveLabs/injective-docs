@@ -1,0 +1,25 @@
+---
+title: トークンメタデータ
+updatedAt: "2025-11-27"
+---
+
+Injective 上のアセットは denom として表現されます。denom（および数量）はヒューマンリーダブルではないため、特定の denom に対してトークンメタデータ情報を「添付」する方法が必要です。
+
+Getting Started セクションで取り上げた denom の種類を振り返りましょう:
+
+* **Native denom** - このタイプの denom は 1 つだけで、Injective のネイティブコインを表す `inj` denom です。
+* **Peggy denom** - これらの denom は、Peggy bridge を使用して Ethereum から Injective へブリッジされたアセットを表します。以下の形式です: `peggy{ERC20_CONTRACT_ADDRESS}`
+* **IBC denom** - これらの denom は、IBC を通じて他の Cosmos chain からブリッジされたアセットを表します。以下の形式です: `ibc/{hash}`
+* **Insurance Fund Denom** - これらの denom は、Injective 上で作成された insurance fund のトークンシェアを表します。以下の形式です: `share{id}`
+* **Factory Denom** - これらの denom は、Cosmwasm の CW20 トークンを Injective のネイティブ bank モジュール上で表現したものです。以下の形式です: `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`。ここで `CW20_ADAPTER_CONTRACT` は CW20 とネイティブ Bank モジュールの間で変換を行う adapter contract のアドレスです。
+
+より迅速なアクセスのために、トークンメタデータのリストはオフチェーンで [injective-lists](https://github.com/InjectiveLabs/injective-lists/tree/master/tokens) リポジトリに保持しています。
+
+## トークン検証
+
+トークンメタデータの検証はいくつかの方法で行うことができます。検証レベルとその意味は以下のとおりです:
+
+* **Verified** → アセットのメタデータが `@injectivelabs/token-metadata` パッケージに**提出および検証**されています。パッケージにトークンメタデータを追加する方法に関するチュートリアルは [こちら](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) にあります。
+* **Internal** → アセットのメタデータが [こちら](/developers-native/examples/token-factory) で説明されているように `MsgSetDenomMetadata` メッセージを使用してオンチェーンで検証されています。
+* **External** → アセットのメタデータが Ethereum のコントラクト詳細などの外部ソースで検証されています。
+* **Unverified** → アセットのメタデータがどこにも提供されていません。

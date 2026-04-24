@@ -1,0 +1,32 @@
+---
+title: Injective List
+updatedAt: "2025-12-23"
+---
+
+オンチェーンの denom トークンメタデータを [injective-list](https://github.com/InjectiveLabs/injective-lists) リポジトリに移行しました。このリポジトリは複数のソースからデータを集約し、包括的なトークンメタデータのマスターリストを生成します。
+
+以下は、TokenFactoryStatic クラスで injective-list を統合する方法の例です:
+
+1. GitHub から [Injective list JSON ファイル](https://github.com/InjectiveLabs/injective-lists?tab=readme-ov-file#-usage) をダウンロードします
+
+2. `sdk-ts` パッケージから `TokenFactoryStatic` クラスを使用します
+
+```ts
+import { TokenFactoryStatic } from "@injectivelabs/sdk-ts/service";
+import { TokenType, TokenStatic } from "@injectivelabs/sdk-ts/types";
+import { tokens } from "../data/tokens.json"; // ステップ 1 でダウンロードした json ファイル
+
+export const tokenFactoryStatic = new TokenFactoryStatic(
+  tokens as TokenStatic[]
+);
+
+// インスタンス化後、dApp で使用を開始できます
+const denom = "peggy0x...";
+const token = tokenFactoryStatic.toToken(denom);
+
+console.log(token);
+```
+
+`TokenFactoryStatic` を使用する際に考慮すべきいくつかのエッジケースがあります:
+
+- [トークンのリスト](https://github.com/InjectiveLabs/injective-lists) に存在しない denom のトークンメタデータをクエリしようとしている場合、`TokenFactoryStatic` は undefined を返します。その場合、パッケージにトークンメタデータ情報を追加するには、[CONTRIBUTION ガイド](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) に従ってください。

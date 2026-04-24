@@ -1,0 +1,53 @@
+---
+title: ネットワーク
+updatedAt: "2025-10-30"
+---
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+最新のパブリック endpoint は [こちら](https://docs.injective.network/develop/public-endpoints/#mainnet) で確認できます。高い使用率/トラフィックを持つアプリケーションの本番環境では、これらを使用することは <mark style="color:red;">**推奨しません**</mark>。何千人もの開発者がパブリックインフラを使用しており、100% の稼働時間と信頼性を約束することはできません。\
+\
+それでも**パブリック**ネットワークを使用することを選択する場合は、`@injectivelabs/networks` パッケージの `Network.{Mainnet|Testnet}Sentry` を使用できます。
+</Callout>
+
+Injective 上で dApp を構築するには、dApp を簡単にテストできる異なる環境とネットワークにアクセスする必要があります。`injective-ts` monorepo の一部として、開発者が Injective の異なる部分に接続するための事前定義された環境に簡単にアクセスできる `@injectivelabs/networks` パッケージがあります。
+
+このパッケージからエクスポートされる 2 つの主要な関数があります:
+
+* `export function getNetworkEndpoints(network: Network): NetworkEndpoints`
+* `export function getEndpointsForNetwork(network: Network): OldNetworkEndpoints`
+* `export function getNetworkInfo(network: Network): ChainInfo`
+
+最初のもの、`getNetworkEndpoints` は、開発者がそのニーズに応じて使用できる事前定義された endpoint のセットを返します。この関数から返されるインターフェースは以下のとおりです:
+
+```ts
+export type NetworkEndpoints = {
+  indexer: string // indexer API service の grpc-web ポート
+  grpc: string // sentry node の grpc-web ポート
+  rest: string // sentry node の REST endpoint
+  rpc?: string // Tendermint RPC の REST endpoint
+}
+
+/** @deprecated */
+export type OldNetworkEndpoints = {
+  exchangeApi: string // @deprecated - exchange API service の grpc-web ポート
+  indexerApi: string // indexer API service の grpc-web ポート
+  sentryGrpcApi: string // sentry node の grpc-web ポート
+  sentryHttpApi: string // sentry node の REST endpoint
+  tendermintApi?: string // Tendermint RPC の REST endpoint
+  chronosApi?: string // chronos API service の REST endpoint
+  exchangeWeb3GatewayApi?: string // web3-gateway service API の grpc-web ポート
+}
+```
+
+これらの endpoint とその意味を説明しましょう:
+
+* `indexer` は、チェーンからのイベントをリッスンし、イベントを処理し、データを MongoDB に保存する `exchange/indexer` サービスに接続するために使用できる [**grpc-web**](https://github.com/grpc/grpc-web) endpoint で、チェーン自体から直接クエリするよりも簡単かつはるかにパフォーマンスが高いデータ配信が可能になります。
+* `grpc` は、sentry node に接続するために使用できる [**grpc-web**](https://github.com/grpc/grpc-web) endpoint です。Sentry node は、チェーンから直接データをクエリするために使用できるチェーンの読み取り（および軽量）専用バージョンです。
+* `rest` は、sentry node に接続するために使用できる REST endpoint です。
+* `rpc` は、Tendermint RPC に接続するために使用できる REST endpoint です。
+
+`getNetworkInfo` は、これらの endpoint に加えて、対象の `Network` の `chainId` とデフォルト `fee` をエクスポートします。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+TypeScript SDK を独自のインフラ（endpoint）で使用するには、サーバーに `grpc-web` プロキシを設定する必要があります。詳細については、[このドキュメント](https://github.com/grpc/grpc-web?tab=readme-ov-file#2-run-the-server-and-proxy) を参照してください。
+</Callout>

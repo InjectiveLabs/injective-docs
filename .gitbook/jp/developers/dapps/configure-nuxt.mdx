@@ -1,0 +1,178 @@
+---
+title: Nuxt の設定
+updatedAt: "2025-11-28"
+---
+
+## Nuxt3 - 直感的な Web フレームワーク
+
+@InjectiveLabs では、Injective 上で分散型アプリケーションを構築するために推奨される UI フレームワークは Nuxt3 です。Crypto wallet と対話するために必要となる `@injectivelabs` パッケージといくつかの polyfill を使って Nuxt3 + Vite ビルダーを設定する方法をご案内します。
+
+### 1. Nuxt 3 のインストール
+
+[Nuxt3 Docs](https://nuxt.com/docs/getting-started/installation) の Getting Started ガイドに従って、アプリケーションを設定してください。
+
+### 2. @injectivelabs パッケージのインストール
+
+yarn を使って @injectivelabs パッケージをインストールできます。
+
+```bash
+$ yarn add @injectivelabs/sdk-ts @injectivelabs/networks @injectivelabs/ts-types @injectivelabs/utils
+
+## Wallet Connection が必要な場合
+$ yarn add @injectivelabs/wallet-strategy
+```
+
+これらは `injective-ts` monorepo から最もよく使用されるパッケージです。
+
+### 3. Nuxt の設定と polyfill の追加
+
+まず、必要な polyfill パッケージを追加します
+
+```bash
+$ yarn add @bangjelkoski/node-stdlib-browser
+$ yarn add -D @bangjelkoski/vite-plugin-node-polyfills
+```
+
+`vue-tsc@1.8.8`、`nuxt@^3.8.1`、`typescript@^5.0.4` のバージョンを使用していることを確認してください。
+
+**Buffer**
+
+crypto 関連の分散型アプリケーションの主要な依存関係の 1 つは Buffer です。プロジェクトに Buffer を必ず追加するために、これを依存関係としてインストールしてから、global/window オブジェクトにインポートする Nuxt プラグインを作成できます:
+
+```bash
+$ yarn add buffer
+```
+
+```ts
+// filename - plugins/buffer.client.ts
+export default defineNuxtPlugin(() => {
+  import('buffer/').then((Buffer) => {
+    window.Buffer = window.Buffer || Buffer.default.Buffer
+    globalThis.Buffer = window.Buffer || Buffer.default.Buffer
+  })
+})
+```
+
+### 4. state management の使用
+
+state management として `pinia` を使用する場合は、パッケージに追加してください:
+
+```bash
+$ yarn add @pinia/nuxt@^0.4.9
+```
+
+### 5. `vueuse` の使用
+
+`@vueuse/nuxt` は多くのユーティリティ関数をすぐに提供してくれるため、依存関係として追加することをお勧めします。
+
+次に、TypeScript を使用している場合（推奨）は `tsconfig.json` を設定する必要があります。以下の `tsconfig.json` をベースとして参照できます。
+
+```json
+{
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["@vueuse/nuxt", "@pinia/nuxt"]
+  },
+  "exclude": ["node_modules", "dist", ".output"]
+}
+```
+
+### 6. nuxt.config.ts / packages.json
+
+アプリケーションを起動する前に、すべての Nuxt 3 アプリケーションの主要な設定ポイントである `nuxt.config.ts` にすべてをセットアップする必要があります。参照用の `nuxt.config.ts` を見て、開発者が理解しやすいようにコメントで各行を説明しましょう。
+
+```ts
+// filename - nuxt.config.ts
+import tsconfigPaths from 'vite-tsconfig-paths'
+import { nodePolyfills } from '@bangjelkoski/vite-plugin-node-polyfills'
+
+export default defineNuxtConfig({
+  ssr: false, // アプリケーションを事前レンダリングするかどうか
+  modules: [
+    // nuxtjs モジュール
+    '@pinia/nuxt',
+    '@vueuse/nuxt',
+  ],
+
+  typescript: {
+    typeCheck: 'build', // ビルド時にのみ typescript チェックを実行するよう build を推奨
+  },
+
+  imports: {
+    // store 定義の自動インポート（pinia を使用する場合）
+    dirs: ['store/**'],
+  },
+
+  pinia: {
+    // pinia 定義のインポート
+    autoImports: ['defineStore'],
+  },
+
+  plugins: [
+    {
+      // 作成した buffer プラグインをインポート
+      src: './plugins/buffer.client.ts',
+      ssr: false,
+    },
+  ],
+
+  // サーバーは必要ないため、クライアント側のみに sitemap を生成します
+  // 注意: Vite + Nuxt3 の sitemap には問題があり、
+  // 通常は sitemap の生成に時間/メモリがかかりすぎて、
+  // Github Actions/Netlify/Vercel などでビルドプロセスが失敗することがあります。
+  // そのため、ローカルで生成して
+  // busgnag のようなサービスにプッシュするなど、別の戦略を使用する必要があります
+  sourcemap: {
+    server: false,
+    client: true,
+  },
+
+  // Vite 関連の設定
+  vite: {
+    plugins: [
+      // node + crypto polyfill + vite TS path resolution の設定
+      tsconfigPaths(),
+      nodePolyfills({ protocolImports: false }),
+    ],
+
+    build: {
+      sourcemap: false, // 生成しません
+
+      // デフォルトの rollup オプション
+      rollupOptions: {
+        cache: false,
+        output: {
+          manualChunks: (id: string) => {
+            //
+          },
+        },
+      },
+    },
+
+    // @bangjelkoski/vite-plugin-node-polyfills プラグインに関連する
+    // Vite の一部の問題に必要です
+    optimizeDeps: {
+      exclude: ['fsevents'],
+    },
+  },
+})
+```
+
+バンドルサイズを減らすために実行できる 1 つの最適化があります - これらの resolutions を `packages.json` に追加してください
+
+```
+"resolutions": {
+  "@ethereumjs/tx": "^4.1.1",
+  "**/libsodium": "npm:@bangjelkoski/noop",
+  "**/libsodium-wrappers": "npm:@bangjelkoski/noop"
+}
+```
+
+### 7. アプリの起動
+
+最後に、`yarn dev` を使用してローカルでアプリを起動するか、`yarn generate` を使用して静的ページを生成できます。これは Netlify、Vercel などの任意の静的ページホスティングにデプロイできます。

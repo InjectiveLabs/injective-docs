@@ -1,0 +1,296 @@
+---
+title: スマートコントラクト
+updatedAt: "2025-11-28"
+---
+
+このシリーズでは、Injective 上で dApp を構築するのがいかに簡単かをご紹介します。誰でも参照して Injective 上で構築するために使用できるオープンソースの [dApp](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui) があります。Next、Nuxt、Vanilla Js 用の例があります。ゼロから始めたい方にはここが最適なスタート地点です。
+
+この例では、injective-ts モジュールを使用して、Injective Chain にデプロイされたサンプルスマートコントラクトとの接続および対話を実装します。
+
+このシリーズには以下が含まれます:
+
+- API クライアントと環境のセットアップ、
+- Chain と Indexer API への接続、
+- ユーザーのウォレットに接続してアドレスを取得、
+- スマートコントラクトのクエリ（この場合、スマートコントラクトの現在のカウントを取得）、
+- コントラクトの state の変更（この場合、カウントを 1 インクリメント、または特定の値に設定）、
+
+## セットアップ
+
+まず、希望する UI フレームワークを設定してください。設定の詳細はこちらで確認できます。
+
+dex を始めるには、API クライアントと環境をセットアップする必要があります。DEX を構築するために、Injective Chain と Indexer API の両方からデータをクエリします。この例では、既存の **Testnet** 環境を使用します。
+
+まず、データをクエリするために必要ないくつかのクラスをセットアップしましょう。
+
+スマートコントラクトと対話するために、`@injectivelabs/sdk-ts` の `ChainGrpcWasmApi` を使用します。また、使用するネットワーク endpoint（Mainnet または Testnet）が必要で、これは `@injectivelabs/networks` で見つけることができます
+
+例:
+
+```js
+//filename: services.ts
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/wasm";
+
+export const NETWORK = Network.Testnet;
+export const ENDPOINTS = getNetworkEndpoints(NETWORK);
+
+export const chainGrpcWasmApi = new ChainGrpcWasmApi(ENDPOINTS.grpc);
+```
+
+次に、ユーザーが DEX に接続してトランザクションの署名を開始できるようにするために、wallet connection もセットアップする必要があります。これを実現するために、ユーザーがさまざまな異なる wallet provider と接続し、Injective 上でトランザクションに署名するために使用できる `@injectivelabs/wallet-strategy` パッケージを使用します。
+
+`@injectivelabs/wallet-strategy` の主な目的は、Injective 上で異なる wallet 実装を持つ方法を開発者に提供することです。これらすべての wallet 実装は同じ `ConcreteStrategy` インターフェースを公開しており、これはユーザーが特定の wallet の基になる実装を知る必要なくこれらのメソッドを使用できることを意味します。それは抽象化されているためです。
+
+まず、すぐに異なる wallet を使用できる機能を提供する WalletStrategy クラスのインスタンスを作成する必要があります。walletStrategy インスタンス上で `setWallet` メソッドを使用することで、現在使用している wallet を切り替えることができます（注意: `setWallet` は非同期であり、`await` が必要です）。デフォルトは `Metamask` です。
+
+```ts
+// filename: wallet.ts
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { WalletStrategy } from "@injectivelabs/wallet-strategy";
+
+const chainId = ChainId.Testnet; // Injective Testnet Chain ID
+const evmChainId = EvmChainId.TestnetEvm; // Injective Evm Testnet Chain ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`;
+
+export const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    evmChainId,
+    rpcUrl: evmRpcEndpoint,
+  },
+});
+```
+
+Ethereum ネイティブの wallet を使用したくない場合は、`WalletStrategy` コンストラクタ内の `evmOptions` を省略してください。
+
+最後に、Injective 上でトランザクションフロー全体（準備 + 署名 + ブロードキャスト）を行うために、MsgBroadcaster クラスを使用します。
+
+```js
+import { Network } from "@injectivelabs/networks";
+export const NETWORK = Network.Testnet;
+
+export const msgBroadcastClient = new MsgBroadcaster({
+  walletStrategy,
+  network: NETWORK,
+});
+```
+
+## ユーザーの wallet に接続する
+
+ユーザーの wallet との接続を処理するために `WalletStrategy` を使用しているため、ユーザーのアドレス取得、トランザクションへの署名/ブロードキャストなどのユースケースを処理するためにそのメソッドを使用できます。wallet strategy の詳細については、ドキュメントのインターフェースと `WalletStrategy` が提供するメソッドを探ってください。
+
+注意: `setWallet` メソッドを使用して `WalletStrategy` 内の「アクティブ」な wallet を切り替えることができます（これは非同期で `await` が必要です）。
+
+```ts
+// filename: WalletConnection.ts
+import {
+  WalletException,
+  UnspecifiedErrorCode,
+  ErrorType,
+} from "@injectivelabs/exceptions";
+import { Wallet } from "@injectivelabs/wallet-base";
+import { walletStrategy } from "./Wallet.ts";
+
+export const getAddresses = async (wallet: Wallet): Promise<string[]> => {
+  await walletStrategy.setWallet(wallet);
+
+  const addresses = await walletStrategy.getAddresses();
+
+  if (addresses.length === 0) {
+    throw new WalletException(
+      new Error("There are no addresses linked in this wallet."),
+      {
+        code: UnspecifiedErrorCode,
+        type: ErrorType.WalletError,
+      }
+    );
+  }
+
+  if (!addresses.every((address) => !!address)) {
+    throw new WalletException(
+      new Error("There are no addresses linked in this wallet."),
+      {
+        code: UnspecifiedErrorCode,
+        type: ErrorType.WalletError,
+      }
+    );
+  }
+
+  // Ethereum ネイティブ wallet を使用している場合、'addresses' は hex アドレスです
+  // Cosmos ネイティブ wallet を使用している場合、'addresses' は bech32 injective アドレスです
+  return addresses;
+};
+```
+
+## クエリ
+
+初期セットアップが完了したら、先ほど作成した chainGrpcWasmApi サービスを使用してスマートコントラクトに get_count を呼び出し、現在のカウントを取得する方法を見てみましょう。
+
+```ts
+function getCount() {
+  const response = (await chainGrpcWasmApi.fetchSmartContractState(
+    COUNTER_CONTRACT_ADDRESS, // コントラクトのアドレス
+    toBase64({ get_count: {} }) // クエリを Base64 に変換する必要があります
+  )) as { data: string };
+
+  const { count } = fromBase64(response.data) as { count: number }; // レスポンスを Base64 から変換する必要があります
+
+  return count; // 現在のカウンター値を返します
+}
+```
+
+これらの関数（`getCount` や他に作成するもの）があれば、アプリケーションの任意の場所で呼び出すことができます（通常は Nuxt の Pinia や React の Context provider などの集中型 state management サービス）。
+
+## state の変更
+
+次に、`count` state を変更します。先ほど作成した `Broadcast Client` と `@injectivelabs/sdk-ts` の `MsgExecuteContractCompat` を使用してチェーンにメッセージを送信することで、それを行うことができます
+
+この例で使用するスマートコントラクトには、state を変更するための 2 つのメソッドがあります:
+
+- `increment`
+- `reset`
+
+`increment` はカウントを 1 インクリメントし、`reset` はカウントを指定された値に設定します。`reset` はスマートコントラクトの作成者である場合にのみ呼び出せる点に注意してください。
+
+これらの関数を呼び出すと、メッセージ/トランザクションに署名してブロードキャストするために wallet が開きます。
+
+まず、カウントをインクリメントする方法を見てみましょう。
+
+```js
+// メッセージの準備
+
+const msg = MsgExecuteContractCompat.fromJSON({
+  contractAddress: COUNTER_CONTRACT_ADDRESS,
+  sender: injectiveAddress,
+  msg: {
+    increment: {}, // メソッドにパラメータがない場合は空のオブジェクトを渡します
+  },
+});
+
+// メッセージの署名とブロードキャスト
+
+const response = await msgBroadcastClient.broadcast({
+  msgs: msg, // 配列を使用してここに複数のメッセージを渡すことができます。例: [msg1,msg2]
+  injectiveAddress: injectiveAddress,
+});
+
+console.log(response);
+```
+
+次に、カウンターを特定の値に設定する方法の例を見てみましょう。このスマートコントラクトでは、カウントをスマートコントラクトの作成者のみが特定の値に設定できる点に注意してください。
+
+```js
+// メッセージの準備
+
+const msg = MsgExecuteContractCompat.fromJSON({
+  contractAddress: COUNTER_CONTRACT_ADDRESS,
+  sender: injectiveAddress,
+  msg: {
+    reset: {
+      count: parseInt(number, 10), // ここで number 変数をパースしているのは、通常は常に string を返す input から来るため、代わりに number を渡す必要があるためです。
+    },
+  },
+});
+
+// メッセージの署名とブロードキャスト
+
+const response = await msgBroadcastClient.broadcast({
+  msgs: msg,
+  injectiveAddress: injectiveAddress,
+});
+
+console.log(response);
+```
+
+### 完全な例
+
+では、Vanilla JS での完全な例を見てみましょう（Nuxt や Next などの特定のフレームワーク用の例は [こちら](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui) で見つけることができます）
+
+```js
+import { Web3Exception } from "@injectivelabs/exceptions"
+import { WalletStrategy } from "@injectivelabs/wallet-strategy"
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/wasm"
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks"
+import { getInjectiveAddress } from "@injectivelabs/sdk-ts/utils"
+
+const chainId = ChainId.Testnet // The Injective Testnet Chain ID
+const evmChainId = EvmChainId.TestnetEvm // The Injective Evm Testnet Chain ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
+
+const NETWORK = Network.Testnet
+const ENDPOINTS = getNetworkEndpoints(NETWORK)
+
+const chainGrpcWasmApi = new ChainGrpcWasmApi(ENDPOINTS.grpc)
+
+export const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    evmChainId,
+    rpcUrl: evmRpcEndpoint,
+  },
+})
+
+export const getAddresses = async (): Promise<string[]> => {
+  const addresses = await walletStrategy.getAddresses()
+
+  if (addresses.length === 0) {
+    throw new Web3Exception(
+      new Error("There are no addresses linked in this wallet.")
+    )
+  }
+
+  return addresses
+}
+
+const msgBroadcastClient = new MsgBroadcaster({
+  walletStrategy,
+  network: NETWORK,
+})
+
+const [address] = await getAddresses()
+const injectiveAddress = getInjectiveAddress(getInjectiveAddress)
+
+async function fetchCount() {
+  const response = (await chainGrpcWasmApi.fetchSmartContractState(
+    COUNTER_CONTRACT_ADDRESS, // コントラクトのアドレス
+      toBase64({ get_count: {} }) // クエリを Base64 に変換する必要があります
+    )) as { data: string }
+
+  const { count } = fromBase64(response.data) as { count: number } // レスポンスを Base64 から変換する必要があります
+
+  console.log(count)
+}
+
+async function increment(){
+    const msg = MsgExecuteContractCompat.fromJSON({
+    contractAddress: COUNTER_CONTRACT_ADDRESS,
+    sender: injectiveAddress,
+    msg: {
+        increment: {},
+        },
+    })
+
+    // メッセージの署名とブロードキャスト
+
+    await msgBroadcastClient.broadcast({
+        msgs: msg,
+        injectiveAddress: injectiveAddress,
+    })
+}
+
+async function main() {
+    await fetchCount() // これはログ出力: {count: 5}
+    await increment() // これは wallet を開いてトランザクションに署名しブロードキャストします
+    await fetchCount() // カウントは 6 になりました。ログ: {count: 6}
+}
+
+main()
+
+```
+
+## 最後に
+
+残っているのは、上記で説明したビジネスロジックの周りに美しい UI を構築することです :)

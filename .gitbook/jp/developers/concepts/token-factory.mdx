@@ -1,0 +1,60 @@
+---
+title: Token Factory
+updatedAt: "2025-12-23"
+---
+
+Injective 上の Token Factory モジュールは、ユーザーやコントラクトが新しいネイティブトークンを作成し、Mint + Burn モデルを使用してネイティブトークンと CW20 トークンの間でスワップすることを可能にします。これはチェーン上で持つべき重要な機能です。なぜなら、さまざまなソースからのアセットをネイティブな bank denom に表現することは、ユーザーが exchange、auction、insurance funds など、その他のオンチェーンモジュールにアクセスできるようにするために不可欠だからです。Token factory の denom は `factory/{creator address}/{subdenom}` という形式です。
+
+creator として機能する `CW20AdapterContract` と組み合わせることで、CW20 アセットを Injective 上で Token Factory の denom としてネイティブに表現することが可能になります。その仕組みは、CW20 アセットは `CW20AdapterContract` によって保持され、injective アドレスに対して factory denom として mint されます。そして CW20 に戻して redeem したい場合には、bank モジュールから burn され、`CW20AdapterContract` から owner address に戻ってロックが解除されます。
+
+## factory denom を CW20 に redeem する例
+
+```ts
+import {
+  MsgExecuteContractCompat,
+  ExecArgCW20AdapterRedeemAndTransfer,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+
+const message = MsgExecuteContractCompat.fromJSON({
+  sender: injectiveAddress,
+  contractAddress: CW20_ADAPTER_CONTRACT,
+  funds: {
+    denom: `factory/${CW20_ADAPTER_CONTRACT}/${contractCw20Address}`,
+    amount: actualAmount.toFixed(),
+  },
+  execArgs: ExecArgCW20AdapterRedeemAndTransfer.fromJSON({
+    recipient: injectiveAddress,
+  }),
+})
+
+// 次にメッセージをトランザクションにパックし、署名してチェーンにブロードキャストします
+```
+
+## CW20 を factory denom に変換する例
+
+```ts
+import {
+  ExecArgCW20Send,
+  MsgExecuteContractCompat,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+const amount = '1000000' // 1 USDT はチェーン上では 6 decimals で表現される
+
+const message = MsgExecuteContractCompat.fromJSON({
+  contractAddress: contractCw20Address,
+  sender: injectiveAddress,
+  execArgs: ExecArgCW20Send.fromJSON({
+    amount,
+    contractAddress: CW20_ADAPTER_CONTRACT,
+  }),
+})
+
+// 次にメッセージをトランザクションにパックし、署名してチェーンにブロードキャストします
+```

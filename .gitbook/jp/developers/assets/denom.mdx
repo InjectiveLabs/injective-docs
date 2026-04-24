@@ -1,0 +1,25 @@
+---
+title: Denom
+updatedAt: "2025-11-27"
+---
+
+denom は、Injective の Bank モジュール内でアセットがどのように表現されるかを示すものです。これらのアセットは、取引、exchange モジュールでの新しい market の作成、auction への参加、別のアドレスへの送金などに使用できます。
+
+denom の出所と Injective 上でどのように作成されたかに応じて、異なる種類の denom があります:
+
+* **Native denom** - このタイプの denom は 1 つだけで、Injective のネイティブコインを表す `inj` denom です。
+* **Peggy denom** - これらの denom は、Peggy bridge を使用して Ethereum から Injective へブリッジされたアセットを表します。以下の形式です: `peggy{ERC20_CONTRACT_ADDRESS}`
+* **IBC denom** - これらの denom は、IBC を通じて他の Cosmos chain からブリッジされたアセットを表します。以下の形式です: `ibc/{hash}`
+* **Insurance Fund Denom** - これらの denom は、Injective 上で作成された insurance fund のトークンシェアを表します。以下の形式です: `share{id}`
+* **Factory Denom** - これらの denom は、Cosmwasm の CW20 トークンを Injective のネイティブ bank モジュール上で表現したものです。以下の形式です: `factory/{OWNER}/{SUBDENOM}`。ここで `OWNER` は factory denom を作成した owner です。1 つの例は CW20 token factory denom `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` で、`CW20_ADAPTER_CONTRACT` は CW20 とネイティブ Bank モジュールの間で変換を行う adapter contract のアドレスです。
+
+## トークン
+
+トークンとは、メタ情報を持つ Injective chain 上の denom です。メタデータには、特定の denom のシンボル、名前、decimals、ロゴなどの情報が含まれます。チェーン上の情報はその生の形式で保存されるため（例えば、チェーン上の `1inj` は `1*10^18inj` として表現される）、denom のメタデータは dApp 開発者にとって非常に重要です。したがって、ユーザーにヒューマンリーダブルな情報（数値、ロゴ、シンボルなど）を表示する方法が必要です。
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+**非推奨のお知らせ**
+
+Injective SDK 内で利用可能だった "Denom Client" がありました。
+これは [Injective List](/developers/assets/injective-list) を優先して非推奨となりました。
+</Callout>

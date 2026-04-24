@@ -1,0 +1,50 @@
+---
+title: Market min price tick size の計算
+updatedAt: "2025-11-21"
+---
+
+# Market min price tick size
+
+注文価格に対する市場の最小 price tick size - 市場の minPriceTickSize が `0.001` で、`0.0011` という価格での注文送信は拒否されます。
+
+spot 市場と quote 市場の price tick size を計算する式は異なる点に注意してください。
+
+### Spot market
+
+1.  UI ヒューマンリーダブル形式からチェーン形式へ:
+    18 base decimals と 6 quote decimals を持つ INJ/USDT 市場を例として、値をチェーン形式に変換する方法は以下のとおりです:
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+
+const value = toChainFormat(value, quoteDecimals - baseDecimals).toFixed();
+```
+
+2. チェーン形式から UI ヒューマンリーダブル形式へ:
+   18 base decimals と 6 quote decimals を持つ INJ/USDT 市場を例として、値を UI ヒューマンリーダブル形式に変換する方法は以下のとおりです:
+
+```ts
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const value = toHumanReadable(value, quoteDecimals - baseDecimals).toFixed();
+```
+
+### Derivative market
+
+1.  UI ヒューマンリーダブル形式からチェーン形式へ:
+    6 quote decimals を持つ INJ/USDT perp 市場を例として、値をチェーン形式に変換する方法は以下のとおりです:
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+
+const value = toChainFormat(value, -quoteDecimals).toFixed();
+```
+
+2. チェーン形式から UI ヒューマンリーダブル形式へ:
+   6 quote decimals を持つ INJ/USDT perp 市場を例として、値を UI ヒューマンリーダブル形式に変換する方法は以下のとおりです:
+
+```ts
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const value = toHumanReadable(value, quoteDecimals).toFixed();
+```

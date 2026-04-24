@@ -1,0 +1,150 @@
+---
+description: >-
+  このセクションの目的は、開発者が Injective 上でプロジェクトを構築するのを支援することです
+title: 開発者
+updatedAt: "2026-03-04"
+---
+
+Injective は、クロスチェーン取引、デリバティブ、DeFi、および Web3 アプリケーションのために特別に設計された唯一のブロックチェーンです。
+DeFi エコシステムビルダーの世界的な中心地となるべく位置づけられた Injective は、
+開発者に数多くの利点を提供し、より短い時間でより強力なアプリケーションを構築できるようにします。
+
+このセクションでは、Injective 上で構築を行う開発者向けに、包括的なガイド、ツール、およびリソースを提供します。
+Solidity または CosmWasm でスマートコントラクトを作成する場合でも、分散型取引所を開発する場合でも、
+ネイティブモジュールと統合する場合でも、フルスタック dApp を構築する場合でも、
+このドキュメントは迅速に開始し、Injective の DeFi に特化した独自のインフラを活用する助けとなります。
+
+Injective は、Ethereum と Cosmos 両方のエコシステムの長所を組み合わせ、デュアル スマートコントラクト環境を提供します。
+Solidity 開発者向けの EVM と Rust 開発者向けの CosmWasm を提供しつつ、
+コアな金融インフラをゼロから再構築する必要をなくすネイティブ DeFi モジュールを備えています。
+650ms という超高速のブロック生成時間、$0.0003 のトランザクションコスト、MEV 耐性のあるインフラ、
+そして Ethereum や Solana を含む 23 以上のネットワークとのシームレスな相互運用性により、
+開発者はパフォーマンス、セキュリティ、ユーザーエクスペリエンスを損なうことなく、
+高度なクロスチェーン金融アプリケーションを構築できます。
+
+## 主要概念
+
+| 用語 | 説明 |
+|------|-------------|
+| **injectived** | Injective ブロックチェーンに接続して対話するためのコマンドラインインターフェースおよびノードデーモンです。 |
+| **Denom** | Injective 上のネイティブアセット表現フォーマットです（例: `factory/{creator}/{subdenom}` または `peggy{ethereumAddress}`）。 |
+| **Trading Account** | Bank モジュールから資金を切り離して取引を実行するための分離されたサブアカウントです。1 つのアドレスは無制限の trading account を持つことができます。 |
+| **Token Factory** | ユーザーやコントラクトが新しいネイティブトークンを作成し、ネイティブトークンと CW20 トークンの間でスワップできるネイティブモジュールです。 |
+| **Indexer API** | チェーンからの高速クエリ、ストリーミング更新、および履歴データを提供する高性能データインデックスサービスです。 |
+
+## なぜ Injective 上で構築するのか？
+
+<Columns cols={2}>
+  <Card
+    title="DeFi 最適化"
+    arrow="true"
+    icon="panel-left-close"
+    img="">
+    ⇾ 専用モジュール<br />
+    ⇾ 低遅延インフラ<br />
+    ⇾ より迅速な開発<br />
+    ⇾ より高度な機能<br />
+    ⇾ 新たな可能性の解放
+  </Card>
+  <Card
+    title="商用グレードのスケーラビリティ"
+    arrow="true"
+    icon="panel-left-close"
+    img="">
+    ⇾ 25,000+ TPS<br />
+    ⇾ 650ms のブロック生成時間<br />
+    ⇾ 即時ファイナリティ<br />
+    ⇾ MEV 耐性<br />
+    ⇾ トランザクションあたり $0.0003
+  </Card>
+  <Card
+    title="高い相互運用性"
+    arrow="true"
+    icon="panel-left-close"
+    img="">
+    ⇾ Ethereum と Solana を含む 23 以上のネットワークとのネイティブ相互運用性<br />
+    ⇾ IBC 対応、110 以上のチェーン
+  </Card>
+  <Card
+    title="直感的な開発者体験"
+    arrow="true"
+    icon="panel-left-close"
+    img="">
+    ⇾ ネイティブに統合された実行レイヤー<br />
+    ⇾ WASM + EVM<br />
+    ⇾ Rust、Golang、Solidity により動作
+  </Card>
+</Columns>
+
+## 開発者向けパス
+
+<Columns cols={2}>
+  <Card
+    title="EVM"
+    href="/developers-evm/"
+    arrow="true"
+    cta="ここをクリック"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    Injective の EVM 互換実行レイヤー上で、使い慣れた Ethereum ツールを使用して Solidity スマートコントラクトをデプロイし、dApp を構築します。
+  </Card>
+  <Card
+    title="CosmWasm"
+    href="/developers-cosmwasm/"
+    arrow="true"
+    cta="ここをクリック"
+    icon="panel-left-close"
+    img="/img/launch-token-hero.png">
+    Rust と CosmWasm フレームワークを使用して、パフォーマンスと安全性を強化した、安全で効率的なスマートコントラクトを構築します。
+  </Card>
+  <Card
+    title="DeFi"
+    href="/developers-defi/"
+    arrow="true"
+    cta="ここをクリック"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    Injective のネイティブな金融プリミティブを活用して、DEX、デリバティブプラットフォーム、レンディングプロトコル、その他の DeFi アプリケーションを構築します。
+  </Card>
+  <Card
+    title="Native モジュール"
+    href="/developers-native/"
+    arrow="true"
+    cta="ここをクリック"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    高度なユースケース向けに、exchange、oracle、auction、token factory モジュールを含む低レベルのチェーン機能にアクセスします。
+  </Card>
+</Columns>
+
+## 追加のリソース
+
+<Columns cols={3}>
+  <Card
+    title="dApp の構築"
+    href="/developers/dapps/"
+    arrow="true"
+    cta="ここをクリック"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    Injective 上で UI フレームワーク（React、Nuxt、Webpack）を設定し、サンプル dApp を構築するためのステップバイステップガイド。
+  </Card>
+  <Card
+    title="技術的概念"
+    href="/developers/concepts/"
+    arrow="true"
+    cta="ここをクリック"
+    icon="panel-left-close"
+    img="/img/code-hero.png">
+    trading account、トークン規格、gRPC、および Indexer API アーキテクチャなどのコア概念の詳細な解説。
+  </Card>
+  <Card
+    title="injectived CLI"
+    href="/developers/injectived/"
+    arrow="true"
+    cta="ここをクリック"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    チェーン対話、validator 運用、および高度なコマンドのための Injective ノードデーモンをインストール、設定、使用します。
+  </Card>
+</Columns>

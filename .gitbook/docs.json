@@ -1757,6 +1757,72 @@
             "pages": [
               "jp/index",
               {
+                "group": "開発者",
+                "icon": "laptop-code",
+                "expanded": false,
+                "pages": [
+                  "jp/developers/index",
+                  "jp/developers/network-information",
+                  "jp/developers/convert-addresses",
+                  {
+                    "group": "injectived",
+                    "pages": [
+                      "jp/developers/injectived/index",
+                      "jp/developers/injectived/install",
+                      "jp/developers/injectived/use",
+                      "jp/developers/injectived/advanced",
+                      "jp/developers/testnet-proposals"
+                    ]
+                  },
+                  {
+                    "group": "概念",
+                    "pages": [
+                      "jp/developers/concepts/index",
+                      "jp/developers/concepts/sentry-node",
+                      "jp/developers/concepts/indexer-api",
+                      "jp/developers/concepts/trading-account",
+                      "jp/developers/concepts/grpc-protobuf",
+                      "jp/developers/concepts/token-factory",
+                      "jp/developers/concepts/calculation-min-price-tick-size",
+                      "jp/developers/concepts/calculation-min-quantity-tick-size",
+                      "jp/developers/concepts/cosmjs-support",
+                      "jp/developers/concepts/networks"
+                    ]
+                  },
+                  {
+                    "group": "アセット",
+                    "pages": [
+                      "jp/developers/assets/index",
+                      "jp/developers/assets/denom",
+                      "jp/developers/assets/token-metadata",
+                      "jp/developers/assets/injective-list",
+                      "jp/developers/assets/token-create"
+                    ]
+                  },
+                  {
+                    "group": "dApp",
+                    "pages": [
+                      "jp/developers/dapps/index",
+                      "jp/developers/dapps/configure-nuxt",
+                      "jp/developers/dapps/configure-react",
+                      "jp/developers/dapps/run-examples",
+                      "jp/developers/dapps/example-smart-contract",
+                      "jp/developers/dapps/example-dex",
+                      "jp/developers/dapps/example-webpack"
+                    ]
+                  },
+                  "redirects/https_testnet_faucet_injective_network",
+                  "redirects/https_sentry_lcd_injective_network_swagger",
+                  "redirects/https_docs_ts_injective_network",
+                  "redirects/https_github_com_InjectiveLabs_sdk_go",
+                  "redirects/https_github_com_InjectiveLabs_sdk_python",
+                  "redirects/https_github_com_InjectiveLabs_cw_injective",
+                  "redirects/https_github_com_InjectiveLabs_injective_rust",
+                  "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
+                  "redirects/https_api_injective_exchange"
+                ]
+              },
+              {
                 "group": "AI開発者",
                 "icon": "brain",
                 "expanded": false,

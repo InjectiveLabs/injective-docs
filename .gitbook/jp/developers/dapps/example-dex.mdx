@@ -1,0 +1,380 @@
+---
+title: DEX
+updatedAt: "2025-11-28"
+---
+
+このシリーズでは、Injective 上で DEX を構築するのがいかに簡単かをご紹介します。誰でも参照して Injective 上で構築するために使用できるオープンソースの [DEX](https://github.com/InjectiveLabs/injective-dex) があります。ゼロから始めたい方にはここが最適なスタート地点です。
+
+このシリーズには以下が含まれます:
+
+- API クライアントと環境のセットアップ、
+- Chain と Indexer API への接続、
+- ユーザーのウォレットに接続してアドレスを取得、
+- Spot および Derivative market とその orderbook の取得、
+- spot および derivative market の両方で market order を発注、
+- Injective アドレスのすべての position を表示。
+
+## セットアップ
+
+まず、希望する UI フレームワークを設定してください。設定の詳細はこちらで確認できます。
+
+dex を始めるには、API クライアントと環境をセットアップする必要があります。DEX を構築するために、Injective Chain と Indexer API の両方からデータをクエリします。この例では、既存の **Testnet** 環境を使用します。
+
+まず、データをクエリするために必要ないくつかのクラスをセットアップしましょう。
+
+```ts
+// filename: Services.ts
+import {
+  ChainGrpcBankApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import {
+  IndexerGrpcSpotApi,
+  IndexerGrpcDerivativesApi,
+} from "@injectivelabs/sdk-ts/client/indexer";
+import { 
+  IndexerGrpcSpotStreamV2,
+  IndexerGrpcDerivativesStreamV2
+} from "@injectivelabs/sdk-ts/client/indexer";
+
+// Testnet 環境の事前定義された endpoint を取得
+// (Kubernetes インフラを使用したいため、ここでは TestnetK8s を使用)
+export const NETWORK = Network.Testnet;
+export const ENDPOINTS = getNetworkEndpoints(NETWORK);
+
+export const chainBankApi = new ChainGrpcBankApi(ENDPOINTS.grpc);
+export const indexerSpotApi = new IndexerGrpcSpotApi(ENDPOINTS.indexer);
+export const indexerDerivativesApi = new IndexerGrpcDerivativesApi(
+  ENDPOINTS.indexer
+);
+
+export const indexerSpotStream = new IndexerGrpcSpotStreamV2(
+  ENDPOINTS.indexer
+);
+export const indexerDerivativeStream = new IndexerGrpcDerivativesStreamV2(
+  ENDPOINTS.indexer
+);
+```
+
+次に、ユーザーが DEX に接続してトランザクションの署名を開始できるようにするために、wallet connection もセットアップする必要があります。これを実現するために、ユーザーがさまざまな異なる wallet provider と接続し、Injective 上でトランザクションに署名するために使用できる `@injectivelabs/wallet-strategy` パッケージを使用します。
+
+```ts
+// filename: Wallet.ts
+import { Wallet } from "@injectivelabs/wallet-base";
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import { WalletStrategy } from "@injectivelabs/wallet-strategy";
+
+const chainId = ChainId.Testnet; // Injective Chain chainId
+const evmChainId = EvmChainId.Sepolia; // EVM Chain ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`;
+
+export const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    rpcUrl: evmRpcEndpoint,
+    evmChainId,
+  },
+});
+```
+
+Ethereum ネイティブの wallet を使用したくない場合は、`WalletStrategy` コンストラクタ内の `evmOptions` を省略してください。
+
+最後に、Injective 上でトランザクションフロー全体（準備 + 署名 + ブロードキャスト）を行うために、MsgBroadcaster クラスを使用します。
+
+```ts
+// filename: MsgBroadcaster.ts
+import { Wallet } from "@injectivelabs/wallet-base";
+import { MetamaskStrategy } from "@injectivelabs/wallet-evm";
+import { BaseWalletStrategy, MsgBroadcaster } from "@injectivelabs/wallet-core";
+
+const strategyArgs: WalletStrategyArguments = {}; /** 引数を定義 */
+const strategyEthArgs: ConcreteEthereumWalletStrategyArgs =
+  {}; /** wallet が Ethereum wallet の場合 */
+const strategies = {
+  [Wallet.Metamask]: new MetamaskStrategy(strategyEthArgs),
+};
+
+export const walletStrategy = new BaseWalletStrategy({
+  ...strategyArgs,
+  strategies,
+});
+
+const broadcasterArgs: MsgBroadcasterOptions =
+  {}; /** broadcaster 引数を定義 */
+export const msgBroadcaster = new MsgBroadcaster({
+  ...broadcasterArgs,
+  walletStrategy,
+});
+```
+
+## ユーザーの wallet に接続する
+
+ユーザーの wallet との接続を処理するために `WalletStrategy` を使用しているため、ユーザーのアドレス取得、トランザクションへの署名/ブロードキャストなどのユースケースを処理するためにそのメソッドを使用できます。wallet strategy の詳細については、ドキュメントのインターフェースと `WalletStrategy` が提供するメソッドを探ってください。
+
+注意: `setWallet` メソッドを使用して `WalletStrategy` 内の「アクティブ」な wallet を切り替えることができます（これは非同期で `await` が必要です）。
+
+```ts
+// filename: WalletConnection.ts
+import {
+  WalletException,
+  UnspecifiedErrorCode,
+  ErrorType,
+} from "@injectivelabs/exceptions";
+import { Wallet } from "@injectivelabs/wallet-base";
+import { walletStrategy } from "./Wallet.ts";
+
+export const getAddresses = async (wallet: Wallet): Promise<string[]> => {
+  await walletStrategy.setWallet(wallet);
+
+  const addresses = await walletStrategy.getAddresses();
+
+  if (addresses.length === 0) {
+    throw new WalletException(
+      new Error("There are no addresses linked in this wallet."),
+      {
+        code: UnspecifiedErrorCode,
+        type: ErrorType.WalletError,
+      }
+    );
+  }
+
+  if (!addresses.every((address) => !!address)) {
+    throw new WalletException(
+      new Error("There are no addresses linked in this wallet."),
+      {
+        code: UnspecifiedErrorCode,
+        type: ErrorType.WalletError,
+      }
+    );
+  }
+
+  // Ethereum ネイティブ wallet を使用している場合、'addresses' は hex アドレスです
+  // Cosmos ネイティブ wallet を使用している場合、'addresses' は bech32 injective アドレスです
+  return addresses;
+};
+```
+
+## クエリ
+
+初期セットアップが完了したら、IndexerAPI から market をクエリ（およびストリーム）する方法、およびチェーンから直接ユーザーの残高を取得する方法を見てみましょう。
+
+```ts
+// filename: Query.ts
+import  { getDefaultSubaccountId, OrderbookWithSequence } from '@injectivelabs/sdk-ts/utils'
+import { StreamManagerV2 } from '@injectivelabs/sdk-ts/client/indexer'
+import {
+  chainBankApi,
+  indexerSpotApi,
+  indexerSpotStream,
+  indexerDerivativesApi,
+  indexerDerivativeStream,
+} from './Services.ts'
+
+export const fetchDerivativeMarkets = async () => {
+  return await indexerDerivativesApi.fetchMarkets()
+}
+
+export const fetchPositions = async (injectiveAddress: string) => {
+  const subaccountId = getDefaultSubaccountId(injectiveAddress)
+
+  return await indexerDerivativesApi.fetchPositions({ subaccountId })
+}
+
+export const fetchSpotMarkets = async () => {
+  return await indexerSpotApi.fetchMarkets()
+}
+
+export const fetchBankBalances = async (injectiveAddress: string) => {
+  return await chainBankApi.fetchBalances(injectiveAddress)
+}
+
+export const streamDerivativeMarketOrderbook = (marketId: string) => {
+  const streamManager = new StreamManagerV2({
+    id: 'derivative-orderbook',
+    streamFactory: () => indexerDerivativeStream.streamOrderbookV2({
+      marketIds: [marketId],
+      callback: (response) => {
+        streamManager.emit('data', response)
+      }
+    }),
+    onData: (orderbookUpdate) => {
+      console.log(orderbookUpdate)
+    },
+    retryConfig: { enabled: true }
+  })
+
+  streamManager.start()
+  
+  return streamManager
+}
+
+export const streamSpotMarketOrderbook = (marketId: string) => {
+  const streamManager = new StreamManagerV2({
+    id: 'spot-orderbook',
+    streamFactory: () => indexerSpotStream.streamOrderbookV2({
+      marketIds: [marketId],
+      callback: (response) => {
+        streamManager.emit('data', response)
+      }
+    }),
+    onData: (orderbookUpdate) => {
+      console.log(orderbookUpdate)
+    },
+    retryConfig: { enabled: true }
+  })
+
+  streamManager.start()
+  
+  return streamManager
+}
+```
+
+これらの関数ができれば、アプリケーションの任意の場所で呼び出すことができます（通常は Nuxt の Pinia や React の Context provider などの集中型 state management サービス）。
+
+## トランザクション
+
+最後に、いくつかのトランザクションを作成しましょう。この例では、以下を行います:
+
+1. あるアドレスから別のアドレスへアセットを送信、
+2. spot limit order を作成、
+3. derivative market order を作成。
+
+```ts
+// filename: Transactions.ts
+import { toChainFormat } from '@injectivelabs/utils'
+import {
+  MsgSend,
+  MsgCreateSpotLimitOrder,
+  MsgCreateDerivativeMarketOrder,
+} from '@injectivelabs/sdk-ts/core/modules'
+import {
+  spotPriceToChainPriceToFixed,
+  spotQuantityToChainQuantityToFixed,
+  derivativePriceToChainPriceToFixed,
+  derivativeQuantityToChainQuantityToFixed,
+  derivativeMarginToChainMarginToFixed,
+  getDefaultSubaccountId
+} from '@injectivelabs/sdk-ts/utils'
+
+// あるアドレスから別のアドレスへアセットを送信するために使用
+export const makeMsgSend = ({
+  sender,
+  recipient,
+  amount,
+  denom
+}: {
+  sender: string,
+  recipient: string,
+  amount: string, // ヒューマンリーダブルな数量
+  denom: string
+}) => {
+  const amount = {
+    denom,
+    amount: toChainFormat(amount, /** denom's decimals */).toFixed()
+  }
+
+  return MsgSend.fromJSON({
+    amount,
+    srcInjectiveAddress: sender,
+    dstInjectiveAddress: recipient,
+  })
+}
+
+// spot limit order を作成するために使用
+export const makeMsgCreateSpotLimitOrder = ({
+  price, // ヒューマンリーダブルな数値
+  quantity, // ヒューマンリーダブルな数値
+  orderType, // OrderType enum
+  injectiveAddress,
+}) => {
+  const subaccountId = getDefaultSubaccountId(injectiveAddress)
+  const market = {
+    marketId: '0x...',
+    baseDecimals: 18,
+    quoteDecimals: 6,
+    minPriceTickSize: '', /* チェーンから取得 */
+    minQuantityTickSize: '', /* チェーンから取得 */
+    priceTensMultiplier: '', /** getSpotMarketTensMultiplier から取得可能 */
+    quantityTensMultiplier: '', /** getSpotMarketTensMultiplier から取得可能 */
+  }
+
+  return MsgCreateSpotLimitOrder.fromJSON({
+    subaccountId,
+    injectiveAddress,
+    orderType: orderType,
+    price: spotPriceToChainPriceToFixed({
+      value: price,
+      tensMultiplier: market.priceTensMultiplier,
+      baseDecimals: market.baseDecimals,
+      quoteDecimals: market.quoteDecimals
+    }),
+    quantity: spotQuantityToChainQuantityToFixed({
+      value: quantity,
+      tensMultiplier: market.quantityTensMultiplier,
+      baseDecimals: market.baseDecimals
+    }),
+    marketId: market.marketId,
+    feeRecipient: injectiveAddress,
+  })
+}
+
+// derivative market order を作成するために使用
+export const makeMsgCreateDerivativeMarketOrder = ({
+  price, // ヒューマンリーダブルな数値
+  margin, // ヒューマンリーダブルな数値
+  quantity, // ヒューマンリーダブルな数値
+  orderType, // OrderType enum
+  injectiveAddress,
+}) => {
+  const subaccountId = getDefaultSubaccountId(injectiveAddress)
+  const market = {
+    marketId: '0x...',
+    baseDecimals: 18,
+    quoteDecimals: 6,
+    minPriceTickSize: '', /* チェーンから取得 */
+    minQuantityTickSize: '', /* チェーンから取得 */
+    priceTensMultiplier: '', /** getDerivativeMarketTensMultiplier から取得可能 */
+    quantityTensMultiplier: '', /** getDerivativeMarketTensMultiplier から取得可能 */
+  }
+
+  return MsgCreateDerivativeMarketOrder.fromJSON({
+    orderType: orderType,
+    triggerPrice: '0',
+    injectiveAddress,
+    price: derivativePriceToChainPriceToFixed({
+      value: price,
+      tensMultiplier: market.priceTensMultiplier,
+      quoteDecimals: market.quoteDecimals
+    }),
+    quantity: derivativeQuantityToChainQuantityToFixed({
+      value: quantity,
+      tensMultiplier: market.quantityTensMultiplier,
+    }),
+    margin: derivativeMarginToChainMarginToFixed({
+      value: margin,
+      quoteDecimals: market.quoteDecimals,
+      tensMultiplier: market.priceTensMultiplier,
+    }),
+    marketId: market.marketId,
+    feeRecipient: injectiveAddress,
+    subaccountId: subaccountId
+  })
+
+}
+```
+
+メッセージができたら、`msgBroadcaster` クライアントを使用してこれらのトランザクションをブロードキャストできます:
+
+```ts
+const response = await msgBroadcaster.broadcast({
+  msgs: /** ここにメッセージ */,
+  injectiveAddress: signersInjectiveAddress,
+})
+
+console.log(response)
+```
+
+## 最後に
+
+残っているのは、上記で説明したビジネスロジックの周りに美しい UI を構築することです :)

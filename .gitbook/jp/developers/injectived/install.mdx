@@ -1,0 +1,92 @@
+---
+title: injectived のインストール
+updatedAt: "2025-11-27"
+---
+
+## プラットフォーム互換性ガイド
+
+`injectived` CLI を実行するためにサポートされているプラットフォームは、以下の表をご確認ください:
+
+| プラットフォーム | ビルド済みバイナリ | Docker | ソースから |
+|----------|-------------------|--------|------------|
+| macOS (M1/ARM) | ❌ | ✅ | ✅ |
+| macOS (Intel) | ❌ | ✅ | ✅ |
+| Windows (x86_64) | ❌ | ✅ | ❌ |
+| Windows (ARM) | ❌ | ✅ | ❌ |
+| Linux (x86_64) | ✅ | ✅ | ✅ |
+| Linux (ARM) | ❌ | ✅ | ✅ |
+
+
+## ビルド済みバイナリで始める
+
+現時点では、ビルド済みの `injectived` CLI を実行するためにサポートされている唯一のプラットフォームは Linux x86_64 です。ビルド済みバイナリは [Injective GitHub Releases page](https://github.com/InjectiveFoundation/injective-core/releases) で入手できます。
+
+```bash
+# URL を https://github.com/InjectiveFoundation/injective-core/releases の最新リリースに置き換えてください
+wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+```
+
+この zip ファイルには以下のファイルが含まれています:
+
+* **`injectived`** - Injective デーモン兼 CLI
+* **`peggo`** - Injective Ethereum bridge relayer デーモン
+* **`libwasmvm.x86_64.so`** - WASM 仮想マシンのサポートファイル
+
+注意: スマートコントラクトのデプロイとインスタンス化には `peggo` は必要ありません。これは validator 用です。
+
+```bash
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib
+```
+
+バージョンが以下の出力と一致することを確認してください（新しいバージョンが利用可能な場合、出力が若干異なる場合があります）:
+
+```bash
+injectived version
+
+Version v1.14.1 (0fe59376dc)
+Compiled at 20250302-2204 using Go go1.23.1 (amd64)
+```
+
+Injective ブロックチェーンと対話するために `injectived` CLI を使用する方法については、[Using injectived](/developers/injectived/use/) に進んでください。
+
+## Docker で始める
+
+以下のコマンドは `injectived` CLI を含むコンテナを起動します:
+
+```bash
+docker run -it --rm injectivelabs/injective-core:v1.14.1 injectived version
+
+Version v1.14.1 (0fe59376d)
+Compiled at 20250302-2220 using Go go1.22.11 (amd64)
+```
+
+これはほとんどのプラットフォームおよび arm64 / x86_64 アーキテクチャと互換性があります。
+
+
+Injective ブロックチェーンと対話するために `injectived` CLI を使用する方法については、[Using injectived](/developers/injectived/use/) に進んでください。
+
+
+## ソースコードで始める
+
+以下のコマンドはソースコードから `injectived` CLI をビルドします:
+
+```bash
+git clone https://github.com/InjectiveFoundation/injective-core.git
+cd injective-core && git checkout v1.14.1
+make install
+```
+
+これは `injectived` CLI を go path にインストールします。
+
+```bash
+injectived version
+
+Version v1.14.1 (dd7622f)
+Compiled at 20250302-2230 using Go go1.24.0 (amd64)
+```
+
+（オープンソースリポジトリはビルド済みバージョンとは別に公開されているため、コミットハッシュは異なる場合があります）。
+
+Injective ブロックチェーンと対話するために `injectived` CLI を使用する方法については、[Using injectived](/developers/injectived/use/) に進んでください。

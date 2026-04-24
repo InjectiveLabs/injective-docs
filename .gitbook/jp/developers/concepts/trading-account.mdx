@@ -1,0 +1,12 @@
+---
+title: Trading Account
+updatedAt: "2025-12-18"
+---
+
+Subaccount または Trading Account は、ネイティブの Injective Bank モジュール内の資金（ステーキング、オークションへの入札、ガバナンスへの参加、マーケットの作成などに使用できる）を、取引を実行できる分離された trading account に切り離せる概念です。1 つの Injective アドレスは無制限の数の trading account を持つことができます。これらは `${ethereumAddress}${subaccountNonce}` という形式で表現されます。ここで `ethereumAddress` は `bech32` Injective アドレスの `hex` バージョン、`subaccountNonce` は 12 バイトで表現される nonce です。nonce が 1 の trading account の例は `0xc7dca7c15c364865f77a4fb67ab11dc95502e6fe000000000000000000000001` のようになります。
+
+<Tip>
+subaccount とその主な機能の一般的な概要については、[Accounts](/defi/wallet/accounts#subaccounts) ページを参照してください。
+</Tip>
+
+v1.10.0 のチェーンアップグレード以降、Bank balance とデフォルトの trading account（nonce = 0）はマージされ、デフォルトの trading account から発生する取引を実行する際に、Bank の資金が直接使用されるようになります。
