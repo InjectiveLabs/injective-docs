@@ -1,0 +1,45 @@
+---
+title: RESTエンドポイントを使用したノードとの対話
+---
+
+Cosmos SDK上のすべてのgRPCサービスは、gRPC-gatewayを通じてより扱いやすいRESTベースのクエリとして利用できます。
+URLパスの形式はProtobufサービスメソッドの完全修飾名に基づいていますが、最終的なURLはより一般的なREST形式になるようカスタマイズされる場合があります。例えば、`cosmos.bank.v1beta1.Query/AllBalances`メソッドのRESTエンドポイントは`GET /cosmos/bank/v1beta1/balances/{address}`です。リクエスト引数はクエリパラメータとして渡されます。
+
+以下の例では、ローカルプライベートネットワーク内のノードとRESTエンドポイントを使用して対話することを想定しています。ドメインをパブリックネットワークに変更することもできます。
+
+具体的な例として、残高リクエストを行う`curl`コマンドは以下のとおりです：
+
+```bash
+curl \
+    -X GET \
+    -H "Content-Type: application/json" \
+    http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR
+```
+
+`localhost:1317`を、`api.address`フィールドで設定されたノードのRESTエンドポイントに置き換えてください。
+
+利用可能なすべてのRESTエンドポイントの一覧はSwagger仕様ファイルとして提供されています。`localhost:1317/swagger`で確認できます。`app.toml`ファイルの`api.swagger`フィールドがtrueに設定されていることを確認してください。
+
+## RESTを使用した過去のstateのクエリ
+
+過去のstateのクエリは、HTTPヘッダー`x-cosmos-block-height`を使用して行います。例えば、curlコマンドは以下のようになります：
+
+```bash
+curl \
+    -X GET \
+    -H "Content-Type: application/json" \
+    -H "x-cosmos-block-height: 279256" \
+    http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR
+```
+
+そのブロックのstateがノードによってまだプルーニングされていない場合、このクエリは空でないレスポンスを返します。
+
+## Cross-Origin Resource Sharing (CORS)
+
+セキュリティのため、[CORSポリシー](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)はデフォルトで有効になっていません。rest-serverを使用する場合は、リバースプロキシの提供を推奨します。これは[nginx](https://www.nginx.com/)を使用して行うことができます。テストおよび開発目的では、`app.toml`内に`enabled-unsafe-cors`フィールドがあります。
+
+## トランザクションの送信
+
+gRPCおよびRESTを使用してトランザクションを送信するには、トランザクションの生成、署名、そしてブロードキャストという追加手順が必要です。
+
+詳細については[トランザクション](/defi/transactions/ "mention")を参照してください。

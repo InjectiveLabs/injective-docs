@@ -1,0 +1,96 @@
+---
+title: keyringのセットアップ
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+このドキュメントでは、Injectiveノード用のkeyringとそのさまざまなバックエンドの設定と使用方法について説明します。keyringをセットアップする前に`injectived`をインストールする必要があります。詳細については[`injectived`のインストールページ](../developers/injectived/install/)を参照してください。
+</Callout>
+
+keyringは、ノードとの対話に使用される秘密鍵/公開鍵のペアを保持します。例えば、ブロックを正しく署名するために、Injectiveノードを実行する前にバリデーターキーをセットアップする必要があります。秘密鍵は「バックエンド」と呼ばれるさまざまな場所に保存できます。例えば、ファイルやオペレーティングシステム独自のキーストレージなどです。
+
+### keyringの利用可能なバックエンド
+
+#### `os`バックエンド
+
+`os`バックエンドは、オペレーティングシステム固有のデフォルトに依存してキーストレージを安全に処理します。通常、オペレーティングシステムの資格情報サブシステムは、ユーザーのパスワードポリシーに従って、パスワードプロンプト、秘密鍵の保存、ユーザーセッションを処理します。以下は、最も一般的なオペレーティングシステムとそれぞれのパスワードマネージャーの一覧です：
+
+* macOS（Mac OS 8.6以降）: [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
+* Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
+* GNU/Linux:
+  * [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
+  * [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)
+
+GNOMEをデフォルトデスクトップ環境として使用するGNU/Linuxディストリビューションには、通常[Seahorse](https://wiki.gnome.org/Apps/Seahorse)が付属しています。KDEベースのディストリビューションのユーザーには、通常[KDE Wallet Manager](https://userbase.kde.org/KDE_Wallet_Manager)が提供されます。前者は実質的に`libsecret`の便利なフロントエンドであり、後者は`kwallet`クライアントです。
+
+`os`は、オペレーティングシステム標準の資格情報マネージャーを利用することで、セキュリティを維持しつつ利便性の高い体験を提供するため、デフォルトの選択肢となっています。
+
+ヘッドレス環境で推奨されるバックエンドは`file`と`pass`です。
+
+#### `file`バックエンド
+
+`file`は、アプリの設定ディレクトリ内にkeyringを暗号化して保存します。このkeyringはアクセスのたびにパスワードを要求し、1つのコマンド内で複数回発生する場合があり、パスワードプロンプトが繰り返し表示されます。`file`オプションを使用してコマンドを実行するbashスクリプトを使用する場合、複数のプロンプトに対して以下の形式を利用できます：
+
+```bash
+# KEYPASSWDが環境変数に設定されていることを前提としています
+yes $KEYPASSWD | injectived keys add me
+yes $KEYPASSWD | injectived keys show me
+# keyring-backendフラグを指定してinjectivedを起動
+injectived --keyring-backend=file start
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+空のkeyringに初めてキーを追加する際、パスワードを2回入力するよう求められます。
+</Callout>
+
+#### `pass`バックエンド
+
+`pass`バックエンドは、[pass](https://www.passwordstore.org/)ユーティリティを使用して、キーの機密データとメタデータのディスク上の暗号化を管理します。キーはアプリ固有のディレクトリ内の`gpg`暗号化ファイルに保存されます。`pass`は、最も一般的なUNIXオペレーティングシステムおよびGNU/Linuxディストリビューションで利用可能です。ダウンロードとインストールの方法については、マニュアルページを参照してください。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`pass`は暗号化に[GnuPG](https://gnupg.org/)を使用します。`gpg`は実行時に自動的に`gpg-agent`デーモンを起動し、GnuPG資格情報のキャッシュを処理します。資格情報のTTLやパスフレーズの有効期限などのキャッシュパラメータの設定方法の詳細については、`gpg-agent`のmanページを参照してください。
+</Callout>
+
+パスワードストアは初回使用前にセットアップする必要があります：
+
+```sh
+pass init <GPG_KEY_ID>
+```
+
+`<GPG_KEY_ID>`をGPGキーIDに置き換えてください。個人用のGPGキー、または専用の暗号化キーを使用できます。
+
+#### `kwallet`バックエンド
+
+`kwallet`バックエンドは`KDE Wallet Manager`を使用します。これは、KDEをデフォルトデスクトップ環境として搭載するGNU/Linuxディストリビューションにデフォルトでインストールされています。詳細については[KWallet Handbook](https://docs.kde.org/stable/en/kdeutils/kwallet/index.html)を参照してください。
+
+#### `test`バックエンド
+
+`test`バックエンドは、`file`バックエンドのパスワード不要バージョンです。キーは暗号化されずにディスクに保存されます。
+
+**テスト目的でのみ提供されています。`test`バックエンドは本番環境での使用は推奨されません**。
+
+#### `memory`バックエンド
+
+`memory`バックエンドはキーをメモリに保存します。プログラムの終了後、キーは即座に削除されます。
+
+**テスト目的でのみ提供されています。`memory`バックエンドは本番環境での使用は推奨されません**。
+
+### keyringへのキーの追加
+
+`injectived keys`を使用してkeysコマンドのヘルプを表示し、`injectived keys [command] --help`で特定のサブコマンドの詳細を確認できます。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`injectived completion`コマンドでオートコンプリートを有効にすることもできます。例えば、bashセッションの開始時に`. <(injectived completion)`を実行すると、すべての`injectived`サブコマンドがオートコンプリートされます。
+</Callout>
+
+keyringに新しいキーを作成するには、`<key_name>`引数を指定して`add`サブコマンドを実行します。このチュートリアルでは`test`バックエンドのみを使用し、新しいキーを`my_validator`と呼びます。このキーは次のセクションで使用されます。
+
+```bash
+$ injectived keys add my_validator --keyring-backend test
+
+# 生成されたアドレスを後で使用するために変数に格納します。
+MY_VALIDATOR_ADDRESS=$(injectived keys show my_validator -a --keyring-backend test)
+```
+
+このコマンドは新しい24単語のニーモニックフレーズを生成し、該当するバックエンドに保存し、キーペアに関する情報を出力します。このキーペアが価値のあるトークンを保持するために使用される場合は、ニーモニックフレーズを安全な場所に必ず書き留めてください。
+
+デフォルトでは、keyringは`eth_secp256k1`キーペアを生成します。keyringは`ed25519`キーもサポートしており、`--algo ed25519`フラグを渡すことで作成できます。keyringはもちろん両方のタイプのキーを同時に保持できます。
