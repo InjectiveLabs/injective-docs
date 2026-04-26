@@ -1,0 +1,134 @@
+---
+description: "単一市場におけるマーケットメイカーのEpochパフォーマンスのスコアリング"
+title: "スコアリング計算式/方法論"
+---
+
+Injectiveのオンチェーンオーダーブックにおいて深く持続的な流動性を促進するため、OLPでは以下のメトリクスが優先されます：
+
+- **両サイドの流動性**（bidとaskの両方の流動性）
+- **流動性の深さ**
+- **Bid-askスプレッド**
+- **マーケットメイカーのアップタイム**
+- **ボリューム**（メイカーおよびテイカー）
+- **複数市場への参加**
+
+## Total Score
+
+任意の市場において、流動性プロバイダーのepochにおける$TS$（Total Score）は以下のように計算されます：
+
+$$
+TS_{Market} = (LS_{Epoch})^a \cdot (Uptime_{Epoch})^b \cdot (Volume_{epoch})^c
+$$
+
+ここで、$LS_{epoch}$はそのepochにおけるその市場での流動性プロバイダーの[Liquidity Score](/defi/open-liquidity-program/scoring#liquidity-score)、$Uptime_{Epoch}$はそのepochにおけるその市場での流動性プロバイダーの[Uptime Score](/defi/open-liquidity-program/scoring#uptime-score)、$Volume_{epoch}$はそのepochにおけるその市場での流動性プロバイダーの合計ボリューム（メイカーおよびテイカー）です。
+
+<Info>
+  $a$、$b$、$c$は計算式の異なる構成要素を重み付けする指数[パラメータ](/defi/open-liquidity-program/formula-parameters)です。
+</Info>
+
+## Liquidity Score
+
+$$
+LS_{Epoch} =  \sum \limits_{N=1}^{40,320}  \min(LS_{N_{Bid}}, LS_{N_{Ask}})
+$$
+
+epochにおける市場の流動性プロバイダーのLiquidity Score $LS_{Epoch}$は、該当市場のepoch内のすべてのオーダーブックスナップショットにわたるBidとAskのLiquidity Score（以下参照）の最小値の合計に、各市場固有のボラティリティパラメータ（Θで表現）を乗じたものです。$\min()$関数の下では片側のみの流動性はLiquidity Score 0となるため、両サイドの流動性が促進されます。
+
+オーダーブックのスナップショットは10〜100ブロックごとにランダムに取得されます。これは平均して約1分ごとであり、1epochあたり約40,320のスナップショットがあることを意味します$(60 \cdot 24 \cdot 28 = 40,320)$。実際には、合計の上限はepoch内の実際のスナップショット数に応じて変動します。このガイドでは、epochにちょうど40,320のスナップショットがあったと仮定します。
+
+$$
+LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots
+ \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+$$
+
+$$
+LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+$$
+
+$LS_{N_{Bid}}$は、スナップショット$N$において流動性プロバイダーが配置した、サイズが$MinDepth$以上かつ$MaxSpread$以内のすべてのリミットオーダーについて、各bidオーダーの深さをそのオーダーのスプレッドで割り、そのスナップショットのボラティリティパラメータを乗じた合計です。
+
+$LS_{N_{Ask}}$は$LS_{N_{Bid}}$と同じロジックですが、オーダーブックのask側に対して適用されます。
+
+ボラティリティパラメータは以下のように計算されます：
+
+$$
+\Theta_{\text{vol}}(S_b)\;=\;
+\min\!\bigl(\,\Theta_{\max},\;
+           \max\!\{\,1,\;
+                    e^{\alpha\,\sigma_b\,|\frac{S_b-\mu_b}{S_b}|}\}\bigr)
+$$
+
+ここで、$\mu_b$は$N$ブロック（1000ブロック、約10分）にわたるオラクル価格の移動平均、$S_b$は現在のブロックのオラクル価格、$\sigma_b$は$N$ブロックにわたる実現ボラティリティを表します。この関数はクランプを持ち、現在のオラクル価格が移動平均から乖離した場合、または直近$N$ブロックでボラティリティが急上昇した場合に適切にスケールします。$\Theta_{\text{vol}} \in [1, \Theta_{\text{max}}]$の範囲 - 有限の範囲内に制限されます。ボラティリティへの感度とクランプを監視する2つの新しいパラメータ$(\alpha, \Theta_{\text{max}})$を導入しています。$\Theta_{\text{max}}$は10分間の期間における3%の価格変動に対して上記の上限10に向かう傾向があるため、$\alpha$は現在2,500に設定されています。$\alpha$の値が高いほど$\Theta$は$\Theta_{\text{max}}$に速く到達しますが、$\Theta_{\text{max}}$は現在市場ごとに10に設定されており（市場ごとに変更可能）、$\alpha$が高くてもその上限を超えることはありません。
+
+$Spread$はミッドプライスから計算されます（ミッドプライスからの距離をミッドプライスで割ったもの）。
+
+<Info>
+  $MinDepth$と$MaxSpread$の現在の値については、[計算式パラメータページ](/defi/open-liquidity-program/formula-parameters)をご覧ください。
+</Info>
+
+## Uptime Score
+
+$$
+Uptime_{Epoch} = \sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases}
+$$
+
+$Uptime_{Epoch}$は、流動性プロバイダーが対象市場において[**正のBid Liquidity Scoreと正のAsk Liquidity Score**](/defi/open-liquidity-program/scoring#liquidity-score)を持っていたepoch全体のオーダーブックスナップショットの数です。これは、流動性プロバイダーがそのスナップショットにおいて、$MinDepth$以上のオーダーサイズで$MaxSpread$以下のスプレッドで、オーダーブックの両サイドにクォートしていたことを意味します。
+
+epochの途中でOLP報酬の資格を（初めて）取得した流動性プロバイダーの場合、$Uptime_{Epoch}$は資格取得時点からepoch終了までの合計スナップショット数に基づいてスケーリングされます。
+
+例えば、epochにちょうど40,320のスナップショットがあり、流動性プロバイダーが残りちょうど20,000スナップショットの時点で初めて資格を取得したとします。また、epochの残りの期間中に上記のスコアリング計算式で定義される$Uptime_{Epoch}$が18,000であったとします。この場合、$Uptime_{Epoch}$は$\frac{18000}{20000}*40320 = 36288$にスケーリングされます。
+
+<Info>
+  epochの途中で資格を取得したが過去に資格を取得したことがあるアドレス（ある時点で資格を維持できなかったアドレス）の場合、$Uptime_{Epoch}$はスケーリングされません。これは、epoch間で資格を失うことへのディスインセンティブとなります。
+</Info>
+
+## Volume
+
+$Volume$は、epochにおけるその市場での流動性プロバイダーの累積的な対象メイカーおよびテイカーボリュームです。
+
+## 完全展開計算式
+
+完全に展開された計算式は以下のとおりです：
+
+$TS_{Market} =$
+
+$$
+\left(\sum \limits_{N=1}^{40,320}  \min(LS_{N_{Bid}}, LS_{N_{Ask}})\right)^a \cdot \left(\sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases} \right)^b \cdot Volume^c
+$$
+
+$$
+\text {where}
+$$
+
+$$
+LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots
+ \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+$$
+
+$$
+LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+$$
+
+<Info>
+  各epochの個別報酬計算については、[報酬配分ページ](/defi/open-liquidity-program/reward-allocations)をご覧ください。
+</Info>
+
+[^1]: Market Maker
+
+[^2]: Market Maker
+
+[^3]: オーダーブックにおけるベストビッド価格とベストアスク価格の平均
+
+[^4]: Market Maker
+
+[^5]: Market Maker
+
+[^6]: Market Makers
+
+[^7]: Market Maker
+
+[^8]: Market Maker
+
+[^9]: Market Maker
+
+[^10]: Market Maker

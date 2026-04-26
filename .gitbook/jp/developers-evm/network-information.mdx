@@ -1,0 +1,118 @@
+---
+description: Injective EVMネットワークに関する基本情報
+title: EVMネットワーク情報
+---
+
+<Tabs>
+
+<Tab title="Injective EVMメインネット" icon="server">
+
+## ネットワーク情報
+
+* Chain ID: `1776`
+* JSON-RPCエンドポイント: `https://sentry.evm-rpc.injective.network/`
+* WSエンドポイント: `wss://sentry.evm-ws.injective.network`
+* Faucet: N/A、メインネットINJの取得については [`injective.com/getinj`](https://injective.com/getinj/) を参照
+* Explorer: [`blockscout.injective.network`](https://blockscout.injective.network/)
+* Explorer API: `https://blockscout-api.injective.network/api`
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+InjectiveのネイティブChain IDは `injective-1` です。
+しかし、EVMでは数値Chain ID `1776` を使用します。
+これらは異なりますが、**同じ**ネットワークに対応しています。
+
+詳細については [Injectiveメインネットのネットワーク情報](/developers/network-information/#injective-mainnet) を参照してください。
+</Callout>
+
+## コントラクト
+
+* **USDT** USDT (MTS) - [`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`](https://blockscout.injective.network/address/0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13)
+* **wETH** wrapped ETH (MTS) - [`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`](https://blockscout.injective.network/address/0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7)
+* **wINJ** wrapped INJ (MTS) - [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
+* **USDC** USDC (MTS) - [`0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989`](https://blockscout.injective.network/address/0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989)
+* **MultiCall** - [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11)
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**MTS** と表記されているトークンは [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard) に準拠しています。
+
+これにより、ブリッジを使用せずに、同じトークンをすべてのInjectiveモジュール（EVM、Cosmos）で使用できます。
+</Callout>
+
+## その他のプロバイダー
+
+* Explorer
+  * Blockscoutミラー: [`injective.cloud.blockscout.com`](https://injective.cloud.blockscout.com)
+* JSON-RPCプロバイダー
+  * Quicknode [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
+    * エンドポイントURLを取得するにはQuicknodeのアカウント作成が必要です
+    * [Quicknode JSON-RPCドキュメント](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
+  * ThirdWeb [`thirdweb.com/injective`](https://thirdweb.com/injective)
+    * エンドポイントURLを取得するにはThirdWebのアカウント作成が必要です
+    * [ThirdWeb Playground](https://playground.thirdweb.com/)
+
+</Tab>
+
+<Tab title="Injective EVMテストネット" icon="flask-vial">
+
+## ネットワーク情報
+
+* Chain ID: `1439`
+* JSON-RPCエンドポイント: `https://k8s.testnet.json-rpc.injective.network/`
+* WSエンドポイント: `wss://k8s.testnet.ws.injective.network/`
+* Faucet (Injective): [`testnet.faucet.injective.network/`](https://testnet.faucet.injective.network/)
+* Faucet (Google): [`cloud.google.com/application/web3/faucet/injective/testnet`](https://cloud.google.com/application/web3/faucet/injective/testnet)
+* Faucet (Circle): [`faucet.circle.com/`](https://faucet.circle.com/)
+* Explorer: [`testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/)
+* Explorer API: `https://testnet.blockscout-api.injective.network/api`
+
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Injective Chain IDはネイティブでは `injective-888` です。しかし、EVMでは数値Chain ID `1439` を使用します。これらは異なりますが、**同じ**ネットワークにマッピングされます。
+
+詳細については [Injectiveテストネットのネットワーク情報](/developers/network-information/#injective-testnet) を参照してください。
+</Callout>
+
+## コントラクト
+
+* **wINJ** wrapped INJ (MTS) - [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://testnet.blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
+* **USDT** USDT (MTS) - [`0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`](https://testnet.blockscout.injective.network/address/0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60)
+* **USDC** - [`0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d`](https://testnet.blockscout.injective.network/token/0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d)
+* **USDC CCTP TokenMessengerV2** - [`0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA`](https://testnet.blockscout.injective.network/address/0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA)
+* **USDC CCTP MessageTransmitterV2** - [`0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275`](https://testnet.blockscout.injective.network/address/0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275)
+* **USDC CCTP TokenMinterV2** - [`0xb43db544E2c27092c107639Ad201b3dEfAbcF192`](https://testnet.blockscout.injective.network/address/0xb43db544E2c27092c107639Ad201b3dEfAbcF192)
+* **USDC CCTP MessageV2** - [`0xbaC0179bB358A8936169a63408C8481D582390C4`](https://testnet.blockscout.injective.network/address/0xbaC0179bB358A8936169a63408C8481D582390C4)
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**MTS** と表記されているトークンは [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard) に準拠しています。
+
+これにより、ブリッジを使用せずに、同じトークンをすべてのInjectiveモジュール（EVM、Cosmos）で使用できます。
+</Callout>
+
+## その他のプロバイダー
+
+* Explorer
+  * Blockscoutミラー: [`testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
+* JSON-RPCプロバイダー
+  * Quicknode [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
+    * エンドポイントURLを取得するにはQuicknodeのアカウント作成が必要です
+    * [Quicknode JSON-RPCドキュメント](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
+  * ThirdWeb [`thirdweb.com/injective-evm-testnet`](https://thirdweb.com/injective-evm-testnet)
+    * エンドポイントURLを取得するにはThirdWebのアカウント作成が必要です
+    * [ThirdWeb Playground](https://playground.thirdweb.com/)
+
+## その他の情報
+
+Injective EVMテストネットの詳細については以下のページを参照してください：
+
+* 基礎:
+  * [EVMでの開発を始める](/developers-evm)
+  * [初めてのEVMスマートコントラクト](/developers-evm/smart-contracts)
+  * [初めてのEVM dApp](/developers-evm/dapps)
+* 応用:
+  * [EVM Equivalence](/developers-evm/evm-equivalence)
+  * [MultiVM Token Standard](/developers-evm/multivm-token-standard)
+  * [Precompiles](/developers-evm/precompiles)
+
+</Tab>
+
+</Tabs>

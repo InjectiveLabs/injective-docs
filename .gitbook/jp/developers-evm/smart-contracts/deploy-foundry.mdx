@@ -1,0 +1,50 @@
+---
+title: Foundryを使用したスマートコントラクトのデプロイ
+---
+
+## 前提条件
+
+Foundryプロジェクトがセットアップ済みで、スマートコントラクトのコンパイルが成功している必要があります。
+その方法については [Foundryのセットアップとスマートコントラクトのコンパイル](./compile-foundry/) チュートリアルを参照してください。
+
+任意ですが強く推奨: スマートコントラクトのテストも成功している必要があります。
+その方法については [Foundryを使用したスマートコントラクトのテスト](./test-foundry/) チュートリアルを参照してください。
+
+## デプロイの実行
+
+以下のコマンドでスマートコントラクトをデプロイします：
+
+```shell
+forge create \
+  src/Counter.sol:Counter \
+  --rpc-url injectiveEvm \
+  --legacy \
+  --account injTest \
+  --gas-price 160000000 \
+  --gas-limit 2000000 \
+  --broadcast
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+keystoreに保存された `injTest` アカウントを使用しています。
+これは [Foundryのセットアップとスマートコントラクトのコンパイル](./compile-foundry/) で事前にセットアップしたものです。
+</Callout>
+
+出力は以下のようになります：
+
+```text
+Enter keystore password:
+Deployer: 0x58f936cb685Bd6a7dC9a21Fa83E8aaaF8EDD5724
+Deployed to: 0x213bA803265386C10CE04a2cAa0f31FF3440b9cF
+Transaction hash: 0x6aa9022f593083c7779da014a3032efd40f3faa2cf3473f4252a8fbd2a80db6c
+```
+
+デプロイされたアドレスをコピーし、[`https://testnet.blockscout.injective.network`](https://testnet.blockscout.injective.network/) にアクセスして、検索フィールドにアドレスを貼り付けます。
+デプロイしたスマートコントラクトのブロックエクスプローラーページが表示されます。
+
+"Contract" タブをクリックすると、そのコントラクトのEVM bytecodeが表示され、コンパイル後のアーティファクトディレクトリのEVM bytecodeと一致するはずです。
+
+## 次のステップ
+
+スマートコントラクトのデプロイが完了したので、次はスマートコントラクトの検証です！
+[Foundryを使用したスマートコントラクトの検証](./verify-foundry/) チュートリアルに進みましょう。

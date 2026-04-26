@@ -1,6 +1,7 @@
 ---
 sidebar_position: 4
 title: How to Launch Permissioned Assets
+updatedAt: "2025-10-30"
 ---
 
 # How to Launch Permissioned Assets

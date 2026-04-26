@@ -1,42 +1,72 @@
 ---
 title: Precompiles
+description: >-
+    Precompiles that expose Injective-specific modules (exchange, staking, governance) to the Injective EVM,
+    which allows Solidity smart contracts to have direct access to Injective's powerful native modules.
+updatedAt: "2025-11-27"
 ---
 
-### What are Precompiles on Injective?
+## What are Precompiles on Injective?
 
-On Injective, precompiles are special, highly-optimized smart contracts embedded directly into our EVM (Ethereum Virtual Machine) layer at the protocol level. Unlike standard Solidity smart contracts that are deployed by users, precompiles are part of the chain's core logic. They are written in Go instead of Solidity and are exposed to the EVM with fixed addresses, making them callable from your Solidity smart contracts just like any other smart contract.
+On Injective, precompiles are special, highly-optimized smart contracts embedded directly into our
+EVM (Ethereum Virtual Machine) layer at the protocol level.
+Unlike standard Solidity smart contracts that are deployed by users, precompiles are part of the chain's core logic.
+They are written in Go instead of Solidity and are exposed to the EVM with fixed addresses,
+making them callable from your Solidity smart contracts just like any other smart contract.
 
 Think of them as native functions of the Injective chain that have been given an Ethereum-style interface.
 
-### Why are they necessary? (Bridging EVM & Native Modules)
+## Why are they necessary?
 
-The Injective EVM doesn't operate in a silo. It's deeply integrated with Injective's powerful native Cosmos SDK modules, such as the Bank module (for token management), the Exchange module (for the on-chain order book), the Staking module, and more.
+Short answer: They bridge EVM &amp; Native Modules
 
-Precompiles serve as the crucial **bridge** between the EVM world (where your Solidity contracts live) and these native Injective functionalities. Without precompiles, your EVM smart contracts would be isolated, unable to tap into the rich features and liquidity of the broader Injective ecosystem.
+The Injective EVM doesn't operate in a silo. It's deeply integrated with Injective's powerful native Cosmos SDK modules,
+such as the Bank module (for token management), the Exchange module (for the on-chain order book), the Staking module, and more.
 
-For example, our [MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard) model, which ensures unified token balances across native and EVM environments, is heavily reliant on the **Bank Precompile**.
+Precompiles serve as the crucial **bridge** between the EVM world (where your Solidity contracts live)
+and these native Injective functionalities. Without precompiles, your EVM smart contracts would be isolated,
+unable to tap into the rich features and liquidity of the broader Injective ecosystem.
+
+For example, our [MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard) model,
+which ensures unified token balances across native and EVM environments, is heavily reliant on the **Bank Precompile**.
 
 ### Benefits for Developers
 
-* **Access to Native Features:** Directly interact with Injective's unique modules like the on-chain order book, native staking, governance, and the bank module for MTS.
-* **Enhanced Performance:** Operations executed via precompiles can be significantly faster and more gas-efficient than trying to replicate complex native logic purely in Solidity, as they run as optimized native code.
-* **Seamless Interoperability:** Build truly integrated applications that leverage the strengths of both the EVM and Injective's Cosmos-native capabilities.
-* **Simplified Development:** Interact with complex native functionalities through familiar Solidity interfaces, abstracting away much of the underlying Cosmos complexity.
+* **Access to Native Features:** Directly interact with Injective's unique modules like the on-chain order book,
+  native staking, governance, and the bank module for MTS.
+* **Enhanced Performance:** Operations executed via precompiles can be significantly faster and
+  more gas-efficient than trying to replicate complex native logic purely in Solidity,
+  as they run as optimized native code.
+* **Seamless Interoperability:** Build truly integrated applications that leverage the strengths of both
+  the EVM and Injective's Cosmos-native capabilities.
+* **Simplified Development:** Interact with complex native functionalities through familiar Solidity interfaces,
+  abstracting away much of the underlying Cosmos complexity.
 
-A range of ERC-20 implementations backed by the Bank precompile, alongside precompile interfaces and abstract contracts, are available at [Injective’s Solidity Contracts Repository](https://github.com/InjectiveLabs/solidity-contracts). Key contracts include:
+A range of ERC-20 implementations backed by the Bank precompile, alongside precompile interfaces and abstract contracts,
+are available at [Injective’s Solidity Contracts Repository](https://github.com/InjectiveLabs/solidity-contracts).
+Key contracts include:
 
-* [**Bank.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/Bank.sol) – precompile interface
-* [**BankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/BankERC20.sol) – abstract ERC20 implementation backed by the Bank precompile
-* [**FixedSupplyBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/FixedSupplyBankERC20.sol) – decentralized ERC20 with fixed supply (no owner, no minting or burning)
-* [**MintBurnBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/MintBurnBankERC20.sol) – ERC20 with an owner authorized to mint and burn tokens
+* [**Bank.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/Bank.sol) –
+  precompile interface
+* [**BankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/BankERC20.sol) –
+  abstract ERC20 implementation backed by the Bank precompile
+* [**FixedSupplyBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/FixedSupplyBankERC20.sol) –
+  decentralized ERC20 with fixed supply (no owner, no minting or burning)
+* [**MintBurnBankERC20.sol**](https://github.com/InjectiveLabs/solidity-contracts/blob/master/src/MintBurnBankERC20.sol) –
+  ERC20 with an owner authorized to mint and burn tokens
 
-These implementations are based on OpenZeppelin’s ERC20 contracts. Developers can freely create custom ERC20 contracts utilizing the Bank precompile.
+These implementations are based on OpenZeppelin’s ERC20 contracts.
+Developers can freely create custom ERC20 contracts utilizing the Bank precompile.
 
 ### Demos to get you started
 
-We've prepared a handful of demos that show how to build contracts using the Bank, Exchange, and Staking precompiles. These examples also demonstrate how to interact with the Injective EVM using the most common Ethereum development framework — **Foundry**.
+We've prepared a handful of demos that show how to build contracts using the Bank, Exchange, and Staking precompiles.
+These examples also demonstrate how to interact with the Injective EVM
+using the most common Ethereum development framework — **Foundry**.
 
-By leveraging Foundry's `cast` tool, you can easily deploy contracts and interact with the Injective chain directly from your terminal. This enables builders to quickly experiment, test, and deploy powerful applications that tap into Injective's native modules.
+By leveraging Foundry's `cast` tool,
+you can easily deploy contracts and interact with the Injective chain directly from your terminal.
+This enables builders to quickly experiment, test, and deploy powerful applications that tap into Injective's native modules.
 
 Explore the demos below to see:
 
@@ -44,7 +74,9 @@ Explore the demos below to see:
 - How to use Foundry scripts and `cast` commands to deploy and interact with these contracts on Injective EVM.
 - Best practices for bridging EVM logic with Injective's native features.
 
-Jumpstart your development by cloning the [Injective Solidity Contracts Repository](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos) and following the step-by-step guides in each demo directory.
+Jump start your development by cloning the
+[Injective Solidity Contracts Repository](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos) and
+following the step-by-step guides in each demo directory.
 
 * [Bank Precompile Demo](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/erc20)
 * [Exchange Precompile Demo](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange)
@@ -68,7 +100,7 @@ you may see an error similar to the following:
 [Revert] call to non-contract address 0x0000000000000000000000000000000000000064
 ```
 
-This occurs becuase Foundry is *simulating* Injective locally,
+This occurs because Foundry is *simulating* Injective locally,
 rather than actually running on Injective.
 It is therefore running a *generic EVM* simulation,
 and not one that is specific to Injective.

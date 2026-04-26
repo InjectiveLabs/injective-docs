@@ -1,3 +1,7 @@
+---
+updatedAt: "2025-10-30"
+---
+
 # ERC20
 
 ## Abstract

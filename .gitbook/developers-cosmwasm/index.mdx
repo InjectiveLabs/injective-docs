@@ -1,7 +1,81 @@
 ---
 title: Overview
+updatedAt: "2025-12-04"
 ---
 
-CosmWasm is a novel smart contracting platform built for the Cosmos ecosystem. You can learn more about CosmWasm from [the CosmWasm docs](https://cosmwasm.cosmos.network/), or see the [CosmWasm Book](https://book.cosmwasm.com/index.html) for a guide on creating CosmWasm smart contracts.
+This section is for developers building on Injective using CosmWasm,
+the WebAssembly-based smart contracting platform for the Cosmos ecosystem.
+Whether you're writing Rust contracts, integrating with Injective's native modules, or deploying to mainnet through governance,
+you'll find comprehensive guides for the entire CosmWasm development lifecycle—from local development to production deployment.
 
-**Start your builder journey on Injective using Cosmwasm here**: [Your First CosmWasm Smart Contracts](/developers-cosmwasm/smart-contracts/your-first-smart-contract)
+Injective elevates CosmWasm development by bridging the gap between WebAssembly contracts and
+high-performance financial infrastructure.
+Unlike standard CosmWasm chains where contracts operate in isolation,
+Injective's `Any` message system enables direct communication between Rust contracts and native modules—allowing contracts
+to place orders on the on-chain orderbook, query oracle price feeds, create TokenFactory assets, and participate in auctions.
+The CW20 Adapter further extends interoperability by letting CW20 tokens seamlessly trade on Injective's exchange
+by converting to native denoms.
+With `injective-test-tube`, developers can integration-test their contracts against actual chain logic rather than mocks,
+ensuring real-world correctness. Combined with Injective's sub-second block times and permissionless testnet,
+CosmWasm developers get a production-grade environment for building sophisticated DeFi applications that
+leverage the full depth of Injective's financial primitives.
+
+## Key Concepts
+
+| Term | Definition |
+|------|------------|
+| **CosmWasm** | A WebAssembly-based smart contract platform built for Cosmos that enables writing secure, portable contracts in Rust with deterministic execution. |
+| **CW20 Adapter** | A bridge contract that converts CW20 tokens to native TokenFactory denoms, enabling CW20 tokens to interact with Injective's exchange and other native modules. |
+| **Any Messages** | Protobuf-encoded messages (CosmWasm 2.0+) that allow CosmWasm contracts to interact with Injective's native modules like exchange, oracle, and tokenfactory. |
+| **injective-test-tube** | An integration testing library that runs actual Injective chain logic in-memory for testing CosmWasm contracts against real module behavior (not mocks). |
+| **WASMx** | Injective's module that governs CosmWasm contract deployment, including governance proposals for mainnet code uploads and permission management. |
+
+## Start Building
+
+<Columns cols={2}>
+  <Card
+    title="Your First CosmWasm Smart Contract"
+    href="/developers-cosmwasm/smart-contracts/your-first-smart-contract"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="">
+    Complete beginner's guide to writing, compiling, testing, deploying, and interacting with your first Rust-based CosmWasm contract on Injective.
+  </Card>
+  <Card
+    title="Local Development Guide"
+    href="/developers-cosmwasm/local-development-guide/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="">
+    Set up a local Injective node, compile CW20 contracts with rust-optimizer, and deploy to a local network for rapid iteration and testing.
+  </Card>
+  <Card
+    title="Mainnet Deployment Guide"
+    href="/developers-cosmwasm/mainnet-deployment-guide/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="">
+    Navigate the governance process for uploading contracts to Injective Mainnet, including proposal submission, instantiation permissions, and contract migration.
+  </Card>
+  <Card
+    title="Using Injective Modules"
+    href="/developers-cosmwasm/cosmwasm-any/"
+    arrow="true"
+    cta="Click here"
+    icon="panel-left-close"
+    img="">
+    Learn how to use Any messages and queries to interact with Injective's native modules (exchange, oracle, tokenfactory) from your CosmWasm contracts.
+  </Card>
+</Columns>
+
+## Additional Resources
+
+- **[CW20 Adapter](/developers-cosmwasm/cw20-adapter/)** —
+  Technical documentation for the adapter contract that bridges CW20 tokens to Injective's native bank module and exchange.
+- **[Injective Test Tube](/developers-cosmwasm/injective-test-tube/)** —
+  Integration testing framework for running CosmWasm tests against actual Injective chain logic in-memory.
+- **[Smart Contract Examples](/developers-cosmwasm/smart-contracts/)** —
+  Reference implementations including Injective Name Service, Neptune Service, and CW20-to-market-order workflows.

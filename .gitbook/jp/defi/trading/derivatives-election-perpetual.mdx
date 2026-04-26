@@ -1,0 +1,26 @@
+---
+hidden: true
+title: Election Perpetual
+---
+
+Election Perpetual Futures契約（Election Perp）は、Injective上のデリバティブ金融商品の一種であり、選挙市場へのレバレッジ付きエクスポージャーを得ることを可能にします。Election Perpは、従来の暗号資産ではなく、Polymarket上の市場価格を追跡するPerpetual Futures契約です。
+
+従来の先物契約とは異なり、これらの契約には満期日がなく、無期限に保有することができます。取引はUSDTで決済されます。他のPerpと同様に、Election Perpはファンディングレートメカニズムを使用して、契約価格を原資産のインデックス価格に近い状態に維持します。
+
+### Election Perpetual Futuresの仕組み
+
+* 契約はPolymarket上の市場（例：[Presidential Election Winner 2024](https://polymarket.com/event/presidential-election-winner-2024)）を追跡します。
+* トレーダーは最大3倍のレバレッジで、Election Perpをロング（買い）またはショート（売り）することができます。
+* 契約価格をインデックスに一致させるため、ロング保有者とショート保有者の間で定期的なファンディングペイメントが発生します。
+
+Expiry Futuresでは、清算価格と決済価格を追跡するためにMark Priceが必要です。Mark Priceは通常、原資産のスポット価格に基づいているため、インデックス価格が一般的なOracleフィードに存在しないElection Perpには通常のOracle価格フィードを使用できません。しかし、清算価格を決定するためにはMark Priceが依然として必要です。これを解決するために、Election Perpetual Futuresは独自のOracleフィードをMark Priceとして使用します。
+
+### Mark Priceメカニズム
+
+Injective上のElection PerpのMark Priceは、Storkが提供する独自のOracleフィードに基づいています。2024ELECTION PERPの例では、StorkはPolymarket上の2024年大統領選挙市場の中間値を照会します。その後、Mark Priceの急激な変動を防ぐために6時間のTWAP（時間加重平均価格）を適用します。その価格はより人間が読みやすい形式（すなわち$0から$1の間の価格）にスケールダウンされ、Mark Priceとして使用されます。
+
+### マーケット決済
+
+Election Perpは満期のある商品ではありませんが、取引ペアにはおおよその存続期間があります（すなわち、選挙の終了時）。Polymarket上の原資産市場が決済に達すると（すなわち、トークン価格が$0または$1に収束する）、利益を得る機会がなくなるため、Election Perpの取引活動はゼロに向かう傾向があります。その時点で、関係者がマーケットを決済するためのガバナンス提案を提出する場合があります。そのような提案が可決された場合、マーケットは決済され、未決済ポジションを持つトレーダーはOracleのMark Price（$0または$1に収束）で強制清算されます。
+
+2024ELECTION PERPに関しては、TRUMPWINを原資産として取引ペアが上場されました。2つ以上の資産（すなわち、民主党および共和党の候補者それぞれ）を上場して流動性を分散させるのではなく、1つの資産を上場する決定がなされました。この資産について、前述のPolymarket上の市場がDonald J. Trumpに対して「yes」で決済された場合（すなわち、Donald J. Trumpが2024年大統領選挙に勝利した場合）、Mark Priceは$1に収束し、市場が「no」で決済された場合（すなわち、Kamala Harrisまたは他の候補者が大統領選挙に勝利した場合）、Mark Priceは$0に収束します。

@@ -1,0 +1,62 @@
+---
+title: gRPCを使用したノードとの対話
+---
+
+Protobufエコシステムでは、`*.proto`ファイルからさまざまな言語へのコード生成を含む、さまざまなユースケース向けのツールが開発されています。これらのツールにより、クライアントを簡単に構築できます。多くの場合、クライアント接続（トランスポート）は簡単にプラグインおよび置換できます。ここでは一般的なトランスポート方法であるgRPCについて説明します。
+
+コード生成ライブラリは技術スタックに大きく依存するため、ここでは2つの方法のみを紹介します：
+
+* 汎用的なデバッグおよびテスト用の`grpcurl`
+* Go、Python、またはTSによるプログラム的な方法
+
+## grpcurl
+
+[grpcurl](https://github.com/fullstorydev/grpcurl)は、gRPC版の`curl`です。GoライブラリとしてもGoから利用可能ですが、ここではデバッグおよびテスト目的のCLIコマンドとしてのみ使用します。インストール方法については、上記リンクの手順に従ってください。
+
+ローカルノードが稼働している場合（localnetまたはライブネットワークに接続済み）、以下のコマンドを実行して利用可能なProtobufサービスの一覧を取得できます。`localhost:9090`は、`app.toml`の`grpc.address`フィールドで設定された別のノードのgRPCサーバーエンドポイントに置き換えることができます：
+
+```bash
+grpcurl -plaintext localhost:9090 list
+```
+
+`cosmos.bank.v1beta1.Query`のようなgRPCサービスの一覧が表示されます。これはリフレクションと呼ばれ、利用可能なすべてのエンドポイントの説明を返すProtobufエンドポイントです。これらはそれぞれ異なるProtobufサービスを表し、各サービスはクエリ可能な複数のRPCメソッドを公開しています。
+
+サービスの詳細を取得するには、以下のコマンドを実行します：
+
+```bash
+# 確認したいサービス
+grpcurl \
+    localhost:9090 \
+    describe cosmos.bank.v1beta1.Query                  
+```
+
+RPCコールを実行してノードから情報を取得することも可能です：
+
+```bash
+grpcurl \
+    -plaintext
+    -d '{"address":"$MY_VALIDATOR"}' \
+    localhost:9090 \
+    cosmos.bank.v1beta1.Query/AllBalances
+```
+
+## grpcurlを使用した過去のstateのクエリ
+
+gRPCリクエストに[gRPCメタデータ](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md)を渡すことで、過去のデータをクエリすることもできます。`x-cosmos-block-height`メタデータにクエリ対象のブロックを含める必要があります。grpcurlを使用する場合、コマンドは以下のようになります：
+
+```bash
+grpcurl \
+    -plaintext \
+    -H "x-cosmos-block-height: 279256" \
+    -d '{"address":"$MY_VALIDATOR"}' \
+    localhost:9090 \
+    cosmos.bank.v1beta1.Query/AllBalances
+```
+
+そのブロックのstateがノードによってまだプルーニングされていない場合、このクエリは有効なレスポンスを返します。
+
+## トランザクションの送信
+
+gRPCおよびRESTを使用してトランザクションを送信するには、トランザクションの生成、署名、そしてブロードキャストという追加手順が必要です。
+
+詳細については[トランザクション](/defi/transactions/ "mention")を参照してください。
