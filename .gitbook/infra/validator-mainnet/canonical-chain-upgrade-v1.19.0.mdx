@@ -92,13 +92,23 @@ rm -rf .injectived/wasm/wasm/cache/
     Compiled at 20260424-1643 using Go go1.26.2 (amd64)
     ```
 
-5.  Start `injectived`:
+5.  Remove any deprecated `statsd` flags from your `injectived start` command or systemd unit file:
+
+    <Warning>
+    The following flags are no longer supported as of v1.19.0 and will cause `injectived` to fail on startup:
+
+    `statsdAgent`, `statsdEnabled`, `statsd-prefix`, `statsd-address`, `statsd-stuck-func`, `statsd-tracing-enabled`, `statsd-profiling-enabled`, `trace-recorder-threshold`
+
+    These flags were supported in earlier versions but have been removed. An external validator on testnet encountered a startup failure due to these flags still being present. Check your start script, systemd service file, or any wrapper scripts and remove them **before** proceeding to the next step.
+    </Warning>
+
+6.  Start `injectived`:
 
     ```bash
     injectived start
     ```
 
-6.  Verify you are currently running the correct version (v1.19.0) of `peggo` after downloading the v1.19.0 release:
+7.  Verify you are currently running the correct version (v1.19.0) of `peggo` after downloading the v1.19.0 release:
 
     ```bash
     $ peggo version
@@ -106,7 +116,7 @@ rm -rf .injectived/wasm/wasm/cache/
     Compiled at 20260424-1644 using Go go1.26.2 (amd64)
     ```
 
-7.  Start peggo:
+8.  Start peggo:
 
     ```bash
     peggo orchestrator
