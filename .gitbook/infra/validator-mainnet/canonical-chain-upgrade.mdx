@@ -3,16 +3,6 @@ title: Canonical Chain Upgrades
 updatedAt: "2025-12-03"
 ---
 
-<Warning>
-**Deprecated `statsd` flags (v1.19.0+)**
-
-The following `injectived start` flags are no longer supported as of v1.19.0 and must be removed from your start command or systemd unit file before upgrading:
-
-`statsdAgent`, `statsdEnabled`, `statsd-prefix`, `statsd-address`, `statsd-stuck-func`, `statsd-tracing-enabled`, `statsd-profiling-enabled`, `trace-recorder-threshold`
-
-If any of these flags are present, `injectived` will fail to start after the upgrade. An external validator on testnet encountered this issue informally — remove these flags **before** running `injectived start` on the new version.
-</Warning>
-
 ## Verify release versions
 
 ### Releases on Github
@@ -77,3 +67,15 @@ the following in addition to the version numbers (e.g. `v1.16.1`):
 - The compiler (e.g. `Go go1.23.9 (amd64)`)
 
 You can verify that these **match** the values stated in the [Injective chain releases](https://github.com/InjectiveLabs/injective-chain-releases/releases) page on Github.
+
+## Deprecated flags
+
+<Warning>
+**Deprecated `statsd` flags (v1.19.0+)**
+
+The following `injectived start` flags are no longer supported as of v1.19.0 and must be removed from your start command or systemd unit file before upgrading:
+
+`statsdAgent`, `statsdEnabled`, `statsd-prefix`, `statsd-address`, `statsd-stuck-func`, `statsd-tracing-enabled`, `statsd-profiling-enabled`, `trace-recorder-threshold`
+
+If any of these flags are present, `injectived` will fail to start after the upgrade. An external validator on testnet encountered this issue informally — remove these flags **before** running `injectived start` on the new version.
+</Warning>
