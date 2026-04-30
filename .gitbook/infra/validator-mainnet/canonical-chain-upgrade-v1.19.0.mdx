@@ -1,0 +1,123 @@
+---
+title: Upgrade to v1.19.0
+updatedAt: "2026-04-28"
+---
+
+Tuesday, April 28th, 2026
+
+Following [IIP-632](https://injhub.com/proposal/632/) This indicates that the upgrade procedure should be performed on block number **164394000**
+
+* [Summary](#summary)
+* [Recovery](#recovery)
+* [Upgrade Procedure](#upgrade-procedure)
+* [Notes for Validators](#notes-for-validators)
+
+## Summary
+
+The Injective Chain will undergo a scheduled enhancement upgrade on **Tuesday, April 28th, 2026, 10:00 AM ET / 14:00 UTC**.
+
+The following is a short summary of the upgrade steps:
+
+1. Vote and wait till the node panics at block height **164394000**.
+2. Backing up configs, data, and keys used for running the Injective Chain.
+3. Install the [v1.19.0](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.19.0) binaries.
+4. Start your node with the new injectived binary to fulfill the upgrade.
+
+Upgrade coordination and support for validators will be available on the `#validators` private channel of the [Injective Discord](https://discord.gg/injective).
+
+The network upgrade can take the following potential pathways:
+
+1. **Happy path**:\
+   Validators successfully upgrade the chain without purging the blockchain history, and all validators are up within 5-10 minutes of the upgrade.
+2. **Not-so-happy path**:\
+   Validators have trouble upgrading to the latest Canonical chain.
+3. **Abort path**:\
+   In the rare event that the team becomes aware of unnoticed critical issues, the Injective team will attempt to patch all the breaking states and provide another official binary within 36 hours.\
+   If the chain is not successfully resumed within 36 hours, the upgrade will be announced as aborted on the `#validators` channel in [Injective's Discord](https://discord.gg/injective), and validators will need to resume running the chain without any updates or changes.
+
+## Recovery
+
+Prior to exporting chain state, validators are encouraged to take a full data snapshot at the export height before proceeding. Snapshotting depends heavily on infrastructure, but generally this can be done by backing up the `.injectived` directory.
+
+It is critically important to backup the `.injectived/data/priv_validator_state.json` file after stopping your injectived process. This file is updated every block as your validator participates in a consensus rounds. It is a critical file needed to prevent double-signing, in case the upgrade fails and the previous chain needs to be restarted.
+
+In the event that the upgrade does not succeed, validators and operators must restore the snapshot and downgrade back to Injective Chain release [v1.18.3](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.18.3-1774990852) and continue this earlier chain until next upgrade announcement.
+
+## Upgrade Procedure
+
+### Notes for Validators
+
+<Callout icon="warning" color="#FFA500" iconType="regular">
+**Source builds require Go v1.26.2**
+
+The v1.19.0 source has already been released and raises the minimum Go version to `go1.26.2`. Validators building `injectived` or `peggo` from source should upgrade their Go environment before the chain halt to avoid build-time surprises. Teams deploying the published binaries or Docker image do not need to make any additional environment changes.
+</Callout>
+
+You must remove the wasm cache before upgrading to the new version:
+
+```shell
+rm -rf .injectived/wasm/wasm/cache/
+```
+
+### Steps
+
+1.  Verify you are currently running the correct version (`v1.18.3`) of `injectived`:
+
+    ```bash
+    $ injectived version
+    Version v1.18.3 (b18483b)
+    Compiled at 20260331-2102 using Go go1.23.9 (amd64)
+    ```
+
+2.  Make a backup of your `.injectived` directory:
+
+    ```bash
+    cp -r ~/.injectived ./injectived-backup
+    ```
+
+3. Download and install the `injective-chain` release for v1.19.0:
+
+    ```bash
+    wget https://github.com/InjectiveFoundation/injective-core/releases/download/v1.19.0/linux-amd64.zip
+    unzip linux-amd64.zip
+    sudo mv injectived peggo /usr/bin
+    sudo mv libwasmvm.x86_64.so /usr/lib
+    ```
+
+4.  Verify you are currently running the correct version (v1.19.0) of `injectived` after downloading the v1.19.0 release:
+
+    ```bash
+    $ injectived version
+    Version v1.19.0 (750b3fb)
+    Compiled at 20260424-1643 using Go go1.26.2 (amd64)
+    ```
+
+5.  Remove any deprecated `statsd` flags from your `injectived start` command or systemd unit file:
+
+    <Warning>
+    The following flags are no longer supported as of v1.19.0 and will cause `injectived` to fail on startup:
+
+    `statsdAgent`, `statsdEnabled`, `statsd-prefix`, `statsd-address`, `statsd-stuck-func`, `statsd-tracing-enabled`, `statsd-profiling-enabled`, `trace-recorder-threshold`
+
+    These flags were supported in earlier versions but have been removed. An external validator on testnet encountered a startup failure due to these flags still being present. Check your start script, systemd service file, or any wrapper scripts and remove them **before** proceeding to the next step.
+    </Warning>
+
+6.  Start `injectived`:
+
+    ```bash
+    injectived start
+    ```
+
+7.  Verify you are currently running the correct version (v1.19.0) of `peggo` after downloading the v1.19.0 release:
+
+    ```bash
+    $ peggo version
+    Version v1.19.0 (750b3fb)
+    Compiled at 20260424-1644 using Go go1.26.2 (amd64)
+    ```
+
+8.  Start peggo:
+
+    ```bash
+    peggo orchestrator
+    ```

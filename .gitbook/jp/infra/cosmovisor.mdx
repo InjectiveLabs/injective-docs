@@ -1,0 +1,172 @@
+---
+title: Injective NetworkのCosmovisorセットアップガイド
+---
+
+Cosmovisorは、Cosmos SDKベースのブロックチェーン向けに設計されたプロセスマネージャーで、バイナリ（チェーン）アップグレードの管理を簡素化します。このガイドでは、Injective NetworkノードにCosmovisorをセットアップする手順を説明します。
+
+> **注意:** これらの手順は、既存のチェーンバイナリ（例：`injectived`）があり、ソースからCosmovisorをインストールする場合にはGo環境が動作していることを前提としています。セットアップに応じて名前とパスを調整してください。
+
+---
+
+## 目次
+
+1. [インストール](#インストール)
+   - [Goによるインストール](#goによるインストール)
+2. [環境変数](#環境変数)
+3. [ディレクトリ構造](#ディレクトリ構造)
+4. [Cosmovisorの実行](#cosmovisorの実行)
+5. [チェーンアップグレードの処理](#チェーンアップグレードの処理)
+6. [Cosmovisorをsystemdサービスとして実行](#cosmovisorをsystemdサービスとして実行)
+
+---
+
+## インストール
+
+### Goによるインストール
+
+Goがインストールされている場合、以下のコマンドでCosmovisorをインストールできます：
+
+```bash
+go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
+```
+
+> **ヒント:** Goバイナリのインストールパス（通常`$GOPATH/bin`または`$HOME/go/bin`）がシステムの`PATH`に追加されていることを確認してください。以下のコマンドでインストールを確認できます：
+>
+> ```bash
+> which cosmovisor
+> ```
+
+## 環境変数
+
+Cosmovisorがどのバイナリを実行し、どこにあるかを認識できるように、以下の環境変数をセットアップします：
+
+- **`DAEMON_NAME`**  
+  チェーンのバイナリ名（例：`injectived`）。
+
+- **`DAEMON_HOME`**  
+  ノードのホームディレクトリ（例：`~/.injectived`）。
+
+これらの変数は、シェルのプロファイル（`~/.bashrc`や`~/.profile`など）に設定するか、ターミナルセッションで直接エクスポートできます：
+
+```bash
+export DAEMON_NAME=injectived
+export DAEMON_HOME=~/.injectived
+```
+
+---
+
+## ディレクトリ構造
+
+Cosmovisorは、ノードのホームディレクトリに特定のフォルダ構造を必要とします：
+
+1. **Genesisディレクトリの作成**
+
+   このディレクトリには初期（genesis）バイナリが配置されます。
+
+   ```bash
+   mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
+   ```
+
+2. **現在のバイナリのコピー**
+
+   現在のチェーンバイナリ（例：`injectived`）をgenesisフォルダに配置します。ファイル名が`DAEMON_NAME`の値と一致していることを確認してください（次のセクションを参照）。
+
+   ```bash
+   cp $(which injectived) $DAEMON_HOME/cosmovisor/genesis/bin/injectived
+   ```
+
+---
+
+## Cosmovisorの実行
+
+チェーンのバイナリを直接実行する代わりに、以下のコマンドでCosmovisorを使用してノードを起動します：
+
+```bash
+cosmovisor run start
+```
+
+Cosmovisorは以下を行います：
+
+- `$DAEMON_HOME/cosmovisor/genesis/bin`（または適切なアップグレードフォルダ）のバイナリを検索します。
+- そのバイナリを使用してノードを起動します。
+- オンチェーンのアップグレードシグナルを監視し、必要に応じてバイナリを自動的に切り替えます。
+
+---
+
+## チェーンアップグレードの処理
+
+オンチェーンでアップグレードがアナウンスされた場合、Cosmovisorが自動的に切り替えられるように新しいバイナリを準備します：
+
+1. **アップグレードディレクトリの作成**
+
+   オンチェーンで提供されるアップグレード名（例：`v1.14.0`）を使用します：
+
+   ```bash
+   mkdir -p $DAEMON_HOME/cosmovisor/upgrades/<upgrade_name>/bin
+   ```
+
+2. **新しいバイナリの配置**
+
+   新しいバイナリをコンパイルまたはダウンロードし、アップグレードディレクトリにコピーします。バイナリ名が`DAEMON_NAME`と一致していることを確認してください。
+
+   ```bash
+   cp /path/to/new/injectived $DAEMON_HOME/cosmovisor/upgrades/<upgrade_name>/bin
+   cp /path/to/new/libwasmvm.x86_64.so $DAEMON_HOME/cosmovisor/upgrades/<upgrade_name>/bin
+   ```
+
+> **ヒント：**GitHubから`injectived`バイナリをダウンロードした場合は、`libwasmvm.x86_64.so`も同じ`bin`ディレクトリにコピーしてください。
+> systemd設定でこのディレクトリを`LD_LIBRARY_PATH`に追加する必要があります。
+
+3. **アップグレードプロセス**
+
+   アップグレード高に達すると、Cosmovisorはスケジュールされたアップグレードを検出し、対応するアップグレードフォルダにあるバイナリに自動的に切り替えます。
+
+---
+
+## Cosmovisorをsystemdサービスとして実行
+
+本番環境では、ノードをsystemdサービスとして実行するのが一般的です。以下はサービスファイルの例です。
+
+1. **サービスファイルの作成**
+
+   以下の内容でファイル（例：`/etc/systemd/system/injectived.service`）を作成します。パスと`<your_username>`を適宜調整してください：
+
+   ```ini
+   [Unit]
+   Description=Injective Daemon managed by Cosmovisor
+   After=network-online.target
+
+   [Service]
+   User=<your_username>
+   ExecStart=/home/<your_username>/go/bin/cosmovisor run start
+   Restart=always
+   RestartSec=3
+   Environment="DAEMON_NAME=injectived"
+   Environment="DAEMON_HOME=/home/<your_username>/.injectived"
+   Environment="PATH=/usr/local/bin:/home/<your_username>/go/bin:$PATH"
+   Environment="DAEMON_ALLOW_DOWNLOAD_BINARIES=false"
+   Environment="DAEMON_RESTART_AFTER_UPGRADE=true"
+   Environment="UNSAFE_SKIP_BACKUP=true"
+   Environment="LD_LIBRARY_PATH=/home/<your_username>/.injectived/cosmovisor/current/bin"
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+2. **サービスの有効化と起動**
+
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable injectived.service
+   sudo systemctl start injectived.service
+   ```
+
+3. **ログの確認**
+
+   サービスが正常に動作していることを確認します：
+
+   ```bash
+   journalctl -u injectived.service -f
+   ```
+
+---

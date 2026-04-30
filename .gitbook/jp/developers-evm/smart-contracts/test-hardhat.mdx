@@ -1,0 +1,88 @@
+---
+title: Hardhatを使用したスマートコントラクトのテスト
+---
+
+## 前提条件
+
+Hardhatプロジェクトがセットアップ済みで、スマートコントラクトのコンパイルが成功している必要があります。
+その方法については [Hardhatのセットアップとスマートコントラクトのコンパイル](./compile-hardhat/) チュートリアルを参照してください。
+
+## テスト仕様の編集
+
+テスト対象のスマートコントラクトは最小限のものなので、必要なテストケースも最小限です。
+
+テスト前に、スマートコントラクトをデプロイする必要があります。
+これは `before` ブロックで行われます。
+スマートコントラクトは単独では実行できず、EVM内で実行する必要があるためです。
+Hardhatでは、デフォルトでテストはエミュレートされたインメモリEVMインスタンスで実行されます。この環境は一時的なため、デプロイは形式的な処理にすぎません。
+
+ファイルを開きます: `test/Counter.test.js`
+
+```js
+const { expect } = require('chai');
+
+describe('Counter', function () {
+  let counter;
+
+  before(async function () {
+    Counter = await ethers.getContractFactory('Counter');
+    counter = await Counter.deploy();
+    await counter.waitForDeployment();
+  });
+
+  it('should start with a count of 0', async function () {
+    expect(await counter.value()).to.equal(0);
+  });
+
+  it('should increment the count starting from zero', async function () {
+    await counter.increment(100);
+    expect(await counter.value()).to.equal(100);
+  });
+
+  it('should increment the count starting from non-zero', async function () {
+    await counter.increment(23);
+    expect(await counter.value()).to.equal(123);
+  });
+});
+
+```
+
+3つのテストケースがあります：
+
+- 初期 `value()` の確認。
+- `increment(num)` を呼び出し、`value()` が更新されたことを確認。
+- `increment(num)` を再度呼び出し、`value()` が再度更新されたことを確認。
+
+## スマートコントラクトに対するテストの実行
+
+以下のコマンドでテストを実行します。
+
+```shell
+npx hardhat test
+```
+
+以下のコマンドは、エミュレートされたEVMインスタンスでは**なく**、Injectiveテストネット（パブリックネットワーク）にスマートコントラクトをデプロイしてテストを実行します。
+ほとんどの場合、この方法は**推奨されません**。特定/高度なユースケースでのみ必要です。
+
+```shell
+npx hardhat test --network inj_testnet
+```
+
+## テスト出力の確認
+
+すべてのテストが計画通りに動作すれば、以下のような出力が表示されます：
+
+```text
+  Counter
+    ✔ should start with a count of 0
+    ✔ should increment the count starting from zero
+    ✔ should increment the count starting from non-zero
+  3 passing (41ms)
+```
+
+その後、gas（複雑さとトランザクションコストの指標）に関する追加レポートを含むテーブルが表示されます。
+
+## 次のステップ
+
+スマートコントラクトのテストが完了したので、次はスマートコントラクトのデプロイです！
+[Hardhatを使用したスマートコントラクトのデプロイ](./deploy-hardhat/) チュートリアルに進みましょう。
