@@ -46,7 +46,7 @@ docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-cor
 
 キーペアが作成され、コンテナの`/root/.injective/keyring-file`ディレクトリに保存されます。これは、ホストの`~/.injective/keyring-file`ディレクトリと同じです。
 
-すべてのキーを一覧表示するには、次を実行します:
+すべてのキーを一覧表示するには、次のコマンドを実行します:
 
 ```bash
 docker run -it --rm -v ~/.injective:/root/.injective injectivelabs/injective-core:v1.14.1 injectived keys list --home /root/.injective
@@ -83,7 +83,7 @@ balances:
 
 ### 一般的なヘルプ
 
-`injectived`に関する一般的な情報については、次を実行します:
+`injectived`に関する一般的な情報については、次のコマンドを実行します:
 
 ```bash
 injectived --help
@@ -103,7 +103,7 @@ injectived query --help.
 
 ## トランザクションの生成、署名、ブロードキャスト
 
-次のコマンドを実行すると、送信者のアカウントから受信者のアカウントにINJトークンが送信されます。`1000inj`は送信するINJトークンの量で、`1 INJ = 10^18 inj`なので、`1000inj`は非常に小さな金額です。
+次のコマンドを実行すると、送信者のアカウントから受信者のアカウントにINJトークンが送信されます。`1000inj`は送信するINJトークンの量で、`1 INJ = 10^18 inj`であるため、`1000inj`は非常に小さな単位（ごく少額）です。
 
 ```bash
 injectived tx bank send MY_WALLET RECEIVER_WALLET 1000inj --from MY_WALLET
@@ -117,7 +117,7 @@ injectived tx bank send MY_WALLET RECEIVER_WALLET 1000inj --from MY_WALLET
 * keyringのアカウントで生成されたトランザクションに署名します。
 * 署名されたトランザクションをネットワークにブロードキャストします。CLIがパブリックInjectiveノードのRPCエンドポイントに接続されているため、これが可能です。
 
-CLIは必要なすべてのステップをシンプルで使いやすいユーザーエクスペリエンスにまとめています。ただし、すべてのステップを個別に実行することも可能です。
+CLIはこれらの必要なステップをシンプルで使いやすいユーザー体験としてまとめています。ただし、すべてのステップを個別に実行することも可能です。
 
 ### トランザクションの生成のみ
 

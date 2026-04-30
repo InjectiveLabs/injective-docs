@@ -2,9 +2,7 @@
 title: CosmJs Support
 updatedAt: "2025-11-28"
 ---
-Injectiveは`@cosmjs`パッケージでネイティブにサポートされていません。Injectiveと対話するには、`@injectivelabs`パッケージを使用することを強くお勧めします。
-`@cosmjs`パッケージに慣れている場合は、`@cosmjs`のクラスと同じように動作する類似のインターフェース/クラスをエクスポートしていますが、Injectiveのサポートも含まれています。
-繰り返しになりますが、推奨されるアプローチはInjectiveの標準的なアプローチを使用することであることに注意してください。詳細は[Cosmos transactions](../../developers-native/transactions/cosmos/)で学ぶことができます。
+Injectiveは`@cosmjs`パッケージでネイティブにはサポートされていません。 Injectiveと対話するには、`@injectivelabs`パッケージの使用が強く推奨されます。 `@cosmjs`パッケージに慣れている場合でも、`@injectivelabs`は同様のインターフェース／クラスを提供しており、Injective向けの拡張サポートが含まれています。繰り返しになりますが、推奨されるアプローチはInjectiveの標準SDK（`@injectivelabs`）を使用することです。 詳細についてはCosmos transactionsを参照してください。
 ## Keplrを使用した使用方法
 `@cosmjs`パッケージの代替となる`@injectivelabs`をKeplrで使用する例は次のとおりです:
 ```ts
@@ -57,7 +55,7 @@ import { assertIsBroadcastTxSuccess } from '@cosmjs/stargate'
 ```
 ## CLI/Node環境での使用方法
 `@cosmjs`パッケージの代替となる`@injectivelabs`をnodeまたはCLI環境で使用する例は次のとおりです。
-繰り返しになりますが、推奨されるアプローチはInjectiveの標準的なアプローチに従うために[MsgBroadcasterWithPk](../../developers-native/transactions/private-key/#example-with-msgbroadcasterwithpk)抽象化を使用することであることに注意してください。
+繰り返しになりますが、推奨されるアプローチはInjectiveの標準的な実装に従い、[MsgBroadcasterWithPk](../../developers-native/transactions/private-key/#example-with-msgbroadcasterwithpk)の抽象化を使用することです。
 ```ts
 import {
   PrivateKey,

@@ -3,10 +3,10 @@ title: Trading Account
 updatedAt: "2025-12-18"
 ---
 
-SubaccountsまたはTrading Accountsは、ネイティブのInjective Bankモジュール内の資金（ステーキング、オークションへの入札、ガバナンスへの参加、マーケットの作成などに使用できる）を、トレードを実行できる独立したトレーディングアカウントに分離することを可能にする概念です。1つのInjectiveアドレスは無制限の数のトレーディングアカウントを持つことができます。それらは`${ethereumAddress}${subaccountNonce}`として表現され、ここで`ethereumAddress`は`bech32` Injectiveアドレスの`hex`バージョンであり、`subaccountNonce`は12バイトで表されるnonceです。nonce 1のトレーディングアカウントの例は`0xc7dca7c15c364865f77a4fb67ab11dc95502e6fe000000000000000000000001`です。
+SubaccountsまたはTrading Accountsは、ネイティブのInjective Bankモジュール内の資金（ステーキング、オークションへの入札、ガバナンスへの参加、マーケットの作成などに使用できる）を、トレード専用の独立したアカウントとして分離するための仕組みです。1つのInjectiveアドレスは無制限の数のトレーディングアカウントを持つことができます。それらは`${ethereumAddress}${subaccountNonce}`として表現され、ここで`ethereumAddress`は`bech32` Injectiveアドレスの`hex`バージョンであり、`subaccountNonce`は12バイトで表されるnonceです。nonce 1のトレーディングアカウントの例は`0xc7dca7c15c364865f77a4fb67ab11dc95502e6fe000000000000000000000001`です。
 
 <Tip>
 subaccountsの一般的な概要とその主な機能については、[Accounts](/defi/wallet/accounts#subaccounts)ページを参照してください。
 </Tip>
 
-v1.10.0チェーンアップグレード以降、Bankの残高とデフォルトのトレーディングアカウント（nonce = 0）が統合され、デフォルトのトレーディングアカウントから発信されるトレードを実行する際にBankの資金が直接使用されます。
+v1.10.0のチェーンアップグレード以降、Bank残高とデフォルトのトレーディングアカウント（nonce = 0）は統合されており、デフォルトのトレーディングアカウントからのトレード実行時にはBankの資金が直接使用されます。
