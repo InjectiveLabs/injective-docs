@@ -1,0 +1,57 @@
+---
+title: CW20からBank & Market Orderへの一括変換
+description: CW20トークンをBankトークンに変換し、マーケットオーダーを1トランザクションで実行する方法
+---
+
+この例では、InjectiveブロックチェーンでCW20トークンをBankトークンに変換するためのメッセージの作成方法を説明します。CW20トークンを保有しており、マーケットオーダーなどの操作を行うためにBank相当のトークンに変換する必要がある場合に特に便利です。このフローはCW20トークンとそれに対応する[Factoryトークン](/developers/concepts/)のみに対応しています。
+
+このガイドでは以下の手順を説明します：
+
+* ユーザーのCW20トークン残高の取得
+* ConvertCw20ToBankServiceを使用したCW20トークンからBankトークンへの変換メッセージの作成
+* 変換後のBank残高と既存のBank残高を使用したマーケットオーダーの実行
+
+## ユーザーのCW20残高を取得する
+
+[Explorer Indexerクエリ](/developers-native/query-indexer/explorer/#fetch-cw20-balances)を使用して取得できます。
+
+* 結果セットから、Bank Factoryトークンに変換したいCW20トークンのアドレスと残高を特定します
+
+## CW20からBankへの変換メッセージの作成
+
+* CW20トークンをBank Factoryトークンに変換するために、[こちら](/developers/concepts/token-factory/#example-on-how-to-convert-cw20-to-a-factory-denom)の手順に従って`convertMsg`を作成します。まだトランザクションは送信しません。
+
+## `MsgCreateSpotMarketOrder`メッセージの作成
+
+* [MsgCreateSpotMarketOrder](/developers-native/examples/exchange/#msgcreatespotmarketorder)の手順に従って`msg`を作成します。まだトランザクションは送信しません。
+* 作成する買い注文は、変換されたCW20残高と既存のBank残高の合計にアクセスできます。例：
+
+```ts
+const order = {
+  price: 1,
+  quantity: 10,
+}
+```
+
+* 価格$1で5つのCW20トークンと5つのBankトークンを保有している場合、マーケットオーダー実行前にCW20がBankに変換されるため、上記の注文は成功します。次のステップでより詳しく説明します。
+
+## 変換後のCW20残高と既存のBank残高を使用してマーケットオーダーを発行する
+
+両方のメッセージのフォーマットが完了したら、CW20トークンをBank Factoryトークンに変換し、合算残高を使用してマーケットオーダーを発行する処理を1トランザクションで実行できます。
+
+```ts
+import { Network } from '@injectivelabs/networks'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+
+const privateKey = '0x...'
+const injectiveAddress = 'inj1...'
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.MainnetSentry,
+}).broadcast({
+  msgs: [convertMsg, msg], // Bank変換メッセージが最初に実行され、その後追加された残高を使用してマーケットオーダーが実行されます
+})
+
+console.log(txHash)
+```

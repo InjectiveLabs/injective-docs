@@ -1935,6 +1935,27 @@
                   "jp/developers-evm/evm-integrations-faq"
                 ]
               },
+              {
+                "group": "CosmWasm開発者",
+                "icon": "comet",
+                "expanded": false,
+                "pages": [
+                  "jp/developers-cosmwasm/index",
+                  {
+                    "group": "CosmWasmスマートコントラクト",
+                    "pages": [
+                      "jp/developers-cosmwasm/smart-contracts/index",
+                      "jp/developers-cosmwasm/smart-contracts/your-first-smart-contract",
+                      "jp/developers-cosmwasm/smart-contracts/injective-name-service",
+                      "jp/developers-cosmwasm/smart-contracts/neptune-service",
+                      "jp/developers-cosmwasm/smart-contracts/cw20-convert-market-order"
+                    ]
+                  },
+                  "jp/developers-cosmwasm/local-development-guide",
+                  "jp/developers-cosmwasm/mainnet-deployment-guide",
+                  "jp/developers-cosmwasm/whitelisting-deployment-address-guide"
+                ]
+              },
               "jp/faq",
               "jp/glossary",
               "jp/references"

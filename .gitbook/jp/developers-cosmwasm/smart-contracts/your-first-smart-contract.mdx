@@ -1,0 +1,793 @@
+---
+title: 初めてのCosmWasmスマートコントラクト
+description: CosmWasmスマートコントラクトの作成、コンパイル、テスト、デプロイ、操作の完全ガイド
+---
+
+このセクションでは、CosmWasmスマートコントラクト開発のための環境セットアップ方法を説明します。
+
+## 前提条件
+
+開始前に、[`rustup`](https://rustup.rs/)と最新バージョンの`rustc`および`cargo`がインストールされていることを確認してください。現在、Rust v1.58.1以降でテストしています。
+
+また、`wasm32-unknown-unknown`ターゲットと`cargo-generate` Rustクレートもインストールする必要があります。
+
+以下のコマンドでバージョンを確認できます：
+
+```bash
+rustc --version
+cargo --version
+rustup target list --installed
+# wasm32が上記に表示されない場合、以下を実行
+rustup target add wasm32-unknown-unknown
+# cargo-generateをインストールするには、以下を実行
+cargo install cargo-generate
+```
+
+## 目標
+
+* カウンターを指定値まで増加およびリセットするスマートコントラクトの作成と操作
+* CosmWasmスマートコントラクトの基礎を理解し、Injectiveにデプロイしてツールで操作する方法を習得
+
+## CosmWasmコントラクトの基礎
+
+スマートコントラクトは[シングルトンオブジェクト](https://en.wikipedia.org/wiki/Singleton_pattern)のインスタンスと考えることができます。その内部状態はブロックチェーン上に永続化されます。ユーザーはJSONメッセージを送信することで状態変更をトリガーでき、JSONメッセージ形式のリクエストを送信して状態をクエリすることもできます。これらのJSONメッセージは`MsgSend`や`MsgExecuteContract`などのInjectiveブロックチェーンメッセージとは異なります。
+
+スマートコントラクト開発者として、コントラクトのインターフェースを構成する3つの関数を定義する必要があります：
+
+* `instantiate()`：コントラクトのインスタンス化時に呼び出されるコンストラクタ関数であり、初期状態を設定します。
+* `execute()`：ユーザーがスマートコントラクトのメソッドを呼び出す際に実行されます
+* `query()`：ユーザーがスマートコントラクトからデータを取得する際に呼び出されます
+
+[サンプルカウンターコントラクト](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/msg.rs)では、1つの`instantiate`、1つの`query`、2つの`execute`メソッドを実装します。
+
+## テンプレートから始める
+
+作業ディレクトリで以下のコマンドを実行すると、推奨されるフォルダ構成とビルド設定を備えたテンプレートから開発を開始できます：
+
+```bash
+cargo generate --git https://github.com/CosmWasm/cw-template.git --branch 1.0 --name my-first-contract
+cd my-first-contract
+```
+
+これにより、スマートコントラクトの基本的なボイラープレートと構造が提供されます。[`src/contract.rs`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs)ファイルには、標準的なCosmWasmエントリポイントである[`instantiate()`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L15)、[`execute()`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L35)、[`query()`](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L72)が適切に公開されています。
+
+## State
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+CosmWasmのStateについて詳しくは[ドキュメント](https://book.cosmwasm.com/basics/state.html)を参照してください。
+</Callout>
+
+`State`はスマートコントラクトのデータが保存・アクセスされるデータベースの状態を管理します。
+
+[スターティングテンプレート](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/state.rs)は以下の基本的な状態を持ちます。シングルトン構造体`State`は以下を含みます：
+
+* `count`：`execute()`メッセージが増加またはリセットを行う32ビット整数
+* `owner`：`MsgInstantiateContract`の送信者`address`で、特定のexecuteメッセージの実行可否を判断します
+
+```c
+// src/state.rs
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+use cosmwasm_std::Addr;
+use cw_storage_plus::Item;
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct State {
+    pub count: i32,
+    pub owner: Addr,
+}
+
+pub const STATE: Item<State> = Item::new("state");
+```
+
+Injectiveスマートコントラクトは、InjectiveネイティブのLevelDB（バイトベースのKey-Valueストア）を通じて永続的な状態を保持できます。永続化したいデータには一意のキーを割り当てる必要があり、これによりデータのインデックス作成と取得が可能になります。
+
+データはrawバイトとしてのみ永続化できるため、構造やデータ型はシリアライズおよびデシリアライズ関数のペアとして表現する必要があります。例えば、オブジェクトはバイトとして保存するため、オブジェクトをバイトにエンコードしてブロックチェーンに保存する関数と、バイトをコントラクトロジックが理解できるデータ型にデコードする関数の両方を提供する必要があります。バイト表現の選択は自由ですが、クリーンな双方向マッピングを提供する必要があります。
+
+CosmWasmは[`cosmwasm-storage`](https://crates.io/crates/cosmwasm-storage)などのユーティリティクレートを提供しており、構造体やRustの数値型などの一般的に使用される型に対して自動的にシリアライズとデシリアライズを行う「singleton」や「bucket」などのデータコンテナの便利な高レベル抽象化を提供します。さらに、[`cw-storage-plus`](https://cosmwasm.cosmos.network/smart-contracts/state/cw-plus/)クレートを使用することで、より効率的なストレージメカニズムを利用できます。
+
+`State`構造体が`count`と`owner`の両方を保持していることに注目してください。`derive`属性は以下の便利なトレイトを自動実装します：
+
+* `Serialize`：シリアライズを提供
+* `Deserialize`：デシリアライズを提供
+* `Clone`：構造体のコピーを可能にする
+* `Debug`：構造体の文字列出力を可能にする
+* `PartialEq`：等価比較を提供
+* `JsonSchema`：JSONスキーマを自動生成
+
+`Addr`はInjectiveの人間が読めるアドレスを参照し、`inj`がプレフィックスとして付きます。例：`inj1clw20s2uxeyxtam6f7m84vgae92s9eh7vygagt`
+
+## InstantiateMsg
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+CosmWasmの[InstantiateMsgに関するドキュメント](https://github.com/CosmWasm/docs/blob/archive/dev-academy/develop-smart-contract/01-intro.md#instantiatemsg)を参照してください。
+</Callout>
+
+`InstantiateMsg`は、ユーザーが`MsgInstantiateContract`を通じてブロックチェーン上でコントラクトをインスタンス化する際にコントラクトに提供されます。これにより、コントラクトの設定と初期状態が提供されます。
+
+Injectiveブロックチェーンでは、コントラクトコードのアップロードとコントラクトのインスタンス化は別々のイベントとして扱われます（Ethereumとは異なります）。これにより、少数の検証済みコントラクトアーキタイプが同じベースコードを共有しながら異なるパラメータで設定された複数のインスタンスとして存在できます（標準的なERC20を想像し、そのコードを使用する複数のトークンがあるイメージです）。
+
+### 例
+
+このコントラクトでは、コントラクト作成者が初期状態をJSONメッセージとして提供することが期待されます。以下のメッセージ定義では、初期カウントを表す`count`パラメータを1つ保持しています。
+
+```json
+{
+  "count": 100
+}
+```
+
+### メッセージ定義
+
+```c
+// src/msg.rs
+
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct InstantiateMsg {
+    pub count: i32,
+}
+
+```
+
+### コントラクトロジック
+
+`contract.rs`で、最初のエントリポイント`instantiate()`を定義します。ここでコントラクトがインスタンス化され、`InstantiateMsg`が渡されます。メッセージからcountを取得し、初期状態を設定します：
+
+* `count`にメッセージのcountを割り当て
+* `owner`に`MsgInstantiateContract`の送信者を割り当て
+
+```c
+// src/contract.rs
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn instantiate(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
+) -> Result<Response, ContractError> {
+    let state = State {
+        count: msg.count,
+        owner: info.sender.clone(),
+    };
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    STATE.save(deps.storage, &state)?;
+
+    Ok(Response::new()
+        .add_attribute("method", "instantiate")
+        .add_attribute("owner", info.sender)
+        .add_attribute("count", msg.count.to_string()))
+}
+```
+
+## ExecuteMsg
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+CosmWasmのExecuteMsgについて詳しくは[ドキュメント](https://book.cosmwasm.com/basics/execute.html)を参照してください。
+</Callout>
+
+`ExecuteMsg`は`MsgExecuteContract`を通じて`execute()`関数に渡されるJSONメッセージです。`InstantiateMsg`とは異なり、`ExecuteMsg`はスマートコントラクトがユーザーに公開できるさまざまな種類の関数に対応するため、複数の種類のメッセージとして存在できます。[`execute()`関数](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/src/contract.rs#L35)は、これらの異なる種類のメッセージを適切なメッセージハンドラロジックにルーティングします。
+
+[2つのExecuteMsg](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/msg.rs#L9)があります：`Increment`と`Reset`。
+
+* `Increment`は入力パラメータがなく、countの値を1増加させます。
+* `Reset`は32ビット整数をパラメータとして受け取り、`count`の値を入力パラメータにリセットします。
+
+### 例
+
+**Increment**
+
+すべてのユーザーが現在のカウントを1増加させることができます。
+
+```json
+{
+  "increment": {}
+}
+```
+
+#### Reset
+
+オーナーのみがカウントを特定の数値にリセットできます。実装の詳細はロジックを参照してください。
+
+```json
+{
+  "reset": {
+    "count": 5
+  }
+}
+```
+
+### メッセージ定義
+
+`ExecuteMsg`には、コントラクトが理解できるさまざまな種類のメッセージを多重化するために`enum`を使用できます。`serde`属性は属性キーをスネークケースおよび小文字に書き換えるため、シリアライズおよびデシリアライズ時に`Increment`と`Reset`の代わりに`increment`と`reset`になります。
+
+```c
+// src/msg.rs
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecuteMsg {
+    Increment {},
+    Reset { count: i32 },
+}
+```
+
+### ロジック
+
+```c
+// src/contract.rs
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn execute(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response, ContractError> {
+    match msg {
+        ExecuteMsg::Increment {} => try_increment(deps),
+        ExecuteMsg::Reset { count } => try_reset(deps, info, count),
+    }
+}
+```
+
+これは`execute()`メソッドで、Rustのパターンマッチングを使用して受信した`ExecuteMsg`を適切な処理ロジックにルーティングします。受信したメッセージに応じて`try_increment()`または`try_reset()`の呼び出しにディスパッチします。
+
+```c
+pub fn try_increment(deps: DepsMut) -> Result<Response, ContractError> {
+    STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
+        state.count += 1;
+        Ok(state)
+    })?;
+
+    Ok(Response::new().add_attribute("method", "try_increment"))
+}
+```
+
+まず、キー`state`にあるアイテムを更新するためにストレージへの可変参照を取得します。次に、新しい状態で`Ok`結果を返すことでstateのcountを更新します。最後に、`Response`と共に`Ok`結果を返すことで、成功を確認してコントラクトの実行を終了します。
+
+```c
+// src/contract.rs
+
+pub fn try_reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
+    STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
+        if info.sender != state.owner {
+            return Err(ContractError::Unauthorized {});
+        }
+        state.count = count;
+        Ok(state)
+    })?;
+    Ok(Response::new().add_attribute("method", "reset"))
+}
+```
+
+resetのロジックはincrementと非常に似ていますが、最初にメッセージの送信者がreset関数の呼び出しを許可されているかどうかを確認します（この場合、コントラクトのオーナーである必要があります）。
+
+## QueryMsg
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+CosmWasmの[QueryMsgに関するドキュメント](https://docs.cosmwasm.com/docs/smart-contracts/query)を参照してください。
+</Callout>
+
+`GetCount`[クエリメッセージ](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/msg.rs#L16)はパラメータがなく、`count`値を返します。
+
+実装の詳細はロジックを参照してください。
+
+### 例
+
+テンプレートコントラクトは1種類の`QueryMsg`のみをサポートしています：
+
+**GetCount**
+
+リクエスト：
+
+```json
+{
+  "get_count": {}
+}
+```
+
+レスポンス：
+
+```json
+{
+  "count": 5
+}
+```
+
+### メッセージ定義
+
+コントラクトでデータクエリをサポートするには、`QueryMsg`のフォーマット（リクエストを表す）とクエリの出力構造（この場合は`CountResponse`）の両方を定義する必要があります。`query()`は構造化されたJSONを通じてユーザーに情報を返送するため、レスポンスの形式を公開する必要があります。詳細はJSONスキーマの生成を参照してください。
+
+`src/msg.rs`に以下を追加します：
+
+```c
+// src/msg.rs
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum QueryMsg {
+    // GetCountは現在のカウントをJSONエンコードされた数値として返す
+    GetCount {},
+}
+
+// 各クエリレスポンス用のカスタム構造体を定義
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct CountResponse {
+    pub count: i32,
+}
+```
+
+### ロジック
+
+`query()`のロジックは`execute()`と類似していますが、`query()`はエンドユーザーがトランザクションを作成せずに呼び出されるため、`env`引数は省略されます。
+
+```c
+// src/contract.rs
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetCount {} => to_binary(&query_count(deps)?),
+    }
+}
+
+fn query_count(deps: Deps) -> StdResult<CountResponse> {
+    let state = STATE.load(deps.storage)?;
+    Ok(CountResponse { count: state.count })
+}
+```
+
+## ユニットテスト
+
+ユニットテストはチェーンにコードをデプロイする前の最初の保証として実行すべきです。実行が速く、`RUST_BACKTRACE=1`フラグを使用することで失敗時に有用なバックトレースを提供できます：
+
+```c
+cargo unit-test // RUST_BACKTRACE=1で実行するとバックトレースが表示されます
+```
+
+[ユニットテストの実装](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/src/contract.rs#L88)は`src/contract.rs`にあります。
+
+## コントラクトのビルド
+
+コントラクトを理解しテストしたので、以下のコマンドを実行してコントラクトをビルドできます。これにより、次のステップでコントラクトを最適化する前に予備的なエラーを確認します。
+
+```bash
+cargo wasm
+```
+
+次に、チェーンへのアップロードに向けてコードを準備するためにコントラクトを最適化する必要があります。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+[本番用Wasmバイトコードの準備](https://github.com/InjectiveLabs/cw-counter/blob/59b9fed82864103eb704a58d20ddb4bf94c69787/Developing.md#preparing-the-wasm-bytecode-for-production)の詳細を参照してください。
+</Callout>
+
+CosmWasmには[rust-optimizer](https://github.com/CosmWasm/rust-optimizer)という小さく一貫したビルド出力を生成できる最適化コンパイラがあります。最も簡単な方法はPublishされたDockerイメージを使用することです。最新のx86バージョンは[こちら](https://hub.docker.com/r/cosmwasm/rust-optimizer/tags)、最新のARMバージョンは[こちら](https://hub.docker.com/r/cosmwasm/rust-optimizer-arm64/tags)を確認してください。Dockerが実行中の状態で、以下のコマンドを実行してコントラクトコードを`/code`にマウントし出力を最適化します（`$(pwd)`の代わりに絶対パスを使用することもできます）：
+
+```bash
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/rust-optimizer:0.12.12
+```
+
+ARM64マシンの場合は、ARM64用にビルドされたDockerイメージを使用してください：
+
+```bash
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/rust-optimizer-arm64:0.12.12
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+CosmWasmはARM64版コンパイラの使用を推奨していません。Intel/AMD版とは異なるWasmアーティファクトが生成されるためです。リリース/本番環境では、Intel/AMDオプティマイザでビルドされたコントラクトのみの使用が推奨されます。詳細は[こちら](https://github.com/CosmWasm/rust-optimizer#notice)を参照してください。
+</Callout>
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+コマンド実行時に`` Unable to update registry `crates-io` ``エラーが表示される場合があります。コントラクトディレクトリ内の`Cargo.toml`ファイルに以下の行を追加して再実行してください：
+
+```toml
+[net]
+git-fetch-with-cli = true
+```
+
+詳細は[The Cargo Book](https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli)を参照してください。
+</Callout>
+
+これにより、`PROJECT_NAME.wasm`とWasmファイルのSha256ハッシュを含む`checksums.txt`が格納された`artifacts`ディレクトリが生成されます。Wasmファイルは決定論的にコンパイルされます（同じDockerで同じGitコミットを実行すると、同一のSha256ハッシュを持つ同一のファイルが得られます）。
+
+## `injectived`のインストール
+
+`injectived`はInjectiveに接続してInjectiveブロックチェーンとの対話を可能にするコマンドラインインターフェースおよびデーモンです。
+
+CLIを使用してスマートコントラクトとローカルで対話する場合は、`injectived`をインストールする必要があります。[Injectiveのインストールガイド](/developers/injectived/install)の手順に従ってください。
+
+または、このチュートリアルを簡単にするためにDockerイメージが用意されています。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+バイナリから`injectived`をインストールした場合は、Dockerコマンドを無視してください。
+[パブリックエンドポイントセクション](/infra/public-endpoints)で、MainnetおよびTestnetと対話するための正しい--node情報を確認できます。
+</Callout>
+
+以下のコマンドを実行すると、Dockerコンテナが無期限に実行されます。
+
+```bash
+docker run --name="injective-core-staging" \
+-v=<directory_to_which_you_cloned_cw-template>/artifacts:/var/artifacts \
+--entrypoint=sh public.ecr.aws/l9h3g6c6/injective-core:staging \
+-c "tail -F anything"
+```
+
+注意：`directory_to_which_you_cloned_cw-template`は絶対パスである必要があります。絶対パスはCosmWasm/cw-counterディレクトリ内で`pwd`コマンドを実行することで簡単に取得できます。
+
+新しいターミナルを開き、Dockerコンテナに入ってチェーンを初期化します：
+
+```bash
+docker exec -it injective-core-staging sh
+```
+
+後で必要になる`jq`依存パッケージを追加します：
+
+```bash
+# "injective-core-staging"コンテナ内で
+apk add jq
+```
+
+次に、ローカルチェーンの初期化に進み、`testuser`というテストユーザーを追加します（プロンプトが表示されたらパスワードとして12345678を使用）。テストユーザーは、テストネットでメッセージの署名に使用する新しいプライベートキーの生成にのみ使用します：
+
+```sh
+# "injective-core-staging"コンテナ内で
+injectived keys add testuser
+```
+
+**出力**
+
+```
+- name: testuser
+  type: local
+  address: inj1exjcp8pkvzqzsnwkzte87fmzhfftr99kd36jat
+  pubkey: '{"@type":"/injective.crypto.v1beta1.ethsecp256k1.PubKey","key":"Aqi010PsKkFe9KwA45ajvrr53vfPy+5vgc3aHWWGdW6X"}'
+  mnemonic: ""
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+wash wise evil buffalo fiction quantum planet dial grape slam title salt dry and some more words that should be here
+```
+
+先に進むためにアドレスをメモするか、環境変数としてエクスポートしてください：
+
+```bash
+# "injective-core-staging"コンテナ内で
+export INJ_ADDRESS= <your inj address>
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+[Injectiveテストfaucet](https://faucet.injective.network/)を使用して、生成したテストアドレスにテストネット資金をリクエストできます。
+</Callout>
+
+これで`testuser`がInjective Testnetに正常に作成されました。faucetからテストネット資金をリクエストした後、残高も保有しているはずです。
+
+確認するには、[Injective Testnet Explorer](https://testnet.explorer.injective.network/)でアドレスを検索して残高を確認してください。
+
+または、[Bank残高のクエリ](https://sentry.testnet.lcd.injective.network/swagger/#/Query/AllBalances)またはcurlで確認することもできます：
+
+```bash
+curl -X GET "https://sentry.testnet.lcd.injective.network/cosmos/bank/v1beta1/balances/<your_INJ_address>" -H "accept: application/json"
+```
+
+## Wasmコントラクトのアップロード
+
+前のステップでコンパイルした`.wasm`ファイルをInjective Testnetにアップロードします。メインネットの手順は異なり、[ガバナンスプロポーザルが必要です。](../mainnet-deployment-guide/)
+
+```bash
+# "injective-core-staging"コンテナ内で、またはinjectivedをローカルで実行している場合はコントラクトディレクトリから
+yes 12345678 | injectived tx wasm store artifacts/my_first_contract.wasm \
+--from=$(echo $INJ_ADDRESS) \
+--chain-id="injective-888" \
+--yes --fees=1000000000000000inj --gas=2000000 \
+--node=https://testnet.sentry.tm.injective.network:443
+```
+
+**出力：**
+
+```bash
+code: 0
+codespace: ""
+data: ""
+events: []
+gas_used: "0"
+gas_wanted: "0"
+height: "0"
+info: ""
+logs: []
+raw_log: '[]'
+timestamp: ""
+tx: null
+txhash: 912458AA8E0D50A479C8CF0DD26196C49A65FCFBEEB67DF8A2EA22317B130E2C
+```
+
+[Injective Testnet Explorer](https://testnet.explorer.injective.network)でアドレスを確認し、コード保存から返された`txhash`のトランザクションを探してください。トランザクションタイプは`MsgStoreCode`のはずです。
+
+Injective Testnet上のすべての保存コードは[Code](https://testnet.explorer.injective.network/smart-contracts/code/)で確認できます。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+保存したコードを見つけるには複数の方法があります：
+
+* Injective Explorerの[コード一覧](https://testnet.explorer.injective.network/smart-contracts/code/)でTxHashを探します。最新のものである可能性が高いです。
+* `injectived`を使用してトランザクション情報をクエリします。
+</Callout>
+
+トランザクションをクエリするには`txhash`を使用してコントラクトがデプロイされたことを確認します。
+
+```sh
+injectived query tx 912458AA8E0D50A479C8CF0DD26196C49A65FCFBEEB67DF8A2EA22317B130E2C --node=https://testnet.sentry.tm.injective.network:443
+```
+
+出力を詳しく見ると、アップロードされたコントラクトの`code_id`が`290`であることがわかります：
+
+```bash
+- events:
+  - attributes:
+    - key: access_config
+      value: '{"permission":"Everybody","address":""}'
+    - key: checksum
+      value: '"+OdoniOsDJ1T9EqP2YxobCCwFAqNdtYA4sVGv7undY0="'
+    - key: code_id
+      value: '"290"'
+    - key: creator
+      value: '"inj1h3gepa4tszh66ee67he53jzmprsqc2l9npq3ty"'
+    type: cosmwasm.wasm.v1.EventCodeStored
+  - attributes:
+    - key: action
+      value: /cosmwasm.wasm.v1.MsgStoreCode
+    - key: module
+      value: wasm
+    - key: sender
+      value: inj1h3gepa4tszh66ee67he53jzmprsqc2l9npq3ty
+    type: message
+  - attributes:
+    - key: code_id
+      value: "290"
+    type: store_code
+```
+
+`code_id`を環境変数としてエクスポートしましょう。コントラクトのインスタンス化に必要です。このステップはスキップして後で手動で追加することもできますが、IDを記録しておいてください。
+
+```bash
+export CODE_ID= <code_id of your stored contract>
+```
+
+## JSONスキーマの生成
+
+Wasmの`instantiate`、`execute`、`query`はJSONを受け取りますが、これだけでは使用に十分な情報ではありません。期待されるメッセージのスキーマをクライアントに公開する必要があります。
+
+JSONスキーマの自動生成を利用するには、スキーマが必要な各データ構造を登録する必要があります。
+
+```c
+// examples/schema.rs
+
+use std::env::current_dir;
+use std::fs::create_dir_all;
+
+use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
+
+use my_first_contract::msg::{CountResponse, HandleMsg, InitMsg, QueryMsg};
+use my_first_contract::state::State;
+
+fn main() {
+    let mut out_dir = current_dir().unwrap();
+    out_dir.push("schema");
+    create_dir_all(&out_dir).unwrap();
+    remove_schemas(&out_dir).unwrap();
+
+    export_schema(&schema_for!(InstantiateMsg), &out_dir);
+    export_schema(&schema_for!(ExecuteMsg), &out_dir);
+    export_schema(&schema_for!(QueryMsg), &out_dir);
+    export_schema(&schema_for!(State), &out_dir);
+    export_schema(&schema_for!(CountResponse), &out_dir);
+}
+```
+
+スキーマは以下のコマンドで生成できます：
+
+```bash
+cargo schema
+```
+
+これにより、コントラクトが受け取る3つのメッセージタイプ、クエリレスポンスメッセージ、内部`State`に対応する5つのファイルが`./schema`に出力されます。
+
+これらのファイルは標準的なJSON Schemaフォーマットで、さまざまなクライアントサイドツールで使用できます。コーデックの自動生成や、定義されたスキーマに対する受信JSONの検証に利用できます。
+
+スキーマを生成し（[こちら](https://github.com/InjectiveLabs/cw-counter/blob/master/schema/cw-counter.json)で確認できます）、次のステップに必要なので内容を理解しておいてください。
+
+## コントラクトのインスタンス化
+
+コードがInjective上にアップロードされたので、コントラクトをインスタンス化して対話できるようにします。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+CosmWasmでは、コントラクトコードのアップロードとコントラクトのインスタンス化は別々のイベントとして扱われます。
+</Callout>
+
+コントラクトをインスタンス化するには、前のステップで取得したcode_idと[JSONエンコードされた初期化引数](https://github.com/InjectiveLabs/cw-counter/blob/ea3b781447a87f052e4b8308d5c73a30481ed61f/schema/cw-counter.json#L7)、およびlabel（リストでこのコントラクトを識別するための人間が読める名前）を指定して以下のCLIコマンドを実行します。
+
+```bash
+INIT='{"count":99}'
+yes 12345678 | injectived tx wasm instantiate $CODE_ID $INIT \
+--label="CounterTestInstance" \
+--from=$(echo $INJ_ADDRESS) \
+--chain-id="injective-888" \
+--yes --fees=1000000000000000inj \
+--gas=2000000 \
+--no-admin \
+--node=https://testnet.sentry.tm.injective.network:443
+```
+
+**出力：**
+
+```bash
+code: 0
+codespace: ""
+data: ""
+events: []
+gas_used: "0"
+gas_wanted: "0"
+height: "0"
+info: ""
+logs: []
+raw_log: '[]'
+timestamp: ""
+tx: null
+txhash: 01804F525FE336A5502E3C84C7AE00269C7E0B3DC9AA1AB0DDE3BA62CF93BE1D
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+コントラクトアドレスとメタデータは以下の方法で確認できます：
+
+* [Testnet Explorer](https://www.injscan.com/smart-contracts/)で確認
+* [ContractsByCode](https://k8s.testnet.lcd.injective.network/swagger/#/Query/ContractsByCode)および[ContractInfo](https://k8s.testnet.lcd.injective.network/swagger/#/Query/ContractInfo) APIでクエリ
+* CLIでクエリ
+
+```bash
+injectived query wasm contract inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 --node=https://testnet.sentry.tm.injective.network:443
+```
+</Callout>
+
+## コントラクトのクエリ
+
+先に説明した通り、唯一のQueryMsgは`get_count`です。
+
+```bash
+GET_COUNT_QUERY='{"get_count":{}}'
+injectived query wasm contract-state smart inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 "$GET_COUNT_QUERY" \
+--node=https://testnet.sentry.tm.injective.network:443 \
+--output json
+```
+
+**出力：**
+
+```bash
+{"data":{"count":99}}
+```
+
+コントラクトをインスタンス化した時に設定した通り、`count`は99です。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+同じコントラクトをクエリすると、他のユーザーがカウントを増加またはリセットして操作している可能性があるため、異なるレスポンスが返される場合があります。
+</Callout>
+
+## コントラクトの実行
+
+カウンターを増加させてコントラクトと対話してみましょう。
+
+```bash
+INCREMENT='{"increment":{}}'
+yes 12345678 | injectived tx wasm execute inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 "$INCREMENT" --from=$(echo $INJ_ADDRESS) \
+--chain-id="injective-888" \
+--yes --fees=1000000000000000inj --gas=2000000 \
+--node=https://testnet.sentry.tm.injective.network:443 \
+--output json
+```
+
+カウントをクエリすると、以下のようになります：
+
+```bash
+{"data":{"count":100}}
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**yes 12345678 |** は、自動的にパスフレーズを **injectived tx wasm execute** の入力にパイプする（渡す）ため、手動で入力する必要はありません。
+</Callout>
+
+カウンターをリセットするには：
+
+```bash
+RESET='{"reset":{"count":999}}'
+yes 12345678 | injectived tx wasm execute inj1ady3s7whq30l4fx8sj3x6muv5mx4dfdlcpv8n7 "$RESET" \
+--from=$(echo $INJ_ADDRESS) \
+--chain-id="injective-888" \
+--yes --fees=1000000000000000inj --gas=2000000 \
+--node=https://testnet.sentry.tm.injective.network:443 \
+--output json
+```
+
+コントラクトを再度クエリすると、カウントが指定した値にリセットされていることがわかります：
+
+```bash
+{"data":{"count":999}}
+```
+
+## Cosmosメッセージ
+
+カスタムスマートコントラクトロジックの定義に加えて、CosmWasmではコントラクトが基盤となるCosmos SDK機能と対話することもできます。一般的なユースケースの1つは、Cosmos SDKのBankモジュールを使用してコントラクトから指定アドレスにトークンを送信することです。
+
+### 例：Bank Send
+
+`BankMsg::Send`メッセージを使用すると、コントラクトが別のアドレスにトークンを転送できます。報酬の配布やユーザーへの返金など、さまざまなシナリオで役立ちます。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**注意：** 資金の送信と別のコントラクト上の関数の実行を同時に行いたい場合は、BankMsg::Sendを使用しないでください。代わりに、WasmMsg::Executeを使用して、それぞれのfundsフィールドを設定してください。
+</Callout>
+
+### メッセージの構築
+
+コントラクトの`execute`関数内で`BankMsg::Send`メッセージを構築できます。このメッセージでは受信者アドレスと送信額を指定する必要があります。構築方法の例を以下に示します：
+
+```rust
+use cosmwasm_std::{BankMsg, Coin, Response, MessageInfo};
+
+pub fn try_send(
+    info: MessageInfo,
+    recipient_address: String,
+    amount: Vec<Coin>,
+) -> Result<Response, ContractError> {
+    let send_message = BankMsg::Send {
+        to_address: recipient_address,
+        amount,
+    };
+
+    let response = Response::new().add_message(send_message);
+    Ok(response)
+}
+```
+
+### スマートコントラクトでの使用
+
+コントラクトでは、ExecuteMsg enumにBank送金機能を処理する新しいバリアントを追加できます：
+
+```rust
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecuteMsg {
+    // ... 他のメッセージ ...
+    SendTokens { recipient: String, amount: Vec<Coin> },
+}
+```
+
+次に、`execute`関数にこのメッセージを処理するケースを追加します：
+
+```rust
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn execute(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response, ContractError> {
+    match msg {
+        // ... 他のメッセージ処理 ...
+        ExecuteMsg::SendTokens { recipient, amount } => try_send(info, recipient, amount),
+    }
+}
+```
+
+## テスト
+
+他のスマートコントラクト関数と同様に、Bank送金機能が期待通りに動作することを確認するためのユニットテストを追加する必要があります。さまざまなトークン量の送信やエラーの適切な処理など、異なるシナリオのテストを含めてください。
+
+ローカルInjectiveチェーンを含む統合テストの実行には[test-tube](https://github.com/InjectiveLabs/test-tube)を使用できます。
+
+おめでとうございます！初めてのInjectiveスマートコントラクトを作成して操作し、InjectiveでのCosmWasm開発の始め方を習得しました。コントラクト用のWeb UIを作成するガイドについては「フロントエンドの作成」に進んでください。

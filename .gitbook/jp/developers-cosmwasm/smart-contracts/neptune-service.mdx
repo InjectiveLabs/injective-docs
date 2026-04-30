@@ -1,0 +1,208 @@
+---
+title: NeptuneService
+description: Neptune CosmWasmスマートコントラクトとの連携方法
+---
+
+`NeptuneService`は、Injective上のNeptune CosmWasmスマートコントラクトと連携するためのシンプルなツールです。アセット価格の取得、交換レートの計算、入出金メッセージの作成、レンディングレートの取得が可能です。
+
+以下に`NeptuneService`クラスの各メソッドの使用例を示します。
+
+## NeptuneServiceの初期化
+
+サービスを使用する前に、`NeptuneService`のインスタンスを作成します。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { NeptuneService } from "@injectivelabs/sdk-ts/client/wasm";
+
+// メインネットを使用してNeptuneServiceインスタンスを作成
+const neptuneService = new NeptuneService(Network.MainnetSentry);
+```
+
+## 価格の取得
+
+- Neptune Price Oracleコントラクトから特定のアセットの価格を取得します。Bank denomには`native_token`を、CW20トークンには`contract_addr`付きの`token`を使用します。
+
+```ts
+const assets = [
+  {
+    native_token: {
+      denom: "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7", // peggy USDT bank denom
+    },
+  },
+  {
+    token: {
+      contract_addr: "inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s", // nUSDTコントラクトアドレス
+    },
+  },
+];
+
+const prices = await neptuneService.fetchPrices(assets);
+
+console.log(prices);
+```
+
+## Redemption Ratioの取得
+
+- nUSDT（CW20トークン）とUSDT（Bankトークン）間のRedemption Ratioを計算します。
+
+```ts
+const cw20Asset = {
+  token: {
+    contract_addr: "inj1cy9hes20vww2yr6crvs75gxy5hpycya2hmjg9s", // nUSDT
+  },
+};
+
+const nativeAsset = {
+  native_token: {
+    denom: "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
+  },
+};
+
+const redemptionRatio = await neptuneService.fetchRedemptionRatio({
+  cw20Asset,
+  nativeAsset,
+});
+
+console.log(`Redemption Ratio: ${redemptionRatio}`);
+```
+
+## CW20 nUSDTからBank USDTへの変換
+
+- Redemption Ratioを使用して、指定量のCW20 nUSDTからBank USDTの金額を計算します。
+
+```ts
+const amountCW20 = 1000; // nUSDTの量
+const redemptionRatio = 0.95; // fetchRedemptionRatioから取得
+
+const bankAmount = neptuneService.calculateBankAmount(
+  amountCW20,
+  redemptionRatio
+);
+
+console.log(`Bank USDT Amount: ${bankAmount}`);
+```
+
+## Bank USDTからCW20 nUSDTへの変換
+
+- Redemption Ratioを使用して、指定量のBank USDTからCW20 nUSDTの金額を計算します。
+
+```ts
+const amountBank = 950; // USDTの量
+const redemptionRatio = 0.95; // fetchRedemptionRatioから取得
+
+const cw20Amount = neptuneService.calculateCw20Amount(
+  amountBank,
+  redemptionRatio
+);
+
+console.log(`CW20 nUSDT Amount: ${cw20Amount}`);
+```
+
+## レンディングレートの取得
+
+- Neptuneのレンディングマーケットスマートコントラクトにおける各レンディングマーケットのレンディングレートを取得します。
+
+```ts
+const lendingRates = await neptuneService.getLendingRates({
+  limit: 10, // 任意：取得するレート数
+});
+
+console.log(lendingRates);
+```
+
+## Denominationによるレンディングレートの取得
+
+- 例えばUSDTのレンディングレートを取得します。
+
+```ts
+const denom = "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT denom
+
+const lendingRate = await neptuneService.getLendingRateByDenom({ denom });
+
+if (lendingRate) {
+  console.log(`Lending Rate for USDT: ${lendingRate}`);
+} else {
+  console.log("Lending Rate for USDT not found");
+}
+```
+
+## 年間利回り（APY）の計算
+
+- 年間利率（APR）を連続複利の年間利回り（APY）に変換します。aprには`neptuneService.getLendingRateByDenom`から取得したレンディングレートを使用してください。
+
+```ts
+const apr = 0.1; // 10% APR
+
+const apy = neptuneService.calculateAPY(apr);
+
+console.log(`APY (continuously compounded): ${(apy * 100).toFixed(2)}%`);
+```
+
+## 入金メッセージの作成とブロードキャスト
+
+- Neptune USDTレンディングマーケットにUSDTを入金するメッセージを作成し、ネットワークにブロードキャストします。
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const denom = "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT denom
+
+const amountInUsdt = "100";
+
+// 最小単位に変換（USDTは6桁のデシマル）
+const amount = toChainFormat(amountInUsdt, 6).toFixed();
+
+const depositMsg = neptuneService.createDepositMsg({
+  denom,
+  amount,
+  sender: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.MainnetSentry,
+}).broadcast({
+  msgs: depositMsg,
+});
+
+console.log(txHash);
+```
+
+## 出金メッセージの作成とブロードキャスト
+
+- Neptune USDTレンディングマーケットからUSDTを出金するメッセージを作成し、ネットワークにブロードキャストします。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExecuteContractCompat } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x..."; // プライベートキー
+const injectiveAddress = "inj1..."; // Injectiveアドレス
+
+// 出金額を指定（例：100 nUSDT）
+const amountInNusdt = "100";
+
+// 最小単位に変換（nUSDTは6桁のデシマル）
+const amount = toChainFormat(amountInNusdt, 6).toFixed();
+
+const withdrawMsg = neptuneService.createWithdrawMsg({
+  amount,
+  sender: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.MainnetSentry,
+}).broadcast({
+  msgs: withdrawMsg,
+});
+
+console.log(`Transaction Hash: ${txHash}`);
+```
