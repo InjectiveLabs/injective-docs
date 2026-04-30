@@ -1,0 +1,92 @@
+---
+title: Swapコントラクトの作成
+updatedAt: "2025-10-30"
+---
+
+[swap contract](https://github.com/InjectiveLabs/swap-contract)は、2つの異なるトークン間の即時スワップを可能にします。内部的にはアトミックオーダーを利用して、1つ以上のスポットマーケットでマーケット注文を発注します。
+
+### はじめに
+
+誰でもswap contractのインスタンスをインスタンス化できます。Injectiveメインネットにはこのコントラクトのバージョンがすでにアップロードされており、[こちら](https://injscan.com/code/67/)で確認できます。
+
+コントラクトをインスタンス化する前に、コントラクトオーナーとして3つの問いに答える必要があります：
+
+#### 1. fee recipientとなるアドレスはどれか？
+
+swap contractによって発注される注文はInjective Exchange Moduleの注文であるため、各注文にはfee recipientを指定でき、トレーディング手数料の40%を受け取ることができます。一般的に、Exchange dAppsは自身のアドレスをfee recipientとして設定します。
+
+#### 2. このコントラクトはどのトークンをサポートすべきか？
+
+コントラクトで利用可能なすべてのトークンには、ルートを定義する必要があります。ルートとは、`token A`から`token B`を得るためにどのマーケットを経由するかを指します。例えば、ATOMとINJ間のスワップをサポートしたい場合、ATOM/USDTおよびINJ/USDTのmarket IDをコントラクトに提供してルートを設定する必要があります。これにより、ATOMとINJ間のスワップルートはATOM ⇔ USDT ⇔ INJであるとコントラクトが認識します。
+
+現時点では、コントラクトはUSDT建てのマーケットのみをサポートできます。
+
+#### 3. このコントラクトにどれだけのバッファを提供するか？
+
+コントラクトオーナーとして、スワップ実行時に使用される資金をコントラクトに提供する必要もあります。バッファはコントラクトが注文を発注する際に使用されます。ユーザーが大きな金額をスワップしたい場合や流動性の低いマーケットでスワップしたい場合、より多くのバッファが必要となります。コントラクトのバッファがユーザーの入力金額を満たせない場合、エラーが発生します。
+
+現時点では、バッファはUSDTのみとする必要があります。
+
+### Messages
+
+#### Instantiate
+
+コントラクトの状態をコントラクトのバージョンと設定詳細で初期化します。configには管理者アドレスとfee recipientアドレスが含まれます。
+
+```rust
+pub fn instantiate(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError>
+```
+
+#### Execute
+
+異なる種類のトランザクションおよび管理機能を処理します：
+
+* SwapMinOutput：最小出力数量でのスワップ。
+* SwapExactOutput：正確な出力数量でのスワップ。
+* SetRoute：スワップルートを設定。
+* DeleteRoute：スワップルートを削除。
+* UpdateConfig：コントラクトの設定を更新。
+* WithdrawSupportFunds：コントラクトからサポート資金を引き出し。
+
+```rust
+pub fn execute(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError>
+```
+
+#### Reply
+
+他のコントラクトまたはトランザクションからのreplyを処理します。
+
+```rust
+pub fn reply(
+    deps: DepsMut<InjectiveQueryWrapper>,
+    env: Env,
+    msg: Reply,
+) -> Result<Response<InjectiveMsgWrapper>, ContractError>
+```
+
+#### Query
+
+コントラクトに対する各種クエリを処理します：
+
+* GetRoute：特定のスワップルートを取得。
+* GetOutputQuantity：指定された入力数量に対する出力数量を取得。
+* GetInputQuantity：指定された出力数量に対する入力数量を取得。
+* GetAllRoutes：利用可能なすべてのスワップルートを取得。
+
+```rust
+pub fn query(deps: Deps<InjectiveQueryWrapper>, env: Env, msg: QueryMsg) -> StdResult<Binary>
+```
+
+### リポジトリ
+
+swap contractの完全なGitHubリポジトリは[こちら](https://github.com/InjectiveLabs/swap-contract)で確認できます。
