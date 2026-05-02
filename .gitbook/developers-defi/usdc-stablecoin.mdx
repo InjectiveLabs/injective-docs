@@ -98,6 +98,20 @@ Use the following faucets to obtain testnet USDC and INJ for development:
   handle the minting and burning of USDC for cross-chain transfers.
 </Accordion>
 
+<Accordion title="What is the `restricted action` error when transferring USDC?">
+  For regulatory compliance, every USDC transfer on Injective is validated by an EVM hook that calls a contract during the transaction.
+  If your transaction runs out of gas mid-call, you will see an error similar to:
+
+  ```text
+  transfer is restricted by EVM hook: panic during EVM hook: {call evm hook}: contract hook query error: restricted action
+  ```
+
+  This message does **not** mean the transfer was actually restricted.
+  It means the validation call *ran out of gas* before completing.
+
+  **Solution**: Retry the transaction with a higher gas limit.
+</Accordion>
+
 <Accordion title="Can USDC be used across both EVM and Cosmos on Injective?">
   Yes.
   USDC on Injective follows the [MultiVM Token Standard (MTS)](/developers-evm/multivm-token-standard),
