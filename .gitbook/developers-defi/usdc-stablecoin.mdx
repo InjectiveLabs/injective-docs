@@ -58,20 +58,6 @@ Use the following faucets to obtain testnet USDC and INJ for development:
 | Injective Faucet | INJ | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
 | Google Cloud Faucet | INJ | [`cloud.google.com/application/web3/faucet/injective/testnet`](https://cloud.google.com/application/web3/faucet/injective/testnet) |
 
-## Troubleshooting
-
-### `restricted action` error on USDC transfers
-
-For regulatory compliance, every USDC transfer on Injective is validated by an EVM hook that calls a contract during the transaction.
-If your transaction runs out of gas mid-call, you will see an error similar to:
-
-```text
-transfer is restricted by EVM hook: panic during EVM hook: {call evm hook}: contract hook query error: restricted action
-```
-
-This message does **not** mean the transfer was actually restricted — it means the validation call ran out of gas before completing.
-**Retry the transaction with a higher gas limit** to resolve the issue.
-
 ## Frequently asked questions
 
 <Accordion title="What is USDC on Injective?">
@@ -110,6 +96,18 @@ This message does **not** mean the transfer was actually restricted — it means
   USDC to be transferred between blockchain networks.
   On Injective, CCTP V2 contracts (`TokenMessengerV2`, `MessageTransmitterV2`, `TokenMinterV2`, and `MessageV2`)
   handle the minting and burning of USDC for cross-chain transfers.
+</Accordion>
+
+<Accordion title="Why am I getting a `restricted action` error when transferring USDC?">
+  For regulatory compliance, every USDC transfer on Injective is validated by an EVM hook that calls a contract during the transaction.
+  If your transaction runs out of gas mid-call, you will see an error similar to:
+
+  ```text
+  transfer is restricted by EVM hook: panic during EVM hook: {call evm hook}: contract hook query error: restricted action
+  ```
+
+  This message does **not** mean the transfer was actually restricted — it means the validation call ran out of gas before completing.
+  **Retry the transaction with a higher gas limit** to resolve the issue.
 </Accordion>
 
 <Accordion title="Can USDC be used across both EVM and Cosmos on Injective?">
