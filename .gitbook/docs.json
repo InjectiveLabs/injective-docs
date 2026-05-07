@@ -365,6 +365,7 @@
                   "developers-defi/denom-and-bank",
                   "developers-defi/provider-oracle",
                   "developers-defi/usdc-stablecoin",
+                  "developers-defi/usdc-cctp-tutorial",
                   {
                     "group": "Injective Trader",
                     "expanded": false,

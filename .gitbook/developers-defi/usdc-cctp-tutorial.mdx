@@ -1,0 +1,257 @@
+---
+title: USDC + CCTP Tutorial
+description: >-
+  How to use the Cross-Chain Transfer Protocol (CCTP) to transfer USDC 1:1 between Injective and other networks
+updatedAt: "2026-05-07"
+---
+
+In this tutorial you will:
+
+- Learn how the CCTP burn-attest-mint protocol works
+- Burn USDC on a source chain to initiate a cross-chain transfer
+- Fetch the Circle attestation that authorises minting on the destination chain
+- Mint USDC on the destination chain to complete the transfer
+
+**What is CCTP on Injective?**
+
+Cross-Chain Transfer Protocol (CCTP) allows you to transfer USDC 1:1
+between Injective and other networks.
+
+USDC is available on Injective as a native stablecoin.
+It is available through [CCTP](/developers-defi/usdc-stablecoin).
+CCTP transfers USDC 1:1 between supported networks.
+The process is to:
+
+1. Burn USDC on the source chain.
+1. Receive an *attestation*.
+1. Mint an equivalent amount of USDC on the destination chain.
+
+No wrapping or bridging is required.
+
+## Prerequisites
+
+Before starting this tutorial, ensure you have the following installed:
+
+| Tool | Minimum version | Check | Install |
+| --- | --- | --- | --- |
+| Node.js | 22+ | `node --version` | [nodejs.org](https://nodejs.org/) |
+| npm | 11+ | `npm --version` | Included with Node.js |
+
+You also need:
+
+- [MetaMask](https://metamask.io/) installed in your browser
+  - Connected to Injective Testnet
+  - Also connected to Sepolia
+- Testnet INJ from the [Injective Faucet](https://testnet.faucet.injective.network/)
+  or [Google Cloud Faucet](https://cloud.google.com/application/web3/faucet/injective/testnet)
+- Testnet Sepolia ETH from a [Sepolia faucet](https://sepoliafaucet.com/)
+- Testnet USDC from the [Circle Faucet](https://faucet.circle.com/)
+
+## Get started
+
+The accompanying code for this tutorial is available in the
+[USDC CCTP demo](https://github.com/injective-dev/usdc-cctp-injective-demo) repository.
+
+Clone the repository and install its dependencies:
+
+```shell
+git clone https://github.com/injective-dev/usdc-cctp-injective-demo
+cd usdc-cctp-injective-demo
+npm install
+```
+
+Start the development server:
+
+```shell
+npm run dev
+```
+
+Open `http://localhost:5173` in your browser to view the dApp.
+
+## How does CCTP work?
+
+CCTP transfers USDC across chains by burning it on the source chain,
+obtaining a signed attestation from Circle's API,
+and minting an equivalent amount on the destination chain.
+
+CCTP transfers USDC across chains in three steps:
+
+1. **Burn**:
+    The source chain's `TokenMessengerV2` contract burns the specified USDC amount.
+    It then emits a `MessageSent` event containing the transfer details.
+2. **Attest**:
+    Circle's Iris API monitors on-chain events, and signs a message.
+    It then produces an attestation once the burn is confirmed.
+3. **Mint**:
+    The destination chain's `MessageTransmitterV2` contract verifies the attestation
+    and mints an equivalent amount of USDC to the recipient address.
+
+The demo application accompanying this tutorial automates steps two and three,
+polling Circle's API until the attestation is ready,
+then unlocking the mint action.
+
+<Info>
+The dApp implements each step with the following calls:
+
+```typescript
+// Step 1 — src/components/CCTPTransfer.tsx
+writeBurn({ functionName: 'depositForBurn', args: [amount, destDomain, mintRecipient, burnToken, ...] })
+
+// Step 2 — src/hooks/useAttestation.ts
+const { messages } = await fetch(`${CIRCLE_ATTESTATION_API}/${sourceDomain}?transactionHash=${txHash}`).then(r => r.json())
+
+// Step 3 — src/components/CCTPTransfer.tsx
+writeMint({ functionName: 'receiveMessage', args: [messages[0].message, messages[0].attestation] })
+```
+</Info>
+
+<Info>
+For the contract addresses used on Injective,
+refer to [USDC on Injective](/developers-defi/usdc-stablecoin).
+</Info>
+
+## Burning USDC on the source chain
+
+With the dApp open at `http://localhost:5173`:
+
+1. Select **Connect Wallet** and approve the MetaMask connection prompt.
+2. Select the source chain (for example, **Ethereum Sepolia**)
+   and the destination chain (**Injective EVM Testnet**),
+   then enter the USDC amount to transfer.
+3. Select **Approve USDC** and confirm the approval transaction in MetaMask.
+4. Select **Burn USDC** and confirm the burn transaction.
+
+The dApp will display the transaction hash and advance to the attestation step
+automatically once the burn transaction is confirmed on-chain.
+
+<Info>
+When you select **Burn USDC**,
+the dApp calls `depositForBurn` on the `TokenMessengerV2` contract:
+
+```typescript
+// src/components/CCTPTransfer.tsx
+writeBurn({
+  address: messengerAddr,
+  abi: tokenMessengerAbi,
+  functionName: 'depositForBurn',
+  args: [
+    amountParsed,                                       // USDC amount (6 decimals)
+    destDomain,                                         // 0 = Sepolia, 29 = Injective
+    padHex(destAddress as `0x${string}`, { size: 32 }), // 32-byte-padded recipient
+    usdcContract,                                       // USDC token address
+    '0x0000000000000000000000000000000000000000000000000000000000000000',
+    maxFee,                                             // relay fee (fast mode on Sepolia)
+    minFinalityThreshold,                               // 1 = Sepolia, 2000 = Injective
+  ],
+})
+```
+</Info>
+
+<Accordion title="How to choose the minFinalityThreshold value?">
+The value of `minFinalityThreshold` should be set to:
+
+- A value ≤ 1000 produces a "fast" message, and
+- a value &gt; 1000 produces a "standard" message.
+
+On Sepolia, both standard and fast messages are supported,
+with standard messages taking approximately 15 to 19 minutes,
+and fast messages taking approximately 20 seconds.
+
+On Injective, only standard messages are supported,
+with standard messages taking approximately 0.65 seconds.
+Fast message are not supported as there is no need,
+thanks to Injective's fast block time and instant finality.
+
+See Circle documentation on
+[Block confirmation requirements and attestation timing for CCTP](https://developers.circle.com/cctp/concepts/finality-and-block-confirmations)
+as the canonical reference on this.
+</Accordion>
+
+## What is a Circle attestation?
+
+A Circle attestation is a cryptographic signature from Circle's Iris API
+that proves a USDC burn occurred on the source chain.
+Attestations are used to authorise the corresponding mint on the destination chain.
+
+After a burn, Circle's Iris API watches for the `MessageSent` event,
+on the *source chain*.
+Once the required number of block confirmations is reached,
+Circle signs the message and issues an attestation.
+
+Attestation times vary by source chain:
+
+- **Ethereum Sepolia (standard mode)**: 15–20 minutes
+- **Injective EVM Testnet**: typically a few minutes
+
+<Info>
+Transfers from Sepolia support a fast mode that reduces wait times significantly,
+but require a sufficient `maxFee` to be set.
+If the fee is too low, the transfer falls back to standard mode.
+</Info>
+
+## Waiting for attestation
+
+This dApp polls the Iris API automatically.
+You do not need to leave the page.
+The UI will notify you when the attestation is ready.
+
+<Info>
+The dApp fetches the attestation using the transaction hash from the burn step:
+
+```typescript
+// src/hooks/useAttestation.ts
+const url = `${CIRCLE_ATTESTATION_API}/${sourceDomain}?transactionHash=${txHash}`
+const { messages } = await fetch(url).then(r => r.json())
+
+if (messages[0]?.status === 'complete') {
+  setResult({ message: messages[0].message, attestation: messages[0].attestation })
+} else {
+  setResult({ status: 'pending_confirmations' }) // poll again in 15 s
+}
+```
+</Info>
+
+## Minting USDC on the destination chain
+
+Once the dApp shows "Attestation received":
+
+1. When prompted, switch MetaMask to the **destination chain**.
+2. Select **Mint USDC** and confirm the transaction in MetaMask.
+3. Verify your USDC balance on the destination chain
+   using the balance shown in the dApp, or by viewing your address in
+   [Injective Testnet Blockscout](https://testnet.blockscout.injective.network/)
+   or [Sepolia Etherscan](https://sepolia.etherscan.io/).
+
+<Info>
+When you select **Mint USDC**,
+the dApp calls `receiveMessage` on the `MessageTransmitterV2` contract:
+
+```typescript
+// src/components/CCTPTransfer.tsx
+writeMint({
+  address: transmitterAddr,
+  abi: messageTransmitterAbi,
+  functionName: 'receiveMessage',
+  args: [attMessage, attestation], // message bytes + Circle's ECDSA signature
+})
+```
+</Info>
+
+## Next steps
+
+Congratulations on completing your first cross-chain USDC transfer
+using CCTP on Injective!
+
+Here is what you learnt in this tutorial:
+
+- How the CCTP burn-attest-mint protocol transfers USDC 1:1 across chains,
+  *without* wrapping or bridging
+- How to burn USDC on a source chain to initiate a cross-chain transfer
+- How to obtain a Circle attestation and use it to mint USDC on the destination chain
+
+Now that you can transfer USDC across chains, you may want to explore:
+
+- [USDC on Injective](/developers-defi/usdc-stablecoin):
+  Contract addresses, testnet faucets, and frequently asked questions.
+- [MultiVM Token Standard](/developers-evm/multivm-token-standard):
+  Use USDC across both EVM and Cosmos on Injective without bridging.
