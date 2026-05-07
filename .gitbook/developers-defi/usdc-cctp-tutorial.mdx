@@ -1,5 +1,5 @@
 ---
-title: USDC + CCTP tutorial
+title: USDC + CCTP Tutorial
 description: >-
   How to use the Cross-Chain Transfer Protocol (CCTP) to transfer USDC 1:1 between Injective and other networks
 updatedAt: "2026-05-07"
@@ -20,8 +20,12 @@ between Injective and other networks.
 USDC is available on Injective as a native stablecoin.
 It is available through [CCTP](/developers-defi/usdc-stablecoin).
 CCTP transfers USDC 1:1 between supported networks.
-It does so by burning it on the source chain
-and minting an equivalent amount on the destination chain.
+The process is to:
+
+1. Burn USDC on the source chain.
+1. Receive an *attestation*.
+1. Mint an equivalent amount of USDC on the destination chain.
+
 No wrapping or bridging is required.
 
 ## Prerequisites
@@ -46,13 +50,13 @@ You also need:
 ## Get started
 
 The accompanying code for this tutorial is available in the
-[USDC CCTP demo](https://github.com/Ninja-Labs-Devs/USDC-CCTP-Template) repository.
+[USDC CCTP demo](https://github.com/injective-dev/usdc-cctp-injective-demo) repository.
 
 Clone the repository and install its dependencies:
 
 ```shell
-git clone https://github.com/Ninja-Labs-Devs/USDC-CCTP-Template
-cd USDC-CCTP-Template
+git clone https://github.com/injective-dev/usdc-cctp-injective-demo
+cd usdc-cctp-injective-demo
 npm install
 ```
 
@@ -142,6 +146,26 @@ writeBurn({
 })
 ```
 </Info>
+
+<Accordion title="How to choose the minFinalityThreshold value?">
+The value of `minFinalityThreshold` should be set to:
+
+- A value ≤ 1000 produces a "fast" message, and
+- a value &gt; 1000 produces a "standard" message.
+
+On Sepolia, both standard and fast messages are supported,
+with standard messages taking approximately 15 to 19 minutes,
+and fast messages taking approximately 20 seconds.
+
+On Injective, only standard messages are supported,
+with standard messages taking approximately 0.65 seconds.
+Fast message are not supported as there is no need,
+thanks to Injective's fast block time and instant finality.
+
+See Circle documentation on
+[Block confirmation requirements and attestation timing for CCTP](https://developers.circle.com/cctp/concepts/finality-and-block-confirmations)
+as the canonical reference on this.
+</Accordion>
 
 ## What is a Circle attestation?
 
