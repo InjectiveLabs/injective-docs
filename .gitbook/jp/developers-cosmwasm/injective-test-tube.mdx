@@ -3,7 +3,7 @@ title: Injective Test Tube
 updatedAt: "2025-10-30"
 ---
 
-`injective-test-tube`はCosmWasm × Injectiveの統合テストライブラリで、`cw-multi-test`とは異なり、モックではなくチェーンの実際のロジックに対してCosmWasmコントラクトをテストできます。
+`injective-test-tube`は、CosmWasmとInjectiveを統合したテストライブラリであり、モックではなく実際のチェーンロジックに対してコントラクトをテストできる点が特徴です。
 
 `dev`ブランチは現在プライベートなリポジトリに依存していますが、公開済みのバージョンを代わりに利用できます。機能とアップデート情報については、[`CHANGELOG`](https://github.com/InjectiveLabs/test-tube/blob/dev/packages/injective-test-tube/CHANGELOG.md)を参照してください。
 
@@ -35,9 +35,9 @@ let admin = &accs[0];
 let new_admin = &accs[1];
 ```
 
-これで、初期残高を持ちappchainと相互作用できるappchainインスタンスとアカウントが用意できました。これはDockerインスタンスを実行したり外部プロセスを起動したりするのではなく、単にappchainのコードをライブラリとしてロードしてインメモリインスタンスを作成しています。
+これで、初期残高を持ちappchainと相互作用可能なインメモリのappchainインスタンスとアカウントが作成されます。 これはDockerコンテナや外部プロセスを起動するのではなく、appchainのコードをライブラリとしてロードし、インメモリ上で実行される点が特徴です。
 
-なお、`init_accounts`は同じ初期残高を持つ複数のアカウントを作成する便利な関数です。1つのアカウントだけを作成したい場合は、代わりに`init_account`を使用できます。
+なお、`init_accounts`は同一の初期残高を持つ複数アカウントを一括作成できるユーティリティ関数です。 1つのアカウントのみを作成したい場合は、`init_account`を使用します。
 
 ```rust
 use cosmwasm_std::Coin;

@@ -100,11 +100,11 @@ pub fn handle_on_received_cw20_funds_msg(
 
 #### `RedeemAndTransfer \{ recipient: Option\<String\> \}`
 
-添付されたTokenFactoryトークンをredeemし、CW-20トークンをrecipientに転送します。recipientが指定されない場合、メッセージの送信者に送られます。
+添付されたTokenFactoryトークンをredeemし、対応するCW-20トークンをrecipientに転送します。 recipientが指定されない場合、メッセージ送信者に送付されます。
 
 #### `RedeemAndSend { recipient: String, submessage: Binary }`
 
-添付されたTokenFactoryトークンをredeemし、CW-20トークンをrecipientコントラクトに送信します。呼び出し元はオプションのsubmessageを提供できます。
+添付されたTokenFactoryトークンをredeemし、CW-20トークンをrecipientのコントラクトに送信します。 呼び出し元は任意のsubmessageを付与することができます。
 
 ```rust
 ExecuteMsg::RedeemAndTransfer { recipient } => execute_redeem::handle_redeem_msg(deps, env, info, recipient, None)

@@ -7,7 +7,7 @@ updatedAt: "2025-10-30"
 
 ## CosmWasmにおける`Any`メッセージとは？
 
-CosmWasmにおいて`Any`メッセージは`CosmosMsg` enumの一部であり、チェーンがサポートするprotobuf `Any`型でラップされたメッセージを送信できるようにします。これらは（`stargate`フィーチャーフラグ下で引き続き利用可能な）非推奨の`Stargate`メッセージを置き換え、命名と構文が改善されています。`Any`メッセージは`cosmwasm_2_0`でフィーチャーゲートされており、CosmWasm 2.0を実行しているチェーン（Injectiveでサポート済み）が必要です。`CosmosMsg`定義の抜粋は以下のとおりです：
+CosmWasmにおいて`Any`メッセージは`CosmosMsg` enumの一部であり、チェーンがサポートするprotobufの`Any`型でラップされたメッセージを送信できる仕組みです。これらは（`stargate`フィーチャーフラグ下で引き続き利用可能な）非推奨の`Stargate`メッセージを置き換え、命名と構文が改善されています。`Any`メッセージは`cosmwasm_2_0`でフィーチャーゲートされており、CosmWasm 2.0を実行しているチェーン（Injectiveでサポート済み）が必要です。`CosmosMsg`定義の抜粋は以下のとおりです：
 
 ```rust
 pub enum CosmosMsg<T = Empty> {
