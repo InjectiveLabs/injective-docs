@@ -1,0 +1,72 @@
+---
+title: アドレスの変換
+updatedAt: "2025-12-27"
+---
+
+このドキュメントでは、異なる形式や派生パス間でアドレスを変換するいくつかの例について説明します。
+
+### Hex ↔ Bech32アドレスの変換
+
+[wallet](../defi/wallet)セクションで述べたように、InjectiveアドレスはEthereumアドレスと互換性があります。2つの形式間で簡単に変換できます。
+
+### TypeScriptの使用
+
+`@injectivelabs/sdk-ts`パッケージのユーティリティ関数を使用して、InjectiveアドレスとEthereumアドレスの間で簡単に変換できます:
+
+```typescript
+import {
+  getEthereumAddress,
+  getInjectiveAddress,
+} from "@injectivelabs/sdk-ts/utils";
+
+const injectiveAddress = "inj1...";
+const ethereumAddress = "0x..";
+
+console.log(
+  "Injective address from Ethereum address => ",
+  getInjectiveAddress(ethereumAddress)
+);
+console.log(
+  "Ethereum address from Injective address => ",
+  getEthereumAddress(injectiveAddress)
+);
+```
+
+### **CosmosアドレスをInjectiveアドレスに変換**
+
+Injectiveはデフォルトの Cosmos とは異なる派生パスを持つため、Cosmosの`publicAddress`をInjectiveのものに変換するには、アカウントの`publicKey`が必要です。
+
+### TypeScriptの使用
+
+```typescript
+import { config } from "dotenv";
+import { PublicKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+
+config();
+
+(async () => {
+  const chainApi = new ChainRestAuthApi(
+    "https://rest.cosmos.directory/cosmoshub"
+  );
+
+  const cosmosAddress = "cosmos1..";
+  const account = await chainApi.fetchCosmosAccount(cosmosAddress);
+
+  if (!account.pub_key?.key) {
+    console.log("No public key found");
+    return;
+  }
+
+  console.log(
+    "injectiveAddress",
+    PublicKey.fromBase64(account.pub_key.key || "")
+      .toAddress()
+      .toBech32()
+  );
+})();
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  さらに多くの例は[wallet accounts](../defi/wallet/accounts/)を参照してください。
+</Callout>

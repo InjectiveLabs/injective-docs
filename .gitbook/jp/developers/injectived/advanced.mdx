@@ -1,0 +1,360 @@
+---
+title: Commands
+updatedAt: "2025-10-30"
+---
+
+このセクションでは、実行中の`injectived`プロセス（ノード）に接続するコマンドラインインターフェースである`injectived`から利用できるコマンドについて説明します。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+いくつかの`injectived`コマンドは、動作させるためにサブコマンド、引数、またはフラグを必要とします。この情報を表示するには、`injectived`コマンドを`--help`または`-h`フラグと共に実行します。ヘルプフラグの使用例については`query`または`tx`を参照してください。
+
+`chain-id`引数については、mainnetには`injective-1`を、testnetには`injective-888`を使用してください。
+</Callout>
+
+### `add-genesis-account`
+
+`genesis.json`にジェネシスアカウントを追加します。`genesis.json`に関する詳細情報については、Join TestnetまたはJoin Mainnetガイドを参照してください。
+
+**構文**
+
+```bash
+injectived add-genesis-account <address-or-key-name> <amount><coin-denominator>
+```
+
+**例**
+
+```bash
+injectived add-genesis-account acc1 100000000000inj
+```
+
+### `collect-gentxs`
+
+ジェネシストランザクションを収集し、`genesis.json`に出力します。`genesis.json`に関する詳細情報については、Join TestnetまたはJoin Mainnetガイドを[こちら](../../infra/join-a-network/)で参照してください。
+
+**構文**
+
+```bash
+injectived collect-gentxs
+```
+
+### `debug`
+
+アプリケーションのデバッグを支援します。構文とサブコマンドのリストについては、`debug`コマンドを`--help`または`-h`フラグと共に実行します:
+
+```bash
+injectived debug -h
+```
+
+**サブコマンド**:
+
+```bash
+injectived debug [subcommand]
+```
+
+* **`addr`**: hexとbech32の間でアドレスを変換
+* **`pubkey`**: proto JSONからpubkeyをデコード
+* **`raw-bytes`**: 生バイト出力（例: \[72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]）をhexに変換
+
+### `export`
+
+状態をJSONにエクスポートします。
+
+**構文**
+
+```bash
+injectived export
+```
+
+### `gentx`
+
+`genesis.json`にジェネシストランザクションを追加します。`genesis.json`に関する詳細情報については、Join TestnetまたはJoin Mainnetガイドを参照してください。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**注:** `gentx`コマンドには多くのフラグが利用可能です。すべてのフラグを表示するには、`gentx`コマンドを`--help`または`-h`と共に実行します。
+</Callout>
+
+**構文**
+
+```bash
+injectived gentx <key-name> <amount><coin-denominator>
+```
+
+**例**
+
+```bash
+injectived gentx myKey 100000000000inj --home=/path/to/home/dir --keyring-backend=os --chain-id=injective-1 \
+    --moniker="myValidator" \
+    --commission-max-change-rate=0.01 \
+    --commission-max-rate=1.0 \
+    --commission-rate=0.07 \
+    --details="..." \
+    --security-contact="..." \
+    --website="..."
+```
+
+### `help`
+
+利用可能なコマンドの概要を表示します。
+
+**構文**
+
+```bash
+injectived help
+```
+
+### `init`
+
+ノードの設定ファイルを初期化します。
+
+**構文**
+
+```bash
+injectived init <moniker>
+```
+
+**例**
+
+```bash
+injectived init myNode
+```
+
+### `keys`
+
+Keyringコマンドを管理します。これらのキーは、Tendermint cryptoライブラリでサポートされる任意の形式であり、light-clients、full nodes、または秘密鍵で署名する必要がある他のアプリケーションで使用できます。
+
+構文とサブコマンドのリストについては、`keys`コマンドを`--help`または`-h`フラグと共に実行します:
+
+```bash
+injectived keys -h
+```
+
+**サブコマンド**:
+
+```bash
+injectived keys [subcommand]
+```
+
+* **`add`**: 暗号化された秘密鍵（新規生成または復元）を追加し、暗号化して指定されたファイル名に保存
+* **`delete`**: 指定されたキーを削除
+* **`export`**: 秘密鍵をエクスポート
+* **`import`**: ローカルkeybaseに秘密鍵をインポート
+* **`list`**: すべてのキーを一覧表示
+* **`migrate`**: レガシー（dbベース）Keybaseからキーを移行
+* **`mnemonic`**: 一部の入力エントロピーに対するbip39ニーモニックを計算
+* **`parse`**: アドレスをhexからbech32およびその逆に変換
+* **`show`**: 名前またはアドレスでキー情報を取得
+* **`unsafe-export-eth-key`**: Ethereum秘密鍵を平文でエクスポート
+* **`unsafe-import-eth-key`**: Ethereum秘密鍵をローカルkeybaseにインポート
+
+\
+`migrate`
+
+ソースジェネシスをターゲットバージョンに移行し、STDOUTに出力します。`genesis.json`に関する詳細情報については、Join TestnetまたはJoin Mainnetガイドを参照してください。
+
+**構文**
+
+```bash
+injectived migrate <target version> <path-to-genesis-file>
+```
+
+**例**
+
+```bash
+injectived migrate v1.9.0 /path/to/genesis.json --chain-id=injective-888 --genesis-time=2023-03-07T17:00:00Z 
+```
+
+### `query`
+
+クエリを管理します。構文とサブコマンドのリストについては、`query`サブコマンドを`--help`または`-h`フラグと共に実行します:
+
+```bash
+injectived query -h
+```
+
+**サブコマンド**:
+
+```bash
+injectived query [subcommand]
+```
+
+* **`account`**: アドレスでアカウントをクエリ
+* **`auction`**: `auction`モジュールのクエリコマンド
+* **`auth`**: `auth`モジュールのクエリコマンド
+* **`authz`**: `authz`モジュールのクエリコマンド
+* **`bank`**: `bank`モジュールのクエリコマンド
+* **`block`**: 指定された高さのブロックの検証済みデータを取得
+* **`chainlink`**: `oracle`モジュールのクエリコマンド
+* **`distribution`**: `distribution`モジュールのクエリコマンド
+* **`evidence`**: ハッシュによるevidenceのクエリまたは送信されたすべての（ページ分割された）evidence
+* **`exchange`**: `exchange`モジュールのクエリコマンド
+* **`feegrant`**: `feegrant`モジュールのクエリコマンド
+* **`gov`**: `governance`モジュールのクエリコマンド
+* **`ibc`**: `ibc`モジュールのクエリコマンド
+* **`ibc-fee`**: IBCリレイヤーインセンティブ化クエリサブコマンド
+* **`ibc-transfer`**: IBC fungible token transferクエリサブコマンド
+* **`insurance`**: `insurance`モジュールのクエリコマンド
+* **`interchain-accounts`**: Interchain accountsサブコマンド
+* **`mint`**: mintingモジュールのクエリコマンド
+* **`oracle`**: `oracle`モジュールのクエリコマンド
+* **`params`**: `params`モジュールのクエリコマンド
+* **`peggy`**: `peggy`モジュールのクエリコマンド
+* **`slashing`**: `slashing`モジュールのクエリコマンド
+* **`staking`**: `staking`モジュールのクエリコマンド
+* **`tendermint-validator-set`**: 指定された高さの完全なTendermintバリデーターセットを取得
+* **`tokenfactory`**: `tokenfactory`モジュールのクエリコマンド
+* **`tx`**: ハッシュ、アカウントシーケンス、またはコミットされたブロック内のカンマ区切り署名の組み合わせでトランザクションをクエリ
+* **`txs`**: イベントセットに一致するページ分割されたトランザクションをクエリ
+* **`upgrade`**: `upgrade`モジュールのクエリコマンド
+* **`wasm`**: `wasm`モジュールのクエリコマンド
+* **`xwasm`**: `wasmx`モジュールのクエリコマンド
+
+### `rollback`
+
+Tendermintが不正なapp hashを永続化し、進行できない場合に、誤ったアプリケーション状態遷移から回復するために状態ロールバックが実行されます。Rollbackは高さ _n_ の状態を高さ _n - 1_ の状態で上書きします。アプリケーションも高さ _n - 1_ にロールバックされます。ブロックは削除されないため、Tendermintを再起動すると、ブロック _n_ のトランザクションはアプリケーションに対して再実行されます。
+
+**構文**
+
+```bash
+injectived rollback
+```
+
+### `rosetta`
+
+Rosettaサーバーを作成します。
+
+**構文**
+
+```bash
+injectived rosetta [flags]
+```
+
+### `start`
+
+Tendermintをプロセス内またはプロセス外でフルノードアプリケーションを実行します。デフォルトでは、アプリケーションはTendermintと共にプロセス内で実行されます。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`start`コマンドには多くのフラグが利用可能です。すべてのフラグを表示するには、`start`コマンドを`--help`または`-h`と共に実行します。
+</Callout>
+
+**構文**
+
+```bash
+injectived start [flags]
+```
+
+### `status`
+
+リモートノードのステータスを表示します。ノードエンドポイントを指定するには、`--node`または`-n`フラグを使用します。
+
+**構文**
+
+```bash
+injectived status
+```
+
+### `tendermint`
+
+Tendermintプロトコルを管理します。構文とサブコマンドのリストについては、`query`サブコマンドを`--help`または`-h`フラグと共に実行します:
+
+```bash
+injectived tendermint -h
+```
+
+**サブコマンド**:
+
+```bash
+injectived tendermint [subcommand]
+```
+
+* **`reset-state`**: すべてのデータとWALを削除
+* **`show-address`**: このノードのTendermintバリデーターコンセンサスアドレスを表示
+* **`show-node-id`**: このノードのIDを表示
+* **`show-validator`**: このノードのTendermintバリデーター情報を表示
+* **`unsafe-reset-all`**: すべてのデータとWALを削除し、このノードのバリデーターをジェネシス状態にリセット
+* **`version`** Tendermintライブラリのバージョンを表示
+
+### `testnet`
+
+指定された数のディレクトリを持つtestnetを作成し、各ディレクトリに必要なファイルを設定します。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`testnet`コマンドには多くのフラグが利用可能です。すべてのフラグを表示するには、`testnet`コマンドを`--help`または`-h`と共に実行します。
+</Callout>
+
+**構文**
+
+```bash
+injectived testnet [flags]
+```
+
+**例**
+
+```bash
+injectived testnet --v 4 --keyring-backend test --output-dir ./output --ip-addresses 192.168.10.2
+```
+
+### `tx`
+
+トランザクションの生成、署名、ブロードキャストを管理します。例についてはUsing Injectivedを参照してください。
+
+構文および利用可能なサブコマンドに関する詳細情報については、`tx`コマンドを `--help` または `-h` フラグと共に実行して確認します:
+
+```bash
+injectived tx -h
+```
+
+**サブコマンド**:
+
+```bash
+injectived tx [subcommand]
+```
+
+* **`auction`**: Auctionトランザクションサブコマンド
+* **`authz`**: Authorizationトランザクションサブコマンド
+* **`bank`**: Bankトランザクションサブコマンド
+* **`broadcast`**: オフラインで生成されたトランザクションをブロードキャスト
+* **`chainlink`**: Off-Chain Reporting (OCR) サブコマンド
+* **`crisis`**: Crisisトランザクションサブコマンド
+* **`decode`**: バイナリエンコードされたトランザクション文字列をデコード
+* **`distribution`**: Distributionトランザクションサブコマンド
+* **`encode`**: オフラインで生成されたトランザクションをエンコード
+* **`evidence`**: Evidenceトランザクションサブコマンド
+* **`exchange`**: Exchangeトランザクションサブコマンド
+* **`feegrant`**: Feegrantトランザクションサブコマンド
+* **`gov`**: Governanceトランザクションサブコマンド
+* **`ibc`**: IBCトランザクションサブコマンド
+* **`ibc-fee`**: IBCリレイヤーインセンティブ化トランザクションサブコマンド
+* **`ibc-transfer`**: IBC fungible token transferトランザクションサブコマンド
+* **`insurance`**: Insuranceトランザクションサブコマンド
+* **`multisign`**: オフラインで生成されたトランザクションのマルチシグ署名を生成
+* **`oracle`**: Oracleトランザクションサブコマンド
+* **`peggy`**: Peggyトランザクションサブコマンド
+* **`sign`**: オフラインで生成されたトランザクションに署名
+* **`sign-batch`**: トランザクションバッチファイルに署名
+* **`slashing`**: Slashingトランザクションサブコマンド
+* **`staking`**: Stakingトランザクションサブコマンド
+* **`tokenfactory`**: Tokenfactoryトランザクションサブコマンド
+* **`validate-signatures`**: トランザクション署名を検証
+* **`vesting`**: Vestingトランザクションサブコマンド
+* **`wasm`**: Wasmトランザクションサブコマンド
+* **`xwasm`**: Wasmxトランザクションサブコマンド
+
+### `validate-genesis`
+
+デフォルトの場所または指定された場所のジェネシスファイルを検証します。ジェネシスファイルに関する詳細情報については、Join TestnetまたはJoin Mainnetガイドを参照してください。
+
+**構文**
+
+```bash
+injectived validate-genesis </path-to-file>
+```
+
+### `version`
+
+実行中のInjectiveのバージョンを返します。
+
+**構文**
+
+```bash
+injectived version
+```

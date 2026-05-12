@@ -1,0 +1,50 @@
+---
+title: マーケットの最小価格ティックサイズ計算
+updatedAt: "2025-11-21"
+---
+
+# マーケットの最小価格ティックサイズ
+
+オーダー価格のマーケット最小価格ティックサイズです。マーケットのminPriceTickSizeが`0.001`で、価格`0.0011`のオーダー送信があった場合、拒否されます。
+
+なお、SpotマーケットとDerivativeマーケットではティックサイズの計算方法が異なる点に注意してください。
+
+### Spotマーケット
+
+1.  UI人間可読形式からチェーン形式への変換:
+    18のベースdecimalと6のquote decimalを持つINJ/USDTマーケットを例に、値をチェーン形式に変換する方法は次のとおりです:
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+
+const value = toChainFormat(value, quoteDecimals - baseDecimals).toFixed();
+```
+
+2. チェーン形式からUI人間可読形式への変換:
+   18のベースdecimalと6のquote decimalを持つINJ/USDTマーケットを例に、値をUI人間可読形式に変換する方法は次のとおりです:
+
+```ts
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const value = toHumanReadable(value, quoteDecimals - baseDecimals).toFixed();
+```
+
+### Derivativeマーケット
+
+1.  UI人間可読形式からチェーン形式への変換:
+    6のquote decimalを持つINJ/USDT perpマーケットを例に、値をチェーン形式に変換する方法は次のとおりです:
+
+```ts
+import { toChainFormat } from "@injectivelabs/utils";
+
+const value = toChainFormat(value, -quoteDecimals).toFixed();
+```
+
+2. チェーン形式からUI人間可読形式への変換:
+   6のquote decimalを持つINJ/USDT perpマーケットを例に、値をUI人間可読形式に変換する方法は次のとおりです:
+
+```ts
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const value = toHumanReadable(value, quoteDecimals).toFixed();
+```

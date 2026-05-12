@@ -1844,6 +1844,41 @@
                 ]
               },
               {
+                "group": "開発者",
+                "icon": "laptop-code",
+                "expanded": false,
+                "pages": [
+                  "jp/developers/index",
+                  "jp/developers/network-information",
+                  "jp/developers/convert-addresses",
+                  {
+                    "group": "injectived",
+                    "pages": [
+                      "jp/developers/injectived/index",
+                      "jp/developers/injectived/install",
+                      "jp/developers/injectived/use",
+                      "jp/developers/injectived/advanced",
+                      "jp/developers/testnet-proposals"
+                    ]
+                  },
+                  {
+                    "group": "概念",
+                    "pages": [
+                      "jp/developers/concepts/index",
+                      "jp/developers/concepts/sentry-node",
+                      "jp/developers/concepts/indexer-api",
+                      "jp/developers/concepts/trading-account",
+                      "jp/developers/concepts/grpc-protobuf",
+                      "jp/developers/concepts/token-factory",
+                      "jp/developers/concepts/calculation-min-price-tick-size",
+                      "jp/developers/concepts/calculation-min-quantity-tick-size",
+                      "jp/developers/concepts/cosmjs-support",
+                      "jp/developers/concepts/networks"
+                    ]
+                  }
+                ]
+              },
+              {
                 "group": "AI開発者",
                 "icon": "brain",
                 "expanded": false,
