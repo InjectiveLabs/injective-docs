@@ -1,0 +1,141 @@
+---
+title: はじめに
+updatedAt: "2025-12-27"
+---
+
+# はじめに
+
+Injective Traderには、迅速なプロトタイピングとコードベースに慣れるための「Simple Strategy」が組み込まれています。
+
+**動作内容:**
+
+* INJ、BTC、ETHのorderbookを監視
+* マーケット価格よりわずかに下の価格でbuy注文を発注
+* マーケット価格よりわずかに上の価格でsell注文を発注
+* 収益性のためにスプレッドを維持
+* リスクコントロールのためにポジションリミットを尊重
+
+**最適な用途:** Injective Traderに慣れながら、予測可能で安定したトレーディングを行うこと。**本番環境での使用は推奨されません。**
+
+**ログの例:**
+
+```
+[INFO] Placing BUY order: 0.1 INJ at $3.45 (spread: 0.5%)
+[INFO] Placing SELL order: 0.1 INJ at $3.47 (spread: 0.5%)
+[INFO] Order filled: BUY 0.1 INJ at $3.45
+```
+
+## 戦略のカスタマイズ
+
+### 注文サイズ
+
+```yaml
+OrderSize: 0.5
+MaxPosition: 2.0
+```
+
+### マーケットの追加
+
+```yaml
+MarketTickers:
+  - INJ/USDT PERP
+  - BTC/USDT PERP
+  - ETH/USDT PERP
+  - APT/USDT PERP
+  - AVAX/USDT PERP
+  - SOL/USDT PERP
+```
+
+### スプレッド
+
+```yaml
+SpreadThreshold: 0.01   # conservative
+SpreadThreshold: 0.002  # aggressive
+```
+
+## 一般的な構成
+
+### Conservative Maker
+
+```yaml
+OrderSize: 0.05
+MaxPosition: 0.5
+SpreadThreshold: 0.01
+```
+
+### Aggressive Maker
+
+```yaml
+OrderSize: 0.5
+MaxPosition: 5.0
+SpreadThreshold: 0.002
+```
+
+### マルチマーケット戦略
+
+```yaml
+MarketTickers:
+  - INJ/USDT PERP
+  - BTC/USDT PERP
+  - ETH/USDT PERP
+  - APT/USDT PERP
+  - AVAX/USDT PERP
+  - SOL/USDT PERP
+  - TON/USDT PERP
+  - ATOM/USDT PERP
+```
+
+## botの監視
+
+```bash
+tail -f logs/my_bot.log
+grep "Order filled" logs/my_bot.log
+grep "ERROR" logs/my_bot.log
+```
+
+### 主要メッセージ
+
+* ✅ Order placed successfully
+* 💰 Order filled
+* ⚠️ Position limit reached
+* ❌ Insufficient balance
+
+### パフォーマンスメトリクス
+
+* Total PnL
+* Win rate
+* Fill rate
+* Average spread
+
+## リスク管理
+
+* ポジションリミット（`MaxPosition`）を設定
+* ポジションを監視し、必要に応じて手動でストップアウト
+* マージン、手数料、バッファに十分なUSDTを維持
+
+## トラブルシューティング
+
+**秘密鍵が見つからない場合**
+
+```bash
+echo $MyBot_GRANTER_INJECTIVE_PRIVATE_KEY
+```
+
+* **残高不足** → USDTを追加 / `OrderSize` を縮小
+* **マーケットが見つからない** → ticker/IDをダブルチェック
+* **botが動かない**
+
+```bash
+grep "ERROR" logs/my_bot.log | tail -10
+python main.py MyBot config.yaml --log_path logs/my_bot.log --network mainnet
+```
+
+## 高度な機能
+
+* `AccountAddresses` による **複数アカウント**
+* **カスタム注文タイプ**（limit、market、reduce-only）
+* Redis/Valkeyを使った **外部シグナル**
+
+## 次へ
+
+Injective Trader向けの自分の [カスタム戦略](/jp/developers-defi/injective-trader/strategy-development-guide) を開発する方法を学びましょう。

@@ -1,0 +1,24 @@
+---
+title: Provider Oracle
+updatedAt: "2025-11-27"
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+事前に [Injective Oracle Module](/developers-native/injective/oracle/) を読むことを推奨します。
+</Callout>
+
+このセクションの目的は、Injective上でoracle providerを立ち上げて運用する方法のガイドをユーザーに提供することです。これらのoracleは、Perpetualマーケット、Expiry Futuresマーケット、[Binary Optionsマーケット](/developers-native/injective/exchange/02_binary_options_markets/) など、さまざまな用途に使用できます。
+
+まず、oracle providerとは何でしょうか？これは外部のパーティが価格フィードをInjectiveチェーンへ中継できるoracleの **TYPE** です。これらの外部パーティをproviderと呼びます。providerは各外部パーティを識別し、チェーン上で提供されたすべての価格フィードは、その特定のproviderの下に保存されます。これによりInjective上にカスタム価格フィードを作成でき、Injective上で立ち上げられる [Binary Optionsマーケット](/developers-native/injective/exchange/02_binary_options_markets/) のような、創造的で高度なマーケットを動かすことができます。
+
+開発者がまず行うべきことは、自分のproviderをOracle Providerタイプとして登録することです。これは `GrantProviderPrivilegeProposal` のガバナンス提案を提出することで実現できます。提案が可決されると、providerが登録され、価格フィードを中継できるようになります。CLI環境で `injectived` を使う方法（`grant-provider-privilege-proposal [providerName] [relayers] --title [title] --description [desc] [flags]`）もあれば、当社のSDKのいずれかを使ってメッセージを作成し、チェーンへブロードキャストする方法もあります。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Oracle ModuleのProposalsセクションで、この提案の提出例を確認できます。
+</Callout>
+
+_Note: `GrantProviderPrivilegeProposal` の `relayers` は、Injectiveへ価格フィードを提出するためにホワイトリストに登録されるアドレスです。_
+
+提案が可決されると、`relayers` は `MsgRelayProviderPrices` を使って、Injective上のOracle Providerタイプoracleにおける自身のproviderネームスペース内のbase/quoteペアに対する価格を提出できます。CLI環境で `injectived` を使う方法（`relay-provider-prices [providerName] [symbol:prices] [flags]`）もあれば、当社のSDKのいずれかを使ってメッセージを作成し、チェーンへブロードキャストする方法もあります。
+
+最後に、これらの価格フィードを使ってDerivativeマーケットを作成できます。

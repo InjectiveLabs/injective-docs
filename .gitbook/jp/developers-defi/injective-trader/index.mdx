@@ -1,0 +1,225 @@
+---
+title: Injective Trader
+updatedAt: "2025-12-27"
+---
+
+# Injective Trader
+
+Injective Traderは、Injectiveブロックチェーン上でアルゴリズミックトレーディング戦略を開発・デプロイするための、高性能で信頼性の高い基盤を提供するプロフェッショナルグレードのフレームワークです。アルゴリズミックトレーディング戦略とブロックチェーン執行の間のギャップを橋渡しし、技術的な障壁を取り除きます。リアルタイムなデータストリーミング、注文執行、再接続/リカバリ、トランザクションのバッチング、アナリティクスといった重い処理はすべてフレームワークが担います。これにより、トレーダーはブロックチェーンの複雑さではなく、戦略開発に専念できます。
+
+これを使って既存の戦略をインポートしたり、以下のような新しい戦略を作成したりできます:
+
+* ロジックに基づいて **自動的に注文を発注する**
+* マーケットを **24/7監視** し、価格変動に反応する
+* 組み込みのリミットと安全機能で **リスクを管理する**
+* 複数のマーケットを **同時にハンドリング** する
+* すべてのトレーディングアクティビティの **詳細なログを提供する**
+
+### コア機能
+
+**シンプル化された戦略開発**
+
+* SDKの専門知識は不要 - トレーディングロジックだけに集中可能
+* 最小限の技術的オーバーヘッドで迅速に戦略をデプロイ
+* イベントドリブンなアーキテクチャで直感的に戦略を実装可能
+
+**組み込みの信頼性**
+
+* 自動的な再接続およびリカバリメカニズム
+* 執行前のトランザクション検証
+* 包括的なエラーハンドリングおよびリトライロジック
+
+**パフォーマンスの最適化**
+
+* コスト削減のためのインテリジェントなトランザクションバッチング
+* 自動的な手数料管理および最適化
+* スケールのためのマルチアカウントサポート
+
+**エンタープライズ対応機能**
+
+* ポジションおよびPnLの完全なトラッキング
+* リスク管理機能
+* 詳細なパフォーマンスアナリティクス
+
+<Callout icon="warning" color="#07C1FF" iconType="regular">
+Injective Traderは実価値を持つアセットを扱うトランザクションを行うため、セキュリティが最重要です。以下をセキュリティのベースラインとして使用し、さらに追加の対策を講じてアセットを保護してください。
+
+* **秘密鍵を共有しない** こと、Gitにコミットしないこと。
+* シークレットはローカルの **`.env` ファイル** に保存し、環境変数経由でロードする。
+* さらなる安全性のため、メインアカウントを露出させずにトレーディング権限を付与するために
+  [**AuthZ**](https://github.com/InjectiveLabs/injective-trader/tree/master?tab=readme-ov-file#authorization-trading-authz)
+  の使用を検討してください。
+</Callout>
+
+## クイックスタート（5分）
+
+### 1. Injectiveアカウントの準備（および入金）
+
+1. Keplrまたは `injectived` を使ってInjective上に **アカウントを作成** します。
+2. Keplrを使用する場合は、`.env` ファイル用に **秘密鍵をエクスポート** します。
+   * _ヒント: AuthZを使えば、より高いセキュリティのために、トレーディング用アカウントに制限された権限を付与できます。_
+3. 別のInjectiveアドレスから送金するか、[bridge.injective.network](http://bridge.injective.network/) を経由して、USDTで **アカウントに入金** します。
+   * _EVMヒント: TS SDKを使って自分の `inj` アドレスを導出し、InjectiveアカウントをセットアップせずにEthereumからInjectiveへUSDTをbridgeできます。_
+
+### 2. ダウンロードとセットアップ
+
+```bash
+git clone https://github.com/InjectiveLabs/injective-trader.git
+cd injective-trader
+
+# Create a virtual environment (recommended)
+python3 -m venv .venv
+source .venv/bin/activate    # Windows: .venv\Scripts\Activate.ps1
+
+pip install -r requirements.txt
+pip install "injective-py==1.9"
+```
+
+_Note: `injective-trader` は `injective-py` v1.11 とはまだ互換性がありません。_
+
+### 3. 戦略の設定
+
+事前に存在する `config.yaml` を編集します:
+
+```yaml
+Exchange: Helix
+ConsoleLevel: INFO
+FileLevel: DEBUG
+
+Components:
+  Initializer:
+    Network: mainnet
+    BotName: MyBot
+    MarketTickers:
+      - INJ/USDT PERP
+      - BTC/USDT PERP
+      - ETH/USDT PERP
+
+Strategies:
+  MyMarketMaker:
+    Name: "MyMarketMaker"
+    Class: "SimpleStrategy"
+    MarketIds:
+      - "0x17ef48032..."  # INJ/USDT PERP
+      - "0x4ca0f92f..."  # BTC/USDT PERP
+      - "0x9b998016..."  # ETH/USDT PERP
+    AccountAddresses:
+      - "inj1your_account_address_here"
+    TradingAccount: "inj1your_account_address_here"
+    CIDPrefix: "my_mm"
+    Parameters:
+      OrderSize: 0.1
+      MaxPosition: 1.0
+      SpreadThreshold: 0.005
+```
+
+### 4. 秘密鍵の設定
+
+単一の `INJECTIVE_PRIVATE_KEY` の代わりに、`.env` 内で **bot-scoped 環境変数** を使用します（フレームワークのデフォルトに一致します）:
+
+```
+# For bot named "MyBot"
+MyBot_GRANTER_INJECTIVE_PRIVATE_KEY=your_granter_private_key_here
+MyBot_GRANTEE_0_INJECTIVE_PRIVATE_KEY=your_first_grantee_private_key_here
+```
+
+これらをセッションへロードします:
+
+```bash
+export $(grep -v '^#' .env | xargs)
+```
+
+### 5. 戦略の実行
+
+```bash
+python main.py MyBot config.yaml --log_path logs/my_bot.log --network mainnet
+```
+
+これで完了です - botがライブで稼働中です！
+
+## IDEのセットアップ
+
+VS Codeまたは互換性のあるIDE（Cursorなど）を使用している場合、デバッグを簡単にするために以下の設定を追加することを検討してください。
+
+`.vscode/launch.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run MyBot (mainnet)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "args": ["MyBot", "config.yaml", "--log_path", "logs/strategy.log", "--network", "mainnet"],
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "Run MyBot (testnet, debug)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "args": ["MyBot", "config.yaml", "--log_path", "logs/debug.log", "--network", "testnet", "--debug"],
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
+```
+
+これでIDE上で **Run → Start Debugging** ができるようになります。
+
+## アーキテクチャ
+
+### システムアーキテクチャ図
+
+<figure>
+<img src="/img/injective-trader-network-architecture-diagram.png" alt="Injective Trader Network Architecture Diagram" width="563"></img>
+<figcaption><p>Injective Trader Network Architecture Diagram</p></figcaption>
+</figure>
+
+### コア設計パターン
+
+* **Mediator Pattern**: コンポーネント間の通信を集中化し、コンポーネントが直接の依存関係なしで連携できる疎結合アーキテクチャを実現します。
+* **Component Pattern**: すべてのシステムコンポーネントに対するライフサイクル管理（initialize、run、terminate）を標準化し、一貫した振る舞いを保証します。
+* **State Pattern**: 明確に定義されたstate（Idle、Running、Terminated）を介してコンポーネントのライフサイクルを管理し、予測可能な遷移とエラーハンドリングを提供します。
+* **Task Management Pattern**: 非同期タスクを自動的なモニタリングおよびリカバリと共に協調させ、イベントドリブンな環境での信頼性の高い実行を保証します。
+* **Observer Pattern**: 戦略が特殊化されたイベントハンドラを通じて特定の更新イベントに反応できるようにし、柔軟な戦略開発アプローチを生み出します。
+
+### 主要コンポーネント
+
+**Exchange固有のエージェント**
+
+* **Initializer**: exchange接続、アカウント、マーケットをセットアップ
+* **ChainListener**: 自動再接続付きでリアルタイムなブロックチェーンデータをストリーミング
+* **MessageBroadcaster**: リトライロジック付きでトランザクション作成とブロードキャストをハンドリング
+* **Liquidator**: 担保不足のポジションに対するliquidationを監視・執行
+
+**Managers**
+
+* **MarketManager**: マーケットデータを処理し、orderbookの整合性を維持
+* **AccountManager**: 残高、ポジション、注文の状態をトラッキング
+* **StrategyManager**: マーケットイベントを適切な戦略実装へルーティング
+* **RiskManager**: ポジションリミットとリスクコントロールを実施
+* **TaskManager**: 非同期タスクの実行をオーケストレーションおよびモニタリング
+
+**データレベルのドメイン**
+
+* **Market**: orderbookとメタデータを持つトレーディングペアを表現
+* **Account**: アカウントの残高、deposit、subaccountを管理
+* **Positions**: P\&L計算付きでderivativeポジションをトラッキング
+* **Order**: 執行履歴付きで注文の状態をトラッキング
+* **Oracle Prices**: タイムスタンプトラッキング付きのリアルタイム価格フィード
+
+**戦略レベルのプラグイン**
+
+* **Strategy Base**: カスタム戦略を実装するためのテンプレート
+* **Update Handlers**: マーケットデータイベント用のイベント固有プロセッサ
+* **Performance Metrics**: 統計およびP\&Lトラッキング
+* **Risk Models**: カスタマイズ可能なリスク管理ルール
+
+## 次へ
+
+コードベースに本格的に取り組む前にまず慣れるために、Injective Traderに同梱されている [シンプル戦略](/jp/developers-defi/injective-trader/simple-strategy) について詳しく学びましょう。

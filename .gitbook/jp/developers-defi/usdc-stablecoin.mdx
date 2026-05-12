@@ -1,0 +1,133 @@
+---
+title: Injective上のUSDC
+description: >-
+  Injective上でUSDCを使って構築するための、USDCステーブルコインのコントラクトアドレス、CCTP統合の詳細、およびテストネットfaucet情報。
+updatedAt: "2026-05-07"
+---
+
+USDCは [Circle's Cross-Chain Transfer Protocol (CCTP)](https://www.circle.com/cross-chain-transfer-protocol) を通じて、Injective上で **ネイティブステーブルコイン** として利用可能です。
+Injective上のUSDCは [MultiVM Token Standard (MTS)](/jp/developers-evm/multivm-token-standard) を実装しており、これは同一のトークンが、bridgingなしでInjectiveネットワーク上のEVMおよびCosmosプロトコルの両方からアクセス可能であることを意味します。
+
+USDCは、Injectiveのオンチェーンorder bookでのトレーディング、derivativeマーケットの担保、CCTPによるクロスチェーン送金、Injective上で構築されたDeFiアプリケーションの決済通貨などに利用できます。
+
+[USDC CCTPチュートリアル](/jp/developers-defi/usdc-cctp-tutorial) でハンズオンで試してみましょう。
+
+## コントラクトアドレス
+
+<Tabs>
+
+<Tab title="Mainnet" icon="server">
+
+| Contract | Address |
+| --- | --- |
+| USDC | [`0xa00C59fF5a080D2b954d0c75e46E22a0c371235a`](https://blockscout.injective.network/token/0xa00C59fF5a080D2b954d0c75e46E22a0c371235a) |
+| USDC CCTP `TokenMessengerV2` | [`0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d`](https://blockscout.injective.network/address/0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d) |
+| USDC CCTP `MessageTransmitterV2` | [`0x81D40F21F12A8F0E3252Bccb954D722d4c464B64`](https://blockscout.injective.network/address/0x81D40F21F12A8F0E3252Bccb954D722d4c464B64) |
+| USDC CCTP `TokenMinterV2` | [`0xfd78EE919681417d192449715b2594ab58f5D002`](https://blockscout.injective.network/address/0xfd78EE919681417d192449715b2594ab58f5D002) |
+| USDC CCTP `MessageV2` | [`0xec546b6B005471ECf012e5aF77FBeC07e0FD8f78`](https://blockscout.injective.network/address/0xec546b6B005471ECf012e5aF77FBeC07e0FD8f78) |
+
+<Info>
+Injective MainnetのUSDC CCTP domain ID: `29`
+</Info>
+
+</Tab>
+
+<Tab title="Testnet" icon="flask-vial">
+
+| Contract | Address |
+| --- | --- |
+| USDC | [`0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d`](https://testnet.blockscout.injective.network/token/0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d) |
+| USDC CCTP `TokenMessengerV2` | [`0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA`](https://testnet.blockscout.injective.network/address/0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA) |
+| USDC CCTP `MessageTransmitterV2` | [`0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275`](https://testnet.blockscout.injective.network/address/0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275) |
+| USDC CCTP `TokenMinterV2` | [`0xb43db544E2c27092c107639Ad201b3dEfAbcF192`](https://testnet.blockscout.injective.network/address/0xb43db544E2c27092c107639Ad201b3dEfAbcF192) |
+| USDC CCTP `MessageV2` | [`0xbaC0179bB358A8936169a63408C8481D582390C4`](https://testnet.blockscout.injective.network/address/0xbaC0179bB358A8936169a63408C8481D582390C4) |
+
+<Info>
+Injective TestnetのUSDC CCTP domain ID: `29`
+</Info>
+
+</Tab>
+
+</Tabs>
+
+## テストネットfaucet
+
+開発用にテストネットのUSDCおよびINJを入手するには、以下のfaucetを使用してください:
+
+| Faucet | 用途 | URL |
+| --- | --- | --- |
+| Circle USDC Faucet | USDC | [`faucet.circle.com`](https://faucet.circle.com/) |
+| Injective Faucet | INJ | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+| Google Cloud Faucet | INJ | [`cloud.google.com/application/web3/faucet/injective/testnet`](https://cloud.google.com/application/web3/faucet/injective/testnet) |
+
+## よくある質問
+
+<Accordion title="Injective上のUSDCとは？">
+  Injective上のUSDCは、CircleのUSD Coinステーブルコインのネイティブデプロイメントです。
+  Circleが保有する米ドル準備で1:1の裏付けがあり、Cross-Chain Transfer Protocol (CCTP) を通じてInjectiveへ送られます。
+  Injective上のUSDCはMultiVM Token Standard (MTS) に従っており、
+  InjectiveブロックチェーンネットワークのEVMおよびCosmosプロトコルの両方で利用可能です。
+</Accordion>
+
+<Accordion title="USDCおよびUSDC CCTPのスマートコントラクトアドレスはどこで確認できますか？">
+  上記の情報は便宜上提供されているものです。
+  スマートコントラクトアドレスおよびUSDC CCTP domain IDの *正式なソース* としては、必ずCircleのドキュメントを参照してください。
+
+  References:
+  - [USDC smart contract addresses](https://developers.circle.com/stablecoins/usdc-contract-addresses)
+  - [USDC CCTP smart contract addresses for EVM-compatible blockchains](https://developers.circle.com/cctp/references/contract-addresses)
+</Accordion>
+
+<Accordion title="Injective TestnetでUSDCを入手する方法は？">
+  Injective Testnetでは、[Circle Faucet](https://faucet.circle.com/) からテストネットのUSDCを入手できます。
+  トランザクション手数料の支払いのために、[Injective Testnet Faucet](https://testnet.faucet.injective.network/) を使ってテストネットのINJも入手する必要があるでしょう。
+  サポート対象の他ネットワークからUSDCを移転するために、[Circle's CCTP](https://www.circle.com/cross-chain-transfer-protocol) を利用することもできます。
+</Accordion>
+
+<Accordion title="Injective MainnetでUSDCを入手する方法は？">
+  Injective Mainnetでは、サポート対象の他ネットワークから [Circle's CCTP](https://www.circle.com/cross-chain-transfer-protocol) を使ってUSDCをInjectiveへ移転できます。
+  上記のCCTP V2コントラクトが、クロスチェーン送金のためのUSDCのmintおよびburnを処理します。
+</Accordion>
+
+<Accordion title="Injective上のCCTPとは？">
+  Cross-Chain Transfer Protocol (CCTP) は、USDCをブロックチェーンネットワーク間で移転できるようにする、Circleのネイティブなクロスチェーンインフラです。
+  Injective上ではCCTP V2コントラクト（`TokenMessengerV2`、`MessageTransmitterV2`、`TokenMinterV2`、`MessageV2`）が、クロスチェーン送金のためのUSDCのmintおよびburnを処理します。
+</Accordion>
+
+<Accordion title="USDC送金時の `restricted action` エラーとは？">
+  規制対応のため、Injective上のすべてのUSDC送金は、トランザクション中にコントラクトを呼び出すEVMフックによって検証されます。
+  途中でガス不足になると、以下のようなエラーが表示されます:
+
+  ```text
+  transfer is restricted by EVM hook: panic during EVM hook: {call evm hook}: contract hook query error: restricted action
+  ```
+
+  このメッセージは、送金が実際に制限されたことを意味するものでは **ありません**。
+  検証の呼び出しが完了する前に *ガス不足になった* ことを意味します。
+
+  **解決策**: より高いgas limitでトランザクションを再試行してください。
+</Accordion>
+
+<Accordion title="USDCはInjective上でEVMとCosmosの両方で使用できますか？">
+  はい。
+  Injective上のUSDCは [MultiVM Token Standard (MTS)](/jp/developers-evm/multivm-token-standard) に従っており、
+  これは同一のトークン残高がEVMスマートコントラクトとCosmosベースのモジュールの両方からアクセス可能であることを意味します。
+  2つの実行環境間を移動する際に、USDCをbridgeまたはwrapする必要はありません。
+</Accordion>
+
+## 関連リソース
+
+<CardGroup cols={2}>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/jp/developers-evm/multivm-token-standard">
+    Injective上でEVMとCosmosをまたいでトークンがどう機能するかを学びます。
+  </Card>
+  <Card title="EVM Network Information" icon="network-wired" href="/jp/developers-evm/network-information">
+    RPCエンドポイント、chain ID、その他のEVMネットワーク詳細。
+  </Card>
+  <Card title="USDC Smart Contracts Addresses" icon="location" href="https://developers.circle.com/stablecoins/usdc-contract-addresses">
+    USDCに関するCircleのスマートコントラクトデプロイメントの公式/正式リファレンス。
+  </Card>
+  <Card title="USDC CCTP Smart Contracts Addresses" icon="stamp" href="https://developers.circle.com/cctp/references/contract-addresses">
+    USDC CCTPに関するCircleのスマートコントラクトデプロイメントの公式/正式リファレンス。
+  </Card>
+</CardGroup>

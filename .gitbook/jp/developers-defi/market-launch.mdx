@@ -1,0 +1,46 @@
+---
+title: マーケットの立ち上げ
+updatedAt: "2025-11-27"
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+マーケット立ち上げの前提条件として、[トークンの立ち上げ](/jp/developers-defi/token-launch/) を行ってください。
+</Callout>
+
+Injective上にトレーディングペアを立ち上げるのは、迅速かつ簡単で、何よりパーミッションレスです！
+
+以下のチュートリアルでは、EthereumからbridgeされたERC-20トークンをbase asset、INJをquote assetとしたペアをリストすることを前提としています。
+
+Injectiveネイティブのトークンの場合は、bridging部分をスキップして手順6から始めてください。
+
+1. [Injective Bridge](http://bridge.injective.network/) にアクセスし、Peggy bridgeを使って選択したERC-20トークンをEthereumからInjectiveへbridgeするプロセスを開始します。
+
+![Injective Bridge](</img/Docs - Deposit Peggy.png>)
+
+2. ドロップダウンをクリックし、最下部までスクロールして、advanced toolの隣の「add」をクリックします。トークンアドレスを使ってカスタムERC-20トークンを追加できます。アドレスはCoinGeckoのような信頼できる情報源で確認することを推奨します。
+
+![Add Custom ERC-20 Token](</img/Docs - Deposit From.png>)
+
+3. 正しいコントラクトアドレスをコピー＆ペーストし、「add」をクリックします。
+
+![Add Smart Contract Address](</img/Docs - Add and Bridge ERC20.png>)
+
+4. bridgeしたいERC-20トークンの量を入力し、「approve」をクリックしてトランザクションを承認します。続いて「review」をクリックし、トランザクションを承認して待機します。
+
+![Launch trading Pair](https://docs.injective.network/assets/images/ltp4-f8f97c3328c04389962ac3deb9b137a9.png) ![Launch trading Pair](https://docs.injective.network/assets/images/ltp6-7812b6fe19b088c68b8d2a9bda8df05c.png) ![Launch trading Pair](https://docs.injective.network/assets/images/ltp7-d83a52c9fc794a2934ea8f2a5371595a.png) ![Launch trading Pair](https://docs.injective.network/assets/images/ltp8-da76aaaa5ee9f233ea47bbcb1f5b53bf.png)
+
+5. approve spendおよびdepositトランザクションがEthereumブロックチェーン上で確定すると、bridgingトランザクションの進捗を確認できます。Injective上でトランザクションが確定すると、bridgeされたERC-20トークンがInjectiveウォレットで利用可能になります。（注: ソースチェーンでMetaMaskを使用した場合、デフォルトではbridgeされたトークンは、MetaMaskに紐付いた `inj` アドレスへ送信されます。これは手順4の冒頭でrecipientアドレスの横にあるロックアイコンをクリックすることで変更できます。）
+
+![Bridging Completion](</img/Docs - Transaction Submitted.png>)
+
+6. bridgingトランザクションが完了したら、[Injective Hub](https://injhub.com/proposal/create/) にアクセスして、Injective上でパーミッションレスにトークンをリストできます。
+
+![List on Injective](</img/Docs - New Proposal.png>)
+
+7. 最初のドロップダウンから「instant spot market launch」を選択し、tickerを指定します。この例ではPEPE/INJを使用します。次にドロップダウンからbase tokenを選択します。ただし注意点として、同じtickerを持つ複数のトークンが存在することがあります。常に正しいトークンアドレスと一致するか確認してください。今回の場合、トークンはPeggy bridgeを使ってbridgeされているため、アドレスは「peggy」の後にERC-20コントラクトアドレスが続く形になります。
+
+![Specify Ticker](</img/Docs - Select Ticker.png>)
+
+8. 続いて、正しいquote denomを選択します。この場合は `inj` です。（注: トークンをUSDTとペアにしたい場合は、「正しい」USDTアドレスを選択してください。これは「peggy」の後にUSDTのERC-20コントラクトアドレスが続く形です。）最後に最小価格tick sizeと最小数量tick sizeを指定します。PEPE/INJはセント未満で取引されるため、最小tickはそれに合わせて設定されます。
+
+![Select Quote Denom](</img/Docs - Quote Denom.png>)

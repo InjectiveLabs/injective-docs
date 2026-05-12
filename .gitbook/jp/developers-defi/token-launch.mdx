@@ -1,0 +1,241 @@
+---
+title: トークンの立ち上げ
+updatedAt: "2025-11-27"
+---
+
+このドキュメントでは、Injective上でトークンを立ち上げる方法について説明します。
+
+Injective上でトークンを立ち上げるには、既存のトークンをbridgeする方法と、新しくトークンを作成する方法の2つの選択肢があります。
+
+## Bridging <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+
+Injective上でトークンを立ち上げる最も簡単な方法は、Injectiveが相互運用可能なサポート対象ネットワークの1つから、既存のアセットをbridgeすることです。他のネットワークからInjectiveへアセットをbridgeする方法については、[bridge](/jp/defi/bridge/ "mention") セクションのガイドを参照してください。
+
+bridgingが完了すると、Injective上にトークンが作成され、それを使って [マーケットを立ち上げる](/jp/developers-defi/market-launch/ "mention") ことができます。
+
+## 新しいトークンの作成
+
+`TokenFactory` モジュールを使ってInjective上に新しいトークンを作成することもできます。実現方法は複数あります。
+
+### Injective Hubを使用する <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+
+[Injective Hub](https://injhub.com/token-factory/) のWebアプリでは、トークンの作成・管理、Injectiveの [ネイティブorderbook](/developers-native/injective/exchange) 上でのマーケット作成などをシームレスに行えます。
+
+### TokenStationを使用する[​](/developers-defi/token-launch) <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+
+[TokenStation](https://www.tokenstation.app/) のWebアプリでは、トークンの作成・管理、Injectiveの [ネイティブorderbook](/developers-native/injective/exchange/) 上でのマーケット作成、エアドロップの実施など、多くの機能をシームレスに利用できます。
+
+### DojoSwapを使用する[​](/developers-defi/token-launch/#4-via-dojoswap) <a href="#id-4-via-dojoswap" id="id-4-via-dojoswap"></a>
+
+上記と同様に、[DojoSwap's Market Creation module](https://docs.dojo.trading/introduction/market-creation) を活用することで、トークンの作成・管理・リスト化に加え、その他多数の有用な機能を利用できます。
+
+### プログラム的な方法
+
+#### TypeScriptを使用する
+
+[トークンの立ち上げ](/developers/assets/token-create) について詳しく学びましょう。
+
+#### Injective CLIを使用する
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+このチュートリアルを進める前に、ローカルに `injectived` がインストールされている必要があります。詳細は [injectived](/developers/injectived/ "mention") ページを参照してください。
+</Callout>
+
+`injectived` をインストールし、鍵を追加したら、CLIを使ってトークンを立ち上げられます:
+
+1. **`TokenFactory` denomの作成**
+
+factory denomの作成手数料は `0.1 INJ` です。
+
+```bash
+injectived tx tokenfactory create-denom [subdenom] [name] [symbol] [decimals] --from=YOUR_KEY --chain-id=injective-888 --node=https://testnet.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+トークンは作成者アドレスによって名前空間が区切られ、パーミッションレスかつ名前の衝突を回避できます。上記の例ではsubdenomは `ak` ですが、denomの命名は `factory/{creator address}/{subdenom}` となります。
+
+2. **トークンメタデータの提出**
+
+Injective dApp上でトークンを表示させるには、そのメタデータを提出する必要があります。
+
+```bash
+injectived tx tokenfactory set-denom-metadata "My Token Description" 'factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak' AKK AKCoin AK '' '' '[
+{"denom":"factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak","exponent":0,"aliases":[]},
+{"denom":"AKK","exponent":6,"aliases":[]}
+]' 6 --from=YOUR_KEY --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+このコマンドは以下の引数を期待します:
+
+```bash
+injectived tx tokenfactory set-denom-metadata [description] [base] [display] [name] [symbol] [uri] [uri-hash] [denom-unit (json)] [decimals]
+```
+
+3. **トークンのmint**
+
+トークンを作成し、メタデータを提出したら、いよいよmintを行います。
+
+```bash
+injectived tx tokenfactory mint 1000000factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+このコマンドは、トークンが6 decimalsを持つ場合、1トークンをmintします。
+
+4. **トークンのburn**
+
+トークンのadminは、トークンをburnすることもできます。
+
+```bash
+injectived tx tokenfactory burn 1000000factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+5. **adminの変更**
+
+初期供給量をmintした後は、トークン供給が操作されないようにするため、adminを `null` アドレスへ変更することを推奨します。前述の通り、トークンのadminはいつでも供給量をmint・burnできます。上記で説明したように、`NEW_ADDRESS` はほとんどの場合 `inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49` に設定すべきです。
+
+```bash
+injectived tx tokenfactory change-admin factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak NEW_ADDRESS --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+上記の例はテストネット用です。mainnetで実行する場合は、以下のように変更してください:
+
+`injective-888` > `injective-1`
+
+`https://testnet.sentry.tm.injective.network:443` > `http://sentry.tm.injective.network:443`
+</Callout>
+
+#### CosmWasmを使用する
+
+スマートコントラクトを通じてプログラム的にbankトークンを作成・管理する場合、[`injective-cosmwasm`](https://github.com/InjectiveLabs/cw-injective/blob/6b2d549ff99912b9b16dbf91a06c83db99b5dace/packages/injective-cosmwasm/src/msg.rs#L399-L434) パッケージの以下のメッセージを使用できます:
+
+\
+`create_new_denom_msg`
+
+```rust
+pub fn create_new_denom_msg(sender: String, subdenom: String) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::CreateDenom { sender, subdenom },
+    }
+    .into()
+}
+```
+
+目的: tokenfactoryモジュールを使用して新しいトークンのdenomを作成するメッセージを生成します。
+
+パラメーター:
+
+* `sender`: 作成を開始するアカウントのアドレス。
+* `subdenom`: 新しいトークンのサブdenom識別子。
+
+戻り値: Injectiveブロックチェーンへ送信可能な、`InjectiveMsgWrapper` でラップされた `CosmosMsg`。
+
+例:
+
+```rust
+let new_denom_message = create_new_denom_msg(
+    env.contract.address,  // Sender's address
+    "mytoken".to_string(), // Sub-denomination identifier
+);
+```
+
+#### `create_set_token_metadata_msg`
+
+```rust
+pub fn create_set_token_metadata_msg(denom: String, name: String, symbol: String, decimals: u8) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::SetTokenMetadata {
+            denom,
+            name,
+            symbol,
+            decimals,
+        },
+    }
+    .into()
+}
+```
+
+目的: トークンのメタデータを設定または更新するメッセージを生成します。
+
+パラメーター:
+
+* `denom`: トークンのdenom識別子。
+* `name`: トークンの正式名称。
+* `symbol`: トークンのシンボル。
+* `decimals`: トークンが使用する小数点以下の桁数。
+
+戻り値: Injectiveブロックチェーンへ送信可能な、`InjectiveMsgWrapper` でラップされた `CosmosMsg`。
+
+例:
+
+```rust
+let metadata_message = create_set_token_metadata_msg(
+    "mytoken".to_string(),         // Denomination identifier
+    "My Custom Token".to_string(), // Full name
+    "MYT".to_string(),             // Symbol
+    18,                            // Number of decimals
+);
+```
+
+#### `create_mint_tokens_msg`
+
+```rust
+pub fn create_mint_tokens_msg(sender: Addr, amount: Coin, mint_to: String) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::Mint { sender, amount, mint_to },
+    }
+    .into()
+}
+```
+
+目的: 新しいトークンをmintするメッセージを生成します。対象トークンはtokenfactoryトークンである必要があり、senderはトークンのadminである必要があります。
+
+パラメーター:
+
+* `sender`: mint操作を開始するアカウントのアドレス。
+* `amount`: mintするトークンの量。
+* `mint_to`: 新しくmintされたトークンを送るrecipientアドレス。
+
+戻り値: Injectiveブロックチェーンへ送信可能な、`InjectiveMsgWrapper` でラップされた `CosmosMsg`。
+
+例:
+
+```rust
+let mint_message = create_mint_tokens_msg(
+    env.contract.address,                                   // Sender's address
+    Coin::new(1000, "factory/<creator-address>/mytoken"),   // Amount to mint
+    "inj1...".to_string(),                                  // Recipient's address
+);
+```
+
+#### `create_burn_tokens_msg`
+
+```rust
+pub fn create_burn_tokens_msg(sender: Addr, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route: InjectiveRoute::Tokenfactory,
+        msg_data: InjectiveMsg::Burn { sender, amount },
+    }
+    .into()
+}
+```
+
+目的: トークンをburnするメッセージを生成します。対象トークンはtokenfactoryトークンである必要があり、senderはトークンのadminである必要があります。
+
+パラメーター:
+
+* `sender`: burn操作を開始するアカウントのアドレス。
+* `amount`: burnするトークンの量。
+
+戻り値: Injectiveブロックチェーンへ送信可能な、`InjectiveMsgWrapper` でラップされた `CosmosMsg`。
+
+例:
+
+```rust
+let burn_message = create_burn_tokens_msg(
+    env.contract.address,                                    // Sender's address
+    Coin::new(500, "factory/<creator-address>/mytoken"),     // Amount to burn
+);
+```
