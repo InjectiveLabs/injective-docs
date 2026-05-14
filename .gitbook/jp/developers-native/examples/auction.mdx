@@ -1,0 +1,113 @@
+---
+title: Auction
+updatedAt: "2025-11-28"
+---
+
+`auction`モジュールは、オンチェーンの`buy-back-and-burn`メカニズムの中核です。週次の取引手数料の60%が集められ、最高入札のINJ入札者へオークションされ、最高入札者が提出したINJはバーンされます。
+
+## MsgBid
+
+このメッセージは、メンバーがその週にInjectiveが集めた取引手数料のバスケット（60%）を巡ってINJで入札できるよう、毎週開催される[auction](https://hub.injective.network/auction/)に入札を提出するために使用されます。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import { toChainFormat } from '@injectivelabs/utils'
+import { MsgBid } from '@injectivelabs/sdk-ts/core/modules'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcAuctionApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpointsForNetwork = getNetworkEndpoints(Network.Mainnet)
+const auctionApi = new ChainGrpcAuctionApi(endpointsForNetwork.grpc)
+
+const injectiveAddress = 'inj1...'
+/* format amount for bid, note that bid amount has to be higher than the current highest bid */
+const amount = {
+  denom: 'inj',
+  amount: toChainFormat(1).toFixed(),
+}
+
+const latestAuctionModuleState = await auctionApi.fetchModuleState()
+const latestRound = latestAuctionModuleState.auctionRound
+
+/* create message in proto format */
+const msg = MsgBid.fromJSON({
+  amount,
+  injectiveAddress,
+  round: latestRound,
+})
+
+const privateKey = '0x...'
+
+/* broadcast transaction */
+const txHash = await new MsgBroadcasterWithPk({
+  network: Network.Mainnet,
+  privateKey,
+}).broadcast({
+  msgs: msg,
+})
+
+console.log(txHash)
+```
+
+## MsgExternalTransferを使用したBurn Auctionデポジット
+
+Burn Auctionプールのサイズを増やしたい場合、Auctionのsubaccountへ直接資金を送ることができます。
+
+注意事項:
+
+- 資金はプールのsubaccount `0x1111111111111111111111111111111111111111111111111111111111111111`へ送る必要があります。
+- 送った資金は現在のオークションではなく、次回のオークションに反映されることに注意してください。
+- 既定の（デフォルトの）subaccountIdからは転送できません。残高はbankモジュール内でInjectiveアドレスに紐付けられているためです。したがって、`MsgExternalTransfer`を機能させるには、デフォルトでないsubaccountIdから転送する必要があります。
+
+転送元のsubaccountIdを調べる方法:
+
+- [account portfolio api](../query-indexer/portfolio/)を使用して既存のsubaccountIdをクエリできます。
+
+bankモジュール内で現在Injectiveアドレスに紐付けられている資金を使用する方法:
+
+- 既存のデフォルトでないsubaccountをすでに持っている場合は、既存のデフォルトでないsubaccountIdの1つに[MsgDeposit](/jp/developers-native/examples/exchange#msgdeposit)を実行し、そのsubaccountIdを下記の`srcSubaccountId`として使用してください。
+- 既存のデフォルトでないsubaccountを持っていない場合は、新しいデフォルトでないsubaccountIdに[MsgDeposit](/jp/developers-native/examples/exchange#msgdeposit)を実行します。これは`sdk-ts`から`getSubaccountId`をインポートし、[MsgDeposit](/jp/developers-native/examples/exchange#msgdeposit)の`subaccountId`フィールドに`getSubaccountId(injectiveAddress, 1)`を設定することで実現できます。
+
+詳細は[burn auctionプールのドキュメント](https://docs.injective.network/developers/modules/injective/auction)を参照してください。
+
+```ts
+import { Network } from '@injectivelabs/networks'
+import { toChainFormat } from '@injectivelabs/utils'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+import { MsgExternalTransfer } from '@injectivelabs/sdk-ts/core/modules'
+
+const injectiveAddress = 'inj1...'
+const srcSubaccountId = '0x...'
+const POOL_SUBACCOUNT_ID = `0x1111111111111111111111111111111111111111111111111111111111111111`
+
+// USDT Peggy token details
+const USDT_DENOM = 'peggy0xdAC17F958D2ee523a2206206994597C13D831ec7'
+const USDT_DECIMALS = 6
+
+/* format amount to add to the burn auction pool */
+const amount = {
+  denom: USDT_DENOM,
+  amount: toChainFormat(1, USDT_DECIMALS).toFixed(),
+}
+
+/* create message in proto format */
+const msg = MsgExternalTransfer.fromJSON({
+  amount,
+  srcSubaccountId,
+  injectiveAddress,
+  dstSubaccountId: POOL_SUBACCOUNT_ID,
+})
+
+const privateKey = '0x...'
+
+/* broadcast transaction */
+const txHash = await new MsgBroadcasterWithPk({
+  network: Network.Mainnet,
+  privateKey,
+}).broadcast({
+  msgs: msg,
+})
+
+console.log(txHash)
+```

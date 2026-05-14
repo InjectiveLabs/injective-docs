@@ -1,0 +1,104 @@
+---
+title: Wallet Strategy
+updatedAt: "2025-12-23"
+---
+
+`@injectivelabs/wallet-strategy`の主な目的は、Injective上で異なるウォレット実装を扱う方法を開発者に提供することです。これらのウォレット実装はすべて同じ`ConcreteStrategy`インターフェースを公開しているため、ユーザーは特定のウォレットの実装を意識することなく、抽象化されたメソッドをそのまま使用できます。
+
+最初に、`WalletStrategy`クラスのインスタンスを作成すると、さまざまなウォレットをそのまま利用できるようになります。現在使用されているウォレットは、`walletStrategy`インスタンスの`setWallet`メソッドを使用して切り替えできます（注: `setWallet`は非同期で、`await`が必要です）。
+
+`WalletStrategy`が公開するメソッドとその意味を見ていきましょう:
+
+**EthereumおよびCosmosネイティブウォレットの両方:**
+
+- `getAddresses`: 接続済みのウォレット戦略からアドレスを取得します。このメソッドはEthereumネイティブウォレット（戦略）の場合はEthereumアドレスを、Cosmosネイティブウォレット（戦略）の場合はInjectiveアドレスを返します。
+- `signTransaction`: 対応するウォレットタイプのメソッド（Cosmosネイティブウォレットの場合は`signCosmosTransaction`、Ethereumネイティブウォレットの場合は`signEip712TypedData`）を使用してトランザクションに署名します。
+- `sendTransaction`: 対応するウォレットタイプのメソッドを使用してトランザクションに署名します（Ethereumネイティブウォレットで使用する場合はオプションに`sentryEndpoint`を渡す必要があります - 詳細は下記参照）。
+- `getWalletDeviceType`: ウォレット接続タイプ（mobile、browser、hardware）を返します。
+
+**Cosmosネイティブウォレット:**
+
+- `signCosmosTransaction`: 接続されているウォレット戦略を使用してInjectiveトランザクションに署名します。
+- `getPublicKey`: Cosmosネイティブウォレット戦略の公開鍵を取得します。
+
+**Ethereumネイティブウォレット:**
+
+- `getEthereumChainId`: Ethereumネイティブウォレット戦略のchain idを取得します。
+- `signEip712TypedData`: 接続されているウォレット戦略を使用してEIP712 typed dataに署名します。
+- `sendEvmTransaction`: 接続されているウォレット戦略を使用してEthereum Web3トランザクションを送信します。
+- `signEvmTransaction`: 接続されているウォレット戦略を使用してEthereum Web3トランザクションに署名します。
+- `getEvmTransactionReceipt`: ウォレット戦略を使用したEthereumネイティブトランザクションのtransaction receiptを取得します。
+
+### 引数
+
+WalletStrategyに渡される引数は以下のインターフェースを持ちます:
+
+```ts
+export interface WalletStrategyEvmOptions {
+  rpcUrl: string; // rpc url needed **ONLY** the Ethereum native methods on the strategies
+  evmChainId: EvmChainId; // needed if you are signing EIP712 typed data using the Wallet Strategies
+}
+
+export interface EthereumWalletStrategyArgs {
+  chainId: ChainId; // the Injective chain id
+  evmOptions?: WalletStrategyEvmOptions; // optional, needed only if you are using Ethereum native wallets
+  disabledWallets?: Wallet[]; // optional, needed if you wanna disable some wallets for being instantiated
+  wallet?: Wallet; // optional, the initial wallet selected (defaults to Metamask if `evmOptions` are passed and Keplr if they are not)
+}
+```
+
+_注:_ Ethereumネイティブウォレットで`sendTransaction`を他のオプション（chainIdとaddress）と併用したい場合、トランザクションをブロードキャストするためにsentryへのgRPCエンドポイントも渡す必要があります。これはEthereumネイティブウォレットからは、KeplrやLeapのようにウォレットの抽象化を通じてトランザクションをブロードキャストする`broadcastTx`メソッドにアクセスできないため、クライアント側から直接チェーンへブロードキャストする必要があるためです。
+
+### 使用例
+
+```ts
+import { TxRaw } from '@injectivelabs/sdk-ts/types'
+import { Web3Exception } from '@injectivelabs/exceptions'
+import { ChainId, EvmChainId } from '@injectivelabs/ts-types'
+import { WalletStrategy } from '@injectivelabs/wallet-strategy'
+
+const chainId = ChainId.Testnet // The Injective Testnet Chain ID
+const evmChainId = EvmChainId.TestnetEvm // The Injective Evm Testnet Chain ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
+
+export const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    evmChainId,
+    rpcUrl: evmRpcEndpoint,
+  },
+})
+
+// Get wallet's addresses
+export const getAddresses = async (): Promise<string[]> => {
+  const addresses = await walletStrategy.getAddresses()
+
+  if (addresses.length === 0) {
+    throw new Web3Exception(new Error('There are no addresses linked in this wallet.'))
+  }
+
+  return addresses
+}
+
+// Sign an Injective transaction
+export const signTransaction = async (tx: TxRaw): Promise<string[]> => {
+  const response = await walletStrategy.signCosmosTransaction(
+    /*transaction:*/ { txRaw: tx, accountNumber: /* */, chainId: 'injective-1' },
+    /*address: */ 'inj1...',
+  )
+
+  return response
+}
+
+// Send an Injective transaction
+export const sendTransaction = async (tx: TxRaw): Promise<string[]> => {
+  const response = await walletStrategy.sendTransaction(
+    tx,
+    // `sentryEndpoint` needed if Ethereum wallets are used
+    {address: 'inj1...', chainId: 'injective-1', sentryEndpoint: 'https://grpc.injective.network' }
+  )
+
+  return response
+}
+```

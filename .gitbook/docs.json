@@ -1997,6 +1997,64 @@
                   "jp/developers-cosmwasm/injective-test-tube"
                 ]
               },
+              {
+                "group": "ネイティブ開発者",
+                "icon": "microchip",
+                "expanded": false,
+                "pages": [
+                  "jp/developers-native/index",
+                  {
+                    "group": "ウォレット",
+                    "pages": [
+                      "jp/developers-native/wallets/index",
+                      "jp/developers-native/wallets/accounts",
+                      "jp/developers-native/wallets/connections",
+                      "jp/developers-native/wallets/strategy",
+                      "jp/developers-native/wallets/offchain-data"
+                    ]
+                  },
+                  {
+                    "group": "ブリッジ",
+                    "pages": [
+                      "jp/developers-native/bridges/index",
+                      "jp/developers-native/bridges/ethereum"
+                    ]
+                  },
+                  {
+                    "group": "トランザクション",
+                    "pages": [
+                      "jp/developers-native/transactions/index",
+                      "jp/developers-native/transactions/cosmos",
+                      "jp/developers-native/transactions/cosmos-ledger-keplr",
+                      "jp/developers-native/transactions/ethereum",
+                      "jp/developers-native/transactions/ethereum-ledger",
+                      "jp/developers-native/transactions/msgbroadcaster",
+                      "jp/developers-native/transactions/private-key",
+                      "jp/developers-native/transactions/web3-gateway"
+                    ]
+                  },
+                  {
+                    "group": "トランザクション例",
+                    "pages": [
+                      "jp/developers-native/examples/index",
+                      "jp/developers-native/examples/auction",
+                      "jp/developers-native/examples/authz",
+                      "jp/developers-native/examples/bank",
+                      "jp/developers-native/examples/distribution",
+                      "jp/developers-native/examples/exchange",
+                      "jp/developers-native/examples/feegrant",
+                      "jp/developers-native/examples/governance",
+                      "jp/developers-native/examples/ibc",
+                      "jp/developers-native/examples/insurance",
+                      "jp/developers-native/examples/peggy",
+                      "jp/developers-native/examples/permissions",
+                      "jp/developers-native/examples/staking",
+                      "jp/developers-native/examples/token-factory",
+                      "jp/developers-native/examples/wasm"
+                    ]
+                  }
+                ]
+              },
               "jp/faq",
               "jp/glossary",
               "jp/references"

@@ -1,0 +1,69 @@
+---
+title: Distribution
+updatedAt: "2025-11-28"
+---
+
+`distribution`モジュールはCosmos SDKの[distributionモジュール](https://github.com/InjectiveLabs/cosmos-sdk/tree/master/x/distribution)を拡張したもので、delegatorはバリデータからステーキング報酬を引き出すことができます。
+
+Distribution -> MsgWithdrawValidatorCommission
+
+## MsgWithdrawDelegatorReward
+
+このメッセージは、バリデータから利用可能なdelegatorのステーキング報酬をすべて引き出すために使用されます。
+
+```ts
+import {  Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgWithdrawDelegatorReward } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const validatorAddress = "inj1...";
+
+/* create message in proto format */
+const msg = MsgWithdrawDelegatorReward.fromJSON({
+  validatorAddress,
+  delegatorAddress: injectiveAddress,
+});
+
+const privateKey = "0x...";
+
+/* broadcast transaction */
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet
+}).broadcast({
+  msgs: msg
+});
+
+console.log(txHash);
+```
+
+## MsgWithdrawValidatorCommission
+
+このメッセージはバリデータが獲得した手数料（commission）を引き出すために使用されます。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgWithdrawValidatorCommission } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const validatorAddress = "inj1...";
+
+/* create message in proto format */
+const msg = MsgWithdrawValidatorCommission.fromJSON({
+  validatorAddress,
+});
+
+const privateKey = "0x...";
+
+/* broadcast transaction */
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet
+}).broadcast({
+  msgs: msg
+});
+
+console.log(txHash);
+```

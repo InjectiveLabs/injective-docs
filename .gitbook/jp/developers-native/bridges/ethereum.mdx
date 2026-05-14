@@ -1,0 +1,165 @@
+---
+title: Ethereum Bridge
+updatedAt: "2025-11-28"
+---
+
+Injective Ethereumブリッジは、Injective Chainがトラストレスかつオンチェーンで双方向のトークンブリッジをサポートできるようにします。このシステムでは、Ethereum上のERC-20トークンの保有者は、自身のERC-20トークンをInjective Chain上のCosmosネイティブコインへ瞬時に変換でき、その逆も可能です。
+
+Injective Peggyブリッジは、3つの主要コンポーネントで構成されています:
+
+1. Ethereum上のPeggyコントラクト
+2. Peggoオーケストレーター
+3. Injective Chain上のPeggyモジュール
+
+## Peggyコントラクト
+
+Peggyコントラクトの役割は、EthereumからInjective Chainへの効率的な双方向クロスチェーンERC-20トークン転送を促進することです。他のトークンブリッジ構成とは異なり、Injective PeggyブリッジはInjectiveのバリデータのみによって運営される非中央集権・ノンカストディアルのブリッジです。デポジットおよび出金は、コンセンサスステーキングパワーに基づき少なくとも2/3のバリデータによる証明（attestation）に従って処理されるため、ブリッジはInjective ChainのProof of Stakeセキュリティによって保護されます。
+
+## Peggoオーケストレーター
+
+オーケストレーターは、各Injective Chainバリデータが運用するオフチェーンリレイヤーであり、EthereumからInjective ChainへERC-20トークン転送データを送信する役割を担います。
+
+## Peggyモジュール
+
+基本的なレベルでは、PeggyモジュールはEthereumからのERC-20デポジット時にInjective Chain上で新しいトークンをミントし、Injective ChainからEthereumへトークンを引き出す際にトークンをバーンします。Peggyモジュールはまた、スラッシングペナルティ、ネイティブトークン報酬、出金手数料などのさまざまなメカニズムを通じて、バリデータが正直かつ効率的に行動するための経済的インセンティブを管理します。
+
+## EthereumからInjectiveへ
+
+EthereumからInjectiveへ転送するには、Web3トランザクションを発行してEthereum上のPeggyコントラクトとやり取りする必要があります。転送には2つのステップが必要です:
+
+1. ERC20アセットをEthereum上のPeggyコントラクトにロックすることになるため、転送するアセットに対するアロウワンスをPeggyコントラクトに対して設定する必要があります。任意のweb3プロバイダー（ethers.jsやweb3.jsなど）を使用して、PeggyコントラクトアドレスをspenderとしてERC-20の`approve`関数を呼び出すことができます。
+2. アロウワンスが設定されたら、Injective Chainへ転送したい所望の数量とアセットを指定して、Peggyコントラクトの`sendToInjective`関数を呼び出す必要があります。`@injectivelabs/contracts`の`PeggyContract`クラスを使用するか（下記の例を参照）、ABIを介してコントラクトと直接やり取りすることができます。トランザクションが確定すると、アセットがInjective Chain上に表示されるまで数分かかります。
+
+上記の例に関するいくつかの注意事項:
+
+- 宛先アドレス（自分でトランザクションを構築する場合）は次の形式です:
+
+```ts
+"0x000000000000000000000000{ETHEREUM_ADDRESS_HERE_WITHOUT_0X_PREFIX}";
+// example
+"0x000000000000000000000000e28b3b32b6c345a34ff64674606124dd5aceca30";
+```
+
+ここで、Ethereumアドレスは宛先のInjectiveアドレスに対応するEthereumアドレスです。
+
+- `walletStrategy`は当方が構築した抽象化であり、多くのウォレットをサポートしてトランザクションへの署名およびブロードキャスト（EthereumとInjective Chainの両方）に使用できます。詳細はnpmパッケージ[@injectivelabs/wallet-strategy](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-strategy)および[@injectivelabs/wallet-core](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-core)のドキュメントを参照してください。もちろんこれは単なる例であり、web3パッケージを直接使用するか、任意のweb3プロバイダーでトランザクションを扱うこともできます。
+
+```ts
+import { PeggyContract } from "@injectivelabs/contracts";
+
+const contract = new PeggyContract({
+  ethereumChainId,
+  address: peggyContractAddress,
+  web3: web3 as any,
+});
+```
+
+- 以下のスニペットは、コントラクトのコンストラクタに渡した`web3`を使用して`estimateGas`および`sendTransaction`を簡単に実行できるPeggyContractインスタンスを作成します。その実装は[こちら](https://github.com/InjectiveLabs/injective-ts/blob/master/packages/contracts/src/contracts/Peggy.ts)にあります。もちろんこれは単なる例であり、web3パッケージとコントラクトのABIを直接使用してコントラクトをインスタンス化し、任意のweb3プロバイダーで署名とブロードキャストのロジックを処理することもできます。
+
+## InjectiveからEthereumへ
+
+ERC20版のINJをInjectiveに転送した後、Injective Chain上のネイティブな`inj`denomがミントされ、これがINJトークンの正規バージョンとなります。InjectiveからEthereumへ`inj`を引き出すには、Injective Chain上でネイティブなCosmosトランザクションを準備、署名、ブロードキャストする必要があります。
+
+CosmosでのTransactions（およびMessages）の動作に詳しくない場合は、こちらで詳細を確認できます。InjectiveからEthereumへ資金を引き出すよう指示するためにトランザクションにパックする必要があるMessageは`MsgSendToEth`です。
+
+`MsgSendToEth`がチェーン上で呼び出されると、一部のバリデータがトランザクションを取得し、複数の`MsgSendToEth`リクエストを1つにバッチ化して、Injective上で引き出されるアセットをバーンし、Ethereum上のPeggyスマートコントラクト上でこれらの資金をアンロックし、対応するアドレスへ送信します。
+
+これらのトランザクションには、バリデータが出金リクエストをより速く取得・処理するインセンティブを与えるためのbridgeFeeが含まれます。bridgeFeeはユーザーがEthereumへ出金したいアセットで支払われます（INJを引き出す場合、bridgeFeeもINJで支払う必要があります）。
+
+トランザクションを準備し、privateKeyを使用して署名し、最終的にInjectiveへブロードキャストする実装例は次のとおりです:
+
+```ts
+import { getNetworkInfo, Network } from "@injectivelabs/networks";
+import {
+  TxClient,
+  TxRestApi,
+  createTransaction,
+} from "@injectivelabs/sdk-ts/core/tx";
+import {
+  PrivateKey,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
+  MsgSendToEth,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  ChainRestAuthApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
+
+/** MsgSendToEth Example */
+(async () => {
+  const network = getNetworkInfo(Network.Mainnet); // Gets the rpc/lcd endpoints
+  const privateKeyHash =
+    "f9db9bf330e23cb7839039e944adef6e9df447b90b503d5b4464c90bea9022f3";
+  const privateKey = PrivateKey.fromPrivateKey(privateKeyHash);
+  const injectiveAddress = privateKey.toBech32();
+  const ethAddress = privateKey.toHex();
+  const publicKey = privateKey.toPublicKey().toBase64();
+
+  /** Account Details **/
+  const accountDetails = await new ChainRestAuthApi(network.rest).fetchAccount(
+    injectiveAddress
+  );
+
+  /** Prepare the Message */
+  const amount = {
+    amount: toChainFormat(0.01).toFixed(),
+    denom: "inj",
+  };
+  const bridgeFee = {
+    amount: toChainFormat(0.01).toFixed(),
+    denom: "inj",
+  };
+
+  const msg = MsgSendToEth.fromJSON({
+    amount,
+    bridgeFee,
+    injectiveAddress,
+    address: ethAddress,
+  });
+
+  /** Prepare the Transaction **/
+  const { signBytes, txRaw } = createTransaction({
+    message: msg,
+    pubKey: publicKey,
+    fee: getDefaultStdFee(),
+    sequence: parseInt(accountDetails.account.base_account.sequence, 10),
+    accountNumber: parseInt(
+      accountDetails.account.base_account.account_number,
+      10
+    ),
+    chainId: network.chainId,
+  });
+
+  /** Sign transaction */
+  const signature = await privateKey.sign(Buffer.from(signBytes));
+
+  /** Append Signatures */
+  txRaw.signatures = [signature];
+
+  /** Calculate hash of the transaction */
+  console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
+
+  const txService = new TxRestApi(network.rest);
+
+  /** Simulate transaction */
+  const simulationResponse = await txService.simulate(txRaw);
+
+  console.log(
+    `Transaction simulation response: ${JSON.stringify(
+      simulationResponse.gasInfo
+    )}`
+  );
+
+  /** Broadcast transaction */
+  const txResponse = await txService.broadcast(txRaw);
+
+  if (txResponse.code !== 0) {
+    console.log(`Transaction failed: ${txResponse.rawLog}`);
+  } else {
+    console.log(
+      `Broadcasted transaction hash: ${JSON.stringify(txResponse.txhash)}`
+    );
+  }
+})();
+```

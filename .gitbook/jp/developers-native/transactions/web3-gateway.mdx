@@ -1,0 +1,55 @@
+---
+title: Web3 Gatewayトランザクション
+updatedAt: "2025-10-30"
+---
+
+_事前必読 #1:_ [Transaction Lifecycle](https://docs.cosmos.network/main/basics/tx-lifecycle)
+
+_事前必読 #2:_ Injective上のトランザクション
+
+Web3Gatewayマイクロサービスは、Injective上で発生するトランザクションのfee delegationを提供することを主な目的としたAPIをエンドユーザーに公開します。これにより、ガスはWeb3Gatewayサービスの運用者が負担するため、ユーザーはInjectiveを操作する際にガスレス環境を享受できます。
+
+Web3Gatewayはfee delegationのサポートに加えて、開発者がMessageをEIP712 typed dataへ変換できるようにします。MessageをEIP712 dataへ変換した後、任意のEthereumネイティブウォレットで署名し、Injectiveへブロードキャストできます。
+
+## Fee Delegation
+
+前述のとおり、fee delegationによりユーザーはガスを支払うことなくInjectiveを操作（トランザクションを送信）できます。Cosmos-SDKをベースとするすべてのチェーンの_Transaction Lifecycle_の一部として、`AnteHandler`があり、署名検証、ガス計算、手数料控除などを実行します。
+
+知っておくべきいくつかの事項があります:
+
+* トランザクションは複数の署名者を持つことができます（つまり、トランザクション内に複数の署名を含めることができます）。
+* トランザクションのガス手数料は`authInfo.fee.feePayer`の値から差し引かれ、`feePayer`に対して検証される署名は、トランザクションの署名リスト内の最初の署名です（[reference](https://github.com/cosmos/cosmos-sdk/blob/e2d6cbdeb55555893ffde3f2ae0ed6db7179fd0d/x/auth/ante/fee.go#L15-L24)）。
+* 残りの署名はトランザクションの実際の送信者に対して検証されます。
+
+これを踏まえてfee delegationを実現するには、Web3Gatewayマイクロサービスの秘密鍵を使用してトランザクションに署名し、その`privateKey`のアドレスを`feePayer`として含め、Injectiveを操作するために使用したいprivateKeyでこのトランザクションに署名し、そのトランザクションをブロードキャストする必要があります。
+
+## Web3Gateway API
+
+誰でもWeb3Gatewayマイクロサービスを実行し、自分のユーザーにfee delegationサービスを提供できます。例えば、Injective上で取引所dAppを構築する開発者がこのマイクロサービスを実行し、ガスレスの取引環境をトレーダーに提供する、というような使用例が考えられます。
+
+このマイクロサービスは、2つのコアメソッドを含むAPIを公開します:
+
+* `PrepareTx`（および`PrepareCosmosTx`）
+* `BroadcastTx`（および`BroadcastCosmosTx`）
+
+## PrepareTx
+
+`PrepareTx`メソッドは、ユーザーが実行したいトランザクションに関するコンテキスト（`chainId`、`signerAddress`、`timeoutHeight`など）を含むMessage(s)を受け取り、特定のメッセージのEIP712 typed data（EIP712 typed data内の署名を含む）を返します。このEIP712 typed dataを使用して任意のEthereumネイティブウォレットで署名し、Injectiveを操作したいユーザー用の署名を取得できます。
+
+EIP712 typed dataは、`PrepareTx`メソッドに渡したMessageのproto定義から生成されます。
+
+## BroadcastTx
+
+`BroadcastTx`メソッドはノードへトランザクションをブロードキャストする役割を担います。`PrepareTx` API呼び出しの完全なレスポンスとともに、EIP712 typed dataの署名を渡します。すると`BroadcastTx`はMessageをネイティブCosmosトランザクションへパックし、トランザクション（およびそのコンテキスト）を準備し、Injectiveへブロードキャストします。結果として、トランザクションハッシュがユーザーへ返されます。
+
+## Prepare/BroadcastCosmosTx
+
+上記のメソッドは、**Ethereumネイティブウォレット**を使用してトランザクションに署名・ブロードキャストする際に、EIP712トランザクション表現に署名する場合に使用されます。
+
+Cosmosネイティブウォレットに対してWeb3Gatewayでfee delegationをサポートしたい場合、PrepareCosmosTx呼び出しを省略（または、Web3Gateway署名者の`publicKey`が必要な場合は呼び出し）し、クライアント側でトランザクションを準備し、Cosmosウォレットで署名し、`BroadcastCosmosTx`メソッドを使用してブロードキャストできます。
+
+この仕組みは、`Web3Gateway`署名者の`publicKey`を`TxRaw`の`authInfo`オブジェクトに追加し、その後ブロードキャストする際にAPI側で`privateKey`を使用してトランザクションに署名する、というものです。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+従来のEIP712アプローチとの違いは、`Web3Gateway`署名者を使用して事前にトランザクションに署名する必要がある（つまり、EIP712を生成する時点）ことです。これは、`PrepareTx`を使用する必要があり、クライアント側でトランザクションを生成できないことを意味します。
+</Callout>

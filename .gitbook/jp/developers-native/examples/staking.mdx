@@ -1,0 +1,119 @@
+---
+title: Staking
+updatedAt: "2025-11-28"
+---
+
+このモジュールは、Cosmos SDKベースのブロックチェーンが高度なProof-of-Stake (PoS)システムをサポートできるようにします。このシステムでは、チェーンのネイティブステーキングトークンの保有者はバリデータになることができ、バリデータにトークンをdelegateすることができ、最終的にシステムの有効なバリデータセットを決定します。
+
+## メッセージ
+
+Stakingモジュールがエクスポートし、Injectiveチェーンとのやり取りに使用できるメッセージを順番に確認し、例を提供します。
+
+### MsgBeginRedelegate
+
+このメッセージは、あるバリデータからもう一方のバリデータへステークされたINJをRedelegateするために使用されます。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgBeginRedelegate } from "@injectivelabs/sdk-ts/core/modules";
+
+const denom = "inj";
+const privateKey = "0x...";
+const amount = toChainFormat(5);
+const injectiveAddress = "inj1...";
+const sourceValidatorAddress = "inj1...";
+const destinationValidatorAddress = "inj1...";
+
+const msg = MsgBeginRedelegate.fromJSON({
+  injectiveAddress,
+  dstValidatorAddress: destinationValidatorAddress,
+  srcValidatorAddress: sourceValidatorAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgDelegate
+
+このメッセージは、INJをバリデータにDelegateするために使用されます。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgDelegate } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const denom = "inj";
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const validatorAddress = "inj1...";
+const amount = toChainFormat(5).toFixed();
+
+const msg = MsgDelegate.fromJSON({
+  injectiveAddress,
+  validatorAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgCancelUnbondingDelegation
+
+このメッセージは、バリデータからのunbondingをキャンセルし、bonding periodをリセットして、以前のバリデータへdelegateを戻すために使用されます。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCancelUnbondingDelegation } from "@injectivelabs/sdk-ts/core/modules";
+
+const denom = "inj";
+const delegatorAddress = "inj1...";
+const privateKey = "0x...";
+const amount = toChainFormat(5).toFixed();
+const validatorAddress = "inj1...";
+const creationHeight = "123456"; // the height at which the unbonding was initiated
+
+const msg = MsgCancelUnbondingDelegation.fromJSON({
+  delegatorAddress,
+  validatorAddress,
+  amount: {
+    denom,
+    amount,
+  },
+  creationHeight,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
