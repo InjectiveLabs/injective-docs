@@ -1,0 +1,126 @@
+---
+title: 概要
+updatedAt: "2025-12-04"
+---
+
+Injectiveは、分散型のperpetual swap、futures、spotトレーディングを提供する、取引特化型のレイヤー1ブロックチェーンの最前線に位置しています。
+分散型デリバティブとボーダレスなDeFiの可能性を最大限に引き出します。
+すべてのコンポーネントは、完全なトラストレス性、検閲耐性、公的な検証可能性、フロントランニングへの耐性を備えるよう設計されています。
+
+Injectiveでは、トレーダーが任意のspotおよびderivativeマーケットを作成・取引できます。また、Injective Chainの[Exchange Module](/developers-native/injective/exchange)によって、オンチェーンでのorderbook管理、注文執行、注文マッチング、決済、トレーディングインセンティブ配布を実現しています。
+
+automated market maker（AMM）に依存する他のDeFiプラットフォームとは異なり、
+Injectiveはプロトコル層に直接組み込まれたマッチングエンジン機能を持つ、完全オンチェーンのorderbookを提供します。
+これにより、Injective上のエクスチェンジは、独自のUIやユーザー基盤を維持しながら、グローバルに共有された流動性プールを利用できます。
+perpetual swap、futures、spot、binary optionsのネイティブサポートに加え、パーミッションレスなマーケット作成とサブ秒単位のブロックタイムにより、
+開発者はバックエンドインフラの構築やリクイディティの分断を懸念することなく、洗練されたトレーディングプラットフォームを立ち上げられます。
+
+## このセクションで扱う内容
+
+このセクションは、Injective上で分散型金融アプリケーション、エクスチェンジ、トレーディングインフラを構築する開発者向けに設計されています。
+新しいトークンやマーケットの立ち上げ、アルゴリズミックトレーディング戦略の構築、価格oracleの統合、トークンメタデータの管理など、
+InjectiveのネイティブなDeFiプリミティブを活用するために必要な実践的な知識を提供します。
+
+## 主要な概念
+
+| 用語 | 説明 |
+|------|-------------|
+| **Exchange Module** | limit orderbook管理、取引執行、注文マッチング、決済をすべてオンチェーンで処理するInjectiveのネイティブモジュール。 |
+| **Denom** | Injective上のネイティブなトークン表現フォーマット（例: `factory/{creator}/{subdenom}`、`peggy{ethereumAddress}`）。Bankモジュール内のすべてのアセットはこのフォーマットを使用します。 |
+| **Oracle Provider** | ガバナンスを通じて登録され、価格フィードをチェーンへ中継する外部エンティティ。perpetualやbinary optionsのようなカスタムマーケットを実現します。 |
+| **Token Factory** | `factory/{creator}/{subdenom}` フォーマットによる新規トークンのパーミッションレスな作成を可能にするネイティブモジュール。 |
+| **Tick Size** | トレーディングマーケットにおける価格・数量の最小増分。アセットの価値とdecimalsに基づいて算出されます。 |
+
+## InjectiveでOrderbook型DEXを構築する
+
+エクスチェンジがInjective上に構築し、取引活動を呼び込むことを促すインセンティブメカニズムとして、
+Injectiveのエクスチェンジプロトコルの共有orderbookに注文を起源として送り込んだエクスチェンジ（[詳細](/developers-native/injective/exchange)）には、その注文から発生した取引手数料の一部が報酬として支払われます。
+エクスチェンジプロトコルは、makerおよびtakerに対するグローバルな最低取引手数料を実装しています。
+
+Injectiveのインセンティブメカニズムの目的は、エクスチェンジ同士が競争することでより良いユーザー体験を提供し、ユーザーによりよく奉仕し、世界中のユーザーにDeFiへのアクセスを広げることにあります。
+
+エクスチェンジはクライアント（Web・モバイル上のUIなど）とAPIプロバイダーを簡単にセットアップできます。
+
+数クリックでDEXをブートストラップするには、[DEXチュートリアル](/developers/dapps/example-dex) を参照してください！
+
+## コアDeFiガイド
+
+<Columns cols={2}>
+  <Card
+    title="トークンの立ち上げ"
+    href="/jp/developers-defi/token-launch/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/launch-token-hero.png">
+    bridging、Token Factory、またはCLI、TypeScript、CosmWasmを使ったプログラム的な方法でInjective上にトークンを立ち上げる方法を学びましょう。
+  </Card>
+  <Card
+    title="マーケットの立ち上げ"
+    href="/jp/developers-defi/market-launch/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    アセットをbridgeし、Injective Hub上でガバナンス提案を提出することで、Injective上にspotトレーディングペアをパーミッションレスに作成します。
+  </Card>
+  <Card
+    title="Denomメタデータ"
+    href="/jp/developers-defi/denom-and-bank/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    bank残高やマーケットデータ向けに、`injective-lists`リポジトリからトークンメタデータ（decimals、symbol、logo）を取得・マッピングします。
+  </Card>
+  <Card
+    title="Injective Trader"
+    href="/jp/developers-defi/injective-trader/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    リスク管理とアナリティクスを組み込んだ、アルゴリズミックトレーディング戦略の開発・デプロイのためのプロフェッショナルグレードなPythonフレームワーク。
+  </Card>
+</Columns>
+
+## 高度なトピック
+
+<Columns cols={2}>
+  <Card
+    title="Provider Oracle"
+    href="/jp/developers-defi/provider-oracle/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/code-hero.png">
+    oracle providerとして登録し、価格フィードを中継して、Injective上のperpetualマーケット、expiry futures、binary optionsを稼働させます。
+  </Card>
+  <Card
+    title="テストネットFaucet統合"
+    href="/jp/developers-defi/testnet-faucet-integration/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    シンプルなPOSTリクエストを通じて、テストINJトークンをユーザーへ提供するために、dApp内にテストネットfaucetを統合します。
+  </Card>
+  <Card
+    title="最小価格Tick Size"
+    href="/jp/developers-defi/calculate-min-price-tick-size/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    base assetのUSD価値とdecimal精度に基づいて、マーケットの最小価格tick sizeを算出します。
+  </Card>
+  <Card
+    title="最小数量Tick Size"
+    href="/jp/developers-defi/min-quantity-tick-size/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    quote assetのUSD価値と希望する最小notional価値に基づいて、マーケットの最小数量tick sizeを算出します。
+  </Card>
+</Columns>
