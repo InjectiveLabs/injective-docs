@@ -9,7 +9,7 @@ updatedAt: "2025-11-27"
 
 このセクションの目的は、Injective上でoracle providerを立ち上げて運用する方法のガイドをユーザーに提供することです。これらのoracleは、Perpetualマーケット、Expiry Futuresマーケット、[Binary Optionsマーケット](/developers-native/injective/exchange/02_binary_options_markets/) など、さまざまな用途に使用できます。
 
-まず、oracle providerとは何でしょうか？これは外部のパーティが価格フィードをInjectiveチェーンへ中継できるoracleの **TYPE** です。これらの外部パーティをproviderと呼びます。providerは各外部パーティを識別し、チェーン上で提供されたすべての価格フィードは、その特定のproviderの下に保存されます。これによりInjective上にカスタム価格フィードを作成でき、Injective上で立ち上げられる [Binary Optionsマーケット](/developers-native/injective/exchange/02_binary_options_markets/) のような、創造的で高度なマーケットを動かすことができます。
+まず、oracle providerとは何でしょうか？これは外部のパーティが価格フィードをInjectiveチェーンへ中継できるoracleの **TYPE** です。これらの外部パーティをproviderと呼びます。providerは各外部パーティを識別する役割を持ち、チェーン上で提供された価格フィードは、そのprovider固有のネームスペース配下に保存されます。これによりInjective上にカスタム価格フィードを作成でき、Injective上で立ち上げられる [Binary Optionsマーケット](/developers-native/injective/exchange/02_binary_options_markets/) のような、創造的で高度なマーケットを動かすことができます。
 
 開発者がまず行うべきことは、自分のproviderをOracle Providerタイプとして登録することです。これは `GrantProviderPrivilegeProposal` のガバナンス提案を提出することで実現できます。提案が可決されると、providerが登録され、価格フィードを中継できるようになります。CLI環境で `injectived` を使う方法（`grant-provider-privilege-proposal [providerName] [relayers] --title [title] --description [desc] [flags]`）もあれば、当社のSDKのいずれかを使ってメッセージを作成し、チェーンへブロードキャストする方法もあります。
 
