@@ -1,0 +1,338 @@
+---
+title: Injective Test Tube
+updatedAt: "2025-10-30"
+---
+
+`injective-test-tube`は、CosmWasmとInjectiveを統合したテストライブラリであり、モックではなく実際のチェーンロジックに対してコントラクトをテストできる点が特徴です。
+
+`dev`ブランチは現在プライベートなリポジトリに依存していますが、公開済みのバージョンを代わりに利用できます。機能とアップデート情報については、[`CHANGELOG`](https://github.com/InjectiveLabs/test-tube/blob/dev/packages/injective-test-tube/CHANGELOG.md)を参照してください。
+
+### はじめに
+
+`injective-test-tube`の動作を示すために、シンプルなサンプルコントラクトとして`cw-plus`の[cw-whitelist](https://github.com/CosmWasm/cw-plus/tree/main/contracts/cw1-whitelist)を使用します。
+
+テストのセットアップは以下のとおりです：
+
+```rust
+use cosmwasm_std::Coin;
+use injective_test_tube::InjectiveTestApp;
+
+// create new injective appchain instance.
+let app = InjectiveTestApp::new();
+
+// create new account with initial funds
+let accs = app
+    .init_accounts(
+        &[
+            Coin::new(1_000_000_000_000, "usdt"),
+            Coin::new(1_000_000_000_000, "inj"),
+        ],
+        2,
+    )
+    .unwrap();
+
+let admin = &accs[0];
+let new_admin = &accs[1];
+```
+
+これで、初期残高を持ちappchainと相互作用可能なインメモリのappchainインスタンスとアカウントが作成されます。 これはDockerコンテナや外部プロセスを起動するのではなく、appchainのコードをライブラリとしてロードし、インメモリ上で実行される点が特徴です。
+
+なお、`init_accounts`は同一の初期残高を持つ複数アカウントを一括作成できるユーティリティ関数です。 1つのアカウントのみを作成したい場合は、`init_account`を使用します。
+
+```rust
+use cosmwasm_std::Coin;
+use injective_test_tube::InjectiveTestApp;
+
+let app = InjectiveTestApp::new();
+
+let account = app.init_account(&[
+    Coin::new(1_000_000_000_000, "usdt"),
+    Coin::new(1_000_000_000_000, "inj"),
+]);
+```
+\u0001\u0001\u0001
+CosmWasmコントラクトをテストするには、以下が必要です：
+
+* wasmファイルをビルドする
+* コードをstoreする
+* インスタンス化する
+
+その後、コントラクトとの対話を開始できます。実際にやってみましょう。
+
+```rust
+use cosmwasm_std::Coin;
+use cw1_whitelist::msg::{InstantiateMsg}; // for instantiating cw1_whitelist contract
+use injective_test_tube::{Account, Module, InjectiveTestApp, Wasm};
+
+let app = InjectiveTestApp::new();
+let accs = app
+    .init_accounts(
+        &[
+            Coin::new(1_000_000_000_000, "usdt"),
+            Coin::new(1_000_000_000_000, "inj"),
+        ],
+        2,
+    )
+    .unwrap();
+let admin = &accs[0];
+let new_admin = &accs[1];
+
+// ============= NEW CODE ================
+
+// `Wasm` is the module we use to interact with cosmwasm related logic on the appchain
+// it implements `Module` trait which you will see more later.
+let wasm = Wasm::new(&app);
+
+// Load compiled wasm bytecode
+let wasm_byte_code = std::fs::read("./test_artifacts/cw1_whitelist.wasm").unwrap();
+let code_id = wasm
+    .store_code(&wasm_byte_code, None, admin)
+    .unwrap()
+    .data
+    .code_id;
+```
+
+この例では、シンプルなデモのために[cw-plus release](https://github.com/CosmWasm/cw-plus/releases)からwasmバイトコードをロードしています。実際には、`cargo wasm`を実行して`target/wasm32-unknown-unknown/release/<contract_name>.wasm`にあるwasmファイルを使用することになるでしょう。
+
+```rust
+use cosmwasm_std::Coin;
+use cw1_whitelist::msg::{InstantiateMsg, QueryMsg, AdminListResponse};
+use injective_test_tube::{Account, Module, InjectiveTestApp, Wasm};
+
+let app = InjectiveTestApp::new();
+let accs = app
+    .init_accounts(
+        &[
+            Coin::new(1_000_000_000_000, "usdt"),
+            Coin::new(1_000_000_000_000, "inj"),
+        ],
+        2,
+    )
+    .unwrap();
+let admin = &accs[0];
+let new_admin = &accs[1];
+
+let wasm = Wasm::new(&app);
+
+
+let wasm_byte_code = std::fs::read("./test_artifacts/cw1_whitelist.wasm").unwrap();
+let code_id = wasm
+    .store_code(&wasm_byte_code, None, admin)
+    .unwrap()
+    .data
+    .code_id;
+
+// ============= NEW CODE ================
+
+// instantiate contract with initial admin and make admin list mutable
+let init_admins = vec![admin.address()];
+let contract_addr = wasm
+    .instantiate(
+        code_id,
+        &InstantiateMsg {
+            admins: init_admins.clone(),
+            mutable: true,
+        },
+        None, // contract admin used for migration, not the same as cw1_whitelist admin
+        Some("Test label"), // contract label
+        &[], // funds
+        admin, // signer
+    )
+    .unwrap()
+    .data
+    .address;
+
+// query contract state to check if contract instantiation works properly
+let admin_list = wasm
+    .query::<QueryMsg, AdminListResponse>(&contract_addr, &QueryMsg::AdminList {})
+    .unwrap();
+
+assert_eq!(admin_list.admins, init_admins);
+assert!(admin_list.mutable);
+```
+
+次に、コントラクトを実行し、コントラクトの状態が正しく更新されることを検証してみましょう。
+
+```rust
+use cosmwasm_std::Coin;
+use cw1_whitelist::msg::{InstantiateMsg, QueryMsg, ExecuteMsg, AdminListResponse};
+use injective_test_tube::{Account, Module, InjectiveTestApp, Wasm};
+
+let app = InjectiveTestApp::new();
+let accs = app
+    .init_accounts(
+        &[
+            Coin::new(1_000_000_000_000, "usdt"),
+            Coin::new(1_000_000_000_000, "inj"),
+        ],
+        2,
+    )
+    .unwrap();
+let admin = &accs[0];
+let new_admin = &accs[1];
+
+let wasm = Wasm::new(&app);
+
+
+let wasm_byte_code = std::fs::read("./test_artifacts/cw1_whitelist.wasm").unwrap();
+let code_id = wasm
+    .store_code(&wasm_byte_code, None, admin)
+    .unwrap()
+    .data
+    .code_id;
+
+// instantiate contract with initial admin and make admin list mutable
+let init_admins = vec![admin.address()];
+let contract_addr = wasm
+    .instantiate(
+        code_id,
+        &InstantiateMsg {
+            admins: init_admins.clone(),
+            mutable: true,
+        },
+        None, // contract admin used for migration, not the same as cw1_whitelist admin
+        Some("Test label"), // contract label
+        &[], // funds
+        admin, // signer
+    )
+    .unwrap()
+    .data
+    .address;
+
+let admin_list = wasm
+    .query::<QueryMsg, AdminListResponse>(&contract_addr, &QueryMsg::AdminList {})
+    .unwrap();
+
+assert_eq!(admin_list.admins, init_admins);
+assert!(admin_list.mutable);
+
+// ============= NEW CODE ================
+
+// update admin list and rechec the state
+let new_admins = vec![new_admin.address()];
+wasm.execute::<ExecuteMsg>(
+    &contract_addr,
+    &ExecuteMsg::UpdateAdmins {
+        admins: new_admins.clone(),
+    },
+    &[],
+    admin,
+)
+.unwrap();
+
+let admin_list = wasm
+    .query::<QueryMsg, AdminListResponse>(&contract_addr, &QueryMsg::AdminList {})
+    .unwrap();
+
+assert_eq!(admin_list.admins, new_admins);
+assert!(admin_list.mutable);
+```
+
+### デバッグ
+
+コントラクトコードの中でデバッグしたい場合は、[`deps.api.debug(..)`](https://docs.rs/cosmwasm-std/latest/cosmwasm_std/trait.Api.html#tymethod.debug)を使用すると、デバッグメッセージをstdoutに出力できます。`wasmd`ではこれはデフォルトで無効化されていますが、`InjectiveTestApp`はstdoutへの出力を許可しているため、テスト実行中にスマートコントラクトのデバッグが可能です。
+
+### Module Wrapperの使用
+
+場合によっては、環境のセットアップやappchainの状態クエリのために、appchainロジックと直接対話したいことがあります。Module wrapperは、appchainのモジュールと対話するための便利な関数を提供します。
+
+`Exchange`モジュールと対話する例を見てみましょう：
+
+```rust
+use cosmwasm_std::{Addr, Coin};
+use injective_std::types::injective::exchange::v1beta1::{
+    MarketStatus, MsgInstantSpotMarketLaunch,
+    QuerySpotMarketsRequest, QuerySpotMarketsResponse, SpotMarket,
+};
+use injective_test_tube::{Account, Exchange, InjectiveTestApp};
+use test_tube_inj::Module;
+
+let app = InjectiveTestApp::new();
+let signer = app
+    .init_account(&[
+        Coin::new(10_000_000_000_000_000_000_000u128, "inj"),
+        Coin::new(100_000_000_000_000_000_000u128, "usdt"),
+    ])
+    .unwrap();
+let trader = app
+    .init_account(&[
+        Coin::new(10_000_000_000_000_000_000_000u128, "inj"),
+        Coin::new(100_000_000_000_000_000_000u128, "usdt"),
+    ])
+    .unwrap();
+let exchange = Exchange::new(&app);
+
+exchange
+    .instant_spot_market_launch(
+        MsgInstantSpotMarketLaunch {
+            sender: signer.address(),
+            ticker: "INJ/USDT".to_owned(),
+            base_denom: "inj".to_owned(),
+            quote_denom: "usdt".to_owned(),
+            min_price_tick_size: "10000".to_owned(),
+            min_quantity_tick_size: "100000".to_owned(),
+        },
+        &signer,
+    )
+    .unwrap();
+
+exchange
+    .instant_spot_market_launch(
+        MsgInstantSpotMarketLaunch {
+            sender: signer.address(),
+            ticker: "INJ/USDT".to_owned(),
+            base_denom: "inj".to_owned(),
+            quote_denom: "usdt".to_owned(),
+            min_price_tick_size: "10000".to_owned(),
+            min_quantity_tick_size: "100000".to_owned(),
+        },
+        &signer,
+    )
+    .unwrap_err();
+
+app.increase_time(1u64);
+
+let spot_markets = exchange
+    .query_spot_markets(&QuerySpotMarketsRequest {
+        status: "Active".to_owned(),
+        market_ids: vec![],
+    })
+    .unwrap();
+
+let expected_response = QuerySpotMarketsResponse {
+    markets: vec![SpotMarket {
+        ticker: "INJ/USDT".to_string(),
+        base_denom: "inj".to_string(),
+        quote_denom: "usdt".to_string(),
+        maker_fee_rate: "-100000000000000".to_string(),
+        taker_fee_rate: "1000000000000000".to_string(),
+        relayer_fee_share_rate: "400000000000000000".to_string(),
+        market_id: "0xd5a22be807011d5e42d5b77da3f417e22676efae494109cd01c242ad46630115"
+            .to_string(),
+        status: MarketStatus::Active.into(),
+        min_price_tick_size: "10000".to_string(),
+        min_quantity_tick_size: "100000".to_string(),
+    }],
+};
+assert_eq!(spot_markets, expected_response);
+```
+
+その他の例は[modules](https://github.com/InjectiveLabs/test-tube/tree/dev/packages/injective-test-tube/src/module)ディレクトリで確認できます。
+
+### バージョニング
+
+injective-test-tubeのバージョンは、その依存関係であるinjectiveとtest-tubeのバージョン、およびそれ自身の変更によって決定されます。バージョンはA.B.Cの形式で表され、それぞれは以下を意味します：
+
+* Aはinjectiveのメジャーバージョン
+* Bはtest-tubeのマイナーバージョン
+* Cはinjective-test-tube自身のパッチ番号
+
+injectiveの新バージョンがリリースされ破壊的変更を含む場合、test-tubeにも破壊的変更があればリリースし、injective-test-tubeのメジャーバージョンをインクリメントします。これにより、新しいバージョンのinjective-test-tubeが以前のバージョンと後方互換性がないことが明確になります。
+
+injective-test-tubeに後方互換性のある新機能を追加する場合は、マイナーバージョン番号がインクリメントされます。
+
+`injective-test-tube`固有のバグ修正やその他の後方互換性のある変更を行う場合は、パッチ番号がインクリメントされます。
+
+破壊的変更がある場合に備えて、パッケージのアップグレードガイドを確認してください。
+
+なお、パッケージのバージョンは依存関係のバージョンとは独立して管理される点にご注意ください。

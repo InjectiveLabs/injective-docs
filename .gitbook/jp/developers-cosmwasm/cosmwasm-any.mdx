@@ -1,0 +1,153 @@
+---
+title: CosmWasmでのInjectiveモジュールとクエリの利用
+updatedAt: "2025-10-30"
+---
+
+このガイドでは、`Any`メッセージとクエリを用いてCosmWasmからInjectiveのモジュールおよびクエリを操作する方法を包括的に解説します。JSONエンコードされたメッセージに依存していた古い[injective-cosmwasm](https://github.com/InjectiveLabs/cw-injective/tree/dev/packages/injective-cosmwasm)パッケージは、現在メンテナンスされておらず古くなる可能性があります。本ガイドでは、より効率的でモダンなCosmWasm標準に準拠した、protobufエンコードされた`Any`メッセージとクエリを使用する推奨アプローチに焦点を当てます。
+
+## CosmWasmにおける`Any`メッセージとは？
+
+CosmWasmにおいて`Any`メッセージは`CosmosMsg` enumの一部であり、チェーンがサポートするprotobufの`Any`型でラップされたメッセージを送信できる仕組みです。これらは（`stargate`フィーチャーフラグ下で引き続き利用可能な）非推奨の`Stargate`メッセージを置き換え、命名と構文が改善されています。`Any`メッセージは`cosmwasm_2_0`でフィーチャーゲートされており、CosmWasm 2.0を実行しているチェーン（Injectiveでサポート済み）が必要です。`CosmosMsg`定義の抜粋は以下のとおりです：
+
+```rust
+pub enum CosmosMsg<T = Empty> {
+    // ...
+    #[cfg(feature = "cosmwasm_2_0")]
+    Any(AnyMsg),
+    // ...
+}
+
+pub struct AnyMsg {
+    pub type_url: String,
+    pub value: Binary,
+}
+```
+
+`type_url`はprotobufメッセージの型を指定し、`value`はシリアライズされたメッセージデータを含みます。
+
+## なぜこの方法を使うのか？
+
+`injective-cosmwasm`パッケージはJSONベースのメッセージを使用しており、効率が低く、将来のアップデートとの互換性が維持されない可能性があります。新しい`Any`メッセージ方式はprotobufエンコーディングを使用し、より優れたパフォーマンス、型安全性、CosmWasm 2.0+との互換性を提供します。これが現在、Injectiveのモジュールおよびクエリと連携するための推奨方法です。
+
+## メッセージの送信
+
+メッセージを送信するには、protobufメッセージを作成し、エンコードして`Any`メッセージにラップします。以下はInjectiveのexchangeモジュールにスポットマーケット注文を作成する例です。
+
+### 例：スポットマーケット注文の作成
+
+```rust
+use cosmwasm_std::{AnyMsg, CosmosMsg, StdResult};
+use injective_cosmwasm::{InjectiveMsgWrapper, OrderType, SpotMarket};
+use injective_math::{round_to_min_tick, round_to_nearest_tick, FPDecimal};
+use injective_std::types::injective::exchange::v1beta1 as Exchange;
+use prost::Message;
+
+pub fn create_spot_market_order_message(
+    price: FPDecimal,
+    quantity: FPDecimal,
+    order_type: OrderType,
+    sender: &str,
+    subaccount_id: &str,
+    fee_recipient: &str,
+    market: &SpotMarket,
+) -> StdResult<CosmosMsg<InjectiveMsgWrapper>> {
+    let msg = create_spot_market_order(price, quantity, order_type, sender, subaccount_id, fee_recipient, market);
+
+    let mut order_bytes = vec![];
+    Exchange::MsgCreateSpotMarketOrder::encode(&msg, &mut order_bytes).unwrap();
+
+    Ok(CosmosMsg::Any(AnyMsg {
+        type_url: Exchange::MsgCreateSpotMarketOrder::TYPE_URL.to_string(),
+        value: order_bytes.into(),
+    }))
+}
+
+fn create_spot_market_order(
+    price: FPDecimal,
+    quantity: FPDecimal,
+    order_type: OrderType,
+    sender: &str,
+    subaccount_id: &str,
+    fee_recipient: &str,
+    market: &SpotMarket,
+) -> Exchange::MsgCreateSpotMarketOrder {
+    let rounded_quantity = round_to_min_tick(quantity, market.min_quantity_tick_size);
+    let rounded_price = round_to_nearest_tick(price, market.min_price_tick_size);
+
+    Exchange::MsgCreateSpotMarketOrder {
+        sender: sender.to_string(),
+        order: Some(Exchange::SpotOrder {
+            market_id: market.market_id.as_str().into(),
+            order_info: Some(Exchange::OrderInfo {
+                subaccount_id: subaccount_id.to_string(),
+                fee_recipient: fee_recipient.to_string(),
+                price: rounded_price.to_string(),
+                quantity: rounded_quantity.to_string(),
+                cid: "".to_string(),
+            }),
+            order_type: order_type as i32,
+            trigger_price: "".to_string(),
+        }),
+    }
+}
+```
+
+**手順：**
+
+1. 注文の詳細を含む`MsgCreateSpotMarketOrder` protobufメッセージを構築します。
+2. `prost::Message::encode`を使用してバイト列にエンコードします。
+3. 正しい`type_url`を指定して`AnyMsg`にラップします。
+4. `CosmosMsg::Any`として返します。
+
+このアプローチは、適切なprotobufメッセージと`type_url`を使用することで、他のモジュール（例：auction、tokenfactory）にも応用できます。
+
+## クエリの実行
+
+クエリは`InjectiveQueryWrapper`を伴う`QuerierWrapper`を使用して実行します。`injective_std`の組み込みquerierを使用するか、生のクエリを送信できます。以下は異なるモジュールの例です。
+
+### 例：スポットマーケットのクエリ（Exchangeモジュール）
+
+```rust
+use cosmwasm_std::{to_json_binary, Binary, Deps, StdResult};
+use injective_cosmwasm::InjectiveQueryWrapper;
+use injective_std::types::injective::exchange::v1beta1::ExchangeQuerier;
+
+pub fn handle_query_spot_market(deps: Deps<InjectiveQueryWrapper>, market_id: &str) -> StdResult<Binary> {
+    let querier = ExchangeQuerier::new(&deps.querier);
+    to_json_binary(&querier.spot_market(market_id.to_string())?)
+}
+```
+
+**手順：**
+
+1. `deps.querier`から`ExchangeQuerier`を作成します。
+2. `market_id`を指定して`spot_market`を呼び出します。
+3. レスポンスをJSONにシリアライズし、`Binary`として返します。
+
+### 例：Bankパラメータのクエリ（Bankモジュール）
+
+```rust
+use cosmwasm_std::{to_json_binary, Binary, Deps, StdResult};
+use injective_cosmwasm::InjectiveQueryWrapper;
+use injective_std::types::cosmos::bank::v1beta1::BankQuerier;
+
+pub fn handle_query_bank_params(deps: Deps<InjectiveQueryWrapper>) -> StdResult<Binary> {
+    let querier = BankQuerier::new(&deps.querier);
+    to_json_binary(&querier.params()?)
+}
+```
+
+**手順：**
+
+1. `deps.querier`から`BankQuerier`を作成します。
+2. `params`を呼び出してbankモジュールのパラメータを取得します。
+3. 結果をシリアライズして返します。
+
+## その他のモジュールでの利用
+
+同じ原則は、auction、insurance、oracle、permissions、tokenfactoryなどの他のInjectiveモジュールや、Cosmosのネイティブモジュールにも適用されます。例：
+
+- **Auctionモジュール**：クエリには`AuctionQuerier`を使用、または`MsgBid`を`Any`メッセージとしてエンコードします。
+- **Tokenfactoryモジュール**：`MsgCreateDenom`をエンコードするか、`TokenFactoryQuerier`を使用します。
+
+具体的なメッセージ型およびquerierについては[injective_std](https://github.com/InjectiveLabs/injective-rust/tree/dev/packages/injective-std)を参照してください。

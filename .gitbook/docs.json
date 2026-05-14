@@ -1989,7 +1989,12 @@
                   },
                   "jp/developers-cosmwasm/local-development-guide",
                   "jp/developers-cosmwasm/mainnet-deployment-guide",
-                  "jp/developers-cosmwasm/whitelisting-deployment-address-guide"
+                  "jp/developers-cosmwasm/whitelisting-deployment-address-guide",
+                  "jp/developers-cosmwasm/create-your-swap-contract-guide",
+                  "jp/developers-cosmwasm/create-uis-guide",
+                  "jp/developers-cosmwasm/cosmwasm-any",
+                  "jp/developers-cosmwasm/cw20-adapter",
+                  "jp/developers-cosmwasm/injective-test-tube"
                 ]
               },
               "jp/faq",

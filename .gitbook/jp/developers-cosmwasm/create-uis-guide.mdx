@@ -1,0 +1,22 @@
+---
+title: UIの作成
+updatedAt: "2025-11-28"
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  UIの作成およびブートストラップオプションに関するより包括的なドキュメントは、[dAppsドキュメント](/developers/dapps/)を参照してください。
+</Callout>
+
+これまでInjective CLIを通じてコントラクトと対話してきましたが、これは多くのdAppユーザーにとって理想的な方法ではありません。WebのUIがあればはるかに優れた体験を提供できます！`injectived`を介してトランザクションメッセージを送る代わりに、その複雑さを抽象化し、ユーザーには2つのボタン—カウントを増やすボタンとカウントをリセットするボタン—を提供できます。
+
+![](https://docs.injective.network/img/Counter_website.png)
+
+例として、[counter website](https://injective-simple-cosmwasm-sc.netlify.app/)を参照してください。Vueと[Injective TS SDK](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/sdk-ts)を用いたフロントエンド開発のハイレベルなガイドは、[こちらのwebsiteリポジトリ](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui/tree/master/nuxt)で確認できます。React実装については、[こちら](https://github.com/InjectiveLabs/injective-simple-sc-counter-ui/tree/master/next)を参照してください。
+
+これにより、コントラクトとの対話は、ボタンをクリックしてMetaMaskで署名するだけのシンプルな操作になります（アカウントがEthereum Sepolia Testnetに設定されていることを確認してください。そうでない場合はchain IDの不一致エラーが発生します）。
+
+![](https://docs.injective.network/img/metamask_select_testnet.png)
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  カウントをリセットしようとすると「Unauthorized」エラーメッセージが表示されることに気づくかもしれません。これは想定された挙動です！[reset用のコントラクトロジック](/developers-cosmwasm/smart-contracts/your-first-smart-contract/#reset)を思い出してください。カウントをリセットできるのはコントラクトのオーナーのみです。フロントエンドが対話している正確なコントラクトをあなた自身がインスタンス化したわけではないため、カウントをリセットするために必要な権限を持っていません。
+</Callout>
