@@ -7,7 +7,7 @@ InjectiveはEthereumとCosmosの両方のネイティブウォレットをサポ
 
 ### Wallet Strategy
 
-これらすべてのウォレットをそのままサポートするための推奨方法は、当方が構築した[WalletStrategy](./strategy/)抽象化を使用することです。このアプローチにより、dAppのユーザーはさまざまなウォレットに接続して操作できるようになります。
+これらすべてのウォレットを統一的にサポートする推奨方法は、Injectiveが提供する[WalletStrategy](./strategy/)抽象化 を利用することです。このアプローチにより、dAppのユーザーはさまざまなウォレットに接続して操作できるようになります。
 
 これを[MsgBroadcaster](../transactions/msgbroadcaster/)抽象化と組み合わせることで、1回の関数呼び出しでトランザクションに署名できます。これは、Helix、Hub、Explorerなどのすべてのプロダクトで使用されている方式であり、dAppでもこのアプローチの使用を強く推奨します。
 
@@ -73,4 +73,4 @@ const getKeplr = () => {
 
 - **Keplrを使用してトランザクションに署名する**
 
-Keplrを使用してInjective上でトランザクションを準備・署名・ブロードキャストする方法の例は[Cosmosトランザクション](../transactions/cosmos/)を参照してください。
+Keplrを使用して、Injective上でトランザクションを準備・署名・ブロードキャストする方法の例については、[Cosmosトランザクション](../transactions/cosmos/)を参照してください。

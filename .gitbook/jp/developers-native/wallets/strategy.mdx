@@ -3,7 +3,7 @@ title: Wallet Strategy
 updatedAt: "2025-12-23"
 ---
 
-`@injectivelabs/wallet-strategy`の主な目的は、Injective上で異なるウォレット実装を扱う方法を開発者に提供することです。これらのウォレット実装はすべて同じ`ConcreteStrategy`インターフェースを公開しているため、ユーザーは特定のウォレットの実装を意識することなく、抽象化されたメソッドをそのまま使用できます。
+`@injectivelabs/wallet-strategy` の主な目的は、Injective上で異なるウォレット実装を統一的に扱う仕組みを開発者へ提供することです。これらのウォレット実装はすべて同じ`ConcreteStrategy`インターフェースを公開しているため、ユーザーは特定のウォレットの実装を意識することなく、抽象化されたメソッドをそのまま使用できます。
 
 最初に、`WalletStrategy`クラスのインスタンスを作成すると、さまざまなウォレットをそのまま利用できるようになります。現在使用されているウォレットは、`walletStrategy`インスタンスの`setWallet`メソッドを使用して切り替えできます（注: `setWallet`は非同期で、`await`が必要です）。
 

@@ -3,15 +3,15 @@ title: Keplrウォレットを介したLedgerトランザクション
 updatedAt: "2025-12-27"
 ---
 
-このページでは、ユーザーがKeplrウォレットを介してLedgerデバイスを使用する場合のInjective向け実装について見ていきます。
+このページでは、Keplrウォレット経由でLedgerデバイスを使用する場合のInjective実装について説明します。
 
 前述したように、InjectiveはCosmosチェーンの他とは異なる導出曲線を使用するため、ユーザーは（現時点では）Ethereumアプリを使用してInjectiveとやり取りする必要があります。
 
-すべてのエッジケースをカバーし、Injectiveでサポートされているすべてのウォレット向けに完全に箱から出してすぐに使えるソリューションを求める場合は、[MsgBroadcaster + WalletStrategy](./msgbroadcaster/#msgbroadcaster-+-wallet-strategy)抽象化を参照することを推奨します。独自の実装を行いたい場合は、コード例を一緒に見ていきましょう。
+すべてのエッジケースをカバーし、Injectiveでサポートされるウォレットに対して完全なアウトオブボックスソリューションを求める場合は、[MsgBroadcaster + WalletStrategy](./msgbroadcaster/#msgbroadcaster-+-wallet-strategy)抽象化を参照することを推奨します。独自の実装を行いたい場合は、コード例を一緒に見ていきましょう。
 
 ## 概要
 
-Keplrは`experimentalSignEIP712CosmosTx_v0`メソッドを公開しており、これを利用してEIP712 typed data（上記のメソッドにCosmos StdSignDocを渡すことでKeplr側で自動生成）に署名し、KeplrからLedgerデバイスに接続された場合でもEVM互換チェーンが適切な署名を取得できるようにできます。
+Keplrは`experimentalSignEIP712CosmosTx_v0`メソッドを公開しており、これを利用してEIP712 typed data（上記のメソッドにCosmos StdSignDocを渡すことでKeplr側で自動生成）に署名し、LedgerデバイスがKeplrへ接続されている場合でも、EVM互換チェーンとして適切な署名を取得できます。
 
 関数のシグネチャは次のとおりです:
 
