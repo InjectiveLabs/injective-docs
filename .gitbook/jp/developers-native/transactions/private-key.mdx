@@ -1,0 +1,259 @@
+---
+title: 秘密鍵によるトランザクション
+updatedAt: "2025-12-23"
+---
+
+このドキュメントでは、PrivateKeyを使用してInjective上のトランザクションに署名する方法を示します。
+
+Injective上のすべてのトランザクションは同じフローに従います。フローは、トランザクションの準備、署名、ブロードキャストの3つのステップで構成されます。各ステップを個別に深掘りし、サンプルを交えてプロセスを詳しく説明することで、トランザクション全体のフローを理解できるようにします。
+
+## トランザクションの準備
+
+まず、署名のためのトランザクションを準備する必要があります。
+
+```ts
+import {
+  toBigNumber,
+  toChainFormat,
+  getDefaultStdFee,
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
+} from "@injectivelabs/utils";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { ChainId } from "@injectivelabs/ts-types";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { createTransaction } from "@injectivelabs/sdk-ts/core/tx";
+import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
+import { PrivateKey, BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
+
+const privateKeyHash = "";
+const privateKey = PrivateKey.fromHex(privateKeyHash);
+const injectiveAddress = privateKey.toBech32();
+const address = privateKey.toAddress();
+const pubKey = privateKey.toPublicKey().toBase64();
+const chainId = "injective-1"; /* ChainId.Mainnet */
+const restEndpoint =
+  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(0.01).toFixed(),
+};
+
+/** Account Details **/
+const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
+const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+  injectiveAddress
+);
+const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+const accountDetails = baseAccount.toAccountDetails();
+
+/** Block Details */
+const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
+const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+const latestHeight = latestBlock.header.height;
+const timeoutHeight = toBigNumber(latestHeight).plus(
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+);
+
+/** Preparing the transaction */
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+/** Prepare the Transaction **/
+const { txRaw, signBytes } = createTransaction({
+  pubKey,
+  chainId,
+  message: msg,
+  fee: getDefaultStdFee(),
+  sequence: baseAccount.sequence,
+  timeoutHeight: timeoutHeight.toNumber(),
+  accountNumber: baseAccount.accountNumber,
+});
+```
+
+## トランザクションへの署名
+
+トランザクションの準備ができたら、署名に進みます。前のステップで`txRaw`トランザクションを取得したら、Cosmosネイティブのウォレット（例: Keplr）を使用して署名します。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+
+/* Sign the Transaction */
+const privateKeyHash = ''
+const privateKey = PrivateKey.fromHex(privateKeyHash);
+const signBytes = /* From the previous step */
+
+/** Sign transaction */
+const signature = await privateKey.sign(Buffer.from(signBytes));
+```
+
+## トランザクションのブロードキャスト
+
+署名の準備ができたら、Injectiveチェーン自体にトランザクションをブロードキャストする必要があります。第2ステップで署名を取得した後、その署名を署名済みのトランザクションに含めてチェーンにブロードキャストします。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import { TxClient } from '@injectivelabs/sdk-ts/core/tx'
+import { TxGrpcApi } from '@injectivelabs/sdk-ts/client/chain'
+import { Network, getNetworkInfo } from '@injectivelabs/networks'
+
+/** Append Signatures */
+const network = getNetworkInfo(Network.Testnet);
+const txRaw = /* from the first step */
+const signature = /* from the second step */
+txRaw.signatures = [signature];
+
+/** Calculate hash of the transaction */
+console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
+
+const txService = new TxGrpcApi(network.grpc);
+
+/** Simulate transaction */
+const simulationResponse = await txService.simulate(txRaw);
+
+console.log(
+  `Transaction simulation response: ${JSON.stringify(
+    simulationResponse.gasInfo
+  )}`
+);
+
+/** Broadcast transaction */
+const txResponse = await txService.broadcast(txRaw);
+
+console.log(txResponse);
+
+if (txResponse.code !== 0) {
+  console.log(`Transaction failed: ${txResponse.rawLog}`);
+} else {
+  console.log(
+    `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`
+  );
+}
+```
+
+## 例（準備 + 署名 + ブロードキャスト）
+
+フロー全体を見てみましょう（Keplrを署名ウォレットとして使用）。
+
+```ts
+import {
+  TxClient,
+  TxGrpcApi,
+  createTransaction,
+} from "@injectivelabs/sdk-ts/core/tx";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { getNetworkInfo, Network } from "@injectivelabs/networks";
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
+
+/** MsgSend Example */
+(async () => {
+  const network = getNetworkInfo(Network.Testnet);
+  const privateKeyHash =
+    "f9db9bf330e23cb7839039e944adef6e9df447b90b503d5b4464c90bea9022f3";
+  const privateKey = PrivateKey.fromHex(privateKeyHash);
+  const injectiveAddress = privateKey.toBech32();
+  const publicKey = privateKey.toPublicKey().toBase64();
+
+  /** Account Details **/
+  const accountDetails = await new ChainRestAuthApi(network.rest).fetchAccount(
+    injectiveAddress
+  );
+
+  /** Prepare Message */
+  const amount = {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  };
+
+  const msg = MsgSend.fromJSON({
+    amount,
+    srcInjectiveAddress: injectiveAddress,
+    dstInjectiveAddress: injectiveAddress,
+  });
+
+  /** Prepare the Transaction **/
+  const { signBytes, txRaw } = createTransaction({
+    message: msg,
+    memo: "",
+    pubKey: publicKey,
+    fee: getDefaultStdFee(),
+    sequence: parseInt(accountDetails.account.base_account.sequence, 10),
+    accountNumber: parseInt(
+      accountDetails.account.base_account.account_number,
+      10
+    ),
+    chainId: network.chainId,
+  });
+
+  /** Sign transaction */
+  const signature = await privateKey.sign(Buffer.from(signBytes));
+
+  /** Append Signatures */
+  txRaw.signatures = [signature];
+
+  /** Calculate hash of the transaction */
+  console.log(`Transaction Hash: ${TxClient.hash(txRaw)}`);
+
+  const txService = new TxGrpcApi(network.grpc);
+
+  /** Simulate transaction */
+  const simulationResponse = await txService.simulate(txRaw);
+  console.log(
+    `Transaction simulation response: ${JSON.stringify(
+      simulationResponse.gasInfo
+    )}`
+  );
+
+  /** Broadcast transaction */
+  const txResponse = await txService.broadcast(txRaw);
+
+  if (txResponse.code !== 0) {
+    console.log(`Transaction failed: ${txResponse.rawLog}`);
+  } else {
+    console.log(
+      `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`
+    );
+  }
+})();
+```
+
+## MsgBroadcasterWithPkを使用した例
+
+`@injectivelabs/sdk-ts`パッケージの`MsgBroadcasterWithPk`クラスを使用すると、上記のロジックの多くを単一のクラスに抽象化できます。
+
+**この抽象化により、Node/CLI環境でトランザクションに署名できます。**
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(1).toFixed(),
+};
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

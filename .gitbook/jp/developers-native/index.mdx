@@ -1,0 +1,52 @@
+---
+title: 概要
+updatedAt: "2025-12-04"
+---
+
+このセクションは、ネイティブのCosmos SDKモジュールとGoベースのツールを使用してInjective上で開発する開発者向けです。カスタムモジュールの開発、チェーン状態のクエリ、トランザクションの構築、またはInjectiveのコア金融プリミティブとの統合のいずれであっても、ネイティブ開発パスに関する包括的な技術ドキュメントを見つけることができます。
+
+InjectiveはCosmos SDKを拡張し、分散型金融に特化したモジュールを提供することで、各コンポーネントが特定の責務を担いながらシームレスに相互運用するモジュラーアーキテクチャを実現しています。Injectiveの中核である`exchange`モジュールは、中央集権型取引所に匹敵する完全オンチェーンのオーダーブック取引を可能にします。一方、`tokenfactory`のようなモジュールはパーミッションレスなアセット作成を、`peggy`はトラストレスなEthereumブリッジングを実現します。このモジュラー設計により、開発者は既存インフラを組み合わせながら、高度なDeFiアプリケーションや取引戦略を構築できます。コンセンサスのためのstaking、プロトコルアップグレードのためのgovernance、EVMとCosmos環境間で統一されたトークン残高を提供するネイティブbankモジュールなどです。開発者にとっては、クリーンなGo API、gRPCエンドポイント、および高度な取引戦略やDeFiアプリケーションへ構成可能な包括的なメッセージ型を通じて、機関投資家グレードの金融プリミティブにアクセスできることを意味します。
+
+## 主要概念
+
+| 用語 | 定義 |
+|------|------|
+| **Cosmos SDK Module** | 特定の機能を提供し、モジュール間メッセージングを通じて通信する、自己完結型のブロックチェーンロジックの単位（例: `exchange`、`bank`、`staking`）。 |
+| **Exchange Module** | オンチェーンオーダーブック管理、注文マッチング、決済を備えた完全分散型のスポットおよびデリバティブ取引を実現するInjectiveのコアモジュール。 |
+| **Keeper** | 状態を管理し、定義されたインターフェースを通じてビジネスロジックを公開するモジュールの中核コンポーネント。読み書き操作と状態遷移を処理します。 |
+| **Message (Msg)** | モジュール内で状態変更をトリガーするトランザクション型。例えば、転送のための`MsgSend`や取引のための`MsgCreateSpotLimitOrder`など。 |
+| **Query** | チェーン状態を変更せずに取得する読み取り専用操作。gRPC、REST、CLIインターフェースを通じて公開されます。 |
+
+## モジュールを探索する
+
+<Columns cols={2}>
+  <Card
+    title="Injective"
+    href="/jp/developers-native/injective/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="">
+    `injective`モジュール。Exchange（オンチェーンオーダーブック）、TokenFactory（パーミッションレスなトークン作成）、Peggy（Ethereumブリッジ）、Oracle（価格フィード）、Insurance Funds、Auction、WASMx（CosmWasm統合）などのInjective固有のモジュール群。
+  </Card>
+  <Card
+    title="Core"
+    href="/jp/developers-native/core/"
+    arrow="true"
+    cta="こちらをクリック"
+    icon="panel-left-close"
+    img="">
+    `core`モジュール。Bank（トークン転送）、Staking（バリデータデリゲーション）、Governance（オンチェーンプロポーザル）、Auth（アカウント）、Distribution（報酬）、IBC（クロスチェーン相互運用性）などの標準的なCosmos SDKモジュール群。
+  </Card>
+</Columns>
+
+## 追加リソース
+
+- **[トランザクション例](/jp/developers-native/examples/)** —
+  Bank転送、Exchange取引、Staking、Governance、IBC転送など、すべてのモジュールにわたる一般的な操作のコードサンプル。
+- **[チェーンのクエリ](/jp/developers-native/query-chain/)** —
+  すべてのモジュールについて、gRPCおよびRPCエンドポイントを介してチェーン状態を直接クエリするためのリファレンス。
+- **[Indexerのクエリ](/jp/developers-native/query-indexer/)** —
+  取引、注文、ポートフォリオデータなどを効率的に取得するためのInjective Indexer利用ガイド。
+- **[トランザクション](/jp/developers-native/transactions/)** —
+  さまざまな署名者タイプ（Ethereum、Cosmos、秘密鍵）を使用してトランザクションを構築・ブロードキャストするためのドキュメント。

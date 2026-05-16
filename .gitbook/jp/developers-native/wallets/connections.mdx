@@ -1,0 +1,76 @@
+---
+title: ウォレット接続
+updatedAt: "2025-12-23"
+---
+
+InjectiveはEthereumとCosmosの両方のネイティブウォレットをサポートしています。Metamask、Ledger、Keplr、LeapなどのメジャーなウォレットでInjective上のトランザクションに署名できます。
+
+### Wallet Strategy
+
+これらすべてのウォレットを統一的にサポートする推奨方法は、Injectiveが提供する[WalletStrategy](./strategy/)抽象化 を利用することです。このアプローチにより、dAppのユーザーはさまざまなウォレットに接続して操作できるようになります。
+
+これを[MsgBroadcaster](../transactions/msgbroadcaster/)抽象化と組み合わせることで、1回の関数呼び出しでトランザクションに署名できます。これは、Helix、Hub、Explorerなどのすべてのプロダクトで使用されている方式であり、dAppでもこのアプローチの使用を強く推奨します。
+
+何らかのウォレットを（WalletStrategyクラスを介さずに）ネイティブに使用したい場合に備えて、本ドキュメントではMetamaskとKeplrを介してInjective上に構築されたdAppに接続する例を提供します。
+
+### Metamask
+
+MetamaskはEthereumネイティブのウォレットであり、Injective上に構築されたdAppへの接続および操作に使用できます。
+
+- **MetamaskからInjectiveアドレスを取得する**
+
+```ts lines highlight={4-6,11-13}
+import { getInjectiveAddress } from "@injectivelabs/sdk-ts/utils";
+
+const getEthereum = () => {
+  if (!window.ethereum) {
+    throw new Error("Metamask extension not installed");
+  }
+  return window.ethereum;
+};
+
+const ethereum = getEthereum();
+const addresses = await ethereum.request({
+  method: "eth_requestAccounts",
+}); /** these are evm addresses */
+
+const injectiveAddresses = addresses.map(getInjectiveAddress);
+console.log(injectiveAddresses);
+```
+
+- **Metamaskを使用してトランザクションに署名する**
+
+Metamaskを使用してInjective上でトランザクションを準備・署名・ブロードキャストする方法の例は[こちら](../transactions/ethereum/)を参照してください。
+
+### Keplr
+
+KeplrはCosmosネイティブのウォレットであり、Injective上に構築されたdAppへの接続および操作に使用できます。
+
+- **KeplrからInjectiveアドレスを取得する**
+
+```ts lines
+import { ChainId } from "@injectivelabs/ts-types";
+
+const getKeplr = () => {
+  if (!window.keplr) {
+    throw new Error("Keplr extension not installed");
+  }
+
+  return window.keplr;
+};
+
+(async () => {
+  const keplr = getKeplr();
+  const chainId = ChainId.Mainnet;
+  await keplr.enable(chainId);
+  const injectiveAddresses = await keplr
+    .getOfflineSigner(chainId)
+    .getAccounts();
+
+  console.log(injectiveAddresses);
+})();
+```
+
+- **Keplrを使用してトランザクションに署名する**
+
+Keplrを使用して、Injective上でトランザクションを準備・署名・ブロードキャストする方法の例については、[Cosmosトランザクション](../transactions/cosmos/)を参照してください。

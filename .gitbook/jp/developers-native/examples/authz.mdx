@@ -1,0 +1,130 @@
+---
+title: AuthZ
+updatedAt: "2025-12-23"
+---
+
+`authz`モジュールは、ADR 30に従ったCosmos SDKモジュールの実装で、あるアカウント（granter）から別のアカウント（grantee）へ任意の権限を付与できるようにします。
+
+## メッセージ
+
+### MsgGrant
+
+認可のgrantはMsgGrantメッセージを使用して作成されます。すでに(granter, grantee, Authorization)の三つ組に対するgrantが存在する場合、新しいgrantで以前のものが上書きされます。既存grantを更新または延長したい場合は、同じ (granter, grantee, Authorization) の組み合わせで新しいgrantを再作成する必要があります。
+
+便利なメッセージ型の一覧:
+
+```
+"/injective.exchange.v1beta1.MsgCreateSpotLimitOrder",
+"/injective.exchange.v1beta1.MsgCreateSpotMarketOrder",
+"/injective.exchange.v1beta1.MsgCancelSpotOrder",
+"/injective.exchange.v1beta1.MsgBatchUpdateOrders",
+"/injective.exchange.v1beta1.MsgBatchCancelSpotOrders",
+"/injective.exchange.v1beta1.MsgDeposit",
+"/injective.exchange.v1beta1.MsgWithdraw",
+"/injective.exchange.v1beta1.MsgCreateDerivativeLimitOrder",
+"/injective.exchange.v1beta1.MsgCreateDerivativeMarketOrder",
+"/injective.exchange.v1beta1.MsgCancelDerivativeOrder",
+"/injective.exchange.v1beta1.MsgBatchUpdateOrders",
+"/injective.exchange.v1beta1.MsgBatchCancelDerivativeOrders",
+"/injective.exchange.v1beta1.MsgDeposit",
+"/injective.exchange.v1beta1.MsgWithdraw",
+```
+
+[cosmos sdkのドキュメント](https://docs.cosmos.network/main/modules/authz)によると、「認可は特定のMsgサービスメソッドごとに1つずつ付与される必要がある」とされています。したがって、`grantee`が`granter`に代わって認可を持つようにしたい各メッセージ型ごとに、以下のコードスニペットを繰り返す必要があります。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgGrant } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKeyOfGranter = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+const messageType =
+  "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder"; /* example message type */
+
+const msg = MsgGrant.fromJSON({
+  messageType,
+  grantee,
+  granter,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGranter,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgExec
+
+granteeがgranterに代わってトランザクションを実行したい場合は、MsgExecを送信する必要があります。この例では、MsgSendを使用してgranterのアカウントアドレスから別のアカウントアドレスへアセットを転送します。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgExec, MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKeyOfGrantee = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+
+const msgs = MsgSend.fromJSON({
+  amount: {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  },
+  srcInjectiveAddress: granter,
+  dstInjectiveAddress: "inj1...",
+});
+
+const msg = MsgExec.fromJSON({
+  msgs,
+  grantee,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGrantee,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgRevoke
+
+grantはMsgRevokeメッセージで削除できます。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgRevoke } from "@injectivelabs/sdk-ts/core/modules";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const privateKeyOfGranter = "0x...";
+const grantee = "inj...";
+const granter = "inj...";
+const messageType =
+  "/injective.exchange.v1beta1.MsgCreateSpotLimitOrder"; /* example message type */
+
+const msg = MsgRevoke.fromJSON({
+  messageType,
+  grantee,
+  granter,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGranter,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

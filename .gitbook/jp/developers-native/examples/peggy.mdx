@@ -1,0 +1,72 @@
+---
+title: Peggy
+updatedAt: "2025-11-28"
+---
+
+`peggy`モジュールはInjective ↔ Ethereumブリッジの中核です。デポジットされた資金はEthereumの[peggyコントラクト](https://etherscan.io/address/0xF955C57f9EA9Dc8781965FEaE0b6A2acE2BAD6f3#code)上でロックされ、Injectiveチェーン上でミントされます。同様に、出金される資金はInjectiveチェーン上でバーンされ、Ethereumのpeggyコントラクト上でアンロックされます。
+
+## メッセージ
+
+### MsgSendToEth
+
+このメッセージは、[peggyコントラクト](https://etherscan.io/address/0xF955C57f9EA9Dc8781965FEaE0b6A2acE2BAD6f3#code)を介してInjective Chainから資金を引き出すために使用されます。その過程で資金はInjectiveチェーン上でバーンされ、peggyコントラクトからEthereumアドレスへ送金されます。
+
+なお、このトランザクションには、標準のINJトランザクション手数料に加えて、Ethereumのガス手数料をカバーするための10米ドルのブリッジ手数料が課されます。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import { toBigNumber, toChainFormat } from '@injectivelabs/utils'
+import { MsgSendToEth } from '@injectivelabs/sdk-ts/core/modules'
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts/core/tx'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TokenPrice, TokenStaticFactory } from '@injectivelabs/sdk-ts/service'
+// refer to https://github.com/InjectiveLabs/injective-lists
+import { tokens } from '../data/tokens.json'
+
+export const tokenStaticFactory = new TokenStaticFactory(tokens as TokenStatic[])
+
+const tokenPriceMap = new TokenPrice(Network.Mainnet)
+const tokenService = new TokenService({
+  chainId: ChainId.Mainnet,
+  network: Network.Mainnet,
+})
+
+const ETH_BRIDGE_FEE_IN_USD = 10
+const endpointsForNetwork = getNetworkEndpoints(Network.Mainnet)
+
+const tokenSymbol = 'INJ'
+const tokenMeta = tokenStaticFactory.toToken(tokenSymbol)
+
+const amount = 1
+const injectiveAddress = 'inj1...'
+const destinationAddress = '0x...' // ethereum address
+const tokenDenom = `peggy${tokenMeta.erc20.address}`
+
+if (!tokenMeta) {
+  return
+}
+
+const tokenUsdPrice = tokenPriceMap[tokenMeta.coinGeckoId]
+const amountToFixed = toChainFormat(amount, tokenMeta.decimals).toFixed()
+const bridgeFeeInToken = toBigNumber(ETH_BRIDGE_FEE_IN_USD).dividedBy(tokenUsdPrice).toFixed()
+
+const msg = MsgSendToEth.fromJSON({
+  injectiveAddress,
+  address: destinationAddress,
+  amount: {
+    denom: tokenDenom,
+    amount: amountToFixed,
+  },
+  bridgeFee: {
+    denom: tokenDenom,
+    amount: bridgeFeeInToken,
+  },
+})
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Mainnet,
+}).broadcast({
+  msgs: msg,
+})
+```

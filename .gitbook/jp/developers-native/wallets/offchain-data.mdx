@@ -1,0 +1,64 @@
+---
+title: オフチェーン（任意）データ
+updatedAt: "2025-11-28"
+---
+
+このページでは、Cosmosの[ADR-036](https://docs.cosmos.network/main/build/architecture/adr-036-arbitrary-signature)仕様に基づいて任意のデータに署名・検証する方法の例を提供します。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+`@injectivelabs/sdk-ts`の`generateArbitrarySignDoc`関数を使用してADR-36互換の`signDoc`を生成できます。生成した`signDoc`をブラウザウォレットまたはCLI環境での署名・検証に使用できます。最新のパッケージバージョンを使用していることを確認してください。
+</Callout>
+
+#### Keplrのようなブラウザウォレットを使用して署名と検証を行う
+
+```typescript
+
+(async () => {
+  const message = "Offline Sign Message Example";
+  const signer = 'inj1...'
+  const chainId = 'injective-1'
+  
+  // Sign Arbitrary Data
+  const signature = await window.keplr.signArbitrary(chainId, signer, message)
+  
+  // Verify Arbitrary Data
+  const result = await window.keplr.verifyArbitrary(chainId, signer, message, signature)
+  
+  if (result) {
+    console.log("Signature is valid");
+  }
+})();
+```
+
+#### CLI環境でPrivateKeyを使用して署名と検証を行う
+
+```typescript
+import { config } from "dotenv";
+import { PrivateKey } from "@injectivelabs/sdk-ts/core/accounts";
+import { generateArbitrarySignDoc } from "@injectivelabs/sdk-ts/core/tx";
+
+config();
+
+(async () => {
+  const { privateKey } = PrivateKey.generate();
+  const injectiveAddress = privateKey.toBech32();
+  const publicKey = privateKey.toPublicKey();
+  
+  const message = "Offline Sign Message Example";
+  const { signDocBuff } = generateArbitrarySignDoc(message, injectiveAddress);
+
+  const signature = await privateKey.sign(signDocBuff);
+  const signatureInHex = Buffer.from(signature).toString("hex");
+
+  if (
+    PrivateKey.verifyArbitrarySignature({
+      signature: signatureInHex,
+      signDoc: signDocBuff,
+      publicKey: publicKey.toHex(),
+    })
+  ) {
+    console.log("Signature is valid");
+  }
+})();
+
+```
