@@ -1,0 +1,181 @@
+---
+title: Denomメタデータ
+updatedAt: "2025-11-28"
+---
+
+`denom` は、InjectiveのBankモジュール内でトークンを表現する方法です。これらのアセットは、トレーディング、exchangeモジュール上での新規マーケット作成、オークションへの参加、他アドレスへの送金などに使用できます。
+
+開発者およびトレーダーにとって最大の悩みの1つは、これらの `denom` のメタデータを取得することです。このメタデータには `decimals`、`symbol`、`name` などが含まれます。
+
+このガイドでは、`injective-lists` リポジトリから直接 `denom` メタデータを取得し、対象の `denom` にマッピングする方法を示します。同じアプローチを使って、SpotマーケットやDerivativeマーケットの `denoms` メタデータをマッピングすることも可能です。
+
+## Injective Lists
+
+`injective-lists` は、Injective上のすべてのトークンのメタデータ情報を保持する公開リポジトリです。この種の情報については、最も最新かつ信頼性の高いソースです。このリポジトリにPRを作成することで、自分のトークン情報を提出できます。フィールドを正しく指定するようにしてください。特に `"denom"` フィールド（[token standards](/jp/defi/tokens/) を参照）には、トークン規格に応じて適切な `ibc`、`peggy`、`factory` プレフィックスを付ける必要があります。
+
+メタデータはチェーン上の新しい `denoms` に対して30分ごとに自動的に取得され、`json` ファイルが再生成されます。
+
+[https://github.com/InjectiveLabs/injective-lists/tree/master/json/tokens](https://github.com/InjectiveLabs/injective-lists/tree/master/json/tokens) フォルダにアクセスし、環境に応じてメタデータをダウンロードできます:
+
+1. [Mainnet Raw JSON](https://raw.githubusercontent.com/InjectiveLabs/injective-lists/refs/heads/master/json/tokens/mainnet.json)
+2. [Testnet Raw JSON](https://github.com/InjectiveLabs/injective-lists/blob/master/json/tokens/testnet.json)
+
+JSONを取得したら、対象の `denom` とメタデータをマッピングする必要があります。
+
+このメタデータ情報が持つインターフェースは以下の通りです:
+
+```typescript
+export interface Token {
+  name: string;
+  logo: string;
+  symbol: string;
+  decimals: number;
+  coinGeckoId: string;
+  denom: string;
+  address: string;
+  tokenType: string;
+  tokenVerification: string;
+}
+```
+
+### Bank残高
+
+特定のアドレスのbank残高を取得する場合（以下にTypeScriptの例を示します）、上記のJSONファイルから取得したメタデータ情報と簡単にマッピングできます。
+
+```typescript
+import { config } from "dotenv";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { IndexerGrpcPortfolioApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+config();
+
+/** Querying Example */
+(async () => {
+  const endpoints = getNetworkEndpoints(Network.MainnetSentry);
+  const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc);
+
+  const injectiveAddress = "inj...";
+  const { balances } = chainGrpcBankApi.fetchBalances(injectiveAddress);
+
+  console.log(bankBalances);
+
+ const metadata = JSON.parse(await readFile("./mainnet.json", "utf8")) as {
+    denom: string;
+    address: string;
+    decimals: string;
+    logo: string;
+    name: string;
+    tokenType: string;
+    coinGeckoId: string
+  }[];
+  const balances = bankBalances.map((balance) => {
+    const meta = metadata.find((m) => m.denom === balance.denom);
+
+    return {
+      ...balance,
+      ...meta,
+    };
+  }
+
+  console.log(balances)
+})();
+```
+
+これで、bank残高に必要なすべてのメタデータ情報（`decimals`、`symbol`、`name`、`logo` など）が含まれるようになります。
+
+### Spotマーケット
+
+bank残高と同様に、同じアプローチでSpotマーケット内の `denoms` をメタデータにマッピングできます。
+
+```typescript
+import { config } from "dotenv";
+import { readFile } from "fs/promises";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcSpotApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+config();
+
+/** Querying Example */
+(async () => {
+  const endpoints = getNetworkEndpoints(Network.Testnet);
+  const indexerGrpcSpotApi = new IndexerGrpcSpotApi(endpoints.indexer);
+
+  const markets = await indexerGrpcSpotApi.fetchMarkets();
+
+  console.log(markets);
+
+  const metadata = JSON.parse(await readFile("./mainnet.json", "utf8")) as {
+    denom: string;
+    address: string;
+    decimals: string;
+    logo: string;
+    name: string;
+    tokenType: string;
+    coinGeckoId: string;
+  }[];
+  const marketsWithMetadata = markets.map((market) => {
+    const baseTokenMetadata = metadata.find(
+      (m) => m.denom === market.baseDenom
+    );
+    const quoteTokenMetadata = metadata.find(
+      (m) => m.denom === market.quoteDenom
+    );
+
+    return {
+      ...market,
+      baseTokenMetadata,
+      quoteTokenMetadata,
+    };
+  });
+
+  console.log(marketsWithMetadata);
+})();
+```
+
+### Derivativeマーケット
+
+bank残高と同様に、同じアプローチでDerivativeマーケット内の `denom` をメタデータにマッピングできます。
+
+```typescript
+import { config } from "dotenv";
+import { readFile } from "fs/promises";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+config();
+
+/** Querying Example */
+(async () => {
+  const endpoints = getNetworkEndpoints(Network.Testnet);
+  const indexerGrpcDerivativeApi = new IndexerGrpcDerivativesApi(
+    endpoints.indexer
+  );
+
+  const markets = await indexerGrpcDerivativeApi.fetchMarkets();
+
+  console.log(markets);
+
+  const metadata = JSON.parse(await readFile("./mainnet.json", "utf8")) as {
+    denom: string;
+    address: string;
+    decimals: string;
+    logo: string;
+    name: string;
+    tokenType: string;
+    coinGeckoId: string;
+  }[];
+  const marketsWithMetadata = markets.map((market) => {
+    const baseTokenMetadata = metadata.find(
+      (m) => m.denom === market.baseDenom
+    );
+
+    return {
+      ...market,
+      quoteTokenMetadata,
+    };
+  });
+
+  console.log(marketsWithMetadata);
+})();
+```

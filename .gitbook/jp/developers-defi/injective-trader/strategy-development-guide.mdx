@@ -1,0 +1,730 @@
+---
+title: 戦略開発ガイド
+updatedAt: "2025-12-27"
+---
+
+# 戦略開発ガイド
+
+## 設定ガイド
+
+Injective Traderは、動作、コンポーネント、戦略パラメーターを定義するためにYAML設定ファイルを使用します。
+
+特に注目すべき重要な設定セクションは以下の通りです:
+
+* `LogLevel`
+* `Components` セクション内の `Initializer` における `Network` と `MarketTickers`
+* `Strategies` セクション
+
+設定構造の詳細な内訳は以下の通りです:
+
+### トップレベルパラメーター
+
+```yaml
+Exchange: Helix                # Trading exchange to use
+LogLevel: INFO                 # Logging level (DEBUG, INFO, WARNING, ERROR)
+```
+
+### Componentsセクション
+
+`Components` セクションはフレームワークコンポーネントを設定します:
+
+```yaml
+Components:
+  # Chain initialization and market setup
+  Initializer:
+    Network: mainnet           # Network to connect to (mainnet or testnet)
+    MarketTickers:             # Market tickers to track (will be converted to IDs)
+      - INJ/USDT PERP
+      - ETH/USDT
+    BotName: MyBot
+
+  # Chain listening configuration
+  ChainListener:
+    ReconnectionDelay: 5       # Seconds to wait before reconnection attempts
+    LargeGapThreshold: 50      # Sequence gap threshold for orderbook snapshot requests
+
+  # Transaction broadcasting configuration
+  MessageBroadcaster:
+    ErrorCodesJson: config/error_codes.json   # Error code lookup for tx validation
+    GranteePool:               # For authz transaction mode
+      MaxPendingTxs: 5         # Maximum pending transactions per grantee
+      ErrorThreshold: 3        # Consecutive errors before blocking a grantee
+      BlockDuration: 300       # Seconds to block a grantee after errors
+      RotationInterval: 1      # Seconds between grantee rotations
+    RefreshInterval: 300       # Seconds between grant refresh checks
+    Batch:                     # Transaction batching settings
+      MaxBatchSize: 15         # Maximum messages per batch
+      MinBatchSize: 3          # Minimum messages to trigger immediate send
+      MaxGasLimit: 5000000     # Maximum gas per batch
+      MaxBatchDelay: 0.5       # Maximum seconds to wait for batch completion
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**Note**: ほとんどのユーザーは、`Network` の設定と、リッスンしたいすべてのマーケットを `MarketTickers` に含めることだけを行えば十分です。
+これらの高度なコンポーネント設定を変更する必要はありません。デフォルト値はほとんどのユースケースで適切に機能します。
+</Callout>
+
+### Strategiesセクション
+
+`Strategies` セクションは各トレーディング戦略を定義します:
+
+```yaml
+Strategies:
+  SimpleStrategy:                                    # Strategy identifier (your choice)
+    # Required parameters
+    Name: "SimpleStrategy"                           # Strategy name (used in logs)
+    Class: "SimpleStrategy"                          # [REQUIRED] Python class name to instantiate
+    MarketIds:                                       # [REQUIRED] Markets to trade on
+      - "0x9b9980167ecc3645ff1a5517886652d94a0825e54a77d2057cbbe3ebee015963"  # INJ/USDT PERP
+    AccountAddresses:                                # [REQUIRED] Accounts to use
+      - "inj1youractualaccount..."                   # (Must match private key in env)
+    TradingAccount: "inj1youractualaccount..."       # [REQUIRED] Account for placing orders (Must match private key in env)
+
+    # Optional parameters
+    FeeRecipient: "inj1feerecipient..."   # Address to receive trading fees (if applicable)
+    CIDPrefix: "simple_strat"              # Prefix for client order IDs
+    SubaccountIds: ["0x123..."]            # Specific subaccounts to use (otherwise all available)
+
+    # Risk management configuration [Optional]
+    # You don't have to include them if you don't have your specific risk model
+    Risk: "BasicRiskModel"                 # Risk model to apply (if using risk management)
+    RiskConfig:                            # Risk thresholds
+      DrawdownWarning: 0.1                 # 10% drawdown warning threshold
+      DrawdownCritical: 0.2                # 20% drawdown critical threshold
+      MarginWarning: 0.7                   # 70% margin usage warning
+      MarginCritical: 0.8                  # 80% margin usage critical
+```
+
+**必須の戦略パラメーター:**
+
+* `Class`: Pythonクラス名と正確に一致する必要があります
+* `MarketIds`: この戦略でトレードするマーケットIDのリスト（hexフォーマットを使用）
+* `AccountAddresses`: この戦略でトレーディングに使用するアカウントのリスト
+* `TradingAccount`: 注文執行に使用するアカウント（`AccountAddresses` に含まれている必要があります）\[詳細は [Trading Mode Configuration](https://www.notion.so/Trading-Mode-Configuration-1bb7a004ab758056affdefc2c99aca08?pvs=21) を参照]
+
+**推奨パラメーター:**
+
+* `CIDPrefix`: client order IDのプレフィックス（自分の注文を識別するのに役立ちます）
+* `Name`: ログとモニタリング用の人間可読な名前
+
+**カスタムパラメーター:**
+
+* 戦略が必要とする任意のカスタムパラメーターを追加できます
+* 戦略名の下にあるすべてのパラメーターは `self.config` で利用可能になります
+* 関連パラメーターは明確化のために `Parameters` セクションでグループ化してください
+
+### Trading Modeの設定
+
+フレームワークは2つのトレーディングモードをサポートします:
+
+#### Direct Execution Mode
+
+```yaml
+Strategies:
+  SimpleStrategy:
+    # Other parameters...
+    TradingAccount: "inj1youraccount..."   # Account that will sign and broadcast transactions
+```
+
+#### Authorization (Authz) Mode
+
+```yaml
+Strategies:
+  SimpleStrategy:
+    # Other parameters...
+    Granter: "inj1granteraccount..."   # Account granting permission to execute trades
+    Grantees:                          # Accounts that can execute trades on behalf of granter
+      - "inj1grantee1..."
+      - "inj1grantee2..."
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**Note**: direct executionのための `TradingAccount` か、authorizationモードのための `Granter` および `Grantees` のいずれかを指定する必要があります。
+フレームワークは初期化時にこの要件を強制します。
+</Callout>
+
+### RetryConfigセクション
+
+`RetryConfig` セクションは、ネットワーク操作のリトライ動作を制御します:
+
+```yaml
+RetryConfig:
+  # Global retry settings
+  DefaultRetry:
+    max_attempts: 3            # Maximum retry attempts
+    base_delay: 1.0            # Base delay between retries (seconds)
+    max_delay: 32.0            # Maximum delay cap (seconds)
+    jitter: true               # Add randomness to delay
+    timeout: 30.0              # Operation timeout (seconds)
+    error_threshold: 10        # Errors before circuit breaking
+    error_window: 60           # Error counting window (seconds)
+
+  # Component-specific retry settings (override defaults)
+  ChainListener:
+    max_attempts: 5            # More retries for chain listener
+    base_delay: 2.0
+    max_delay: 45.0
+  MessageBroadcaster:
+    max_attempts: 3
+    base_delay: 1.0
+    max_delay: 30.0
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**Note**: RetryConfigには妥当なデフォルトがあり、特定の接続性の問題に遭遇しない限り、通常はカスタマイズの必要はありません。
+</Callout>
+
+***
+
+全体構造を理解したところで、いよいよカスタム戦略を開発する準備ができました！
+
+## 戦略開発ガイド
+
+Injective Traderの戦略は、`Strategy` ベースクラスをベースとする一貫した構造に従います。このセクションでは、効果的な戦略を構築する方法を説明します。
+
+### Strategyクラスの構造
+
+戦略クラスはベースの `Strategy` クラスを継承します:
+
+```python
+from src.core.strategy import Strategy, StrategyResult
+from src.utils.enums import UpdateType, Side
+
+class SimpleStrategy(Strategy):
+    def __init__(self, logger, config):
+		"""
+        Initialize strategy with logger and configuration.
+
+        Args:
+            logger: Logger instance for strategy logging
+            config: Strategy configuration dictionary
+                Required keys:
+                - MarketIds: List of market IDs to trade
+                - AccountAddresses: List of account addresses to use
+                Optional keys:
+                - Name: Strategy name
+                - Parameters: Strategy-specific parameters
+                - RiskConfig: Risk management parameters
+        """
+        super().__init__(logger, config)
+
+    def on_initialize(self, accounts, markets):
+        """
+        Initialize strategy-specific state and parameters.
+        Called once before strategy starts processing updates.
+
+        Args:
+            accounts: Dictionary of account_address -> Account
+            markets: Dictionary of market_id -> Market
+        """
+        pass
+
+    async def _execute_strategy(self, update_type, processed_data):
+        """
+        Strategy-specific execution logic.
+
+       Args:
+          update_type: Type of update being processed
+          processed_data: Update-specific data dictionary after handler processing
+              Common fields:
+              - market_id: Market identifier
+              - account_address: Account address (for account updates)
+              - subaccount_id: Subaccount identifier (for position/trade updates)
+
+        Returns:
+            StrategyResult:
+            - orders
+            - cancellations
+            - margin updates
+        """
+        pass
+```
+
+#### Strategyコンストラクタ（`__init__`）
+
+戦略クラスには、親クラスのコンストラクタを呼び出すコンストラクタを含めることができます:
+
+```python
+def __init__(self, logger, config):
+    super().__init__(logger, config)
+
+    # Custom initialization that doesn't require markets or accounts
+    self.custom_parameter = 42
+
+    # Optional: Custom handler overrides
+    self.handlers[UpdateType.OnOrderbook] = MyCustomOrderbookHandler(
+        self.logger, self.config, self.metrics
+    )
+
+    # Optional: Custom performance metrics overrides
+    self.my_metrics = MyCustomPerformanceMetrics(self.logger)
+```
+
+ベースクラスのコンストラクタは以下を処理します:
+
+1. パラメーターのバリデーションと抽出
+2. 標準のメトリクスとハンドラのセットアップ（自分のハンドラを書く方法については \[block link] を参照）
+3. 状態トラッキングコンテナの初期化
+4. トレーディングモード（directまたはauthz）のセットアップ
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**Important**: `__init__` メソッドはマーケットデータやアカウント情報にアクセスできません。
+これらのリソースを必要とする操作には `on_initialize` を使用してください。
+</Callout>
+
+ベースの `__init__` によって提供される利用可能なプロパティは以下の通りです:
+
+| **Property**             | **Description**                                       | **Source**                                                             | **Required**   |
+| ------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------- | -------------- |
+| `self.name`              | Strategy name used in log                             | From config `Name`                                                     | YES            |
+| `self.logger`            | Logger instance                                       | For strategy-specific logging                                          | YES            |
+| `self.config`            | Complete strategy configuration                       | Corresponding strategy subsection under `Strategies` section in config | YES            |
+| `self.market_ids`        | List of market IDs interested in this strategy        | From config `MarketIds`                                                | YES            |
+| `self.account_addresses` | List of account addresses interested in this strategy | From config `AccountAddresses`                                         | YES            |
+| `self.subaccount_ids`    | List of subaccount IDs                                | From config `SubaccountIds`                                            | NO             |
+| `self.markets`           | Dictionary of market_id → `Market` objects           | Populated during initialization                                        | NO             |
+| `self.accounts`          | Dictionary of account_address → `Account` objects    | Populated during initialization                                        | NO             |
+| `self.trading_mode`      | "direct" or "authz”                                   | Based on config                                                        | YES            |
+| `self.fee_recipient`     | Fee recipient address                                 | From config `FeeRecipient`                                             | NO             |
+| `self.cid_prefix`        | Client order ID prefix                                | From config `CIDPrefix`                                                | NO             |
+| `self.metrics`           | Performance tracking                                  | For recording metrics and alerts                                       | YES \[DEFAULT] |
+| `self.handlers`          | Event handlers dictionary                             | UpdateType → Handler objects                                           | YES \[DEFAULT] |
+
+#### 初期化メソッド（`on_initialize`）
+
+`on_initialize` メソッドは、フレームワーク起動時にマーケットとアカウントがロードされた後に一度だけ呼び出されます。
+
+**目的**: 戦略の状態とパラメーターを初期化する **パラメーター**:
+
+* `accounts`: account_address → `Account` オブジェクトの辞書
+* `markets`: market_id → `Market` オブジェクトの辞書
+
+**戻り値**: \[Optional] 初期注文（あれば）を含む `StrategyResult`
+
+```python
+def on_initialize(self, accounts, markets):
+    # Now you have access to all market and account data
+
+    # Example: Access market metadata
+    for market_id in self.market_ids:
+        market = markets[market_id]
+        self.logger.info(f"Market {market_id} tick sizes: "
+                         f"price={market.min_price_tick}, "
+                         f"quantity={market.min_quantity_tick}")
+
+    # Example: Initialize parameters that need market info
+    self.avg_prices = {
+        market_id: markets[market_id].orderbook.tob()[0]
+        for market_id in self.market_ids
+        if markets[market_id].orderbook.tob()[0]
+    }
+
+    # Example: Place initial orders
+    if self.config.get("PlaceInitialOrders", False):
+        result = StrategyResult()
+        # Add initial orders...
+        return result
+
+    return None  # No initial orders
+```
+
+このメソッドは戦略初期化シーケンスの一部です:
+
+1. フレームワークがこの戦略で必要なマーケットとアカウントをロードする
+2. ロードされたデータを引数として `on_initialize` メソッドが呼び出される
+3. 返された注文があれば即座に提出される
+4. 戦略がrunning stateへ移行する
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**Tip**: マーケットやアカウントデータを必要とするパラメーター初期化、および戦略に必要な初期注文の発注には `on_initialize` を使用してください。
+`Account` と `Market` のデータ構造については、以下を参照してください。
+</Callout>
+
+#### 戦略ロジック（`_execute_strategy`）メソッド
+
+`_execute_strategy` メソッドは「Strategy Execution（`execute`）Method」の一部です。ベースクラスの `execute` メソッドが完全な実行フローを処理します:
+
+1. **初期化チェック**: 必要に応じて戦略を初期化
+2. **状態更新**: 戦略のアカウントおよびマーケット参照を更新
+3. **データ処理**: 適切なハンドラを通じて生の更新データを処理
+4. **戦略実行**: 処理済みデータを使って `_execute_strategy` メソッドを呼び出し
+5. **注文の補完**: 注文にデフォルト値（fee recipient、client ID）を追加
+
+このメソッドをオーバーライドする必要はほとんどありません。代わりに、カスタムトレーディングロジックが入る `_execute_strategy` の実装に集中してください:
+
+**目的**: マーケットデータを分析し、トレーディングシグナルを生成する **パラメーター**:
+
+* `update_type`: 処理される更新のタイプ \[詳細は [Update Types and Corresponding Data Fields](https://www.notion.so/Update-Types-and-Corresponding-Data-Fields-1bb7a004ab7580c1a32ed133b770937a?pvs=21) を参照]
+* `processed_data`: 関連フィールドを含むハンドラ処理済みデータの辞書
+
+**戻り値**: 注文/キャンセルを含む `StrategyResult` または `None`
+
+```python
+async def _execute_strategy(self, update_type, processed_data):
+    # Only respond to orderbook updates
+    if update_type != UpdateType.OnOrderbook:
+        return None
+
+    # Get market data
+    market_id = processed_data["market_id"]
+    market = self.markets[market_id]
+
+    # Get current prices
+    bid, ask = market.orderbook.tob()
+    if not bid or not ask:
+        self.logger.warning(f"Incomplete orderbook for {market_id}")
+        return None
+
+    # Implement your strategy logic
+    spread = (ask - bid) / bid
+    if spread < self.min_spread_threshold:
+        self.logger.info(f"Spread too narrow: {spread:.2%}")
+        return None
+
+    # Get subaccount for orders
+    subaccount_id = self.config.get("SubaccountIds", [""])[0]
+    if not subaccount_id:
+        return None
+
+    # Check current position to avoid exceeding limits
+    position = self.get_position(subaccount_id, market_id)
+    current_size = Decimal("0")
+    if position:
+        current_size = position.get("quantity", Decimal("0"))
+
+    # Determine order parameters
+    result = StrategyResult()
+
+    # Create a new order
+    if current_size < self.max_position:
+        buy_order = Order(
+            market_id=market_id,
+            subaccount_id=subaccount_id,
+            order_side=Side.BUY,
+            price=bid,
+            quantity=self.order_size,
+            market_type=market.market_type # Required field as of v0.5.1
+        )
+        result.orders.append(buy_order)
+        self.logger.info(f"Creating BUY order at {bid}: {self.order_size}")
+
+    # Cancel existing orders if needed
+    for order_hash in self.active_orders:
+        result.cancellations.append({
+            "market_id": market_id,
+            "subaccount_id": subaccount_id,
+            "order_hash": order_hash
+        })
+
+    return result
+```
+
+`_execute_strategy` では以下のことができます:
+
+* 特定のイベントをハンドルするためにupdate typeでフィルタリング
+* 現在のマーケットデータとアカウント状態にアクセス
+* 注文発注前に既存ポジションをチェック
+* マーケット条件に基づくカスタムトレーディングロジックを実装
+* 新規注文を作成し、既存注文をキャンセル
+* derivativeマーケットでのポジションマージンを更新
+* モニタリングおよびデバッグのために戦略の意思決定をログ出力
+
+フレームワークは、返された `StrategyResult` に基づき、トランザクション作成、シミュレーション、ブロードキャストなどの執行詳細を処理します。
+
+#### ベストプラクティス
+
+1. **すべてのパラメーターを `on_initialize` で初期化する**
+   * パラメーターを `self.config` から取得
+   * 不足パラメーターに対するデフォルト値を設定
+   * 内部状態変数を初期化
+2. **update typeをフィルタリングする**
+   * 戦略が気にする update type のみを処理
+   * 常に processed_data 内の必須フィールドをチェック
+3. **マーケットデータをバリデートする**
+   * bid/askが存在することを使用前に確認
+   * ポジションが存在することを意思決定前に検証
+4. **マーケット制約を尊重する**
+   * 価格と数量をマーケットのtick sizeに丸める
+   * 最低注文サイズおよびnotional要件をチェック
+5. **トレーディングアカウントを適切にハンドルする**
+   * トレーディングアカウントがAccountAddressesに含まれることを確認
+   * 注文に対して正しいsubaccount_idを指定
+6. **適切なロギングを実装する**
+   * 戦略の意思決定および重要なイベントをログ出力
+   * 適切なログレベル（info、warning、error）を使用
+7. **カスタムパラメーターを設定する**
+   * 戦略固有の値には `Parameters` セクションを使用
+   * 期待されるパラメーターをドキュメント化
+
+このガイドは、フレームワークで効果的なトレーディング戦略を作成・設定するための強固な基礎を提供します。
+
+### カスタムハンドラ
+
+フレームワークは、戦略にデータを渡す前に、特殊化されたハンドラを通じて更新を処理します。データ処理をより詳細に制御するために、カスタムハンドラを作成できます。
+
+#### Handlerベースクラス
+
+すべてのハンドラは `UpdateHandler` ベースクラスから継承します:
+
+```python
+class UpdateHandler(ABC):
+    def __init__(self, logger, config, metrics):
+        self.logger = logger
+        self.config = config
+        self.metrics = metrics
+
+    async def process(self, **update_data) -> Dict:
+        """Process update data and return processed result"""
+        try:
+            return await self._process_update(**update_data)
+        except Exception as e:
+            self.logger.error(f"Error processing update: {e}")
+            return None
+
+    @abstractmethod
+    async def _process_update(self, **kwargs) -> Dict:
+        """Process specific update type. To be implemented by subclasses."""
+        pass
+```
+
+#### カスタムハンドラの作成
+
+カスタムハンドラを作成するには:
+
+1. 適切なハンドラベースクラスから継承する
+2. `_process_update` メソッドをオーバーライドする
+3. 戦略のコンストラクタでハンドラを登録する
+
+```python
+from src.core.handlers import OrderbookHandler
+
+class MyCustomOrderbookHandler(OrderbookHandler):
+    async def _process_update(self, **update_data):
+        # Get basic processed data
+        processed_data = await super()._process_update(**update_data)
+        if not processed_data:
+            return None
+
+        # Add custom metrics
+        market = update_data.get("market")
+        bid, ask = market.orderbook.tob()
+
+        if bid and ask:
+            # Calculate custom metrics
+            spread = ask - bid
+            spread_pct = (ask - bid) / bid
+
+            # Add to processed data
+            processed_data["spread"] = spread
+            processed_data["spread_pct"] = spread_pct
+
+            # Record in metrics system
+            self.metrics.add_custom_metric(f"{market.market_id}_spread", spread_pct)
+
+        return processed_data
+```
+
+#### カスタムハンドラの登録
+
+戦略のコンストラクタでカスタムハンドラを登録します:
+
+```python
+def __init__(self, logger, config):
+    super().__init__(logger, config)
+
+    # Replace default handlers with custom implementations
+    self.handlers[UpdateType.OnOrderbook] = MyCustomOrderbookHandler(
+        self.logger, self.config, self.metrics
+    )
+    self.handlers[UpdateType.OnPosition] = MyCustomPositionHandler(
+        self.logger, self.config, self.metrics
+    )
+```
+
+#### 利用可能なハンドラタイプ
+
+フレームワークは、拡張可能な以下のハンドラタイプを提供します:
+
+| **Handler Class**  | **Update Type**            | **Purpose**                  |
+| ------------------ | -------------------------- | ---------------------------- |
+| `OrderbookHandler` | `UpdateType.OnOrderbook`   | Process orderbook updates    |
+| `OracleHandler`    | `UpdateType.OnOraclePrice` | Process oracle price updates |
+| `PositionHandler`  | `UpdateType.OnPosition`    | Process position updates     |
+| `BalanceHandler`   | `UpdateType.OnBankBalance` | Process balance updates      |
+| `DepositHandler`   | `UpdateType.OnDeposit`     | Process deposit updates      |
+| `TradeHandler`     | `UpdateType.OnSpotTrade`   | Process trade execution      |
+| `OrderHandler`     | `UpdateType.OnSpotOrder`   | Process order updates        |
+
+## 主要データ構造
+
+### Update TypeとそれぞれのデータFields
+
+フレームワークは、戦略が反応できる以下の主要なイベントタイプを処理します:
+
+| **Update Type**                | **Description**            | **Key Data Fields**                                                                                                                                                            |
+| ------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `UpdateType.OnOrderbook`       | Orderbook updates          | <p>- market_id: str<br />- market: Market object with updated orderbook<br />- sequence: int<br />- block_time: Optional[str]</p>                                                    |
+| `UpdateType.OnOraclePrice`     | Oracle price updates       | <p>- market_id: str<br />- symbol: str<br />- price: Decimal<br />- timestamp: int</p>                                                                                               |
+| `UpdateType.OnBankBalance`     | Account balance updates    | <p>- account_address: str<br />- account: Account object<br />- balance: BankBalance object</p>                                                                                    |
+| `UpdateType.OnDeposit`         | Subaccount deposit updates | <p>- account_address: str<br />- subaccount_id: str<br />- account: Account object<br />- deposit: Deposit object</p>                                                                |
+| `UpdateType.OnPosition`        | Position changes           | <p>- market_id: str<br />- account_address: str<br />- subaccount_id: str<br />- account: Account object<br />- position: Position object</p>                                          |
+| `UpdateType.OnSpotTrade`       | Spot trade execution       | <p>- market_id: str<br />- subaccount_id: str<br />- account: Account object<br />- trade: Order object representing the trade<br />- order: Original Order object that was filled</p> |
+| `UpdateType.OnDerivativeTrade` | Derivative trade execution | <p>- market_id: str<br />- subaccount_id: str<br />- account: Account object<br />- trade: Order object representing the trade<br />- order: Original Order object that was filled</p> |
+| `UpdateType.OnSpotOrder`       | Spot order updates         | <p>- market_id: str<br />- subaccount_id: str<br />- account: Account object<br />- order: Order object</p>                                                                          |
+| `UpdateType.OnDerivativeOrder` | Derivative order updates   | <p>- market_id: str<br />- subaccount_id: str<br />- account: Account object<br />- order: Order object</p>                                                                          |
+
+### Strategy Result
+
+戦略がアクションを取る決定をするとき、以下を含む `StrategyResult` オブジェクトを返します:
+
+| **Field**        | **Description**                                               | **Content**                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `orders`         | List of new orders to create                                  | `[Order(...), Order(...)]`                                                                                                                                  |
+| `cancellations`  | List of orders to cancel                                      | `[{"market_id": "0x123...", "subaccount_id": "0x456...", "order_hash": "0x789..."}]`                                                                        |
+| `margin_updates` | List of margin adjustments                                    | `[{"action": "increase", "market_id": "0x123...", "source_subaccount_id": "0x456...", "destination_subaccount_id": "0x456...", "amount": Decimal("50.0")}]` |
+| `liquidations`   | List of positions to be liquidated due to insufficient margin | `[{"market_id": "0x123...", "subaccount_id": "0x456...", "executor_subaccount_id": "0x789...", "price": price, "quantity": quantity, "margin": margin}]`    |
+
+### Market
+
+| **Property**         | **Type**                                               | **Description**                          | **Note**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------- | ------------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `market_id`          | `str`                                                  | Unique market identifier                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `market_type`        | `MarketType` object                                    | Market type (SPOT, DERIVATIVE or BINARY) | Required as of v0.5.1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `market`             | `BinaryOptionMarket \| DerivativeMarket \| SpotMarket` | Market object from `pyinjective`         | <p>SpotMarket: <a href="https://api.injective.exchange/#chain-exchange-for-spot-spotmarkets">https://api.injective.exchange/#chain-exchange-for-spot-spotmarkets</a><br />DerivativeMarket: <a href="https://api.injective.exchange/#chain-exchange-for-derivatives-derivativemarkets">https://api.injective.exchange/#chain-exchange-for-derivatives-derivativemarkets</a><br />BinaryOptionMarket: <a href="https://api.injective.exchange/#chain-exchange-for-binary-options-binaryoptionsmarkets">https://api.injective.exchange/#chain-exchange-for-binary-options-binaryoptionsmarkets</a></p> |
+| `orderbook`          | `Orderbook` object                                     | Current market orderbook                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `oracle_price`       | `Decimal`                                              | Current market oracle price              |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `min_price_tick`     | `Decimal`                                              | Minimum price increment                  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `min_quantity_tick`  | `Decimal`                                              | Minimum quantity increment               |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `base_oracle_price`  | `Decimal`                                              | Base token oracle price                  | Optional                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `quote_oracle_price` | `Decimal`                                              | Quote token oracle price                 | Optional                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `oracle_timestamp`   | `int`                                                  | Oracle price timestamp                   | Optional                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `mark_price`         | `Decimal`                                              | Mark price for derivative                | Optional                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+
+### Orderbook
+
+| **Property** | **Type**             | **Description**                            | **Note**                                |
+| ------------ | -------------------- | ------------------------------------------ | --------------------------------------- |
+| `sequence`   | `str`                | Orderbook sequence number                  |                                         |
+| `bids`       | `List[L2PriceLevel]` | List of bid price levels                   | `L2PriceLevel` : `price` and `quantity` |
+| `asks`       | `List[L2PriceLevel]` | List of ask price levels                   | `L2PriceLevel` : `price` and `quantity` |
+| `tob`        | `Tuple`              | Top of book (bid, ask) prices              |                                         |
+| `is_health`  | `bool`               | Indicates if orderbook is in healthy state | `False` when sequence is 0              |
+
+### Account
+
+| **Property**      | **Type**                 | **Description**                    | **Note**                                |
+| ----------------- | ------------------------ | ---------------------------------- | --------------------------------------- |
+| `private_key`     | `PrivateKey`             | Injective private key              | Not directly accessible                 |
+| `public_key`      | `PublicKey`              | Corresponding public key           |                                         |
+| `address`         | `Address`                | Account address object             | Contains sequence information           |
+| `account_address` | `str`                    | Bech32 address string              | Format: "inj1..."                       |
+| `bank_balances`   | `Dict[str, BankBalance]` | Token balances in account          | Key: denom                              |
+| `balances`        | `Dict[str, Balance]`     | Alternative balance representation | Key: denom                              |
+| `subaccounts`     | `Dict[str, SubAccount]`  | Subaccounts owned by this account  | Key: subaccount_id                     |
+| `sequence`        | `int`                    | Transaction sequence number        | Property that accesses address.sequence |
+
+### BankBalance
+
+| **Property** | **Type**  | **Description**    | **Note**                  |
+| ------------ | --------- | ------------------ | ------------------------- |
+| `denom`      | `str`     | Token denomination | e.g., "inj", "peggy0x..." |
+| `amount`     | `Decimal` | Token amount       | Human-readable format     |
+
+### Balance
+
+| **Property** | **Type**  | **Description**    | **Note**                   |
+| ------------ | --------- | ------------------ | -------------------------- |
+| `denom`      | `str`     | Token denomination | e.g., "inj", "peggy0x..."  |
+| `total`      | `Decimal` | Total balance      |                            |
+| `available`  | `Decimal` | Available balance  | Total minus locked amounts |
+
+### SubAccount
+
+| **Property**        | **Type**                      | **Description**              | **Note**                           |
+| ------------------- | ----------------------------- | ---------------------------- | ---------------------------------- |
+| `subaccount_id`     | `str`                         | Unique subaccount identifier | Format: "0x..."                    |
+| `portfolio`         | `Dict[str, Deposit]`          | Token deposits in subaccount | Key: denom                         |
+| `positions`         | `Dict[str, Position]`         | Trading positions            | Key: market_id                    |
+| `open_bid_orders`   | `Dict[str, Dict[str, Order]]` | Open buy orders              | `market_id -> {order_hash: Order}` |
+| `open_ask_orders`   | `Dict[str, Dict[str, Order]]` | Open sell orders             | `market_id -> {order_hash: Order}` |
+| `traded_bid_orders` | `Dict[str, Dict[str, Order]]` | Filled buy orders            | `market_id -> {order_hash: Order}` |
+| `traded_ask_orders` | `Dict[str, Dict[str, Order]]` | Filled sell orders           | `market_id -> {order_hash: Order}` |
+
+### Deposit
+
+| **Property**        | **Type**  | **Description**          | **Note**                       |
+| ------------------- | --------- | ------------------------ | ------------------------------ |
+| `denom`             | `str`     | Token denomination       | e.g., "inj", "peggy0x..."      |
+| `total_balance`     | `Decimal` | Total deposit amount     |                                |
+| `available_balance` | `Decimal` | Available deposit amount | Total minus margins and locked |
+
+### Position
+
+| **Property**               | **Type**  | **Description**              | **Note**   |
+| -------------------------- | --------- | ---------------------------- | ---------- |
+| `subaccount_id`            | `str`     | Owner subaccount ID          |            |
+| `market_id`                | `str`     | Market identifier            |            |
+| `quantity`                 | `Decimal` | Position size                |            |
+| `entry_price`              | `Decimal` | Average entry price          |            |
+| `margin`                   | `Decimal` | Total margin amount          |            |
+| `cumulative_funding_entry` | `Decimal` | Cumulative funding at entry  |            |
+| `is_long`                  | `bool`    | Long (true) or short (false) |            |
+| `unrealized_pnl`           | `Decimal` | Unrealized profit/loss       | Default: 0 |
+| `total_volume`             | `Decimal` | Total trading volume         | Default: 0 |
+| `trades_count`             | `int`     | Number of trades             | Default: 0 |
+| `mark_price`               | `Decimal` | Current market price         | Optional   |
+| `liquidation_price`        | `Decimal` | Liquidation threshold        | Optional   |
+| `margin_ratio`             | `Decimal` | Current margin ratio         | Optional   |
+
+### Order
+
+| **Property**     | **Type**      | **Description**             | **Note**                      |
+| ---------------- | ------------- | --------------------------- | ----------------------------- |
+| `market_id`      | `str`         | Market identifier           |                               |
+| `subaccount_id`  | `str`         | Subaccount identifier       |                               |
+| `order_side`     | `Side`        | Buy or sell                 | Side.BUY or Side.SELL         |
+| `price`          | `Decimal`     | Order price                 |                               |
+| `quantity`       | `Decimal`     | Order quantity              |                               |
+| `order_hash`     | `str`         | Unique order identifier     | Optional, set by chain        |
+| `fillable`       | `Decimal`     | Remaining unfilled quantity | Optional                      |
+| `filled`         | `Decimal`     | Filled quantity             | Optional                      |
+| `status`         | `OrderStatus` | Order status                | BOOKED, PARTIAL_FILLED, etc. |
+| `order_type`     | `str`         | Order type                  | Default: "LIMIT"              |
+| `margin`         | `Decimal`     | Margin amount (derivatives) | Optional                      |
+| `leverage`       | `Decimal`     | Leverage multiple           | Optional                      |
+| `trigger_price`  | `Decimal`     | For conditional orders      | Optional                      |
+| `market_type`    | `MarketType`  | SPOT, DERIVATIVE, BINARY    | Optional                      |
+| `fee_recipient`  | `str`         | Fee recipient address       | Default: ""                   |
+| `cid`            | `str`         | Client order ID             | Optional                      |
+| `created_at`     | `datetime`    | Creation timestamp          | Optional                      |
+| `updated_at`     | `datetime`    | Last update timestamp       | Optional                      |
+| `position_delta` | `Dict`        | Position change data        | Optional for derivatives      |
+| `payout`         | `Decimal`     | Expected payout             | Optional for derivatives      |
+| `tx_hash`        | `str`         | Transaction hash            | Optional                      |
+| `error_code`     | `str`         | Error code if failed        | Optional                      |
+| `error_message`  | `str`         | Error details               | Optional                      |
+
+### OrderStatus (Enum)
+
+| **Value**        | **Description**           |
+| ---------------- | ------------------------- |
+| `BOOKED`         | Order accepted and active |
+| `PARTIAL_FILLED` | Partially filled          |
+| `FILLED`         | Completely filled         |
+| `CANCELLED`      | Cancelled by user         |
+| `EXPIRED`        | Expired (time-based)      |
+
+### Side (Enum)
+
+| **Value** | **Description** |
+| --------- | --------------- |
+| `BUY`     | Buy order       |
+| `SELL`    | Sell order      |
+
+### MarketType (Enum)
+
+| **Value**    | **Description**       |
+| ------------ | --------------------- |
+| `SPOT`       | Spot market           |
+| `DERIVATIVE` | Derivatives market    |
+| `BINARY`     | Binary options market |

@@ -1,0 +1,28 @@
+---
+title: 最小数量Tick Size
+updatedAt: "2025-10-30"
+---
+
+## マーケットの最小数量Tick Size
+
+最小マーケット数量tick sizeは、注文数量が増減できる最小単位を定義します。例えば、あるマーケットの最小数量tick sizeが **0.001** である場合、数量 **0.0011** で提出された注文は、許容される増分に一致しないため拒否されます。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+**Note:** derivativeマーケットでは、ユーザーインターフェースとチェーンの間で `minQuantityTickSize` のフォーマットが共通であるため、変換は不要です。
+</Callout>
+
+### Spotマーケット
+
+#### Human-Readableフォーマットからチェーンフォーマットへの変換
+
+**18 base decimals** と **6 quote decimals** を持つINJ/USDTマーケットを例とすると、チェーンフォーマットへの変換は以下の通りです:
+
+$$\text{chainFormat} = \text{value} \times 10^{\text{baseDecimals}}$$
+
+#### チェーンフォーマットからHuman-Readableフォーマットへの変換
+
+human-readableフォーマットへ戻すには:
+
+$$\text{humanReadableFormat} = \text{value} \times 10^{-\text{baseDecimals}}$$
+
+また、[concepts](../developers/concepts/calculation-min-price-tick-size/) も併せてご確認ください。
