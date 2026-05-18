@@ -318,6 +318,7 @@
                   "developers-evm/oracle-precompile",
                   "developers-evm/erc20-module",
                   "developers-evm/infrastructure-and-tooling",
+                  "developers-evm/alchemy-rpc-setup",
                   "developers-evm/add-injective-to-your-dapp",
                   "developers-evm/evm-integrations-cheat-sheet",
                   "developers-evm/evm-integrations-faq",
