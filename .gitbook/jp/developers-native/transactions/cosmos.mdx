@@ -1,0 +1,296 @@
+---
+title: Cosmosトランザクション
+updatedAt: "2025-11-28"
+---
+
+Injective上のすべてのトランザクションは同じフローに従います。フローは、トランザクションの準備、署名、ブロードキャストの3つのステップで構成されます。各ステップを個別に深掘りし、サンプルを交えてプロセスを詳しく説明することで、トランザクション全体のフローを理解できるようにします。
+
+## トランザクションの準備
+
+まず、署名のためのトランザクションを準備する必要があります。
+
+この時点では、提供されたMessageと署名者に基づいてトランザクションを素早く準備するオンラインの抽象化（例: `@cosmjs/stargate`パッケージの使用）は**使用できません**。理由は、これらのパッケージがInjectiveのpublicKey typeUrlをサポートしていないため、アドレスの準備をクライアント側で行う必要があるからです。
+
+これを解決するため、`@injectivelabs/sdk-ts`パッケージに`txRaw`トランザクションを準備できる関数を提供しています。`txRaw`はCosmosで使用されるトランザクションインターフェースで、トランザクションおよび署名者自体に関する詳細を含みます。
+
+Cosmosウォレットから秘密鍵を取得する一般的な方法は、現在のchainIdの鍵を取得し、そこからpubKeyにアクセスすることです（例: `const key = await window.keplr.getKey(chainId)` => `const pubKey = key.publicKey`）。
+
+```ts
+import {
+  MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  BaseAccount,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
+  createTransaction,
+} from "@injectivelabs/sdk-ts/core/tx";
+import { toBigNumber, toChainFormat } from "@injectivelabs/utils";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { getStdFee, DEFAULT_BLOCK_TIMEOUT_HEIGHT } from "@injectivelabs/utils";
+
+(async () => {
+  const injectiveAddress = "inj1";
+  const chainId = "injective-1"; /* ChainId.Mainnet */
+  const restEndpoint =
+    "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.MainnetSentry).rest */
+  const amount = {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  };
+
+  /** Account Details **/
+  const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
+  const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+    injectiveAddress
+  );
+  const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+
+  /** Block Details */
+  const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
+  const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+  const latestHeight = latestBlock.header.height;
+  const timeoutHeight = toBigNumber(latestHeight).plus(
+    DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  );
+
+  /** Preparing the transaction */
+  const msg = MsgSend.fromJSON({
+    amount,
+    srcInjectiveAddress: injectiveAddress,
+    dstInjectiveAddress: injectiveAddress,
+  });
+
+  /** Get the PubKey of the Signer from the Wallet/Private Key */
+  const pubKey = await getPubKey();
+
+  /** Prepare the Transaction **/
+  const { txRaw, signDoc } = createTransaction({
+    pubKey,
+    chainId,
+    fee: getStdFee({}),
+    message: msg,
+    sequence: baseAccount.sequence,
+    timeoutHeight: timeoutHeight.toNumber(),
+    accountNumber: baseAccount.accountNumber,
+  });
+})();
+```
+
+## トランザクションへの署名
+
+トランザクションの準備ができたら、署名に進みます。前のステップで`txRaw`トランザクションを取得したら、Cosmosネイティブのウォレット（例: Keplr）を使用して署名します。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import { SignDoc } from '@keplr-wallet/types'
+
+const getKeplr = async (chainId: string) => {
+  await window.keplr.enable(chainId);
+
+  const offlineSigner = window.keplr.getOfflineSigner(chainId);
+  const accounts = await offlineSigner.getAccounts();
+  const key = await window.keplr.getKey(chainId);
+
+  return { offlineSigner, accounts, key }
+}
+
+const { offlineSigner } = await getKeplr(ChainId.Mainnet)
+
+/* Sign the Transaction */
+const address = 'inj1...'
+const signDoc = /* From the previous step */
+const directSignResponse = await offlineSigner.signDirect(address, signDoc as SignDoc)
+```
+
+`@injectivelabs/wallet-strategy`パッケージを使用することで、トランザクションへの署名に使用できる抽象化メソッドを提供するウォレットを、そのまま手に入れることもできます。パッケージのドキュメントを参照してください。セットアップと使用は簡単です。**dAppで複数のウォレットを利用できるため、こちらの方法が推奨されます。`WalletStrategy`はトランザクション署名抽象化以上のものを提供します。**
+
+## トランザクションのブロードキャスト
+
+署名の準備ができたら、Injectiveチェーン自体にトランザクションをブロードキャストする必要があります。第2ステップで署名を取得した後、それを署名済みのトランザクションに含めてチェーンにブロードキャストします。
+
+```ts
+import { ChainId } from '@injectivelabs/ts-types'
+import {
+  TxRestApi,
+  CosmosTxV1Beta1Tx,
+  BroadcastModeKeplr,
+  getTxRawFromTxRawOrDirectSignResponse,
+  TxRaw,
+} from '@injectivelabs/sdk-ts/core/tx'
+import { TransactionException } from '@injectivelabs/exceptions'
+
+/**
+ * IMPORTANT NOTE:
+ * If we use Keplr/Leap wallets
+ * after signing the transaction we get a `directSignResponse`,
+ * and instead of adding the signature to the `txRaw` we create
+ * using the `createTransaction` function we need to append the
+ * signature from the `directSignResponse` to the transaction that
+ * got actually signed (i.e `directSignResponse.signed`) and
+ * the reason why is that the user can make some changes on the original
+ * transaction (i.e change gas limit or gas prices) and the transaction
+ * that get's signed and the one that gets broadcasted are not the same.
+ */
+const directSignResponse = /* From the second step above */;
+const txRaw = getTxRawFromTxRawOrDirectSignResponse(directSignResponse)
+
+const broadcastTx = async (chainId: String, txRaw: TxRaw) => {
+  const getKeplr = async (chainId: string) => {
+    await window.keplr.enable(chainId);
+
+    return window.keplr
+  }
+
+  const keplr = await getKeplr(ChainId.Mainnet)
+  const result = await keplr.sendTx(
+    chainId,
+    CosmosTxV1Beta1Tx.TxRaw.encode(txRaw).finish(),
+    BroadcastModeKeplr.Sync,
+  )
+
+  if (!result || result.length === 0) {
+    throw new TransactionException(
+      new Error('Transaction failed to be broadcasted'),
+      { contextModule: 'Keplr' },
+    )
+  }
+
+  return Buffer.from(result).toString('hex')
+}
+
+const txHash = await broadcastTx(ChainId.Mainnet, txRaw)
+
+/**
+ * Once we get the txHash, because we use the Sync mode we
+ * are not sure that the transaction is included in the block,
+ * it can happen that it's still in the mempool so we need to query
+ * the chain to see when the transaction will be included
+ */
+const restEndpoint = 'https://sentry.lcd.injective.network' /* getNetworkEndpoints(Network.MainnetSentry).rest */
+const txRestApi = new TxRestApi(restEndpoint)
+
+ /** This will poll querying the transaction and await for it's inclusion in the block */
+const response = await txRestApi.fetchTxPoll(txHash)
+```
+
+## 例（準備 + 署名 + ブロードキャスト）
+
+フロー全体を見てみましょう（Keplrを署名ウォレットとして使用）。
+
+```ts
+import {
+  MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  BaseAccount,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import { ChainId } from "@injectivelabs/ts-types";
+import { SignDoc } from "@keplr-wallet/types";
+import { toBigNumber, toChainFormat } from "@injectivelabs/utils";
+import { TransactionException } from "@injectivelabs/exceptions";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { getStdFee, DEFAULT_BLOCK_TIMEOUT_HEIGHT } from "@injectivelabs/utils";
+import {
+  TxRaw,
+  TxRestApi,
+  createTransaction,
+  CosmosTxV1Beta1Tx,
+  BroadcastModeKeplr,
+  getTxRawFromTxRawOrDirectSignResponse,
+} from "@injectivelabs/sdk-ts/core/tx";
+
+const getKeplr = async (chainId: string) => {
+  await window.keplr.enable(chainId);
+
+  const offlineSigner = window.keplr.getOfflineSigner(chainId);
+  const accounts = await offlineSigner.getAccounts();
+  const key = await window.keplr.getKey(chainId);
+
+  return { offlineSigner, accounts, key };
+};
+
+const broadcastTx = async (chainId: string, txRaw: TxRaw) => {
+  const keplr = await getKeplr(ChainId.Mainnet);
+  const result = await keplr.sendTx(
+    chainId,
+    CosmosTxV1Beta1Tx.TxRaw.encode(txRaw).finish(),
+    BroadcastModeKeplr.Sync
+  );
+
+  if (!result || result.length === 0) {
+    throw new TransactionException(
+      new Error("Transaction failed to be broadcasted"),
+      { contextModule: "Keplr" }
+    );
+  }
+
+  return Buffer.from(result).toString("hex");
+};
+
+(async () => {
+  const chainId = "injective-1"; /* ChainId.Mainnet */
+  const { key, offlineSigner } = await getKeplr(chainId);
+  const pubKey = Buffer.from(key.pubKey).toString("base64");
+  const injectiveAddress = key.bech32Address;
+  const restEndpoint =
+    "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.MainnetSentry).rest */
+  const amount = {
+    denom: "inj",
+    amount: toChainFormat(0.01).toFixed(),
+  };
+
+  /** Account Details **/
+  const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
+  const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+    injectiveAddress
+  );
+  const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+
+  /** Block Details */
+  const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
+  const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+  const latestHeight = latestBlock.header.height;
+  const timeoutHeight = toBigNumber(latestHeight).plus(
+    DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  );
+
+  /** Preparing the transaction */
+  const msg = MsgSend.fromJSON({
+    amount,
+    srcInjectiveAddress: injectiveAddress,
+    dstInjectiveAddress: injectiveAddress,
+  });
+
+  /** Prepare the Transaction **/
+  const { signDoc } = createTransaction({
+    pubKey,
+    chainId,
+    fee: getStdFee({}),
+    message: msg,
+    sequence: baseAccount.sequence,
+    timeoutHeight: timeoutHeight.toNumber(),
+    accountNumber: baseAccount.accountNumber,
+  });
+
+  const directSignResponse = await offlineSigner.signDirect(
+    injectiveAddress,
+    signDoc as SignDoc
+  );
+  const txRaw = getTxRawFromTxRawOrDirectSignResponse(directSignResponse);
+  const txHash = await broadcastTx(ChainId.Mainnet, txRaw);
+  const response = await new TxRestApi(restEndpoint).fetchTxPoll(txHash);
+
+  console.log(response);
+})();
+```
+
+## WalletStrategyを使用した例（準備 + 署名 + ブロードキャスト）
+
+例は[wallet-coreパッケージ](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/wallets/wallet-core)で参照できます。

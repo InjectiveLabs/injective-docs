@@ -1,0 +1,79 @@
+---
+title: Fee Grant
+updatedAt: "2025-11-28"
+---
+
+`feegrant`モジュールにより、アカウント（granter）が他のアカウント（grantee）にfee allowanceを付与できます。これにより、granteeはgranterの資金を使ってトランザクション手数料を支払うことができます。
+
+## メッセージ
+
+### MsgGrantAllowance
+
+fee allowance grantは`MsgGrantAllowance`メッセージを使用して作成されます。すでに(granter, grantee)ペアに対するgrantが存在する場合、新しいgrantで以前のものが上書きされます。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgGrantAllowance } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKeyOfGranter = "0x...";
+
+const date = new Date("2023-10-02T00:00:00Z");
+const expiration = date.getTime() / 1000;
+const granter = "inj...";
+const grantee = "inj...";
+const allowance = {
+  spendLimit: [
+    {
+      denom: "inj",
+      amount: "10000",
+    },
+  ],
+  expiration,
+};
+
+const msg = MsgGrantAllowance.fromJSON({
+  granter,
+  grantee,
+  allowance,
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey: privateKeyOfGranter,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgRevokeAllowance
+
+grantはMsgRevokeAllowanceメッセージで削除できます。granteeはgranterの資金を使ってトランザクション手数料を支払うことができなくなります。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgRevokeAllowance } from "@injectivelabs/sdk-ts/core/modules";
+
+const privateKey = "0x...";
+const granteeAddress = "inj...";
+const granterAddress = "inj...";
+
+const params = {
+  grantee: granteeAddress,
+  granter: granterAddress,
+};
+
+const msg = MsgRevokeAllowance.fromJSON(params);
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

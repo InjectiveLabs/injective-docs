@@ -1,0 +1,121 @@
+---
+title: Insurance
+updatedAt: "2025-11-28"
+---
+
+このモジュールは、Injective ChainのExchangeモジュールにおけるderivativeマーケットに対して、より高いレバレッジ取引をサポートするために使用されるinsurance fund（保険基金）を提供します。概要レベルでは、各derivativeマーケット用のinsurance fundは、insurance fund shareトークンを通じて、insurance fund内の原資産に対する比例的な請求権を所有するパーミッションレスなunderwriterグループによって資金提供されます。
+
+## メッセージ
+
+Insuranceモジュールがエクスポートし、Injectiveチェーンとのやり取りに使用できるメッセージを順番に確認し、例を提供します。
+
+### MsgCreateInsuranceFund
+
+このメッセージはInsurance Fundを作成するために使用されます。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgCreateInsuranceFund } from "@injectivelabs/sdk-ts/core/modules";
+
+const injectiveAddress = "inj1...";
+const privateKey = "0x...";
+const amount = 5;
+const fund = {
+  ticker: "BTC/USDT",
+  quoteDenom: "peggy0x...",
+  oracleBase: "BTC",
+  oracleQuote: "USDT",
+  oracleType: 10, // BANDIBC
+};
+
+const msg = MsgCreateInsuranceFund.fromJSON({
+  fund,
+  injectiveAddress,
+  deposit: {
+    denom: fund.quoteDenom,
+    amount: toChainFormat(amount, 6 /* 6 because USDT has 6 decimals */).toFixed(),
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgRequestRedemption
+
+このメッセージは、redemption（償還）をリクエストするために使用されます。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+import { MsgRequestRedemption } from "@injectivelabs/sdk-ts/core/modules";
+
+const marketId = "0x....";
+const privateKey = "0x...";
+const injectiveAddress = "inj1...";
+const denom = "share1"; // the insurance fund denom (share{id})
+const amount = toChainFormat(5).toFixed();
+
+const msg = MsgRequestRedemption.fromJSON({
+  marketId,
+  injectiveAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```
+
+### MsgUnderwrite
+
+このメッセージは、insurance fundにunderwriteするために使用されます。
+
+```ts
+import { Network } from "@injectivelabs/networks";
+import { toChainFormat } from "@injectivelabs/utils";
+import { MsgUnderwrite } from "@injectivelabs/sdk-ts/core/modules";
+import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
+
+const usdtDecimals = 6;
+const marketId = "0x...";
+const privateKey = "0x...";
+const denom = "peggy0x...";
+const injectiveAddress = "inj1...";
+const amount = toChainFormat(5, usdtDecimals).toFixed();
+
+const msg = MsgUnderwrite.fromJSON({
+  marketId,
+  injectiveAddress,
+  amount: {
+    denom,
+    amount,
+  },
+});
+
+const txHash = await new MsgBroadcasterWithPk({
+  privateKey,
+  network: Network.Testnet,
+}).broadcast({
+  msgs: msg,
+});
+
+console.log(txHash);
+```

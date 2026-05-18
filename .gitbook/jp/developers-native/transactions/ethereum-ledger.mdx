@@ -1,0 +1,363 @@
+---
+title: Ethereum Ledgerトランザクション
+updatedAt: "2025-11-28"
+---
+
+## Ledgerを使用したInjective上のトランザクション署名
+
+このドキュメントでは、Ledgerを使用してInjective上のトランザクションへ署名し、チェーンへブロードキャストする方法について説明します。Injectiveは鍵にEthereumのECDSA secp256k1曲線を使用する独自のカスタムAccount型を定義しているため、実装はCosmos SDKネイティブチェーンのデフォルトのアプローチとは異なります。
+
+## 実装
+
+実装方法を理解するため、いくつかの概念を順を追って確認し、これから取るアプローチが理解しやすいようにしましょう。
+
+### 背景
+
+導出パス（Derivation path）は、Hierarchical Deterministic (HD)ウォレットに鍵のツリー内で特定の鍵を導出する方法を伝えるデータです。導出パスは標準として使用されており、HDウォレットの一部としてBIP32で導入されました。Hierarchical Deterministic Walletとは、シードを使用して多くの公開鍵と秘密鍵を導出するウォレットを指す用語です。
+
+導出パスは次のような形をしています:
+
+`m/purpose'/coin_type'/account'/change/address_index`
+
+シーケンスの各部分にはそれぞれ役割があり、それぞれが秘密鍵、公開鍵、アドレスを変更します。HDパスの各部分の意味について詳細な解説は行いませんが、`coin_type`について簡単に説明します。各ブロックチェーンには、それを表す番号（`coin_type`）があります。Bitcoinは`0`、Ethereumは`60`、Cosmosは`118`です。
+
+### Injective固有のコンテキスト
+
+InjectiveはEthereumと同じ`coin_type`、すなわち`60`を使用します。これは、Ledgerを使用してInjective上のトランザクションに署名するには、**Ledger上のEthereumアプリを使用する必要がある**ことを意味します。
+
+Ledgerは1つの`coin_type`につき1つのアプリケーションしかインストールできません。Ethereumアプリを使用してInjective上のトランザクションに署名する必要があるため、有効な署名を取得するために利用可能なオプションを探る必要があります。利用可能なオプションの1つは、typed structured dataのハッシュと署名のための`EIP712`手順です。Ledgerは`signEIP712HashedMessage`を公開しており、これを使用します。
+
+`EIP712` typed dataに署名したら、通常のCosmos-SDKのアプローチを使用してトランザクションをパックし、ブロードキャストします。`SIGN_MODE_LEGACY_AMINO_JSON`モードの使用やCosmosトランザクションへの`Web3Exension`の付加など、いくつかの細かな違いがあり、本ドキュメントで説明します。
+
+### EIP712 Typed Data
+
+EIP 712はtyped structured dataのハッシュと署名のための標準です。あらゆるEIP712 typed dataについて、ユーザーが渡す各値（署名が必要なもの）には、その特定の値の正確な型を説明する型表現があります。ユーザーが署名したい値とその型（EIP712 typedDataの`PrimaryType`）に加えて、すべてのEIP712 typed dataにはトランザクションのソースに関するコンテキストを提供する`EIP712Domain`が含まれている必要があります。
+
+## トランザクションフロー
+
+実装自体はいくつかのステップで構成されます:
+
+1. Ledger上のEthereumアプリを使用して署名するためのトランザクションを準備する
+2. Ledger上でトランザクションを準備して署名する
+3. ブロードキャスト用のトランザクションを準備する
+4. トランザクションをブロードキャストする
+
+各ステップを深掘りし、トランザクションへの署名とチェーンへのブロードキャストに必要なアクションを詳しく説明します。
+
+### トランザクションの準備（署名用）
+
+前述のとおり、トランザクションはLedger上のEthereumアプリを使用して署名する必要があります。これは、署名段階に到達したら、ユーザーにLedger上のEthereumアプリへ切り替える（または開く）よう促す必要があることを意味します。
+
+各Cosmosトランザクションは、ユーザーがチェーン上で実行したい命令を表すメッセージで構成されることがわかっています。あるアドレスから別のアドレスに資金を送りたい場合は、`MsgSend`メッセージをトランザクションにパックし、チェーンにブロードキャストします。
+
+これを踏まえて、Injectiveチームはこれらのメッセージの[抽象化](https://github.com/InjectiveLabs/injective-ts/blob/master/packages/sdk-ts/src/core/modules/MsgBase.ts)を作成し、トランザクションへのパック方法を簡略化しました。各メッセージは、メッセージをインスタンス化するために必要な特定のパラメータセットを受け取ります。これが完了すると、抽象化は選択した署名/ブロードキャスト方法に基づいて使用できる便利なメソッドをいくつか公開します。例えば、Messageは`toDirectSign`メソッドを公開しており、これによりメッセージの型とproto表現が返され、デフォルトのCosmosアプローチを使用してトランザクションをパック、privateKeyで署名、チェーンにブロードキャストできます。
+
+この特定の実装で重要なのは、`toEip712Types`と`toEip712`メソッドです。最初のものをMessageのインスタンスで呼び出すと、EIP712 typed dataのMessageの型が返され、2つ目はEIP712 dataのMessageの値を返します。これら2つのメソッドを組み合わせることで、署名プロセスに渡せる有効なEIP712 typed dataを生成できます。
+
+これらのメソッドの使用例と、メッセージからEIP712 typedDataを生成する方法のコードスニペットを見てみましょう:
+
+```ts
+import {
+  MsgSend,
+} from "@injectivelabs/sdk-ts/core/modules";
+import {
+  getEip712TypedDataV2,
+  type Eip712ConvertTxArgs,
+  type Eip712ConvertFeeArgs,
+} from "@injectivelabs/sdk-ts/core/tx";
+import { EvmChainId } from "@injectivelabs/ts-types";
+import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
+
+/** More details on these two interfaces later on */
+const txArgs: Eip712ConvertTxArgs = {
+  accountNumber: accountDetails.accountNumber.toString(),
+  sequence: accountDetails.sequence.toString(),
+  timeoutHeight: timeoutHeight.toFixed(),
+  chainId: chainId,
+};
+const txFeeArgs: Eip712ConvertFeeArgs = getDefaultStdFee();
+const injectiveAddress = "inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku";
+const amount = {
+  denom: "inj",
+  amount: toChainFormat(0.01).toFixed(),
+};
+const evmChainId = EvmChainId.Mainnet;
+
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+/** The EIP712 TypedData that can be used for signing **/
+const eip712TypedData = getEip712TypedDataV2({
+  msgs: msg,
+  tx: txArgs,
+  evmChainId,
+  fee: txFeeArgs,
+});
+
+return eip712TypedData;
+```
+
+### Ledger上の署名プロセスの準備
+
+`eip712TypedData`が手に入ったので、Ledgerを使用して署名する必要があります。まず、ブラウザでサポートされているLedgerのtransportを取得し、`@ledgerhq/hw-app-eth`を使用してそのtransportを持つLedgerインスタンスを作成し、ユーザーのアクション（トランザクションの確認）の実行にLedgerデバイス上のEthereumアプリを使用させます。ステップ1で`eip712TypedData`を取得した後、`EthereumApp`上の`signEIP712HashedMessage`を使用してこのtypedDataに署名し、署名を返します。
+
+```ts
+import { TypedDataUtils } from 'eth-sig-util'
+import { bufferToHex, addHexPrefix } from 'ethereumjs-util'
+import EthereumApp from '@ledgerhq/hw-app-eth'
+
+const domainHash = (message: any) =>
+  TypedDataUtils.hashStruct('EIP712Domain', message.domain, message.types, true)
+
+const messageHash = (message: any) =>
+  TypedDataUtils.hashStruct(
+    message.primaryType,
+    message.message,
+    message.types,
+    true,
+  )
+
+const transport = /* Get the transport from Ledger */
+const ledger = new EthereumApp(transport)
+const derivationPath = /* Get the derivation path for the address */
+
+/* eip712TypedData from Step 1 */
+const object = JSON.parse(eip712TypedData)
+
+const result = await ledger.signEIP712HashedMessage(
+  derivationPath,
+  bufferToHex(domainHash(object)),
+  bufferToHex(messageHash(object)),
+)
+const combined = `${result.r}${result.s}${result.v.toString(16)}`
+const signature = combined.startsWith('0x') ? combined : `0x${combined}`
+
+return signature;
+```
+
+### ブロードキャスト用のトランザクションを準備する
+
+署名が手に入ったので、デフォルトのCosmosアプローチを使用してトランザクションを準備できます。
+
+```ts
+import {
+  SIGN_AMINO,
+  createTransaction,
+  createTxRawEIP712,
+  createWeb3Extension,
+} from "@injectivelabs/sdk-ts/core/tx";
+import {
+  BaseAccount,
+} from "@injectivelabs/sdk-ts/core/accounts";
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from "@injectivelabs/sdk-ts/client/chain";
+import { ChainId, EvmChainId } from "@injectivelabs/ts-types";
+import {
+  toBigNumber,
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
+} from "@injectivelabs/utils";
+
+const msg: MsgSend; /* from Step 1 */
+
+const chainId = ChainId.Mainnet;
+const evmChainId = EvmChainId.Mainnet;
+
+/** Account Details **/
+const chainRestAuthApi = new ChainRestAuthApi(lcdEndpoint);
+const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+  injectiveAddress
+);
+const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
+const accountDetails = baseAccount.toAccountDetails();
+
+/** Block Details */
+const chainRestTendermintApi = new ChainRestTendermintApi(lcdEndpoint);
+const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+const latestHeight = latestBlock.header.height;
+const timeoutHeight = toBigNumber(latestHeight).plus(
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+);
+
+const { txRaw } = createTransaction({
+  message: msgs,
+  memo: "",
+  signMode: SIGN_AMINO,
+  fee: getDefaultStdFee(),
+  pubKey: publicKeyBase64,
+  sequence: baseAccount.sequence,
+  timeoutHeight: timeoutHeight.toNumber(),
+  accountNumber: baseAccount.accountNumber,
+  chainId,
+});
+const web3Extension = createWeb3Extension({
+  evmChainId,
+});
+const txRawEip712 = createTxRawEIP712(txRaw, web3Extension);
+
+/** Append Signatures */
+const signatureBuff = Buffer.from(signature.replace("0x", ""), "hex");
+txRawEip712.signatures = [signatureBuff];
+
+return txRawEip712;
+```
+
+### トランザクションのブロードキャスト
+
+トランザクションが`TxRaw`にパックされたので、デフォルトのCosmosアプローチを使用してノードへブロードキャストできます。
+
+## コードベース
+
+以上のステップすべてを含むサンプルコードベースを見てみましょう。
+
+```ts
+import {
+  TxRestApi,
+  SIGN_AMINO,
+  createTransaction,
+  createTxRawEIP712,
+  createWeb3Extension,
+  getEip712TypedDataV2,
+  type Eip712ConvertTxArgs,
+  type Eip712ConvertFeeArgs
+} from '@injectivelabs/sdk-ts/core/tx'
+import {
+  MsgSend,
+} from '@injectivelabs/sdk-ts/core/modules'
+import {
+  BaseAccount,
+} from '@injectivelabs/sdk-ts/core/accounts'
+import {
+  ChainRestAuthApi,
+  ChainRestTendermintApi,
+} from '@injectivelabs/sdk-ts/client/chain'
+import { TypedDataUtils } from 'eth-sig-util'
+import EthereumApp from '@ledgerhq/hw-app-eth'
+import { bufferToHex, addHexPrefix } from 'ethereumjs-util'
+import { EvmChainId, ChainId } from '@injectivelabs/ts-types'
+import { toChainFormat, DEFAULT_BLOCK_TIMEOUT_HEIGHT, getDefaultStdFee } from '@injectivelabs/utils'
+
+const domainHash = (message: any) =>
+TypedDataUtils.hashStruct('EIP712Domain', message.domain, message.types, true)
+
+const messageHash = (message: any) =>
+  TypedDataUtils.hashStruct(
+    message.primaryType,
+    message.message,
+    message.types,
+    true,
+  )
+
+const signTransaction = async (eip712TypedData: any) => {
+  const transport = /* Get the transport from Ledger */
+  const ledger = new EthereumApp(transport)
+  const derivationPath = /* Get the derivation path for the address */
+
+  /* eip712TypedData from Step 1 */
+  const result = await ledger.signEIP712HashedMessage(
+    derivationPath,
+    bufferToHex(domainHash(eip712TypedData)),
+    bufferToHex(messageHash(eip712TypedData)),
+  )
+  const combined = `${result.r}${result.s}${result.v.toString(16)}`
+  const signature = combined.startsWith('0x') ? combined : `0x${combined}`
+
+  return signature;
+}
+
+const getAccountDetails = (address: string): BaseAccount => {
+  const chainRestAuthApi = new ChainRestAuthApi(
+    lcdEndpoint,
+  )
+  const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+    address,
+  )
+  const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse)
+  const accountDetails = baseAccount.toAccountDetails()
+
+  return accountDetails
+}
+
+const getTimeoutHeight = () => {
+  const chainRestTendermintApi = new ChainRestTendermintApi(
+    lcdEndpoint,
+  )
+  const latestBlock = await chainRestTendermintApi.fetchLatestBlock()
+  const latestHeight = latestBlock.header.height
+  const timeoutHeight = latestHeight + DEFAULT_BLOCK_TIMEOUT_HEIGHT
+
+  return timeoutHeight
+}
+
+const address = 'inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku'
+const chainId = ChainId.Mainnet
+const evmChainId = EvmChainId.Mainnet
+const accountDetails = getAccountDetails()
+const timeoutHeight = getTimeoutHeight
+
+const txArgs: Eip712ConvertTxArgs = {
+  accountNumber: accountDetails.accountNumber.toString(),
+  sequence: accountDetails.sequence.toString(),
+  timeoutHeight: timeoutHeight.toString(),
+  chainId: chainId,
+}
+const txFeeArgs: Eip712ConvertFeeArgs = getDefaultStdFee()
+const injectiveAddress = 'inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku'
+const amount = {
+  amount: toChainFormat(0.01).toFixed(),
+  denom: "inj",
+};
+
+const msg = MsgSend.fromJSON({
+  amount,
+  srcInjectiveAddress: injectiveAddress,
+  dstInjectiveAddress: injectiveAddress,
+});
+
+/** The EIP712 TypedData that can be used for signing **/
+const eip712TypedData = getEip712TypedDataV2({
+  msgs: msg,
+  tx: txArgs,
+  evmChainId,
+  fee: txFeeArgs
+})
+
+/** Signing on Ethereum */
+const signature = await signTransaction(eip712TypedData)
+
+/** Preparing the transaction for client broadcasting */
+const { txRaw } = createTransaction({
+  message: msg,
+  memo: '',
+  signMode: SIGN_AMINO,
+  fee: getDefaultStdFee(),
+  pubKey: publicKeyBase64,
+  sequence: accountDetails.sequence,
+  timeoutHeight: timeoutHeight.toNumber(),
+  accountNumber: accountDetails.accountNumber,
+  chainId: chainId,
+})
+const web3Extension = createWeb3Extension({
+  evmChainId,
+})
+const txRawEip712 = createTxRawEIP712(txRaw, web3Extension)
+
+/** Append Signatures */
+const signatureBuff = Buffer.from(signature.replace('0x', ''), 'hex')
+txRawEip712.signatures = [signatureBuff]
+
+/** Broadcast the transaction **/
+const txRestApi = new TxRestApi(lcdEndpoint)
+const response = await txRestApi.broadcast(txRawEip712)
+
+if (response.code !== 0) {
+  throw new Error(`Transaction failed: ${response.rawLog}`)
+}
+
+return response.txhash
+
+```
