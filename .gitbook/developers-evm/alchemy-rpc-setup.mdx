@@ -18,12 +18,14 @@ updatedAt: "2026-05-18"
 <Step title="Create an app">
 From the [Alchemy dashboard](https://dashboard.alchemy.com/), create a new app and select **Injective** as the chain. Choose the network:
 
-- **Injective EVM Mainnet** — Chain ID `1776`
-- **Injective EVM Testnet** — Chain ID `1439`
+- **Injective EVM Mainnet**: Chain ID `1776`
+- **Injective EVM Testnet**: Chain ID `1439`
 </Step>
 
 <Step title="Copy your RPC endpoints">
 Open your app and copy the HTTPS and WebSocket endpoints:
+
+<CodeGroup>
 
 ```bash Mainnet
 https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY>
@@ -35,7 +37,10 @@ https://inj-testnet.g.alchemy.com/v2/<YOUR_API_KEY>
 wss://inj-testnet.g.alchemy.com/v2/<YOUR_API_KEY>
 ```
 
-<Warning>Keep your API key private — treat it like a password.</Warning>
+</CodeGroup>
+
+<Warning>Keep your API key private, treat it like a password.</Warning>
+
 </Step>
 
 <Step title="Start building">
@@ -90,6 +95,6 @@ curl https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY> \
 
 ## Next steps
 
-- [EVM network information](/developers-evm/network-information) — chain IDs, explorers, and public RPC endpoints
+- [EVM network information](/developers-evm/network-information) - chain IDs, explorers, and public RPC endpoints
 - [Deploy your first EVM smart contract](/developers-evm/smart-contracts)
 - [Connect your dApp to Injective](/developers-evm/add-injective-to-your-dapp)
