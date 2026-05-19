@@ -1,10 +1,14 @@
 ---
-title: Alchemy RPC Setup
-description: Connect to Injective EVM mainnet and testnet via Alchemy JSON-RPC endpoints.
+title: "Alchemy RPC Setup"
+description: "Connect to Injective EVM mainnet and testnet via Alchemy JSON-RPC endpoints."
 updatedAt: "2026-05-18"
 ---
 
 [Alchemy](https://www.alchemy.com/) provides reliable JSON-RPC endpoints for the Injective EVM. Use this guide to create an Alchemy app and start making requests.
+
+<iframe className="w-1\/2 aspect-video rounded-xl" src="https://youtube.com/embed/Ma3CIvDRSjk?rel=0&autoplay=1&cc_load_policy=0" title="Injective + Alchemy quick start (1 min) - YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen frameborder="0" />
+
+[_Injective \+ Alchemy quick start (1 min) - YouTube_](https://youtube.com/watch?v=Ma3CIvDRSjk)
 
 ## Prerequisites
 
@@ -14,83 +18,80 @@ updatedAt: "2026-05-18"
 ## Steps
 
 <Steps>
+  <Step title="Create an app">
+    From the [Alchemy dashboard](https://dashboard.alchemy.com/), create a new app and select **Injective** as the chain. Choose the network:
 
-<Step title="Create an app">
-From the [Alchemy dashboard](https://dashboard.alchemy.com/), create a new app and select **Injective** as the chain. Choose the network:
+    - **Injective EVM Mainnet**: Chain ID `1776`
+    - **Injective EVM Testnet**: Chain ID `1439`
+  </Step>
+  <Step title="Copy your RPC endpoints">
+    Open your app and copy the HTTPS and WebSocket endpoints:
 
-- **Injective EVM Mainnet**: Chain ID `1776`
-- **Injective EVM Testnet**: Chain ID `1439`
-</Step>
+    <CodeGroup>
 
-<Step title="Copy your RPC endpoints">
-Open your app and copy the HTTPS and WebSocket endpoints:
+    ```bash Mainnet
+    https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY>
+    wss://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY>
+    ```
 
-<CodeGroup>
+    ```bash Testnet
+    https://inj-testnet.g.alchemy.com/v2/<YOUR_API_KEY>
+    wss://inj-testnet.g.alchemy.com/v2/<YOUR_API_KEY>
+    ```
 
-```bash Mainnet
-https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY>
-wss://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY>
-```
+    </CodeGroup>
 
-```bash Testnet
-https://inj-testnet.g.alchemy.com/v2/<YOUR_API_KEY>
-wss://inj-testnet.g.alchemy.com/v2/<YOUR_API_KEY>
-```
+    <Warning>
+      Keep your API key private, treat it like a password.
+    </Warning>
+  </Step>
+  <Step title="Start building">
+    Use the endpoint with your preferred library:
 
-</CodeGroup>
+    <CodeGroup>
 
-<Warning>Keep your API key private, treat it like a password.</Warning>
+    ```ts ethers.js (v6)
+    import { JsonRpcProvider } from "ethers";
+    
+    const provider = new JsonRpcProvider(
+      "https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY>"
+    );
+    
+    const blockNumber = await provider.getBlockNumber();
+    console.log("Latest block:", blockNumber);
+    ```
 
-</Step>
+    ```ts viem
+    import { createPublicClient, http } from "viem";
+    import { defineChain } from "viem";
+    
+    const injectiveEVM = defineChain({
+      id: 1776,
+      name: "Injective EVM",
+      nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+      rpcUrls: {
+        default: { http: ["https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY>"] },
+      },
+    });
+    
+    const client = createPublicClient({
+      chain: injectiveEVM,
+      transport: http(),
+    });
+    
+    const blockNumber = await client.getBlockNumber();
+    console.log("Latest block:", blockNumber);
+    ```
 
-<Step title="Start building">
-Use the endpoint with your preferred library:
+    ```bash curl
+    curl https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY> \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+    ```
 
-<CodeGroup>
-
-```ts ethers.js (v6)
-import { JsonRpcProvider } from "ethers";
-
-const provider = new JsonRpcProvider(
-  "https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY>"
-);
-
-const blockNumber = await provider.getBlockNumber();
-console.log("Latest block:", blockNumber);
-```
-
-```ts viem
-import { createPublicClient, http } from "viem";
-import { defineChain } from "viem";
-
-const injectiveEVM = defineChain({
-  id: 1776,
-  name: "Injective EVM",
-  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY>"] },
-  },
-});
-
-const client = createPublicClient({
-  chain: injectiveEVM,
-  transport: http(),
-});
-
-const blockNumber = await client.getBlockNumber();
-console.log("Latest block:", blockNumber);
-```
-
-```bash curl
-curl https://inj-mainnet.g.alchemy.com/v2/<YOUR_API_KEY> \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
-```
-
-</CodeGroup>
-</Step>
-
+    </CodeGroup>
+  </Step>
 </Steps>
 
 ## Next steps
