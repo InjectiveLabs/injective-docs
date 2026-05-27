@@ -1,0 +1,37 @@
+---
+title: IBC
+updatedAt: "2025-12-23"
+---
+
+IBC関連のデータをチェーンからクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### IBC hashからdenom traceを取得する
+
+```ts
+import { ChainGrpcIbcApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcIbcApi = new ChainGrpcIbcApi(endpoints.grpc);
+const hash = "...";
+
+const denomTrace = await chainGrpcIbcApi.fetchDenomTrace(hash);
+
+console.log(denomTrace);
+```
+
+### denom traceの一覧を取得する
+
+```ts
+import { ChainGrpcIbcApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcIbcApi = new ChainGrpcIbcApi(endpoints.grpc);
+
+const denomTraces = await chainGrpcIbcApi.fetchDenomsTrace();
+
+console.log(denomTraces);
+```

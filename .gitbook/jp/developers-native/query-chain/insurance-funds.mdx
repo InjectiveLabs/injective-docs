@@ -1,0 +1,95 @@
+---
+title: Insurance Funds
+updatedAt: "2025-12-23"
+---
+
+チェーン上のinsurance fund関連のデータをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### デフォルトのredemption notice period durationを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcInsuranceFundApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### insurance fundsとそれに関連するmetadataを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const insuranceFunds = await chainGrpcInsuranceFundApi.fetchInsuranceFunds();
+
+console.log(insuranceFunds);
+```
+
+### market IDに基づいてinsurance fundとそれに関連するmetadataを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const marketId = "0x...";
+const insuranceFund = await chainGrpcInsuranceFundApi.fetchInsuranceFund(
+  marketId
+);
+
+console.log(insuranceFund);
+```
+
+### あるmarketにおける指定したinjective addressの予測されるredemptionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const marketId = "0x...";
+const injectiveAddress = "inj...";
+
+const estimatedRedemptions =
+  await chainGrpcInsuranceFundApi.fetchEstimatedRedemptions({
+    marketId,
+    address: injectiveAddress,
+  });
+
+console.log(estimatedRedemptions);
+```
+
+### あるmarketにおける指定したinjective addressのpending redemptionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcInsuranceFundApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcInsuranceFundApi = new ChainGrpcInsuranceFundApi(endpoints.grpc);
+
+const marketId = "0x...";
+const injectiveAddress = "inj...";
+
+const pendingRedemptions =
+  await chainGrpcInsuranceFundApi.fetchPendingRedemptions({
+    marketId,
+    address: injectiveAddress,
+  });
+
+console.log(pendingRedemptions);
+```

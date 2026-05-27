@@ -2053,6 +2053,29 @@
                       "jp/developers-native/examples/token-factory",
                       "jp/developers-native/examples/wasm"
                     ]
+                  },
+                  {
+                    "group": "チェーンのクエリ",
+                    "pages": [
+                      "jp/developers-native/query-chain/index",
+                      "jp/developers-native/query-chain/auction",
+                      "jp/developers-native/query-chain/auth",
+                      "jp/developers-native/query-chain/bank",
+                      "jp/developers-native/query-chain/distribution",
+                      "jp/developers-native/query-chain/exchange",
+                      "jp/developers-native/query-chain/governance",
+                      "jp/developers-native/query-chain/ibc",
+                      "jp/developers-native/query-chain/mint",
+                      "jp/developers-native/query-chain/insurance-funds",
+                      "jp/developers-native/query-chain/oracle",
+                      "jp/developers-native/query-chain/peggy",
+                      "jp/developers-native/query-chain/permissions",
+                      "jp/developers-native/query-chain/staking",
+                      "jp/developers-native/query-chain/tendermint",
+                      "jp/developers-native/query-chain/wasm",
+                      "jp/developers-native/query-chain/wasmx",
+                      "jp/developers-native/query-chain/token-factory"
+                    ]
                   }
                 ]
               },

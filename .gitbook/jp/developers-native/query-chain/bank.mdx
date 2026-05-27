@@ -1,0 +1,112 @@
+---
+title: Bank
+updatedAt: "2025-12-23"
+---
+
+bankモジュール関連のデータをチェーンからクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### bankモジュールのパラメータを取得する
+
+```ts line highlight={2}
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcBankApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### injective addressの残高を取得する
+
+```ts
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const balances = await chainGrpcBankApi.fetchBalances(injectiveAddress);
+
+console.log(balances);
+```
+
+### base denomごとのcosmos addressの残高を取得する
+
+```ts
+import { ChainGrpcBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc);
+
+const cosmosAddress = "cosmos1..."; /* example is using Cosmos Hub */
+const denom = "uatom";
+
+const balance = await chainGrpcBankApi.fetchBalance({
+  accountAddress: cosmosAddress,
+  denom,
+});
+
+console.log(balance);
+```
+
+### チェーン上の総供給量を取得する
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcBankApi } from '@injectivelabs/sdk-ts/client/chain'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcBankApi = new ChainGrpcBankApi(endpoints.grpc)
+
+const pagination = {...} as PaginationOption
+
+const totalSupply = await chainGrpcBankApi.fetchTotalSupply(
+  pagination /* optional pagination parameter */
+)
+
+console.log(totalSupply)
+```
+
+## HTTP RESTを使用する
+
+### アドレスの残高を取得する
+
+```ts
+import { ChainRestBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestBankApi = new ChainRestBankApi(endpoints.rest);
+
+const injectiveAddress = "inj...";
+
+const balances = await chainRestBankApi.fetchBalances(injectiveAddress);
+
+console.log(balances);
+```
+
+### base denomごとのcosmos addressの残高を取得する
+
+```ts
+import { ChainRestBankApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestBankApi = new ChainRestBankApi(endpoints.rest);
+
+const cosmosAddress = "cosmos..."; /* example is using Cosmos Hub */
+const denom = "uatom";
+
+const balance = await chainRestBankApi.fetchBalance(cosmosAddress, denom);
+
+console.log(balance);
+```

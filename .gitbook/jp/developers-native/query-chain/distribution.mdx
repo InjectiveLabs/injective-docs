@@ -1,0 +1,60 @@
+---
+title: Distribution
+updatedAt: "2025-12-23"
+---
+
+チェーンからvalidatorへのdelegate関連データをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### base proposer rewardやbonus proposer rewardなどのパラメータを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcDistributionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcDistributionApi = new ChainGrpcDistributionApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcDistributionApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 特定のvalidatorへdelegateしているdelegatorの報酬の量とdenomを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcDistributionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcDistributionApi = new ChainGrpcDistributionApi(endpoints.grpc);
+
+const delegatorAddress = "inj...";
+const validatorAddress = "injvaloper...";
+
+const delegatorRewardsFromValidator =
+  await chainGrpcDistributionApi.fetchDelegatorRewardsForValidatorNoThrow({
+    delegatorAddress,
+    validatorAddress,
+  });
+
+console.log(delegatorRewardsFromValidator);
+```
+
+### delegatorのすべての報酬の量とdenomを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcDistributionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcDistributionApi = new ChainGrpcDistributionApi(endpoints.grpc);
+
+const delegatorAddress = "inj...";
+
+const totalDelegatorRewards =
+  await chainGrpcDistributionApi.fetchDelegatorRewardsNoThrow(delegatorAddress);
+
+console.log(totalDelegatorRewards);
+```

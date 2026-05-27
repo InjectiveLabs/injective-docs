@@ -1,0 +1,138 @@
+---
+title: Exchange
+updatedAt: "2025-12-23"
+---
+
+チェーン上のexchangeモジュールをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### デフォルトのspotおよびderivativesの手数料／trading rewardsなどのパラメータを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcExchangeApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### fee discount scheduleを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const feeDiscountSchedule =
+  await chainGrpcExchangeApi.fetchFeeDiscountSchedule();
+
+console.log(feeDiscountSchedule);
+```
+
+### injective addressに紐づくfee discountsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const feeDiscountAccountInfo =
+  await chainGrpcExchangeApi.fetchFeeDiscountAccountInfo(injectiveAddress);
+
+console.log(feeDiscountAccountInfo);
+```
+
+### trading reward campaignの詳細（total reward pointsなど）を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const tradingRewardsCampaign =
+  await chainGrpcExchangeApi.fetchTradingRewardsCampaign();
+
+console.log(tradingRewardsCampaign);
+```
+
+### injective addressのtrading rewards pointsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+
+const tradeRewardsPoints = await chainGrpcExchangeApi.fetchTradeRewardsPoints(
+  injectiveAddress
+);
+
+console.log(tradeRewardsPoints);
+```
+
+### injective addressのpending trading rewards pointsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const injectiveAddresses = ["inj..."];
+
+const pendingTradeRewardsPoints =
+  await chainGrpcExchangeApi.fetchPendingTradeRewardPoints(injectiveAddresses);
+
+console.log(pendingTradeRewardsPoints);
+```
+
+#### subaccountId、marketId、positionなど、現在のpositionを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+// Replace with your own Injective address(es)
+const injectiveAddresses = ["inj1..."];
+
+const positions = await chainGrpcExchangeApi.fetchPositions(injectiveAddresses);
+
+console.log(positions);
+```
+
+### subaccount trade nonceを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
+
+const subaccountId = "0x...";
+
+const subaccountTradeNonce =
+  await chainGrpcExchangeApi.fetchSubaccountTradeNonce(subaccountId);
+
+console.log(subaccountTradeNonce);
+```

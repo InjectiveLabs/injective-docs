@@ -1,0 +1,161 @@
+---
+title: Wasm
+updatedAt: "2025-12-23"
+---
+
+チェーン上のwasmモジュールをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### contractのアカウント残高を取得する。追加のアカウントを取得するためにpaginationパラメータを渡すこともできます。
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi, PaginationOption } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+
+const contractAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const contractAccountsBalance = await chainGrpcWasmApi.fetchContractAccountsBalance({
+    contractAddress,
+    pagination /* optional pagination options */
+})
+
+console.log(contractAccountsBalance)
+```
+
+### contractに関連する情報を取得する
+
+```ts
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const contractAddress = "inj...";
+
+const contractInfo = await chainGrpcWasmApi.fetchContractInfo(contractAddress);
+
+console.log(contractInfo);
+```
+
+### contractのhistoryを取得する
+
+```ts
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const contractAddress = "inj...";
+
+const contractHistory = await chainGrpcWasmApi.fetchContractHistory(
+  contractAddress
+);
+
+console.log(contractHistory);
+```
+
+### smart contractのstateを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcWasmApi, toBase64 } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const contractAddress = "inj...";
+const query = "...";
+const queryFromObject = toBase64({ get_coin: {} });
+
+const contractState = await chainGrpcWasmApi.fetchSmartContractState({
+  contractAddress,
+  query /* optional string query - HAS to be in base64 or use queryFromObject */,
+});
+
+console.log(contractState);
+```
+
+### smart contractのraw stateを取得する
+
+```ts
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const contractAddress = "inj...";
+const query = "...";
+const queryFromObject = toBase64({ get_coin: {} });
+
+const rawContractState = await chainGrpcWasmApi.fetchRawContractState({
+  contractAddress,
+  query /* optional string query - HAS to be in base64 or use queryFromObject */,
+});
+
+console.log(rawContractState);
+```
+
+### contractに紐づくcodesを取得する
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts/client/chain'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+
+const pagination = {...} as PaginationOption
+
+
+const rawContractState = await chainGrpcWasmApi.fetchRawContractState(
+pagination /* optional pagination options */
+)
+
+console.log(rawContractState)
+```
+
+### contract codeに紐づく情報を取得する
+
+```ts
+import { ChainGrpcWasmApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+
+const codeId = 1;
+
+const codeDetails = await chainGrpcWasmApi.fetchContractCode(codeId);
+
+console.log(codeDetails);
+```
+
+### codeに紐づくcontractsを取得する
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc)
+
+const codeId = 1
+const pagination = {...} as PaginationOption
+
+const contracts = await chainGrpcWasmApi.fetchContractCodeContracts({
+  codeId,
+  pagination /* optional pagination options */
+})
+
+console.log(contracts)
+```

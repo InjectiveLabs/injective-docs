@@ -1,0 +1,212 @@
+---
+title: Staking
+updatedAt: "2025-12-23"
+---
+
+チェーンのstakingモジュールをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### unbonding timeやbond denomなど、stakingモジュールに関連するパラメータを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcStakingApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### poolのunbonded tokensおよびbonded tokensを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const pool = await chainGrpcStakingApi.fetchPool();
+
+console.log(pool);
+```
+
+### validatorsとそれに関連するmetadataを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const validators = await chainGrpcStakingApi.fetchValidators();
+
+console.log(validators);
+```
+
+### validator addressからvalidatorとそれに関連するmetadataを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const validatorAddress = "injvaloper...";
+
+const validator = await chainGrpcStakingApi.fetchValidator(validatorAddress);
+
+console.log(validator);
+```
+
+### validatorに紐づくdelegationsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const validatorAddress = 'injvaloper...'
+const pagination = {...} as PaginationOption
+
+const delegations = await chainGrpcStakingApi.fetchValidatorDelegationsNoThrow({
+  validatorAddress,
+  pagination /* optional pagination options */
+})
+
+console.log(delegations)
+```
+
+### validatorに紐づくunbonding delegationsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const validatorAddress = 'injvaloper...'
+const pagination = {...} as PaginationOption
+
+const unbondingDelegations = await chainGrpcStakingApi.fetchValidatorUnbondingDelegationsNoThrow({
+  validatorAddress,
+  pagination /* optional pagination options */
+})
+
+console.log(unbondingDelegations)
+```
+
+### 特定のvalidatorに対するinjective addressのdelegationsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcStakingApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc);
+
+const injectiveAddress = "inj...";
+const validatorAddress = "injvaloper...";
+
+const delegation = await chainGrpcStakingApi.fetchDelegation({
+  injectiveAddress,
+  validatorAddress,
+});
+
+console.log(delegation);
+```
+
+### injective addressのdelegationsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const delegations = await chainGrpcStakingApi.fetchDelegationsNoThrow({
+  injectiveAddress,
+  pagination /* optional pagination options */
+})
+
+console.log(delegations)
+```
+
+### validatorのdelegatorsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const validatorAddress = 'injvaloper...'
+const pagination = {...} as PaginationOption
+
+const delegators = await chainGrpcStakingApi.fetchDelegatorsNoThrow({
+  validatorAddress,
+  pagination /* optional pagination options */
+})
+
+console.log(delegators)
+```
+
+### injective addressのunbonding delegationsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const unbondingDelegations = await chainGrpcStakingApi.fetchUnbondingDelegationsNoThrow({
+  injectiveAddress,
+  pagination /* optional pagination options */
+})
+
+console.log(unbondingDelegations)
+```
+
+### injective addressのredelegationsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcStakingApi } from '@injectivelabs/sdk-ts/client/chain'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcStakingApi = new ChainGrpcStakingApi(endpoints.grpc)
+
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const unbondingDelegations = await chainGrpcStakingApi.fetchReDelegationsNoThrow({
+  injectiveAddress,
+  pagination /* optional pagination options */
+})
+
+console.log(unbondingDelegations)
+```

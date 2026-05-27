@@ -1,0 +1,22 @@
+---
+title: Oracle
+updatedAt: "2025-12-23"
+---
+
+oracle apiを介してチェーンをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### oracleに関連するパラメータを取得する
+
+```ts
+import { ChainGrpcOracleApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcOracleApi = new ChainGrpcOracleApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcOracleApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
