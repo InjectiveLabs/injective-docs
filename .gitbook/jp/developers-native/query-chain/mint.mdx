@@ -1,0 +1,50 @@
+---
+title: Mint
+updatedAt: "2025-12-23"
+---
+
+チェーン上のmintモジュールをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### mintモジュールに関連するパラメータを取得する
+
+```ts
+import { ChainGrpcMintApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcMintApi = new ChainGrpcMintApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcMintApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### inflationを取得する
+
+```ts
+import { ChainGrpcMintApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcMintApi = new ChainGrpcMintApi(endpoints.grpc);
+
+const inflation = await chainGrpcMintApi.fetchInflation();
+
+console.log(inflation);
+```
+
+### annual provisionsを取得する
+
+```ts
+import { ChainGrpcMintApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcMintApi = new ChainGrpcMintApi(endpoints.grpc);
+
+const annualProvisions = await chainGrpcMintApi.fetchAnnualProvisions();
+
+console.log(annualProvisions);
+```

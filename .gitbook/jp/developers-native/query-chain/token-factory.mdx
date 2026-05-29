@@ -1,0 +1,42 @@
+---
+title: Token Factory
+updatedAt: "2025-12-23"
+---
+
+token factoryモジュール関連のデータをチェーンからクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### _creator_ が作成したすべてのdenomを取得する
+
+```ts lines highlight={1}
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcTokenFactoryApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcTokenFactoryApi = new ChainGrpcTokenFactoryApi(endpoints.grpc);
+
+const creator = "inj...";
+const denoms = await chainGrpcTokenFactoryApi.fetchDenomsFromCreator(creator);
+
+console.log(denoms);
+```
+
+### denom authority metadataを取得する（トークンのadminを取得するなど）
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcTokenFactoryApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcTokenFactoryApi = new ChainGrpcTokenFactoryApi(endpoints.grpc);
+
+const creator = "inj...";
+const subdenom = "NINJA";
+const metadata = await chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
+  creator,
+  subdenom
+);
+
+console.log(metadata);
+```

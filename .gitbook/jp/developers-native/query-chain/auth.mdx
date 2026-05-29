@@ -1,0 +1,92 @@
+---
+title: Auth
+updatedAt: "2025-12-23"
+---
+
+チェーン上のauthモジュールをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### memoの最大文字数やトランザクション署名の上限などのパラメータを取得する
+
+```ts
+import { ChainGrpcAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuthApi = new ChainGrpcAuthApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcAuthApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### injective addressに紐づくアカウント詳細（address、sequence、pub_keyなど）を取得する
+
+```ts
+import { ChainGrpcAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuthApi = new ChainGrpcAuthApi(endpoints.grpc);
+const injectiveAddress = "inj...";
+
+const accountDetailsResponse = await chainGrpcAuthApi.fetchAccount(
+  injectiveAddress
+);
+
+console.log(accountDetailsResponse);
+```
+
+### チェーン上のアカウント一覧を取得する
+
+```ts
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { ChainGrpcAuthApi } from '@injectivelabs/sdk-ts/client/chain'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const chainGrpcAuthApi = new ChainGrpcAuthApi(endpoints.grpc)
+const injectiveAddress = 'inj...'
+const pagination = {...} as PaginationOption
+
+const accounts = await chainGrpcAuthApi.fetchAccounts(/* optional pagination params*/)
+
+console.log(accounts)
+```
+
+## HTTP RESTを使用する
+
+### injective addressに紐づくアカウント詳細（address、sequence、pub_keyなど）を取得する
+
+```ts
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestAuthApi = new ChainRestAuthApi(endpoints.rest);
+const injectiveAddress = "inj...";
+
+const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+  injectiveAddress
+);
+
+console.log(accountDetailsResponse);
+```
+
+#### injective addressからcosmos addressを取得する
+
+```ts
+import { ChainRestAuthApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestAuthApi = new ChainRestAuthApi(endpoints.rest);
+const injectiveAddress = "inj...";
+
+const cosmosAddress = await chainRestAuthApi.fetchCosmosAccount(
+  injectiveAddress
+);
+
+console.log(cosmosAddress);
+```

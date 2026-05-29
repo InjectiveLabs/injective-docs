@@ -1,0 +1,22 @@
+---
+title: Peggy
+updatedAt: "2025-12-23"
+---
+
+peggy apiを介してチェーンをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### peggyに関連するパラメータを取得する
+
+```ts
+import { ChainGrpcPeggyApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcPeggyApi = new ChainGrpcPeggyApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcPeggyApi.fetchModuleParams();
+
+console.log(moduleParams);
+```

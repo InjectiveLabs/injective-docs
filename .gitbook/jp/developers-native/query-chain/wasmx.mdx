@@ -1,0 +1,36 @@
+---
+title: WasmX
+updatedAt: "2025-12-23"
+---
+
+チェーン上のwasmXモジュールをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### wasmXモジュールに関連するパラメータを取得する
+
+```ts
+import { ChainGrpcWasmXApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmXApi = new ChainGrpcWasmXApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcWasmXApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### wasmXモジュールのstateを取得する
+
+```ts
+import { ChainGrpcWasmXApi } from "@injectivelabs/sdk-ts/client/chain";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcWasmXApi = new ChainGrpcWasmXApi(endpoints.grpc);
+
+const moduleState = await chainGrpcWasmXApi.fetchModuleState();
+
+console.log(moduleState);
+```

@@ -79,7 +79,7 @@ console.log(txHash);
 
 ### MsgBurn
 
-adminはtoken factoryの供給量をバーンできます。それ以外のすべての人は、このメッセージを使用して自分の資金のみをバーンできます。
+adminは、token factoryトークンの供給量をバーンできます。それ以外のユーザーは、このメッセージを使用して自身の資金のみをバーンできます。
 
 ```ts
 import { Network } from "@injectivelabs/networks";
@@ -111,7 +111,7 @@ console.log(txHash);
 
 ### MsgSetDenomMetadata
 
-特定のdenomへのメタデータの設定はdenomのadminのみが許可されます。bankモジュール内のdenomメタデータを上書きできます。
+特定のdenomに対するメタデータの設定は、そのdenomのadminのみが実行できます。このメッセージを使用することで、bankモジュール内のdenomメタデータを上書きできます。
 
 ```ts
 import { Network } from "@injectivelabs/networks";

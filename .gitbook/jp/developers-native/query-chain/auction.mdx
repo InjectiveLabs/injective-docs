@@ -1,0 +1,50 @@
+---
+title: Auction
+updatedAt: "2025-12-23"
+---
+
+チェーン上のauctionモジュールをクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### auction periodなどのモジュールパラメータを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuctionApi = new ChainGrpcAuctionApi(endpoints.grpc);
+
+const moduleParams = await chainGrpcAuctionApi.fetchModuleParams();
+
+console.log(moduleParams);
+```
+
+### 現在のauctionの状態（最新のラウンドなど）を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuctionApi = new ChainGrpcAuctionApi(endpoints.grpc);
+
+const latestAuctionModuleState = await chainGrpcAuctionApi.fetchModuleState();
+
+console.log(latestAuctionModuleState);
+```
+
+### 現在のauction basketを取得し、最高入札者や入札額などの情報を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainGrpcAuctionApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainGrpcAuctionApi = new ChainGrpcAuctionApi(endpoints.grpc);
+
+const currentBasket = await chainGrpcAuctionApi.fetchCurrentBasket();
+
+console.log(currentBasket);
+```

@@ -1,0 +1,36 @@
+---
+title: Tendermint
+updatedAt: "2025-12-23"
+---
+
+チェーンノード関連のデータをクエリするためのコードスニペット例。
+
+## HTTP RESTを使用する
+
+### 最新のblock情報を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainRestTendermintApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestTendermintApi = new ChainRestTendermintApi(endpoints.rest);
+
+const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+
+console.log(latestBlock);
+```
+
+### chain nodeの情報を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { ChainRestTendermintApi } from "@injectivelabs/sdk-ts/client/chain";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const chainRestTendermintApi = new ChainRestTendermintApi(endpoints.rest);
+
+const nodeInfo = await chainRestTendermintApi.fetchNodeInfo();
+
+console.log(nodeInfo);
+```
