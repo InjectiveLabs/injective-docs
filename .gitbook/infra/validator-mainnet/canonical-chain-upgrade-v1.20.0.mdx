@@ -53,6 +53,8 @@ You must remove the wasm cache before upgrading to the new version:
 rm -rf .injectived/wasm/wasm/cache/
 ```
 
+Review the [v1.20.0 validator startup flag changes](./validator-v1.20-flag-changes/) before restarting `injectived`. Deprecated flags must be removed, renamed flags should be updated, and changed defaults should be pinned explicitly if your node depends on the previous behavior.
+
 ### Steps
 
 1.  Verify you are currently running the correct version (`v1.19.0`) of `injectived`:
