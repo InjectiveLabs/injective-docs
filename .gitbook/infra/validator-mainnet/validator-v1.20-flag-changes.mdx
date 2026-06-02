@@ -34,7 +34,7 @@ for the `v1.20.0` tag can be found at the bottom of this file.
 
 Update any startup configuration that still uses the old flag names.
 
-| v1.19.0 flag                                    | v1.20.0 flag                               | Notes                                                |
+| v1.19.0 flag                                    | v1.20.0 flag                                    | Notes                                                |
 | ----------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------- |
 | `--metrics-enable-metrics=false`                | `--metrics.metrics-enabled=false`               | Same default.                                        |
 | `--metrics-enable-tracing=false`                | `--metrics.tracing-enabled=false`               | Same default.                                        |
@@ -57,7 +57,7 @@ Update any startup configuration that still uses the old flag names.
 
 These flags did not exist as `injectived start` flags in `v1.19.0`.
 
-| v1.20.0 flag                              | Default       | Notes                                                                     |
+| v1.20.0 flag                                   | Default       | Notes                                                                     |
 | ---------------------------------------------- | ------------- | ------------------------------------------------------------------------- |
 | `--app-db-backend`                             | `""`          | Empty value falls back to the CometBFT DB backend.                        |
 | `--index-events`                               | `[]`          | Controls event indexing for CometBFT. Empty means all events are indexed. |
@@ -87,7 +87,7 @@ Remove these from startup scripts before running `v1.20.0`.
 
 If your deployment relied on the old default, set the old value explicitly.
 
-| Flag                                    | v1.19.0                | v1.20.0            | Suggested validator action                                         |
+| Flag                                    | v1.19.0                | v1.20.0                 | Suggested validator action                                         |
 | --------------------------------------- | ---------------------- | ----------------------- | ------------------------------------------------------------------ |
 | `--minimum-gas-prices`                  | `""`                   | `160000000inj`          | Pin explicitly if you require a different minimum gas price.       |
 | `--pruning`                             | `default`              | `nothing`               | Pin `--pruning=default` if you do not want archive-style behavior. |
