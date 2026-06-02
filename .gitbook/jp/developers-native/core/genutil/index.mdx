@@ -1,0 +1,94 @@
+---
+title: x/genutil
+updatedAt: "2025-12-27"
+---
+
+# `x/genutil`
+
+## Concepts
+
+`genutil`パッケージは、ブロックチェーンアプリケーション内で使用するさまざまなジェネシスユーティリティ機能を含んでいます。具体的には:
+
+* ジェネシストランザクション関連 (gentx)
+* gentxの収集と作成のためのコマンド群
+* gentxの`InitChain`処理
+* ジェネシスファイルの作成
+* ジェネシスファイルの検証
+* ジェネシスファイルのマイグレーション
+* CometBFT関連の初期化
+    * アプリケーションのgenesisからCometBFT genesisへの変換
+
+## Genesis
+
+Genutilには、アプリケーションのgenesisを定義するデータ構造が含まれています。
+アプリケーションのgenesisは、コンセンサスのgenesis（例: CometBFT genesis）とアプリケーション関連のgenesisデータで構成されます。
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/x/genutil/types/genesis.go#L24-L34
+```
+
+アプリケーションのgenesisは、コンセンサスエンジン向けの正しいフォーマットに変換できます:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/x/genutil/types/genesis.go#L126-L136
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/server/start.go#L397-L407
+```
+
+## Client
+
+### CLI
+
+genutilコマンドは、`genesis`サブコマンドの下で利用できます。
+
+#### add-genesis-account
+
+`genesis.json`にジェネシスアカウントを追加します。詳しくは[こちら](https://docs.cosmos.network/main/run-node/run-node#adding-genesis-accounts)を参照してください。
+
+#### collect-gentxs
+
+ジェネシスtxを収集し、`genesis.json`ファイルを出力します。
+
+```shell
+simd genesis collect-gentxs
+```
+
+これにより、すべてのバリデータのデータを含む新しい`genesis.json`ファイルが作成されます（単一バリデータのgenesisファイルと区別するため、「super genesis file」と呼ぶこともあります）。
+
+#### gentx
+
+自己委任を含むジェネシスtxを生成します。
+
+```shell
+simd genesis gentx [key_name] [amount] --chain-id [chain-id]
+```
+
+これにより、新しいチェーンのジェネシストランザクションが作成されます。ここで`amount`は少なくとも`1000000000stake`である必要があります。
+過多または過少を指定すると、ノードの起動時にエラーが発生します。
+
+#### migrate
+
+指定したターゲット（SDK）バージョンへgenesisをマイグレートします。
+
+```shell
+simd genesis migrate [target-version]
+```
+
+:::tip
+`migrate`コマンドは拡張可能で、`MigrationMap`を受け取ります。このマップはターゲットバージョンとジェネシスマイグレーション関数のマッピングです。
+デフォルトの`MigrationMap`を使用しない場合でも、チェーンのSDKバージョンに対応するデフォルトの`MigrationMap`を呼び出し、独自のジェネシスマイグレーションを前後に追加することを推奨します。
+:::
+
+#### validate-genesis
+
+デフォルトの場所、または引数で指定された場所のgenesisファイルを検証します。
+
+```shell
+simd genesis validate-genesis
+```
+
+:::warning
+validate genesisは、**現在のアプリケーションバイナリ**でgenesisが有効かどうかのみを検証します。以前のバージョンのアプリケーションのgenesisを検証するには、`migrate`コマンドを使用してgenesisを現在のバージョンにマイグレートしてください。
+:::

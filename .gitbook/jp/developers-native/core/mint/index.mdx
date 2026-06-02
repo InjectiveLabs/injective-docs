@@ -1,0 +1,367 @@
+---
+sidebar_position: 1
+updatedAt: "2025-12-05"
+---
+
+# `x/mint`
+
+## 目次
+
+* [State](#state)
+    * [Minter](#minter)
+    * [Params](#params)
+* [Begin-Block](#begin-block)
+    * [NextInflationRate](#nextinflationrate)
+    * [NextAnnualProvisions](#nextannualprovisions)
+    * [BlockProvision](#blockprovision)
+* [Parameters](#parameters)
+* [Events](#events)
+    * [BeginBlocker](#beginblocker)
+* [Client](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
+
+## Concepts
+
+### The Minting Mechanism
+
+mintingメカニズムは以下を目的として設計されています:
+
+* 特定のbonded-stake比率をターゲットとする市場需要によって決定される柔軟なインフレ率を可能にする
+* 市場の流動性とステーキングされたサプライのバランスを実現する
+
+インフレ報酬の適切な市場レートを最適に決定するため、移動変化率が使用されます。移動変化率メカニズムは、bonded%がgoal %-bondedを上回るか下回るかに応じて、インフレ率がbondingをさらに動機付けまたは抑制する方向に調整されることを保証します。goal %-bondedを100%未満に設定することで、ネットワークはステーキングされていないトークンを維持することが促され、流動性の提供に役立ちます。
+
+これは以下のように分解できます:
+
+* 実際のbondedトークンの割合がgoal %-bondedを下回る場合、インフレ率は最大値に達するまで増加します
+* goal % bonded（Cosmos-Hubでは67%）が維持される場合、インフレ率は一定に保たれます
+* 実際のbondedトークンの割合がgoal %-bondedを上回る場合、インフレ率は最小値に達するまで減少します
+
+
+## State
+
+### Minter
+
+minterは、現在のインフレ情報を保持するためのスペースです。
+
+* Minter: `0x00 -> ProtocolBuffer(minter)`
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L10-L24
+```
+
+### Params
+
+mintモジュールは接頭辞`0x01`でパラメータをステートに保存し、ガバナンスまたは権限を持つアドレスによって更新できます。
+
+* Params: `mint/params -> legacy_amino(params)`
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L26-L59
+```
+
+## Begin-Block
+
+mintingパラメータは再計算され、インフレは各ブロックの開始時に支払われます。
+
+### Inflation rate calculation
+
+インフレ率は、`NewAppModule`関数に渡される「inflation calculation function」を使用して計算されます。関数が渡されない場合、SDKのデフォルトのインフレ関数（`NextInflationRate`）が使用されます。カスタムインフレ計算ロジックが必要な場合、`InflationCalculationFn`のシグネチャに一致する関数を定義して渡すことで実現できます。
+
+```go
+type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec
+```
+
+#### NextInflationRate
+
+目標年率インフレ率は、各ブロックで再計算されます。
+インフレ率は、希望する比率（67%）からの距離に応じて変化（正または負）の対象となります。可能な最大変化率は年間13%と定義されていますが、年率インフレは7%から20%の間に制限されます。
+
+```go
+NextInflationRate(params Params, bondedRatio math.LegacyDec) (inflation math.LegacyDec) {
+	inflationRateChangePerYear = (1 - bondedRatio/params.GoalBonded) * params.InflationRateChange
+	inflationRateChange = inflationRateChangePerYear/blocksPerYr
+
+	// increase the new annual inflation for this next block
+	inflation += inflationRateChange
+	if inflation > params.InflationMax {
+		inflation = params.InflationMax
+	}
+	if inflation < params.InflationMin {
+		inflation = params.InflationMin
+	}
+
+	return inflation
+}
+```
+
+### NextAnnualProvisions
+
+現在の総供給量とインフレ率に基づいて年間provisionsを計算します。このパラメータはブロックごとに1回計算されます。
+
+```go
+NextAnnualProvisions(params Params, totalSupply math.LegacyDec) (provisions math.LegacyDec) {
+	return Inflation * totalSupply
+```
+
+### BlockProvision
+
+現在の年間provisionsに基づいて、各ブロックで生成されるprovisionsを計算します。provisionsは`mint`モジュールの`ModuleMinterAccount`によってmintされ、`auth`の`FeeCollector` `ModuleAccount`に転送されます。
+
+```go
+BlockProvision(params Params) sdk.Coin {
+	provisionAmt = AnnualProvisions/ params.BlocksPerYear
+	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
+```
+
+
+## Parameters
+
+mintingモジュールには以下のパラメータが含まれます:
+
+| Key                 | Type            | Example                |
+|---------------------|-----------------|------------------------|
+| MintDenom           | string          | "uatom"                |
+| InflationRateChange | string (dec)    | "0.130000000000000000" |
+| InflationMax        | string (dec)    | "0.200000000000000000" |
+| InflationMin        | string (dec)    | "0.070000000000000000" |
+| GoalBonded          | string (dec)    | "0.670000000000000000" |
+| BlocksPerYear       | string (uint64) | "6311520"              |
+
+
+## Events
+
+mintingモジュールは以下のイベントを発行します:
+
+### BeginBlocker
+
+| Type | Attribute Key     | Attribute Value    |
+|------|-------------------|--------------------|
+| mint | bonded_ratio      | {bondedRatio}      |
+| mint | inflation         | {inflation}        |
+| mint | annual_provisions | {annualProvisions} |
+| mint | amount            | {amount}           |
+
+
+## Client
+
+### CLI
+
+ユーザーはCLIを使用して`mint`モジュールにクエリを行い、操作できます。
+
+#### Query
+
+`query`コマンドを使用すると、`mint`の状態をクエリできます。
+
+```shell
+simd query mint --help
+```
+
+##### annual-provisions
+
+`annual-provisions`コマンドを使用すると、現在のminting年間provisions値をクエリできます。
+
+```shell
+simd query mint annual-provisions [flags]
+```
+
+例:
+
+```shell
+simd query mint annual-provisions
+```
+
+出力例:
+
+```shell
+22268504368893.612100895088410693
+```
+
+##### inflation
+
+`inflation`コマンドを使用すると、現在のmintingインフレ値をクエリできます。
+
+```shell
+simd query mint inflation [flags]
+```
+
+例:
+
+```shell
+simd query mint inflation
+```
+
+出力例:
+
+```shell
+0.199200302563256955
+```
+
+##### params
+
+`params`コマンドを使用すると、現在のmintingパラメータをクエリできます。
+
+```shell
+simd query mint params [flags]
+```
+
+例:
+
+```yml
+blocks_per_year: "4360000"
+goal_bonded: "0.670000000000000000"
+inflation_max: "0.200000000000000000"
+inflation_min: "0.070000000000000000"
+inflation_rate_change: "0.130000000000000000"
+mint_denom: stake
+```
+
+### gRPC
+
+ユーザーはgRPCエンドポイントを使用して`mint`モジュールにクエリできます。
+
+#### AnnualProvisions
+
+`AnnualProvisions`エンドポイントを使用すると、現在のminting年間provisions値をクエリできます。
+
+```shell
+/cosmos.mint.v1beta1.Query/AnnualProvisions
+```
+
+例:
+
+```shell
+grpcurl -plaintext localhost:9090 cosmos.mint.v1beta1.Query/AnnualProvisions
+```
+
+出力例:
+
+```json
+{
+  "annualProvisions": "1432452520532626265712995618"
+}
+```
+
+#### Inflation
+
+`Inflation`エンドポイントを使用すると、現在のmintingインフレ値をクエリできます。
+
+```shell
+/cosmos.mint.v1beta1.Query/Inflation
+```
+
+例:
+
+```shell
+grpcurl -plaintext localhost:9090 cosmos.mint.v1beta1.Query/Inflation
+```
+
+出力例:
+
+```json
+{
+  "inflation": "130197115720711261"
+}
+```
+
+#### Params
+
+`Params`エンドポイントを使用すると、現在のmintingパラメータをクエリできます。
+
+```shell
+/cosmos.mint.v1beta1.Query/Params
+```
+
+例:
+
+```shell
+grpcurl -plaintext localhost:9090 cosmos.mint.v1beta1.Query/Params
+```
+
+出力例:
+
+```json
+{
+  "params": {
+    "mintDenom": "stake",
+    "inflationRateChange": "130000000000000000",
+    "inflationMax": "200000000000000000",
+    "inflationMin": "70000000000000000",
+    "goalBonded": "670000000000000000",
+    "blocksPerYear": "6311520"
+  }
+}
+```
+
+### REST
+
+ユーザーはRESTエンドポイントを使用して`mint`モジュールにクエリできます。
+
+#### annual-provisions
+
+```shell
+/cosmos/mint/v1beta1/annual_provisions
+```
+
+例:
+
+```shell
+curl "localhost:1317/cosmos/mint/v1beta1/annual_provisions"
+```
+
+出力例:
+
+```json
+{
+  "annualProvisions": "1432452520532626265712995618"
+}
+```
+
+#### inflation
+
+```shell
+/cosmos/mint/v1beta1/inflation
+```
+
+例:
+
+```shell
+curl "localhost:1317/cosmos/mint/v1beta1/inflation"
+```
+
+出力例:
+
+```json
+{
+  "inflation": "130197115720711261"
+}
+```
+
+#### params
+
+```shell
+/cosmos/mint/v1beta1/params
+```
+
+例:
+
+```shell
+curl "localhost:1317/cosmos/mint/v1beta1/params"
+```
+
+出力例:
+
+```json
+{
+  "params": {
+    "mintDenom": "stake",
+    "inflationRateChange": "130000000000000000",
+    "inflationMax": "200000000000000000",
+    "inflationMin": "70000000000000000",
+    "goalBonded": "670000000000000000",
+    "blocksPerYear": "6311520"
+  }
+}
+```

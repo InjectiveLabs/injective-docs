@@ -2077,6 +2077,30 @@
                       "jp/developers-native/query-chain/wasmx",
                       "jp/developers-native/query-chain/token-factory"
                     ]
+                  },
+                  {
+                    "group": "Core Modules",
+                    "pages": [
+                      "jp/developers-native/core/index",
+                      "jp/developers-native/core/auth",
+                      "jp/developers-native/core/authz",
+                      "jp/developers-native/core/bank",
+                      "jp/developers-native/core/consensus",
+                      "jp/developers-native/core/crisis",
+                      "jp/developers-native/core/distribution",
+                      "jp/developers-native/core/evidence",
+                      "jp/developers-native/core/feegrant",
+                      "jp/developers-native/core/gov",
+                      "jp/developers-native/core/group",
+                      "jp/developers-native/core/mint",
+                      "jp/developers-native/core/nft",
+                      "jp/developers-native/core/params",
+                      "jp/developers-native/core/slashing",
+                      "jp/developers-native/core/staking",
+                      "jp/developers-native/core/upgrade",
+                      "jp/developers-native/core/circuit",
+                      "jp/developers-native/core/genutil"
+                    ]
                   }
                 ]
               },

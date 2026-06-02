@@ -1,0 +1,403 @@
+---
+sidebar_position: 1
+updatedAt: "2025-12-05"
+---
+
+# `x/evidence`
+
+* [Concepts](#concepts)
+* [State](#state)
+* [Messages](#messages)
+* [Events](#events)
+* [Parameters](#parameters)
+* [BeginBlock](#beginblock)
+* [Client](#client)
+    * [CLI](#cli)
+    * [REST](#rest)
+    * [gRPC](#grpc)
+
+## 概要
+
+`x/evidence`は、[ADR 009](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-009-evidence-module.md)に基づくCosmos SDKモジュールの実装で、equivocationやcounterfactual signingのような不正行為に関する任意のevidenceの送信と処理を可能にします。
+
+evidenceモジュールは、通常CometBFTのような基盤となるコンセンサスエンジンが発見時にevidenceを自動的に提出することを期待する標準的なevidence処理とは異なり、クライアントや他のチェーンがより複雑なevidenceを直接送信できるようにします。
+
+すべての具体的なevidence型は`Evidence`インターフェース契約を実装する必要があります。送信された`Evidence`は、まずevidenceモジュールの`Router`を介してルーティングされ、その特定の`Evidence`型に対応する登録済みの`Handler`を見つけようとします。各`Evidence`型は、正しくルーティングされ実行されるために、evidenceモジュールのkeeperに登録された`Handler`を持つ必要があります。
+
+対応する各handlerも`Handler`インターフェース契約を満たす必要があります。特定の`Evidence`型に対する`Handler`は、slashing、jailing、tombstoningのような任意の状態遷移を実行できます。
+
+## Concepts
+
+### Evidence
+
+`x/evidence`モジュールに送信される具体的な型のevidenceは、以下に概説する`Evidence`契約を満たす必要があります。すべての具体的なevidence型がこの契約を同じ方法で満たすわけではなく、一部のデータは特定のevidence型にとってまったく無関係である可能性があります。`Evidence`を拡張する追加の`ValidatorEvidence`も作成されており、悪意のあるバリデータに対するevidenceの契約を定義しています。
+
+```go
+// Evidence defines the contract which concrete evidence types of misbehavior
+// must implement.
+type Evidence interface {
+	proto.Message
+
+	Route() string
+	String() string
+	Hash() []byte
+	ValidateBasic() error
+
+	// Height at which the infraction occurred
+	GetHeight() int64
+}
+
+// ValidatorEvidence extends Evidence interface to define contract
+// for evidence against malicious validators
+type ValidatorEvidence interface {
+	Evidence
+
+	// The consensus address of the malicious validator at time of infraction
+	GetConsensusAddress() sdk.ConsAddress
+
+	// The total power of the malicious validator at time of infraction
+	GetValidatorPower() int64
+
+	// The total validator set power at time of infraction
+	GetTotalPower() int64
+}
+```
+
+### Registration & Handling
+
+`x/evidence`モジュールは、まず処理することを期待しているすべての型のevidenceについて知る必要があります。これは、`Evidence`契約の`Route`メソッドを`Router`（以下に定義）と呼ばれるものに登録することで達成されます。`Router`は`Evidence`を受け取り、`Route`メソッドを介して`Evidence`に対応する`Handler`を見つけようとします。
+
+```go
+type Router interface {
+  AddRoute(r string, h Handler) Router
+  HasRoute(r string) bool
+  GetRoute(path string) Handler
+  Seal()
+  Sealed() bool
+}
+```
+
+`Handler`（以下に定義）は、`Evidence`を処理するビジネスロジック全体の実行を担当します。これには通常、`ValidateBasic`によるステートレスチェックと、`Handler`に提供されたkeeperによるステートフルチェックの両方によるevidenceの検証が含まれます。さらに、`Handler`はバリデータのslashingやjailingのような機能も実行できます。`Handler`によって処理されたすべての`Evidence`は永続化されるべきです。
+
+```go
+// Handler defines an agnostic Evidence handler. The handler is responsible
+// for executing all corresponding business logic necessary for verifying the
+// evidence as valid. In addition, the Handler may execute any necessary
+// slashing and potential jailing.
+type Handler func(context.Context, Evidence) error
+```
+
+
+## State
+
+現在、`x/evidence`モジュールはステートに有効な送信済み`Evidence`のみを保存します。evidenceステートは、`x/evidence`モジュールの`GenesisState`にも保存されエクスポートされます。
+
+```protobuf
+// GenesisState defines the evidence module's genesis state.
+message GenesisState {
+  // evidence defines all the evidence at genesis.
+  repeated google.protobuf.Any evidence = 1;
+}
+
+```
+
+すべての`Evidence`は、接頭辞`0x00`（`KeyPrefixEvidence`）を使用する接頭辞付き`KVStore`を介して取得・保存されます。
+
+
+## Messages
+
+### MsgSubmitEvidence
+
+evidenceは`MsgSubmitEvidence`メッセージを介して送信されます:
+
+```protobuf
+// MsgSubmitEvidence represents a message that supports submitting arbitrary
+// Evidence of misbehavior such as equivocation or counterfactual signing.
+message MsgSubmitEvidence {
+  string              submitter = 1;
+  google.protobuf.Any evidence  = 2;
+}
+```
+
+注意: `MsgSubmitEvidence`メッセージの`Evidence`が正しく処理・ルーティングされるためには、`x/evidence`モジュールの`Router`に対応する`Handler`が登録されている必要があります。
+
+`Evidence`が対応する`Handler`に登録されている場合、以下のように処理されます:
+
+```go
+func SubmitEvidence(ctx Context, evidence Evidence) error {
+  if _, err := GetEvidence(ctx, evidence.Hash()); err == nil {
+    return errorsmod.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
+  }
+  if !router.HasRoute(evidence.Route()) {
+    return errorsmod.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
+  }
+
+  handler := router.GetRoute(evidence.Route())
+  if err := handler(ctx, evidence); err != nil {
+    return errorsmod.Wrap(types.ErrInvalidEvidence, err.Error())
+  }
+
+  ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSubmitEvidence,
+			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
+		),
+	)
+
+  SetEvidence(ctx, evidence)
+  return nil
+}
+```
+
+まず、まったく同じ型の有効な送信済み`Evidence`が既に存在してはなりません。次に、`Evidence`が`Handler`にルーティングされ、実行されます。最後に、`Evidence`の処理にエラーがなければ、イベントが発行され、ステートに永続化されます。
+
+
+## Events
+
+`x/evidence`モジュールは以下のイベントを発行します:
+
+### Handlers
+
+#### MsgSubmitEvidence
+
+| Type            | Attribute Key | Attribute Value |
+| --------------- | ------------- | --------------- |
+| submit_evidence | evidence_hash | {evidenceHash}  |
+| message         | module        | evidence        |
+| message         | sender        | {senderAddress} |
+| message         | action        | submit_evidence |
+
+
+## Parameters
+
+evidenceモジュールにはパラメータは含まれていません。
+
+
+## BeginBlock
+
+### Evidence Handling
+
+CometBFTのブロックには、バリデータが悪意のある行動を行ったかどうかを示す[Evidence](https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md#evidence)を含めることができます。関連する情報は、バリデータが適切に処罰されるよう、`abci.RequestBeginBlock`のABCI Evidenceとしてアプリケーションに転送されます。
+
+#### Equivocation
+
+Cosmos SDKは、ABCI `BeginBlock`内で2種類のevidenceを処理します:
+
+* `DuplicateVoteEvidence`
+* `LightClientAttackEvidence`
+
+evidenceモジュールはこれら2つのevidence型を同じ方法で処理します。最初に、Cosmos SDKは具体的な型として`Equivocation`を使用して、CometBFTの具体的なevidence型をSDKの`Evidence`インターフェースに変換します。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/evidence/v1beta1/evidence.proto#L12-L32
+```
+
+`block`内で送信された`Equivocation`が有効であるためには、以下を満たす必要があります:
+
+`Evidence.Timestamp >= block.Timestamp - MaxEvidenceAge`
+
+ここで:
+
+* `Evidence.Timestamp`は高さ`Evidence.Height`のブロックのタイムスタンプ
+* `block.Timestamp`は現在のブロックタイムスタンプ
+
+ブロックに有効な`Equivocation` evidenceが含まれている場合、`x/slashing`モジュールで定義された`SlashFractionDoubleSign`によって、evidenceが発見された時点ではなく、違反が発生した時点でのステーク額を基にバリデータのステークが削減（slash）されます。「ステークに従う」、つまり違反に寄与したステークがその後にredelegateやunbondingを開始していてもslashされるようにします。
+
+さらに、バリデータは永続的にjailされ、tombstoneされて、再びバリデータセットに入ることができなくなります。
+
+`Equivocation` evidenceは以下のように処理されます:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/evidence/keeper/infraction.go#L26-L140
+```
+
+**Note:** slashing、jailing、tombstoningの呼び出しは、情報イベントを発行し最終的に`x/staking`モジュールに呼び出しを委任する`x/slashing`モジュールを通じて委任されます。slashingおよびjailingに関するドキュメントは[State Transitions](../staking/#state-transitions)を参照してください。
+
+## Client
+
+### CLI
+
+ユーザーはCLIを使用して`evidence`モジュールにクエリを行い、操作できます。
+
+#### Query
+
+`query`コマンドを使用すると、`evidence`の状態をクエリできます。
+
+```bash
+simd query evidence --help
+```
+
+#### evidence
+
+`evidence`コマンドを使用すると、すべてのevidenceまたはハッシュによるevidenceをリストできます。
+
+使用法:
+
+```bash
+simd query evidence evidence [flags]
+```
+
+ハッシュでevidenceをクエリするには
+
+例:
+
+```bash
+simd query evidence evidence "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
+```
+
+出力例:
+
+```bash
+evidence:
+  consensus_address: cosmosvalcons1ntk8eualewuprz0gamh8hnvcem2nrcdsgz563h
+  height: 11
+  power: 100
+  time: "2021-10-20T16:08:38.194017624Z"
+```
+
+すべてのevidenceを取得するには
+
+例:
+
+```bash
+simd query evidence list
+```
+
+出力例:
+
+```bash
+evidence:
+  consensus_address: cosmosvalcons1ntk8eualewuprz0gamh8hnvcem2nrcdsgz563h
+  height: 11
+  power: 100
+  time: "2021-10-20T16:08:38.194017624Z"
+pagination:
+  next_key: null
+  total: "1"
+```
+
+### REST
+
+ユーザーはRESTエンドポイントを使用して`evidence`モジュールにクエリできます。
+
+#### Evidence
+
+ハッシュでevidenceを取得
+
+```bash
+/cosmos/evidence/v1beta1/evidence/{hash}
+```
+
+例:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/evidence/v1beta1/evidence/DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
+```
+
+出力例:
+
+```bash
+{
+  "evidence": {
+    "consensus_address": "cosmosvalcons1ntk8eualewuprz0gamh8hnvcem2nrcdsgz563h",
+    "height": "11",
+    "power": "100",
+    "time": "2021-10-20T16:08:38.194017624Z"
+  }
+}
+```
+
+#### All evidence
+
+すべてのevidenceを取得
+
+```bash
+/cosmos/evidence/v1beta1/evidence
+```
+
+例:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/evidence/v1beta1/evidence"
+```
+
+出力例:
+
+```bash
+{
+  "evidence": [
+    {
+      "consensus_address": "cosmosvalcons1ntk8eualewuprz0gamh8hnvcem2nrcdsgz563h",
+      "height": "11",
+      "power": "100",
+      "time": "2021-10-20T16:08:38.194017624Z"
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
+
+### gRPC
+
+ユーザーはgRPCエンドポイントを使用して`evidence`モジュールにクエリできます。
+
+#### Evidence
+
+ハッシュでevidenceを取得
+
+```bash
+cosmos.evidence.v1beta1.Query/Evidence
+```
+
+例:
+
+```bash
+grpcurl -plaintext -d '{"evidence_hash":"DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"}' localhost:9090 cosmos.evidence.v1beta1.Query/Evidence
+```
+
+出力例:
+
+```bash
+{
+  "evidence": {
+    "consensus_address": "cosmosvalcons1ntk8eualewuprz0gamh8hnvcem2nrcdsgz563h",
+    "height": "11",
+    "power": "100",
+    "time": "2021-10-20T16:08:38.194017624Z"
+  }
+}
+```
+
+#### All evidence
+
+すべてのevidenceを取得
+
+```bash
+cosmos.evidence.v1beta1.Query/AllEvidence
+```
+
+例:
+
+```bash
+grpcurl -plaintext localhost:9090 cosmos.evidence.v1beta1.Query/AllEvidence
+```
+
+出力例:
+
+```bash
+{
+  "evidence": [
+    {
+      "consensus_address": "cosmosvalcons1ntk8eualewuprz0gamh8hnvcem2nrcdsgz563h",
+      "height": "11",
+      "power": "100",
+      "time": "2021-10-20T16:08:38.194017624Z"
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```

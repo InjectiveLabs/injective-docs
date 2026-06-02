@@ -1,0 +1,175 @@
+---
+title: x/circuit
+updatedAt: "2025-12-27"
+---
+
+# `x/circuit`
+
+## Concepts
+
+Circuit Breakerは、脆弱性が存在する状況でチェーンの停止/シャットダウンを回避するためのモジュールで、特定のメッセージまたはすべてのメッセージを無効化できます。チェーンを運用する際、それがアプリ固有のものであれば停止のダメージは比較的小さいですが、チェーン上にアプリケーションが構築されている場合、停止はアプリケーションへの影響により大きなコストとなります。
+
+Circuit Breakerは、特定のアドレスまたはアドレス集合がメッセージの実行および/またはメンプールへの含有をブロックする権限を持つという考え方で動作します。権限を持つすべてのアドレスは、メッセージに対するcircuit breakerをリセットできます。
+
+トランザクションは2つのポイントでチェックされ、拒否される可能性があります:
+
+* `CircuitBreakerDecorator`[ante handler](https://docs.cosmos.network/main/learn/advanced/baseapp#antehandler)内:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/x/circuit/v0.1.0/x/circuit/ante/circuit.go#L27-L41
+```
+
+* [message routerチェック](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router)で:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/baseapp/msg_service_router.go#L104-L115
+```
+
+:::note
+`CircuitBreakerDecorator`はほとんどのユースケースで機能しますが、[トランザクションの内部メッセージはチェックしません](https://docs.cosmos.network/main/learn/beginner/tx-lifecycle#antehandler)。そのため、一部のトランザクション（`x/authz`トランザクションや一部の`x/gov`トランザクションなど）はante handlerを通過する可能性があります。**これはcircuit breakerには影響しません**。message routerのチェックでトランザクションは依然として失敗します。
+このトレードオフは、`x/circuit`モジュールにより多くの依存関係を持ち込まないためのものです。チェーンは必要に応じて、内部メッセージをチェックするように`CircuitBreakerDecorator`を再定義できます。
+:::
+
+## State
+
+### Accounts
+
+* AccountPermissions `0x1 | account_address  -> ProtocolBuffer(CircuitBreakerPermissions)`
+
+```go
+type level int32
+
+const (
+    // LEVEL_NONE_UNSPECIFIED indicates that the account will have no circuit
+    // breaker permissions.
+    LEVEL_NONE_UNSPECIFIED = iota
+    // LEVEL_SOME_MSGS indicates that the account will have permission to
+    // trip or reset the circuit breaker for some Msg type URLs. If this level
+    // is chosen, a non-empty list of Msg type URLs must be provided in
+    // limit_type_urls.
+    LEVEL_SOME_MSGS
+    // LEVEL_ALL_MSGS indicates that the account can trip or reset the circuit
+    // breaker for Msg's of all type URLs.
+    LEVEL_ALL_MSGS 
+    // LEVEL_SUPER_ADMIN indicates that the account can take all circuit breaker
+    // actions and can grant permissions to other accounts.
+    LEVEL_SUPER_ADMIN
+)
+
+type Access struct {
+	level int32 
+	msgs []string // if full permission, msgs can be empty
+}
+```
+
+
+### Disable List
+
+無効化されているtype urlのリスト。
+
+* DisableList `0x2 | msg_type_url -> []byte{}` {/* - should this be stored in json to skip encoding and decoding each block, does it matter? */}
+
+## State Transitions
+
+### Authorize
+
+Authorizeは、モジュールの権限（デフォルトではgovernanceモジュールアカウント）または`LEVEL_SUPER_ADMIN`を持つ任意のアカウントによって呼び出され、別のアカウントにメッセージの無効化/有効化の権限を付与します。付与できる権限レベルは3つあります。`LEVEL_SOME_MSGS`は無効化できるメッセージ数を制限します。`LEVEL_ALL_MSGS`はすべてのメッセージの無効化を許可します。`LEVEL_SUPER_ADMIN`は、他のアカウントの認可および認可取り消しを含む、すべてのcircuit breakerアクションを取ることを許可します。
+
+```protobuf
+  // AuthorizeCircuitBreaker allows a super-admin to grant (or revoke) another
+  // account's circuit breaker permissions.
+  rpc AuthorizeCircuitBreaker(MsgAuthorizeCircuitBreaker) returns (MsgAuthorizeCircuitBreakerResponse);
+```
+
+### Trip
+
+Tripは、認可されたアカウントによって呼び出され、特定のmsgURLのメッセージ実行を無効化します。空の場合、すべてのmsgが無効化されます。
+
+```protobuf
+  // TripCircuitBreaker pauses processing of Msg's in the state machine.
+  rpc TripCircuitBreaker(MsgTripCircuitBreaker) returns (MsgTripCircuitBreakerResponse);
+```
+
+### Reset
+
+Resetは、認可されたアカウントによって呼び出され、以前に無効化された特定のmsgURLのメッセージの実行を有効化します。空の場合、すべての無効化されたメッセージが有効化されます。
+
+```protobuf
+  // ResetCircuitBreaker resumes processing of Msg's in the state machine that
+  // have been been paused using TripCircuitBreaker.
+  rpc ResetCircuitBreaker(MsgResetCircuitBreaker) returns (MsgResetCircuitBreakerResponse);
+```
+
+## Messages
+
+### MsgAuthorizeCircuitBreaker
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L25-L75
+```
+
+このメッセージは以下の場合に失敗します:
+
+* granterが権限レベル`LEVEL_SUPER_ADMIN`を持つアカウント、またはモジュールの権限ではない場合
+
+### MsgTripCircuitBreaker
+
+```protobuf reference 
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L77-L93
+```
+
+このメッセージは以下の場合に失敗します:
+
+* 署名者が指定されたtype urlのメッセージを無効化できる権限レベルを持っていない場合
+
+### MsgResetCircuitBreaker
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L95-109
+```
+
+このメッセージは以下の場合に失敗します:
+
+* type urlが無効化されていない場合
+
+## Events - list and describe event tags
+
+circuitモジュールは以下のイベントを発行します:
+
+### Message Events
+
+#### MsgAuthorizeCircuitBreaker
+
+| Type    | Attribute Key | Attribute Value           |
+|---------|---------------|---------------------------|
+| string  | granter       | `{granterAddress}` |
+| string  | grantee       | `{granteeAddress}` |
+| string  | permission    | `{granteePermissions}` |
+| message | module        | `circuit`                   |
+| message | action        | `authorize_circuit_breaker` |
+
+#### MsgTripCircuitBreaker
+
+| Type     | Attribute Key | Attribute Value    |
+|----------|---------------|--------------------|
+| string   | authority     | `{authorityAddress}` |
+| []string | msg_urls      | `[]string{msg_urls}` |
+| message  | module        | `circuit`            |
+| message  | action        | `trip_circuit_breaker` |
+
+#### ResetCircuitBreaker
+
+| Type     | Attribute Key | Attribute Value    |
+|----------|---------------|--------------------|
+| string   | authority     | `{authorityAddress}` |
+| []string | msg_urls      | `[]string{msg_urls}` |
+| message  | module        | `circuit`            |
+| message  | action        | `reset_circuit_breaker` |
+
+
+## Keys - list of key prefixes used by the circuit module
+
+* `AccountPermissionPrefix` - `0x01`
+* `DisableListPrefix` -  `0x02`
+
+## Client - list and describe CLI commands and gRPC and REST endpoints

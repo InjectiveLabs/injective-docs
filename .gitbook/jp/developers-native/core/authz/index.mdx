@@ -1,0 +1,371 @@
+---
+sidebar_position: 1
+updatedAt: "2025-12-05"
+---
+
+# `x/authz`
+
+## 概要
+
+`x/authz`は、[ADR 30](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-030-authz-module.md)に基づくCosmos SDKモジュールの実装で、あるアカウント（granter）から別のアカウント（grantee）に任意の権限を付与できます。Authorizationは、`Authorization`インターフェースの実装を使用して、特定のMsgサービスメソッドごとに1つずつ付与する必要があります。
+
+## 目次
+
+* [Concepts](#concepts)
+    * [Authorization and Grant](#authorization-and-grant)
+    * [Built-in Authorizations](#built-in-authorizations)
+    * [Gas](#gas)
+* [State](#state)
+    * [Grant](#grant)
+    * [GrantQueue](#grantqueue)
+* [Messages](#messages)
+    * [MsgGrant](#msggrant)
+    * [MsgRevoke](#msgrevoke)
+    * [MsgExec](#msgexec)
+* [Events](#events)
+* [Client](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
+
+## Concepts
+
+### Authorization and Grant
+
+`x/authz`モジュールは、あるアカウントに代わって他のアカウントがアクションを実行する権限を付与するためのインターフェースとメッセージを定義します。設計は[ADR 030](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-030-authz-module.md)で定義されています。
+
+*grant*は、granterに代わってgranteeがMsgを実行することを許可するものです。
+Authorizationは、grantを検証および実行するための具体的なauthorizationロジックによって実装される必要があるインターフェースです。Authorizationは拡張可能で、Msgメソッドが定義されているモジュール外であっても、任意のMsgサービスメソッドに対して定義できます。詳細は次のセクションの`SendAuthorization`の例を参照してください。
+
+**Note:** authzモジュールは、基本的なトランザクション型およびアカウント型を指定する[auth (authentication)](../auth/)モジュールとは異なります。
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/authz/authorizations.go#L11-L25
+```
+
+### Built-in Authorizations
+
+Cosmos SDK `x/authz`モジュールには、以下のauthorization型が組み込まれています:
+
+#### GenericAuthorization
+
+`GenericAuthorization`は`Authorization`インターフェースを実装し、granterのアカウントに代わって指定されたMsgを実行する無制限の権限を付与します。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/authz.proto#L14-L22
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/authz/generic_authorization.go#L16-L29
+```
+
+* `msg`はMsg type URLを保存します。
+
+#### SendAuthorization
+
+`SendAuthorization`は、`cosmos.bank.v1beta1.MsgSend` Msgに対する`Authorization`インターフェースを実装します。
+
+* 正の値の`SpendLimit`を取り、granteeが使用できるトークンの最大量を指定します。`SpendLimit`はトークンが使用されるにつれて更新されます。
+* オプションの`AllowList`を取り、granteeがトークンを送信できるアドレスを指定します。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/authz.proto#L11-L30
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/bank/types/send_authorization.go#L29-L62
+```
+
+* `spend_limit`は、authorizationに残っているコインの数を追跡します。
+* `allow_list`は、granterに代わってgranteeがトークンを送信できるアドレスのオプションリストを指定します。
+
+#### StakeAuthorization
+
+`StakeAuthorization`は、[stakingモジュール](https://docs.cosmos.network/v0.50/build/modules/staking)のメッセージに対する`Authorization`インターフェースを実装します。`AuthorizationType`を取り、delegate、undelegate、redelegateのいずれを認可するかを指定します（つまり、これらは個別に認可する必要があります）。また、オプションの`MaxTokens`を取り、delegate/undelegate/redelegateできるトークンの量の制限を追跡します。空のままにすると、量は無制限となります。さらに、このMsgは`AllowList`または`DenyList`を取り、granteeがステーキングするバリデータを許可または拒否するかを選択できます。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/authz.proto#L11-L35
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/types/authz.go#L15-L35
+```
+
+### Gas
+
+DoS攻撃を防ぐため、`x/authz`で`StakeAuthorization`を付与するとガスが発生します。`StakeAuthorization`では、別のアカウントにバリデータへのdelegate、undelegate、redelegateを認可できます。authorizerは委任を許可または拒否するバリデータのリストを定義できます。Cosmos SDKはこれらのリストを反復処理し、両方のリストの各バリデータごとに10ガスを課金します。
+
+ステートは、同じ有効期限を持つgranter、granteeペアのリストを保持しているため、特定の`msgType`のrevokeの場合にリストからgrantを削除するためにリストを反復処理し、反復ごとに20ガスを課金します。
+
+## State
+
+### Grant
+
+Grantは、granterアドレス（granterのアドレスバイト）、granteeアドレス（granteeのアドレスバイト）、およびAuthorization型（そのtype URL）を組み合わせて識別されます。したがって、(granter, grantee, Authorization)のトリプレットに対して1つのgrantのみを許可します。
+
+* Grant: `0x01 | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes |  msgType_bytes -> ProtocolBuffer(AuthorizationGrant)`
+
+grantオブジェクトは`Authorization`型と有効期限タイムスタンプをカプセル化します:
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/authz.proto#L24-L32
+```
+
+### GrantQueue
+
+authzのpruningのためのキューを維持しています。grantが作成されるたびに、有効期限、granter、granteeをキーとして`GrantQueue`にアイテムが追加されます。
+
+`EndBlock`（ブロックごとに実行される）では、`GrantQueue`に保存されている有効期限を過ぎた現在のブロック時刻でプレフィックスキーを形成することで、期限切れのgrantを継続的にチェックしてpruneします。`GrantQueue`から一致するすべてのレコードを反復処理し、`GrantQueue`および`Grant`ストアから削除します。
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/5f4ddc6f80f9707320eec42182184207fff3833a/x/authz/keeper/keeper.go#L378-L403
+```
+
+* GrantQueue: `0x02 | expiration_bytes | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes -> ProtocalBuffer(GrantQueueItem)`
+
+`expiration_bytes`は、`"2006-01-02T15:04:05.000000000"`の形式のUTCでの有効期限日です。
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/authz/keeper/keys.go#L77-L93
+```
+
+`GrantQueueItem`オブジェクトには、キーで示される時刻に期限切れになるgranterとgrantee間のtype urlのリストが含まれます。
+
+## Messages
+
+このセクションでは、authzモジュールのメッセージの処理について説明します。
+
+### MsgGrant
+
+authorization grantは`MsgGrant`メッセージを使用して作成されます。
+`(granter, grantee, Authorization)`のトリプレットに対してすでにgrantが存在する場合、新しいgrantは前のgrantを上書きします。既存のgrantを更新または拡張するには、同じ`(granter, grantee, Authorization)`トリプレットで新しいgrantを作成する必要があります。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L35-L45
+```
+
+メッセージ処理は以下の場合に失敗します:
+
+* granterとgranteeが同じアドレスを持っている場合。
+* 指定された`Expiration`時刻が現在のunixタイムスタンプより小さい場合（ただし`expiration`はオプションのため、`expiration`時刻が指定されていない場合はgrantが作成されます）。
+* 指定された`Grant.Authorization`が実装されていない場合。
+* `Authorization.MsgTypeURL()`がルーターに定義されていない場合（そのMsg型を処理するハンドラがアプリのルーターに定義されていない）。
+
+### MsgRevoke
+
+grantは`MsgRevoke`メッセージで削除できます。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L69-L78
+```
+
+メッセージ処理は以下の場合に失敗します:
+
+* granterとgranteeが同じアドレスを持っている場合。
+* 指定された`MsgTypeUrl`が空である場合。
+
+NOTE: `MsgExec`メッセージは、grantが期限切れの場合、そのgrantを削除します。
+
+### MsgExec
+
+granteeがgranterに代わってトランザクションを実行したい場合、`MsgExec`を送信する必要があります。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L52-L63
+```
+
+メッセージ処理は以下の場合に失敗します:
+
+* 指定された`Authorization`が実装されていない場合。
+* granteeがトランザクションを実行する権限を持っていない場合。
+* 付与されたauthorizationが期限切れの場合。
+
+## Events
+
+authzモジュールは[Protobuf reference](https://buf.build/cosmos/cosmos-sdk/docs/main/cosmos.authz.v1beta1#cosmos.authz.v1beta1.EventGrant)で定義されたprotoイベントを発行します。
+
+## Client
+
+### CLI
+
+ユーザーはCLIを使用して`authz`モジュールにクエリを行い、操作できます。
+
+#### Query
+
+`query`コマンドを使用すると、`authz`の状態をクエリできます。
+
+```bash
+simd query authz --help
+```
+
+##### grants
+
+`grants`コマンドを使用すると、granter-granteeペアのgrantをクエリできます。メッセージtype URLが設定されている場合は、そのメッセージ型のgrantのみが選択されます。
+
+```bash
+simd query authz grants [granter-addr] [grantee-addr] [msg-type-url]? [flags]
+```
+
+例:
+
+```bash
+simd query authz grants cosmos1.. cosmos1.. /cosmos.bank.v1beta1.MsgSend
+```
+
+出力例:
+
+```bash
+grants:
+- authorization:
+    '@type': /cosmos.bank.v1beta1.SendAuthorization
+    spend_limit:
+    - amount: "100"
+      denom: stake
+  expiration: "2022-01-01T00:00:00Z"
+pagination: null
+```
+
+#### Transactions
+
+`tx`コマンドを使用すると、`authz`モジュールを操作できます。
+
+```bash
+simd tx authz --help
+```
+
+##### exec
+
+`exec`コマンドを使用すると、granteeはgranterに代わってトランザクションを実行できます。
+
+```bash
+  simd tx authz exec [tx-json-file] --from [grantee] [flags]
+```
+
+例:
+
+```bash
+simd tx authz exec tx.json --from=cosmos1..
+```
+
+##### grant
+
+`grant`コマンドを使用すると、granterはgranteeにauthorizationを付与できます。
+
+```bash
+simd tx authz grant <grantee> <authorization_type="send"|"generic"|"delegate"|"unbond"|"redelegate"> --from <granter> [flags]
+```
+-  `send` authorization_typeは組み込みの`SendAuthorization`型を指します。利用可能なカスタムフラグは`spend-limit`（必須）と`allow-list`（オプション）で、[こちら](#SendAuthorization)にドキュメントがあります。
+
+例:
+
+```bash
+    simd tx authz grant cosmos1.. send --spend-limit=100stake --allow-list=cosmos1...,cosmos2... --from=cosmos1..
+```
+- `generic` authorization_typeは組み込みの`GenericAuthorization`型を指します。利用可能なカスタムフラグは`msg-type`（必須）で、[こちら](#GenericAuthorization)にドキュメントがあります。
+
+> Note: `msg-type`は任意の有効なCosmos SDKの`Msg` type urlです。
+
+例:
+```bash
+    simd tx authz grant cosmos1.. generic --msg-type=/cosmos.bank.v1beta1.MsgSend --from=cosmos1..
+```
+- `delegate`、`unbond`、`redelegate` authorization_typeは組み込みの`StakeAuthorization`型を指します。利用可能なカスタムフラグは`spend-limit`（オプション）、`allowed-validators`（オプション）、`deny-validators`（オプション）で、[こちら](#StakeAuthorization)にドキュメントがあります。
+> Note: `allowed-validators`と`deny-validators`は両方とも空にすることはできません。`spend-limit`は`MaxTokens`を表します。
+
+例:
+
+```bash
+simd tx authz grant cosmos1.. delegate --spend-limit=100stake --allowed-validators=cosmos...,cosmos... --deny-validators=cosmos... --from=cosmos1..
+```
+
+##### revoke
+
+`revoke`コマンドを使用すると、granterはgranteeからauthorizationを取り消せます。
+
+```bash
+simd tx authz revoke [grantee] [msg-type-url] --from=[granter] [flags]
+```
+
+例:
+
+```bash
+simd tx authz revoke cosmos1.. /cosmos.bank.v1beta1.MsgSend --from=cosmos1..
+```
+
+### gRPC
+
+ユーザーはgRPCエンドポイントを使用して`authz`モジュールにクエリできます。
+
+#### Grants
+
+`Grants`エンドポイントを使用すると、granter-granteeペアのgrantをクエリできます。メッセージtype URLが設定されている場合は、そのメッセージ型のgrantのみが選択されます。
+
+```bash
+cosmos.authz.v1beta1.Query/Grants
+```
+
+例:
+
+```bash
+grpcurl -plaintext \
+    -d '{"granter":"cosmos1..","grantee":"cosmos1..","msg_type_url":"/cosmos.bank.v1beta1.MsgSend"}' \
+    localhost:9090 \
+    cosmos.authz.v1beta1.Query/Grants
+```
+
+出力例:
+
+```bash
+{
+  "grants": [
+    {
+      "authorization": {
+        "@type": "/cosmos.bank.v1beta1.SendAuthorization",
+        "spendLimit": [
+          {
+            "denom":"stake",
+            "amount":"100"
+          }
+        ]
+      },
+      "expiration": "2022-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+### REST
+
+ユーザーはRESTエンドポイントを使用して`authz`モジュールにクエリできます。
+
+```bash
+/cosmos/authz/v1beta1/grants
+```
+
+例:
+
+```bash
+curl "localhost:1317/cosmos/authz/v1beta1/grants?granter=cosmos1..&grantee=cosmos1..&msg_type_url=/cosmos.bank.v1beta1.MsgSend"
+```
+
+出力例:
+
+```bash
+{
+  "grants": [
+    {
+      "authorization": {
+        "@type": "/cosmos.bank.v1beta1.SendAuthorization",
+        "spend_limit": [
+          {
+            "denom": "stake",
+            "amount": "100"
+          }
+        ]
+      },
+      "expiration": "2022-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": null
+}
+```

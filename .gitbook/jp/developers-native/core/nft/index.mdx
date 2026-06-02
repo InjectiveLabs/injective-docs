@@ -1,0 +1,90 @@
+---
+sidebar_position: 1
+updatedAt: "2025-12-05"
+---
+
+# `x/nft`
+
+## 目次
+
+## 概要
+
+`x/nft`は、[ADR 43](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-043-nft-module.md)に基づくCosmos SDKモジュールの実装で、モジュールを統合することで、NFTの分類作成、NFTの作成、NFTの転送、NFTの更新、および各種クエリのサポートが可能になります。ERC721仕様と完全に互換性があります。
+
+* [Concepts](#concepts)
+    * [Class](#class)
+    * [NFT](#nft)
+* [State](#state)
+    * [Class](#class-1)
+    * [NFT](#nft-1)
+    * [NFTOfClassByOwner](#nftofclassbyowner)
+    * [Owner](#owner)
+    * [TotalSupply](#totalsupply)
+* [Messages](#messages)
+    * [MsgSend](#msgsend)
+* [Events](#events)
+
+## Concepts
+
+### Class
+
+`x/nft`モジュールは、NFTクラスの共通特性を記述するための構造体`Class`を定義します。このクラスの下では、Ethereumのerc721コントラクトに相当する様々なNFTを作成できます。設計は[ADR 043](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-043-nft-module.md)で定義されています。
+
+### NFT
+
+NFTの正式名称はNon-Fungible Tokens（非代替性トークン）です。NFTの代替不可能な性質により、固有のものを表現するために使用できます。このモジュールで実装されているNFTは、Ethereum ERC721標準と完全に互換性があります。
+
+## State
+
+### Class
+
+Classは主に`id`、`name`、`symbol`、`description`、`uri`、`uri_hash`、`data`で構成されており、`id`はEthereum ERC721コントラクトアドレスに類似したクラスの一意の識別子で、その他はオプションです。
+
+* Class: `0x01 | classID | -> ProtocolBuffer(Class)`
+
+### NFT
+
+NFTは主に`class_id`、`id`、`uri`、`uri_hash`、および`data`で構成されます。このうち、`class_id`と`id`はNFTの一意性を識別する2タプルであり、`uri`と`uri_hash`はオプションで、NFTのオフチェーンストレージの場所を示し、`data`はAny型です。`x/nft`モジュールの任意のチェーンでは、このフィールドを拡張することでカスタマイズできます。
+
+* NFT: `0x02 | classID | 0x00 | nftID |-> ProtocolBuffer(NFT)`
+
+### NFTOfClassByOwner
+
+NFTOfClassByOwnerは主に、classIDとownerを使用してすべてのNFTをクエリする機能を実現するためのもので、他の冗長な機能はありません。
+
+* NFTOfClassByOwner: `0x03 | owner | 0x00 | classID | 0x00 | nftID |-> 0x01`
+
+### Owner
+
+NFTの所有者を示す追加フィールドがNFTにはないため、NFTの所有権を保存するために追加のキーバリューペアが使用されます。NFTの転送に伴い、キーバリューペアは同期して更新されます。
+
+* OwnerKey: `0x04 | classID | 0x00  | nftID |-> owner`
+
+### TotalSupply
+
+TotalSupplyは、特定のクラス下のすべてのNFTの数を追跡する役割を担います。変更されたクラスの下でMint操作が実行されるとsupplyが1増加し、burn操作が実行されるとsupplyが1減少します。
+
+* OwnerKey: `0x05 | classID |-> totalSupply`
+
+## Messages
+
+このセクションでは、NFTモジュールのメッセージの処理について説明します。
+
+:::warning
+`ClassID`と`NftID`の検証は、アプリケーション開発者に委ねられています。
+SDKはこれらのフィールドに対するいかなる検証も提供しません。
+:::
+
+### MsgSend
+
+`MsgSend`メッセージを使用してNFTの所有権を転送できます。これは`x/nft`モジュールが提供する機能です。もちろん、`Transfer`メソッドを使用して独自の転送ロジックを実装することもできますが、転送権限には特に注意を払う必要があります。
+
+メッセージ処理は以下の場合に失敗します:
+
+* 指定された`ClassID`が存在しない場合。
+* 指定された`Id`が存在しない場合。
+* 指定された`Sender`がNFTの所有者でない場合。
+
+## Events
+
+nftモジュールは、[Protobuf reference](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.nft.v1beta1)で定義されたprotoイベントを発行します。

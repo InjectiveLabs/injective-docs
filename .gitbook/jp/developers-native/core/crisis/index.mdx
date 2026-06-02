@@ -1,0 +1,99 @@
+---
+sidebar_position: 1
+updatedAt: "2025-12-05"
+---
+
+# `x/crisis`
+
+## 概要
+
+crisisモジュールは、ブロックチェーンの不変条件（invariant）が破られた状況でブロックチェーンを停止させます。Invariantはアプリケーションの初期化プロセス中にアプリケーションに登録できます。
+
+## 目次
+
+* [State](#state)
+* [Messages](#messages)
+* [Events](#events)
+* [Parameters](#parameters)
+* [Client](#client)
+    * [CLI](#cli)
+
+## State
+
+### ConstantFee
+
+invariantの検証には大きなガスコストが必要になることが想定されており（許容される最大ブロックガス制限を超える可能性もある）、標準のガス消費方式の代わりに一定の手数料が使用されます。一定の手数料は、標準のガス消費方式でinvariantを実行する想定ガスコストよりも大きくなるように設定されています。
+
+ConstantFeeパラメータは接頭辞`0x01`でモジュールのパラメータステートに保存され、ガバナンスまたは権限を持つアドレスによって更新できます。
+
+* Params: `mint/params -> legacy_amino(sdk.Coin)`
+
+## Messages
+
+このセクションでは、crisisメッセージの処理と、それに対応するステートの更新について説明します。
+
+### MsgVerifyInvariant
+
+`MsgVerifyInvariant`メッセージを使用して、ブロックチェーンのinvariantを検証できます。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/crisis/v1beta1/tx.proto#L26-L42
+```
+
+このメッセージは以下の場合に失敗します:
+
+* 送信者が一定の手数料を支払うのに十分なコインを持っていない
+* invariantのルートが登録されていない
+
+このメッセージは指定されたinvariantをチェックし、invariantが破られていればpanicしてブロックチェーンを停止させます。invariantが破られた場合、トランザクションはブロックにコミットされないため、一定の手数料は控除されません（返金されるのと同等）。ただし、invariantが破られていなかった場合、一定の手数料は返金されません。
+
+## Events
+
+crisisモジュールは以下のイベントを発行します:
+
+### Handlers
+
+#### MsgVerifyInvariance
+
+| Type      | Attribute Key | Attribute Value  |
+|-----------|---------------|------------------|
+| invariant | route         | `{invariantRoute}` |
+| message   | module        | `crisis`           |
+| message   | action        | `verify_invariant` |
+| message   | sender        | `{senderAddress}` |
+
+## Parameters
+
+crisisモジュールには以下のパラメータが含まれます:
+
+| Key         | Type          | Example                           |
+|-------------|---------------|-----------------------------------|
+| ConstantFee | object (coin) | `{"denom":"uatom","amount":"1000"}` |
+
+## Client
+
+### CLI
+
+ユーザーはCLIを使用して`crisis`モジュールにクエリを行い、操作できます。
+
+#### Transactions
+
+`tx`コマンドを使用すると、`crisis`モジュールを操作できます。
+
+```bash
+simd tx crisis --help
+```
+
+##### invariant-broken
+
+`invariant-broken`コマンドは、invariantが破られた際にチェーンを停止させるための証明を送信します。
+
+```bash
+simd tx crisis invariant-broken [module-name] [invariant-route] [flags]
+```
+
+例:
+
+```bash
+simd tx crisis invariant-broken bank total-supply --from=[keyname or address]
+```

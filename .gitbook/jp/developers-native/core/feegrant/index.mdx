@@ -1,0 +1,397 @@
+---
+sidebar_position: 1
+updatedAt: "2025-12-05"
+---
+
+# `x/feegrant`
+
+## 概要
+
+このドキュメントはfee grantモジュールを規定します。完全なADRについては、[Fee Grant ADR-029](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-029-fee-grant-module.md)を参照してください。
+
+このモジュールは、アカウントがfee allowanceを付与し、他のアカウントの手数料を使用できるようにします。granteeは十分な手数料を保持することなく、任意のトランザクションを実行できます。
+
+## 目次
+
+* [Concepts](#concepts)
+* [State](#state)
+    * [FeeAllowance](#feeallowance)
+    * [FeeAllowanceQueue](#feeallowancequeue)
+* [Messages](#messages)
+    * [Msg/GrantAllowance](#msggrantallowance)
+    * [Msg/RevokeAllowance](#msgrevokeallowance)
+* [Events](#events)
+* [Msg Server](#msg-server)
+    * [MsgGrantAllowance](#msggrantallowance-1)
+    * [MsgRevokeAllowance](#msgrevokeallowance-1)
+    * [Exec fee allowance](#exec-fee-allowance)
+* [Client](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+
+## Concepts
+
+### Grant
+
+`Grant`は、完全なコンテキストでgrantを記録するためにKVStoreに保存されます。すべてのgrantには、`granter`、`grantee`、および付与される`allowance`の種類が含まれます。`granter`は、`grantee`（受益者のアカウントアドレス）の一部またはすべてのトランザクション手数料を支払うことを許可するアカウントアドレスです。`allowance`は、`grantee`に付与されるfee allowanceの種類（`BasicAllowance`または`PeriodicAllowance`、以下参照）を定義します。`allowance`は`FeeAllowanceI`を実装するインターフェースを受け取り、`Any`型としてエンコードされます。`grantee`と`granter`のペアに対して存在できるfee grantは1つだけで、自己付与は許可されません。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L83-L93
+```
+
+`FeeAllowanceI`は次のようになります:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/feegrant/fees.go#L9-L32
+```
+
+### Fee Allowance types
+
+現在、fee allowanceには2つの種類があります:
+
+* `BasicAllowance`
+* `PeriodicAllowance`
+* `AllowedMsgAllowance`
+
+### BasicAllowance
+
+`BasicAllowance`は、`grantee`が`granter`のアカウントから手数料を使用する権限です。`spend_limit`または`expiration`のいずれかが限界に達した場合、grantはステートから削除されます。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L15-L28
+```
+
+* `spend_limit`は、`granter`アカウントから使用可能なコインの上限です。空の場合、spend limitがないものとみなされ、`grantee`は有効期限まで`granter`アカウントアドレスから利用可能なコインを任意の数使用できます。
+
+* `expiration`は、このallowanceの期限切れ時刻をオプションで指定します。値が空の場合、grantに有効期限はありません。
+
+* `spend_limit`と`expiration`の両方が空の値でgrantが作成された場合でも、それは有効なgrantです。`grantee`は`granter`から任意の数のコインを使用でき、有効期限もありません。`grantee`を制限する唯一の方法は、grantを取り消すことです。
+
+### PeriodicAllowance
+
+`PeriodicAllowance`は、指定された期間に対して繰り返されるfee allowanceで、grantの有効期限と期間がリセットされるタイミングの両方を指定できます。指定された期間内で使用可能なコインの最大数も定義できます。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L34-L68
+```
+
+* `basic`は`BasicAllowance`のインスタンスで、periodic fee allowanceではオプションです。空の場合、grantには`expiration`も`spend_limit`もありません。
+
+* `period`は特定の期間です。各期間が経過した後、`period_can_spend`がリセットされます。
+
+* `period_spend_limit`は、期間内に使用できるコインの最大数を指定します。
+
+* `period_can_spend`は、period_reset時刻までに使用できる残りコイン数です。
+
+* `period_reset`は、次の期間リセットがいつ発生するかを追跡します。
+
+### AllowedMsgAllowance
+
+`AllowedMsgAllowance`はfee allowanceで、`BasicFeeAllowance`または`PeriodicAllowance`のいずれかになり得ますが、granterが指定した許可メッセージにのみ制限されます。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/feegrant.proto#L70-L81
+```
+
+* `allowance`は`BasicAllowance`または`PeriodicAllowance`です。
+
+* `allowed_messages`は、指定されたallowanceで実行が許可されたメッセージの配列です。
+
+### FeeGranter flag
+
+`feegrant`モジュールは、fee granterでトランザクションを実行するために、CLI用の`FeeGranter`フラグを導入しています。このフラグが設定されている場合、`clientCtx`はCLI経由で生成されたトランザクションにgranterのアカウントアドレスを追加します。
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/cmd.go#L249-L260
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx/tx.go#L109-L109
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/tx/builder.go#L275-L284
+```
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L203-L224
+```
+
+コマンド例:
+
+```go
+./simd tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --from validator-key --fee-granter=cosmos1xh44hxt7spr67hqaa7nyx5gnutrz5fraw6grxn --chain-id=testnet --fees="10stake"
+```
+
+### Granted Fee Deductions
+
+手数料は`x/auth` ante handlerでgrantから控除されます。ante handlerの仕組みの詳細については、[Auth Module AnteHandlers Guide](../auth/#antehandlers)を参照してください。
+
+### Gas
+
+DoS攻撃を防ぐため、フィルタ付きの`x/feegrant`を使用するとガスが発生します。SDKは、`grantee`のトランザクションがすべて`granter`が設定したフィルタに準拠することを保証する必要があります。SDKはフィルタ内の許可されたメッセージを反復処理し、フィルタされた各メッセージにつき10ガスを課金します。次にSDKは`grantee`が送信するメッセージを反復処理してフィルタに準拠するか確認し、各メッセージにつき10ガスを課金します。フィルタに準拠しないメッセージが見つかった場合、反復を停止しトランザクションを失敗させます。
+
+**警告**: ガスは付与されたallowanceから課金されます。allowanceを使用してトランザクションを送信する前に、フィルタがある場合はメッセージがフィルタに準拠していることを確認してください。
+
+### Pruning
+
+ステート内に、grantの有効期限を接頭辞としたキューが維持され、ブロックごとにEndBlockで現在のブロック時刻でチェックしてpruneします。
+
+## State
+
+### FeeAllowance
+
+Fee Allowanceは、`Grantee`（fee allowance grantee のアカウントアドレス）と`Granter`（fee allowance granter のアカウントアドレス）を組み合わせて識別されます。
+
+Fee allowance grantは、以下のようにステートに保存されます:
+
+* Grant: `0x00 | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> ProtocolBuffer(Grant)`
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/feegrant/feegrant.pb.go#L222-L230
+```
+
+### FeeAllowanceQueue
+
+Fee Allowance キュー項目は、`FeeAllowancePrefixQueue`（つまり0x01）、`expiration`、`grantee`（fee allowance grantee のアカウントアドレス）、`granter`（fee allowance granter のアカウントアドレス）を組み合わせて識別されます。EndBlockerは期限切れのgrantについて`FeeAllowanceQueue`ステートをチェックし、見つかった場合は`FeeAllowance`から削除します。
+
+Fee allowance queueキーは以下のようにステートに保存されます:
+
+* Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> EmptyBytes`
+
+## Messages
+
+### Msg/GrantAllowance
+
+`MsgGrantAllowance`メッセージによりfee allowance grantが作成されます。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/tx.proto#L25-L39
+```
+
+### Msg/RevokeAllowance
+
+許可されたgrant fee allowanceは、`MsgRevokeAllowance`メッセージで削除できます。
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1beta1/tx.proto#L41-L54
+```
+
+## Events
+
+feegrantモジュールは以下のイベントを発行します:
+
+## Msg Server
+
+### MsgGrantAllowance
+
+| Type    | Attribute Key | Attribute Value  |
+| ------- | ------------- | ---------------- |
+| message | action        | set_feegrant     |
+| message | granter       | {granterAddress} |
+| message | grantee       | {granteeAddress} |
+
+### MsgRevokeAllowance
+
+| Type    | Attribute Key | Attribute Value  |
+| ------- | ------------- | ---------------- |
+| message | action        | revoke_feegrant  |
+| message | granter       | {granterAddress} |
+| message | grantee       | {granteeAddress} |
+
+### Exec fee allowance
+
+| Type    | Attribute Key | Attribute Value  |
+| ------- | ------------- | ---------------- |
+| message | action        | use_feegrant     |
+| message | granter       | {granterAddress} |
+| message | grantee       | {granteeAddress} |
+
+### Prune fee allowances
+
+| Type    | Attribute Key | Attribute Value  |
+| ------- | ------------- | ---------------- |
+| message | action        |  prune_feegrant  |
+| message | pruner        | {prunerAddress}  |
+
+
+## Client
+
+### CLI
+
+ユーザーはCLIを使用して`feegrant`モジュールにクエリを行い、操作できます。
+
+#### Query
+
+`query`コマンドを使用すると、`feegrant`の状態をクエリできます。
+
+```shell
+simd query feegrant --help
+```
+
+##### grant
+
+`grant`コマンドを使用すると、指定したgranter-granteeペアのgrantをクエリできます。
+
+```shell
+simd query feegrant grant [granter] [grantee] [flags]
+```
+
+例:
+
+```shell
+simd query feegrant grant cosmos1.. cosmos1..
+```
+
+出力例:
+
+```yml
+allowance:
+  '@type': /cosmos.feegrant.v1beta1.BasicAllowance
+  expiration: null
+  spend_limit:
+  - amount: "100"
+    denom: stake
+grantee: cosmos1..
+granter: cosmos1..
+```
+
+##### grants
+
+`grants`コマンドを使用すると、指定したgranteeのすべてのgrantをクエリできます。
+
+```shell
+simd query feegrant grants [grantee] [flags]
+```
+
+例:
+
+```shell
+simd query feegrant grants cosmos1..
+```
+
+出力例:
+
+```yml
+allowances:
+- allowance:
+    '@type': /cosmos.feegrant.v1beta1.BasicAllowance
+    expiration: null
+    spend_limit:
+    - amount: "100"
+      denom: stake
+  grantee: cosmos1..
+  granter: cosmos1..
+pagination:
+  next_key: null
+  total: "0"
+```
+
+#### Transactions
+
+`tx`コマンドを使用すると、`feegrant`モジュールを操作できます。
+
+```shell
+simd tx feegrant --help
+```
+
+##### grant
+
+`grant`コマンドを使用すると、別のアカウントにfee allowanceを付与できます。fee allowanceには有効期限、合計spend limit、および/または定期的なspend limitを設定できます。
+
+```shell
+simd tx feegrant grant [granter] [grantee] [flags]
+```
+
+例（1回限りのspend limit）:
+
+```shell
+simd tx feegrant grant cosmos1.. cosmos1.. --spend-limit 100stake
+```
+
+例（定期的なspend limit）:
+
+```shell
+simd tx feegrant grant cosmos1.. cosmos1.. --period 3600 --period-limit 10stake
+```
+
+##### revoke
+
+`revoke`コマンドを使用すると、付与されたfee allowanceを取り消せます。
+
+```shell
+simd tx feegrant revoke [granter] [grantee] [flags]
+```
+
+例:
+
+```shell
+simd tx feegrant revoke cosmos1.. cosmos1..
+```
+
+### gRPC
+
+ユーザーはgRPCエンドポイントを使用して`feegrant`モジュールにクエリできます。
+
+#### Allowance
+
+`Allowance`エンドポイントを使用すると、付与されたfee allowanceをクエリできます。
+
+```shell
+cosmos.feegrant.v1beta1.Query/Allowance
+```
+
+例:
+
+```shell
+grpcurl -plaintext \
+    -d '{"grantee":"cosmos1..","granter":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.feegrant.v1beta1.Query/Allowance
+```
+
+出力例:
+
+```json
+{
+  "allowance": {
+    "granter": "cosmos1..",
+    "grantee": "cosmos1..",
+    "allowance": {"@type":"/cosmos.feegrant.v1beta1.BasicAllowance","spendLimit":[{"denom":"stake","amount":"100"}]}
+  }
+}
+```
+
+#### Allowances
+
+`Allowances`エンドポイントを使用すると、指定したgranteeに付与されたすべてのfee allowanceをクエリできます。
+
+```shell
+cosmos.feegrant.v1beta1.Query/Allowances
+```
+
+例:
+
+```shell
+grpcurl -plaintext \
+    -d '{"address":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.feegrant.v1beta1.Query/Allowances
+```
+
+出力例:
+
+```json
+{
+  "allowances": [
+    {
+      "granter": "cosmos1..",
+      "grantee": "cosmos1..",
+      "allowance": {"@type":"/cosmos.feegrant.v1beta1.BasicAllowance","spendLimit":[{"denom":"stake","amount":"100"}]}
+    }
+  ],
+  "pagination": {
+    "total": "1"
+  }
+}
+```
