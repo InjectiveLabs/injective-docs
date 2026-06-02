@@ -1,0 +1,114 @@
+---
+title: GraphQLエンドポイントのクエリ
+updatedAt: "2025-12-23"
+---
+
+このガイドでは、`@injectivelabs/utils`の`HttpClient`を使用してGraphQLエンドポイントをクエリする方法について説明します。
+
+## セットアップ
+
+```ts
+import { HttpClient } from '@injectivelabs/utils'
+
+const client = new HttpClient('YOUR_GRAPHQL_ENDPOINT')
+```
+
+## 認証
+
+GraphQLエンドポイントが認証を必要とする場合は、ヘッダーを設定します：
+
+```ts
+client.setConfig({
+  headers: { 
+    authorization: 'Bearer YOUR_API_KEY' 
+  }
+})
+```
+
+## クエリの実行
+
+GraphQLクエリは、`query`と必要に応じて`variables`を含むJSON文字列として構成します：
+
+```ts
+const query = JSON.stringify({
+  query: `
+    query GetData($id: ID!) {
+      entity(id: $id) {
+        id
+        name
+        value
+      }
+    }
+  `,
+  variables: {
+    id: '123'
+  }
+})
+
+const response = await client.post<string, { data: { data: YourResponseType } }>('', query)
+
+console.log(response.data.data)
+```
+
+## 完全な例
+
+```ts
+import { HttpClient } from '@injectivelabs/utils'
+
+interface Token {
+  id: string
+  symbol: string
+  name: string
+}
+
+interface TokensResponse {
+  tokens: Token[]
+}
+
+const client = new HttpClient('YOUR_GRAPHQL_ENDPOINT')
+
+// Set auth headers if required
+client.setConfig({
+  headers: { 
+    authorization: 'Bearer YOUR_API_KEY' 
+  }
+})
+
+const query = JSON.stringify({
+  query: `
+    query GetTokens($first: Int!) {
+      tokens(first: $first, orderBy: symbol) {
+        id
+        symbol
+        name
+      }
+    }
+  `,
+  variables: {
+    first: 10
+  }
+})
+
+const response = await client.post<string, { data: { data: TokensResponse } }>('', query)
+
+console.log(response.data.data.tokens)
+```
+
+## エラーハンドリング
+
+GraphQLのレスポンスはステータスコード200でもエラーを含む場合があります。常にエラーをチェックしてください：
+
+```ts
+interface GraphQLResponse<T> {
+  data?: T
+  errors?: Array<{ message: string }>
+}
+
+const response = await client.post<string, { data: GraphQLResponse<YourResponseType> }>('', query)
+
+if (response.data.errors && response.data.errors.length > 0) {
+  throw new Error(response.data.errors[0].message)
+}
+
+const data = response.data.data
+```

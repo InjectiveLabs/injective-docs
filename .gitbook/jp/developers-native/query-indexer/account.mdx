@@ -1,0 +1,166 @@
+---
+title: Account
+updatedAt: "2025-12-23"
+---
+
+subaccount関連のデータをindexerでクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### ユーザーのportfolioの詳細を取得する
+
+利用可能残高、未実現損益（unrealized PnL）、portfolioの価値などが含まれます。注: **非推奨** → 代わりに [Portfolio](../query-indexer/portfolio/#using-grpc) を使用してください。
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const injectiveAddress = "inj...";
+
+const portfolio = await indexerGrpcAccountApi.fetchPortfolio(injectiveAddress);
+
+console.log(portfolio);
+```
+
+### epochごとのユーザーのtrading rewardsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const injectiveAddress = "inj...";
+const epoch = -1; // current epoch
+
+const tradingRewards = await indexerGrpcAccountApi.fetchRewards({
+  address: injectiveAddress,
+  epoch,
+});
+
+console.log(tradingRewards);
+```
+
+### injective addressに関連付けられたsubaccountsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const injectiveAddress = "inj...";
+
+const subaccountsList = await indexerGrpcAccountApi.fetchSubaccountsList(
+  injectiveAddress
+);
+
+console.log(subaccountsList);
+```
+
+### 特定のdenomに対するsubaccountの残高を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const subaccountId = "0x...";
+const denom = "inj";
+
+const subaccountBalance = await indexerGrpcAccountApi.fetchSubaccountBalance(
+  subaccountId,
+  denom
+);
+
+console.log(subaccountBalance);
+```
+
+### subaccountの残高一覧を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const subaccountId = "0x...";
+
+const subaccountBalanceList =
+  await indexerGrpcAccountApi.fetchSubaccountBalancesList(subaccountId);
+
+console.log(subaccountBalanceList);
+```
+
+### subaccountの履歴を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcAccountApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer)
+
+const subaccountId = '0x...'
+const denom = 'inj'
+const pagination = {...} as PaginationOption
+
+const subaccountHistory = await indexerGrpcAccountApi.fetchSubaccountHistory({
+  subaccountId,
+  denom,
+  pagination /* optional param */
+})
+
+console.log(subaccountHistory)
+```
+
+### subaccountのordersの概要を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const subaccountId = "0x...";
+const marketId = "0x";
+const orderDirection = "buy";
+
+const orderSummary = await indexerGrpcAccountApi.fetchSubaccountOrderSummary({
+  subaccountId,
+  marketId,
+  orderDirection,
+});
+
+console.log(orderSummary);
+```
+
+### spotまたは（および）derivatives ordersの状態を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcAccountApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcAccountApi = new IndexerGrpcAccountApi(endpoints.indexer);
+
+const spotOrderHashes = ["0x..."];
+const derivativeOrderHashes = ["0x..."];
+
+const orderStates = await indexerGrpcAccountApi.fetchOrderStates({
+  spotOrderHashes,
+  derivativeOrderHashes,
+});
+
+console.log(orderStates);
+```

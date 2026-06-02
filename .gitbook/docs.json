@@ -2078,7 +2078,26 @@
                       "jp/developers-native/query-chain/wasmx",
                       "jp/developers-native/query-chain/token-factory"
                     ]
-                  }
+                  },
+                  {
+                    "group": "Indexerのクエリ",
+                    "pages": [
+                      "jp/developers-native/query-indexer/index",
+                      "jp/developers-native/query-indexer/account",
+                      "jp/developers-native/query-indexer/auction",
+                      "jp/developers-native/query-indexer/derivatives",
+                      "jp/developers-native/query-indexer/explorer",
+                      "jp/developers-native/query-indexer/insurance-funds",
+                      "jp/developers-native/query-indexer/markets",
+                      "jp/developers-native/query-indexer/leaderboard",
+                      "jp/developers-native/query-indexer/mito",
+                      "jp/developers-native/query-indexer/oracle",
+                      "jp/developers-native/query-indexer/portfolio",
+                      "jp/developers-native/query-indexer/spot",
+                      "jp/developers-native/query-indexer/transaction"
+                    ]
+                  },
+                  "jp/developers-native/query-ethereum"
                 ]
               },
               {

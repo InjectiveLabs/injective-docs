@@ -1,0 +1,26 @@
+---
+title: Portfolio
+updatedAt: "2025-11-28"
+---
+
+portfolioモジュール関連のデータをindexerでクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### injective addressに基づいてportfolio（bank残高やsubaccount残高など）を取得する
+
+```ts lines highlight={1}
+import { IndexerGrpcPortfolioApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcPortfolioApi = new IndexerGrpcPortfolioApi(endpoints.indexer);
+
+const injectiveAddress = "inj...";
+
+const portfolio = await indexerGrpcPortfolioApi.fetchAccountPortfolioBalances(
+  injectiveAddress
+);
+
+console.log(portfolio);
+```

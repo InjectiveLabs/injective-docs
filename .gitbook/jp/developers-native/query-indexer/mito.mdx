@@ -1,0 +1,156 @@
+---
+title: Mito
+updatedAt: "2025-11-28"
+---
+
+Mito vaultモジュール関連のデータをindexerでクエリするためのコードスニペット例。
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+  Mitoのドキュメントは移動しました。[Mito's Docs](https://docs.mito.fi/)をご覧ください。
+</Callout>
+
+## （古い）gRPCを使用する
+
+### contract addressに基づいてvaultを取得する（vaultのtvlやprofitsなど）
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const contractAddress = "0x..."; /* optional param */
+const slug = "derivative-vault"; /* optional param */
+
+const vault = await indexerGrpcMitoApi.fetchVault({
+  contractAddress,
+  slug,
+});
+
+console.log(vault);
+```
+
+### vaultsと関連する詳細を取得する
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vault = await indexerGrpcMitoApi.fetchVaults();
+
+console.log(vault);
+```
+
+### vault addressに基づいてvaultのlp tokenの価格チャートを取得する
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vaultAddress = "inj...";
+const from = 50; /* optional pagination params */
+const to = 150; /* optional pagination params */
+
+const lpTokenPriceChart = await indexerGrpcMitoApi.fetchLpTokenPriceChart({
+  vaultAddress,
+  from,
+  to,
+});
+
+console.log(lpTokenPriceChart);
+```
+
+### vault addressに基づいてvaultのtvl tokenチャートを取得する
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vaultAddress = "inj...";
+const from = 50; /* optional pagination params */
+const to = 150; /* optional pagination params */
+
+const tvlChart = await indexerGrpcMitoApi.fetchTVLChartRequest({
+  vaultAddress,
+  from,
+  to,
+});
+
+console.log(tvlChart);
+```
+
+### lp tokenの保有者に関連するvaultsを取得する
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const holderAddress = "inj...";
+
+const vaults = await indexerGrpcMitoApi.fetchVaultsByHolderAddress({
+  holderAddress,
+});
+
+console.log(vaults);
+```
+
+### vault addressからlp tokenの保有者を取得する
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const vaultAddress = "inj...";
+
+const holders = await indexerGrpcMitoApi.fetchLPHolders({
+  vaultAddress,
+});
+
+console.log(holders);
+```
+
+### lp保有者のportfolioを取得する
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const holderAddress = "inj...";
+
+const portfolio = await indexerGrpcMitoApi.fetchHolderPortfolio(holderAddress);
+
+console.log(portfolio);
+```
+
+### leaderboardを取得してPnlのランキングを確認する
+
+```ts
+import { IndexerGrpcMitoApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcMitoApi = new IndexerGrpcMitoApi(endpoints.indexer);
+
+const leaderboard = await indexerGrpcMitoApi.fetchLeaderboard();
+
+console.log(leaderboard);
+```

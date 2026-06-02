@@ -1,0 +1,146 @@
+---
+title: Web3 Gateway Transactions
+updatedAt: "2025-12-23"
+---
+
+transactionモジュール関連のデータをindexerでクエリするためのコードスニペット例。[Web3Gateway](../transactions/web3-gateway/)を使用してやり取りする場合にのみ利用します。
+
+## gRPCを使用する
+
+### transactionを準備するためのレスポンスを取得する
+
+```ts
+import { EvmChainId } from '@injectivelabs/ts-types'
+import { Msgs } from '@injectivelabs/sdk-ts/core/modules'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const address = '0x...' // ethereum address
+const chainId = EvmChainId.Sepolia
+const message = { ... } as Msgs
+const memo = '...'
+
+const prepareTxResponse = await indexerGrpcTransactionApi.prepareTxRequest({
+  address,
+  chainId,
+  message,
+  memo
+})
+
+console.log(prepareTxResponse)
+```
+
+### cosmos transactionを準備するためのレスポンスを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const address = 'inj...'
+const message = { ... }
+
+const prepareCosmosTxResponse = await indexerGrpcTransactionApi.prepareCosmosTxRequest({
+  address,
+  message
+})
+
+console.log(prepareCosmosTxResponse)
+```
+
+### Web3Gatewayを使用してtransactionsをブロードキャストするためのレスポンスを取得する
+
+ノードやCLI環境内でtransactionをブロードキャストするには、`@injectivelabs/sdk-ts`にある`MsgBroadcasterWithPk`を使用します。
+
+ブラウザ環境でtransactionをブロードキャストする方法の詳細については、`@injectivelabs/wallet-core`の`MsgBroadcaster`クラスを使用します。
+
+```ts
+import { Msgs } from '@injectivelabs/sdk-ts/core/modules'
+import { ChainId, EvmChainId } from '@injectivelabs/ts-types'
+import { WalletStrategy } from '@injectivelabs/wallet-strategy'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const chainId = ChainId.Testnet // The Injective Testnet Chain ID
+const evmChainId = EvmChainId.TestnetEvm // The Injective Evm Testnet Chain ID
+
+export const evmRpcEndpoint = `https://eth-sepolia.g.alchemy.com/v2/${process.env.APP_EVM_RPC_KEY}`
+
+const walletStrategy = new WalletStrategy({
+  chainId,
+  evmOptions: {
+    evmChainId,
+    rpcUrl: evmRpcEndpoint,
+  },
+})
+
+const address = '0x...' // ethereum address
+const message = { ... } as Msgs
+const memo = '...'
+const response = { ... } // response from  prepareTxRequest
+const signature = await walletStrategy.signEip712TypedData(
+      response.getData(),
+      address,
+    ) /* see @injectivelabs/wallet-strategy implementation of WalletStrategy. Essentially, you use the signEip712TypedData method of the wallet, if the wallet supports signing ethereum transactions */
+
+const broadcastTxResponse = await indexerGrpcTransactionApi.broadcastTxRequest({
+  signature,
+  chainId,
+  message,
+  txResponse: response
+})
+
+console.log(broadcastTxResponse)
+```
+
+### cosmos transactionをブロードキャストするためのレスポンスを取得する
+
+```ts
+import { TxRaw } from '@injectivelabs/sdk-ts/types'
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { IndexerGrpcTransactionApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(endpoints.indexer)
+
+const address = 'inj...' // ethereum address
+const signature = '...' // base64
+const txRaw = { ... } as TxRaw
+const pubKey = {
+  type: string,
+  value: string // base64
+}
+
+const broadcastCosmosTxResponse = await indexerGrpcTransactionApi.broadcastCosmosTxRequest({
+  address,
+  signature,
+  txRaw,
+  pubKey
+})
+
+console.log(broadcastCosmosTxResponse)
+```
+
+### Web3Gateway Fee Payerを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcTransactionApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcTransactionApi = new IndexerGrpcTransactionApi(
+  endpoints.indexer
+);
+
+const feePayer = await indexerGrpcTransactionApi.fetchFeePayer();
+
+console.log(feePayer);
+```

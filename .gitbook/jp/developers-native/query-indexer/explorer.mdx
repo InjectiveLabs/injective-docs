@@ -1,0 +1,521 @@
+---
+title: Explorer
+updatedAt: "2025-12-23"
+---
+
+explorerモジュール関連のデータをindexerでクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### ハッシュでtransactionを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const txsHash = "...";
+
+const transaction = await indexerGrpcExplorerApi.fetchTxByHash(txsHash);
+
+console.log(transaction);
+```
+
+### addressからaccountのtransactionを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const injectiveAddress = "inj...";
+
+const account = await indexerGrpcExplorerApi.fetchAccountTx({
+  injectiveAddress,
+});
+
+console.log(account);
+```
+
+### addressからvalidatorを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const validatorAddress = "injvaloper...";
+
+const validator = await indexerGrpcExplorerApi.fetchValidator(validatorAddress);
+
+console.log(validator);
+```
+
+### addressからvalidatorのuptimeを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const validatorAddress = "injvaloper...";
+
+const validatorUptime = await indexerGrpcExplorerApi.fetchValidatorUptime(
+  validatorAddress
+);
+
+console.log(validatorUptime);
+```
+
+### addressからvalidatorのuptimeを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const validatorAddress = "injvaloper...";
+
+const validatorUptime = await indexerGrpcExplorerApi.fetchValidatorUptime(
+  validatorAddress
+);
+
+console.log(validatorUptime);
+```
+
+### EthereumからのPeggy deposit transactionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const sender = "0x..."; /* optional parameter */
+const receiver = "inj..."; /* optional parameter */
+const limit = 100; /* optional pagination parameter */
+const skip = 20; /* optional pagination parameter */
+
+const peggyDeposits = await indexerGrpcExplorerApi.fetchPeggyDepositTxs({
+  sender,
+  receiver,
+  limit,
+  skip,
+});
+
+console.log(peggyDeposits);
+```
+
+### EthereumへのPeggy withdrawal transactionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const receiver = "0x..."; /* optional parameter */
+const sender = "inj..."; /* optional parameter */
+const limit = 100; /* optional pagination parameter */
+const skip = 20; /* optional pagination parameter */
+
+const peggyWithdrawals = await indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs({
+  sender,
+  receiver,
+  limit,
+  skip,
+});
+
+console.log(peggyWithdrawals);
+```
+
+### blocksを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const after = 30; /* optional pagination parameter */
+const limit = 100; /* optional pagination parameter */
+
+const blocks = await indexerGrpcExplorerApi.fetchBlocks({
+  after,
+  limit,
+});
+
+console.log(blocks);
+```
+
+### heightからblockを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const height = 123456;
+const block = await indexerGrpcExplorerApi.fetchBlock(height);
+
+console.log(block);
+```
+
+### transactionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const after = 20; /* optional pagination parameter */
+const limit = 100; /* optional pagination parameter */
+
+const transactions = await indexerGrpcExplorerApi.fetchTxs({
+  after,
+  limit,
+});
+
+console.log(transactions);
+```
+
+### IBC transfer transactionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerGrpcExplorerApi(endpoints.explorer);
+
+const sender = "osmo...";
+const receiver = "inj...";
+
+const ibcTransactions = await indexerGrpcExplorerApi.fetchIBCTransferTxs({
+  sender,
+  receiver,
+});
+
+console.log(ibcTransactions);
+```
+
+## HTTP RESTを使用する
+
+### blockと詳細を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const blockHashHeight = 1;
+
+const block = await indexerRestExplorerApi.fetchBlock(blockHashHeight);
+
+console.log(block);
+```
+
+### blocksと詳細を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const before = 200; /* optional pagination param */
+const limit = 100; /* optional pagination param */
+
+const blocks = await indexerRestExplorerApi.fetchBlocks({
+  before,
+  limit,
+});
+
+console.log(blocks);
+```
+
+### transaction詳細付きのblocksを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const before = 200; /* optional pagination param */
+const limit = 100; /* optional pagination param */
+
+const blocks = await indexerRestExplorerApi.fetchBlocksWithTx({
+  before,
+  limit,
+});
+
+console.log(blocks);
+```
+
+### transactionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const after = 200; /* optional pagination param */
+const limit = 100; /* optional pagination param */
+const fromNumber = 1; /* optional param */
+const toNumber = 100; /* optional param */
+
+const transactions = await indexerRestExplorerApi.fetchTransactions({
+  after,
+  limit,
+  fromNumber,
+  toNumber,
+});
+
+console.log(transactions);
+```
+
+### addressのtransactionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const account = "inj...";
+const after = 200; /* optional pagination param */
+const limit = 100; /* optional pagination param */
+const fromNumber = 1; /* optional param */
+const toNumber = 100; /* optional param */
+
+const accountTransactions =
+  await indexerRestExplorerApi.fetchAccountTransactions({
+    account,
+    params: {
+      account,
+      after,
+      limit,
+      fromNumber,
+      toNumber,
+    },
+  });
+
+console.log(accountTransactions);
+```
+
+### transactionハッシュを使用してtransactionを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const txsHash = "...";
+
+const transaction = await indexerRestExplorerApi.fetchTransaction(txsHash);
+
+console.log(transaction);
+```
+
+### validatorsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const validators = await indexerRestExplorerApi.fetchValidators();
+
+console.log(validators);
+```
+
+### validatorのuptimeを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const validatorAddress = "injvalcons";
+
+const validatorUptime = await indexerRestExplorerApi.fetchValidatorUptime(
+  validatorAddress
+);
+
+console.log(validatorUptime);
+```
+
+### contract addressからcontractを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const contractAddress = "inj...";
+
+const contract = await indexerRestExplorerApi.fetchContract(contractAddress);
+
+console.log(contract);
+```
+
+### contractsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const limit = 100; /* optional pagination param */
+const skip = 50; /* optional pagination param */
+
+const contracts = await indexerRestExplorerApi.fetchContracts({
+  limit,
+  skip,
+});
+
+console.log(contracts);
+```
+
+### contract transactionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const contractAddress = "inj...";
+const limit = 100; /* optional pagination param */
+const skip = 50; /* optional pagination param */
+
+const transactions = await indexerRestExplorerApi.fetchContractTransactions({
+  contractAddress,
+  params: {
+    limit,
+    skip,
+  },
+});
+
+console.log(transactions);
+```
+
+### cosmwasm codeの詳細を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const codeId = 1;
+
+const codeDetails = await indexerRestExplorerApi.fetchWasmCode(codeId);
+
+console.log(codeDetails);
+```
+
+### wasm codesと詳細を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const limit = 100; /* optional pagination param */
+const fromNumber = 50; /* optional pagination param */
+const toNumber = 150; /* optional pagination param */
+
+const codes = await indexerRestExplorerApi.fetchWasmCodes({
+  limit,
+  fromNumber,
+  toNumber,
+});
+
+console.log(codes);
+```
+
+### cw20の残高を取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestExplorerApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestExplorerApi = new IndexerRestExplorerApi(
+  `${endpoints.explorer}/api/explorer/v1`
+);
+
+const address = "inj...";
+
+const cw20Balances = await indexerRestExplorerApi.fetchCW20BalancesNoThrow(
+  address
+);
+
+console.log(cw20Balances);
+```

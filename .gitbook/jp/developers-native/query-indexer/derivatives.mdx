@@ -1,0 +1,370 @@
+---
+title: Derivatives
+updatedAt: "2025-12-23"
+---
+
+derivativeモジュール関連のデータをindexerでクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### marketsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const markets = await indexerGrpcDerivativesApi.fetchMarkets();
+
+console.log(markets);
+```
+
+### market idに基づいてmarketを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const marketId = "0x...";
+
+const market = await indexerGrpcDerivativesApi.fetchMarket(marketId);
+
+console.log(market);
+```
+
+### binary options marketsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const binaryOptionsMarket =
+  await indexerGrpcDerivativesApi.fetchBinaryOptionsMarkets();
+
+console.log(binaryOptionsMarket);
+```
+
+### market idに基づいてbinary options marketを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const marketId = "0x...";
+
+const binaryOptionsMarket =
+  await indexerGrpcDerivativesApi.fetchBinaryOptionsMarket(marketId);
+
+console.log(binaryOptionsMarket);
+```
+
+### market idに基づいてmarketのorderbookを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const marketId = "0x...";
+
+const orderbook = await indexerGrpcDerivativesApi.fetchOrderbookV2(marketId);
+
+console.log(orderbook);
+```
+
+### marketのordersを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketId = '0x...' /* optional param */
+const orderSide = OrderSide.Buy /* optional param */
+const subaccountId = '0x...' /* optional param */
+const pagination = {...} as PaginationOption /* optional param */
+
+const orders = await indexerGrpcDerivativesApi.fetchOrders({
+  marketId,
+  orderSide,
+  subaccountId,
+  pagination
+})
+
+console.log(orders)
+```
+
+### marketのorder historyを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide, TradeDirection, PaginationOption, TradeExecutionType } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketIds = ['0x...'] /* optional param */
+const executionTypes = [TradeExecutionType.Market] /* optional param */
+const orderTypes = OrderSide.StopBuy /* optional param */
+const direction = TradeDirection.Buy /* optional param */
+const subaccountId = '0x...' /* optional param */
+const pagination = {...} as PaginationOption /* optional param */
+
+const orderHistory = await indexerGrpcDerivativesApi.fetchOrderHistory({
+  marketIds,
+  executionTypes,
+  orderTypes,
+  direction,
+  subaccountId,
+  pagination
+})
+
+console.log(orderHistory)
+```
+
+### marketのpositionsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TradeDirection, PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketIds = ['0x...'] /* optional param */
+const direction = TradeDirection.Buy /* optional param */
+const subaccountId = '0x...' /* optional param */
+const pagination = {...} as PaginationOption /* optional param */
+
+const positions = await indexerGrpcDerivativesApi.fetchPositions({
+  marketIds,
+  direction,
+  subaccountId,
+  pagination
+})
+
+console.log(positions)
+```
+
+### marketのtradesを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TradeDirection, PaginationOption, TradeExecutionType } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketId = '0x...' /* optional param */
+const executionTypes = [TradeExecutionType.Market] /* optional param */
+const direction = TradeDirection.Buy /* optional param */
+const subaccountId = '0x...'/* optional param */
+const pagination = {...} as PaginationOption /* optional param */
+
+const trades = await indexerGrpcDerivativesApi.fetchTrades({
+  marketId,
+  executionTypes,
+  direction,
+  subaccountId,
+  pagination
+})
+
+console.log(trades)
+```
+
+### marketのfunding paymentsを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketIds = ['0x...'] /* optional param */
+const pagination = {...} as PaginationOption /* optional param */
+
+const fundingPayments = await indexerGrpcDerivativesApi.fetchFundingPayments({
+  marketIds,
+  pagination
+})
+
+console.log(fundingPayments)
+```
+
+### marketのfunding ratesを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketId = '0x...' /* optional param */
+const pagination = {...} as PaginationOption /* optional param */
+
+const fundingRates = await indexerGrpcDerivativesApi.fetchFundingRates({
+  marketId,
+  pagination
+})
+
+console.log(fundingRates)
+```
+
+### subaccount ordersを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketId = '0x...' /* optional param */
+const subaccountId = '0x...' /* optional param */
+const pagination = {...} as PaginationOption /* optional param */
+
+const subaccountOrders = await indexerGrpcDerivativesApi.fetchSubaccountOrdersList({
+  marketId,
+  subaccountId,
+  pagination
+})
+
+console.log(subaccountOrders)
+```
+
+### subaccount tradesを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TradeDirection, TradeExecutionType, PaginationOption } from '@injectivelabs/sdk-ts/types'
+import { IndexerGrpcDerivativesApi } from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer)
+
+const marketId = '0x...' /* optional param */
+const subaccountId = '0x...' /* optional param */
+const executionType = TradeExecutionType.LimitFill /* optional param */
+const direction = TradeDirection.Sell /* optional param */
+const pagination = {...} as PaginationOption /* optional param */
+
+const subaccountTrades = await indexerGrpcDerivativesApi.fetchSubaccountTradesList({
+  marketId,
+  subaccountId,
+  executionType,
+  direction,
+  pagination
+})
+
+console.log(subaccountTrades)
+```
+
+### 複数のmarketのorderbooksを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const marketIds = ["0x..."];
+
+const orderbooks = await indexerGrpcDerivativesApi.fetchOrderbooksV2(marketIds);
+
+console.log(orderbooks);
+```
+
+### marketのorderbookを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
+  endpoints.indexer
+);
+
+const marketId = "0x...";
+
+const orderbook = await indexerGrpcDerivativesApi.fetchOrderbookV2(marketId);
+
+console.log(orderbook);
+```
+
+## HTTP RESTを使用する
+
+### market summary（価格履歴や24時間ボリュームなど）を取得する
+
+```ts
+import { IndexerRestDerivativesChronosApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestDerivativesChronosApi = new IndexerRestDerivativesChronosApi(
+  `${endpoints.chronos}/api/chronos/v1/derivative`
+);
+
+const marketId = "0x...";
+
+const marketSummary = await indexerRestDerivativesChronosApi.fetchMarketSummary(
+  marketId
+);
+
+console.log(marketSummary);
+```
+
+### すべてのmarketのsummaries（価格履歴や24時間ボリュームなど）を取得する
+
+```ts
+import { IndexerRestDerivativesChronosApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerRestDerivativesChronosApi = new IndexerRestDerivativesChronosApi(
+  `${endpoints.chronos}/api/chronos/v1/derivative`
+);
+
+const marketSummaries =
+  await indexerRestDerivativesChronosApi.fetchMarketsSummary(marketId);
+
+console.log(marketSummaries);
+```
