@@ -1,0 +1,218 @@
+---
+title: x402
+description: >-
+    Use x402 on Injective.
+    Stablecoin payment rails for both humans and AI agents.
+updatedAt: "2026-06-01"
+---
+
+x402 is an open protocol that embeds payment into the HTTP request lifecycle, using the long-dormant `402 Payment Required` HTTP status code. On Injective EVM, where payments settle in a single block (approximately 650ms), x402 turns any API endpoint into a pay-per-request service without API keys, subscriptions, or registration.
+
+<iframe className="w-1\/2 aspect-video rounded-xl" src="https://youtube.com/embed/vHJ7wPGv_ZM?rel=0&autoplay=1&cc_load_policy=0" title="x402 payment with USDC on Injective (1 min) - YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen frameborder="0" />
+
+[_x402 payment with USDC on Injective (1 min) - YouTube_](https://youtube.com/watch?v=vHJ7wPGv_ZM)
+
+In this tutorial, you will:
+
+- Understand how x402 integrates payment into the HTTP protocol
+- Use the x402 demo to fetch market data gated behind a 0.01 USDC x402 payment
+- Manually sign and settle an on-chain USDC payment from your EVM wallet
+- Learn why x402 is a natural fit for autonomous AI agents
+- Protect your own Express API endpoint with the `@injectivelabs/x402` library
+
+## Prerequisites
+
+| Tool | Minimum version | Version check | Install |
+|---|---|---|---|
+| Browser | Any modern | - | - |
+| EVM wallet browser extension | - | - | [MetaMask](https://metamask.io) or [Rabby](https://rabby.io) |
+| Node.js | 18 | `node -v` | [nodejs.org](https://nodejs.org) |
+
+You will also need:
+
+- Your EVM wallet connected to the Injective network (mainnet or testnet)
+- INJ tokens in your wallet for gas fees
+- A small amount of USDC in your wallet (a few cents is sufficient for payments)
+
+## Getting started
+
+Open the x402 demo at [`agents.injective.com/x402-v5`](https://agents.injective.com/x402-v5) in your browser.
+
+![x402 demo start](/img/x402-demo-start.png)
+
+Ensure your EVM wallet extension is connected to the Injective network before proceeding to the next section.
+
+## What is x402?
+
+x402 embeds payment into the HTTP protocol,
+where the server demands and collects payment as part of the API response cycle, before returning data.
+
+### What happens in an x402 interaction?
+
+When a client calls an x402-gated HTTP endpoint, the exchange follows these steps:
+
+1. Client sends a normal HTTP request to the API endpoint.
+2. Server responds with `402 Payment Required` and a price quote.
+3. Client *signs* a USDC transfer transaction, but the transaction is not yet broadcast to the network.
+4. An x402 *facilitator* submits the signed payment to the blockchain and awaits confirmation.
+5. Client retries the original request, this time including the details of the completed payment.
+6. Server verifies the receipt via the facilitator and returns the requested data.
+
+![x402 interaction steps](/img/x402-demo-interaction-steps.png)
+
+### What does x402 avoid?
+
+Prior registration, API key management, subscriptions, or credit cards; none of these are needed.
+This means that a server can quote, verify payment, and deliver in a single HTTP conversation.
+
+The facilitator handles all blockchain interaction, keeping your API server web native:
+
+| Facilitator responsibility | What it abstracts away |
+|---|---|
+| Verifying payment signatures | Cryptographic validation code in your server |
+| Submitting transactions to the chain | RPC endpoint management |
+| Gas estimation and fees | Gas calculation logic |
+| Awaiting on-chain confirmation | Block polling: You receive a yes/no |
+
+### Is x402 only for Ethereum?
+
+x402 is network-neutral:
+The open standard supports EVM-compatible networks, SVM-compatible networks, and others.
+This tutorial shows you how to use x402 on *Injective*.
+
+### Why use x402 on Injective?
+
+Injective has a very high throughput and low latency,
+as it has a block time of approximately 650ms,
+and deterministic single-block finality.
+This means that x402 payments can settle about as fast as credit card payments,
+but at a fraction of the cost.
+This opens up new use cases, including pay-per-use, and micro-transactions.
+Since x402 transactions are fully programmatic as well,
+they are a natural fit for AI agents.
+
+## Manual x402 payment
+
+Follow these steps to trigger the manual x402 payment flow,
+which lets you observe the wallet signing process:
+
+(1) Click "Pay it yourself" on the demo page.
+
+![select pay it yourself](/img/x402-demo-method-selector.png)
+
+(2) In the market selector, choose any one you prefer.
+FOr example, "TSLA/USDC PERP".
+
+![select market](/img/x402-demo-market-selector.png)
+
+(3) Click "Pay 1 cent" to initiate the x402 payment.
+
+![make payment](/img/x402-demo-make-payment.png)
+
+(4) When your wallet prompts you, review the USDC transfer details and click "Sign" to authorize the payment.
+
+![sign message](/img/x402-demo-sign-message.png)
+
+The demo displays "Success!" and shows the "TSLA/USDC PERP" price.
+
+![completed successfully](/img/x402-demo-completed-successfully.png)
+
+This confirms that the payment settled on Injective EVM,
+and that the server delivered the gated data.
+
+## How does x402 enable agentic payments?
+
+x402 enables APIs to be programmatically payable.
+This is a property that becomes essential when
+the caller is an AI agent rather than a human.
+
+Traditional billing models
+(API keys, OAuth flows, monthly subscriptions)
+require a human to set up and maintain credentials.
+When an AI agent operates autonomously or scales across many users, pre-registered credentials become a bottleneck and a security liability:
+Keys expire, quotas are shared, and every new service integration requires a human setup step.
+
+x402 removes that bottleneck.
+An agent that holds a USDC balance can call any x402-protected endpoint without prior registration.
+The API quotes the price, the agent signs the payment, and the data is returned programmatically.
+This is done per request, with on-chain receipts as an immutable audit trail.
+No human involvement is needed in individual API calls.
+
+On Injective, x402 provides the payment primitive that
+lets agents fetch market data, trigger transactions, and invoke services at runtime.
+No prior setup or actions need to be performed by humans.
+
+<Info>
+The x402 standard is open-source and network-neutral.
+Coinbase originated it, and open to any network for implementation.
+View the [x402 protocol documentation](https://docs.x402.org/introduction) for the full standard.
+</Info>
+
+## Protecting your own API endpoint with x402
+
+![npm install](/img/x402-demo-npm-install.png)
+
+Create a new Node.JS server with an x402-gated endpoint:
+
+1. Navigate to your project directory (or create a new one with `npm init -y`).
+2. Install the x402 library by running `npm install @injectivelabs/x402` in your terminal.
+3. Create `server.js` and import `express` and `injectivePaymentMiddleware` from `@injectivelabs/x402/middleware`.
+4. Call `injectivePaymentMiddleware` in your middleware stack, specifying the endpoint to protect, the payment network, the USDC asset address, and the amount in the smallest unit.
+
+<Info>
+A minimal example:
+
+```js server.js
+import express from 'express';
+import { injectivePaymentMiddleware } from '@injectivelabs/x402/middleware';
+
+const app = express();
+
+app.use(
+  injectivePaymentMiddleware(
+    {
+      'GET /perps': {
+        accepts: [{
+          // Injective EVM (chain ID 1776)
+          network: 'eip155:1776',
+          // USDC on Injective EVM 
+          asset: '0xa00C59fF5a080D2b954d0c75e46E22a0c371235a',
+          // $0.01 (USDC uses 6 decimal places)
+          amount: '10000',
+        }],
+      },
+    },
+    { facilitatorUrl: process.env.X402_FACILITATOR_URL }
+  )
+);
+
+app.get('/perps', (_req, res) => res.json({ data: "... your data here ..." }));
+
+```
+
+Uses: [`@injectivelabs/x402`](https://www.npmjs.com/package/@injectivelabs/x402)  on npm.
+</Info>
+
+Any HTTP client that presents a valid USDC payment receipt header
+(including an AI agent) will receive the response.
+You do not need to implement API keys or even user accounts on your server.
+
+## Next steps
+
+Congratulations!
+You have used the x402 protocol to pay for an API request on Injective EVM,
+and have seen how to protect your own endpoint with a single middleware call.
+
+Here is what you learned:
+
+- How x402 uses the HTTP `402 Payment Required` status code to gate API responses
+- How the facilitator abstracts RPC, gas, and signature verification from your server
+- How to trigger and sign an x402 USDC payment using the demo and your EVM wallet
+- Why x402 is a natural fit for AI agents that call APIs programmatically
+- How to add `injectivePaymentMiddleware` to an Express server
+
+For further reading:
+
+- [x402 protocol specification](https://x402.org): The open standard this library implements
+- [AI developers on Injective](/developers-ai): Tools and skills for building AI-native applications on Injective
+- [Injective EVM documentation](/evm): EVM development on Injective
