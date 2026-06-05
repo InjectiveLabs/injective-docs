@@ -1,11 +1,9 @@
 ---
-title: Injectived Startup Flag Changes for v1.20.0
+title: "Injectived Startup Flag Changes for v1.20.0"
 updatedAt: "2026-06-02"
 ---
 
-This note summarizes `injectived start` flag changes between `v1.19.0` and
-`v1.20.0`. All node runners should review their startup scripts, Helm charts,
-systemd units, or Kubernetes manifests before upgrading.
+This note summarizes `injectived start` flag changes between `v1.19.0` and `v1.20.0`. All node runners should review their startup scripts, Helm charts, systemd units, or Kubernetes manifests before upgrading.
 
 ## Recommended Upgrade Checklist
 
@@ -17,99 +15,89 @@ systemd units, or Kubernetes manifests before upgrading.
 
 Prefer setting persistent node configuration in the appropriate config file:
 
-- Use `app.toml` for application-level settings such as API, gRPC, JSON-RPC,
-  pruning, metrics, ChainStream, EVM, and Injective websocket configuration.
-- Use `config.toml` for CometBFT settings such as P2P, RPC, consensus, and
-  mempool configuration.
+- Use `app.toml` for application-level settings such as API, gRPC, JSON-RPC, pruning, metrics, ChainStream, EVM, and Injective websocket configuration.
+- Use `config.toml` for CometBFT settings such as P2P, RPC, consensus, and mempool configuration.
 
-Startup flags should be treated as temporary overrides for testing, emergency
-operations, or short-lived rollout changes. They should not be used as the
-permanent replacement for values that belong in `app.toml` or `config.toml`.
-Keeping long-lived settings in config files makes validator behavior easier to
-audit, reduces upgrade risk when flags are renamed or removed, and keeps startup
-commands stable across releases. The template `app.toml` and `config.toml` files
-for the `v1.20.0` tag can be found at the bottom of this file.
+Startup flags should be treated as temporary overrides for testing, emergency operations, or short-lived rollout changes. They should not be used as the permanent replacement for values that belong in `app.toml` or `config.toml`. Keeping long-lived settings in config files makes validator behavior easier to audit, reduces upgrade risk when flags are renamed or removed, and keeps startup commands stable across releases. The template `app.toml` and `config.toml` files for the `v1.20.0` tag can be found at the bottom of this file.
 
 ## Renamed or Replaced Flags
 
 Update any startup configuration that still uses the old flag names.
 
-| v1.19.0 flag                                    | v1.20.0 flag                                    | Notes                                                |
-| ----------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------- |
-| `--metrics-enable-metrics=false`                | `--metrics.metrics-enabled=false`               | Same default.                                        |
-| `--metrics-enable-tracing=false`                | `--metrics.tracing-enabled=false`               | Same default.                                        |
-| `--metrics-endpoint=localhost:4317`             | `--metrics.endpoint=localhost:4317`             | Same default.                                        |
-| `--metrics-insecure=false`                      | `--metrics.insecure-endpoint=false`             | Same default.                                        |
-| `--metrics-export-interval=10s`                 | `--metrics.export-interval=10s`                 | Now parsed as a duration and used by metrics export. |
-| `--metrics-stuck-func=0m`                       | `--metrics.stuck-func-timeout=0s`               | Same effective disabled default.                     |
-| `--trace-flight-recorder-threshold=0`           | `--metrics.flight-recorder-threshold=0s`        | Same effective disabled default.                     |
-| `--log-color=true`                              | `--log-no-color=false`                          | Behavior is inverted.                                |
-| `--chainstream-server=""`                       | `--chainstream.server=""`                       | Same default.                                        |
-| `--chainstream-buffer-cap=100`                  | `--chainstream.buffer-cap=100`                  | Same default.                                        |
-| `--chainstream-publisher-buffer-cap=100`        | `--chainstream.publisher-buffer-cap=100`        | Same default.                                        |
-| `--chainstream-enforce-keepalive=false`         | `--chainstream.enforce-keepalive=false`         | Same default.                                        |
-| `--chainstream-min-client-ping-interval=30`     | `--chainstream.min-client-ping-interval=30`     | Same default.                                        |
-| `--chainstream-max-connection-idle=180`         | `--chainstream.max-connection-idle=180`         | Same default.                                        |
-| `--chainstream-server-ping-interval=60`         | `--chainstream.server-ping-interval=60`         | Same default.                                        |
-| `--chainstream-server-ping-response-timeout=40` | `--chainstream.server-ping-response-timeout=40` | Same default.                                        |
+| v1.19.0 flag | v1.20.0 flag | Notes |
+| --- | --- | --- |
+| `--metrics-enable-metrics=false` | `--metrics.metrics-enabled=false` | Same default. |
+| `--metrics-enable-tracing=false` | `--metrics.tracing-enabled=false` | Same default. |
+| `--metrics-endpoint=localhost:4317` | `--metrics.endpoint=localhost:4317` | Same default. |
+| `--metrics-insecure=false` | `--metrics.insecure-endpoint=false` | Same default. |
+| `--metrics-export-interval=10s` | `--metrics.export-interval=10s` | Now parsed as a duration and used by metrics export. |
+| `--metrics-stuck-func=0m` | `--metrics.stuck-func-timeout=0s` | Same effective disabled default. |
+| `--trace-flight-recorder-threshold=0` | `--metrics.flight-recorder-threshold=0s` | Same effective disabled default. |
+| `--log-color=true` | `--log-no-color=false` | Behavior is inverted. |
+| `--chainstream-server=""` | `--chainstream.server=""` | Same default. |
+| `--chainstream-buffer-cap=100` | `--chainstream.buffer-cap=100` | Same default. |
+| `--chainstream-publisher-buffer-cap=100` | `--chainstream.publisher-buffer-cap=100` | Same default. |
+| `--chainstream-enforce-keepalive=false` | `--chainstream.enforce-keepalive=false` | Same default. |
+| `--chainstream-min-client-ping-interval=30` | `--chainstream.min-client-ping-interval=30` | Same default. |
+| `--chainstream-max-connection-idle=180` | `--chainstream.max-connection-idle=180` | Same default. |
+| `--chainstream-server-ping-interval=60` | `--chainstream.server-ping-interval=60` | Same default. |
+| `--chainstream-server-ping-response-timeout=40` | `--chainstream.server-ping-response-timeout=40` | Same default. |
 
 ## Added Flags (Informational. No change needed as these values will be picked from the config files as usual)
 
 These flags did not exist as `injectived start` flags in `v1.19.0`.
 
-| v1.20.0 flag                                   | Default       | Notes                                                                     |
-| ---------------------------------------------- | ------------- | ------------------------------------------------------------------------- |
-| `--app-db-backend`                             | `""`          | Empty value falls back to the CometBFT DB backend.                        |
-| `--index-events`                               | `[]`          | Controls event indexing for CometBFT. Empty means all events are indexed. |
-| `--chain-id`                                   | `injective-1` | New on `start`                                                            |
-| `--injective-websocket.address`                | `""`          | Empty value disables the Injective websocket server.                      |
-| `--injective-websocket.max-open-connections`   | `0`           | Unlimited.                                                                |
-| `--injective-websocket.read-timeout`           | `10s`         | HTTP read timeout.                                                        |
-| `--injective-websocket.write-timeout`          | `10s`         | HTTP write timeout.                                                       |
-| `--injective-websocket.max-body-bytes`         | `1000000`     | Maximum allowed request body size.                                        |
-| `--injective-websocket.max-header-bytes`       | `1048576`     | Maximum allowed header size.                                              |
-| `--injective-websocket.max-request-batch-size` | `10`          | Maximum JSON-RPC requests per batch.                                      |
+| v1.20.0 flag | Default | Notes |
+| --- | --- | --- |
+| `--app-db-backend` | `""` | Empty value falls back to the CometBFT DB backend. |
+| `--index-events` | `[]` | Controls event indexing for CometBFT. Empty means all events are indexed. |
+| `--chain-id` | `injective-1` | New on `start` |
+| `--injective-websocket.address` | `""` | Empty value disables the Injective websocket server. |
+| `--injective-websocket.max-open-connections` | `0` | Unlimited. |
+| `--injective-websocket.read-timeout` | `10s` | HTTP read timeout. |
+| `--injective-websocket.write-timeout` | `10s` | HTTP write timeout. |
+| `--injective-websocket.max-body-bytes` | `1000000` | Maximum allowed request body size. |
+| `--injective-websocket.max-header-bytes` | `1048576` | Maximum allowed header size. |
+| `--injective-websocket.max-request-batch-size` | `10` | Maximum JSON-RPC requests per batch. |
 
 ## Removed Flags
 
 Remove these from startup scripts before running `v1.20.0`.
 
-| Removed flag               | Previous default         | Replacement                                                                             |
-| -------------------------- | ------------------------ | --------------------------------------------------------------------------------------- |
-| `--with-comet`             | `true`                   | None. In-process CometBFT startup is now the supported path.                            |
-| `--with-tendermint`        | Alias for `--with-comet` | None.                                                                                   |
-| `--address`                | `tcp://0.0.0.0:26658`    | None for normal validator startup.                                                      |
-| `--transport`              | `socket`                 | None for normal validator startup.                                                      |
-| `--pruning-keep-every`     | `0`                      | None. Use `--pruning`, `--pruning-keep-recent`, and `--pruning-interval`.               |
-| `--multistore-commit-sync` | `false`                  | None. This flag was registered in `v1.19.0` but not consumed by Injective startup code. |
+| Removed flag | Previous default | Replacement |
+| --- | --- | --- |
+| `--with-comet` | `true` | None. In-process CometBFT startup is now the supported path. |
+| `--with-tendermint` | Alias for `--with-comet` | None. |
+| `--address` | `tcp://0.0.0.0:26658` | None for normal validator startup. |
+| `--transport` | `socket` | None for normal validator startup. |
+| `--pruning-keep-every` | `0` | None. Use `--pruning`, `--pruning-keep-recent`, and `--pruning-interval`. |
+| `--multistore-commit-sync` | `false` | None. This flag was registered in `v1.19.0` but not consumed by Injective startup code. |
 
 ## Same Name, Changed Default or Type
 
 If your deployment relied on the old default, set the old value explicitly.
 
-| Flag                                    | v1.19.0                | v1.20.0                 | Suggested validator action                                         |
-| --------------------------------------- | ---------------------- | ----------------------- | ------------------------------------------------------------------ |
-| `--minimum-gas-prices`                  | `""`                   | `160000000inj`          | Pin explicitly if you require a different minimum gas price.       |
-| `--pruning`                             | `default`              | `nothing`               | Pin `--pruning=default` if you do not want archive-style behavior. |
-| `--pruning-keep-recent`                 | `uint64(0)`            | string `"0"`            | Usually no action; type changed for config parsing.                |
-| `--pruning-interval`                    | `uint64(0)`            | string `"0"`            | Usually no action; type changed for config parsing.                |
-| `--iavl-cache-size`                     | `int(500000)`          | `uint64(781250)`        | Pin old value if memory/cache sizing depends on it.                |
-| `--api.enable`                          | `false` flag default   | `true` flag default     | Pin `--api.enable=false` if the REST API must remain disabled.     |
-| `--api.swagger`                         | `false` flag default   | `true` flag default     | Pin `--api.swagger=false` if Swagger must remain disabled.         |
-| `--api.address`                         | `tcp://localhost:1317` | `tcp://0.0.0.0:10337`   | Pin old address if exposing the API is not intended.               |
-| `--api.enabled-unsafe-cors`             | `false` flag default   | `true` flag default     | Pin `false` if CORS must remain disabled.                          |
-| `--json-rpc.api`                        | unset / nil            | `[eth, net, web3, inj]` | Pin explicitly if you require a different namespace set.           |
-| `--json-rpc-debug.api`                  | `[debug]`              | `[eth, debug, inj]`     | Pin explicitly if debug RPC is enabled and should stay debug-only. |
-| `--json-rpc.max-open-connections`       | `uint(0)`              | `int(0)`                | Usually no action; value remains unlimited.                        |
-| `--json-rpc.return-data-limit`          | `uint(512000)`         | `int64(512000)`         | Usually no action; value is unchanged.                             |
-| `--json-rpc-debug.max-open-connections` | `uint(0)`              | `int(0)`                | Usually no action; value remains unlimited.                        |
-| `--json-rpc-debug.return-data-limit`    | `uint(10485760)`       | `int64(10485760)`       | Usually no action; value is unchanged.                             |
-| `--log-level`                           | `info`                 | `""`                    | Pin explicitly if you require a specific log level.                |
-| `--log-format`                          | `plain`                | `""`                    | Pin explicitly if you require `plain` or `json`.                   |
+| Flag | v1.19.0 | v1.20.0 | Suggested validator action |
+| --- | --- | --- | --- |
+| `--minimum-gas-prices` | `""` | `160000000inj` | Pin explicitly if you require a different minimum gas price. |
+| `--pruning` | `default` | `nothing` | Pin `--pruning=default` if you do not want archive-style behavior. |
+| `--pruning-keep-recent` | `uint64(0)` | string `"0"` | Usually no action; type changed for config parsing. |
+| `--pruning-interval` | `uint64(0)` | string `"0"` | Usually no action; type changed for config parsing. |
+| `--iavl-cache-size` | `int(500000)` | `uint64(781250)` | Pin old value if memory/cache sizing depends on it. |
+| `--api.enable` | `false` flag default | `true` flag default | Pin `--api.enable=false` if the REST API must remain disabled. |
+| `--api.swagger` | `false` flag default | `true` flag default | Pin `--api.swagger=false` if Swagger must remain disabled. |
+| `--api.address` | `tcp://localhost:1317` | `tcp://0.0.0.0:10337` | Pin old address if exposing the API is not intended. |
+| `--api.enabled-unsafe-cors` | `false` flag default | `true` flag default | Pin `false` if CORS must remain disabled. |
+| `--json-rpc.api` | unset / nil | `[eth, net, web3, inj]` | Pin explicitly if you require a different namespace set. |
+| `--json-rpc-debug.api` | `[debug]` | `[eth, debug, inj]` | Pin explicitly if debug RPC is enabled and should stay debug-only. |
+| `--json-rpc.max-open-connections` | `uint(0)` | `int(0)` | Usually no action; value remains unlimited. |
+| `--json-rpc.return-data-limit` | `uint(512000)` | `int64(512000)` | Usually no action; value is unchanged. |
+| `--json-rpc-debug.max-open-connections` | `uint(0)` | `int(0)` | Usually no action; value remains unlimited. |
+| `--json-rpc-debug.return-data-limit` | `uint(10485760)` | `int64(10485760)` | Usually no action; value is unchanged. |
+| `--log-level` | `info` | `""` | Pin explicitly if you require a specific log level. |
+| `--log-format` | `plain` | `""` | Pin explicitly if you require `plain` or `json`. |
 
-For `--api.*`, note that generated Injective `app.toml` defaults were already
-set to enabled in `v1.19.0`; the notable change is the effective CLI flag
-default used by `injectived start`.
+For `--api.*`, note that generated Injective `app.toml` defaults were already set to enabled in `v1.19.0`; the notable change is the effective CLI flag default used by `injectived start`.
 
 ## Template Config Files
 
@@ -1001,17 +989,17 @@ version = "v0"
 wal_file = "data/cs.wal/wal"
 
 # How long we wait for a proposal block before prevoting nil
-timeout_propose = "3s"
+timeout_propose = "1s"
 # How much timeout_propose increases with each round
-timeout_propose_delta = "500ms"
+timeout_propose_delta = "100ms"
 # How long we wait after receiving +2/3 prevotes for “anything” (ie. not a single block or nil)
-timeout_prevote = "1s"
+timeout_prevote = "250ms"
 # How much the timeout_prevote increases with each round
-timeout_prevote_delta = "500ms"
+timeout_prevote_delta = "100ms"
 # How long we wait after receiving +2/3 precommits for “anything” (ie. not a single block or nil)
-timeout_precommit = "1s"
+timeout_precommit = "250ms"
 # How much the timeout_precommit increases with each round
-timeout_precommit_delta = "500ms"
+timeout_precommit_delta = "100ms"
 # How long we wait after committing a block, before starting on the new
 # height (this gives us a chance to receive some more precommits, even
 # though we already have +2/3).
