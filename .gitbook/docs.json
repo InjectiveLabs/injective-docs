@@ -74,7 +74,8 @@
                       "defi/trading/derivatives-election-perpetual",
                       "defi/trading/derivatives-pre-launch-futures",
                       "defi/trading/derivatives-index-perpetual-futures",
-                      "defi/trading/derivatives-iassets"
+                      "defi/trading/derivatives-iassets",
+                      "defi/trading/oracle-feed-sources"
                     ]
                   },
                   {

@@ -18,6 +18,7 @@
 
 # Misc
 .env
+CLAUDE.md
 .DS_Store
 .env.local
 .env.development.local
