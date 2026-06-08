@@ -75,7 +75,7 @@
                       "defi/trading/derivatives-pre-launch-futures",
                       "defi/trading/derivatives-index-perpetual-futures",
                       "defi/trading/derivatives-iassets",
-                      "defi/trading/iassets-market-specifications"
+                      "defi/trading/oracle-feed-sources"
                     ]
                   },
                   {
