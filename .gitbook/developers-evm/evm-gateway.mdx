@@ -1,0 +1,248 @@
+---
+title: EVM Gateway
+description: Run Injective's standalone EVM JSON-RPC gateway for Ethereum-compatible RPC access to Injective EVM data.
+updatedAt: "2026-06-09"
+---
+
+## About
+
+`evm-gateway` is a standalone Injective EVM JSON-RPC server.
+
+It reads block data from CometBFT RPC, uses Injective gRPC for module queries, indexes EVM-relevant data into a local KV store, and serves Ethereum-style RPC from that local indexed state where possible.
+
+Operationally, it is meant to be run beside an Injective node, not inside it. It replaces the internal JSON-RPC server that was not intended to be run in production environments.
+
+**Properties:**
+
+- cache-first for indexed EVM blocks, receipts, transactions, and logs
+- historical gap fill and forward sync
+- no keyring-backed `personal_*` API
+- HTTP and WebSocket JSON-RPC
+
+## Installing
+
+Source and releases: [github.com/InjectiveLabs/evm-gateway/releases](https://github.com/InjectiveLabs/evm-gateway/releases)
+
+Requirements to run `evm-gateway`:
+
+- Go toolchain and `make`, when building from source
+- Access to a running Injective node:
+  - CometBFT RPC endpoint
+  - gRPC endpoint
+  - archival node access for historical backfill
+
+### Using the repository
+
+```bash
+git clone https://github.com/InjectiveLabs/evm-gateway.git
+cd evm-gateway
+make install
+```
+
+### Pre-built Docker image
+
+```bash
+docker run -it --rm injectivelabs/evm-gateway:latest --help
+```
+
+## Configuration
+
+Configuration is environment-driven with the `WEB3INJ_` prefix. The repository's `.env.example` is the reference.
+
+Minimum practical configuration:
+
+```bash
+export WEB3INJ_CHAIN_ID=injective-1
+export WEB3INJ_COMET_RPC=http://127.0.0.1:26657
+export WEB3INJ_GRPC_ADDR=127.0.0.1:9090
+export WEB3INJ_EARLIEST_BLOCK=127250000
+export WEB3INJ_DATA_DIR=evm-gateway-data
+export WEB3INJ_JSONRPC_API=eth,net,web3,debug
+```
+
+If you run it next to `injectived`, do not bind on the same ports. A typical sidecar setup is:
+
+```bash
+export WEB3INJ_JSONRPC_ADDRESS=0.0.0.0:8645
+export WEB3INJ_JSONRPC_WS_ADDRESS=0.0.0.0:8646
+```
+
+<Info>
+On the first run, the service syncs historical data from `WEB3INJ_EARLIEST_BLOCK` to the current chain tip. Use an archival node for the first backfill and size rate limits accordingly.
+</Info>
+
+## Virtualized Cosmos Bank Transfers
+
+By default, `evm-gateway` exposes the EVM view of Injective blocks. Native Cosmos `x/bank` transfers are not EVM transactions, so an EVM-only JSON-RPC index would otherwise miss native bank activity such as standard Cosmos transfers, minting, burning, and module-level balance movements.
+
+Set `WEB3INJ_VIRTUALIZE_COSMOS_EVENTS=true` to enable the optional virtualization layer:
+
+```bash
+export WEB3INJ_VIRTUALIZE_COSMOS_EVENTS=true
+```
+
+When enabled, `evm-gateway` parses supported Cosmos `x/bank` events and projects them into Ethereum-style JSON-RPC transactions and logs. This makes native bank transfer activity discoverable through familiar methods such as `eth_getBlockByNumber`, `eth_getTransactionByHash`, `eth_getTransactionReceipt`, `eth_getLogs`, and filter APIs.
+
+The gateway currently virtualizes these Cosmos bank event types:
+
+- `transfer`
+- `coin_spent`
+- `coin_received`
+- `coinbase`
+- `burn`
+
+Virtualized bank logs are emitted from the reserved pseudo-contract address:
+
+```text
+0x0000000000000000000000000000000000000800
+```
+
+The event-only ABI is:
+
+```solidity
+interface IInjectiveNativeBankTransfers {
+    event NativeBankTransfer(bytes32 indexed sender, bytes32 indexed recipient, string denom, uint256 amount);
+    event NativeBankCoinSpent(bytes32 indexed spender, string denom, uint256 amount);
+    event NativeBankCoinReceived(bytes32 indexed receiver, string denom, uint256 amount);
+    event NativeBankCoinbase(bytes32 indexed minter, string denom, uint256 amount);
+    event NativeBankBurn(bytes32 indexed burner, string denom, uint256 amount);
+}
+```
+
+Address-like Cosmos fields are encoded as right-aligned `bytes32` values. This allows both 20-byte EVM addresses and longer Cosmos addresses to fit the same ABI.
+
+### Virtual transaction behavior
+
+Virtualized Cosmos events are represented as synthetic Ethereum-style transactions:
+
+- non-EVM Cosmos transaction events use a virtual hash derived from `keccak256(cosmos_tx_hash)`
+- begin-block and end-block events use deterministic hashes derived from the block height
+- virtual transactions use empty `input`, zero gas and value defaults, and `to = 0x0000000000000000000000000000000000000800`
+- virtual transactions and logs include `virtual: true` metadata
+- when the source Cosmos transaction hash is available, virtual transaction and log results include `cosmos_hash`
+- begin-block and end-block virtual transactions do not include `cosmos_hash`
+
+The gateway preserves block ordering in the virtualized view:
+
+1. begin-block virtual transaction, when applicable
+2. normal EVM transactions and virtualized Cosmos transactions in block order
+3. end-block virtual transaction, when applicable
+
+If a Cosmos bank event is emitted as a side effect of an EVM transaction, the virtual logs are appended after that transaction's real EVM logs.
+
+### Querying virtualized transfers
+
+You can query the reserved pseudo-contract address with `eth_getLogs`:
+
+```bash
+curl -s localhost:8645 \
+  -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getLogs","params":[{"address":"0x0000000000000000000000000000000000000800","fromBlock":"latest","toBlock":"latest"}]}'
+```
+
+Then use the returned transaction hash with `eth_getTransactionByHash` or `eth_getTransactionReceipt` to inspect the virtual transaction and its logs.
+
+<Info>
+For a complete indexed history, enable `WEB3INJ_VIRTUALIZE_COSMOS_EVENTS=true` before the initial sync. If you already synced an existing data directory with virtualization disabled, rebuild or reindex the data directory before relying on historical virtualized bank logs.
+</Info>
+
+## Quick checking functionality with curl
+
+Version:
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"web3_clientVersion","params":[]}'
+```
+
+Chain ID:
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}'
+```
+
+Head:
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}'
+```
+
+Sync status:
+
+```bash
+curl -s localhost:8645/status/sync
+```
+
+Simple block read:
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBlockByNumber","params":["latest",false]}'
+```
+
+If `debug` is enabled, transaction tracing:
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"debug_traceTransaction","params":["0x<txhash>",{"tracer":"callTracer"}]}'
+```
+
+## Configuring state persistence
+
+State persistence is controlled primarily by:
+
+- `WEB3INJ_DATA_DIR`
+- `WEB3INJ_DB_BACKEND`
+
+Example:
+
+```bash
+export WEB3INJ_DATA_DIR=/var/lib/evm-gateway
+export WEB3INJ_DB_BACKEND=goleveldb
+```
+
+## Glossary of implemented methods by namespace
+
+Default namespaces:
+
+- `eth`
+- `net`
+- `web3`
+
+Optional namespaces:
+
+- `debug`
+- `inj`
+
+Not implemented:
+
+- `personal`
+- `txpool`
+- `miner`
+
+### `eth`
+
+`eth_blockNumber`, `eth_getBlockByNumber`, `eth_getBlockByHash`, `eth_getBlockTransactionCountByHash`, `eth_getBlockTransactionCountByNumber`, `eth_getTransactionByHash`, `eth_getTransactionCount`, `eth_getTransactionReceipt`, `eth_getTransactionByBlockHashAndIndex`, `eth_getTransactionByBlockNumberAndIndex`, `eth_sendRawTransaction`, `eth_getBalance`, `eth_getStorageAt`, `eth_getCode`, `eth_getProof`, `eth_call`, `eth_protocolVersion`, `eth_gasPrice`, `eth_estimateGas`, `eth_feeHistory`, `eth_maxPriorityFeePerGas`, `eth_chainId`, `eth_getUncleByBlockHashAndIndex`, `eth_getUncleByBlockNumberAndIndex`, `eth_getUncleCountByBlockHash`, `eth_getUncleCountByBlockNumber`, `eth_hashrate`, `eth_mining`, `eth_syncing`, `eth_coinbase`, `eth_getTransactionLogs`, `eth_fillTransaction`, `eth_getPendingTransactions`
+
+Filter methods under the same namespace:
+
+`eth_newPendingTransactionFilter`, `eth_newBlockFilter`, `eth_newFilter`, `eth_getFilterChanges`, `eth_getFilterLogs`, `eth_getLogs`, `eth_uninstallFilter`
+
+### `net`
+
+`net_version`, `net_listening`, `net_peerCount`
+
+### `web3`
+
+`web3_clientVersion`, `web3_sha3`
+
+### `debug`
+
+Tracing and block inspection:
+
+`debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, `debug_traceCall`, `debug_getHeaderRlp`, `debug_getBlockRlp`, `debug_printBlock`, `debug_intermediateRoots`
+
+Runtime and profiling:
+
+`debug_blockProfile`, `debug_cPUProfile`, `debug_gcStats`, `debug_goTrace`, `debug_memStats`, `debug_setBlockProfileRate`, `debug_stacks`, `debug_startCPUProfile`, `debug_stopCPUProfile`, `debug_writeBlockProfile`, `debug_writeMemProfile`, `debug_mutexProfile`, `debug_setMutexProfileFraction`, `debug_writeMutexProfile`, `debug_freeOSMemory`, `debug_setGCPercent`, `debug_startGoTrace`, `debug_stopGoTrace`
+
+### `inj`
+
+`inj_getTxHashByEthHash`
