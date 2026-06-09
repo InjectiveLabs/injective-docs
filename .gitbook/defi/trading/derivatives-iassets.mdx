@@ -25,11 +25,12 @@ The key difference between iAssets and crypto perps lies in mark price behavior.
 | Asset Class              | Price Feed Hours                       | Trading Hours |
 | ------------------------ | -------------------------------------- | ------------- |
 | Crypto                   | 24/7                                   | 24/7          |
-| iAssets (Equities)       | Every weekday from 9.30AM ET to 4PM ET | 24/7          |
+| iAssets (Equities)       | 24/5 for supported equities (pre-market through overnight via SEDA aggregation); see [24/5 Equity Feeds](/defi/trading/24-5-equity-feeds) | 24/7          |
 | iAssets (FX/commodities) | From Sunday 6PM ET to Friday 5PM ET    | 24/7          |
 
 * iAssets continue trading 24/7 on Injective, even when the mark price is not updating. Users are always warned of the potential risks when trading iAssets through a frontend like Helix, which checks for oracle liveness.
-* Outside market hours, price feeds are held constant. Because the mark price does not update, it's virtually impossible to get liquidated outside of these times.
+* For supported equities, Injective now provides 24/5 pricing by aggregating pre-market, regular hours, after-hours, and overnight Pyth feeds into a single continuous stream via SEDA. See [24/5 Equity Feeds](/defi/trading/24-5-equity-feeds) for the full list of supported markets and how the aggregation works.
+* For equities not yet on the 24/5 feed, and for FX and commodity markets, price feeds are held constant outside market hours. Because the mark price does not update during these periods, it is virtually impossible to get liquidated outside of them.
 * This allows users to take or unwind positions around the clock, but PNL will not shift until the next price update cycle resumes.
 
 Mark prices for iAssets are sourced via decentralized oracles such as Pyth, which aggregate high-fidelity, low-latency price data from primary market sources. For more information on the price feeds used for iAssets, please visit [Pyth](https://docs.pyth.network/price-feeds/market-hours).

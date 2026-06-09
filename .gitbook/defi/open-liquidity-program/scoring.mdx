@@ -38,12 +38,13 @@ The liquidity provider’s Liquidity Score for a market in an epoch, $LS_{Epoch}
 A snapshot of the order book is taken randomly every 10-100 blocks. This is approximately every minute on average, which means there are approximately 40,320 snapshots in an epoch $(60 \cdot 24 \cdot 28 = 40,320).$ In practice, the upper bound of the summation will vary depending on the actual number of snapshots in the epoch. For the purposes of this guide, we will assume that there were exactly 40,320 snapshots in the epoch.
 
 $$
-LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots
- \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \\
+\forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 $$
-LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \\
+\forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 $LS_{N_{Bid}}$ is the sum of all bid order depths divided by the spread of the order, multiplied by the volatility parameter for that snapshot, for all limit orders placed by the liquidity provider in snapshot $N$ that exceed $MinDepth$ in size and are within the $MaxSpread.$
@@ -70,7 +71,7 @@ $Spread$ is calculated from the mid-price (distance from mid-price divided by mi
 ## Uptime Score
 
 $$
-Uptime_{Epoch} = \sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases}
+Uptime_{Epoch} = \sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise}\end{cases}
 $$
 
 $Uptime_{Epoch}$ is the number of order book snapshots throughout the epoch in which the liquidity provider had a [**_positive Bid Liquidity Score and a positive Ask Liquidity Score_**](/defi/open-liquidity-program/scoring#liquidity-score) in the market of interest. This means the liquidity provider quoted on both sides of the order book with order sizes greater than or equal to $MinDepth$ with spreads less than or equal to $MaxSpread$ in the snapshot.
@@ -94,20 +95,19 @@ The fully expanded formula is:
 $TS_{Market} =$
 
 $$
-\left(\sum \limits_{N=1}^{40,320}  \min(LS_{N_{Bid}}, LS_{N_{Ask}})\right)^a \cdot \left(\sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases} \right)^b \cdot Volume^c
+\left(\sum \limits_{N=1}^{40,320}  \min(LS_{N_{Bid}}, LS_{N_{Ask}})\right)^a \cdot \left(\sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise}\end{cases} \right)^b \cdot Volume^c
+$$
+
+where
+
+$$
+LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \\
+\forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 $$
-\text {where}
-$$
-
-$$
-LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots
- \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
-$$
-
-$$
-LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \\
+\forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 <Info>
