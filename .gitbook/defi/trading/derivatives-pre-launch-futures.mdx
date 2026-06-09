@@ -8,9 +8,9 @@ Many assets generate large amounts of trading activity when they are publicly la
 
 ### How do Pre-Launch Futures Work?
 
-Expiry futures require mark prices to track liquidation and settlement prices. Because mark prices are typically based on the spot prices of the underlying assets, regular oracle price feeds cannot be used for Pre-Launch Futures as the spot price does not exist before the token has launched. Expiry futures based PLFs[^2] are designed to be traded near the public launch date so a spot price exists prior to the market expiry date (not applicable to perpetual futures based PLFs[^3]). This is so that upon the asset being publicly traded, the mark price can be set to the public spot price and the market can eventually settle at the spot price upon expiry. However, an mark price is still needed prior to this time to inform liquidation prices.
+Expiry futures require mark prices to track liquidation and settlement prices. Because mark prices are typically based on the spot prices of the underlying assets, regular oracle price feeds cannot be used for Pre-Launch Futures as the spot price does not exist before the token has launched. Expiry futures based PLFs[^2] are designed to be traded near the public launch date so a spot price exists prior to the market expiry date (not applicable to perpetual futures based PLFs[^3]). This is so that upon the asset being publicly traded, the mark price can be set to the public spot price and the market can eventually settle at the spot price upon expiry. However, a mark price is still needed prior to this time to inform liquidation prices.
 
-To solve this, Pre-Launch Futures will initially use an 24-hour exponentially weighted moving average of the last day's minutely last traded price as the mark price.
+To solve this, Pre-Launch Futures will initially use a 24-hour exponentially weighted moving average of the last day's minutely last traded price as the mark price.
 
 ### Mark Price Mechanism
 
