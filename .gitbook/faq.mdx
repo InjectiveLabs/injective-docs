@@ -1,7 +1,7 @@
 ---
 title: Injective FAQ
 icon: question
-updatedAt: "2026-03-30"
+updatedAt: "2026-06-18"
 ---
 
 ## Fundamentals
@@ -11,6 +11,16 @@ Q: What account address types are supported in Injective?
 A: There are two address types supported:
 - Bech32 (`inj...`), which is primarily used when interacting via Cosmos wallets/ tools
 - Hexadecimal (`0x...`), which is primarily used when interacting via EVM wallets/ tools
+
+Q: How can I convert *hex* addresses to *bech32* addresses?
+
+Addresses can convert between `inj1...` and `0x...` formats in both directions
+using `getInjectiveAddress` and `getEthereumAddress` from the Injective TS SDK.
+[How to convert between hex and bech32 addresses on Injective](https://docs.injective.network/developers/convert-addresses).
+
+Injective addresses use a *bech32* format: `inj1...`.
+They are compatible with EVM addresses which use a *hex* format: `0x...`.
+They share the same underlying public key, and are convertible, 1-to-1 and deterministically.
 
 ----
 
@@ -30,6 +40,22 @@ Q: When maintaining a private node:
 - Can you skip that part and make the indexer work?
 
 A: You can prune the event provider. Use the public event provider endpoint for the initial sync, then switch to local deployment from the latest height. Yes, you can skip it.
+
+Q: Which network explorer should I use on Injective?
+
+Use Blockscout for full EVM compatibility,
+and use Injscan for full Cosmos compatibility.
+
+Specifically, if you are looking for:
+- an [EIP-3091](https://eips.ethereum.org/EIPS/eip-3091)-compatible experience, or
+- to use `wallet_addEthereumChain` (or similar) in a dApp,
+... use Blockscout.
+Otherwise either Blockscout or Injscan will work.
+
+- [Injective Mainnet Blockscout](https://blockscout.injective.network/)
+- [Injective Testnet Blockscout](https://testnet.blockscout.injective.network/)
+- [Injective Mainnet Injscan](https://injscan.com/)
+- [Injective Testnet Injscan](https://testnet.explorer.injective.network/)
 
 ----
 
