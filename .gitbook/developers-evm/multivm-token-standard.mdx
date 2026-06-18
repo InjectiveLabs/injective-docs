@@ -1,7 +1,7 @@
 ---
 title: MultiVM Token Standard
 description: Understanding token representation in Injective's multi-VM architecture
-updatedAt: "2026-03-19"
+updatedAt: "2026-06-18"
 ---
 
 ## What is MultiVM Token Standard (MTS)?
@@ -109,9 +109,17 @@ Injective’s EVM is integrated directly into the Cosmos-based chain.
 - Advanced security guidelines and best practices for smart contract development
   are provided in our security section and external resources.
 
-**ℹ️ Note:**
+
+<Info>
+**Note**:
 
 To prevent denom spam, deploying an ERC20 contract via the ERC20 module
 is a **payable operation** and requires a deployment fee of **1 INJ**.
 Make sure your ERC20 contract deployment transaction includes this amount,
 or the operation will be rejected.
+
+If the supply is wiped - specifically total supply goes from non-zero to zero -
+the underlying denom is removed from the blockchain state.
+Should you add supply again - specifically total supply goes from zero to non-zero -
+the underlying denom must be recreated, and thus the deployment fee is charged again.
+</Info>
