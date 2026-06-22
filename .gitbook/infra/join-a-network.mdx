@@ -1,6 +1,6 @@
 ---
 title: Join a network
-updatedAt: "2025-10-30"
+updatedAt: "2026-06-22"
 ---
 
 This guide will walk you through the process of setting up a standalone network locally,
@@ -195,11 +195,15 @@ to ensure high uptime.
 
 #### Install `injectived` and `peggo`
 
-See the [Injective releases repo](https://github.com/InjectiveLabs/testnet/releases) for the most recent releases.
+Use the [Injective core releases](https://github.com/InjectiveFoundation/injective-core/releases) for current binaries.
 Non-validator node operators do not need to install `peggo`.
 
 ```bash
-wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
+# The live testnet currently runs v1.20.0-beta.2. Before installing, verify the
+# version reported by a public testnet node and use the matching injective-core release.
+curl -s https://testnet.sentry.lcd.injective.network/cosmos/base/tendermint/v1beta1/node_info | jq -r '.application_version.version'
+
+wget https://github.com/InjectiveFoundation/injective-core/releases/download/v1.20.0-beta.2-1779837158/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv peggo /usr/bin
 sudo mv injectived /usr/bin
@@ -221,26 +225,31 @@ Running the `init` command will create `injectived` default configuration files 
 
 #### Prepare Configuration to Join Testnet
 
-You should now update the default configuration with the Testnet's genesis file and application config file,
-as well as configure your persistent peers with seed nodes.
+You should now update the default configuration with the Testnet genesis file,
+minimum gas price, and seed nodes. Do not clone archived legacy testnet config repositories
+for binaries or configuration.
 
 ```bash
-git clone https://github.com/InjectiveLabs/testnet.git
-
-# copy genesis file to config directory
+# Copy the testnet genesis file to the node config directory.
 aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
 mv genesis.json ~/.injectived/config/
 
-# copy config file to config directory
-cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
-cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
+# Configure app.toml. The testnet validator guides use 500000000inj for transactions.
+sed -i.bak -e 's/^minimum-gas-prices *=.*/minimum-gas-prices = "500000000inj"/' ~/.injectived/config/app.toml
+
+# Configure a seed node. You can replace this with your own trusted seed or sentry node.
+sed -i.bak -e 's/^seeds *=.*/seeds = "ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@testnet-seeds.polkachu.com:14356"/' ~/.injectived/config/config.toml
 ```
 
-You can also run verify the checksum of the genesis checksum - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
+You can also verify the genesis checksum - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
 
 ```bash
 sha256sum ~/.injectived/config/genesis.json
 ```
+
+If the seed node above is unavailable or your node has trouble finding peers,
+use a current [Injective Testnet peer list](https://www.polkachu.com/testnets/injective/peers)
+or your own sentry nodes in the `persistent_peers` field of `~/.injectived/config/config.toml`.
 
 #### Configure `systemd` Service for `injectived`
 
@@ -257,6 +266,7 @@ Edit the config at `/etc/systemd/system/injectived.service`:
   Restart=always
   RestartSec=5
   User=root
+  LimitNOFILE=65535
 
 [Install]
   WantedBy=multi-user.target
