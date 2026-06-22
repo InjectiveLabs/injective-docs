@@ -1,0 +1,31 @@
+---
+title: Leaderboard
+updatedAt: "2025-12-23"
+---
+
+leaderboardモジュール関連のデータをindexerでクエリするためのコードスニペット例。
+
+## HTTP RESTを使用する
+
+### leaderboardを取得する
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import { IndexerRestLeaderboardChronosApi } from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcExplorerApi = new IndexerRestLeaderboardChronosApi(
+  `${endpoints.chronos}/api/chronos/v1/leaderboard`
+);
+
+const SelectList = {
+  Day: "1d",
+  Week: "7d",
+};
+
+const resolution = SelectList.Day;
+
+const leaderboard = await indexerGrpcExplorerApi.fetchLeaderboard(resolution);
+
+console.log(leaderboard);
+```

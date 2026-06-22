@@ -1,0 +1,62 @@
+---
+title: Oracle
+updatedAt: "2025-12-23"
+---
+
+oracleモジュール関連のデータをindexerでクエリするためのコードスニペット例。
+
+## gRPCを使用する
+
+### oracleの一覧を取得する
+
+```ts
+import { IndexerGrpcOracleApi } from "@injectivelabs/sdk-ts/client/indexer";
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcOracleApi = new IndexerGrpcOracleApi(endpoints.indexer);
+
+const oracleList = await indexerGrpcOracleApi.fetchOracleList();
+
+console.log(oracleList);
+```
+
+### oracleから価格を取得する
+
+baseおよびquoteのoracleシンボルは、常にmarket自体から取得されます。これらはプレーンなシンボルとは異なる表現になる場合があります（例：`pyth` oracleではハッシュなど）。
+
+```ts
+import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
+import {
+  IndexerGrpcOracleApi,
+  IndexerGrpcDerivativesApi,
+} from "@injectivelabs/sdk-ts/client/indexer";
+
+const endpoints = getNetworkEndpoints(Network.Testnet);
+const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(endpoints.indexer);
+const indexerGrpcOracleApi = new IndexerGrpcOracleApi(endpoints.indexer);
+
+// Fetch the list of derivative markets
+const markets = await indexerGrpcDerivativesApi.fetchMarkets();
+
+// Find the specific market by ticker
+const market = markets.find((market) => market.ticker === "INJ/USDT PERP");
+
+if (!market) {
+  throw new Error("Market not found");
+}
+
+// These values are a part of the market object
+// fetched from the indexer i.e `oracleBase` and `oracleQuote`
+const baseSymbol = market.oracleBase;
+const quoteSymbol = market.oracleQuote;
+const oracleType = market.oracleType;
+
+const oraclePrice = await indexerGrpcOracleApi.fetchOraclePriceNoThrow({
+  baseSymbol,
+  quoteSymbol,
+  oracleType,
+});
+
+console.log(oraclePrice);
+```
