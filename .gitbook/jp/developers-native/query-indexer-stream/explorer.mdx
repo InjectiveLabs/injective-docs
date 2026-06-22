@@ -1,0 +1,95 @@
+---
+title: Explorer
+updatedAt: "2025-11-28"
+---
+
+StreamManagerV2を使用してexplorer module関連データをindexerからストリーミングするコードスニペットの例です。
+
+## StreamManagerV2を使用したgRPCストリーム
+
+### Blockをストリーミング
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'explorer-blocks',
+  streamFactory: () => stream.streamBlocks({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (blocks) => {
+    console.log(blocks)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### Transaction付きのblockをストリーミング
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'explorer-blocks-with-txs',
+  streamFactory: () => stream.streamBlocksWithTxs({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (blocksWithTransactions) => {
+    console.log(blocksWithTransactions)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### Transactionをストリーミング
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcExplorerStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcExplorerStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'explorer-transactions',
+  streamFactory: () => stream.streamTransactions({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (transactions) => {
+    console.log(transactions)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```

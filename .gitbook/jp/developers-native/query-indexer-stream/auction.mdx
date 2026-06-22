@@ -1,0 +1,37 @@
+---
+title: Auction
+updatedAt: "2025-11-28"
+---
+
+StreamManagerV2を使用してauction module関連データをindexerからストリーミングするコードスニペットの例です。
+
+## StreamManagerV2を使用したgRPCストリーム
+
+### Auctionの入札をストリーミング
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcAuctionStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcAuctionStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'auction-bids',
+  streamFactory: () => stream.streamBids({
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (bids) => {
+    console.log(bids)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```

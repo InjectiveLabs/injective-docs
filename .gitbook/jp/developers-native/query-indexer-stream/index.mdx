@@ -1,0 +1,111 @@
+---
+title: Indexerのストリーミング
+updatedAt: "2025-11-28"
+---
+
+このセクションでは、StreamManagerV2を使用してInjective Indexer APIからリアルタイムデータをストリーミングする方法について説明します。
+
+## StreamManagerV2
+
+StreamManagerV2は、自動リトライ、指数バックオフ、包括的なエラーハンドリングを備えたgRPCストリームを管理するためのイベントベースのアーキテクチャを提供します。
+
+### 主な機能
+
+- **イベントベースのライフサイクル** - connect、disconnect、error、dataイベントをリッスン
+- **自動リトライ** - リトライ制限付きの設定可能な指数バックオフ
+- **エラーハンドリング** - リトライ可能なエラーとリトライ不可能なエラーを区別
+- **永続モード** - 最大試行回数後も無期限にリトライを継続
+- **きめ細かい制御** - ストリームライフサイクルの開始、停止、管理
+
+### 基本的な使い方
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'my-stream',
+  streamFactory: () => stream.streamOrders({ 
+    marketId: '0x...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (data) => {
+    console.log(data)
+  },
+  retryConfig: {
+    enabled: true,
+    maxAttempts: 5,
+    initialDelayMs: 1000,
+    maxDelayMs: 30000,
+    backoffMultiplier: 2,
+    persistent: true
+  }
+})
+
+// イベントリスナー
+streamManager.on('connect', () => console.log('Connected'))
+streamManager.on('disconnect', (reason) => console.log('Disconnected:', reason))
+streamManager.on('error', (error) => console.error('Error:', error))
+streamManager.on('stateChange', ({ from, to }) => console.log(`State: ${from} -> ${to}`))
+
+// 開始/停止
+streamManager.start()
+streamManager.stop()
+```
+
+### 利用可能なStreamクラス
+
+- `IndexerGrpcAccountStreamV2` - Accountの残高およびtransactionストリーム
+- `IndexerGrpcAccountPortfolioStreamV2` - Portfolio価値ストリーム
+- `IndexerGrpcArchiverStreamV2` - Archiverデータストリーム
+- `IndexerGrpcAuctionStreamV2` - Auction入札ストリーム
+- `IndexerGrpcDerivativesStreamV2` - Derivatives marketストリーム
+- `IndexerGrpcExplorerStreamV2` - ブロックチェーンexplorerストリーム
+- `IndexerGrpcMitoStreamV2` - Mito vaultストリーム
+- `IndexerGrpcOracleStreamV2` - Oracle価格フィードストリーム
+- `IndexerGrpcSpotStreamV2` - Spot marketストリーム
+- `IndexerGrpcTradingStreamV2` - トレーディング自動化ストリーム
+
+### リトライ設定
+
+```ts
+retryConfig: {
+  enabled: true,           // リトライの有効化/無効化
+  maxAttempts: 5,          // 最大リトライ試行回数 (0 = 無制限)
+  initialDelayMs: 1000,    // 初期バックオフ遅延
+  maxDelayMs: 30000,       // 最大バックオフ遅延
+  backoffMultiplier: 2,    // 指数バックオフ乗数
+  persistent: true         // maxAttempts後も最大遅延で継続
+}
+```
+
+### イベントタイプ
+
+- `connect` - ストリームが正常に接続
+- `disconnect` - 理由付きでストリーム切断
+- `error` - ストリームエラーが発生
+- `data` - 新しいデータを受信
+- `stateChange` - ストリームの状態が変化
+- `retry` - リトライ試行を開始
+- `warn` - 警告メッセージ
+
+## ストリームの例
+
+- [Account](/jp/developers-native/query-indexer-stream/account/) - accountの更新をストリーミング
+- [Archiver](/jp/developers-native/query-indexer-stream/archiver/) - archiverデータをストリーミング
+- [Auction](/jp/developers-native/query-indexer-stream/auction/) - auctionの更新をストリーミング
+- [Derivatives](/jp/developers-native/query-indexer-stream/derivatives/) - derivatives marketの更新をストリーミング
+- [Explorer](/jp/developers-native/query-indexer-stream/explorer/) - explorerの更新をストリーミング
+- [Mito](/jp/developers-native/query-indexer-stream/mito/) - Mito vaultの更新をストリーミング
+- [Oracle](/jp/developers-native/query-indexer-stream/oracle/) - oracle価格の更新をストリーミング
+- [Portfolio](/jp/developers-native/query-indexer-stream/portfolio/) - portfolioの更新をストリーミング
+- [Spot](/jp/developers-native/query-indexer-stream/spot/) - spot marketの更新をストリーミング
+- [Trading](/jp/developers-native/query-indexer-stream/trading/) - トレーディング自動化の更新をストリーミング

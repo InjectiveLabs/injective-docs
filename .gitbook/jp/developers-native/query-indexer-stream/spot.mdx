@@ -1,0 +1,141 @@
+---
+title: Spot
+updatedAt: "2025-11-28"
+---
+
+StreamManagerV2を使用してspot market module関連データをindexerからストリーミングするコードスニペットの例です。
+
+## StreamManagerV2を使用したgRPCストリーム
+
+### Orderbookの更新をストリーミング
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-orderbook-updates',
+  streamFactory: () => stream.streamOrderbookUpdates({ 
+    marketIds: ['0x...'],
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orderbookUpdates) => {
+    console.log(orderbookUpdates)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### Spot orderをストリーミング
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { OrderSide } from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-orders',
+  streamFactory: () => stream.streamOrders({
+    marketId: '0x...',
+    subaccountId: '0x...', // オプション
+    orderSide: OrderSide.Buy, // オプション
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orders) => {
+    console.log(orders)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### Spot order historyをストリーミング
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import {
+  TradeDirection,
+  TradeExecutionType,
+} from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-order-history',
+  streamFactory: () => stream.streamOrderHistory({
+    marketId: '0x...', // オプション
+    subaccountId: '0x...', // オプション
+    direction: TradeDirection.Buy, // オプション
+    executionTypes: [TradeExecutionType.Market], // オプション
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (orderHistory) => {
+    console.log(orderHistory)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
+
+### Spot tradeをストリーミング
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { TradeDirection } from '@injectivelabs/sdk-ts/types'
+import { 
+  StreamManagerV2,
+  IndexerGrpcSpotStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcSpotStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'spot-trades',
+  streamFactory: () => stream.streamTrades({
+    marketIds: ['0x...'], // オプション
+    subaccountId: '0x...', // オプション
+    direction: TradeDirection.Buy, // オプション
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (trades) => {
+    console.log(trades)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```

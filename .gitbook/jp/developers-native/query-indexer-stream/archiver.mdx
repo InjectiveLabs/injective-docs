@@ -1,0 +1,38 @@
+---
+title: Archiver
+updatedAt: "2025-11-28"
+---
+
+StreamManagerV2を使用してarchiver module関連データをindexerからストリーミングするコードスニペットの例です。
+
+## StreamManagerV2を使用したgRPCストリーム
+
+### Spotの平均エントリーをストリーミング
+
+```ts
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+import { 
+  StreamManagerV2,
+  IndexerGrpcArchiverStreamV2 
+} from '@injectivelabs/sdk-ts/client/indexer'
+
+const endpoints = getNetworkEndpoints(Network.Testnet)
+const stream = new IndexerGrpcArchiverStreamV2(endpoints.indexer)
+
+const streamManager = new StreamManagerV2({
+  id: 'archiver-spot-average-entries',
+  streamFactory: () => stream.streamSpotAverageEntries({ 
+    account: 'inj...',
+    callback: (response) => {
+      streamManager.emit('data', response)
+    }
+  }),
+  onData: (averageEntries) => {
+    console.log(averageEntries)
+  },
+  retryConfig: { enabled: true }
+})
+
+streamManager.on('connect', () => console.log('Stream connected'))
+streamManager.start()
+```
