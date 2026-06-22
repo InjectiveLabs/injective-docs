@@ -2104,13 +2104,8 @@
                     "group": "Indexerのストリーミング",
                     "pages": [
                       "jp/developers-native/query-indexer-stream/index",
-                      "jp/developers-native/query-indexer-stream/account",
-                      "jp/developers-native/query-indexer-stream/auction",
                       "jp/developers-native/query-indexer-stream/derivatives",
-                      "jp/developers-native/query-indexer-stream/oracle",
-                      "jp/developers-native/query-indexer-stream/portfolio",
-                      "jp/developers-native/query-indexer-stream/spot",
-                      "jp/developers-native/query-indexer-stream/explorer"
+                      "jp/developers-native/query-indexer-stream/spot"
                     ]
                   },
                   "jp/developers-native/query-ethereum"
