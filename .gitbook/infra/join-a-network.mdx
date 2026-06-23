@@ -1,6 +1,6 @@
 ---
 title: Join a network
-updatedAt: "2026-06-22"
+updatedAt: "2026-06-23"
 ---
 
 This guide will walk you through the process of setting up a standalone network locally,
@@ -318,8 +318,11 @@ See the [Injective core releases](https://github.com/InjectiveFoundation/injecti
 Non-validator node operators do not need to install `peggo`.
 
 ```bash
-# Replace the URL with the latest release from https://github.com/InjectiveFoundation/injective-core/releases
-wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
+# The live mainnet currently runs v1.20.0. Before installing, verify the
+# version reported by a public mainnet node and use the matching injective-core release.
+curl -s https://sentry.lcd.injective.network/cosmos/base/tendermint/v1beta1/node_info | jq -r '.application_version.version'
+
+wget https://github.com/InjectiveFoundation/injective-core/releases/download/v1.20.0-1780128924/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv peggo /usr/bin
 sudo mv injectived /usr/bin
@@ -341,32 +344,31 @@ Running the `init` command will create `injectived` default configuration files 
 
 #### Prepare Configuration to Join Mainnet
 
-You should now update the default configuration with the Mainnet's genesis file and application config file,
-as well as configure your persistent peers with seed nodes.
+You should now update the default configuration with the Mainnet genesis file,
+minimum gas price, seed nodes, and block commit timeout. Do not clone archived legacy mainnet config repositories
+for node setup.
 
 ```bash
-git clone https://github.com/InjectiveLabs/mainnet-config
+# Copy the mainnet genesis file to the node config directory.
+curl -L https://snapshots.polkachu.com/genesis/injective/genesis.json -o ~/.injectived/config/genesis.json
 
-# copy genesis file to config directory
-cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
+# Configure app.toml. This is the default minimum gas price used by current Injective nodes.
+sed -i.bak -e 's/^minimum-gas-prices *=.*/minimum-gas-prices = "160000000inj"/' ~/.injectived/config/app.toml
 
-# copy config file to config directory
-cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
+# Configure seed nodes and the mainnet block commit timeout.
+sed -i.bak -e 's/^seeds *=.*/seeds = "ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@seeds.polkachu.com:14356,ebc272824924ea1a27ea3183dd0b9ba713494f83@injective-mainnet-seed.autostake.com:26726,1846e76e14913124a07e231586d487a0636c0296@tenderseed.ccvalidators.com:26007"/' ~/.injectived/config/config.toml
+sed -i.bak -e 's/^timeout_commit *=.*/timeout_commit = "300ms"/' ~/.injectived/config/config.toml
 ```
 
-You can also run verify the checksum of the genesis checksum - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
+You can also verify the genesis checksum - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
 
 ```bash
 sha256sum ~/.injectived/config/genesis.json
 ```
 
-Then update the `seeds` field in `~/.injectived/config/config.toml` with the contents of `mainnet-config/10001/seeds.txt`
-and update the `timeout_commit` to `300ms`.
-
-```bash
-cat mainnet-config/10001/seeds.txt
-nano ~/.injectived/config/config.toml
-```
+If the seed nodes above are unavailable or your node has trouble finding peers,
+use a current [Injective Mainnet peer list](https://www.polkachu.com/live_peers/injective)
+or your own sentry nodes in the `persistent_peers` field of `~/.injectived/config/config.toml`.
 
 #### Configure `systemd` Service for `injectived`
 
@@ -383,6 +385,7 @@ Edit the config at `/etc/systemd/system/injectived.service`:
   Restart=always
   RestartSec=5
   User=root
+  LimitNOFILE=65535
 
 [Install]
   WantedBy=multi-user.target
@@ -428,9 +431,8 @@ _To be added soon_
 4. [Bware Labs](https://bwarelabs.com/snapshots).
 5. [AutoStake](https://autostake.com/networks/injective/#validator).
 
-Should the Injective `mainnet-config seeds.txt` list not work (the node fails to sync blocks),
-ChainLayer, Polkachu, and Autostake maintain peer lists (can be used in the `persistent_peers` field in `config.toml`)
-or addressbooks (for faster peer discovery).
+If the configured seeds do not work or the node fails to sync blocks,
+ChainLayer, Polkachu, and Autostake maintain peer lists that can be used in the `persistent_peers` field in `config.toml`.
 
 **Support**
 
