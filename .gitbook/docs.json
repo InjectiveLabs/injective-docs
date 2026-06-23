@@ -2100,6 +2100,14 @@
                       "jp/developers-native/query-indexer/transaction"
                     ]
                   },
+                  {
+                    "group": "Indexerのストリーミング",
+                    "pages": [
+                      "jp/developers-native/query-indexer-stream/index",
+                      "jp/developers-native/query-indexer-stream/derivatives",
+                      "jp/developers-native/query-indexer-stream/spot"
+                    ]
+                  },
                   "jp/developers-native/query-ethereum"
                 ]
               },
