@@ -22,7 +22,7 @@ Assuming both of these requirements have been met, the address will qualify for 
 
 ## Maintaining Next Epoch Eligibility/Pre-Qualification
 
-To automatically qualify for the next epoch after qualifying for the current epoch, an **address must account for at least 0.25% of total exchange maker volume** of [eligible markets](./eligible-markets/) (not including KAVA reward markets) from the date of qualification to the last day of the epoch.
+To automatically qualify for the next epoch after qualifying for the current epoch, an **address must account for at least 0.25% of total exchange maker volume** of [eligible markets](./eligible-markets/) from the date of qualification to the last day of the epoch.
 
 - Example: Address `inj1a` enters epoch 21 ineligible for OLP rewards. `inj1a` accounts for 1%, 0.1%, and 0.2% of total daily exchange maker volume of [eligible markets](./eligible-markets/) on days 1, 2, and 3 of epoch 21, respectively. On days 4, 5, and 6, `inj1a` accounts for 0.5% of the applicable volume each day. `inj1a` qualifies on day 7 of the epoch. To maintain eligibility/qualification for epoch 22, `inj1a` must account for at least 0.25% of the cumulative applicable maker volume from day 7 through day 28 of epoch 21. If the cumulative maker volume of [eligible markets](./eligible-markets/) for this period (days 7 through 28) was \$100M, then `inj1a` must account for \$250,000 of cumulative maker volume in those markets within the same period.
 
