@@ -3,7 +3,7 @@ title: USDC on Injective
 description: >-
   USDC stablecoin contract addresses, CCTP integration details, and testnet faucet
   information for building with USDC on Injective.
-updatedAt: "2026-05-07"
+updatedAt: "2026-06-27"
 ---
 
 USDC is available on Injective as a **native stablecoin** through
@@ -106,13 +106,14 @@ Use the following faucets to obtain testnet USDC and INJ for development:
 
 <Accordion title="What is the `restricted action` error when transferring USDC?">
   For regulatory compliance, every USDC transfer on Injective is validated by an EVM hook that calls a contract during the transaction.
-  If your transaction runs out of gas mid-call, you will see an error similar to:
+  If your transaction runs out of gas mid-call, it will surface an error similar to:
 
   ```text
-  transfer is restricted by EVM hook: panic during EVM hook: {call evm hook}: contract hook query error: restricted action
+  transfer is restricted by EVM hook: panic during EVM hook: types.ErrorOutOfGas: {EVM hook call failed}: contract hook query error: restricted action
   ```
 
-  This message does **not** mean the transfer was actually restricted.
+  If the error includes `types.ErrorOutOfGas`,
+  it does not mean the transfer was actually restricted.
   It means the validation call *ran out of gas* before completing.
 
   **Solution**: Retry the transaction with a higher gas limit.
