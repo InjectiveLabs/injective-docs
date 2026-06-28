@@ -54,6 +54,16 @@ You must remove the wasm cache before upgrading to the new version:
 rm -rf .injectived/wasm/wasm/cache/
 ```
 
+### Breaking changes
+
+<Warning>
+    Verify that you make the following changes as part of the upgrade process.
+</Warning>
+
+The Go build environment has changed.
+In the previous release, the Go version was 1.26.2 (`go1.26.2`).
+Update your Go version to 1.26.4 (`go1.26.4`).
+
 ### Steps
 
 1.  Verify you are currently running the correct version (`v1.20.0`) of `injectived`:
