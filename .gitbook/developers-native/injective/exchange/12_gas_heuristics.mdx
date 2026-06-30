@@ -1,7 +1,7 @@
 ---
 sidebar_position: 13
 title: Gas Heuristics
-updatedAt: "2025-12-05"
+updatedAt: "2026-06-29"
 ---
 
 This doc contains suggested `gasWanted` values for specific Exchange messages. Values were obtained heuristically 
@@ -22,21 +22,24 @@ ensure a transaction does not run out of gas:
 
 | Message Type                                    | Gas Wanted                   |
 |-------------------------------------------------|------------------------------|
-| MsgCreateDerivativeLimitOrder                   | 240,000 (post-only: 260,000) |
-| MsgCreateDerivativeMarketOrder                  | 235,000                      |
-| MsgCancelDerivativeOrder                        | 190,000                      |
-| MsgCreateSpotLimitOrder                         | 220,000 (post-only: 240,000) |
-| MsgCreateSpotMarketOrder                        | 170,000                      |
+| MsgCreateDerivativeLimitOrder                   | 330,000                      |
+| MsgCreateDerivativeLimitOrder (post-only)       | 370,000                      |
+| MsgCreateDerivativeMarketOrder                  | 310,000                      |
+| MsgCancelDerivativeOrder                        | 200,000                      |
+| MsgCreateSpotLimitOrder                         | 300,000                      |
+| MsgCreateSpotLimitOrder (post-only)             | 330,000                      |
+| MsgCreateSpotMarketOrder                        | 300,000                      |
 | MsgCancelSpotOrder                              | 185,000                      |
-| MsgCreateBinaryOptionsLimitOrder                | 240,000 (post-only: 260,000) |
-| MsgCreateBinaryOptionsMarketOrder               | 225,000                      |
-| MsgCancelBinaryOptionsOrder                     | 190,000                      |
-| MsgDeposit                                      | 158,000                      |
-| MsgWithdrawGas                                  | 155,000                      |
-| MsgSubaccountTransferGas                        | 135,000                      |
-| MsgExternalTransferGas                          | 160,000                      |
-| MsgIncreasePositionMarginGas                    | 171,000                      |
-| MsgDecreasePositionMarginGas                    | 180,000                      |
+| MsgCreateBinaryOptionsLimitOrder                | 330,000                      |
+| MsgCreateBinaryOptionsLimitOrder (post-only)    | 370,000                      |
+| MsgCreateBinaryOptionsMarketOrder               | 310,000                      |
+| MsgCancelBinaryOptionsOrder                     | 200,000                      |
+| MsgDeposit                                      | 330,000                      |
+| MsgWithdrawGas                                  | 320,000                      |
+| MsgSubaccountTransferGas                        | 220,000                      |
+| MsgExternalTransferGas                          | 300,000                      |
+| MsgIncreasePositionMarginGas                    | 185,000                      |
+| MsgDecreasePositionMarginGas                    | 200,000                      |
 
 If the order in question is also a GTB (Good-Till-Block) order, an amount of gas equal to 10% of the above values should be added on top. 
 
