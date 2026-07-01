@@ -194,6 +194,7 @@
                 "expanded": false,
                 "pages": [
                   "developers-ai/index",
+                  "developers-ai/ai-sdk",
                   "developers-ai/injective-cli-skill",
                   "developers-ai/injective-evm-developer-skill",
                   "developers-ai/injective-mcp-servers-skill",

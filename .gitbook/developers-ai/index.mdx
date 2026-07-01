@@ -3,7 +3,7 @@ title: AI developers
 description: >-
     How to build AI-powered applications and agents on Injective,
     including generative AI tools, MCP servers, and agent skills.
-updatedAt: "2026-03-10"
+updatedAt: "2026-07-01"
 ---
 
 ## Why build using generative AI tools on Injective?
@@ -14,12 +14,16 @@ You will find skills, agents, workflows, and MCP servers here that will help you
 
 ## What types of generative AI tools are available?
 
+LLMs, LLM providers, MCP servers, agent skills, CLIs/SDKs/functions/scripts,
+AI engineering IDEs/Harnesses/Orchestrators are various types of generative AI tools.
+You can use all of them when building on Injective.
+
 - **LLMs** -
     Large language models (LLMs) are the base-layer technology powering almost all generative AI software engineering.
     Almost all AI development tools are wrappers around LLMs.
     Popular ones include Claude Opus (Anthropic), Gemini (Google), and Kimi (Moonshot AI).
 - **LLM Providers** -
-    Low- and mid-tier LLMs are possible to run on retail/ consumer hardware.
+    Low-tier and mid-tier LLMs are possible to run on retail/ consumer hardware.
     However the top-tier LLMs need to be accessed remotely.
     You have 3 main options:
     - **Local providers** -
@@ -28,39 +32,43 @@ You will find skills, agents, workflows, and MCP servers here that will help you
       For example, accessing Claude Opus via an Anthropic subscription.
     - **Remote providers from model aggregators** -
       For example, accessing Claude Opus, Gemini, or Kimi via an OpenRouter subscription.
-- **Tools** -
+- **CLIs, SDKs, functions, and scripts** -
     These can be anything from functions, to scripts, to command-line interfaces (CLIs) that are packaged up in a manner
     that make them understood or callable by LLMs.
     For example, if you want the LLM to access real-time information,
     i.e. information that was no available to it when the LLM was trained,
     you would need to give it access to call tools for web searches or other data APIs.
+    Note that even when these are not adapted for use by LLMs,
+    agent skills may be use to provide thin wrappers around them.
 - **MCP** -
     Model-Context-Protocol (MCP) is a protocol designed for discovery and calling of tools by LLMs.
     They are designed to standardize the way for different LLMs and LLM providers to invoke tools.
     Previously each LLM or LLM provider had competing standards/ protocols for doing so.
-- **Skills** -
-    These are markdown files that optionally reference supporting resources, tools, MCP servers and others.
-    They are designed specifically to work with AI engineering harnesses (but can be used in other contexts).
+- **Agent Skills** -
+    These are markdown files that primarily include a detailed repeatable prompt.
+    They optionally reference supporting resources, tools, MCP servers and others.
+    They are designed specifically to work with AI engineering harnesses,
+    but can be used in other contexts too.
     They can be recursive, for example a skill can reference other skills.
     These are sometimes also referred to as "workflows", "subagents", and "agents".
     In this context, workflows are usually a set of skills with a defined order;
     and agents/ subagents are are sets of workflows and skills with no specified order,
     where the LLM is given agency over which ones to use and in what order.
     Note that the term "agents" is overused, with multiple definitions,
-    so the above is specific to this context.
-- **AI engineering IDEs** -
+    so the above definition is specific to this context.
+- **AI Engineering IDEs** -
     These are either dedicated IDEs or plugins within IDEs that allow you to prompt LLMs,
     including execution of tool calls or MCPs,
     and use their output to work on the code base that is open within the IDE.
     Popular ones include: Roo, Cline, and Cursor.
-- **AI engineering Harnesses** -
+- **AI Engineering Harnesses** -
     These are command line interfaces (CLIs) or terminal user interfaces (TUIs) that are designed around
     invoking LLMs for coding tasks.
     The operate directly on the file system, and often come with baked-in optimizations and utilities for engineering tasks.
     These tend to be more powerful than working with AI engineering IDEs,
     as they work best when skills, workflows, and agents are used.
     Popular ones include: Claude Code (Anthropic), Codex (OpenAI), and OpenCode (unaffiliated).
-- **AI engineering Orchestrators** -
+- **AI Engineering Orchestrators** -
     These are tools that act as wrappers around harnesses.
     Their main intent is to enable long-running loops or parallelization of harness invocation,
     such that it becomes possible have LLMs working autonomously on longer and more complex tasks
@@ -73,6 +81,12 @@ LLMs, LLM Providers, Tools, MCP, Skills, Workflows, Agents, AI engineering IDEs,
 AI engineering Harnesses, AI engineering Orchestrators.
 In short, all of them!
 In fact, that is the point of this **AI Developers** section!
+
+## AI SDK
+
+Injective makes it easy for you to develop using AI.
+Use the [Injective AI SDK](/developers-ai/ai-sdk/)
+which provides you agent skills, CLI, MCP servers - all in a single install.
 
 ## Agent skills
 
