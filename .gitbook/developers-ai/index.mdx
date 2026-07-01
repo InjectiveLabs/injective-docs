@@ -36,12 +36,12 @@ You can use all of them when building on Injective.
     These can be anything from functions, to scripts, to command-line interfaces (CLIs) that are packaged up in a manner
     that make them understood or callable by LLMs.
     For example, if you want the LLM to access real-time information,
-    i.e. information that was no available to it when the LLM was trained,
+    i.e. information that was not available to it when the LLM was trained,
     you would need to give it access to call tools for web searches or other data APIs.
     Note that even when these are not adapted for use by LLMs,
-    agent skills may be use to provide thin wrappers around them.
+    agent skills may be used to provide thin wrappers around them.
 - **MCP** -
-    Model-Context-Protocol (MCP) is a protocol designed for discovery and calling of tools by LLMs.
+    Model Context Protocol (MCP) is a protocol designed for discovery and calling of tools by LLMs.
     They are designed to standardize the way for different LLMs and LLM providers to invoke tools.
     Previously each LLM or LLM provider had competing standards/ protocols for doing so.
 - **Agent Skills** -
@@ -52,7 +52,7 @@ You can use all of them when building on Injective.
     They can be recursive, for example a skill can reference other skills.
     These are sometimes also referred to as "workflows", "subagents", and "agents".
     In this context, workflows are usually a set of skills with a defined order;
-    and agents/ subagents are are sets of workflows and skills with no specified order,
+    and agents/ subagents are sets of workflows and skills with no specified order,
     where the LLM is given agency over which ones to use and in what order.
     Note that the term "agents" is overused, with multiple definitions,
     so the above definition is specific to this context.
@@ -64,7 +64,7 @@ You can use all of them when building on Injective.
 - **AI Engineering Harnesses** -
     These are command line interfaces (CLIs) or terminal user interfaces (TUIs) that are designed around
     invoking LLMs for coding tasks.
-    The operate directly on the file system, and often come with baked-in optimizations and utilities for engineering tasks.
+    They operate directly on the file system, and often come with baked-in optimizations and utilities for engineering tasks.
     These tend to be more powerful than working with AI engineering IDEs,
     as they work best when skills, workflows, and agents are used.
     Popular ones include: Claude Code (Anthropic), Codex (OpenAI), and OpenCode (unaffiliated).
@@ -86,7 +86,7 @@ In fact, that is the point of this **AI Developers** section!
 
 Injective makes it easy for you to develop using AI.
 Use the [Injective AI SDK](/developers-ai/ai-sdk/)
-which provides you agent skills, CLI, MCP servers - all in a single install.
+which provides you with agent skills, CLI, and MCP servers - all in a single install.
 
 ## Agent skills
 
