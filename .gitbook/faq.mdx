@@ -6,15 +6,15 @@ updatedAt: "2026-06-18"
 
 ## Fundamentals
 
-Q: What account address types are supported in Injective?
+**Q**: What account address types are supported in Injective?
 
-A: There are two address types supported:
+**A**: There are two address types supported:
 - Bech32 (`inj...`), which is primarily used when interacting via Cosmos wallets/ tools
 - Hexadecimal (`0x...`), which is primarily used when interacting via EVM wallets/ tools
 
-Q: How can I convert *hex* addresses to *bech32* addresses?
+**Q**: How can I convert *hex* addresses to *bech32* addresses?
 
-Addresses can convert between `inj1...` and `0x...` formats in both directions
+**A**: Addresses can convert between `inj1...` and `0x...` formats in both directions
 using `getInjectiveAddress` and `getEthereumAddress` from the Injective TS SDK.
 [How to convert between hex and bech32 addresses on Injective](https://docs.injective.network/developers/convert-addresses).
 
@@ -24,9 +24,9 @@ They share the same underlying public key, and are convertible, 1-to-1 and deter
 
 ----
 
-Q: Is there a way to find which Injective Cosmos address is mapped to which Injective EVM address?
+**Q**: Is there a way to find which Injective Cosmos address is mapped to which Injective EVM address?
 
-A: These address types map to each other through a mathematical operation that is one to one and bidirectional:
+**A**: These address types map to each other through a mathematical operation that is one-to-one and bidirectional:
 - Live example: [Injective Testnet Faucet](https://testnet.faucet.injective.network/)
 - Docs: [TypeScript (TS) code examples](https://docs.injective.network/developers/convert-addresses)
 
@@ -34,16 +34,16 @@ A: These address types map to each other through a mathematical operation that i
 
 ## Infrastructure
 
-Q: When maintaining a private node:
+**Q**: When maintaining a private node:
 
 - Should you store 2.5 TiB of archival data (event provider)?
 - Can you skip that part and make the indexer work?
 
-A: You can prune the event provider. Use the public event provider endpoint for the initial sync, then switch to local deployment from the latest height. Yes, you can skip it.
+**A**: You can prune the event provider. Use the public event provider endpoint for the initial sync, then switch to local deployment from the latest height. Yes, you can skip it.
 
-Q: Which network explorer should I use on Injective?
+**Q**: Which network explorer should I use on Injective?
 
-Use Blockscout for full EVM compatibility,
+**A**: Use Blockscout for full EVM compatibility,
 and use Injscan for full Cosmos compatibility.
 
 Specifically, if you are looking for:
@@ -61,11 +61,31 @@ Otherwise either Blockscout or Injscan will work.
 
 ## EVM
 
-Q: Does Injective have a deployment of the [`multicall3`](https://www.multicall3.com/) smart contract? {/* tachida2k */}
+**Q**: Does Injective have a deployment of the [`multicall3`](https://www.multicall3.com/) smart contract? {/* tachida2k */}
 
-A: Yes, at the following addresses:
+**A**: Yes, at the following addresses:
 
 - Injective Mainnet `multicall3`: [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
 - Injective Testnet `multicall3`: [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://testnet.blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract)
 
 ----
+
+## Injective native modules
+
+**Q**: For transactions on the exchange module,
+why do some event logs show on the transaction while others do not?
+
+**A**: To see all event logs, you must check *both* in the transaction and
+in all exchange events filtered by subaccount.
+This is because when Injective executes a transaction on the exchange module
+(such as `MsgBatchUpdateOrders`), the transaction may have settled:
+
+- Either within the direct transaction context,
+  in which case the event logs are emitted at the *transaction* level.
+- Or in the frequent batch auction (FBA) context,
+  in which case the event logs are emitted at the *block* level.
+
+To learn more about FBA within the Injective exchange module:
+
+- Glossary: [Frequent Batch Auction](https://docs.injective.network/glossary#frequent-batch-auction-fba)
+- Injective Native Modules → Exchange → `EndBlocker`: [Order Matching: Frequent Batch Auction](https://docs.injective.network/developers-native/injective/exchange/08_end_block#order-matching-frequent-batch-auction-fba)
