@@ -26,7 +26,7 @@ They share the same underlying public key, and are convertible, 1-to-1 and deter
 
 **Q**: Is there a way to find which Injective Cosmos address is mapped to which Injective EVM address?
 
-**A**: These address types map to each other through a mathematical operation that is one to one and bidirectional:
+**A**: These address types map to each other through a mathematical operation that is one-to-one and bidirectional:
 - Live example: [Injective Testnet Faucet](https://testnet.faucet.injective.network/)
 - Docs: [TypeScript (TS) code examples](https://docs.injective.network/developers/convert-addresses)
 
@@ -73,17 +73,17 @@ Otherwise either Blockscout or Injscan will work.
 ## Injective native modules
 
 **Q**: For transactions on the exchange module,
-why do some event logs show but others do not, on the transaction?
+why do some event logs show on the transaction while others do not?
 
-**A**: To see all event logs, you must check *both* the transaction and
-on all exchange events filtered by subaccount.
+**A**: To see all event logs, you must check *both* in the transaction and
+in all exchange events filtered by subaccount.
 This is because when Injective executes a transaction on the exchange module
 (such as `MsgBatchUpdateOrders`), the transaction may have settled:
 
-- Either within direct transaction context,
-  in which case the event logs are emitted at the transaction level.
-- Or in an frequent batch auction (FBA) context,
-  in which case the event logs are emitted at the block level.
+- Either within the direct transaction context,
+  in which case the event logs are emitted at the *transaction* level.
+- Or in the frequent batch auction (FBA) context,
+  in which case the event logs are emitted at the *block* level.
 
 To learn more about FBA within the Injective exchange module:
 
