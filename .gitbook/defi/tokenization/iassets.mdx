@@ -1,0 +1,113 @@
+---
+title: iAssets
+description: >-
+  Synthetic real-world asset derivatives on Injective: how iAssets work, what markets are
+  available, how prices are sourced, and how to trade them.
+updatedAt: "2026-07-09"
+---
+
+iAssets are synthetic perpetual futures contracts that give traders price exposure to real-world
+assets, including equities, commodities, and FX pairs, without requiring custody of the underlying.
+Unlike permissioned native tokens, iAssets carry no direct on-chain representation of the underlying
+instrument. Collateral is posted in USDT or other supported stablecoins, positions are cash-settled,
+and price exposure is delivered through Injective's decentralized oracle infrastructure.
+
+iAssets trade through Injective's native derivatives engine under exactly the same mechanics as
+crypto perpetual futures: margin-based positions, funding rates, an orderbook (or RFQ for
+supported front-ends), and 24/7 continuous trading even when the underlying market is closed.
+
+---
+
+## How iAssets Work
+
+### Price Feed
+
+Each iAsset market is anchored to a decentralized oracle price feed sourced via Pyth. This price determines:
+- The mark price used for margin and liquidation calculations
+- Funding rate direction and magnitude
+- Settlement value when a position is closed
+
+Price feed hours vary by asset class:
+
+| Asset Class | Price Feed Hours | Trading Hours |
+|-------------|-----------------|---------------|
+| iAssets (Equities, supported) | 24/5 via SEDA aggregation (pre-market through overnight) | 24/7 |
+| iAssets (Equities, other) | Regular market hours only | 24/7 |
+| iAssets (FX / Commodities) | Sunday 6PM ET to Friday 5PM ET | 24/7 |
+
+iAssets continue trading 24/7 on Injective even when the mark price is not updating. Outside of active feed hours, the mark price is held constant, which means PnL does not shift and liquidation is virtually impossible until the next price update cycle resumes.
+
+### Settlement
+
+iAssets are cash-settled perpetuals with no physical delivery of shares, commodities, or
+currency. When you close a position, the PnL is settled in USDT based on the mark price at the
+time of close.
+
+### Funding Rate
+
+Like all perpetual futures on Injective, iAssets accrue a funding rate to keep the perpetual price
+anchored to the oracle price. When the perpetual trades at a premium to the oracle price, long
+positions pay short positions, and vice versa.
+
+---
+
+## Available Markets
+
+iAsset markets cover three primary categories:
+
+| Category | Examples |
+|----------|---------|
+| **Equities** | Major US and international equity exposures |
+| **Commodities** | Gold, silver, crude oil, and other commodities |
+| **FX** | Major currency pairs |
+
+The full current list of active iAsset markets is available on the Injective exchange.
+
+---
+
+## Trading iAssets
+
+### Differences from Crypto Perpetuals
+
+iAssets trade identically to crypto perpetuals on Injective, with one key distinction: the
+underlying price source. For crypto markets, the oracle is typically sourced from spot DEX prices.
+For iAssets, the oracle relies on off-chain financial data providers. This means:
+
+- **No spot arbitrage**: There is no on-chain spot market for the underlying to hedge against.
+  Arbitrage is purely between the iAsset perpetual price and the oracle price, not the physical asset.
+- **Oracle dependency**: Outside of active feed hours, the mark price is held constant by design. If an unplanned outage occurs during market hours, positions remain open but no new funding accrues until the feed resumes.
+- **Extended hours**: iAssets trade 24/7 but price exposure is limited to active feed windows (see the price feed table above). Outside those windows, PnL does not shift.
+
+### Margin and Leverage
+
+Margin is posted in USDT or other supported stablecoins. Leverage varies by market (typically 25x for equities, 50x for commodities, 100x for FX).
+See [Margin trading](/trading/margin-trading) for how cross- and isolated-margin work.
+
+### Fees
+
+iAssets are subject to the same maker/taker fee schedule as other Injective derivative markets.
+See [Fees](/trading/fees).
+
+---
+
+## iAssets vs. Permissioned Native Assets
+
+| | iAssets | Permissioned Native Assets |
+|---|---|---|
+| **What it represents** | Synthetic price exposure | On-chain token representation of an RWA |
+| **Custody of underlying** | None | Depends on issuer structure |
+| **Collateral** | USDT margin | Asset-specific |
+| **Settlement** | Cash (USDT) | Token-denominated |
+| **Transfer restrictions** | None | Enforced by Permissions module |
+| **Compliance controls** | None | Whitelist, blacklist, freeze, custom Wasm hook |
+| **Best for** | Traders seeking price exposure | Issuers requiring regulated, tokenized instruments |
+
+---
+
+## Further Reading
+
+- [Permissioned Assets](/defi/tokenization/permissioned-assets): for tokenizing RWAs with compliance controls
+- [Perpetual Markets](/trading/perpetual-markets): how perpetual futures work on Injective
+- [Funding Rates](/trading/funding-rates)
+- [Margin Trading](/trading/margin-trading)
+- [Oracle Feed Sources](/trading/oracle-feed-sources)

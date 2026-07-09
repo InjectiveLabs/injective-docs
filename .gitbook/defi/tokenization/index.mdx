@@ -1,0 +1,61 @@
+---
+title: Tokenization
+description: >-
+  Overview of real-world asset tokenization on Injective, covering permissioned
+  native asset issuance and synthetic RWA derivatives.
+updatedAt: "2026-07-09"
+---
+
+Injective provides native infrastructure for bringing real-world assets (RWAs) onchain,
+from tokenized treasuries and fixed income instruments to equities, commodities, and pre-IPO credit.
+Rather than relying on wrapped representations or off-chain bridges, Injective supports two complementary
+approaches to RWA tokenization, each suited to different use cases and compliance requirements.
+
+Whether you are an issuer looking to launch a compliant, permissioned asset with transfer restrictions
+and KYC enforcement, or a builder wanting to give traders synthetic exposure to real-world markets
+without custody of the underlying, Injective provides the on-chain primitives to do it.
+
+## Approaches to Tokenization on Injective
+
+### Permissioned Native Assets
+
+Issuers can create fully on-chain token representations of real-world assets using Injective's
+`TokenFactory` and `Permissions` modules in combination. This approach is suitable for regulated
+assets that require compliance controls at the protocol level, for example tokenized treasuries,
+money market funds, or private credit instruments that must restrict transfers to KYC-verified
+addresses.
+
+Key capabilities:
+- **Whitelist/blacklist enforcement**: restrict minting, sending, and receiving to approved addresses only
+- **Freeze and pause**: disable all transfers across the asset at any time
+- **Role-based access control**: assign granular permissions (mint, burn, send, receive) to different roles
+- **Wasm contract hooks**: extend compliance logic with custom smart contracts that trigger on every receive event
+- **Governance compatibility**: namespace settings can be overridden by on-chain governance if configured
+
+This approach gives issuers full control over the asset lifecycle and is designed to support the
+compliance requirements of institutional tokenization.
+
+### iAssets (Synthetic RWA Derivatives)
+
+iAssets are synthetic derivatives that track real-world asset prices, including equities, commodities,
+and FX pairs, using Injective's native perpetual futures engine and decentralized oracle infrastructure.
+Unlike permissioned native assets, iAssets do not require custody of the underlying asset. Margin
+is posted in USDT or other supported stablecoins and positions are cash-settled, giving traders
+direct price exposure without the legal or operational overhead of holding the real asset.
+
+iAssets trade 24/7 on Injective. Outside of active oracle feed hours, the mark price is held constant and PnL does not shift until the feed resumes.
+
+## Key Concepts
+
+| Term | Definition |
+|------|------------|
+| **TokenFactory** | A permissionless module that allows any account to create a new native token denom. The creator becomes the admin, with the ability to mint and burn the asset. |
+| **Permissions Module** | An RBAC (Role-Based Access Control) layer built on top of TokenFactory denoms. Enables compliant, permissioned asset issuance with transfer restrictions, whitelisting, and freeze capabilities. |
+| **Namespace** | The container within the Permissions module that holds all roles, permissions, and policy settings for a single asset. Each asset denom can have one namespace. |
+| **iAssets** | Synthetic perpetual futures contracts that track the price of real-world assets (equities, commodities, FX) using decentralized oracles. No custody of the underlying asset is required. |
+| **Wasm Contract Hook** | An optional smart contract invoked on every receive event for a permissioned asset. Used to implement custom compliance logic beyond what the Permissions module provides natively. |
+
+## Navigation
+
+- **[Permissioned Assets](/defi/tokenization/permissioned-assets)**: How to issue compliant, permissioned RWA tokens on Injective using the TokenFactory and Permissions modules. Covers roles, namespaces, transfer restrictions, KYC enforcement, and how to launch a permissioned asset.
+- **[iAssets](/defi/tokenization/iassets)**: Synthetic RWA derivatives that provide price exposure to equities, commodities, and FX markets without custody of the underlying asset. Built on Injective's perpetual futures engine with 24/7 trading and decentralized oracle price feeds.
