@@ -23,104 +23,139 @@ different chain IDs but share the same underlying state. See
 [EVM Network Information](/developers-evm/network-information) for the full reference.
 </Info>
 
-export const AddNetworkButton = ({ label, sublabel, onClick }) => {
-  const [status, setStatus] = useState("idle");
-  const handle = async () => {
+export const AddNetworkButtons = ({ kind }) => {
+  const [status, setStatus] = useState({});
+  const setBtn = (id, s) => setStatus((prev) => ({ ...prev, [id]: s }));
+
+  const addEvm = async (config) => {
+    if (!window.ethereum) {
+      alert("Please install MetaMask or another EVM wallet.");
+      throw new Error("no-evm-wallet");
+    }
     try {
-      setStatus("pending");
-      await onClick();
-      setStatus("done");
-      setTimeout(() => setStatus("idle"), 2500);
-    } catch (e) {
-      console.error(e);
-      setStatus("error");
-      setTimeout(() => setStatus("idle"), 3500);
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: config.chainId }],
+      });
+    } catch (err) {
+      if (err && err.code === 4902) {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [config],
+        });
+      } else {
+        throw err;
+      }
     }
   };
-  const text =
-    status === "pending" ? "Confirm in your wallet…" :
-    status === "done" ? "Added ✓" :
-    status === "error" ? "Failed — try again" : label;
-  return (
-    <button
-      type="button"
-      onClick={handle}
-      disabled={status === "pending"}
-      className="not-prose"
-      style={{
-        display: "flex", alignItems: "center", gap: "12px", width: "100%",
-        maxWidth: "420px", padding: "12px 16px", marginBottom: "10px",
-        borderRadius: "12px", border: "1px solid rgba(77,61,255,0.35)",
-        background: status === "error" ? "#ffefef" : "rgba(77,61,255,0.06)",
-        color: "#182E4B", fontWeight: 600, fontSize: "15px",
-        cursor: status === "pending" ? "wait" : "pointer", textAlign: "left",
-      }}
-    >
-      <span
-        style={{
-          display: "inline-flex", alignItems: "center", justifyContent: "center",
-          width: "34px", height: "34px", borderRadius: "9px",
-          background: "#4D3DFF", color: "#fff", fontSize: "18px", flexShrink: 0,
-        }}
-      >
-        {status === "done" ? "✓" : "＋"}
-      </span>
-      <span style={{ display: "flex", flexDirection: "column" }}>
-        <span>{text}</span>
-        {sublabel && (
-          <span style={{ fontWeight: 400, fontSize: "12.5px", opacity: 0.7 }}>
-            {sublabel}
-          </span>
-        )}
-      </span>
-    </button>
-  );
-};
 
-export const addEvmNetwork = (config) => async () => {
-  if (!window.ethereum) {
-    alert("Please install MetaMask or another EVM wallet.");
-    throw new Error("No EVM wallet found");
-  }
-  try {
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: config.chainId }],
-    });
-  } catch (err) {
-    if (err && err.code === 4902) {
-      await window.ethereum.request({
-        method: "wallet_addEthereumChain",
-        params: [config],
-      });
-    } else {
-      throw err;
+  const enableCosmos = async (chainId) => {
+    if (!window.keplr) {
+      alert("Please install the Keplr wallet.");
+      throw new Error("no-keplr");
     }
-  }
-};
+    await window.keplr.enable(chainId);
+  };
 
-export const enableCosmos = (chainId) => async () => {
-  if (!window.keplr) {
-    alert("Please install the Keplr wallet.");
-    throw new Error("No Keplr wallet found");
-  }
-  await window.keplr.enable(chainId);
-};
+  const run = async (id, fn) => {
+    try {
+      setBtn(id, "pending");
+      await fn();
+      setBtn(id, "done");
+      setTimeout(() => setBtn(id, "idle"), 2500);
+    } catch (e) {
+      setBtn(id, "error");
+      setTimeout(() => setBtn(id, "idle"), 3500);
+    }
+  };
 
-export const INJ_EVM_MAINNET = {
-  chainId: "0x6f0", // 1776
-  chainName: "Injective",
-  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
-  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-  blockExplorerUrls: ["https://blockscout.injective.network/"],
-};
+  const evmButtons = [
+    {
+      id: "evm-mainnet",
+      label: "Add Injective EVM Mainnet",
+      sub: "MetaMask · Rabby · any EVM wallet — Chain ID 1776",
+      run: () =>
+        addEvm({
+          chainId: "0x6f0",
+          chainName: "Injective",
+          rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+          nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+          blockExplorerUrls: ["https://blockscout.injective.network/"],
+        }),
+    },
+    {
+      id: "evm-testnet",
+      label: "Add Injective EVM Testnet",
+      sub: "MetaMask · Rabby · any EVM wallet — Chain ID 1439",
+      run: () =>
+        addEvm({
+          chainId: "0x59f",
+          chainName: "Injective Testnet",
+          rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+          nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+          blockExplorerUrls: ["https://testnet.blockscout.injective.network/"],
+        }),
+    },
+  ];
 
-export const INJ_EVM_TESTNET = {
-  chainId: "0x59f", // 1439
-  chainName: "Injective Testnet",
-  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
-  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"],
+  const cosmosButtons = [
+    {
+      id: "cosmos-mainnet",
+      label: "Connect Injective Mainnet in Keplr",
+      sub: "Keplr · Leap — Chain ID injective-1",
+      run: () => enableCosmos("injective-1"),
+    },
+    {
+      id: "cosmos-testnet",
+      label: "Connect Injective Testnet in Keplr",
+      sub: "Keplr · Leap — Chain ID injective-888",
+      run: () => enableCosmos("injective-888"),
+    },
+  ];
+
+  const buttons = kind === "cosmos" ? cosmosButtons : evmButtons;
+
+  return (
+    <div className="not-prose" style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "16px 0" }}>
+      {buttons.map((b) => {
+        const s = status[b.id] || "idle";
+        const text =
+          s === "pending" ? "Confirm in your wallet…" :
+          s === "done" ? "Added ✓" :
+          s === "error" ? "Failed — try again" : b.label;
+        return (
+          <button
+            key={b.id}
+            type="button"
+            disabled={s === "pending"}
+            onClick={() => run(b.id, b.run)}
+            style={{
+              display: "flex", alignItems: "center", gap: "12px", width: "100%",
+              maxWidth: "440px", padding: "12px 16px", borderRadius: "12px",
+              border: "1px solid rgba(77,61,255,0.35)",
+              background: s === "error" ? "#fff0f0" : "rgba(77,61,255,0.06)",
+              color: "#182E4B", fontWeight: 600, fontSize: "15px",
+              cursor: s === "pending" ? "wait" : "pointer", textAlign: "left",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: "34px", height: "34px", borderRadius: "9px",
+                background: "#4D3DFF", color: "#fff", fontSize: "18px", flexShrink: 0,
+              }}
+            >
+              {s === "done" ? "✓" : "+"}
+            </span>
+            <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
+              <span>{text}</span>
+              <span style={{ fontWeight: 400, fontSize: "12.5px", opacity: 0.7 }}>{b.sub}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
 };
 
 ## Injective EVM
@@ -128,17 +163,7 @@ export const INJ_EVM_TESTNET = {
 Injective EVM is compatible with EVM wallets (MetaMask, Rabby, and more). Click a
 button below — your wallet will prompt you to add or switch to the network.
 
-<AddNetworkButton
-  label="Add Injective EVM Mainnet"
-  sublabel="MetaMask · Rabby · any EVM wallet — Chain ID 1776"
-  onClick={addEvmNetwork(INJ_EVM_MAINNET)}
-/>
-
-<AddNetworkButton
-  label="Add Injective EVM Testnet"
-  sublabel="MetaMask · Rabby · any EVM wallet — Chain ID 1439"
-  onClick={addEvmNetwork(INJ_EVM_TESTNET)}
-/>
+<AddNetworkButtons kind="evm" />
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
 The button uses the standard `wallet_addEthereumChain` / `wallet_switchEthereumChain`
@@ -187,17 +212,7 @@ The native Injective chain works with Cosmos wallets such as **Keplr** and **Lea
 Injective is built into both wallets, so it is available out of the box. Click a
 button below to unlock the chain in Keplr.
 
-<AddNetworkButton
-  label="Connect Injective Mainnet in Keplr"
-  sublabel="Keplr · Leap — Chain ID injective-1"
-  onClick={enableCosmos("injective-1")}
-/>
-
-<AddNetworkButton
-  label="Connect Injective Testnet in Keplr"
-  sublabel="Keplr · Leap — Chain ID injective-888"
-  onClick={enableCosmos("injective-888")}
-/>
+<AddNetworkButtons kind="cosmos" />
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
 Keplr and Leap ship with Injective built in, so the button simply unlocks the
