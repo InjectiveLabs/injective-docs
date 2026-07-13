@@ -2,8 +2,8 @@
 title: Add Network to Your Wallet
 description: >-
   Add Injective networks to your browser wallet in one click. Interactive
-  buttons for Injective EVM (MetaMask and other EVM wallets) and Injective
-  native (Keplr), covering mainnet and testnet.
+  wallet buttons for Injective EVM (MetaMask and other EVM wallets) and
+  Injective native (Keplr, Leap), covering mainnet and testnet.
 icon: wallet
 updatedAt: "2026-07-13"
 ---
@@ -11,19 +11,25 @@ updatedAt: "2026-07-13"
 Add Injective to your browser wallet with a single click, or use the manual
 configuration details below. Injective exposes two interoperable interfaces:
 
-- **Injective EVM** — an Ethereum-compatible JSON-RPC layer. Works with EVM
+- **Injective EVM** is an Ethereum-compatible JSON-RPC layer. Use it with EVM
   wallets such as MetaMask, Rabby, or any injected `window.ethereum` wallet.
-- **Injective (CosmWasm / native)** — the native Cosmos SDK chain. Works with
+- **Injective (CosmWasm / native)** is the native Cosmos SDK chain. Use it with
   Cosmos wallets such as Keplr and Leap.
 
 <Info>
-Injective EVM and Injective native map to the **same** network — they use
-different chain IDs but share the same underlying state. See
+Injective EVM and Injective native map to the same network. They use different
+chain IDs but share the same underlying state. See
 [Network Information](/developers/network-information) and
 [EVM Network Information](/developers-evm/network-information) for the full reference.
 </Info>
 
-export const AddNetworkButtons = ({ kind }) => {
+export const WALLET_LOGOS = {
+  metamask: "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjAuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiCgkgdmlld0JveD0iMCAwIDIwNC44IDE5Mi40IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMDQuOCAxOTIuNDsiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPgoJLnN0MHtkaXNwbGF5Om5vbmU7fQoJLnN0MXtmaWxsOiNGNTg0MUY7fQoJLnN0MntmaWxsOiNFMjc2MjU7fQoJLnN0M3tmaWxsOiNEN0MxQjM7fQoJLnN0NHtmaWxsOiMyRjM0M0I7fQoJLnN0NXtmaWxsOiNDQzYyMjg7fQoJLnN0NntmaWxsOiNDMEFEOUU7fQoJLnN0N3tmaWxsOiM3NjNFMUE7fQo8L3N0eWxlPgo8ZyBpZD0iYmdfeDI4X2RvX25vdF9leHBvcnRfeDI5XyIgY2xhc3M9InN0MCI+CjwvZz4KPGcgaWQ9Ik1NX0hlYWRfYmFja2dyb3VuZF9feDI4X0RvX25vdF9lZGl0X3gyOV8iPgoJPGc+CgkJPHBhdGggY2xhc3M9InN0MSIgZD0iTTE2Ny40LDk2LjFsNi45LTguMWwtMy0yLjJsNC44LTQuNGwtMy43LTIuOGw0LjgtMy42bC0zLjEtMi40bDUtMjQuNGwtNy42LTIyLjYgTTE3MS41LDI1LjZsLTQ4LjgsMTguMWwwLDAKCQkJbDAsMEg4MmwwLDBMMzMuMiwyNS42bDAuMywwLjJsLTAuMy0wLjJsLTcuNiwyMi42bDUuMSwyNC40TDI3LjUsNzVsNC45LDMuNmwtMy43LDIuOGw0LjgsNC40bC0zLDIuMmw2LjksOC4xbC0xMC41LDMyLjRoMGwwLDAKCQkJbDkuNywzMy4xbDM0LjEtOS40bDAtMC4xbDAsMC4xbDAsMGwwLDBsMCwwdjBsMCwwbDAsMGwwLDBsNi42LDUuNGwxMy41LDkuMmgyMy4xbDEzLjUtOS4ybDYuNi01LjRsMCwwdjBsMCwwbDAsMGwzNC4yLDkuNAoJCQlsOS44LTMzLjFsMCwwaDBsLTEwLjYtMzIuNCBNNzAuNywxNTIuMUw3MC43LDE1Mi4xTDcwLjcsMTUyLjEiLz4KCTwvZz4KPC9nPgo8ZyBpZD0iTG9nb3MiPgoJPGc+CgkJPHBvbHlnb24gY2xhc3M9InN0MiIgcG9pbnRzPSIxNzEuNSwyNS42IDExMS42LDY5LjcgMTIyLjcsNDMuNyAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDIiIHBvaW50cz0iMzMuMiwyNS42IDkyLjYsNzAuMSA4Miw0My43IAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0MiIgcG9pbnRzPSIxNTAsMTI3LjkgMTM0LDE1Mi4xIDE2OC4yLDE2MS41IDE3OCwxMjguNCAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDIiIHBvaW50cz0iMjYuOSwxMjguNCAzNi42LDE2MS41IDcwLjcsMTUyLjEgNTQuOCwxMjcuOSAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDIiIHBvaW50cz0iNjguOSw4Ni45IDU5LjQsMTAxLjIgOTMuMiwxMDIuNyA5Mi4xLDY2LjUgCQkiLz4KCQk8cG9seWdvbiBjbGFzcz0ic3QyIiBwb2ludHM9IjEzNS45LDg2LjkgMTEyLjMsNjYuMSAxMTEuNiwxMDIuNyAxNDUuNCwxMDEuMiAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDIiIHBvaW50cz0iNzAuNywxNTIuMSA5MS4yLDE0Mi4zIDczLjUsMTI4LjcgCQkiLz4KCQk8cG9seWdvbiBjbGFzcz0ic3QyIiBwb2ludHM9IjExMy42LDE0Mi4zIDEzNCwxNTIuMSAxMzEuMiwxMjguNyAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDMiIHBvaW50cz0iMTM0LDE1Mi4xIDExMy42LDE0Mi4zIDExNS4zLDE1NS41IDExNS4xLDE2MS4xIAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0MyIgcG9pbnRzPSI3MC43LDE1Mi4xIDg5LjcsMTYxLjEgODkuNiwxNTUuNSA5MS4yLDE0Mi4zIAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0NCIgcG9pbnRzPSI5MCwxMTkuOSA3My4xLDExNSA4NS4xLDEwOS41IAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0NCIgcG9pbnRzPSIxMTQuNywxMTkuOSAxMTkuNywxMDkuNSAxMzEuNywxMTUgCQkiLz4KCQk8cG9seWdvbiBjbGFzcz0ic3Q1IiBwb2ludHM9IjcwLjcsMTUyLjEgNzMuNywxMjcuOSA1NC44LDEyOC40IAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0NSIgcG9pbnRzPSIxMzEuMSwxMjcuOSAxMzQsMTUyLjEgMTUwLDEyOC40IAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0NSIgcG9pbnRzPSIxNDUuNCwxMDEuMiAxMTEuNiwxMDIuNyAxMTQuNywxMTkuOSAxMTkuNywxMDkuNSAxMzEuNywxMTUgCQkiLz4KCQk8cG9seWdvbiBjbGFzcz0ic3Q1IiBwb2ludHM9IjczLjEsMTE1IDg1LjEsMTA5LjUgOTAsMTE5LjkgOTMuMiwxMDIuNyA1OS40LDEwMS4yIAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0MiIgcG9pbnRzPSI1OS40LDEwMS4yIDczLjUsMTI4LjcgNzMuMSwxMTUgCQkiLz4KCQk8cG9seWdvbiBjbGFzcz0ic3QyIiBwb2ludHM9IjEzMS43LDExNSAxMzEuMiwxMjguNyAxNDUuNCwxMDEuMiAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDIiIHBvaW50cz0iOTMuMiwxMDIuNyA5MCwxMTkuOSA5NCwxNDAuMyA5NC45LDExMy41IAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0MiIgcG9pbnRzPSIxMTEuNiwxMDIuNyAxMDkuOSwxMTMuNCAxMTAuNywxNDAuMyAxMTQuNywxMTkuOSAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDEiIHBvaW50cz0iMTE0LjcsMTE5LjkgMTEwLjcsMTQwLjMgMTEzLjYsMTQyLjMgMTMxLjIsMTI4LjcgMTMxLjcsMTE1IAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0MSIgcG9pbnRzPSI3My4xLDExNSA3My41LDEyOC43IDkxLjIsMTQyLjMgOTQsMTQwLjMgOTAsMTE5LjkgCQkiLz4KCQk8cG9seWdvbiBjbGFzcz0ic3Q2IiBwb2ludHM9IjExNS4xLDE2MS4xIDExNS4zLDE1NS41IDExMy43LDE1NC4yIDkxLDE1NC4yIDg5LjYsMTU1LjUgODkuNywxNjEuMSA3MC43LDE1Mi4xIDc3LjMsMTU3LjUgCgkJCTkwLjgsMTY2LjggMTEzLjksMTY2LjggMTI3LjQsMTU3LjUgMTM0LDE1Mi4xIAkJIi8+CgkJPHBvbHlnb24gY2xhc3M9InN0NCIgcG9pbnRzPSIxMTMuNiwxNDIuMyAxMTAuNywxNDAuMyA5NCwxNDAuMyA5MS4yLDE0Mi4zIDg5LjYsMTU1LjUgOTEsMTU0LjIgMTEzLjcsMTU0LjIgMTE1LjMsMTU1LjUgCQkiLz4KCQk8cG9seWdvbiBjbGFzcz0ic3Q3IiBwb2ludHM9IjE3NC4xLDcyLjYgMTc5LjEsNDguMiAxNzEuNSwyNS42IDExMy42LDY4LjIgMTM1LjksODYuOSAxNjcuNCw5Ni4xIDE3NC4zLDg4IDE3MS4zLDg1LjggMTc2LjEsODEuNSAKCQkJMTcyLjQsNzguNiAxNzcuMiw3NSAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDciIHBvaW50cz0iMjUuNiw0OC4yIDMwLjcsNzIuNiAyNy41LDc1IDMyLjMsNzguNyAyOC42LDgxLjUgMzMuNCw4NS44IDMwLjQsODggMzcuNCw5Ni4xIDY4LjksODYuOSA5MS4yLDY4LjIgCgkJCTMzLjIsMjUuNiAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDEiIHBvaW50cz0iMTY3LjQsOTYuMSAxMzUuOSw4Ni45IDE0NS40LDEwMS4yIDEzMS4yLDEyOC43IDE1MCwxMjguNCAxNzgsMTI4LjQgCQkiLz4KCQk8cG9seWdvbiBjbGFzcz0ic3QxIiBwb2ludHM9IjY4LjksODYuOSAzNy40LDk2LjEgMjYuOSwxMjguNCA1NC44LDEyOC40IDczLjUsMTI4LjcgNTkuNCwxMDEuMiAJCSIvPgoJCTxwb2x5Z29uIGNsYXNzPSJzdDEiIHBvaW50cz0iMTExLjYsMTAyLjcgMTEzLjYsNjguMiAxMjIuNyw0My43IDgyLDQzLjcgOTEuMiw2OC4yIDkzLjIsMTAyLjcgOTQsMTEzLjUgOTQsMTQwLjMgMTEwLjcsMTQwLjMgCgkJCTExMC44LDExMy41IAkJIi8+Cgk8L2c+CjwvZz4KPC9zdmc+Cg==",
+  keplr: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImsiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxN0JERkYiLz48c3RvcCBvZmZzZXQ9Ii41IiBzdG9wLWNvbG9yPSIjNkE4MUZGIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRkY3N0M2Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOSIgZmlsbD0idXJsKCNrKSIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0xMyA5aDR2OS4yTDI1LjQgOWg1LjFsLTguNiA5LjZMMzEgMzFoLTUuMmwtNi44LTkuN1YzMWgtNHoiLz48L3N2Zz4=",
+  leap: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSI5IiBmaWxsPSIjMTQxNDE0Ii8+PHBhdGggZmlsbD0iI0Y1QzU0MiIgZD0iTTIwIDhjNiA0IDEwIDggMTAgMTRhMTAgMTAgMCAwIDEtMjAgMGMwLTYgNC0xMCAxMC0xNHptMCA2Yy0zIDIuNi02IDUuMi02IDguNWE2IDYgMCAwIDAgMTIgMGMwLTMuMy0zLTUuOS02LTguNXoiLz48L3N2Zz4=",
+};
+
+export const AddNetworkCard = ({ kind }) => {
   const [status, setStatus] = useState({});
   const setBtn = (id, s) => setStatus((prev) => ({ ...prev, [id]: s }));
 
@@ -50,11 +56,12 @@ export const AddNetworkButtons = ({ kind }) => {
   };
 
   const enableCosmos = async (chainId) => {
-    if (!window.keplr) {
-      alert("Please install the Keplr wallet.");
-      throw new Error("no-keplr");
+    const provider = window.keplr || window.leap;
+    if (!provider) {
+      alert("Please install the Keplr or Leap wallet.");
+      throw new Error("no-cosmos-wallet");
     }
-    await window.keplr.enable(chainId);
+    await provider.enable(chainId);
   };
 
   const run = async (id, fn) => {
@@ -69,106 +76,131 @@ export const AddNetworkButtons = ({ kind }) => {
     }
   };
 
-  const evmButtons = [
-    {
-      id: "evm-mainnet",
-      label: "Add Injective EVM Mainnet",
-      sub: "MetaMask · Rabby · any EVM wallet — Chain ID 1776",
-      run: () =>
-        addEvm({
-          chainId: "0x6f0",
-          chainName: "Injective",
-          rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
-          nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-          blockExplorerUrls: ["https://blockscout.injective.network/"],
-        }),
-    },
-    {
-      id: "evm-testnet",
-      label: "Add Injective EVM Testnet",
-      sub: "MetaMask · Rabby · any EVM wallet — Chain ID 1439",
-      run: () =>
-        addEvm({
-          chainId: "0x59f",
-          chainName: "Injective Testnet",
-          rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
-          nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-          blockExplorerUrls: ["https://testnet.blockscout.injective.network/"],
-        }),
-    },
-  ];
+  const evmMainnet = {
+    chainId: "0x6f0",
+    chainName: "Injective",
+    rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+    nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+    blockExplorerUrls: ["https://blockscout.injective.network/"],
+  };
+  const evmTestnet = {
+    chainId: "0x59f",
+    chainName: "Injective Testnet",
+    rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+    nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+    blockExplorerUrls: ["https://testnet.blockscout.injective.network/"],
+  };
 
-  const cosmosButtons = [
-    {
-      id: "cosmos-mainnet",
-      label: "Connect Injective Mainnet in Keplr",
-      sub: "Keplr · Leap — Chain ID injective-1",
-      run: () => enableCosmos("injective-1"),
+  const config = {
+    evm: {
+      title: "Injective EVM",
+      networks: [
+        {
+          name: "Mainnet",
+          chainId: "1776",
+          wallets: [
+            { id: "evm-m-mm", name: "MetaMask", logo: WALLET_LOGOS.metamask, run: () => addEvm(evmMainnet) },
+          ],
+        },
+        {
+          name: "Testnet",
+          chainId: "1439",
+          wallets: [
+            { id: "evm-t-mm", name: "MetaMask", logo: WALLET_LOGOS.metamask, run: () => addEvm(evmTestnet) },
+          ],
+        },
+      ],
     },
-    {
-      id: "cosmos-testnet",
-      label: "Connect Injective Testnet in Keplr",
-      sub: "Keplr · Leap — Chain ID injective-888",
-      run: () => enableCosmos("injective-888"),
+    cosmos: {
+      title: "Injective (CosmWasm / Native)",
+      networks: [
+        {
+          name: "Mainnet",
+          chainId: "injective-1",
+          wallets: [
+            { id: "cos-m-keplr", name: "Keplr", logo: WALLET_LOGOS.keplr, run: () => enableCosmos("injective-1") },
+            { id: "cos-m-leap", name: "Leap", logo: WALLET_LOGOS.leap, run: () => enableCosmos("injective-1") },
+          ],
+        },
+        {
+          name: "Testnet",
+          chainId: "injective-888",
+          wallets: [
+            { id: "cos-t-keplr", name: "Keplr", logo: WALLET_LOGOS.keplr, run: () => enableCosmos("injective-888") },
+            { id: "cos-t-leap", name: "Leap", logo: WALLET_LOGOS.leap, run: () => enableCosmos("injective-888") },
+          ],
+        },
+      ],
     },
-  ];
-
-  const buttons = kind === "cosmos" ? cosmosButtons : evmButtons;
+  }[kind];
 
   return (
-    <div className="not-prose" style={{ display: "flex", flexDirection: "column", gap: "10px", margin: "16px 0" }}>
-      {buttons.map((b) => {
-        const s = status[b.id] || "idle";
-        const text =
-          s === "pending" ? "Confirm in your wallet…" :
-          s === "done" ? "Added ✓" :
-          s === "error" ? "Failed — try again" : b.label;
-        return (
-          <button
-            key={b.id}
-            type="button"
-            disabled={s === "pending"}
-            onClick={() => run(b.id, b.run)}
-            style={{
-              display: "flex", alignItems: "center", gap: "12px", width: "100%",
-              maxWidth: "440px", padding: "12px 16px", borderRadius: "12px",
-              border: "1px solid rgba(77,61,255,0.35)",
-              background: s === "error" ? "#fff0f0" : "rgba(77,61,255,0.06)",
-              color: "#182E4B", fontWeight: 600, fontSize: "15px",
-              cursor: s === "pending" ? "wait" : "pointer", textAlign: "left",
-            }}
-          >
-            <span
-              style={{
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: "34px", height: "34px", borderRadius: "9px",
-                background: "#4D3DFF", color: "#fff", fontSize: "18px", flexShrink: 0,
-              }}
-            >
-              {s === "done" ? "✓" : "+"}
+    <div className="not-prose" style={{ display: "flex", flexDirection: "column", gap: "14px", margin: "18px 0" }}>
+      {config.networks.map((net) => (
+        <div
+          key={net.name}
+          style={{
+            border: "1px solid rgba(77,61,255,0.22)",
+            borderRadius: "16px",
+            padding: "16px 18px",
+            background: "rgba(77,61,255,0.04)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+            <span style={{ fontWeight: 700, fontSize: "15px", color: "#182E4B" }}>
+              {config.title} {net.name}
             </span>
-            <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
-              <span>{text}</span>
-              <span style={{ fontWeight: 400, fontSize: "12.5px", opacity: 0.7 }}>{b.sub}</span>
+            <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>
+              Chain ID {net.chainId}
             </span>
-          </button>
-        );
-      })}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            {net.wallets.map((w) => {
+              const s = status[w.id] || "idle";
+              const text =
+                s === "pending" ? "Confirm in wallet" :
+                s === "done" ? "Added" :
+                s === "error" ? "Try again" : w.name;
+              return (
+                <button
+                  key={w.id}
+                  type="button"
+                  disabled={s === "pending"}
+                  onClick={() => run(w.id, w.run)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "9px",
+                    padding: "9px 16px 9px 10px", borderRadius: "11px",
+                    border: "1px solid rgba(24,46,75,0.15)",
+                    background: s === "error" ? "#fff0f0" : s === "done" ? "#ecfdf3" : "#fff",
+                    color: "#182E4B", fontWeight: 600, fontSize: "14px",
+                    cursor: s === "pending" ? "wait" : "pointer",
+                    minWidth: "130px",
+                  }}
+                >
+                  <img src={w.logo} alt={w.name} width="26" height="26" style={{ borderRadius: "7px", flexShrink: 0 }} />
+                  <span>{text}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
 
 ## Injective EVM
 
-Injective EVM is compatible with EVM wallets (MetaMask, Rabby, and more). Click a
-button below — your wallet will prompt you to add or switch to the network.
+Injective EVM works with EVM wallets like MetaMask and Rabby. Pick a network and
+click your wallet. It will prompt you to add or switch to Injective.
 
-<AddNetworkButtons kind="evm" />
+<AddNetworkCard kind="evm" />
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-The button uses the standard `wallet_addEthereumChain` / `wallet_switchEthereumChain`
-requests. If the network is already added, your wallet shows a "switch network"
-prompt instead. If nothing happens, add it manually with the values below.
+The button uses the standard `wallet_addEthereumChain` and
+`wallet_switchEthereumChain` requests. If the network is already added, your
+wallet shows a switch prompt instead. If nothing happens, add it manually with
+the values below.
 </Callout>
 
 ### Manual configuration
@@ -208,15 +240,16 @@ prompt instead. If nothing happens, add it manually with the values below.
 
 ## Injective (CosmWasm / Native)
 
-The native Injective chain works with Cosmos wallets such as **Keplr** and **Leap**.
-Injective is built into both wallets, so it is available out of the box. Click a
-button below to unlock the chain in Keplr.
+The native Injective chain works with Cosmos wallets like Keplr and Leap.
+Injective ships built into both wallets, so it is available out of the box.
+Pick a network and click your wallet to unlock the chain.
 
-<AddNetworkButtons kind="cosmos" />
+<AddNetworkCard kind="cosmos" />
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-Keplr and Leap ship with Injective built in, so the button simply unlocks the
-chain in your wallet. For a full wallet integration guide, see [Wallets](/defi/wallet/index).
+Keplr and Leap include Injective by default, so the button simply unlocks the
+chain in your wallet. For a full wallet integration guide, see
+[Wallets](/defi/wallet/index).
 </Callout>
 
 ### Manual configuration
@@ -235,7 +268,7 @@ chain in your wallet. For a full wallet integration guide, see [Wallets](/defi/w
 
 <Info>
 Injective natively uses the chain ID `injective-1`. Its EVM interface uses the
-numeric chain ID `1776` — both map to the same mainnet.
+numeric chain ID `1776`. Both map to the same mainnet.
 </Info>
 
 </Tab>
@@ -252,8 +285,8 @@ numeric chain ID `1776` — both map to the same mainnet.
 | Faucet | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
 
 <Info>
-Injective natively uses the chain ID `injective-888` on testnet. Its EVM interface
-uses the numeric chain ID `1439` — both map to the same testnet.
+Injective natively uses the chain ID `injective-888` on testnet. Its EVM
+interface uses the numeric chain ID `1439`. Both map to the same testnet.
 </Info>
 
 </Tab>
