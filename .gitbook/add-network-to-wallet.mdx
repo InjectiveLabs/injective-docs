@@ -1,0 +1,196 @@
+---
+title: Add Network to Your Wallet
+description: >-
+  Add Injective networks to your browser wallet. Manual configuration details
+  and a one-click code snippet for Injective EVM and Injective (CosmWasm /
+  native), including mainnet and testnet.
+icon: wallet
+updatedAt: "2026-07-13"
+---
+
+Add Injective to your browser wallet using the network details below, or drop the
+one-click snippet into your dApp so users can add Injective with a single button.
+Injective exposes two interoperable interfaces:
+
+- **Injective EVM** — an Ethereum-compatible JSON-RPC layer. Use with EVM wallets
+  such as MetaMask, Rabby, or any injected `window.ethereum` wallet.
+- **Injective (CosmWasm / native)** — the native Cosmos SDK chain. Use with Cosmos
+  wallets such as Keplr or Leap.
+
+<Info>
+Injective EVM and Injective native map to the **same** network — they use different
+chain IDs but share the same underlying state. See
+[Network Information](/developers/network-information) and
+[EVM Network Information](/developers-evm/network-information) for the full reference.
+</Info>
+
+## Injective EVM
+
+Injective EVM is compatible with EVM wallets (MetaMask, Rabby, and more). Add it
+manually with the parameters below, or use the one-click snippet in your dApp.
+
+<Tabs>
+
+<Tab title="Injective EVM Mainnet" icon="server">
+
+| Property | Value |
+| --- | --- |
+| Network Name | Injective |
+| Chain ID | `1776` |
+| RPC URL | `https://sentry.evm-rpc.injective.network/` |
+| WS Endpoint | `wss://sentry.evm-ws.injective.network` |
+| Currency Symbol | `INJ` |
+| Decimals | `18` |
+| Block Explorer | `https://blockscout.injective.network/` |
+
+</Tab>
+
+<Tab title="Injective EVM Testnet" icon="flask-vial">
+
+| Property | Value |
+| --- | --- |
+| Network Name | Injective Testnet |
+| Chain ID | `1439` |
+| RPC URL | `https://k8s.testnet.json-rpc.injective.network/` |
+| WS Endpoint | `wss://k8s.testnet.ws.injective.network/` |
+| Currency Symbol | `INJ` |
+| Decimals | `18` |
+| Block Explorer | `https://testnet.blockscout.injective.network/` |
+| Faucet | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+
+</Tab>
+
+</Tabs>
+
+### One-click "Add to wallet" snippet
+
+Add an **Add Injective Network** button to your dApp. Copy the snippet, wire
+`addInjectiveEvmNetwork` to a button, and your users can add Injective (or switch
+to it) in one click.
+
+```ts
+// Injective EVM — mainnet and testnet
+const NETWORKS = {
+  mainnet: {
+    chainId: "0x6f0", // 1776
+    chainName: "Injective",
+    rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+    nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+    blockExplorerUrls: ["https://blockscout.injective.network/"],
+  },
+  testnet: {
+    chainId: "0x59f", // 1439
+    chainName: "Injective Testnet",
+    rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+    nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+    blockExplorerUrls: ["https://testnet.blockscout.injective.network/"],
+  },
+} as const;
+
+async function addInjectiveEvmNetwork(network: "mainnet" | "testnet" = "mainnet") {
+  const config = NETWORKS[network];
+
+  if (!window.ethereum) {
+    alert("Please install MetaMask or another EVM wallet.");
+    return;
+  }
+
+  try {
+    // Try to switch first — the network may already be added.
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: config.chainId }],
+    });
+  } catch (switchError: any) {
+    // 4902 = network not added yet → add it.
+    if (switchError?.code === 4902) {
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [config],
+      });
+    } else {
+      console.error("Failed to switch to Injective:", switchError);
+    }
+  }
+}
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+The snippet uses the standard `wallet_addEthereumChain` / `wallet_switchEthereumChain`
+requests supported by MetaMask and other injected EVM wallets. See also
+[Add Injective to Your dApp](/developers-evm/add-injective-to-your-dapp).
+</Callout>
+
+## Injective (CosmWasm / Native)
+
+The native Injective chain works with Cosmos wallets such as **Keplr** and **Leap**.
+Injective is a built-in chain in both wallets, so it is available out of the box —
+you do not need to add it manually. Use the details below to verify or connect
+programmatically.
+
+<Tabs>
+
+<Tab title="Injective Mainnet" icon="server">
+
+| Property | Value |
+| --- | --- |
+| Chain ID | `injective-1` |
+| RPC / Node | `https://sentry.tm.injective.network:443` |
+| Currency Symbol | `INJ` |
+| Decimals | `18` |
+| Explorer | [`injscan.com`](https://injscan.com/) |
+
+<Info>
+Injective natively uses the chain ID `injective-1`. Its EVM interface uses the
+numeric chain ID `1776` — both map to the same mainnet.
+</Info>
+
+</Tab>
+
+<Tab title="Injective Testnet" icon="flask-vial">
+
+| Property | Value |
+| --- | --- |
+| Chain ID | `injective-888` |
+| RPC / Node | `https://testnet.sentry.tm.injective.network:443` |
+| Currency Symbol | `INJ` |
+| Decimals | `18` |
+| Explorer | [`testnet.explorer.injective.network`](https://testnet.explorer.injective.network/) |
+| Faucet | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+
+<Info>
+Injective natively uses the chain ID `injective-888` on testnet. Its EVM interface
+uses the numeric chain ID `1439` — both map to the same testnet.
+</Info>
+
+</Tab>
+
+</Tabs>
+
+### Connect with a Cosmos wallet (snippet)
+
+Because Injective ships built into Keplr and Leap, connecting is a single `enable`
+call — no manual network configuration required.
+
+```ts
+// Injective native — mainnet: "injective-1", testnet: "injective-888"
+async function connectInjective(chainId: "injective-1" | "injective-888" = "injective-1") {
+  if (!window.keplr) {
+    alert("Please install the Keplr wallet.");
+    return;
+  }
+
+  await window.keplr.enable(chainId);
+  const offlineSigner = window.keplr.getOfflineSigner(chainId);
+  const [account] = await offlineSigner.getAccounts();
+
+  console.log("Connected Injective account:", account.address);
+  return account.address;
+}
+```
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Keplr and Leap include Injective by default, so `enable` simply unlocks the chain
+in the user's wallet. For a full wallet integration guide, see
+[Wallets](/defi/wallet/index).
+</Callout>
