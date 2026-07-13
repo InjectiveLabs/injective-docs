@@ -1,33 +1,152 @@
 ---
 title: Add Network to Your Wallet
 description: >-
-  Add Injective networks to your browser wallet. Manual configuration details
-  and a one-click code snippet for Injective EVM and Injective (CosmWasm /
-  native), including mainnet and testnet.
+  Add Injective networks to your browser wallet in one click. Interactive
+  buttons for Injective EVM (MetaMask and other EVM wallets) and Injective
+  native (Keplr), covering mainnet and testnet.
 icon: wallet
 updatedAt: "2026-07-13"
 ---
 
-Add Injective to your browser wallet using the network details below, or drop the
-one-click snippet into your dApp so users can add Injective with a single button.
-Injective exposes two interoperable interfaces:
+Add Injective to your browser wallet with a single click, or use the manual
+configuration details below. Injective exposes two interoperable interfaces:
 
-- **Injective EVM** — an Ethereum-compatible JSON-RPC layer. Use with EVM wallets
-  such as MetaMask, Rabby, or any injected `window.ethereum` wallet.
-- **Injective (CosmWasm / native)** — the native Cosmos SDK chain. Use with Cosmos
-  wallets such as Keplr or Leap.
+- **Injective EVM** — an Ethereum-compatible JSON-RPC layer. Works with EVM
+  wallets such as MetaMask, Rabby, or any injected `window.ethereum` wallet.
+- **Injective (CosmWasm / native)** — the native Cosmos SDK chain. Works with
+  Cosmos wallets such as Keplr and Leap.
 
 <Info>
-Injective EVM and Injective native map to the **same** network — they use different
-chain IDs but share the same underlying state. See
+Injective EVM and Injective native map to the **same** network — they use
+different chain IDs but share the same underlying state. See
 [Network Information](/developers/network-information) and
 [EVM Network Information](/developers-evm/network-information) for the full reference.
 </Info>
 
+export const AddNetworkButton = ({ label, sublabel, onClick }) => {
+  const [status, setStatus] = useState("idle");
+  const handle = async () => {
+    try {
+      setStatus("pending");
+      await onClick();
+      setStatus("done");
+      setTimeout(() => setStatus("idle"), 2500);
+    } catch (e) {
+      console.error(e);
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 3500);
+    }
+  };
+  const text =
+    status === "pending" ? "Confirm in your wallet…" :
+    status === "done" ? "Added ✓" :
+    status === "error" ? "Failed — try again" : label;
+  return (
+    <button
+      type="button"
+      onClick={handle}
+      disabled={status === "pending"}
+      className="not-prose"
+      style={{
+        display: "flex", alignItems: "center", gap: "12px", width: "100%",
+        maxWidth: "420px", padding: "12px 16px", marginBottom: "10px",
+        borderRadius: "12px", border: "1px solid rgba(77,61,255,0.35)",
+        background: status === "error" ? "#ffefef" : "rgba(77,61,255,0.06)",
+        color: "#182E4B", fontWeight: 600, fontSize: "15px",
+        cursor: status === "pending" ? "wait" : "pointer", textAlign: "left",
+      }}
+    >
+      <span
+        style={{
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          width: "34px", height: "34px", borderRadius: "9px",
+          background: "#4D3DFF", color: "#fff", fontSize: "18px", flexShrink: 0,
+        }}
+      >
+        {status === "done" ? "✓" : "＋"}
+      </span>
+      <span style={{ display: "flex", flexDirection: "column" }}>
+        <span>{text}</span>
+        {sublabel && (
+          <span style={{ fontWeight: 400, fontSize: "12.5px", opacity: 0.7 }}>
+            {sublabel}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+};
+
+export const addEvmNetwork = (config) => async () => {
+  if (!window.ethereum) {
+    alert("Please install MetaMask or another EVM wallet.");
+    throw new Error("No EVM wallet found");
+  }
+  try {
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: config.chainId }],
+    });
+  } catch (err) {
+    if (err && err.code === 4902) {
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [config],
+      });
+    } else {
+      throw err;
+    }
+  }
+};
+
+export const enableCosmos = (chainId) => async () => {
+  if (!window.keplr) {
+    alert("Please install the Keplr wallet.");
+    throw new Error("No Keplr wallet found");
+  }
+  await window.keplr.enable(chainId);
+};
+
+export const INJ_EVM_MAINNET = {
+  chainId: "0x6f0", // 1776
+  chainName: "Injective",
+  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+  blockExplorerUrls: ["https://blockscout.injective.network/"],
+};
+
+export const INJ_EVM_TESTNET = {
+  chainId: "0x59f", // 1439
+  chainName: "Injective Testnet",
+  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"],
+};
+
 ## Injective EVM
 
-Injective EVM is compatible with EVM wallets (MetaMask, Rabby, and more). Add it
-manually with the parameters below, or use the one-click snippet in your dApp.
+Injective EVM is compatible with EVM wallets (MetaMask, Rabby, and more). Click a
+button below — your wallet will prompt you to add or switch to the network.
+
+<AddNetworkButton
+  label="Add Injective EVM Mainnet"
+  sublabel="MetaMask · Rabby · any EVM wallet — Chain ID 1776"
+  onClick={addEvmNetwork(INJ_EVM_MAINNET)}
+/>
+
+<AddNetworkButton
+  label="Add Injective EVM Testnet"
+  sublabel="MetaMask · Rabby · any EVM wallet — Chain ID 1439"
+  onClick={addEvmNetwork(INJ_EVM_TESTNET)}
+/>
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+The button uses the standard `wallet_addEthereumChain` / `wallet_switchEthereumChain`
+requests. If the network is already added, your wallet shows a "switch network"
+prompt instead. If nothing happens, add it manually with the values below.
+</Callout>
+
+### Manual configuration
 
 <Tabs>
 
@@ -62,71 +181,30 @@ manually with the parameters below, or use the one-click snippet in your dApp.
 
 </Tabs>
 
-### One-click "Add to wallet" snippet
-
-Add an **Add Injective Network** button to your dApp. Copy the snippet, wire
-`addInjectiveEvmNetwork` to a button, and your users can add Injective (or switch
-to it) in one click.
-
-```ts
-// Injective EVM — mainnet and testnet
-const NETWORKS = {
-  mainnet: {
-    chainId: "0x6f0", // 1776
-    chainName: "Injective",
-    rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
-    nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-    blockExplorerUrls: ["https://blockscout.injective.network/"],
-  },
-  testnet: {
-    chainId: "0x59f", // 1439
-    chainName: "Injective Testnet",
-    rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
-    nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-    blockExplorerUrls: ["https://testnet.blockscout.injective.network/"],
-  },
-} as const;
-
-async function addInjectiveEvmNetwork(network: "mainnet" | "testnet" = "mainnet") {
-  const config = NETWORKS[network];
-
-  if (!window.ethereum) {
-    alert("Please install MetaMask or another EVM wallet.");
-    return;
-  }
-
-  try {
-    // Try to switch first — the network may already be added.
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: config.chainId }],
-    });
-  } catch (switchError: any) {
-    // 4902 = network not added yet → add it.
-    if (switchError?.code === 4902) {
-      await window.ethereum.request({
-        method: "wallet_addEthereumChain",
-        params: [config],
-      });
-    } else {
-      console.error("Failed to switch to Injective:", switchError);
-    }
-  }
-}
-```
-
-<Callout icon="info" color="#07C1FF" iconType="regular">
-The snippet uses the standard `wallet_addEthereumChain` / `wallet_switchEthereumChain`
-requests supported by MetaMask and other injected EVM wallets. See also
-[Add Injective to Your dApp](/developers-evm/add-injective-to-your-dapp).
-</Callout>
-
 ## Injective (CosmWasm / Native)
 
 The native Injective chain works with Cosmos wallets such as **Keplr** and **Leap**.
-Injective is a built-in chain in both wallets, so it is available out of the box —
-you do not need to add it manually. Use the details below to verify or connect
-programmatically.
+Injective is built into both wallets, so it is available out of the box. Click a
+button below to unlock the chain in Keplr.
+
+<AddNetworkButton
+  label="Connect Injective Mainnet in Keplr"
+  sublabel="Keplr · Leap — Chain ID injective-1"
+  onClick={enableCosmos("injective-1")}
+/>
+
+<AddNetworkButton
+  label="Connect Injective Testnet in Keplr"
+  sublabel="Keplr · Leap — Chain ID injective-888"
+  onClick={enableCosmos("injective-888")}
+/>
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+Keplr and Leap ship with Injective built in, so the button simply unlocks the
+chain in your wallet. For a full wallet integration guide, see [Wallets](/defi/wallet/index).
+</Callout>
+
+### Manual configuration
 
 <Tabs>
 
@@ -166,31 +244,3 @@ uses the numeric chain ID `1439` — both map to the same testnet.
 </Tab>
 
 </Tabs>
-
-### Connect with a Cosmos wallet (snippet)
-
-Because Injective ships built into Keplr and Leap, connecting is a single `enable`
-call — no manual network configuration required.
-
-```ts
-// Injective native — mainnet: "injective-1", testnet: "injective-888"
-async function connectInjective(chainId: "injective-1" | "injective-888" = "injective-1") {
-  if (!window.keplr) {
-    alert("Please install the Keplr wallet.");
-    return;
-  }
-
-  await window.keplr.enable(chainId);
-  const offlineSigner = window.keplr.getOfflineSigner(chainId);
-  const [account] = await offlineSigner.getAccounts();
-
-  console.log("Connected Injective account:", account.address);
-  return account.address;
-}
-```
-
-<Callout icon="info" color="#07C1FF" iconType="regular">
-Keplr and Leap include Injective by default, so `enable` simply unlocks the chain
-in the user's wallet. For a full wallet integration guide, see
-[Wallets](/defi/wallet/index).
-</Callout>
