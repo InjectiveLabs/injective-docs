@@ -9,7 +9,7 @@ Building with AI on Injective usually means stitching together several moving pa
 a command-line interface (CLI),
 one or more Model Context Protocol (MCP) servers, and
 harness-friendly agent skills for tools such as Codex or Claude Code.
-`@bguiz/ainj` packages those pieces into a single install,
+`@injectivelabs/ainj` packages those pieces into a single install,
 so you can set them up once and start building faster.
 
 In this tutorial you will:
@@ -41,23 +41,11 @@ You also need:
 
 ## Get started
 
-The Injective AI SDK is open source at [bguiz/ainj](https://github.com/bguiz/ainj).
-This contains the source code for the package you are about to install.
+Install the Injective AI SDK globally with `npm`:
 
 ```shell
-npm install -g @bguiz/ainj
+npm install -g @injectivelabs/ainj
 ```
-
-<Info>
-If you would like to develop or contribute to AInj:
-
-```shell
-git clone https://github.com/bguiz/ainj.git
-cd ainj
-```
-
-However, note that this tutorial will focus on using AInj, rather than on contributing to it.
-</Info>
 
 ## What does `ainj install` configure?
 
@@ -142,8 +130,6 @@ Re-run `ainj install` to trigger a reinstallation of the agent skills.
 <Info>
 Alternatively, if you do not already have an MCP client,
 you can point an inspector at the same URL to inspect the available tools, and manually issue tool calls.
-
-See the ["Inspecting MCP servers"](https://github.com/bguiz/ainj#inspecting-mcp-servers) section in the README.
 </Info>
 
 The Injective docs MCP server should stay running, and your MCP client should be able to connect to it.
