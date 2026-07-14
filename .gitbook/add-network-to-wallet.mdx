@@ -35,6 +35,10 @@ export const AddNetworkCard = ({ kind }) => {
   const setBtn = (id, s) => setStatus((prev) => ({ ...prev, [id]: s }));
 
   const pickEvm = (flag) => {
+    // SubWallet always exposes its EVM provider at window.SubWallet, and only
+    // takes over window.ethereum when no other EVM wallet is present. Prefer the
+    // dedicated global so the SubWallet button never falls back to MetaMask.
+    if (flag === "isSubWallet" && window.SubWallet) return window.SubWallet;
     const eth = window.ethereum;
     if (!eth) return null;
     const list = eth.providers && eth.providers.length ? eth.providers : [eth];
@@ -53,12 +57,19 @@ export const AddNetworkCard = ({ kind }) => {
         params: [{ chainId: config.chainId }],
       });
     } catch (err) {
+      // 4902 = network not added yet → add it.
       if (err && err.code === 4902) {
-        await provider.request({
-          method: "wallet_addEthereumChain",
-          params: [config],
-        });
+        try {
+          await provider.request({
+            method: "wallet_addEthereumChain",
+            params: [config],
+          });
+        } catch (addError) {
+          console.error("Failed to add Injective network:", addError);
+          throw addError;
+        }
       } else {
+        console.error("Failed to switch to Injective:", err);
         throw err;
       }
     }
@@ -67,7 +78,6 @@ export const AddNetworkCard = ({ kind }) => {
   const cosmosProvider = (wallet) => {
     if (wallet === "keplr") return window.keplr;
     if (wallet === "leap") return window.leap;
-    if (wallet === "subwallet") return window.SubWallet ? window.SubWallet.cosmos : null;
     return null;
   };
 
@@ -138,7 +148,6 @@ export const AddNetworkCard = ({ kind }) => {
           wallets: [
             { id: "cos-m-keplr", name: "Keplr", logo: WALLET_LOGOS.keplr, run: () => enableCosmos("keplr", "injective-1") },
             { id: "cos-m-leap", name: "Leap", logo: WALLET_LOGOS.leap, run: () => enableCosmos("leap", "injective-1") },
-            { id: "cos-m-sw", name: "SubWallet", logo: WALLET_LOGOS.subwallet, run: () => enableCosmos("subwallet", "injective-1") },
           ],
         },
         {
@@ -147,7 +156,6 @@ export const AddNetworkCard = ({ kind }) => {
           wallets: [
             { id: "cos-t-keplr", name: "Keplr", logo: WALLET_LOGOS.keplr, run: () => enableCosmos("keplr", "injective-888") },
             { id: "cos-t-leap", name: "Leap", logo: WALLET_LOGOS.leap, run: () => enableCosmos("leap", "injective-888") },
-            { id: "cos-t-sw", name: "SubWallet", logo: WALLET_LOGOS.subwallet, run: () => enableCosmos("subwallet", "injective-888") },
           ],
         },
       ],
@@ -163,11 +171,11 @@ export const AddNetworkCard = ({ kind }) => {
             border: "1px solid rgba(77,61,255,0.22)",
             borderRadius: "16px",
             padding: "16px 18px",
-            background: "rgba(77,61,255,0.04)",
+            background: "rgba(128,128,128,0.06)",
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
-            <span style={{ fontWeight: 700, fontSize: "15px", color: "#182E4B" }}>
+            <span style={{ fontWeight: 700, fontSize: "15px", color: "inherit" }}>
               {config.title} {net.name}
             </span>
             <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>
@@ -190,9 +198,9 @@ export const AddNetworkCard = ({ kind }) => {
                   style={{
                     display: "flex", alignItems: "center", gap: "9px",
                     padding: "9px 16px 9px 10px", borderRadius: "11px",
-                    border: "1px solid rgba(24,46,75,0.15)",
-                    background: s === "error" ? "#fff0f0" : s === "done" ? "#ecfdf3" : "#fff",
-                    color: "#182E4B", fontWeight: 600, fontSize: "14px",
+                    border: "1px solid rgba(128,128,128,0.28)",
+                    background: s === "error" ? "rgba(255,0,0,0.08)" : s === "done" ? "rgba(0,200,0,0.08)" : "transparent",
+                    color: "inherit", fontWeight: 600, fontSize: "14px",
                     cursor: s === "pending" ? "wait" : "pointer",
                     minWidth: "130px",
                   }}
