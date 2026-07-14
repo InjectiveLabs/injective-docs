@@ -51,26 +51,34 @@ export const AddNetworkCard = ({ kind }) => {
       alert("Please install MetaMask or another EVM wallet.");
       throw new Error("no-evm-wallet");
     }
+    // Establish a connection first. Wallets such as SubWallet reject
+    // wallet_addEthereumChain / wallet_switchEthereumChain until the dapp is
+    // authorized, which otherwise fails silently before any prompt appears.
+    try {
+      await provider.request({ method: "eth_requestAccounts" });
+    } catch (connectError) {
+      console.error("Wallet connection was rejected:", connectError);
+      throw connectError;
+    }
+    // wallet_addEthereumChain is idempotent: it adds the network if missing and
+    // prompts a switch if it already exists, so it works as a single entry point
+    // across MetaMask, SubWallet, Rabby, and other EVM wallets.
     try {
       await provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: config.chainId }],
+        method: "wallet_addEthereumChain",
+        params: [config],
       });
-    } catch (err) {
-      // 4902 = network not added yet, so add it.
-      if (err && err.code === 4902) {
-        try {
-          await provider.request({
-            method: "wallet_addEthereumChain",
-            params: [config],
-          });
-        } catch (addError) {
-          console.error("Failed to add Injective network:", addError);
-          throw addError;
-        }
-      } else {
-        console.error("Failed to switch to Injective:", err);
-        throw err;
+    } catch (addError) {
+      // Some wallets return 4902 when the chain is not yet added even for a
+      // switch, so fall back to an explicit switch request.
+      try {
+        await provider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: config.chainId }],
+        });
+      } catch (switchError) {
+        console.error("Failed to add or switch to Injective:", addError, switchError);
+        throw switchError;
       }
     }
   };
