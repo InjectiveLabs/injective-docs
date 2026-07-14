@@ -57,7 +57,7 @@ export const AddNetworkCard = ({ kind }) => {
         params: [{ chainId: config.chainId }],
       });
     } catch (err) {
-      // 4902 = network not added yet → add it.
+      // 4902 = network not added yet, so add it.
       if (err && err.code === 4902) {
         try {
           await provider.request({
