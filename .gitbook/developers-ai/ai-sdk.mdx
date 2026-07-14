@@ -1,0 +1,166 @@
+---
+title: AI SDK
+description: >-
+    Install the Injective AI SDK to get the Injective CLI, MCP servers, and agent skills in one package.
+updatedAt: "2026-07-01"
+---
+
+Building with AI on Injective usually means stitching together several moving parts:
+a command-line interface (CLI),
+one or more Model Context Protocol (MCP) servers, and
+harness-friendly agent skills for tools such as Codex or Claude Code.
+`@injectivelabs/ainj` packages those pieces into a single install,
+so you can set them up once and start building faster.
+
+In this tutorial you will:
+
+- Install AInj
+  - Install globally via `npm`
+  - Configure AInj and your preferred harness with `ainj install`
+  - Verify your setup with `ainj status` and `ainj skills`
+- Run an Injective CLI command
+- Invoke an Injective agent skill
+- Run both Injective MCP servers
+
+## Prerequisites
+
+| Tool | Minimum version | How to check | Install link |
+| --- | --- | --- | --- |
+| Node.js | `24.0.0` | `node --version` | [Node.js](https://nodejs.org/en/download) |
+| npm | `11.0.0` | `npm --version` | [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) |
+| Git | `2.53.0` | `git --version` | [Git](https://git-scm.com/downloads) |
+| Codex | `0.139.0` | `codex --version` | [Codex](https://platform.openai.com/docs/codex) |
+| Claude Code | `2.1.81` | `claude --version` | [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) |
+
+Note that you only need one harness (Codex or Claude Code).
+
+You also need:
+
+- A terminal session with permission to install a global `npm` package
+- A local project or working directory where your harness can read configuration files
+
+## Get started
+
+Install the Injective AI SDK globally with `npm`:
+
+```shell
+npm install -g @injectivelabs/ainj
+```
+
+## What does `ainj install` configure?
+
+`ainj install` writes AInj state, configures MCP entries for supported harnesses,
+and installs bundled skills so your AI tooling can use Injective-aware prompts and transports without manual wiring.
+
+In practice, the setup flow does three useful jobs:
+
+1. It saves AInj state, including scope, ports, and default harness.
+2. It adds MCP entries for both stdio and HTTP transports to your harness configurations.
+3. It installs the agent skills so a harness can invoke them.
+
+<Info>
+You must run `ainj install` once.
+It includes interactive prompts, which are used to configure the installation.
+</Info>
+
+## Installing and configuring AInj
+
+1. Run `ainj install` in your terminal.
+2. Select the options from the installation wizard
+    - Choose `global` (recommended).
+      - Unless you want the configuration to apply only within the current directory.
+    - Keep the default ports `3001` and `3002` for the MCP servers (or choose others).
+    - Select the harnesses you want AInj to configure, such as `Codex` or `Claude Code`.
+    - Select which agent skills you wish to install.
+
+When the command finishes, you should see `AInj configured` in the terminal.
+
+## Checking your AInj setup
+
+1. Run `ainj status`
+2. Inspect the installed version, configured scope, selected ports, default harness, and agent skills.
+3. Confirm that all of these values match your expectations
+    - If any of them are incorrect, simply re-run `ainj install`.
+
+<Info>
+Note that `ainj status` only shows the number of available agent skills.
+To see the full list of available skills, run `ainj skills`.
+</Info>
+
+## Running Injective CLI commands
+
+1. Run `ainj cli version` to confirm that AInj can resolve the bundled `injectived` binary.
+2. Run `ainj cli --help` if you want to inspect the CLI surface before moving on to chain-specific commands.
+
+You should see version output for the bundled Injective CLI,
+which confirms the binary is installed and callable through AInj.
+
+<Info>
+Note that `ainj injectived` is an alias for `ainj cli`.
+</Info>
+
+## Running an Injective agent skill from your harness
+
+1. Start your preferred harness (e.g. Codex or Claude Code).
+2. Enter a prompt that references a previously installed agent skill
+    - For example, if you want to build a smart contract or dApp on Injective:
+    - In Codex, use `$injective-evm-developer (... your smart contract/ dApp idea)`
+    - In Claude Code, use `/injective-evm-developer (... your smart contract/ dApp idea)`
+3. Thereafter the agent skill will be loaded into the context window,
+   and you can interact with it.
+
+<Info>
+Note that your harness should provide tab completion for skill names,
+e.g. when you type `$inj` (Codex) or `/inj` (Claude Code) there should be several injective-related
+agent skills listed for you to choose from.
+
+If you do this, and skills with matching names do not appear,
+you likely have not installed them yet.
+Re-run `ainj install` to trigger a reinstallation of the agent skills.
+</Info>
+
+## Starting the documentation MCP server
+
+1. Run `ainj mcp docs http` in a dedicated terminal window.
+    - Keep this terminal open while the server is running.
+2. Connect an MCP client to `http://localhost:3002/mcp`.
+    - Change the port number if you have configured a non-default value.
+3. Issue some MCP tool calls.
+
+<Info>
+Alternatively, if you do not already have an MCP client,
+you can point an inspector at the same URL to inspect the available tools, and manually issue tool calls.
+</Info>
+
+The Injective docs MCP server should stay running, and your MCP client should be able to connect to it.
+
+## Starting the main Injective MCP server
+
+1. Run `ainj mcp main http`.
+    - Open another terminal window so you can keep the docs server running (if you want both MCP servers at the same time).
+    - Keep this terminal open while the server is running.
+2. Connect an MCP client to `http://localhost:3001/mcp`
+    - Change the port number if you have configured a non-default value.
+3. Issue some MCP tool calls
+
+## Next steps
+
+You now have AInj installed, configured, and running across workflows spanning CLI, agent skills, and MCP servers.
+
+Here is what you learnt:
+
+- how to install AInj as a single entry point for Injective AI development
+- how to configure harness integrations and MCP ports with `ainj install`
+- how to verify the setup with `ainj status` and `ainj skills`
+- how to use the CLI, agent skills, and both MCP servers
+
+From here, continue with the rest of the AI developer docs:
+
+- [AI developers overview](/developers-ai/)
+- [Injective main MCP server](/developers-ai/mcp)
+- [Injective documentation MCP server](/developers-ai/documentation-mcp)
+- [Injective CLI agent skill](/developers-ai/injective-cli-skill)
+- [Injective EVM Developer agent skill](/developers-ai/injective-evm-developer-skill)
+- [Injective MCP Servers agent skill](/developers-ai/injective-mcp-servers-skill)
+- [Injective Trading agent skills](/developers-ai/injective-trading-skills)
+- [Injective x402](/developers-ai/x402)
