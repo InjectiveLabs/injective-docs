@@ -43,7 +43,6 @@
             "group": "INJECTIVE",
             "pages": [
               "index",
-              "add-network-to-wallet",
               {
                 "group": "DeFi",
                 "icon": "coins",
