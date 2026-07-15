@@ -1,19 +1,18 @@
 ---
 title: Add Network to Your Wallet
 description: >-
-  Add Injective networks to your browser wallet. Configuration for
-  Injective EVM (MetaMask and other EVM wallets) and Injective native
-  (Keplr, Leap), covering mainnet and testnet.
+  Add Injective networks to your browser wallet in one click. Interactive
+  wallet buttons for Injective EVM (MetaMask and other EVM wallets) and
+  Injective native (Keplr, Leap), covering mainnet and testnet.
 icon: wallet
 updatedAt: "2026-07-15"
 ---
 
-Add Injective to your browser wallet using the configuration details below.
-Injective exposes two interoperable interfaces:
+Add Injective to your browser wallet with a single click, or use the manual
+configuration details below. Injective exposes two interoperable interfaces:
 
 - **Injective EVM** is an Ethereum-compatible JSON-RPC layer. Use it with EVM
-  wallets such as MetaMask, Rabby, SubWallet, or any injected `window.ethereum`
-  wallet.
+  wallets such as MetaMask, Rabby, or any injected `window.ethereum` wallet.
 - **Injective (CosmWasm / native)** is the native Cosmos SDK chain. Use it with
   Cosmos wallets such as Keplr and Leap.
 
@@ -26,10 +25,126 @@ chain IDs but share the same underlying state. See
 
 ## Injective EVM
 
-Injective EVM works with EVM wallets like MetaMask, Rabby, and SubWallet. Open
-your wallet's network settings, choose **Add a network manually**, and paste in
-the values below. If the network is already added, your wallet will prompt a
-switch instead.
+Injective EVM works with EVM wallets like MetaMask, Rabby, and SubWallet. Pick a
+network and click your wallet — it will prompt you to add or switch to Injective.
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective EVM Mainnet</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID 1776</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={() => {
+        const eth = typeof window !== "undefined" ? window.ethereum : null;
+        if (!eth) { alert("Please install MetaMask or another EVM wallet."); return; }
+        const list = eth.providers && eth.providers.length ? eth.providers : [eth];
+        const provider = list.find((p) => p && p.isMetaMask) || eth;
+        provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x6f0",
+              chainName: "Injective",
+              rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+              nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+              blockExplorerUrls: ["https://blockscout.injective.network/"]
+            }]
+          }))
+          .catch((e) => console.error("Add network failed:", e));
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "130px" }}
+    >
+      🦊 Add to MetaMask
+    </button>
+    <button
+      type="button"
+      onClick={() => {
+        const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
+        if (!provider) { alert("Please install SubWallet."); return; }
+        provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x6f0",
+              chainName: "Injective",
+              rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+              nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+              blockExplorerUrls: ["https://blockscout.injective.network/"]
+            }]
+          }))
+          .catch((e) => console.error("Add network failed:", e));
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "130px" }}
+    >
+      🟣 Add to SubWallet
+    </button>
+  </div>
+</div>
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective EVM Testnet</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID 1439</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={() => {
+        const eth = typeof window !== "undefined" ? window.ethereum : null;
+        if (!eth) { alert("Please install MetaMask or another EVM wallet."); return; }
+        const list = eth.providers && eth.providers.length ? eth.providers : [eth];
+        const provider = list.find((p) => p && p.isMetaMask) || eth;
+        provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x59f",
+              chainName: "Injective Testnet",
+              rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+              nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+              blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+            }]
+          }))
+          .catch((e) => console.error("Add network failed:", e));
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "130px" }}
+    >
+      🦊 Add to MetaMask
+    </button>
+    <button
+      type="button"
+      onClick={() => {
+        const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
+        if (!provider) { alert("Please install SubWallet."); return; }
+        provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x59f",
+              chainName: "Injective Testnet",
+              rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+              nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+              blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+            }]
+          }))
+          .catch((e) => console.error("Add network failed:", e));
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "130px" }}
+    >
+      🟣 Add to SubWallet
+    </button>
+  </div>
+</div>
+
+<Info>
+The button uses the standard `wallet_addEthereumChain` request. If the network
+is already added, your wallet shows a switch prompt instead. If nothing happens,
+add it manually with the values below.
+</Info>
+
+### Manual configuration
 
 <Tabs>
 
@@ -64,17 +179,81 @@ switch instead.
 
 </Tabs>
 
-<Info>
-Programmatic dApps can add the network with the standard
-`wallet_addEthereumChain` request. See
-[Connect with MetaMask](/developers-evm/dapps/connect-with-metamask) for a code example.
-</Info>
-
 ## Injective (CosmWasm / Native)
 
 The native Injective chain works with Cosmos wallets like Keplr and Leap.
-Injective ships built into both wallets, so it is available out of the box —
-just open the wallet, search for **Injective**, and enable the chain.
+Injective ships built into both wallets, so it is available out of the box.
+Pick a network and click your wallet to unlock the chain.
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective Mainnet</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID injective-1</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={() => {
+        const p = typeof window !== "undefined" ? window.keplr : null;
+        if (!p) { alert("Please install the Keplr wallet."); return; }
+        p.enable("injective-1").catch((e) => console.error("Keplr enable failed:", e));
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "130px" }}
+    >
+      🌌 Add to Keplr
+    </button>
+    <button
+      type="button"
+      onClick={() => {
+        const p = typeof window !== "undefined" ? window.leap : null;
+        if (!p) { alert("Please install the Leap wallet."); return; }
+        p.enable("injective-1").catch((e) => console.error("Leap enable failed:", e));
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "130px" }}
+    >
+      🐸 Add to Leap
+    </button>
+  </div>
+</div>
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective Testnet</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID injective-888</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={() => {
+        const p = typeof window !== "undefined" ? window.keplr : null;
+        if (!p) { alert("Please install the Keplr wallet."); return; }
+        p.enable("injective-888").catch((e) => console.error("Keplr enable failed:", e));
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "130px" }}
+    >
+      🌌 Add to Keplr
+    </button>
+    <button
+      type="button"
+      onClick={() => {
+        const p = typeof window !== "undefined" ? window.leap : null;
+        if (!p) { alert("Please install the Leap wallet."); return; }
+        p.enable("injective-888").catch((e) => console.error("Leap enable failed:", e));
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "130px" }}
+    >
+      🐸 Add to Leap
+    </button>
+  </div>
+</div>
+
+<Info>
+Keplr and Leap include Injective by default, so the button simply unlocks the
+chain in your wallet. For a full wallet integration guide, see
+[Wallets](/defi/wallet/index).
+</Info>
+
+### Manual configuration
 
 <Tabs>
 
@@ -114,5 +293,3 @@ interface uses the numeric chain ID `1439`. Both map to the same testnet.
 </Tab>
 
 </Tabs>
-
-For a full wallet integration guide, see [Wallets](/defi/wallet/index).
