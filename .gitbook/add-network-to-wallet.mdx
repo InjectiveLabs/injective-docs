@@ -5,7 +5,7 @@ description: >-
   wallet buttons for Injective EVM (MetaMask and other EVM wallets) and
   Injective native (Keplr, Leap), covering mainnet and testnet.
 icon: wallet
-updatedAt: "2026-07-15"
+updatedAt: "2026-07-20"
 ---
 
 Add Injective to your browser wallet with a single click, or use the manual
@@ -36,51 +36,127 @@ network and click your wallet — it will prompt you to add or switch to Injecti
   <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
     <button
       type="button"
-      onClick={() => {
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "Connecting...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
         const eth = typeof window !== "undefined" ? window.ethereum : null;
-        if (!eth) { alert("Please install MetaMask or another EVM wallet."); return; }
+        if (!eth) { finish("Wallet not found", false); alert("Please install MetaMask or another EVM wallet."); return; }
         const list = eth.providers && eth.providers.length ? eth.providers : [eth];
         const provider = list.find((p) => p && p.isMetaMask) || eth;
         provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0x6f0",
-              chainName: "Injective",
-              rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
-              nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-              blockExplorerUrls: ["https://blockscout.injective.network/"]
-            }]
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x6f0" }]
+          }).catch((error) => {
+            if (error && error.code === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x6f0",
+                  chainName: "Injective",
+                  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
           }))
-          .catch((e) => console.error("Add network failed:", e));
+          .then(() => {
+            label.textContent = "Connected ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            finish(label.textContent, false);
+          });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
       <img src="/img/wallets/metamask.svg" alt="MetaMask" width="22" height="22" style={{ flexShrink: 0 }} />
-      Add to MetaMask
+      <span data-wallet-label aria-live="polite">Add to MetaMask</span>
     </button>
     <button
       type="button"
-      onClick={() => {
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "Connecting...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
         const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
-        if (!provider) { alert("Please install SubWallet."); return; }
+        if (!provider) { finish("Wallet not found", false); alert("Please install SubWallet."); return; }
         provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0x6f0",
-              chainName: "Injective",
-              rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
-              nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-              blockExplorerUrls: ["https://blockscout.injective.network/"]
-            }]
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x6f0" }]
+          }).catch((error) => {
+            if (error && error.code === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x6f0",
+                  chainName: "Injective",
+                  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
           }))
-          .catch((e) => console.error("Add network failed:", e));
+          .then(() => {
+            label.textContent = "Connected ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            finish(label.textContent, false);
+          });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
       <img src="/img/wallets/subwallet.svg" alt="SubWallet" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
-      Add to SubWallet
+      <span data-wallet-label aria-live="polite">Add to SubWallet</span>
     </button>
   </div>
 </div>
@@ -93,51 +169,127 @@ network and click your wallet — it will prompt you to add or switch to Injecti
   <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
     <button
       type="button"
-      onClick={() => {
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "Connecting...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
         const eth = typeof window !== "undefined" ? window.ethereum : null;
-        if (!eth) { alert("Please install MetaMask or another EVM wallet."); return; }
+        if (!eth) { finish("Wallet not found", false); alert("Please install MetaMask or another EVM wallet."); return; }
         const list = eth.providers && eth.providers.length ? eth.providers : [eth];
         const provider = list.find((p) => p && p.isMetaMask) || eth;
         provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0x59f",
-              chainName: "Injective Testnet",
-              rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
-              nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-              blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
-            }]
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x59f" }]
+          }).catch((error) => {
+            if (error && error.code === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x59f",
+                  chainName: "Injective Testnet",
+                  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
           }))
-          .catch((e) => console.error("Add network failed:", e));
+          .then(() => {
+            label.textContent = "Connected ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            finish(label.textContent, false);
+          });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
       <img src="/img/wallets/metamask.svg" alt="MetaMask" width="22" height="22" style={{ flexShrink: 0 }} />
-      Add to MetaMask
+      <span data-wallet-label aria-live="polite">Add to MetaMask</span>
     </button>
     <button
       type="button"
-      onClick={() => {
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "Connecting...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
         const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
-        if (!provider) { alert("Please install SubWallet."); return; }
+        if (!provider) { finish("Wallet not found", false); alert("Please install SubWallet."); return; }
         provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0x59f",
-              chainName: "Injective Testnet",
-              rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
-              nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-              blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
-            }]
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x59f" }]
+          }).catch((error) => {
+            if (error && error.code === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x59f",
+                  chainName: "Injective Testnet",
+                  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
           }))
-          .catch((e) => console.error("Add network failed:", e));
+          .then(() => {
+            label.textContent = "Connected ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            finish(label.textContent, false);
+          });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
       <img src="/img/wallets/subwallet.svg" alt="SubWallet" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
-      Add to SubWallet
+      <span data-wallet-label aria-live="polite">Add to SubWallet</span>
     </button>
   </div>
 </div>
@@ -197,27 +349,89 @@ Pick a network and click your wallet to unlock the chain.
   <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
     <button
       type="button"
-      onClick={() => {
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "Connecting...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
         const p = typeof window !== "undefined" ? window.keplr : null;
-        if (!p) { alert("Please install the Keplr wallet."); return; }
-        p.enable("injective-1").catch((e) => console.error("Keplr enable failed:", e));
+        if (!p) { finish("Wallet not found", false); alert("Please install the Keplr wallet."); return; }
+        p.enable("injective-1")
+          .then(() => {
+            label.textContent = "Connected ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Keplr enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            finish(label.textContent, false);
+          });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
       <img src="/img/wallets/keplr.png" alt="Keplr" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
-      Add to Keplr
+      <span data-wallet-label aria-live="polite">Add to Keplr</span>
     </button>
     <button
       type="button"
-      onClick={() => {
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "Connecting...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
         const p = typeof window !== "undefined" ? window.leap : null;
-        if (!p) { alert("Please install the Leap wallet."); return; }
-        p.enable("injective-1").catch((e) => console.error("Leap enable failed:", e));
+        if (!p) { finish("Wallet not found", false); alert("Please install the Leap wallet."); return; }
+        p.enable("injective-1")
+          .then(() => {
+            label.textContent = "Connected ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Leap enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            finish(label.textContent, false);
+          });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
       <img src="/img/wallets/leap.svg" alt="Leap" width="22" height="22" style={{ flexShrink: 0 }} />
-      Add to Leap
+      <span data-wallet-label aria-live="polite">Add to Leap</span>
     </button>
   </div>
 </div>
@@ -230,27 +444,89 @@ Pick a network and click your wallet to unlock the chain.
   <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
     <button
       type="button"
-      onClick={() => {
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "Connecting...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
         const p = typeof window !== "undefined" ? window.keplr : null;
-        if (!p) { alert("Please install the Keplr wallet."); return; }
-        p.enable("injective-888").catch((e) => console.error("Keplr enable failed:", e));
+        if (!p) { finish("Wallet not found", false); alert("Please install the Keplr wallet."); return; }
+        p.enable("injective-888")
+          .then(() => {
+            label.textContent = "Connected ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Keplr enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            finish(label.textContent, false);
+          });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
       <img src="/img/wallets/keplr.png" alt="Keplr" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
-      Add to Keplr
+      <span data-wallet-label aria-live="polite">Add to Keplr</span>
     </button>
     <button
       type="button"
-      onClick={() => {
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "Connecting...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
         const p = typeof window !== "undefined" ? window.leap : null;
-        if (!p) { alert("Please install the Leap wallet."); return; }
-        p.enable("injective-888").catch((e) => console.error("Leap enable failed:", e));
+        if (!p) { finish("Wallet not found", false); alert("Please install the Leap wallet."); return; }
+        p.enable("injective-888")
+          .then(() => {
+            label.textContent = "Connected ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Leap enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            finish(label.textContent, false);
+          });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
       <img src="/img/wallets/leap.svg" alt="Leap" width="22" height="22" style={{ flexShrink: 0 }} />
-      Add to Leap
+      <span data-wallet-label aria-live="polite">Add to Leap</span>
     </button>
   </div>
 </div>
