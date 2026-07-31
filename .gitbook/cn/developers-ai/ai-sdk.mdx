@@ -1,0 +1,165 @@
+---
+title: AI SDK
+description: >-
+    安装 Injective AI SDK，一次性获取 Injective CLI、MCP 服务器与 agent skills。
+updatedAt: "2026-07-01"
+---
+
+在 Injective 上使用 AI 进行开发通常需要拼装多个部分：
+命令行工具（CLI）、
+一个或多个 Model Context Protocol（MCP）服务器，以及
+面向 Codex、Claude Code 等 harness 的 agent skills。
+`@injectivelabs/ainj` 将这些组件打包为一次安装，
+让你一次配置完成，更快地开始构建。
+
+在本教程中，你将：
+
+- 安装 AInj
+  - 通过 `npm` 全局安装
+  - 使用 `ainj install` 配置 AInj 与你偏好的 harness
+  - 使用 `ainj status` 与 `ainj skills` 验证安装
+- 运行一条 Injective CLI 命令
+- 调用一个 Injective agent skill
+- 同时运行两个 Injective MCP 服务器
+
+## 前置条件
+
+| 工具 | 最低版本 | 检查命令 | 安装链接 |
+| --- | --- | --- | --- |
+| Node.js | `24.0.0` | `node --version` | [Node.js](https://nodejs.org/en/download) |
+| npm | `11.0.0` | `npm --version` | [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) |
+| Git | `2.53.0` | `git --version` | [Git](https://git-scm.com/downloads) |
+| Codex | `0.139.0` | `codex --version` | [Codex](https://platform.openai.com/docs/codex) |
+| Claude Code | `2.1.81` | `claude --version` | [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) |
+
+Codex 和 Claude Code 只需其中一个 harness 即可。
+
+你还需要：
+
+- 一个具备安装全局 `npm` 包权限的终端会话
+- 一个本地项目或工作目录，让 harness 可以读取配置文件
+
+## 快速开始
+
+使用 `npm` 全局安装 Injective AI SDK：
+
+```shell
+npm install -g @injectivelabs/ainj
+```
+
+## `ainj install` 会配置什么？
+
+`ainj install` 会写入 AInj 状态，为所支持的 harness 配置 MCP 条目，
+并安装内置的 skills，让你的 AI 工具无需手动接线即可使用 Injective 相关的提示词与传输方式。
+
+在实际操作中，安装流程做了三件有用的事：
+
+1. 保存 AInj 状态，包括 scope、端口、默认 harness。
+2. 为你的 harness 配置添加 stdio 与 HTTP 传输的 MCP 条目。
+3. 安装 agent skills，使 harness 可以调用它们。
+
+<Info>
+你必须运行一次 `ainj install`。
+它包含交互式提示，用于配置安装。
+</Info>
+
+## 安装与配置 AInj
+
+1. 在终端中运行 `ainj install`。
+2. 在安装向导中选择相应选项
+    - 选择 `global`（推荐）。
+      - 除非你希望配置仅在当前目录生效。
+    - 保留 MCP 服务器的默认端口 `3001` 与 `3002`（或选择其他端口）。
+    - 选择你希望 AInj 配置的 harness，例如 `Codex` 或 `Claude Code`。
+    - 选择你希望安装的 agent skills。
+
+命令完成时，你应能在终端看到 `AInj configured`。
+
+## 检查 AInj 安装
+
+1. 运行 `ainj status`。
+2. 查看已安装的版本、已配置的 scope、所选端口、默认 harness，以及 agent skills。
+3. 确认这些值都符合预期
+    - 如果有任何项不正确，只需重新运行 `ainj install`。
+
+<Info>
+注意，`ainj status` 只显示可用 agent skills 的数量。
+要查看完整的可用 skills 列表，请运行 `ainj skills`。
+</Info>
+
+## 运行 Injective CLI 命令
+
+1. 运行 `ainj cli version`，确认 AInj 能定位到内置的 `injectived` 可执行文件。
+2. 如果想在使用链相关命令之前查看 CLI 命令列表，运行 `ainj cli --help`。
+
+你应该会看到内置 Injective CLI 的版本输出，
+这表明可执行文件已安装并可通过 AInj 调用。
+
+<Info>
+注意，`ainj injectived` 是 `ainj cli` 的别名。
+</Info>
+
+## 通过 harness 运行一个 Injective agent skill
+
+1. 启动你偏好的 harness（例如 Codex 或 Claude Code）。
+2. 输入一个引用先前已安装 agent skill 的提示词
+    - 例如，如果你想在 Injective 上构建智能合约或 dApp：
+    - 在 Codex 中使用 `$injective-evm-developer （… 你的智能合约 / dApp 思路）`
+    - 在 Claude Code 中使用 `/injective-evm-developer （… 你的智能合约 / dApp 思路）`
+3. 之后 agent skill 会被加载到上下文窗口中，
+   你就可以与之交互。
+
+<Info>
+注意，harness 应该会为 skill 名称提供 Tab 补全，
+即当你输入 `$inj`（Codex）或 `/inj`（Claude Code）时，应有若干 Injective 相关的
+agent skills 供你选择。
+
+如果这样做后没有出现名称匹配的 skills，
+很可能是你还没有安装它们。
+重新运行 `ainj install` 以重新安装 agent skills。
+</Info>
+
+## 启动文档 MCP 服务器
+
+1. 在一个专门的终端窗口中运行 `ainj mcp docs http`。
+    - 服务器运行期间保持该终端打开。
+2. 将 MCP 客户端连接到 `http://localhost:3002/mcp`。
+    - 如果你配置了非默认端口，请相应修改端口号。
+3. 发起一些 MCP 工具调用。
+
+<Info>
+或者，如果你还没有 MCP 客户端，
+可以将一个 inspector 指向同一 URL，用来查看可用工具并手动发起工具调用。
+</Info>
+
+Injective 文档 MCP 服务器应持续运行，你的 MCP 客户端应能连接到它。
+
+## 启动主 Injective MCP 服务器
+
+1. 运行 `ainj mcp main http`。
+    - 打开另一个终端窗口，以便同时运行文档服务器（如果你希望两个 MCP 服务器同时运行）。
+    - 服务器运行期间保持该终端打开。
+2. 将 MCP 客户端连接到 `http://localhost:3001/mcp`
+    - 如果你配置了非默认端口，请相应修改端口号。
+3. 发起一些 MCP 工具调用
+
+## 下一步
+
+你已经完成 AInj 的安装、配置，并让它在涵盖 CLI、agent skills 与 MCP 服务器的多种工作流中运行。
+
+以下是你学到的内容：
+
+- 如何将 AInj 作为 Injective AI 开发的统一入口进行安装
+- 如何通过 `ainj install` 配置 harness 集成与 MCP 端口
+- 如何通过 `ainj status` 与 `ainj skills` 验证安装
+- 如何使用 CLI、agent skills 与两个 MCP 服务器
+
+从这里开始，继续阅读其他 AI 开发者文档：
+
+- [AI 开发者概览](/cn/developers-ai/)
+- [Injective 主 MCP 服务器](/cn/developers-ai/mcp)
+- [Injective 文档 MCP 服务器](/cn/developers-ai/documentation-mcp)
+- [Injective CLI agent skill](/cn/developers-ai/injective-cli-skill)
+- [Injective EVM Developer agent skill](/cn/developers-ai/injective-evm-developer-skill)
+- [Injective MCP Servers agent skill](/cn/developers-ai/injective-mcp-servers-skill)
+- [Injective Trading agent skills](/cn/developers-ai/injective-trading-skills)

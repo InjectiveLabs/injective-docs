@@ -1,0 +1,566 @@
+---
+title: 添加网络到钱包
+description: >-
+  一键将 Injective 网络添加到浏览器钱包。为 Injective EVM（MetaMask 及其他 EVM 钱包）和
+  Injective 原生链（Keplr、Leap）提供交互式钱包按钮，涵盖主网与测试网。
+icon: wallet
+updatedAt: "2026-07-20"
+---
+
+一键将 Injective 添加到浏览器钱包，或使用下方的手动配置。Injective 提供两个可互操作的接口：
+
+- **Injective EVM** 是兼容以太坊的 JSON-RPC 层。可与 MetaMask、Rabby 或任何注入 `window.ethereum` 的 EVM 钱包配合使用。
+- **Injective（CosmWasm / 原生）** 是原生 Cosmos SDK 链。可与 Keplr、Leap 等 Cosmos 钱包配合使用。
+
+<Info>
+Injective EVM 与 Injective 原生链映射到同一个网络。它们使用不同的 chain ID，但共享底层状态。完整参考请参见
+[Network Information](/developers/network-information) 与
+[EVM Network Information](/developers-evm/network-information)。
+</Info>
+
+## Injective EVM
+
+Injective EVM 可与 MetaMask、Rabby、SubWallet 等 EVM 钱包配合使用。选择一个网络并点击钱包按钮 — 钱包会提示你添加或切换到 Injective。
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective EVM 主网</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID 1776</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "连接中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const eth = typeof window !== "undefined" ? window.ethereum : null;
+        if (!eth) { finish("未找到钱包", false); alert("请安装 MetaMask 或其他 EVM 钱包。"); return; }
+        const list = eth.providers && eth.providers.length ? eth.providers : [eth];
+        const provider = list.find((p) => p && p.isMetaMask) || eth;
+        provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x6f0" }]
+          }).catch((error) => {
+            if (error && error.code === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x6f0",
+                  chainName: "Injective",
+                  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => {
+            label.textContent = "已连接 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = error && error.code === 4001 ? "已取消请求" : "重试";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    >
+      <img src="/img/wallets/metamask.svg" alt="MetaMask" width="22" height="22" style={{ flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">添加到 MetaMask</span>
+    </button>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "连接中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
+        if (!provider) { finish("未找到钱包", false); alert("请安装 SubWallet。"); return; }
+        provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x6f0" }]
+          }).catch((error) => {
+            if (error && error.code === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x6f0",
+                  chainName: "Injective",
+                  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => {
+            label.textContent = "已连接 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = error && error.code === 4001 ? "已取消请求" : "重试";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    >
+      <img src="/img/wallets/subwallet.svg" alt="SubWallet" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
+      <span data-wallet-label aria-live="polite">添加到 SubWallet</span>
+    </button>
+  </div>
+</div>
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective EVM 测试网</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID 1439</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "连接中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const eth = typeof window !== "undefined" ? window.ethereum : null;
+        if (!eth) { finish("未找到钱包", false); alert("请安装 MetaMask 或其他 EVM 钱包。"); return; }
+        const list = eth.providers && eth.providers.length ? eth.providers : [eth];
+        const provider = list.find((p) => p && p.isMetaMask) || eth;
+        provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x59f" }]
+          }).catch((error) => {
+            if (error && error.code === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x59f",
+                  chainName: "Injective Testnet",
+                  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => {
+            label.textContent = "已连接 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = error && error.code === 4001 ? "已取消请求" : "重试";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    >
+      <img src="/img/wallets/metamask.svg" alt="MetaMask" width="22" height="22" style={{ flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">添加到 MetaMask</span>
+    </button>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "连接中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
+        if (!provider) { finish("未找到钱包", false); alert("请安装 SubWallet。"); return; }
+        provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x59f" }]
+          }).catch((error) => {
+            if (error && error.code === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x59f",
+                  chainName: "Injective Testnet",
+                  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => {
+            label.textContent = "已连接 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = error && error.code === 4001 ? "已取消请求" : "重试";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    >
+      <img src="/img/wallets/subwallet.svg" alt="SubWallet" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
+      <span data-wallet-label aria-live="polite">添加到 SubWallet</span>
+    </button>
+  </div>
+</div>
+
+<Info>
+按钮使用标准的 `wallet_addEthereumChain` 请求。如果网络已添加，钱包会显示切换提示。如果没有反应，请使用下方的值手动添加。
+</Info>
+
+### 手动配置
+
+<Tabs>
+
+<Tab title="Injective EVM 主网" icon="server">
+
+| 属性 | 值 |
+| --- | --- |
+| 网络名称 | Injective |
+| Chain ID | `1776` |
+| RPC URL | `https://sentry.evm-rpc.injective.network/` |
+| WS 端点 | `wss://sentry.evm-ws.injective.network` |
+| 货币符号 | `INJ` |
+| 精度 | `18` |
+| 区块浏览器 | `https://blockscout.injective.network/` |
+
+</Tab>
+
+<Tab title="Injective EVM 测试网" icon="flask-vial">
+
+| 属性 | 值 |
+| --- | --- |
+| 网络名称 | Injective Testnet |
+| Chain ID | `1439` |
+| RPC URL | `https://k8s.testnet.json-rpc.injective.network/` |
+| WS 端点 | `wss://k8s.testnet.ws.injective.network/` |
+| 货币符号 | `INJ` |
+| 精度 | `18` |
+| 区块浏览器 | `https://testnet.blockscout.injective.network/` |
+| 水龙头 | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+
+</Tab>
+
+</Tabs>
+
+## Injective（CosmWasm / 原生）
+
+Injective 原生链可与 Keplr、Leap 等 Cosmos 钱包配合使用。Injective 已内置于这两个钱包中，因此开箱即用。选择一个网络并点击钱包按钮以解锁该链。
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective 主网</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID injective-1</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "连接中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const p = typeof window !== "undefined" ? window.keplr : null;
+        if (!p) { finish("未找到钱包", false); alert("请安装 Keplr 钱包。"); return; }
+        p.enable("injective-1")
+          .then(() => {
+            label.textContent = "已连接 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Keplr enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "已取消请求" : "重试";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    >
+      <img src="/img/wallets/keplr.png" alt="Keplr" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
+      <span data-wallet-label aria-live="polite">添加到 Keplr</span>
+    </button>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "连接中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const p = typeof window !== "undefined" ? window.leap : null;
+        if (!p) { finish("未找到钱包", false); alert("请安装 Leap 钱包。"); return; }
+        p.enable("injective-1")
+          .then(() => {
+            label.textContent = "已连接 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Leap enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "已取消请求" : "重试";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    >
+      <img src="/img/wallets/leap.svg" alt="Leap" width="22" height="22" style={{ flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">添加到 Leap</span>
+    </button>
+  </div>
+</div>
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective 测试网</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID injective-888</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "连接中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const p = typeof window !== "undefined" ? window.keplr : null;
+        if (!p) { finish("未找到钱包", false); alert("请安装 Keplr 钱包。"); return; }
+        p.enable("injective-888")
+          .then(() => {
+            label.textContent = "已连接 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Keplr enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "已取消请求" : "重试";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    >
+      <img src="/img/wallets/keplr.png" alt="Keplr" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
+      <span data-wallet-label aria-live="polite">添加到 Keplr</span>
+    </button>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "连接中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const p = typeof window !== "undefined" ? window.leap : null;
+        if (!p) { finish("未找到钱包", false); alert("请安装 Leap 钱包。"); return; }
+        p.enable("injective-888")
+          .then(() => {
+            label.textContent = "已连接 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Leap enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "已取消请求" : "重试";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    >
+      <img src="/img/wallets/leap.svg" alt="Leap" width="22" height="22" style={{ flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">添加到 Leap</span>
+    </button>
+  </div>
+</div>
+
+<Info>
+Keplr 和 Leap 默认包含 Injective，因此按钮只是解锁钱包中的该链。完整的钱包接入指南请参见
+[钱包](/cn/defi/wallet/index)。
+</Info>
+
+### 手动配置
+
+<Tabs>
+
+<Tab title="Injective 主网" icon="server">
+
+| 属性 | 值 |
+| --- | --- |
+| Chain ID | `injective-1` |
+| RPC / 节点 | `https://sentry.tm.injective.network:443` |
+| 货币符号 | `INJ` |
+| 精度 | `18` |
+| 浏览器 | [`injscan.com`](https://injscan.com/) |
+
+<Info>
+Injective 原生链使用 chain ID `injective-1`。它的 EVM 接口使用数字型 chain ID `1776`。两者映射到同一个主网。
+</Info>
+
+</Tab>
+
+<Tab title="Injective 测试网" icon="flask-vial">
+
+| 属性 | 值 |
+| --- | --- |
+| Chain ID | `injective-888` |
+| RPC / 节点 | `https://testnet.sentry.tm.injective.network:443` |
+| 货币符号 | `INJ` |
+| 精度 | `18` |
+| 浏览器 | [`testnet.explorer.injective.network`](https://testnet.explorer.injective.network/) |
+| 水龙头 | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+
+<Info>
+Injective 原生链在测试网上使用 chain ID `injective-888`。它的 EVM 接口使用数字型 chain ID `1439`。两者映射到同一个测试网。
+</Info>
+
+</Tab>
+
+</Tabs>
