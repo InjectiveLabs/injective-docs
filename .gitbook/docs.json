@@ -746,6 +746,7 @@
             "group": "INJECTIVE",
             "pages": [
               "cn/index",
+              "cn/add-network-to-wallet",
               {
                 "group": "DeFi",
                 "icon": "coins",
@@ -891,6 +892,7 @@
                 "expanded": false,
                 "pages": [
                   "cn/developers-ai/index",
+                  "cn/developers-ai/ai-sdk",
                   "cn/developers-ai/injective-cli-skill",
                   "cn/developers-ai/injective-evm-developer-skill",
                   "cn/developers-ai/injective-mcp-servers-skill",
