@@ -89,6 +89,14 @@
                     ]
                   },
                   {
+                    "group": "Tokenization",
+                    "pages": [
+                      "defi/tokenization/index",
+                      "defi/tokenization/permissioned-assets",
+                      "defi/tokenization/iassets"
+                    ]
+                  },
+                  {
                     "group": "Bridge",
                     "pages": [
                       "defi/bridge",
