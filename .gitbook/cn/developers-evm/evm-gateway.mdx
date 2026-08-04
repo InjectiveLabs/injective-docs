@@ -1,0 +1,248 @@
+---
+title: EVM Gateway
+description: 运行 Injective 的独立 EVM JSON-RPC 网关，通过以太坊兼容的 RPC 访问 Injective EVM 数据。
+updatedAt: "2026-06-09"
+---
+
+## 关于
+
+`evm-gateway` 是一个独立的 Injective EVM JSON-RPC 服务器。
+
+它从 CometBFT RPC 读取区块数据，通过 Injective gRPC 进行模块查询，将与 EVM 相关的数据索引到本地 KV 存储中，并尽可能从本地的已索引状态提供以太坊风格的 RPC 服务。
+
+在运维层面，它应作为 Injective 节点的旁挂服务运行，而不是在节点内部运行。它取代了原本不适合在生产环境中运行的内置 JSON-RPC 服务器。
+
+**特点：**
+
+- 对已索引的 EVM 区块、receipts、交易和日志实行缓存优先
+- 支持历史数据回填与向前同步
+- 不提供由 keyring 支持的 `personal_*` API
+- 支持 HTTP 与 WebSocket JSON-RPC
+
+## 安装
+
+源码与版本发布：[github.com/InjectiveLabs/evm-gateway/releases](https://github.com/InjectiveLabs/evm-gateway/releases)
+
+运行 `evm-gateway` 的要求：
+
+- 从源码构建时需要 Go 工具链和 `make`
+- 一个正在运行的 Injective 节点可供访问：
+  - CometBFT RPC 端点
+  - gRPC 端点
+  - 用于历史回填的归档节点访问权限
+
+### 使用仓库
+
+```bash
+git clone https://github.com/InjectiveLabs/evm-gateway.git
+cd evm-gateway
+make install
+```
+
+### 预构建的 Docker 镜像
+
+```bash
+docker run -it --rm injectivelabs/evm-gateway:latest --help
+```
+
+## 配置
+
+配置由环境变量驱动，前缀为 `WEB3INJ_`。仓库中的 `.env.example` 是参考。
+
+最小可用配置：
+
+```bash
+export WEB3INJ_CHAIN_ID=injective-1
+export WEB3INJ_COMET_RPC=http://127.0.0.1:26657
+export WEB3INJ_GRPC_ADDR=127.0.0.1:9090
+export WEB3INJ_EARLIEST_BLOCK=127250000
+export WEB3INJ_DATA_DIR=evm-gateway-data
+export WEB3INJ_JSONRPC_API=eth,net,web3,debug
+```
+
+如果与 `injectived` 一起运行，请不要绑定到相同端口。一个典型的旁挂配置是：
+
+```bash
+export WEB3INJ_JSONRPC_ADDRESS=0.0.0.0:8645
+export WEB3INJ_JSONRPC_WS_ADDRESS=0.0.0.0:8646
+```
+
+<Info>
+首次运行时，服务会从 `WEB3INJ_EARLIEST_BLOCK` 同步历史数据到当前链头。首次回填请使用归档节点，并据此配置速率限制。
+</Info>
+
+## 虚拟化的 Cosmos Bank 转账
+
+默认情况下，`evm-gateway` 暴露的是 Injective 区块的 EVM 视图。原生的 Cosmos `x/bank` 转账并不是 EVM 交易，因此仅索引 EVM 的 JSON-RPC 无法涵盖原生 bank 活动，例如标准 Cosmos 转账、铸造、销毁以及模块级余额变动。
+
+将 `WEB3INJ_VIRTUALIZE_COSMOS_EVENTS=true` 设置为开启可选的虚拟化层：
+
+```bash
+export WEB3INJ_VIRTUALIZE_COSMOS_EVENTS=true
+```
+
+启用后，`evm-gateway` 会解析受支持的 Cosmos `x/bank` 事件，并将其投影为以太坊风格的 JSON-RPC 交易和日志。这样就可以通过熟悉的方法访问原生 bank 转账活动，例如 `eth_getBlockByNumber`、`eth_getTransactionByHash`、`eth_getTransactionReceipt`、`eth_getLogs` 及各类过滤器 API。
+
+网关目前会虚拟化以下 Cosmos bank 事件类型：
+
+- `transfer`
+- `coin_spent`
+- `coin_received`
+- `coinbase`
+- `burn`
+
+虚拟化的 bank 日志由保留的伪合约地址发出：
+
+```text
+0x0000000000000000000000000000000000000800
+```
+
+仅包含事件的 ABI 如下：
+
+```solidity
+interface IInjectiveNativeBankTransfers {
+    event NativeBankTransfer(bytes32 indexed sender, bytes32 indexed recipient, string denom, uint256 amount);
+    event NativeBankCoinSpent(bytes32 indexed spender, string denom, uint256 amount);
+    event NativeBankCoinReceived(bytes32 indexed receiver, string denom, uint256 amount);
+    event NativeBankCoinbase(bytes32 indexed minter, string denom, uint256 amount);
+    event NativeBankBurn(bytes32 indexed burner, string denom, uint256 amount);
+}
+```
+
+类似地址的 Cosmos 字段以右对齐的 `bytes32` 值编码。这样，20 字节的 EVM 地址和更长的 Cosmos 地址都可以使用同一份 ABI。
+
+### 虚拟交易的行为
+
+虚拟化的 Cosmos 事件以合成的以太坊风格交易形式呈现：
+
+- 非 EVM 的 Cosmos 交易事件使用由 `keccak256(cosmos_tx_hash)` 派生出的虚拟哈希
+- begin-block 和 end-block 事件使用由区块高度派生出的确定性哈希
+- 虚拟交易的 `input` 为空、gas 与 value 默认为零，`to = 0x0000000000000000000000000000000000000800`
+- 虚拟交易和日志包含 `virtual: true` 元数据
+- 当源 Cosmos 交易哈希可用时，虚拟交易与日志结果中会包含 `cosmos_hash`
+- begin-block 和 end-block 的虚拟交易不包含 `cosmos_hash`
+
+网关在虚拟化视图中保持区块内的顺序：
+
+1. begin-block 虚拟交易（如适用）
+2. 正常的 EVM 交易和虚拟化的 Cosmos 交易，按区块内顺序排列
+3. end-block 虚拟交易（如适用）
+
+如果某个 Cosmos bank 事件是 EVM 交易的副作用发出，则虚拟日志会追加在该交易真实 EVM 日志之后。
+
+### 查询虚拟化转账
+
+你可以对该保留伪合约地址使用 `eth_getLogs` 查询：
+
+```bash
+curl -s localhost:8645 \
+  -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getLogs","params":[{"address":"0x0000000000000000000000000000000000000800","fromBlock":"latest","toBlock":"latest"}]}'
+```
+
+然后使用返回的交易哈希调用 `eth_getTransactionByHash` 或 `eth_getTransactionReceipt` 查看该虚拟交易及其日志。
+
+<Info>
+如果需要完整的索引历史，请在首次同步前启用 `WEB3INJ_VIRTUALIZE_COSMOS_EVENTS=true`。如果你已在关闭虚拟化的情况下同步过既有数据目录，请在依赖历史的虚拟化 bank 日志之前重建或重新索引该数据目录。
+</Info>
+
+## 使用 curl 快速检查功能
+
+版本：
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"web3_clientVersion","params":[]}'
+```
+
+Chain ID：
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}'
+```
+
+链头：
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}'
+```
+
+同步状态：
+
+```bash
+curl -s localhost:8645/status/sync
+```
+
+简单的区块读取：
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBlockByNumber","params":["latest",false]}'
+```
+
+如果启用了 `debug`，可进行交易追踪：
+
+```bash
+curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"debug_traceTransaction","params":["0x<txhash>",{"tracer":"callTracer"}]}'
+```
+
+## 配置状态持久化
+
+状态持久化主要由以下变量控制：
+
+- `WEB3INJ_DATA_DIR`
+- `WEB3INJ_DB_BACKEND`
+
+示例：
+
+```bash
+export WEB3INJ_DATA_DIR=/var/lib/evm-gateway
+export WEB3INJ_DB_BACKEND=goleveldb
+```
+
+## 已实现方法的命名空间概览
+
+默认命名空间：
+
+- `eth`
+- `net`
+- `web3`
+
+可选命名空间：
+
+- `debug`
+- `inj`
+
+未实现：
+
+- `personal`
+- `txpool`
+- `miner`
+
+### `eth`
+
+`eth_blockNumber`、`eth_getBlockByNumber`、`eth_getBlockByHash`、`eth_getBlockTransactionCountByHash`、`eth_getBlockTransactionCountByNumber`、`eth_getTransactionByHash`、`eth_getTransactionCount`、`eth_getTransactionReceipt`、`eth_getTransactionByBlockHashAndIndex`、`eth_getTransactionByBlockNumberAndIndex`、`eth_sendRawTransaction`、`eth_getBalance`、`eth_getStorageAt`、`eth_getCode`、`eth_getProof`、`eth_call`、`eth_protocolVersion`、`eth_gasPrice`、`eth_estimateGas`、`eth_feeHistory`、`eth_maxPriorityFeePerGas`、`eth_chainId`、`eth_getUncleByBlockHashAndIndex`、`eth_getUncleByBlockNumberAndIndex`、`eth_getUncleCountByBlockHash`、`eth_getUncleCountByBlockNumber`、`eth_hashrate`、`eth_mining`、`eth_syncing`、`eth_coinbase`、`eth_getTransactionLogs`、`eth_fillTransaction`、`eth_getPendingTransactions`
+
+同一命名空间下的过滤器方法：
+
+`eth_newPendingTransactionFilter`、`eth_newBlockFilter`、`eth_newFilter`、`eth_getFilterChanges`、`eth_getFilterLogs`、`eth_getLogs`、`eth_uninstallFilter`
+
+### `net`
+
+`net_version`、`net_listening`、`net_peerCount`
+
+### `web3`
+
+`web3_clientVersion`、`web3_sha3`
+
+### `debug`
+
+追踪与区块检查：
+
+`debug_traceTransaction`、`debug_traceBlockByNumber`、`debug_traceBlockByHash`、`debug_traceCall`、`debug_getHeaderRlp`、`debug_getBlockRlp`、`debug_printBlock`、`debug_intermediateRoots`
+
+运行时与性能分析：
+
+`debug_blockProfile`、`debug_cPUProfile`、`debug_gcStats`、`debug_goTrace`、`debug_memStats`、`debug_setBlockProfileRate`、`debug_stacks`、`debug_startCPUProfile`、`debug_stopCPUProfile`、`debug_writeBlockProfile`、`debug_writeMemProfile`、`debug_mutexProfile`、`debug_setMutexProfileFraction`、`debug_writeMutexProfile`、`debug_freeOSMemory`、`debug_setGCPercent`、`debug_startGoTrace`、`debug_stopGoTrace`
+
+### `inj`
+
+`inj_getTxHashByEthHash`

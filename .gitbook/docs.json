@@ -768,6 +768,7 @@
                       "cn/defi/trading/order-types",
                       "cn/defi/trading/fees",
                       "cn/defi/trading/24-5-equity-feeds",
+                      "cn/defi/trading/oracle-feed-sources",
                       "cn/defi/trading/margin",
                       "cn/defi/trading/margin-liquidation",
                       "cn/defi/trading/margin-funding-rates",
@@ -898,7 +899,8 @@
                   "cn/developers-ai/injective-mcp-servers-skill",
                   "cn/developers-ai/injective-trading-skills",
                   "cn/developers-ai/documentation-mcp",
-                  "cn/developers-ai/mcp"
+                  "cn/developers-ai/mcp",
+                  "cn/developers-ai/x402"
                 ]
               },
               {
@@ -928,7 +930,11 @@
                     "pages": [
                       "cn/infra/validator-mainnet/index",
                       "cn/infra/validator-mainnet/peggo",
-                      "cn/infra/validator-mainnet/canonical-chain-upgrade"
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade",
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3",
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.1",
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.0",
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.19.0"
                     ]
                   },
                   {
@@ -986,6 +992,8 @@
                   "cn/developers-evm/oracle-precompile",
                   "cn/developers-evm/erc20-module",
                   "cn/developers-evm/infrastructure-and-tooling",
+                  "cn/developers-evm/evm-gateway",
+                  "cn/developers-evm/alchemy-rpc-setup",
                   "cn/developers-evm/add-injective-to-your-dapp",
                   "cn/developers-evm/evm-integrations-cheat-sheet",
                   "cn/developers-evm/evm-integrations-faq",
@@ -1032,6 +1040,8 @@
                   "cn/developers-defi/market-launch",
                   "cn/developers-defi/denom-and-bank",
                   "cn/developers-defi/provider-oracle",
+                  "cn/developers-defi/usdc-stablecoin",
+                  "cn/developers-defi/usdc-cctp-tutorial",
                   {
                     "group": "Injective Trader",
                     "expanded": false,
@@ -1170,7 +1180,8 @@
               },
               "cn/faq",
               "cn/glossary",
-              "cn/references"
+              "cn/references",
+              "cn/contributing"
             ]
           }
         ]

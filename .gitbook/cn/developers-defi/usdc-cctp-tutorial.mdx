@@ -1,0 +1,253 @@
+---
+title: USDC + CCTP 教程
+description: >-
+  如何使用跨链传输协议（CCTP）在 Injective 与其他网络之间以 1:1 的比例转账 USDC
+updatedAt: "2026-05-07"
+---
+
+在本教程中，你将：
+
+- 了解 CCTP 的 burn-attest-mint（销毁-签名-铸造）协议是如何工作的
+- 在源链上销毁 USDC 以发起跨链转账
+- 获取 Circle 的 attestation（签名证明），以授权在目标链上进行铸造
+- 在目标链上铸造 USDC，完成转账
+
+**Injective 上的 CCTP 是什么？**
+
+跨链传输协议（CCTP）允许你在 Injective 与其他网络之间以 1:1 的比例转账 USDC。
+
+USDC 作为原生稳定币在 Injective 上提供，
+通过 [CCTP](/developers-defi/usdc-stablecoin) 使用。
+CCTP 在受支持的网络之间以 1:1 的比例转账 USDC，
+流程如下：
+
+1. 在源链上销毁 USDC。
+1. 获取一份 *attestation*。
+1. 在目标链上铸造等额的 USDC。
+
+无需包装或跨链桥接。
+
+## 前置条件
+
+在开始本教程之前，请确保已安装以下工具：
+
+| 工具 | 最低版本 | 检查方式 | 安装 |
+| --- | --- | --- | --- |
+| Node.js | 22+ | `node --version` | [nodejs.org](https://nodejs.org/) |
+| npm | 11+ | `npm --version` | 随 Node.js 一同安装 |
+
+你还需要：
+
+- 浏览器中已安装 [MetaMask](https://metamask.io/)
+  - 已连接到 Injective 测试网
+  - 同时已连接到 Sepolia
+- 通过 [Injective 水龙头](https://testnet.faucet.injective.network/)
+  或 [Google Cloud 水龙头](https://cloud.google.com/application/web3/faucet/injective/testnet) 获取的测试网 INJ
+- 通过某个 [Sepolia 水龙头](https://sepoliafaucet.com/) 获取的测试网 Sepolia ETH
+- 通过 [Circle Faucet](https://faucet.circle.com/) 获取的测试网 USDC
+
+## 开始使用
+
+本教程配套代码位于
+[USDC CCTP demo](https://github.com/injective-dev/usdc-cctp-injective-demo) 仓库。
+
+克隆仓库并安装依赖：
+
+```shell
+git clone https://github.com/injective-dev/usdc-cctp-injective-demo
+cd usdc-cctp-injective-demo
+npm install
+```
+
+启动开发服务器：
+
+```shell
+npm run dev
+```
+
+在浏览器中打开 `http://localhost:5173` 查看该 dApp。
+
+## CCTP 是如何工作的？
+
+CCTP 通过在源链上销毁 USDC、
+从 Circle 的 API 获取一份已签名的 attestation，
+并在目标链上铸造等额 USDC 的方式实现跨链转账。
+
+CCTP 通过三个步骤完成跨链 USDC 转账：
+
+1. **Burn（销毁）**：
+    源链上的 `TokenMessengerV2` 合约销毁指定数量的 USDC，
+    随后发出一个包含转账详情的 `MessageSent` 事件。
+2. **Attest（签名证明）**：
+    Circle 的 Iris API 监听链上事件，并对消息进行签名。
+    在销毁被确认后，产生一份 attestation。
+3. **Mint（铸造）**：
+    目标链上的 `MessageTransmitterV2` 合约校验 attestation，
+    并将等额 USDC 铸造到收款地址。
+
+本教程附带的演示应用自动完成第 2 步和第 3 步：
+它会轮询 Circle 的 API 直到 attestation 就绪，
+然后解锁 mint 操作。
+
+<Info>
+该 dApp 用如下调用来实现每一步：
+
+```typescript
+// Step 1 — src/components/CCTPTransfer.tsx
+writeBurn({ functionName: 'depositForBurn', args: [amount, destDomain, mintRecipient, burnToken, ...] })
+
+// Step 2 — src/hooks/useAttestation.ts
+const { messages } = await fetch(`${CIRCLE_ATTESTATION_API}/${sourceDomain}?transactionHash=${txHash}`).then(r => r.json())
+
+// Step 3 — src/components/CCTPTransfer.tsx
+writeMint({ functionName: 'receiveMessage', args: [messages[0].message, messages[0].attestation] })
+```
+</Info>
+
+<Info>
+Injective 上使用的合约地址请参见 [Injective 上的 USDC](/developers-defi/usdc-stablecoin)。
+</Info>
+
+## 在源链上销毁 USDC
+
+在浏览器中打开 dApp（`http://localhost:5173`）后：
+
+1. 点击 **Connect Wallet**，在 MetaMask 弹窗中批准连接请求。
+2. 选择源链（例如 **Ethereum Sepolia**）
+   和目标链（**Injective EVM Testnet**），
+   然后输入要转账的 USDC 数量。
+3. 点击 **Approve USDC**，在 MetaMask 中确认授权交易。
+4. 点击 **Burn USDC**，确认销毁交易。
+
+一旦销毁交易在链上被确认，
+dApp 会显示交易哈希并自动进入 attestation 步骤。
+
+<Info>
+当你点击 **Burn USDC** 时，
+dApp 会调用 `TokenMessengerV2` 合约的 `depositForBurn`：
+
+```typescript
+// src/components/CCTPTransfer.tsx
+writeBurn({
+  address: messengerAddr,
+  abi: tokenMessengerAbi,
+  functionName: 'depositForBurn',
+  args: [
+    amountParsed,                                       // USDC amount (6 decimals)
+    destDomain,                                         // 0 = Sepolia, 29 = Injective
+    padHex(destAddress as `0x${string}`, { size: 32 }), // 32-byte-padded recipient
+    usdcContract,                                       // USDC token address
+    '0x0000000000000000000000000000000000000000000000000000000000000000',
+    maxFee,                                             // relay fee (fast mode on Sepolia)
+    minFinalityThreshold,                               // 1 = Sepolia, 2000 = Injective
+  ],
+})
+```
+</Info>
+
+<Accordion title="如何选择 minFinalityThreshold 的取值？">
+`minFinalityThreshold` 的取值应遵循：
+
+- 取值 ≤ 1000 时会产生一条 "fast"（快速）消息，
+- 取值 &gt; 1000 时会产生一条 "standard"（标准）消息。
+
+在 Sepolia 上，标准和快速消息都受支持，
+其中标准消息大约需要 15 至 19 分钟，
+快速消息大约需要 20 秒。
+
+在 Injective 上，只支持标准消息，
+标准消息大约需要 0.65 秒。
+由于 Injective 出块速度快且具备即时最终性，因此不需要快速消息。
+
+有关此话题，请参阅 Circle 官方文档
+[CCTP 的区块确认要求与 attestation 时间](https://developers.circle.com/cctp/concepts/finality-and-block-confirmations)
+作为权威参考。
+</Accordion>
+
+## Circle attestation 是什么？
+
+Circle attestation 是 Circle 的 Iris API 提供的一份加密签名，
+用于证明 USDC 已在源链上完成销毁。
+Attestation 用于授权在目标链上进行相应的铸造。
+
+在销毁之后，Circle 的 Iris API 会在 *源链* 上监听
+`MessageSent` 事件。
+一旦达到所需的区块确认数，
+Circle 就会对消息签名并颁发一份 attestation。
+
+Attestation 所需时间因源链而异：
+
+- **Ethereum Sepolia（标准模式）**：15–20 分钟
+- **Injective EVM Testnet**：通常几分钟
+
+<Info>
+从 Sepolia 出发的转账支持快速模式，可显著缩短等待时间，
+但需要设置足够高的 `maxFee`。
+若费用过低，转账会回退为标准模式。
+</Info>
+
+## 等待 attestation
+
+本 dApp 会自动轮询 Iris API，
+你不需要离开页面。
+UI 会在 attestation 就绪时通知你。
+
+<Info>
+dApp 使用销毁步骤中的交易哈希来获取 attestation：
+
+```typescript
+// src/hooks/useAttestation.ts
+const url = `${CIRCLE_ATTESTATION_API}/${sourceDomain}?transactionHash=${txHash}`
+const { messages } = await fetch(url).then(r => r.json())
+
+if (messages[0]?.status === 'complete') {
+  setResult({ message: messages[0].message, attestation: messages[0].attestation })
+} else {
+  setResult({ status: 'pending_confirmations' }) // poll again in 15 s
+}
+```
+</Info>
+
+## 在目标链上铸造 USDC
+
+一旦 dApp 显示 "Attestation received"：
+
+1. 在提示时，将 MetaMask 切换到 **目标链**。
+2. 点击 **Mint USDC**，在 MetaMask 中确认交易。
+3. 通过 dApp 中显示的余额，或在
+   [Injective Testnet Blockscout](https://testnet.blockscout.injective.network/)
+   或 [Sepolia Etherscan](https://sepolia.etherscan.io/) 中查看你的地址，
+   核对目标链上的 USDC 余额。
+
+<Info>
+当你点击 **Mint USDC** 时，
+dApp 会调用 `MessageTransmitterV2` 合约的 `receiveMessage`：
+
+```typescript
+// src/components/CCTPTransfer.tsx
+writeMint({
+  address: transmitterAddr,
+  abi: messageTransmitterAbi,
+  functionName: 'receiveMessage',
+  args: [attMessage, attestation], // message bytes + Circle's ECDSA signature
+})
+```
+</Info>
+
+## 后续步骤
+
+恭喜你使用 Injective 上的 CCTP 完成了第一次跨链 USDC 转账！
+
+以下是你在本教程中所学到的：
+
+- CCTP 的 burn-attest-mint 协议如何在链之间以 1:1 的比例转账 USDC，
+  *无需* 包装或跨链桥接
+- 如何在源链上销毁 USDC 以发起跨链转账
+- 如何获取 Circle attestation，并用它在目标链上铸造 USDC
+
+在能够进行跨链 USDC 转账之后，你可以继续了解：
+
+- [Injective 上的 USDC](/developers-defi/usdc-stablecoin)：
+  合约地址、测试网水龙头以及常见问题。
+- [MultiVM 代币标准](/developers-evm/multivm-token-standard)：
+  在 Injective 的 EVM 与 Cosmos 之间使用 USDC，无需跨链桥接。

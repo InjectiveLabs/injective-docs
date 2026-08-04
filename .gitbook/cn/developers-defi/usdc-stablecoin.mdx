@@ -1,0 +1,141 @@
+---
+title: Injective 上的 USDC
+description: >-
+  在 Injective 上使用 USDC 进行开发所需的 USDC 稳定币合约地址、CCTP 集成细节和测试网水龙头信息。
+updatedAt: "2026-06-27"
+---
+
+USDC 通过 [Circle 的跨链传输协议（CCTP）](https://www.circle.com/cross-chain-transfer-protocol) 作为 **原生稳定币** 在 Injective 上提供。
+Injective 上的 USDC 实现了 [MultiVM 代币标准（MTS）](/developers-evm/multivm-token-standard)，
+这意味着同一份代币在 Injective 网络上的 EVM 和 Cosmos 两种协议之间通用，无需跨链桥接。
+
+你可以使用 USDC 在 Injective 链上订单簿进行交易、作为衍生品市场的保证金、
+通过 CCTP 进行跨链转账，以及作为在 Injective 上构建的 DeFi 应用中的结算货币。
+
+想上手实践的话，请查看 [USDC CCTP 教程](/developers-defi/usdc-cctp-tutorial)。
+
+## 合约地址
+
+<Tabs>
+
+<Tab title="Mainnet" icon="server">
+
+| 合约 | 地址 |
+| --- | --- |
+| USDC | [`0xa00C59fF5a080D2b954d0c75e46E22a0c371235a`](https://blockscout.injective.network/token/0xa00C59fF5a080D2b954d0c75e46E22a0c371235a) |
+| USDC CCTP `TokenMessengerV2` | [`0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d`](https://blockscout.injective.network/address/0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d) |
+| USDC CCTP `MessageTransmitterV2` | [`0x81D40F21F12A8F0E3252Bccb954D722d4c464B64`](https://blockscout.injective.network/address/0x81D40F21F12A8F0E3252Bccb954D722d4c464B64) |
+| USDC CCTP `TokenMinterV2` | [`0xfd78EE919681417d192449715b2594ab58f5D002`](https://blockscout.injective.network/address/0xfd78EE919681417d192449715b2594ab58f5D002) |
+| USDC CCTP `MessageV2` | [`0xec546b6B005471ECf012e5aF77FBeC07e0FD8f78`](https://blockscout.injective.network/address/0xec546b6B005471ECf012e5aF77FBeC07e0FD8f78) |
+
+<Info>
+Injective 主网的 USDC CCTP domain ID：`29`
+</Info>
+
+</Tab>
+
+<Tab title="Testnet" icon="flask-vial">
+
+| 合约 | 地址 |
+| --- | --- |
+| USDC | [`0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d`](https://testnet.blockscout.injective.network/token/0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d) |
+| USDC CCTP `TokenMessengerV2` | [`0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA`](https://testnet.blockscout.injective.network/address/0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA) |
+| USDC CCTP `MessageTransmitterV2` | [`0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275`](https://testnet.blockscout.injective.network/address/0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275) |
+| USDC CCTP `TokenMinterV2` | [`0xb43db544E2c27092c107639Ad201b3dEfAbcF192`](https://testnet.blockscout.injective.network/address/0xb43db544E2c27092c107639Ad201b3dEfAbcF192) |
+| USDC CCTP `MessageV2` | [`0xbaC0179bB358A8936169a63408C8481D582390C4`](https://testnet.blockscout.injective.network/address/0xbaC0179bB358A8936169a63408C8481D582390C4) |
+
+<Info>
+Injective 测试网的 USDC CCTP domain ID：`29`
+</Info>
+
+</Tab>
+
+</Tabs>
+
+## 测试网水龙头
+
+在开发时可使用以下水龙头获取测试网 USDC 和 INJ：
+
+| 水龙头 | 用途 | URL |
+| --- | --- | --- |
+| Circle USDC Faucet | USDC | [`faucet.circle.com`](https://faucet.circle.com/) |
+| Injective Faucet | INJ | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+| Google Cloud Faucet | INJ | [`cloud.google.com/application/web3/faucet/injective/testnet`](https://cloud.google.com/application/web3/faucet/injective/testnet) |
+
+## 常见问题
+
+<Accordion title="Injective 上的 USDC 是什么？">
+  Injective 上的 USDC 是 Circle 的 USD Coin 稳定币的原生部署。
+  它由 Circle 持有的美元储备以 1:1 支持，并通过跨链传输协议（CCTP）转移到 Injective。
+  Injective 上的 USDC 遵循 MultiVM 代币标准（MTS），
+  可在 Injective 区块链网络的 EVM 和 Cosmos 两种协议下使用。
+</Accordion>
+
+<Accordion title="在哪里可以查证 USDC 和 USDC CCTP 的智能合约地址？">
+  上文提供的信息仅为方便参考。
+  你应始终以 Circle 的官方文档作为智能合约地址和
+  USDC CCTP domain ID 的*权威来源*。
+
+  参考：
+  - [USDC 智能合约地址](https://developers.circle.com/stablecoins/usdc-contract-addresses)
+  - [面向 EVM 兼容区块链的 USDC CCTP 智能合约地址](https://developers.circle.com/cctp/references/contract-addresses)
+</Accordion>
+
+<Accordion title="如何在 Injective 测试网获取 USDC？">
+  在 Injective 测试网上，你可以通过 [Circle Faucet](https://faucet.circle.com/) 获取测试网 USDC。
+  你可能还需要通过 [Injective 测试网水龙头](https://testnet.faucet.injective.network/) 获取测试网 INJ 以支付交易费。
+  你也可以使用 [Circle 的 CCTP](https://www.circle.com/cross-chain-transfer-protocol)
+  从其他受支持的网络转入 USDC。
+</Accordion>
+
+<Accordion title="如何在 Injective 主网获取 USDC？">
+  在 Injective 主网上，你可以通过 [Circle 的 CCTP](https://www.circle.com/cross-chain-transfer-protocol)
+  从其他受支持的网络将 USDC 转入 Injective。
+  上文列出的 CCTP V2 合约负责跨链转账中 USDC 的铸造和销毁。
+</Accordion>
+
+<Accordion title="Injective 上的 CCTP 是什么？">
+  跨链传输协议（Cross-Chain Transfer Protocol, CCTP）是 Circle 的原生跨链基础设施，
+  能够让 USDC 在不同区块链网络之间转移。
+  在 Injective 上，CCTP V2 合约（`TokenMessengerV2`、`MessageTransmitterV2`、`TokenMinterV2` 和 `MessageV2`）
+  负责跨链转账中 USDC 的铸造和销毁。
+</Accordion>
+
+<Accordion title="转账 USDC 时出现 `restricted action` 错误是什么原因？">
+  出于合规要求，Injective 上的每一笔 USDC 转账都会经过一个 EVM hook 校验，该 hook 会在交易过程中调用一个合约。
+  如果你的交易在调用过程中耗尽了 gas，就会看到类似下面的错误：
+
+  ```text
+  transfer is restricted by EVM hook: panic during EVM hook: types.ErrorOutOfGas: {EVM hook call failed}: contract hook query error: restricted action
+  ```
+
+  如果错误中包含 `types.ErrorOutOfGas`，
+  这并不意味着该转账真的被限制了，
+  而只是校验调用在完成之前*耗尽了 gas*。
+
+  **解决方法**：使用更高的 gas 限额重试该交易。
+</Accordion>
+
+<Accordion title="USDC 是否可以同时在 Injective 的 EVM 和 Cosmos 上使用？">
+  可以。
+  Injective 上的 USDC 遵循 [MultiVM 代币标准（MTS）](/developers-evm/multivm-token-standard)，
+  这意味着相同的代币余额可从 EVM 智能合约和基于 Cosmos 的模块两侧访问。
+  在两个执行环境之间移动 USDC 时无需跨链桥接或包装。
+</Accordion>
+
+## 相关资源
+
+<CardGroup cols={2}>
+  <Card title="MultiVM 代币标准" icon="arrows-repeat" href="/developers-evm/multivm-token-standard">
+    了解代币如何在 Injective 的 EVM 和 Cosmos 之间协同工作。
+  </Card>
+  <Card title="EVM 网络信息" icon="network-wired" href="/developers-evm/network-information">
+    RPC 端点、chain ID 及其他 EVM 网络细节。
+  </Card>
+  <Card title="USDC 智能合约地址" icon="location" href="https://developers.circle.com/stablecoins/usdc-contract-addresses">
+    Circle 为 USDC 部署的智能合约的官方/权威参考。
+  </Card>
+  <Card title="USDC CCTP 智能合约地址" icon="stamp" href="https://developers.circle.com/cctp/references/contract-addresses">
+    Circle 为 USDC CCTP 部署的智能合约的官方/权威参考。
+  </Card>
+</CardGroup>
