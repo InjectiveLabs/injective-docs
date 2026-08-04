@@ -1,0 +1,112 @@
+---
+title: 升级到 v1.20.0
+updatedAt: "2026-06-01"
+---
+
+2026 年 6 月 4 日（周四）
+
+根据 [IIP-650](https://injhub.com/proposal/650/)，升级流程应在区块高度 **169334500** 执行。
+
+* [概览](#summary)
+* [回滚](#recovery)
+* [升级流程](#upgrade-procedure)
+* [验证者须知](#notes-for-validators)
+* [必读的破坏性变更](#breaking-changes-must-review)
+
+## 概览
+
+Injective 链将于 **2026 年 6 月 4 日（周四）美东时间上午 10:00 / UTC 14:00** 进行一次计划内的功能升级。
+
+以下是升级步骤的简要总结：
+
+1. 投票，并等待节点在区块高度 **169334500** 触发 panic。
+2. 备份运行 Injective 链所用的配置、数据和密钥。
+3. 安装 [v1.20.0](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.0) 二进制文件。
+4. 使用新的 injectived 二进制文件启动节点以完成升级。
+
+针对验证者的升级协调与支持将在 [Injective Discord](https://discord.gg/injective) 的 `#validators` 私有频道中进行。
+
+网络升级可能会经历以下几种路径：
+
+1. **顺利路径（Happy path）**：\
+   验证者顺利完成升级，无需清理链上历史，所有验证者在升级后 5-10 分钟内恢复。
+2. **不太顺利的路径（Not-so-happy path）**：\
+   验证者在升级到最新的规范链时遇到问题。
+3. **中止路径（Abort path）**：\
+   在极少数情况下，如果团队发现此前未察觉的严重问题，Injective 团队将尝试修复所有破坏性状态，并在 36 小时内提供另一个官方二进制文件。\
+   如果链未能在 36 小时内成功恢复，将在 [Injective Discord](https://discord.gg/injective) 的 `#validators` 频道公告本次升级中止，验证者需要继续运行原链而不进行任何升级或改动。
+
+## 回滚
+
+在导出链状态之前，建议验证者先在导出高度处对完整数据进行快照。快照方式在很大程度上取决于基础设施，但通常可以通过备份 `.injectived` 目录来完成。
+
+在停止 injectived 进程之后，务必备份 `.injectived/data/priv_validator_state.json` 文件。该文件在验证者参与每一轮共识时都会更新，是防止在升级失败、需要重启旧链时出现双签的关键文件。
+
+如果升级未能成功，验证者和运维方必须恢复快照，并回退到 Injective 链的 [v1.19.0](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.19.0) 版本，继续运行原来的链，直到下一次升级公告。
+
+## 升级流程
+
+### 验证者须知
+
+升级到新版本之前，必须清除 wasm 缓存：
+
+```shell
+rm -rf .injectived/wasm/wasm/cache/
+```
+
+## 必读的破坏性变更
+
+在重启 `injectived` 之前，请仔细阅读 [v1.20.0 injectived 启动参数变更](/infra/validator-mainnet/canonical-chain-upgrade-v1.20.0-flag-changes)（英文）。已废弃的参数必须移除，重命名的参数需要更新；如果你的节点依赖旧行为，则需要显式设置那些默认值发生变化的参数。
+
+### 步骤
+
+1.  确认你当前运行的是正确版本（`v1.19.0`）的 `injectived`：
+
+    ```bash
+    $ injectived version
+    Version v1.19.0 (750b3fb)
+    Compiled at 20260424-1643 using Go go1.26.2 (amd64)
+    ```
+
+2.  备份你的 `.injectived` 目录：
+
+    ```bash
+    cp -r ~/.injectived ./injectived-backup
+    ```
+
+3. 下载并安装 v1.20.0 的 `injective-chain` 发布版本：
+
+    ```bash
+    wget https://github.com/InjectiveFoundation/injective-core/releases/download/v1.20.0-1780128924/linux-amd64.zip
+    unzip linux-amd64.zip
+    sudo mv injectived peggo /usr/bin
+    sudo mv libwasmvm.x86_64.so /usr/lib
+    ```
+
+4.  下载 v1.20.0 发布版本后，确认你当前运行的是正确版本（v1.20.0）的 `injectived`：
+
+    ```bash
+    $ injectived version
+    Version v1.20.0 (3ade14d)
+    Compiled at 20260530-0816 using Go go1.26.2 (amd64)
+    ```
+
+5.  启动 `injectived`：
+
+    ```bash
+    injectived start
+    ```
+
+6.  下载 v1.20.0 发布版本后，确认你当前运行的是正确版本（v1.20.0）的 `peggo`：
+
+    ```bash
+    $ peggo version
+    Version v1.20.0 (3ade14d)
+    Compiled at 20260530-0823 using Go go1.26.2 (amd64)
+    ```
+
+7.  启动 peggo：
+
+    ```bash
+    peggo orchestrator
+    ```

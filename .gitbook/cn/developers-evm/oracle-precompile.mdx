@@ -1,0 +1,176 @@
+---
+title: Oracle 预编译（Precompile）
+description: 在 Injective 上查询价格数据的多种方式，包括原生预言机查询、链下 Pyth，以及通过 EVM 在链上访问 Pyth。
+updatedAt: "2026-03-25"
+---
+
+<Info>
+  Oracle 预编译暂未上线。
+  在此期间，你可以使用下述方法查询价格。
+</Info>
+
+Injective 提供多种方式访问预言机价格数据，具体取决于你的架构和需求。
+下列方法涵盖从在链下集成 Pyth，
+到通过 Injective 的 EVM 在链上读取 Pyth 价格。
+
+## 方式 1：使用 Pyth 的链下价格源
+
+如果你的应用程序在链下获取价格（例如在后端服务或 bot 中），
+可以直接查询 Pyth 的 HTTP API，无需任何链上交互。
+
+有关可用端点、请求格式和响应模式的详情，请参见 Pyth 关于[获取价格更新](https://docs.pyth.network/price-feeds/core/fetch-price-updates)的文档。
+
+这种方式非常适合链下交易系统、分析仪表盘，
+或任何不需要提交交易就能获取价格数据的服务。
+
+## 方式 2：通过 EVM 在链上使用 Pyth 价格源
+
+对于需要在链上读取价格的智能合约，你可以与部署在 Injective EVM 上的 Pyth 合约交互。
+它使用 Pyth 的拉取式（pull-based）预言机模型，即先在链下获取价格更新，再在链上提交后再读取。
+
+### 合约地址
+
+要获取 Injective EVM 上的 Pyth 合约地址，请查阅 Pyth 合约地址页面，找到 **Injective EVM** 条目：
+
+- [主网合约地址](https://docs.pyth.network/price-feeds/core/contract-addresses/evm#mainnets)
+- [测试网合约地址](https://docs.pyth.network/price-feeds/core/contract-addresses/evm#testnets)
+
+当前，Pyth 在 Injective EVM 主网上的合约地址是 `0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320`。
+
+<Warning>
+  请始终以官方文档为准以获取最新地址。
+</Warning>
+
+### 价格源 ID
+
+每一个资产对都有一个唯一的价格源 ID（price feed ID）。你可以在
+ [Pyth price feed IDs](https://docs.pyth.network/price-feeds/core/price-feeds/price-feed-ids) 页面查阅这些 ID。
+例如，搜索 `INJ/USD`。
+
+### 受支持的价格源
+
+| 资产    | 价格源 ID                                                              |
+| -------- | -------------------------------------------------------------------- |
+| INJ/USD  | `0x7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592` |
+| BTC/USD  | `0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43` |
+| ETH/USD  | `0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace` |
+| XRP/USD  | `0xec5d399846a9209f3fe5881d70aae9268c94339ff9817e8d18ff19fa05eea1c8` |
+| USDT/USD | `0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b` |
+| USDC/USD | `0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a` |
+
+<Warning>
+  请始终以官方文档为准以获取最新地址。
+</Warning>
+
+### 集成指南
+
+要在你的 Solidity 合约中使用拉取模型完整集成 Pyth 价格源，
+请按 [Pyth EVM 拉取集成教程](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/evm) 操作。
+
+### 示例
+
+下面的示例演示了如何在 Injective 的 EVM 上从 Pyth 合约读取 INJ/USD 价格：
+
+```typescript
+import { ethers } from "ethers";
+import { toHumanReadable } from "@injectivelabs/utils";
+
+const provider = new ethers.JsonRpcProvider(
+  "https://sentry.evm-rpc.injective.network",
+);
+
+const IPythABI = [
+  {
+    inputs: [{ internalType: "bytes[]", name: "updateData", type: "bytes[]" }],
+    name: "getUpdateFee",
+    outputs: [{ internalType: "uint256", name: "feeAmount", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes[]", name: "updateData", type: "bytes[]" }],
+    name: "updatePriceFeeds",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "id", type: "bytes32" },
+      { internalType: "uint256", name: "age", type: "uint256" },
+    ],
+    name: "getPriceNoOlderThan",
+    outputs: [
+      {
+        components: [
+          { internalType: "int64", name: "price", type: "int64" },
+          { internalType: "uint64", name: "conf", type: "uint64" },
+          { internalType: "int32", name: "expo", type: "int32" },
+          { internalType: "uint256", name: "publishTime", type: "uint256" },
+        ],
+        internalType: "struct PythStructs.Price",
+        name: "price",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes32", name: "id", type: "bytes32" }],
+    name: "getPriceUnsafe",
+    outputs: [
+      {
+        components: [
+          { internalType: "int64", name: "price", type: "int64" },
+          { internalType: "uint64", name: "conf", type: "uint64" },
+          { internalType: "int32", name: "expo", type: "int32" },
+          { internalType: "uint256", name: "publishTime", type: "uint256" },
+        ],
+        internalType: "struct PythStructs.Price",
+        name: "price",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
+
+const pyth = new ethers.Contract(
+  "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+  IPythABI,
+  provider,
+);
+
+async function main() {
+  try {
+    const priceFeedId =
+      "0x7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592"; // INJ/USD
+
+    // const price = await pyth.getPriceUnsafe(priceFeedId);
+    const maxAge = 60; // 60s
+    const price = await pyth.getPriceNoOlderThan(priceFeedId, maxAge);
+
+    console.log(
+      "Human readable price:",
+      price.expo > 0
+        ? toHumanReadable(price.price.toString(), price.expo.toString()).toFixed(2)
+        : toHumanReadable(price.price.toString(), (-price.expo).toString()).toFixed(4),
+    );
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await provider.destroy();
+  }
+}
+
+main().catch(console.error);
+```
+
+<Warning>
+  `getPriceUnsafe` 会返回最后一次推送的价格，且不进行 staleness（过时性）检查。在生产环境中，
+  建议使用 `getPriceNoOlderThan(priceFeedId, maxAge)`——不过请注意，这要求价格在近期已被推送到链上，
+  否则调用会 revert。
+  更多关于拉取模型的信息请参见 [Pyth 文档](https://docs.pyth.network/price-feeds/use-real-time-data/evm)。
+</Warning>

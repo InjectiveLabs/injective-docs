@@ -1,0 +1,219 @@
+---
+title: x402
+description: >-
+    在 Injective 上使用 x402。
+    面向人类用户和 AI 智能体的稳定币支付通道。
+updatedAt: "2026-06-01"
+---
+
+x402 是一个开放协议，它借助长期未被使用的 `402 Payment Required` HTTP 状态码，将支付嵌入到 HTTP 请求的生命周期中。在支付可在一个区块内结算（约 650 毫秒）的 Injective EVM 上，x402 可以将任意 API 端点变成按请求付费的服务，无需 API key、订阅或注册。
+
+<iframe className="w-1\/2 aspect-video rounded-xl" src="https://youtube.com/embed/vHJ7wPGv_ZM?rel=0&autoplay=1&cc_load_policy=0" title="x402 payment with USDC on Injective (1 min) - YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen frameborder="0" />
+
+[_x402 payment with USDC on Injective (1 min) - YouTube_](https://youtube.com/watch?v=vHJ7wPGv_ZM)
+
+在本教程中，你将：
+
+- 理解 x402 如何将支付集成到 HTTP 协议中
+- 使用 x402 演示应用获取一份门槛为 0.01 USDC x402 支付的市场数据
+- 从你的 EVM 钱包手动签署并在链上结算一笔 USDC 支付
+- 了解 x402 为何天然契合自主 AI 智能体
+- 使用 `@injectivelabs/x402` 库为你自己的 Express API 端点添加支付保护
+
+## 前置条件
+
+| 工具 | 最低版本 | 版本检查 | 安装 |
+|---|---|---|---|
+| 浏览器 | 任意现代浏览器 | - | - |
+| EVM 钱包浏览器扩展 | - | - | [MetaMask](https://metamask.io) 或 [Rabby](https://rabby.io) |
+| Node.js | 18 | `node -v` | [nodejs.org](https://nodejs.org) |
+
+你还需要：
+
+- 将你的 EVM 钱包连接到 Injective 网络（主网或测试网）
+- 钱包中持有 INJ 代币用于支付 gas 费
+- 钱包中持有少量 USDC（几美分就足以完成支付）
+
+## 开始使用
+
+在浏览器中打开 x402 演示页面：[`agents.injective.com/x402`](https://agents.injective.com/x402)。
+
+![x402 demo start](/img/x402-demo-start.png)
+
+在继续下一节之前，请确保你的 EVM 钱包扩展已连接到 Injective 网络。
+
+## 什么是 x402？
+
+x402 将支付嵌入到 HTTP 协议中，
+服务器在返回数据之前，会作为 API 响应流程的一部分要求并收取支付。
+
+### 一次 x402 交互中会发生什么？
+
+当客户端调用一个受 x402 保护的 HTTP 端点时，交互过程如下：
+
+1. 客户端向该 API 端点发送一次正常的 HTTP 请求。
+2. 服务器返回 `402 Payment Required` 和一份价格报价。
+3. 客户端*签署*一笔 USDC 转账交易，但该交易尚未被广播到网络。
+4. 一个 x402 *facilitator*（结算方）将已签名的支付提交到区块链并等待确认。
+5. 客户端重试原始请求，这次带上已完成支付的详细信息。
+6. 服务器通过 facilitator 验证收据，并返回所请求的数据。
+
+![x402 interaction steps](/img/x402-demo-interaction-steps.png)
+
+### x402 免去了哪些步骤？
+
+无需预先注册、API key 管理、订阅或信用卡。
+这意味着服务器可以在一次 HTTP 会话中完成报价、验证支付并交付数据。
+
+facilitator 处理所有区块链交互，让你的 API 服务器保持 web 原生形态：
+
+| Facilitator 的职责 | 它帮你屏蔽了什么 |
+|---|---|
+| 验证支付签名 | 服务器上的加密验证代码 |
+| 将交易提交到链上 | RPC 端点管理 |
+| Gas 估算与费用 | Gas 计算逻辑 |
+| 等待链上确认 | 区块轮询：你只收到一个 yes/no |
+
+### x402 只适用于以太坊吗？
+
+x402 与网络无关：
+该开放标准同时支持 EVM 兼容网络、SVM 兼容网络等。
+本教程演示如何在 *Injective* 上使用 x402。
+
+### 为什么在 Injective 上使用 x402？
+
+Injective 具有非常高的吞吐量和极低的延迟：
+出块时间约为 650 毫秒，
+并具备确定性的单区块最终性。
+这意味着 x402 支付可以以接近信用卡支付的速度完成结算，
+而成本却远远低于信用卡。
+这解锁了新的应用场景，包括按次付费和小额支付。
+由于 x402 交易也是完全程序化的，
+它们非常适合 AI 智能体使用。
+
+## 手动 x402 支付
+
+按以下步骤触发手动 x402 支付流程，
+以便观察钱包签名的过程：
+
+（1）在演示页面点击 "Pay it yourself"。
+
+![select pay it yourself](/img/x402-demo-method-selector.png)
+
+（2）在市场选择器中，选择你喜欢的任意一个市场。
+（本例中选择 "TSLA/USDC PERP" 市场。）
+
+![select market](/img/x402-demo-market-selector.png)
+
+（3）点击 "Pay 1 cent" 发起 x402 支付。
+
+![make payment](/img/x402-demo-make-payment.png)
+
+（4）当钱包弹出提示时，检查 USDC 转账详情，然后点击 "Sign" 授权支付。
+
+![sign message](/img/x402-demo-sign-message.png)
+
+演示页面将显示 "Success!"，并展示所选的价格。
+（本例中显示 "TSLA/USDC PERP" 的价格。）
+
+![completed successfully](/img/x402-demo-completed-successfully.png)
+
+这表明支付已在 Injective EVM 上完成结算，
+并且服务器已交付受保护的数据。
+
+## x402 如何实现智能体支付？
+
+x402 让 API 变得可被程序化支付。
+当调用方是 AI 智能体而非人类时，
+这一特性变得至关重要。
+
+传统的计费模型
+（API key、OAuth 流程、按月订阅）
+需要人类来设置和维护凭据。
+当 AI 智能体自主运行或跨大量用户扩展时，预先注册的凭据会成为瓶颈和安全隐患：
+密钥会过期，配额被共享，每接入一个新服务都需要人为参与。
+
+x402 消除了这一瓶颈。
+持有 USDC 余额的智能体可以在无需预先注册的情况下调用任何受 x402 保护的端点。
+API 报价，智能体签署支付，数据以程序化的方式返回。
+这一过程按每次请求执行，链上收据构成不可篡改的审计记录。
+个别 API 调用中不需要人类介入。
+
+在 Injective 上，x402 提供了这样的支付原语：
+让智能体在运行时获取市场数据、触发交易并调用各类服务。
+无需人类提前进行任何设置或操作。
+
+<Info>
+x402 标准是开源且与网络无关的。
+它由 Coinbase 发起，并对所有网络开放实现。
+完整规范请参阅 [x402 协议文档](https://docs.x402.org/introduction)。
+</Info>
+
+## 使用 x402 保护你自己的 API 端点
+
+![npm install](/img/x402-demo-npm-install.png)
+
+创建一个带有 x402 保护端点的 Node.js 服务器：
+
+1. 进入你的项目目录（或使用 `npm init -y` 新建一个）。
+2. 在终端运行 `npm install @injectivelabs/x402` 安装 x402 库。
+3. 创建 `server.js` 并从 `@injectivelabs/x402/middleware` 导入 `express` 和 `injectivePaymentMiddleware`。
+4. 在中间件栈中调用 `injectivePaymentMiddleware`，指定要保护的端点、支付网络、USDC 资产地址，以及以最小单位表示的金额。
+
+<Info>
+一个最小示例：
+
+```js server.js
+import express from 'express';
+import { injectivePaymentMiddleware } from '@injectivelabs/x402/middleware';
+
+const app = express();
+
+app.use(
+  injectivePaymentMiddleware(
+    {
+      'GET /perps': {
+        accepts: [{
+          // Injective EVM (chain ID 1776)
+          network: 'eip155:1776',
+          // USDC on Injective EVM 
+          asset: '0xa00C59fF5a080D2b954d0c75e46E22a0c371235a',
+          // $0.01 (USDC uses 6 decimal places)
+          amount: '10000',
+        }],
+      },
+    },
+    { facilitatorUrl: process.env.X402_FACILITATOR_URL }
+  )
+);
+
+app.get('/perps', (_req, res) => res.json({ data: "... your data here ..." }));
+
+```
+
+使用了 npm 上的 [`@injectivelabs/x402`](https://www.npmjs.com/package/@injectivelabs/x402)。
+</Info>
+
+任何在请求头中携带有效 USDC 支付收据的 HTTP 客户端
+（包括 AI 智能体）都能获得响应。
+你无需在服务器上实现 API key，甚至无需实现用户账号系统。
+
+## 后续步骤
+
+恭喜！
+你已使用 x402 协议在 Injective EVM 上完成了一次 API 请求付费，
+并了解了如何通过一次中间件调用来保护你自己的端点。
+
+以下是你所学到的内容：
+
+- x402 如何使用 HTTP `402 Payment Required` 状态码为 API 响应加上支付门槛
+- facilitator 如何将 RPC、gas 与签名验证从你的服务器中抽离
+- 如何借助演示应用和 EVM 钱包触发并签署 x402 USDC 支付
+- 为什么 x402 天然契合以编程方式调用 API 的 AI 智能体
+- 如何为 Express 服务器添加 `injectivePaymentMiddleware`
+
+延伸阅读：
+
+- [x402 协议规范](https://x402.org)：本库所实现的开放标准
+- [Injective 上的 AI 开发者](/developers-ai)：在 Injective 上构建 AI 原生应用的工具与技能
+- [Injective EVM 文档](/evm)：Injective 上的 EVM 开发
