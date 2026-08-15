@@ -8,7 +8,7 @@ updatedAt: "2025-10-30"
 <Callout icon="info" color="#07C1FF" iconType="regular">
 Learn about the differences between `Gas` and `Fees` on Injective.
 
-Pre-requisite Readings → [Cosmos SDK Gas](https://docs.cosmos.network/main/build/modules/auth#gas--fees)
+Pre-requisite Readings → [Cosmos SDK Gas](https://docs.cosmos.network/sdk/latest/modules/auth/auth#antehandlers)
 </Callout>
 
 Gas represents the amount of computational effort required to execute specific operations on the state machine.
@@ -36,7 +36,7 @@ In the Cosmos SDK, gas is tracked in the main `GasMeter` and the `BlockGasMeter`
 * `GasMeter`: keeps track of the gas consumed during executions that lead to state transitions. It is reset on every transaction execution.
 * `BlockGasMeter`: keeps track of the gas consumed in a block and enforces that the gas does not go over a predefined limit. This limit is defined in the Tendermint consensus parameters and can be changed via governance parameter change proposals.
 
-More information regarding gas in Cosmos SDK can be found [here](https://docs.cosmos.network/main/learn/beginner/gas-fees).
+More information regarding gas in Cosmos SDK can be found [here](https://docs.cosmos.network/sdk/latest/learn/concepts/context-gas-events).
 
 In Cosmos, there are types of operations that are not triggered by transactions that can also result in state transitions. Concrete examples are the `BeginBlock` and `EndBlock` operations and the `AnteHandler` checks, which might also read and write to the store before running the state transition from a transaction.
 
@@ -46,4 +46,4 @@ These operations are defined by the Tendermint Core's Application Blockchain Int
 
 #### `AnteHandler`
 
-The Cosmos SDK [`AnteHandler`](https://docs.cosmos.network/v0.45/modules/auth/03_antehandlers.html) performs basic checks prior to transaction execution. These checks are usually signature verification, transaction field validation, transaction fees, etc.
+The Cosmos SDK [`AnteHandler`](https://docs.cosmos.network/sdk/latest/modules/auth/auth#antehandlers) performs basic checks prior to transaction execution. These checks are usually signature verification, transaction field validation, transaction fees, etc.

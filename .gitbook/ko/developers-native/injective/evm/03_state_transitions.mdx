@@ -23,14 +23,14 @@ updatedAt: "2026-03-07"
 3. `Tx` 필드는 `ValidateBasic()`을 사용하여 (상태 비저장) 검증됩니다
 4. `Tx`는 sender 주소와 연결된 키와 `ChainConfig`의 최신 ethereum 하드 포크(`London`, `Berlin` 등)를 사용하여 **서명**됩니다
 5. `Tx`는 Cosmos Config builder를 사용하여 msg 필드에서 **빌드**됩니다
-6. `Tx`는 [`CheckTx`](https://docs.tendermint.com/master/introduction/what-is-tendermint.html#intro-to-abci) 실행 응답을 기다리기 위해 [sync mode](https://docs.cosmos.network/master/run-node/txs.html#broadcasting-a-transaction)로 **브로드캐스트**됩니다. 트랜잭션은 합의 엔진의 mempool에 추가되기 전에 `CheckTx()`를 사용하여 애플리케이션에 의해 검증됩니다.
+6. `Tx`는 [`CheckTx`](https://docs.tendermint.com/master/introduction/what-is-tendermint.html#intro-to-abci) 실행 응답을 기다리기 위해 [sync mode](https://docs.cosmos.network/sdk/latest/node/txs#broadcasting-a-transaction)로 **브로드캐스트**됩니다. 트랜잭션은 합의 엔진의 mempool에 추가되기 전에 `CheckTx()`를 사용하여 애플리케이션에 의해 검증됩니다.
 7. JSON-RPC 사용자는 트랜잭션 필드의 [`RLP`](https://eth.wiki/en/fundamentals/rlp) hash가 포함된 응답을 받습니다. 이 hash는 트랜잭션 바이트의 `sha256` hash를 계산하는 SDK 트랜잭션에서 사용하는 기본 hash와 다릅니다.
 
 ## Server-Side
 
 트랜잭션을 포함하는 블록이 합의 중에 커밋되면 일련의 ABCI 메시지로 서버 측 애플리케이션에 적용됩니다.
 
-각 `Tx`는 [`RunTx`](https://docs.cosmos.network/master/core/baseapp.html#runtx)를 호출하여 애플리케이션에서 처리됩니다. `Tx`의 각 `sdk.Msg`에 대한 상태 비저장 검증 후 `AnteHandler`는 `Tx`가 Ethereum 트랜잭션인지 SDK 트랜잭션인지 확인합니다. Ethereum 트랜잭션으로서 포함된 메시지는 애플리케이션의 상태를 업데이트하기 위해 `x/evm` 모듈에서 처리됩니다.
+각 `Tx`는 [`RunTx`](https://docs.cosmos.network/sdk/latest/learn/concepts/baseapp#the-transaction-execution-pipeline)를 호출하여 애플리케이션에서 처리됩니다. `Tx`의 각 `sdk.Msg`에 대한 상태 비저장 검증 후 `AnteHandler`는 `Tx`가 Ethereum 트랜잭션인지 SDK 트랜잭션인지 확인합니다. Ethereum 트랜잭션으로서 포함된 메시지는 애플리케이션의 상태를 업데이트하기 위해 `x/evm` 모듈에서 처리됩니다.
 
 ### AnteHandler
 
@@ -54,7 +54,7 @@ updatedAt: "2026-03-07"
 - `CanTransferDecorator(evmKeeper, feeMarketKeeper)`는 메시지에서 EVM을 생성하고 BlockContext CanTransfer 함수를 호출하여 주소가 트랜잭션을 실행할 수 있는지 확인합니다.
 - `EthIncrementSenderSequenceDecorator(ak)`는 signer(즉, sender)의 시퀀스 증가를 처리합니다. 트랜잭션이 컨트랙트 생성인 경우 nonce는 이 AnteHandler decorator 내에서가 아니라 트랜잭션 실행 중에 증가합니다.
 
-`authante.NewMempoolFeeDecorator()`, `authante.NewTxTimeoutHeightDecorator()` 및 `authante.NewValidateMemoDecorator(ak)` 옵션은 Cosmos `Tx`의 경우와 동일합니다. `anteHandler`에 대한 자세한 내용은 [여기](https://docs.cosmos.network/master/basics/gas-fees.html#antehandler)를 클릭하십시오.
+`authante.NewMempoolFeeDecorator()`, `authante.NewTxTimeoutHeightDecorator()` 및 `authante.NewValidateMemoDecorator(ak)` 옵션은 Cosmos `Tx`의 경우와 동일합니다. `anteHandler`에 대한 자세한 내용은 [여기](https://docs.cosmos.network/sdk/latest/learn/concepts/context-gas-events)를 클릭하십시오.
 
 ### EVM module
 

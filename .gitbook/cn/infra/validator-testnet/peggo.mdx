@@ -29,7 +29,7 @@ Peggo 还需要访问你的验证者的 Cosmos 和以太坊凭证来为相应的
 
 如果你想重用那里的密钥，Keyring 路径必须指向你的 injectived 节点的主目录。
 
-在[这里](https://docs.cosmos.network/v0.46/run-node/keyring.html)了解更多关于 Keyring 设置的信息。
+在[这里](https://docs.cosmos.network/sdk/latest/node/keyring)了解更多关于 Keyring 设置的信息。
 
 ### **2. Cosmos 私钥（不安全）**
 
@@ -163,7 +163,7 @@ journalctl -f -u peggo
 这是一个高级 DevOps 主题，请咨询你的系统管理员。
 </Callout>
 
-在[这里](https://docs.cosmos.network/v0.46/run-node/keyring.html)了解更多关于 Cosmos Keyring 设置的信息。一旦你启动了节点，默认的 keyring 将以加密形式将验证者操作员密钥存储在磁盘上。通常，keyring 位于节点的主目录中，即 `~/.injectived/keyring-file`。
+在[这里](https://docs.cosmos.network/sdk/latest/node/keyring)了解更多关于 Cosmos Keyring 设置的信息。一旦你启动了节点，默认的 keyring 将以加密形式将验证者操作员密钥存储在磁盘上。通常，keyring 位于节点的主目录中，即 `~/.injectived/keyring-file`。
 
 Injective 质押文档的某些部分将指导你使用此密钥进行治理目的，即提交交易和设置以太坊桥接。为了保护密钥免受未授权访问，即使 keyring 密码通过配置泄露，你也可以设置操作系统权限，仅允许 `injectived` / `peggo` 进程访问磁盘。
 
