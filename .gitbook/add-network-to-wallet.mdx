@@ -2,19 +2,19 @@
 title: Add Network to Your Wallet
 description: >-
   Add Injective networks to your browser wallet in one click. Interactive
-  wallet buttons for Injective EVM (MetaMask and other EVM wallets) and
-  Injective native (Keplr, Leap), covering mainnet and testnet.
+  wallet options for Injective EVM (MetaMask, Trust Wallet, and WalletConnect)
+  and Injective native (Keplr and WalletConnect), covering mainnet and testnet.
 icon: wallet
-updatedAt: "2026-07-20"
+updatedAt: "2026-07-28"
 ---
 
 Add Injective to your browser wallet with a single click, or use the manual
 configuration details below. Injective exposes two interoperable interfaces:
 
 - **Injective EVM** is an Ethereum-compatible JSON-RPC layer. Use it with EVM
-  wallets such as MetaMask, Rabby, or any injected `window.ethereum` wallet.
-- **Injective (CosmWasm / native)** is the native Cosmos SDK chain. Use it with
-  Cosmos wallets such as Keplr and Leap.
+  wallets such as MetaMask and Trust Wallet, or connect through WalletConnect.
+- **Injective (native)** is the native Cosmos SDK chain. Use it with Keplr or
+  a WalletConnect-compatible wallet.
 
 <Info>
 Injective EVM and Injective native map to the same network. They use different
@@ -25,8 +25,9 @@ chain IDs but share the same underlying state. See
 
 ## Injective EVM
 
-Injective EVM works with EVM wallets like MetaMask, Rabby, and SubWallet. Pick a
-network and click your wallet — it will prompt you to add or switch to Injective.
+Injective EVM works with EVM wallets like MetaMask and Trust Wallet. You can
+also use WalletConnect from a supported dApp. Pick a network and choose a wallet
+option to add or switch to Injective.
 
 <div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
@@ -122,8 +123,12 @@ network and click your wallet — it will prompt you to add or switch to Injecti
         label.textContent = "Connecting...";
         button.disabled = true;
         button.style.opacity = "0.72";
-        const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
-        if (!provider) { finish("Wallet not found", false); alert("Please install SubWallet."); return; }
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const provider = typeof window !== "undefined"
+          ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)))
+          : null;
+        if (!provider) { finish("Wallet not found", false); alert("Please install Trust Wallet."); return; }
         provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
             method: "wallet_switchEthereumChain",
@@ -155,9 +160,16 @@ network and click your wallet — it will prompt you to add or switch to Injecti
       }}
       style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
-      <img src="/img/wallets/subwallet.svg" alt="SubWallet" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
-      <span data-wallet-label aria-live="polite">Add to SubWallet</span>
+      <span aria-hidden="true" style={{ width: "22px", height: "22px", borderRadius: "6px", background: "#3375BB", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 800, flexShrink: 0 }}>T</span>
+      <span data-wallet-label aria-live="polite">Add to Trust Wallet</span>
     </button>
+    <a
+      href="/developers-evm/dapps/connect-with-walletconnect/"
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease", textDecoration: "none" }}
+    >
+      <span aria-hidden="true" style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#3B99FC", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 800, flexShrink: 0 }}>WC</span>
+      <span data-wallet-label aria-live="polite">Connect with WalletConnect</span>
+    </a>
   </div>
 </div>
 
@@ -255,8 +267,12 @@ network and click your wallet — it will prompt you to add or switch to Injecti
         label.textContent = "Connecting...";
         button.disabled = true;
         button.style.opacity = "0.72";
-        const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
-        if (!provider) { finish("Wallet not found", false); alert("Please install SubWallet."); return; }
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const provider = typeof window !== "undefined"
+          ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)))
+          : null;
+        if (!provider) { finish("Wallet not found", false); alert("Please install Trust Wallet."); return; }
         provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
             method: "wallet_switchEthereumChain",
@@ -288,16 +304,26 @@ network and click your wallet — it will prompt you to add or switch to Injecti
       }}
       style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
     >
-      <img src="/img/wallets/subwallet.svg" alt="SubWallet" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
-      <span data-wallet-label aria-live="polite">Add to SubWallet</span>
+      <span aria-hidden="true" style={{ width: "22px", height: "22px", borderRadius: "6px", background: "#3375BB", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 800, flexShrink: 0 }}>T</span>
+      <span data-wallet-label aria-live="polite">Add to Trust Wallet</span>
     </button>
+    <a
+      href="/developers-evm/dapps/connect-with-walletconnect/"
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease", textDecoration: "none" }}
+    >
+      <span aria-hidden="true" style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#3B99FC", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 800, flexShrink: 0 }}>WC</span>
+      <span data-wallet-label aria-live="polite">Connect with WalletConnect</span>
+    </a>
   </div>
 </div>
 
 <Info>
-The button uses the standard `wallet_addEthereumChain` request. If the network
-is already added, your wallet shows a switch prompt instead. If nothing happens,
-add it manually with the values below.
+The MetaMask and Trust Wallet buttons use the standard `wallet_addEthereumChain`
+request. If the network is already added, the wallet shows a switch prompt instead.
+WalletConnect sessions are created by the dApp, so that option opens the
+[WalletConnect integration guide](/developers-evm/dapps/connect-with-walletconnect/).
+If nothing happens with an injected wallet, add the network manually with the
+values below.
 </Info>
 
 ### Manual configuration
@@ -335,11 +361,11 @@ add it manually with the values below.
 
 </Tabs>
 
-## Injective (CosmWasm / Native)
+## Injective (Native)
 
-The native Injective chain works with Cosmos wallets like Keplr and Leap.
-Injective ships built into both wallets, so it is available out of the box.
-Pick a network and click your wallet to unlock the chain.
+The native Injective chain works with Keplr and WalletConnect-compatible wallets.
+Injective is built into Keplr, so it is available out of the box. Choose a network
+below to unlock it in Keplr, or use WalletConnect from a supported dApp.
 
 <div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
@@ -390,49 +416,15 @@ Pick a network and click your wallet to unlock the chain.
       <img src="/img/wallets/keplr.png" alt="Keplr" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
       <span data-wallet-label aria-live="polite">Add to Keplr</span>
     </button>
-    <button
-      type="button"
-      onClick={(event) => {
-        const button = event.currentTarget;
-        const label = button.querySelector("[data-wallet-label]");
-        const originalLabel = label.textContent;
-        const originalBorder = button.style.borderColor;
-        const originalBackground = button.style.background;
-        const originalOpacity = button.style.opacity;
-        const finish = (message, success) => {
-          label.textContent = message;
-          button.style.borderColor = success ? "#22c55e" : "#ef4444";
-          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
-          button.style.opacity = "1";
-          window.setTimeout(() => {
-            label.textContent = originalLabel;
-            button.style.borderColor = originalBorder;
-            button.style.background = originalBackground;
-            button.style.opacity = originalOpacity;
-            button.disabled = false;
-          }, 2500);
-        };
-        label.textContent = "Connecting...";
-        button.disabled = true;
-        button.style.opacity = "0.72";
-        const p = typeof window !== "undefined" ? window.leap : null;
-        if (!p) { finish("Wallet not found", false); alert("Please install the Leap wallet."); return; }
-        p.enable("injective-1")
-          .then(() => {
-            label.textContent = "Connected ✓";
-            finish(label.textContent, true);
-          })
-          .catch((error) => {
-            console.error("Leap enable failed:", error);
-            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
-            finish(label.textContent, false);
-          });
-      }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    <a
+      href="https://walletconnect.network/wallets"
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease", textDecoration: "none" }}
     >
-      <img src="/img/wallets/leap.svg" alt="Leap" width="22" height="22" style={{ flexShrink: 0 }} />
-      <span data-wallet-label aria-live="polite">Add to Leap</span>
-    </button>
+      <span aria-hidden="true" style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#3B99FC", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 800, flexShrink: 0 }}>WC</span>
+      <span data-wallet-label aria-live="polite">Connect with WalletConnect</span>
+    </a>
   </div>
 </div>
 
@@ -485,55 +477,22 @@ Pick a network and click your wallet to unlock the chain.
       <img src="/img/wallets/keplr.png" alt="Keplr" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
       <span data-wallet-label aria-live="polite">Add to Keplr</span>
     </button>
-    <button
-      type="button"
-      onClick={(event) => {
-        const button = event.currentTarget;
-        const label = button.querySelector("[data-wallet-label]");
-        const originalLabel = label.textContent;
-        const originalBorder = button.style.borderColor;
-        const originalBackground = button.style.background;
-        const originalOpacity = button.style.opacity;
-        const finish = (message, success) => {
-          label.textContent = message;
-          button.style.borderColor = success ? "#22c55e" : "#ef4444";
-          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
-          button.style.opacity = "1";
-          window.setTimeout(() => {
-            label.textContent = originalLabel;
-            button.style.borderColor = originalBorder;
-            button.style.background = originalBackground;
-            button.style.opacity = originalOpacity;
-            button.disabled = false;
-          }, 2500);
-        };
-        label.textContent = "Connecting...";
-        button.disabled = true;
-        button.style.opacity = "0.72";
-        const p = typeof window !== "undefined" ? window.leap : null;
-        if (!p) { finish("Wallet not found", false); alert("Please install the Leap wallet."); return; }
-        p.enable("injective-888")
-          .then(() => {
-            label.textContent = "Connected ✓";
-            finish(label.textContent, true);
-          })
-          .catch((error) => {
-            console.error("Leap enable failed:", error);
-            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
-            finish(label.textContent, false);
-          });
-      }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+    <a
+      href="https://walletconnect.network/wallets"
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease", textDecoration: "none" }}
     >
-      <img src="/img/wallets/leap.svg" alt="Leap" width="22" height="22" style={{ flexShrink: 0 }} />
-      <span data-wallet-label aria-live="polite">Add to Leap</span>
-    </button>
+      <span aria-hidden="true" style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#3B99FC", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 800, flexShrink: 0 }}>WC</span>
+      <span data-wallet-label aria-live="polite">Connect with WalletConnect</span>
+    </a>
   </div>
 </div>
 
 <Info>
-Keplr and Leap include Injective by default, so the button simply unlocks the
-chain in your wallet. For a full wallet integration guide, see
+Keplr includes Injective by default, so its button simply unlocks the chain in
+the wallet. WalletConnect support depends on the dApp and wallet establishing a
+compatible session. For a full wallet integration guide, see
 [Wallets](/defi/wallet/index).
 </Info>
 
