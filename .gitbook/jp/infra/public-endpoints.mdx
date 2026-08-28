@@ -1,15 +1,15 @@
 ---
-title: 퍼블릭 엔드포인트
-updatedAt: "2026-03-05"
+title: パブリックエンドポイント
+updatedAt: "2026-02-12"
 ---
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-높은 사용량/트래픽이 있는 애플리케이션의 경우 프로덕션 환경에서 이를 사용하는 것을 **권장하지 않습니다**. 수천 명의 개발자가 퍼블릭 인프라를 사용하고 있으며 100% 가동 시간과 안정성을 보장할 수 없습니다.
+利用量やトラフィックの多いアプリケーションの本番環境では、これらの使用を**推奨しません**。数千人の開発者がパブリックインフラを利用しており、100% の稼働時間と信頼性を保証することはできません。
 </Callout>
 
-## 메인넷
+## メインネット
 
-| 서비스          			| 주소                                                       |
+| サービス          			| アドレス                                                       |
 | ---------------- | ------------------------------------------------------------- |
 | Chain Swagger          | https://sentry.lcd.injective.network/swagger/#/               		 |
 | Chain LCD              | https://sentry.lcd.injective.network:443                      |
@@ -30,12 +30,12 @@ updatedAt: "2026-03-05"
 | Status           | https://uptime.com/statuspage/status.injective.network                                           |
 
 <Info>
-Chain ID, 컨트랙트 및 추가 제공자를 포함한 더 많은 EVM 네트워크 세부 정보는 [EVM 네트워크 정보](/developers-evm/network-information)를 참조하세요.
+チェーン ID、コントラクト、その他のプロバイダーを含む EVM ネットワークの詳細については、[EVM ネットワーク情報](/jp/developers-evm/network-information)を参照してください。
 </Info>
 
-## 테스트넷
+## テストネット
 
-| 서비스          | 주소                                                               |
+| サービス          | アドレス                                                               |
 | ---------------- | --------------------------------------------------------------------- |
 | Chain Swagger          | https://testnet.sentry.lcd.injective.network/swagger/                 |
 | Chain RPC              | https://testnet.sentry.tm.injective.network:443                       |
@@ -55,8 +55,8 @@ Chain ID, 컨트랙트 및 추가 제공자를 포함한 더 많은 EVM 네트�
 | Faucet           | https://testnet.faucet.injective.network/                             |
 | Status           | https://uptime.com/statuspage/testnet.status.injective.network                            |
 
-## 퍼블릭 지연 시간 벤치마크
+## パブリックレイテンシベンチマーク
 
-퍼블릭 Injective RPC 제공자를 비교하는 통합 개발자를 위해, [OpenChainBench](https://openchainbench.com/benchmarks/injective-rpc)는 Injective Foundation 엔드포인트와 커뮤니티 제공자(PublicNode, Polkachu, LavenderFive)를 대상으로 Tendermint `status` 메서드의 지속적인 지연 시간 벤치마크를 게시합니다. 프로브는 암스테르담, 버지니아, 싱가포르에서 60초마다 실행됩니다.
+パブリック Injective RPC プロバイダーを比較したい開発者向けに、[OpenChainBench](https://openchainbench.com/benchmarks/injective-rpc) が Injective Foundation エンドポイントとコミュニティプロバイダー（PublicNode、Polkachu、LavenderFive）を対象に、Tendermint `status` メソッドの継続的なレイテンシベンチマークを公開しています。プローブはアムステルダム、バージニア、シンガポールから 60 秒ごとに実行されます。
 
-소스 및 방법론: [github.com/ChainBench/openchainbench](https://github.com/ChainBench/openchainbench).
+ソースと方法論: [github.com/ChainBench/openchainbench](https://github.com/ChainBench/openchainbench)。

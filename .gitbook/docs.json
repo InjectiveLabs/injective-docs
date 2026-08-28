@@ -1936,7 +1936,8 @@
                   "jp/infra/set-up-keyring",
                   "jp/infra/join-a-network",
                   "jp/infra/cosmovisor",
-                  "jp/infra/upgrade-node"
+                  "jp/infra/upgrade-node",
+                  "jp/infra/public-endpoints"
                 ]
               },
               {
