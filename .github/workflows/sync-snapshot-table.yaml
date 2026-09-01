@@ -1,0 +1,100 @@
+name: Sync archival snapshot table
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Every Monday at 09:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: List S3 segments and check for new ones
+        id: check
+        run: |
+          DOCS_FILE=".gitbook/infra/archival-setup.mdx"
+
+          # List current S3 directories (public bucket, no credentials needed)
+          S3_DIRS=$(aws s3 ls s3://injective-snapshots/mainnet/subnode/ --no-sign-request \
+            | awk '{print $NF}' | sed 's|/||' | sort)
+
+          # Extract directories already in the docs table (lines like "| `0073`")
+          DOCS_DIRS=$(grep -oE '\| `[0-9]+`' "$DOCS_FILE" | sed 's/| `//;s/`//' | sort)
+
+          # Find segments in S3 that are not in the docs
+          NEW_DIRS=$(comm -23 <(echo "$S3_DIRS") <(echo "$DOCS_DIRS"))
+
+          if [ -z "$NEW_DIRS" ]; then
+            echo "No new segments found."
+            echo "has_new=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "New segments found:"
+          echo "$NEW_DIRS"
+          echo "has_new=true" >> "$GITHUB_OUTPUT"
+
+          # Build new table rows and append them before the closing of the table
+          # Height range is inferred from the directory name (e.g. 138150 -> 138M – 150M)
+          NEW_ROWS=""
+          for dir in $NEW_DIRS; do
+            # Split the numeric name into two halves to guess the range
+            len=${#dir}
+            mid=$((len / 2))
+            start=${dir:0:$mid}
+            end=${dir:$mid}
+            NEW_ROWS="${NEW_ROWS}| \`${dir}\`       | ${start}M – ${end}M    | TBD               | TBD                   |\n"
+          done
+
+          echo "new_rows<<EOF" >> "$GITHUB_OUTPUT"
+          echo -e "$NEW_ROWS" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          # Store list for PR body
+          echo "new_dirs<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$NEW_DIRS" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Update docs table
+        if: steps.check.outputs.has_new == 'true'
+        run: |
+          DOCS_FILE=".gitbook/infra/archival-setup.mdx"
+
+          # Find the last table row (line starting with "| `/") and append new rows after it
+          LAST_TABLE_LINE=$(grep -n '| `[0-9]' "$DOCS_FILE" | tail -1 | cut -d: -f1)
+
+          {
+            head -n "$LAST_TABLE_LINE" "$DOCS_FILE"
+            echo -e "${{ steps.check.outputs.new_rows }}"
+            tail -n +"$((LAST_TABLE_LINE + 1))" "$DOCS_FILE"
+          } > "${DOCS_FILE}.tmp"
+          mv "${DOCS_FILE}.tmp" "$DOCS_FILE"
+
+      - name: Create pull request
+        if: steps.check.outputs.has_new == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: docs/sync-snapshot-segments
+          commit-message: "docs: add new archival snapshot segments"
+          title: "docs: new archival snapshot segments detected"
+          body: |
+            ## New segments found in S3
+
+            The following segment directories exist in `s3://injective-snapshots/mainnet/subnode/` but were missing from the docs table:
+
+            ```
+            ${{ steps.check.outputs.new_dirs }}
+            ```
+
+            **Action required:** Please fill in the `TBD` values for:
+            - Injective version
+            - Recommended disk size
+
+            Height ranges were inferred from the directory name and may need correction.
+          labels: documentation
