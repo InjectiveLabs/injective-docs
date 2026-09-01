@@ -228,6 +228,12 @@
                   "infra/cosmovisor",
                   "infra/upgrade-node",
                   {
+                    "group": "Coordinated Upgrades",
+                    "pages": [
+                      "infra/coordinated-upgrades/index"
+                    ]
+                  },
+                  {
                     "group": "Mainnet Validator",
                     "pages": [
                       "infra/validator-mainnet/index",
