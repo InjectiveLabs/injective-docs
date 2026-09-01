@@ -1,0 +1,540 @@
+---
+title: 검증자 문제 해결
+updatedAt: "2026-09-01"
+---
+
+Injective 검증자 및 노드 운영자를 위한 문제 해결 참조 및 운영 가이드입니다. 일반적인 장애 유형, 복구 절차, 업그레이드 체크리스트, 그리고 중요한 안전 수칙을 다룹니다.
+
+---
+## 시작하기 전에: 중요 안전 수칙
+
+<Callout icon="warning" color="#FF8C00" iconType="regular">
+
+**절대 하지 말아야 할 것**
+
+1. **동일한 `priv_validator_key.json`으로 두 개의 노드를 동시에 실행하지 마세요.** 이는 이중 서명을 발생시켜 5% 슬래싱과 영구적인 툼스톤(tombstone) 처리를 초래합니다. 해당 검증자는 다시는 활성 세트에 복귀할 수 없습니다.
+2. **결과를 완전히 이해하지 못한 상태에서 검증자 노드에 `unsafe-reset-all`을 사용하지 마세요.** 이 명령은 합의 상태를 삭제하며, 툼스톤 처리로 이어지는 충돌 투표를 발생시킬 수 있습니다.
+3. **노드가 실행 중인 상태에서 `priv_validator_state.json`을 백업하지 마세요.** 이 파일은 합의 과정에서 계속 변경됩니다. 먼저 노드를 완전히 중지한 다음 복사하세요.
+4. **백업해 둔 `priv_validator_state.json`을 복원하지 않은 채 스냅샷 복구 후 노드를 시작하지 마세요.** 스냅샷에는 이 파일이 포함되어 있지 않습니다. 이 파일 없이 시작하면 서명 상태가 높이 0으로 초기화되어 이중 서명이 발생합니다.
+5. **사전 테스트 없이 아카이벌 노드나 대용량 히스토리 노드를 롤백하지 마세요.** 대용량 데이터베이스에서의 롤백은 수 시간이 걸리거나 노드를 완전히 사용 불능 상태로 만들 수 있으며, 특히 PebbleDB에서 그렇습니다.
+
+**항상 해야 할 것**
+
+1. **모든 복구 작업(롤백, 스냅샷 복원, 바이너리 업그레이드) 전에, 노드를 완전히 중지한 후 `priv_validator_state.json`을 항상 백업하세요.**
+2. **롤백 또는 스냅샷 복구 후 노드를 시작하기 전에 `priv_validator_state.json`을 항상 원래 위치로 복원하세요.**
+3. **노드를 시작하기 전에 `priv_validator_state.json`이 온전한지 항상 확인하세요.** height, round, step 값이 타당한지 점검하세요.
+4. **조정 업그레이드에는 항상 `--halt-height`를 설정하세요.** halt-height 플래그를 생략한 노드는 더 어려운 복구 경로를 거쳐야 합니다.
+5. **업그레이드 후 시작하기 전에 항상 `injectived version`으로 바이너리 버전을 확인하세요.**
+6. **체인이 안정되면 임시 합의 오버라이드(`--unsafe-consensus-timeout-precommit-delta=1ms` 등)를 항상 원래대로 되돌리세요.**
+
+</Callout>
+
+<Callout icon="info" color="#22C55E" iconType="regular">
+**복구용 스냅샷이 필요하신가요?** 프루닝 스냅샷과 커뮤니티 제공자에 대해서는 이 페이지 하단의 [스냅샷 리소스](#스냅샷-리소스)를 참조하세요. 아카이벌 세그먼트 스냅샷은 [아카이벌 설정](/ko/infra/archival-setup) 페이지를 참조하세요.
+</Callout>
+
+---
+
+## 일반적인 문제와 해결 방법
+
+### 업그레이드 높이에서 노드가 멈춤
+
+**증상:**
+- 노드 로그에 예정된 업그레이드 높이에서 체인이 중단되었다고 표시됨
+- `latest_block_height`가 중단 높이를 넘어 진행되지 않음
+
+**원인:** 노드가 이전 바이너리를 실행하고 있습니다. 체인은 업그레이드 높이를 지나 진행하기 위해 업그레이드된 바이너리를 요구합니다.
+
+**해결 방법:**
+
+1. 노드 중지
+2. `~/.injectived/data/priv_validator_state.json` 백업
+3. 새 바이너리 설치
+4. 확인: `injectived version`
+5. 노드 시작
+
+---
+
+### 업그레이드 후 블록 헤더 해시 불일치
+
+**증상:**
+
+```
+ERR prevote step: consensus deems this block invalid; prevoting nil
+err="wrong Block.Header.LastResultsHash. Expected 284C339C..., got 694706724..."
+```
+
+노드가 계속 nil에 prevote하며 다음 블록을 확정하지 못합니다.
+
+**원인:** 업그레이드 높이에서 노드의 로컬 상태가 새 바이너리가 기대하는 상태와 일치하지 않습니다. 이는 노드가 업그레이드 전에 이전 바이너리 로직으로 halt-height 블록을 처리했을 때 발생합니다.
+
+**해결 방법:**
+
+1. 노드 중지
+2. `priv_validator_state.json` 백업
+3. 한 블록 롤백:
+   ```bash
+   injectived rollback
+   ```
+4. `priv_validator_state.json` 복원
+5. 새 바이너리로 노드 시작
+
+<Warning>
+대용량 데이터베이스(수백 GB)를 보유한 아카이벌 노드에서의 롤백은 매우 오래 걸리거나 실패할 수 있습니다. 이러한 노드는 대신 스냅샷에서 복구하세요.
+</Warning>
+
+---
+
+### 충돌 투표 경고
+
+**증상:**
+
+```
+ERR Found conflicting vote from ourselves; did you unsafe_reset a validator?
+height=181027006 module=consensus round=40 type=SIGNED_MSG_TYPE_PREVOTE
+```
+
+이 메시지가 계속 반복됩니다.
+
+**원인:** 노드의 `priv_validator_state.json`이 초기화되거나 손상되어, 이미 서명한 라운드에 다시 서명하면서 충돌 투표가 발생하고 있습니다.
+
+**일반적인 유발 요인:**
+- 검증자에서 `unsafe-reset-all` 실행
+- 오래되었거나 잘못된 `priv_validator_state.json` 복원
+- 노드가 실행 중인 상태에서 `priv_validator_state.json`을 백업함(오래된 사본)
+- 롤백 명령이 검증자 상태를 초기화함
+
+**해결 방법:**
+
+- 올바른 `priv_validator_state.json` 백업(노드를 완전히 중지한 후 생성한 것)이 있는 경우: 복원 후 재시작하세요.
+- 올바른 백업이 없는 경우: **즉시 노드를 중지하고 블록 생성이 재개될 때까지 기다린 후 재시작하세요.** 잘못된 상태로 시작하면 이중 서명 위험이 있습니다.
+- 서명 정보 확인:
+  ```bash
+  injectived query slashing signing-info <injvalcons_address>
+  ```
+
+<Warning>
+온체인에서 충돌 투표가 감지되면 검증자는 툼스톤 처리(영구 감금)됩니다. 이중 서명에 대한 온체인 감금 해제(unjail)는 없습니다.
+</Warning>
+
+---
+
+### 검증자 툼스톤 처리됨(이중 서명)
+
+**증상:**
+
+```
+injectived query slashing signing-info injvalcons1...
+  tombstoned: true
+  jailed_until: "9999-12-31T23:59:59Z"
+```
+
+**원인:** 검증자가 동일한 높이에서 서로 다른 두 개의 블록 또는 prevote에 서명했습니다. 일반적인 유발 요인:
+
+- 동일한 서명 키로 노드 인스턴스 두 개를 실행
+- 이전에 서명한 높이에서 재서명을 유발하는 오래된 `priv_validator_state.json` 복원
+- 롤백으로 서명 상태가 초기화된 후 노드가 충돌하는 블록에 서명
+
+**해결 경로:**
+
+툼스톤 처리된 검증자에 대한 표준 온체인 감금 해제는 없습니다. 해결 경로는 다음과 같습니다:
+- 영향을 받은 검증자의 툼스톤을 명시적으로 해제하는 거버넌스 제안 또는 업그레이드 핸들러
+- 새 오퍼레이터 키로 새 검증자 생성(기존 위임을 잃음)
+
+<Warning>
+**조정 보안 업그레이드 중에 툼스톤 처리된 경우**, 즉시 검증된 검증자 채널에서 Injective 팀에 연락하세요. 조정 업그레이드 중에는 팀이 영향을 받은 검증자를 복원하기 위해 업그레이드 바이너리에 툼스톤 해제 핸들러를 포함할 수 있습니다. 시간이 중요하므로, 업그레이드 핸들러가 확정되기 전에 포함될 수 있도록 최대한 빨리 보고하세요.
+</Warning>
+
+**예방:**
+- 하드웨어 수준에서 단일 서명자를 보장하는 TMKMS 또는 Horcrux 사용
+- 노드를 중지한 후 항상 `priv_validator_state.json` 백업
+- 동일한 서명 키로 두 개의 노드를 동시에 실행하지 않기
+
+---
+
+### 스냅샷에서 복구
+
+**사용 시점:** 롤백이 실패하거나, 너무 오래 걸리거나, 노드 상태가 복구 불가능할 정도로 손상된 경우(AppHash 불일치).
+
+**절차:**
+
+1. 노드를 완전히 중지
+2. `~/.injectived/data/priv_validator_state.json` 백업
+3. 다른 곳에 백업되어 있지 않다면 `~/.injectived/config/priv_validator_key.json` 백업
+4. 신뢰할 수 있는 제공자로부터 스냅샷 다운로드:
+   - Injective 팀이 보안 업그레이드 전이나 도중에 긴급 스냅샷을 공유할 수 있음
+   - [Polkachu Injective Snapshots](https://polkachu.com/tendermint_snapshots/injective) (일반적으로 goleveldb)
+   - 인시던트 중에 커뮤니티 검증자들이 긴급 스냅샷을 공유할 수 있음
+5. 이전 데이터 제거:
+   ```bash
+   rm -rf ~/.injectived/data
+   ```
+6. 스냅샷을 `~/.injectived/data/`에 압축 해제
+7. **백업해 둔 `priv_validator_state.json`을 `~/.injectived/data/`에 복원**
+8. `priv_validator_state.json`이 존재하고 올바른지 확인
+9. 노드 시작
+
+#### 자신의 `priv_validator_state.json`을 반드시 보관해야 하는 이유
+
+스냅샷에는 블록체인 데이터(블록, 애플리케이션 상태)가 포함되지만, 검증자의 서명 상태는 절대 포함되지 않습니다. 서명 상태는 검증자가 마지막으로 서명한 높이(height), 라운드(round), 단계(step)를 추적합니다. 이 파일을 잃어버리거나 빈 파일로 교체하면, 노드는 자신이 이미 서명한 내용을 알지 못하고 충돌하는 블록에 서명할 수 있으며 — 이는 이중 서명과 영구적인 툼스톤 처리를 초래합니다.
+
+서명 상태가 항상 스냅샷 높이보다 앞서 있어야(또는 같아야) 하는 이유를 보여주는 실제 예시입니다.
+
+**상황:** 블록 125에 halt-height가 설정된 조정 체인 업그레이드.
+
+```
+Block:  100  105  110  115  120  125  126
+         |    |    |    |    |    |    |
+         |    |    |    |    |    |    Chain resumes with new binary
+         |    |    |    |    |    Chain halts here (upgrade height)
+         |    |    |    |    |
+         |    |    |    Snapshot taken at block 115
+         |    |    |
+         Your node has been signing every block...
+```
+
+중단 시점에 여러분의 `priv_validator_state.json`은 다음과 같습니다:
+
+```json
+{
+  "height": "126",
+  "round": 42,
+  "step": 3,
+  "signature": "...",
+  "signbytes": "..."
+}
+```
+
+**중단 높이가 125였는데 왜 높이 126이라고 표시될까요?** `--halt-height` 플래그는 블록 126이 *커밋*(확정)되는 것을 막지만, CometBFT 합의 엔진은 여전히 높이 126에 진입하여 라운드를 시작합니다 — 제안(proposing), prevote, precommit을 수행한 후에야 애플리케이션 계층이 블록 처리를 거부하고 노드가 종료됩니다. 높은 라운드 번호(42)는 검증자들이 점진적으로 중지하면서 합의에 도달하지 못한 채 네트워크가 라운드를 반복한 것을 반영합니다. 이는 정상적인 동작입니다: 해당 블록이 확정되지 않았더라도 여러분의 검증자는 높이 126에서 실제 투표를 했습니다.
+
+즉, 여러분의 검증자는 이미 높이 126, 라운드 42에서 투표를 한 것입니다. 사용 가능한 스냅샷은 높이 115의 것입니다.
+
+**서명 상태 없이 스냅샷을 복원하면 발생하는 일:**
+
+스냅샷에는 `priv_validator_state.json`이 없거나 빈 파일(높이 0)이 들어 있습니다. 이 상태로 노드를 시작하면:
+
+1. 노드가 높이 115의 블록체인 데이터를 로드합니다
+2. 블록 116-125를 재생(replay)하여 높이 126까지 따라잡습니다
+3. 높이 126에서 합의에 진입하여 라운드 0부터 서명을 시작합니다
+4. 그러나 네트워크에는 이미 이 높이에서 라운드 42까지의 여러분의 투표가 존재합니다
+5. 노드가 높이 126에서 다른 블록 제안에 서명합니다(새 바이너리로 재생했기 때문에 다른 결과가 나올 수 있음)
+6. 네트워크가 여러분의 검증자 키에서 나온 두 개의 충돌하는 서명을 감지합니다
+7. **검증자는 이중 서명으로 툼스톤 처리됩니다. 영구적으로.**
+
+**올바른 절차:**
+
+1. 노드 중지
+2. `priv_validator_state.json` 백업(높이 126, 라운드 42로 기록되어 있음)
+3. 데이터 디렉터리 삭제
+4. 스냅샷 압축 해제(높이 115의 블록체인 데이터)
+5. **백업해 둔 `priv_validator_state.json`을 데이터 디렉터리에 다시 복사**
+6. 노드 시작
+
+이제 노드가 시작되면:
+
+1. 높이 115의 블록체인 데이터를 로드합니다
+2. 블록 116-125를 재생하여 높이 126까지 따라잡습니다
+3. 높이 126에서 서명 상태를 읽습니다: "나는 이미 라운드 42까지 서명했다"
+4. 라운드 0-42를 건너뛰고 라운드 43이 될 때까지 새로 서명하지 않습니다
+5. 충돌 투표가 없습니다. 검증자는 안전합니다.
+
+<Warning>
+**핵심 규칙:** 서명 상태는 항상 검증자가 지금까지 서명한 가장 높은 지점을 반영해야 합니다. 서명 상태가 스냅샷보다 앞서 있는 것은 안전합니다(노드가 따라잡습니다). 서명 상태가 검증자가 네트워크에서 실제로 서명한 지점보다 뒤에 있는 것은 절대 안전하지 않습니다.
+</Warning>
+
+| 시나리오 | 서명 상태 높이 | 스냅샷 높이 | 안전 여부 |
+|---|---|---|---|
+| 일반 복구 | 126 | 115 | 예 — 노드가 116-125를 재생하고, 126에서 이미 서명한 라운드를 건너뜀 |
+| 최신 스냅샷, 상태 유지 | 126 | 120 | 예 — 동일한 로직, 재생할 블록이 더 적음 |
+| 상태 없는 스냅샷 | 0 | 115 | **아니요** — 이미 서명한 높이에서 재서명하여 이중 서명 발생 |
+| 오래된 백업(110에서 생성) | 110 | 115 | **아니요** — 높이 111-126에서 재서명하게 됨 |
+
+**데이터베이스 백엔드 호환성:** 스냅샷은 백엔드 종속적입니다. goleveldb 스냅샷은 pebbledb로 구성된 노드에서 작동하지 않으며, 그 반대도 마찬가지입니다. 구성을 확인하세요:
+
+```bash
+grep db_backend ~/.injectived/config/config.toml
+```
+
+---
+
+### 롤백이 멈추거나 실패함
+
+**증상:** `injectived rollback`이 실행되지만 완료되지 않거나 오류가 발생합니다.
+
+**원인:**
+- **PebbleDB 백엔드:** pebble에서의 롤백에는 알려진 문제가 있으며 무한정 멈출 수 있음
+- **매우 큰 데이터베이스:** 롤백 시간은 데이터베이스 크기에 비례함
+- **손상된 WAL** (Write-Ahead Log)
+
+**해결 방법:**
+- PebbleDB 노드의 경우: 대신 스냅샷에서 복구
+- 대용량 노드의 경우: 롤백이 30분 이상 완료되지 않으면 중단하고 스냅샷 사용
+- goleveldb로의 전환을 고려하세요. PebbleDB는 공간 효율이 더 좋지만 롤백에 대한 검증이 덜 되어 있습니다
+
+---
+
+### 캐치업 중 라운드 회귀 오류
+
+**증상:**
+
+```
+ERR Failed signing vote err="error signing vote: round regression at height 181027006.
+Got 108, last round 141"
+```
+
+**원인:** 노드가 현재 합의 라운드를 따라잡는 중입니다. 많은 라운드가 진행된 활성 합의 라운드 중에 노드를 재시작할 때 발생하는 정상적이고 예상된 동작입니다.
+
+**해결 방법:** 조치가 필요하지 않습니다. 노드가 따라잡을 것입니다. 라운드 캐치업 속도를 높이려면:
+
+```bash
+# Flag
+--unsafe-consensus-timeout-precommit-delta=1ms
+
+# Or environment variable
+INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
+```
+
+<Warning>
+**체인이 안정되고 노드가 따라잡은 후에는 이 오버라이드를 제거하세요.** 기본값(100ms)으로 되돌리고 재시작하세요.
+
+정상 운영 중에 그대로 두면, 1ms 델타로 인해 라운드가 투표가 네트워크에 전파되는 속도보다 훨씬 빠르게 진행됩니다. 다른 검증자들의 precommit이 도착하기 전에 여러분의 검증자가 다음 라운드로 넘어가므로, 그 투표가 실제 커밋 라운드를 놓치게 됩니다. 그 결과 누락 블록 카운터가 꾸준히 증가하며, 충분히 많은 블록을 놓치면(일반적으로 최근 10,000개 중 500개) **검증자는 다운타임으로 감금(jail)됩니다**.
+</Warning>
+
+---
+
+### AppHash 불일치
+
+**증상:**
+
+```
+panic: Tendermint state.AppHash does not match AppHash after replay
+```
+
+**원인:** 애플리케이션 상태가 합의 상태에서 벗어났습니다. 불완전한 업그레이드, 블록 실행 중 크래시, 또는 손상된 데이터베이스로 인해 발생할 수 있습니다.
+
+**해결 방법:**
+
+1. 롤백 시도: `injectived rollback`
+2. 롤백이 실패하거나 오류가 지속되는 경우: 스냅샷에서 복구
+3. 복구 후에는 항상 `priv_validator_state.json`을 복원
+
+---
+
+### 업그레이드 후 센트리 노드가 멈춤
+
+**증상:** 검증자 노드는 업그레이드되어 서명 중이지만, 센트리 노드는 이전 블록 높이에 멈춰 있습니다.
+
+**원인:** 센트리 노드도 업그레이드 높이를 지나 블록을 처리하려면 새 바이너리가 필요합니다.
+
+**해결 방법:** 센트리 노드를 검증자와 동일한 바이너리 버전으로 업그레이드하세요. 센트리에는 `priv_validator_state.json`이 없지만(서명하지 않음), 올바른 바이너리는 필요합니다.
+
+---
+
+### 업그레이드 후 체인 정지(투표력 부족)
+
+**증상:**
+
+- 업그레이드 높이 이후 체인이 새 블록을 생성하지 않음
+- 합의 라운드 번호가 계속 증가함(라운드 50, 100, 200+)
+- 노드가 prevote와 precommit을 로그에 남기지만 블록이 커밋되지 않음
+- `latest_block_height`가 중단 높이에 멈춰 있음
+
+**원인:** CometBFT는 블록을 확정하기 위해 전체 투표력의 2/3 이상이 온라인 상태로 올바른 바이너리로 참여해야 합니다. 조정 업그레이드 중에는 검증자들이 서로 다른 속도로 업그레이드하는 시간대가 존재합니다. 충분한 투표력이 새 바이너리를 실행할 때까지 네트워크는 합의에 도달할 수 없습니다.
+
+이 시간대에 일어나는 일:
+
+1. 체인이 업그레이드 높이에서 중단됩니다(예: 블록 125)
+2. 업그레이드를 완료한 검증자들이 높이 126에서 합의에 참여하기 시작합니다
+3. 각 라운드마다 네트워크가 블록 126을 확정하려 시도하지만, 투표력의 2/3 미만이 투표하고 있어 실패합니다
+4. 라운드 번호가 증가하며 이 주기가 반복됩니다. 라운드 1, 2, 3, ... 50, ... 100+
+5. 충분한 검증자가 업그레이드를 완료하고 온라인 상태가 될 때까지 계속됩니다
+
+**이는 업그레이드 중 정상적인 현상입니다.** 체인이 고장 난 것이 아니라 정족수를 기다리고 있는 것입니다.
+
+**해야 할 일:**
+
+- **이미 업그레이드한 경우:** 조치가 필요 없습니다. 노드는 참여 중이며 정족수에 도달하면 자동으로 다음 블록을 확정합니다. 노드가 라운드를 따라잡는 동안 로그에 라운드 회귀 오류가 표시될 것입니다. 이는 예상된 동작입니다([캐치업 중 라운드 회귀 오류](#캐치업-중-라운드-회귀-오류) 참조).
+- **아직 업그레이드하지 않은 경우:** 여러분이 부족한 투표력의 일부입니다. 체인이 재개될 수 있도록 가능한 한 빨리 업그레이드를 완료하세요.
+- **진행 상황 모니터링:** 얼마나 많은 검증자가 온라인 상태로 참여 중인지 확인:
+  ```bash
+  curl -s localhost:26657/consensus_state | jq '.result.round_state.votes'
+  ```
+- **검증자 채널에서 조율:** 주요 업그레이드 중에는 검증자들이 일반적으로 검증된 검증자 채널에서 업그레이드 진행 상황과 투표력 비율을 추적하며 조율합니다.
+
+<Note>
+이 시간대가 길어질수록 라운드 번호는 더 높이 올라갑니다. 나중에 온라인 상태가 되는 검증자는 그 모든 라운드를 따라잡아야 하며, 이것이 `--unsafe-consensus-timeout-precommit-delta=1ms` 플래그가 존재하는 이유입니다. 다만 [체인이 안정된 후에는 제거](#캐치업-중-라운드-회귀-오류)해야 한다는 점을 기억하세요.
+</Note>
+
+---
+
+### 다운타임으로 감금됨(툼스톤 아님)
+
+**증상:**
+- 검증자가 비활성 또는 감금 상태로 표시됨
+- 서명 정보에 `tombstoned: false`가 표시됨
+- 누락 블록 카운터가 높음
+
+**원인:** 검증자가 너무 많은 연속 블록을 놓쳤습니다(일반적으로 최근 10,000개 중 500개).
+
+**해결 방법:**
+
+1. 노드가 실행 중이고 최신 블록까지 완전히 따라잡았는지 확인
+2. 감금 해제:
+   ```bash
+   injectived tx slashing unjail \
+     --from=<key_name> \
+     --chain-id=injective-1 \
+     --gas=auto \
+     --gas-adjustment=1.5
+   ```
+3. 검증자가 다시 활성 상태인지 확인:
+   ```bash
+   injectived query staking validator <injvaloper_address>
+   ```
+
+---
+
+## 조정 업그레이드 체크리스트
+
+### 업그레이드 높이 이전
+
+- [ ] 거버넌스 제안 또는 체인 팀으로부터 목표 halt-height 확인
+- [ ] 새 바이너리 다운로드 및 검증(sha256 체크섬 확인)
+- [ ] 노드 구성 또는 CLI 플래그에 `--halt-height=<target_height>` 설정
+- [ ] Cosmovisor 사용 시: 올바른 업그레이드 디렉터리에 새 바이너리 배치
+- [ ] `priv_validator_state.json` 백업
+- [ ] 롤백이 필요할 경우에 대비해 스냅샷 제공자 파악
+- [ ] 중단 높이까지의 체인 진행 상황 모니터링
+
+### 업그레이드 높이에서
+
+- [ ] 노드가 예정된 높이에서 중단되었는지 확인
+- [ ] 노드를 완전히 중지(프로세스가 종료되었는지 확인)
+  ```bash
+  ps aux | grep injectived
+  ```
+- [ ] `priv_validator_state.json` 백업
+- [ ] 새 바이너리 설치
+- [ ] 버전 확인:
+  ```bash
+  injectived version
+  ```
+
+### 업그레이드 이후
+
+- [ ] 새 바이너리로 노드 시작
+- [ ] 합의 참여 여부를 로그로 모니터링
+- [ ] prevote가 올바른지 확인(매 라운드마다 nil에 투표하지 않는지)
+- [ ] 익스플로러에서 투표력 모니터링 ([Mintscan](https://www.mintscan.io/injective/validators))
+- [ ] `wrong Block.Header.LastResultsHash`가 표시되면: 중지, 1블록 롤백, `priv_validator_state.json` 복원, 재시작
+- [ ] 라운드 캐치업 오버라이드(`--unsafe-consensus-timeout-precommit-delta`)를 사용 중이라면: 안정화 후 제거
+- [ ] 검증자가 서명 중인지 확인:
+  ```bash
+  curl -s localhost:26657/consensus_state | jq '.result.round_state["height/round/step"]'
+  ```
+
+---
+
+## 모니터링 참조
+
+### 합의 및 동기화 상태
+
+```bash
+# Current consensus state (height, round, step)
+curl -s localhost:26657/consensus_state \
+  | jq '.result.round_state["height/round/step"] | split("/") | {height: .[0], round: .[1], step: .[2]}'
+
+# Latest block height
+curl -s localhost:26657/status | jq '.result.sync_info.latest_block_height'
+
+# Whether the node is still catching up
+curl -s localhost:26657/status | jq '.result.sync_info.catching_up'
+```
+
+### 검증자 상태 점검
+
+```bash
+# Signing info (missed blocks, jail status, tombstone status)
+injectived query slashing signing-info $(injectived tendermint show-validator)
+
+# Validator status and jail state
+injectived query staking validator <injvaloper_address> --output json | jq '.status, .jailed'
+```
+
+### 노드 구성
+
+```bash
+# Current binary version
+injectived version
+
+# Current priv_validator_state (check height/round/step)
+cat ~/.injectived/data/priv_validator_state.json | jq
+
+# Database backend
+grep db_backend ~/.injectived/config/config.toml
+```
+
+---
+
+## 프루닝 노드와 아카이벌 노드 비교
+
+| | 프루닝 노드 | 아카이벌 노드 |
+|---|---|---|
+| **롤백** | 빠름(수 분) | 느림(수 분에서 수 시간), 실패할 수 있음 |
+| **스냅샷 복구** | 빠름(10-30분) | 매우 느림(수 시간, 스냅샷 100+ GB) |
+| **일반적인 DB 크기** | 10-50 GB | 500+ GB |
+| **권장 복구 방식** | 롤백 우선, 스냅샷은 대안 | 스냅샷 선호, 롤백은 위험 |
+
+---
+
+## 추가 리소스
+
+- [Injective 노드 실행](/ko/infra/run-node)
+- [Cosmovisor 설정](/ko/infra/cosmovisor)
+- [노드 업그레이드](/ko/infra/upgrade-node)
+- [Cosmos 검증자 FAQ](https://github.com/cosmos/cosmos/blob/master/VALIDATORS_FAQ.md)
+- [CometBFT 프로덕션 운영 가이드](https://docs.tendermint.com/v0.34/tendermint-core/running-in-production.html)
+
+---
+
+## 스냅샷 리소스
+
+### Injective 제공 스냅샷
+
+Injective는 두 개의 리전에서 프루닝된 메인넷 스냅샷을 유지 관리합니다. 최신 사용 가능 높이와 다운로드 URL은 상태 엔드포인트를 확인하세요:
+
+| 리전 | 상태 | 다운로드 |
+|---|---|---|
+| **EU (OVH)** | [status.json](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/status.json) | `http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/` |
+| **Asia (GCS)** | [status.json](https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json) | `https://storage.googleapis.com/injective-mainnet-snapshots-asia/` |
+
+최신 스냅샷을 다운로드하려면 상태 엔드포인트에서 현재 파일 이름을 확인하세요:
+
+```bash
+# Check latest available snapshot (Asia example)
+curl -s https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json | jq
+
+# Download the snapshot
+wget <url from status.json>
+
+# Extract
+lz4 -d <snapshot_file>.tar.lz4 | tar xf - -C ~/.injectived/data/
+```
+
+조정 보안 업그레이드 중에는 Injective 팀이 검증된 검증자 채널에서 긴급 스냅샷을 공유할 수도 있습니다. 아카이벌 세그먼트 스냅샷은 [아카이벌 설정](/ko/infra/archival-setup) 페이지를 참조하세요.
+
+### 커뮤니티 스냅샷 제공자
+
+- [Polkachu Injective Snapshots](https://polkachu.com/tendermint_snapshots/injective) (일반적으로 goleveldb, 프루닝)
+- [HighStakes Injective Snapshots](https://tools.highstakes.ch/snapshots/injective)
+- 인시던트 중에는 커뮤니티 검증자들이 검증자 채널에서 긴급 스냅샷을 공유할 수 있음
+
+<Warning>
+**데이터베이스 백엔드 호환성:** 스냅샷은 백엔드 종속적입니다. goleveldb 스냅샷은 pebbledb로 구성된 노드에서 작동하지 않으며, 그 반대도 마찬가지입니다. 다운로드하기 전에 구성을 확인하세요:
+
+```bash
+grep db_backend ~/.injectived/config/config.toml
+```
+
+**스냅샷 복구 후 노드를 시작하기 전에 백업해 둔 `priv_validator_state.json`을 반드시 데이터 디렉터리에 복원해야 합니다.** 전체 절차는 위의 [스냅샷에서 복구](#스냅샷에서-복구)를 참조하세요.
+</Warning>

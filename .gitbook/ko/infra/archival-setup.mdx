@@ -1,35 +1,92 @@
 ---
-title: 아카이벌 설정
-updatedAt: "2026-03-05"
+title: 아카이벌 노드 설정 및 복구
+updatedAt: "2026-09-01"
 ---
 
-이 가이드는 아카이벌 데이터를 제공하는 노드 플릿을 생성하고 게이트웨이를 사용하여 연결하는 과정을 안내합니다.
+Injective 아카이벌 노드의 설정, 구성 및 복구 가이드입니다. 게이트웨이 프록시 뒤에 세그먼트화된 아카이벌 플릿을 배포하는 방법과, 조정 업그레이드 또는 예기치 않은 중단 이후 아카이벌 노드를 복원하는 방법을 다룹니다.
 
-## 아키텍처
+<Callout icon="info" color="#22C55E" iconType="regular">
+**프루닝 스냅샷이나 검증자 복구를 찾고 계신가요?** 프루닝 스냅샷 리소스와 조정 보안 업그레이드 복구 절차는 [검증자 문제 해결 가이드](/ko/infra/coordinated-upgrades)를 참조하세요.
+</Callout>
+
+<Callout icon="warning" color="#FF8C00" iconType="regular">
+**업그레이드 또는 중단 후 복원 중이신가요?** 복구 절차는 [업그레이드 또는 중단 후 아카이벌 노드 복원](#업그레이드-또는-중단-후-아카이벌-노드-복원)으로 바로 이동하세요.
+</Callout>
+
+## 아카이벌 설정
 
 아카이벌 데이터 제공을 더 접근하기 쉽게 하기 위해 데이터를 더 작은 세그먼트로 분할합니다. 이러한 세그먼트는 `s3://injective-snapshots/mainnet/subnode`에 저장됩니다.
 
+이 버킷은 공개적으로 접근 가능하며, AWS 자격 증명이 필요하지 않습니다:
+
+```bash
+# List all available segments using AWS CLI
+aws s3 ls --no-sign-request s3://injective-snapshots/mainnet/subnode/
+
+# Or without AWS CLI, using curl
+curl -s "https://injective-snapshots.s3.amazonaws.com/?prefix=mainnet/subnode/&delimiter=/" \
+  | tr '<' '\n' | sed -n 's/^Prefix>mainnet\/subnode\/\([^/]*\)\/.*/\1/p' | sort -n
+```
+
+#### 명명 규칙
+
+디렉터리 이름은 블록 높이 범위를 백만 단위로 인코딩합니다. 예를 들어 `138150`은 138M부터 150M까지의 블록을 포함합니다. 세그먼트가 겹치는 경우(예: `8896` 대 `8898`, 또는 `119127` 대 `119141` 대 `119143`), 일반적으로 더 새롭거나 더 넓은 세그먼트에 수정 사항이 포함되어 있거나 커버리지가 확장되어 있습니다. 불필요한 중복 없이 대상 범위를 가장 잘 커버하는 세그먼트를 선택하세요.
+
+#### 사용 가능한 세그먼트
+
+<Note>
+이 표에는 최신 세그먼트가 포함되어 있지 않을 수 있습니다. 새로 게시된 세그먼트를 확인하려면 위의 `aws s3 ls` 명령을 실행하세요.
+</Note>
+
 | Snapshot Dir | 높이 범위 | Injective 버전 | 권장 디스크 크기 |
 | ------------ | ------------ | ----------------- | --------------------- |
-| `/0073`      | 0 – 73M      | v1.12.1           | 42 TiB                |
-| `/6068`      | 60M – 68M    | v1.12.1           | 7 TiB                 |
-| `/7380`      | 73M – 80M    | v1.12.1           | 7 TiB                 |
-| `/8088`      | 80M – 88M    | v1.13.3           | 7 TiB                 |
-| `/8896`      | 88M – 96M    | v1.13.3           | 7 TiB                 |
-| `/8898`      | 88M – 98M    | v1.13.3           | 7 TiB                 |
-| `/98106`     | 98M – 106M   | v1.13.3           | 7 TiB                 |
-| `/98107`     | 98M – 107M   | v1.14.0           | 7.5 TiB               |
-| `/66101`     | 66M – 101M   | v1.14.0           | 27 TiB                |
-| `/105116`    | 105M – 116M  | v1.15.0           | 7.5 TiB               |
-| `/113127`    | 113M – 127M  | v1.15.0           | 11 TiB                |
-| `/119143`    | 119M – 143M  | v1.17.0           | 16 TiB                |
-| `/138150`    | 138M – 150M  | v1.17.2           | 5.8 TiB               |
+| `0073`       | 0 – 73M      | v1.12.1           | 42 TiB                |
+| `6068`       | 60M – 68M    | v1.12.1           | 7 TiB                 |
+| `7380`       | 73M – 80M    | v1.12.1           | 7 TiB                 |
+| `8088`       | 80M – 88M    | v1.13.3           | 7 TiB                 |
+| `8896`       | 88M – 96M    | v1.13.3           | 7 TiB                 |
+| `8898`       | 88M – 98M    | v1.13.3           | 7 TiB                 |
+| `98106`      | 98M – 106M   | v1.13.3           | 7 TiB                 |
+| `98107`      | 98M – 107M   | v1.14.0           | 7.5 TiB               |
+| `66101`      | 66M – 101M   | v1.14.0           | 27 TiB                |
+| `105116`     | 105M – 116M  | v1.15.0           | 7.5 TiB               |
+| `113127`     | 113M – 127M  | v1.15.0           | 11 TiB                |
+| `119127`     | 119M – 127M  | 미정               | 미정                   |
+| `119141`     | 119M – 141M  | 미정               | 미정                   |
+| `119143`     | 119M – 143M  | v1.17.0           | 16 TiB                |
+| `138150`     | 138M – 150M  | v1.17.2           | 5.8 TiB               |
+| `150181`     | 150M – 181M  | 곧 제공 예정        | 곧 제공 예정           |
+
+<Warning>
+**미정** 또는 **곧 제공 예정**으로 표시된 행은 S3에 존재하지만 버전과 디스크 크기가 아직 검증되지 않은 세그먼트입니다. 이러한 세그먼트를 사용하기 전에 인프라 팀에 문의하거나 세그먼트 메타데이터를 확인하세요.
+</Warning>
+
+#### 전체 커버리지를 위한 세그먼트 선택
+
+여러 세그먼트가 높이 범위에서 겹칩니다. 모든 세그먼트가 필요하지는 않습니다. 다음은 제네시스부터 현재 체인 최신 블록까지 전체 아카이벌 커버리지를 위한 권장 최소 구성입니다:
+
+| 노드 | 세그먼트 | 높이 범위 | 참고 |
+| ---- | ------- | ------------ | ----- |
+| 1    | `0073`  | 0 – 73M      | 제네시스부터 초기 체인 히스토리까지 |
+| 2    | `7380`  | 73M – 80M    | |
+| 3    | `8088`  | 80M – 88M    | |
+| 4    | `8898`  | 88M – 98M    | 더 넓은 커버리지를 위해 `8896` 대신 `8898` 사용 |
+| 5    | `98107` | 98M – 107M   | 더 넓은 커버리지와 더 새로운 바이너리를 위해 `98106` 대신 `98107` 사용 |
+| 6    | `105116`| 105M – 116M  | 이전 세그먼트와 겹치며, 이중화를 제공 |
+| 7    | `119143`| 119M – 143M  | 노드 수를 최소화하기 위해 가장 넓은 세그먼트 사용 |
+| 8    | `138150`| 138M – 150M  | |
+| 9    | `150181`| 150M – 181M  | 최신 세그먼트, 최근 체인 높이까지 커버 |
+| Tip  | 프루닝  | 최신 블록 | 프루닝 노드가 최신 세그먼트와 라이브 체인 최신 블록 사이의 간격을 커버합니다 |
+
+**프루닝 팁 노드**는 필수입니다. 아카이벌 세그먼트는 라이브 체인과 동기화되지 않는 정적 스냅샷입니다. 게이트웨이는 최근 블록에 대한 쿼리를 p2p를 통해 동기화 상태를 유지하는 프루닝 노드로 라우팅합니다. 팁 노드를 `blocks: [1000]`으로 구성하는 방법은 아래 [게이트웨이 구성](#게이트웨이-구성)을 참조하세요.
 
 이러한 세그먼트는 블록 범위에 따라 쿼리를 적절한 노드로 라우팅하는 애그리게이터 프록시인 게이트웨이를 통해 연결됩니다.
 
-![Archival Architecture](./assets/archival_architecture.jpg)
+![아카이벌 아키텍처](./assets/archival_architecture.jpg)
 
 ## 시스템 요구 사항
+
+아카이벌 데이터의 슬라이스를 호스팅하는 각 노드는 다음 최소 요구 사항을 충족해야 합니다.
 
 | 구성 요소   | 최소 사양 | 참고                                                      |
 | ----------- | --------------------- | ---------------------------------------------------------- |
@@ -39,52 +96,143 @@ updatedAt: "2026-03-05"
 
 ## 설정 단계
 ### 아카이벌 세그먼트를 호스팅하는 각 노드에서:
-#### 1. 아카이벌 세그먼트 다운로드:
+#### 1. 설정에 필요한 히스토리가 포함된 아카이벌 세그먼트를 다음 명령으로 다운로드
 ```bash
-aws s3 cp --recursive s3://injective-snapshots/mainnet/subnode/<SNAPSHOT_DIR> $INJ_HOME
+# SNAPSHOT_DIR matches the "Snapshot Dir" column in the table above (0073, 138150)
+aws s3 cp --no-sign-request --recursive s3://injective-snapshots/mainnet/subnode/$SNAPSHOT_DIR $INJ_HOME
 ```
 
-#### 2. 적절한 injective 바이너리 다운로드
+#### 2. 위 표를 기준으로 적절한 injective 바이너리 또는 이미지 태그를 다운로드하거나 설정
 
-#### 3. config 폴더 생성:
+#### 3. config 폴더 생성
 ```bash
 injectived init $MONIKER --chain-id injective-1 --home $INJ_HOME --overwrite
 ```
+#### 4. app.toml 파일에서 프루닝을 비활성화하고, config.toml 파일에서 p2p를 차단하고 로그 레벨을 error로 설정합니다.
 
-#### 4. 프루닝 비활성화 및 p2p 차단:
+이렇게 하면 데이터가 프루닝되지 않고 노드가 중단된 상태를 유지합니다. 로그 레벨을 error로 설정하면 디스크 작업이 줄어들어 성능이 향상됩니다.
+
 ```bash
+# Disable pruning in app.toml
 sed -i 's/^pruning *= *.*/pruning = "nothing"/' $INJ_HOME/config/app.toml
+
+# Disable p2p and disable create empty blocks on config.toml
+awk '
+    BEGIN { section = "" }
+    /^\[/ {
+    section = $0
+    }
+    section == "[p2p]" {
+    if ($1 ~ /^laddr/) $0 = "laddr = \"tcp://0.0.0.0:26656\""
+    if ($1 ~ /^max_num_inbound_peers/) $0 = "max_num_inbound_peers = 0"
+    if ($1 ~ /^min_num_inbound_peers/) $0 = "min_num_inbound_peers = 0"
+    if ($1 ~ /^pex/) $0 = "pex = false"
+    if ($1 ~ /^seed_mode/) $0 = "seed_mode = false"
+    }
+    section == "[consensus]" {
+    if ($1 ~ /^create_empty_blocks/) $0 = "create_empty_blocks = false"
+    }
+    { print }
+    ' $INJ_HOME/config/config.toml > $INJ_HOME/config/config.tmp && mv $INJ_HOME/config/config.tmp $INJ_HOME/config/config.toml
+
+# Set log level to error (less disk writes = better performance)
 sed -i 's/^log_level *= *.*/log_level = "error"/' $INJ_HOME/config/app.toml
 ```
 
-#### 5. 노드 실행:
+#### 5. 노드 실행
 ```bash
 injectived start --home $INJ_HOME
 ```
 
 ### 게이트웨이 구성
 
+게이트웨이는 요청된 블록 높이에 따라 RPC, gRPC 및 API 쿼리를 올바른 아카이벌 노드로 라우팅하는 리버스 프록시입니다. 아래 참조 구현은 생태계 기여자인 [Decentrio](https://github.com/decentrio/gateway)의 구현입니다.
+
+<Note>
+게이트웨이는 들어오는 요청을 검사하고, 블록 높이를 판별한 다음, 해당 범위를 보유한 업스트림 노드로 전달합니다. 높이를 인식하는 모든 리버스 프록시(nginx, Caddy, 사용자 지정 라우팅이 적용된 HAProxy)가 동일한 역할을 수행할 수 있습니다.
+</Note>
+
+#### 1. 게이트웨이 저장소 클론
 ```bash
 git clone https://github.com/decentrio/gateway
+```
+#### 2. 게이트웨이 빌드
+```bash
 make build
 ```
-
-구성 파일 예시:
+#### 3. 구성 파일 생성
 ```yaml
 upstream:
+  # example node 1 holds blocks 0-80M while node 2 holds blocks 80-88M
   - rpc: "http://$NODE1:$RPC_PORT"
     grpc: "$NODE1:$GRPC_PORT"
     api: "http://$NODE1:$API_PORT"
-    blocks: [0,80000000]
+    blocks: [0,80000000]  
+  - rpc: "http://$NODE2:$RPC_PORT"
+    grpc: "$NODE2:$GRPC_PORT"
+    api: "http://$NODE2:$API_PORT"
+    blocks: [80000000,88000000]
+
+  # <OTHER NODES HERE>
+
+  # Archival tip, this serves the latest x blocks, usually set as a pruned node
+  - rpc: "http://$PRUNED_NODE:$RPC_PORT"
+    grpc: "$PRUNED_NODE:$GRPC_PORT"
+    api: "http://$PRUNED_NODE:$API_PORT"
+    blocks: [1000]
+
 
 ports:
   rpc: $RPC_PORT
   api: $API_PORT 
   grpc: $GRPC_PORT
+  # Leave these as zero to disable for now
   jsonrpc: 0
   jsonrpc_ws: 0
-```
 
+```
+#### 4. 게이트웨이 실행
 ```bash
 gateway start --config $CONFIG_FILE
 ```
+
+---
+
+## 업그레이드 또는 중단 후 아카이벌 노드 복원
+
+아카이벌 세그먼트 노드는 정적이므로 합의에 참여하거나 p2p를 통해 동기화하지 않습니다. 그러나 조정 업그레이드나 예기치 않은 체인 중단의 영향을 받을 수 있으며, 특히 **프루닝 팁 노드**와 최근 블록 높이를 커버하는 세그먼트 노드가 영향을 받습니다.
+
+### 프루닝 팁 노드
+
+프루닝 팁 노드는 아카이벌 플릿에서 라이브 체인과 능동적으로 동기화하는 유일한 노드입니다. 조정 업그레이드 또는 예기치 않은 중단 중에는 다른 풀 노드와 동일하게 처리하세요:
+
+1. 노드 중지
+2. 새 바이너리로 교체
+3. 확인: `injectived version`
+4. 노드 시작
+
+팁 노드에는 `priv_validator_state.json`이 없으므로(검증자가 아님) 이중 서명 위험이 없습니다. 팁 노드의 상태가 손상된 경우(AppHash 불일치), 프루닝 스냅샷에서 복원하세요. [검증자 문제 해결 및 스냅샷 리소스](/ko/infra/coordinated-upgrades#스냅샷-리소스)를 참조하세요.
+
+### 최근 높이를 커버하는 세그먼트 노드
+
+업그레이드가 과거 블록의 처리 또는 저장 방식을 변경하는 경우(쿼리 결과에 영향을 주는 상태 마이그레이션), 업그레이드 경계 근처의 높이를 커버하는 세그먼트 노드가 일관되지 않은 데이터를 반환할 수 있습니다. 이 경우:
+
+1. 영향을 받은 세그먼트 노드를 중지합니다
+2. S3에서 업데이트된 세그먼트를 다운로드합니다(인프라 팀이 업그레이드 후 수정된 세그먼트를 게시할 수 있습니다):
+   ```bash
+   aws s3 cp --no-sign-request --recursive s3://injective-snapshots/mainnet/subnode/$SNAPSHOT_DIR $INJ_HOME
+   ```
+3. 해당 세그먼트에 지정된 버전으로 바이너리를 업데이트합니다
+4. 노드를 재시작합니다
+
+### 오래된 세그먼트 노드
+
+과거 블록 범위를 커버하는 세그먼트 노드(`0073`, `8088`)는 일반적으로 체인 업그레이드의 영향을 받지 않습니다. 이러한 노드는 해당 데이터를 생성한 바이너리 버전으로 기존 데이터를 제공합니다. 업그레이드가 과거 쿼리 처리 방식을 명시적으로 변경하지 않는 한 별도의 조치가 필요하지 않습니다.
+
+### 게이트웨이
+
+게이트웨이 자체는 상태를 저장하지 않으므로 체인 업그레이드 중에 업그레이드할 필요가 없습니다. 그러나 세그먼트 노드를 추가하거나 교체하는 경우, 새 업스트림 엔드포인트를 반영하도록 게이트웨이 구성을 업데이트하고 재시작하세요.
+
+<Warning>
+복원 작업 후에는 각 세그먼트 범위에서 블록을 쿼리하고 응답을 확인하여 게이트웨이가 올바르게 라우팅하는지 검증하세요. 잘못 구성된 게이트웨이는 특정 높이 범위에 대해 오류나 오래된 데이터를 조용히 제공할 수 있습니다.
+</Warning>
