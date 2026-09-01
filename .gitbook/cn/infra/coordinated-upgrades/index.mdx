@@ -1,0 +1,540 @@
+---
+title: 验证者故障排查
+updatedAt: "2026-09-01"
+---
+
+面向 Injective 验证者和节点运营者的故障排查参考与运维指南。涵盖常见故障模式、恢复流程、升级检查清单以及关键安全实践。
+
+---
+## 开始之前：关键安全规则
+
+<Callout icon="warning" color="#FF8C00" iconType="regular">
+
+**绝对不要做的事**
+
+1. **绝不要同时运行两个使用相同 `priv_validator_key.json` 的节点。** 这会导致双重签名，罚没比例为 0%，但会被永久性墓碑处理（tombstoned）。该验证者将永远无法重新加入活跃集。
+2. **绝不要在验证者节点上使用 `unsafe-reset-all`**，除非你完全理解其后果。它会清除共识状态，并可能产生导致 tombstoned 的冲突投票。
+3. **绝不要在节点仍在运行时备份 `priv_validator_state.json`。** 该文件在共识过程中持续变化。请先完全停止节点，然后再复制它。
+4. **绝不要在快照恢复后未还原备份的 `priv_validator_state.json` 就启动节点。** 快照不包含此文件。在没有它的情况下启动会将你的签名状态重置为高度 0，从而导致双重签名。
+5. **绝不要在未事先测试的情况下对归档节点或大型历史节点执行回滚。** 在大型数据库上回滚可能耗时数小时，甚至彻底损坏节点，尤其是在使用 PebbleDB 时。
+
+**始终要做的事**
+
+1. **始终在完全停止节点后备份 `priv_validator_state.json`**，并且要在任何恢复操作（回滚、快照恢复、二进制升级）之前进行。
+2. **始终在回滚或快照恢复之后、启动节点之前**，将 `priv_validator_state.json` 还原到其原始位置。
+3. **始终在启动节点前验证 `priv_validator_state.json` 完好无损。** 检查其中的高度、轮次和步骤值是否合理。
+4. **始终为协调升级设置 `--halt-height`。** 跳过 halt-height 标志的节点需要更困难的恢复路径。
+5. **始终在升级后启动前使用 `injectived version` 验证二进制版本。**
+6. **始终在链稳定后撤销临时的共识覆盖设置**（例如 `--unsafe-consensus-timeout-precommit-delta=1ms`）。
+
+</Callout>
+
+<Callout icon="info" color="#22C55E" iconType="regular">
+**需要快照来恢复？** 请参阅本页底部的[快照资源](#快照资源)，获取剪枝快照和社区提供商信息。有关归档段快照，请参阅[归档设置](/cn/infra/archival-setup)页面。
+</Callout>
+
+---
+
+## 常见问题与解决方案
+
+### 节点卡在升级高度
+
+**症状：**
+- 节点日志显示链在预期的升级高度处停机
+- `latest_block_height` 无法超过停机高度继续前进
+
+**原因：** 节点正在运行旧的二进制文件。链需要升级后的二进制文件才能越过升级高度继续运行。
+
+**解决方案：**
+
+1. 停止节点
+2. 备份 `~/.injectived/data/priv_validator_state.json`
+3. 安装新的二进制文件
+4. 验证：`injectived version`
+5. 启动节点
+
+---
+
+### 升级后区块头哈希不匹配
+
+**症状：**
+
+```
+ERR prevote step: consensus deems this block invalid; prevoting nil
+err="wrong Block.Header.LastResultsHash. Expected 284C339C..., got 694706724..."
+```
+
+节点持续对 nil 进行预投票（prevote），无法完成下一个区块的最终确认。
+
+**原因：** 节点在升级高度处的本地状态与新二进制文件期望的状态不一致。当节点在升级前使用旧二进制逻辑处理了 halt-height 区块时会发生这种情况。
+
+**解决方案：**
+
+1. 停止节点
+2. 备份 `priv_validator_state.json`
+3. 回滚一个区块：
+   ```bash
+   injectived rollback
+   ```
+4. 还原 `priv_validator_state.json`
+5. 使用新的二进制文件启动节点
+
+<Warning>
+在拥有大型数据库（数百 GB）的归档节点上执行回滚可能耗时极长或失败。对于这类节点，请改为从快照恢复。
+</Warning>
+
+---
+
+### 冲突投票警告
+
+**症状：**
+
+```
+ERR Found conflicting vote from ourselves; did you unsafe_reset a validator?
+height=181027006 module=consensus round=40 type=SIGNED_MSG_TYPE_PREVOTE
+```
+
+此消息持续重复出现。
+
+**原因：** 节点的 `priv_validator_state.json` 被重置或损坏，因此它在已经签名过的轮次上重新签名，产生了冲突投票。
+
+**常见诱因：**
+- 在验证者上运行了 `unsafe-reset-all`
+- 还原了旧的或错误的 `priv_validator_state.json`
+- 在节点仍在运行时备份了 `priv_validator_state.json`（过期副本）
+- 回滚命令重置了验证者状态
+
+**解决方案：**
+
+- 如果你有正确的 `priv_validator_state.json` 备份（在完全停止节点后获取）：还原它并重启。
+- 如果你没有正确的备份：**立即停止节点，等待区块生产恢复后再重启。** 使用错误状态启动会有双重签名的风险。
+- 检查签名信息：
+  ```bash
+  injectived query slashing signing-info <injvalcons_address>
+  ```
+
+<Warning>
+如果链上检测到冲突投票，验证者将被墓碑处理（tombstoned，即永久监禁）。对于双重签名，不存在链上解禁（unjail）的途径。
+</Warning>
+
+---
+
+### 验证者被 tombstoned（双重签名）
+
+**症状：**
+
+```
+injectived query slashing signing-info injvalcons1...
+  tombstoned: true
+  jailed_until: "9999-12-31T23:59:59Z"
+```
+
+**原因：** 验证者在同一高度对两个不同的区块或预投票进行了签名。常见诱因：
+
+- 使用相同的签名密钥运行了两个节点实例
+- 还原了旧的 `priv_validator_state.json`，导致在先前已签名的高度重新签名
+- 回滚重置了签名状态，随后节点签署了冲突的区块
+
+**处理方式：**
+
+对于被 tombstoned 的验证者，不存在标准的链上解禁方式。可能的处理路径：
+- 通过治理提案或升级处理器（upgrade handler）明确为受影响的验证者解除 tombstoned 状态
+- 使用新的运营者密钥创建新的验证者（会失去现有的委托）
+
+<Warning>
+**如果你在协调安全升级期间被 tombstoned**，请立即在经过验证的验证者频道中联系 Injective 团队。在协调升级期间，团队可能会在升级二进制文件中包含解除 tombstoned 状态的处理器，以恢复受影响的验证者。此事有时效性，请尽快报告，以便在升级处理器最终确定之前将你包含在内。
+</Warning>
+
+**预防措施：**
+- 使用 TMKMS 或 Horcrux 以硬件方式强制执行单一签名者语义
+- 始终在停止节点后备份 `priv_validator_state.json`
+- 绝不同时运行两个使用相同签名密钥的节点
+
+---
+
+### 从快照恢复
+
+**适用场景：** 当回滚失败、耗时过长，或节点状态损坏到无法修复（AppHash 不匹配）时使用。
+
+**流程：**
+
+1. 完全停止节点
+2. 备份 `~/.injectived/data/priv_validator_state.json`
+3. 如果 `~/.injectived/config/priv_validator_key.json` 尚未在其他地方备份，也进行备份
+4. 从可信提供商下载快照：
+   - Injective 团队也可能在安全升级之前或期间分享应急快照
+   - [Polkachu Injective 快照](https://polkachu.com/tendermint_snapshots/injective)（通常为 goleveldb）
+   - 社区验证者可能会在事故期间分享应急快照
+5. 删除旧数据：
+   ```bash
+   rm -rf ~/.injectived/data
+   ```
+6. 将快照解压到 `~/.injectived/data/`
+7. **将你备份的 `priv_validator_state.json` 还原到 `~/.injectived/data/`**
+8. 验证 `priv_validator_state.json` 存在且正确
+9. 启动节点
+
+#### 为什么必须保留你自己的 `priv_validator_state.json`
+
+快照包含区块链数据（区块、应用状态），但绝不会包含你的验证者的签名状态。签名状态记录了你的验证者最后一次签名的高度、轮次和步骤。如果你丢失了它或用空白的替换了它，你的节点将不知道自己已经签名过什么，可能会签署冲突的区块 —— 导致双重签名和永久性的 tombstoned。
+
+下面是一个实际示例，说明为什么签名状态必须始终领先于（或等于）快照高度。
+
+**场景设定：** 一次协调链升级，halt-height 设置在区块 125。
+
+```
+Block:  100  105  110  115  120  125  126
+         |    |    |    |    |    |    |
+         |    |    |    |    |    |    Chain resumes with new binary
+         |    |    |    |    |    Chain halts here (upgrade height)
+         |    |    |    |    |
+         |    |    |    Snapshot taken at block 115
+         |    |    |
+         Your node has been signing every block...
+```
+
+停机时，你的 `priv_validator_state.json` 内容为：
+
+```json
+{
+  "height": "126",
+  "round": 42,
+  "step": 3,
+  "signature": "...",
+  "signbytes": "..."
+}
+```
+
+**为什么停机高度是 125，文件却显示高度 126？** `--halt-height` 标志阻止的是区块 126 被*提交*（最终确认），但 CometBFT 共识引擎仍会进入高度 126 并开始其轮次 —— 提议、预投票和预提交 —— 直到应用层拒绝处理该区块、节点关闭为止。较高的轮次编号（42）反映了随着验证者陆续停机、共识无法达成时网络不断推进轮次的过程。这是正常行为：即使区块 126 从未被最终确认，你的验证者也在高度 126 处投出了真实的投票。
+
+这意味着你的验证者已经在高度 126、轮次 42 处投过票。而可用的快照来自高度 115。
+
+**如果你恢复快照时没有还原自己的签名状态，会发生什么：**
+
+快照要么不带 `priv_validator_state.json`，要么带一个空白的（高度 0）。如果你以这种方式启动节点：
+
+1. 你的节点从高度 115 加载区块链数据
+2. 它通过重放区块 116-125 追赶到高度 126
+3. 在高度 126 处，它进入共识并从轮次 0 开始签名
+4. 但网络中已经存在你在该高度轮次 42 的投票
+5. 你的节点在高度 126 签署了不同的区块提案（因为它使用新二进制文件重放，可能产生不同的结果）
+6. 网络检测到来自你的验证者密钥的两个冲突签名
+7. **你的验证者被判定双重签名并被 tombstoned。永久性的。**
+
+**正确的流程：**
+
+1. 停止节点
+2. 备份你的 `priv_validator_state.json`（它显示高度 126、轮次 42）
+3. 删除你的数据目录
+4. 解压快照（来自高度 115 的区块链数据）
+5. **将你备份的 `priv_validator_state.json` 复制回数据目录**
+6. 启动节点
+
+现在当节点启动时：
+
+1. 它从高度 115 加载区块链数据
+2. 它通过重放区块 116-125 追赶到高度 126
+3. 在高度 126 处，它读取签名状态：「我已经签名到了轮次 42」
+4. 它跳过轮次 0-42，等到轮次 43 之后才签署任何新内容
+5. 没有冲突投票。你的验证者是安全的。
+
+<Warning>
+**关键规则：** 签名状态必须始终反映你的验证者曾经签名过的最高点。签名状态领先于快照是安全的（节点会自行追赶）。签名状态落后于验证者在网络上实际签名过的位置，则永远是不安全的。
+</Warning>
+
+| 场景 | 签名状态高度 | 快照高度 | 是否安全？ |
+|---|---|---|---|
+| 正常恢复 | 126 | 115 | 是 —— 节点重放 116-125，在 126 处跳过已签名的轮次 |
+| 较新的快照，保留了状态 | 126 | 120 | 是 —— 逻辑相同，需要重放的区块更少 |
+| 不带状态的快照 | 0 | 115 | **否** —— 会在已签名过的高度重新签名，导致双重签名 |
+| 过期备份（在 110 处获取） | 110 | 115 | **否** —— 会在高度 111-126 重新签名 |
+
+**数据库后端兼容性：** 快照与后端相关。goleveldb 快照无法在配置为 pebbledb 的节点上使用，反之亦然。检查你的配置：
+
+```bash
+grep db_backend ~/.injectived/config/config.toml
+```
+
+---
+
+### 回滚挂起或失败
+
+**症状：** `injectived rollback` 一直运行但始终无法完成，或产生错误。
+
+**原因：**
+- **PebbleDB 后端：** 使用 pebble 进行回滚存在已知问题，可能会无限期挂起
+- **数据库非常大：** 回滚时间随数据库大小增加
+- **WAL 损坏**（预写日志，Write-Ahead Log）
+
+**解决方案：**
+- 对于 PebbleDB 节点：改为从快照恢复
+- 对于大型节点：如果回滚超过 30 分钟仍未完成，请中止并使用快照
+- 考虑切换到 goleveldb。PebbleDB 更节省空间，但在回滚方面测试较少
+
+---
+
+### 追赶期间的轮次回退错误
+
+**症状：**
+
+```
+ERR Failed signing vote err="error signing vote: round regression at height 181027006.
+Got 108, last round 141"
+```
+
+**原因：** 节点正在追赶当前的共识轮次。当在一个已推进过多个轮次的活跃共识轮次期间重启节点时，这是正常且预期的现象。
+
+**解决方案：** 无需任何操作。节点会自行追赶。要加快轮次追赶：
+
+```bash
+# Flag
+--unsafe-consensus-timeout-precommit-delta=1ms
+
+# Or environment variable
+INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
+```
+
+<Warning>
+**一旦链稳定且节点追赶完成，请移除此覆盖设置。** 恢复为默认值（100ms）并重启。
+
+如果在正常运行期间保留此设置，1ms 的 delta 会使轮次推进速度远快于投票在网络中传播的速度。你的验证者会在其他验证者的预提交到达之前进入下一轮，导致其投票错过实际的提交轮次。结果是错过区块的计数器持续攀升，如果错过的区块足够多（通常为最近 10,000 个区块中的 500 个），**验证者将因停机而被监禁（jailed）**。
+</Warning>
+
+---
+
+### AppHash 不匹配
+
+**症状：**
+
+```
+panic: Tendermint state.AppHash does not match AppHash after replay
+```
+
+**原因：** 应用状态与共识状态发生了偏离。可能由不完整的升级、区块执行期间的崩溃或数据库损坏引起。
+
+**解决方案：**
+
+1. 尝试回滚：`injectived rollback`
+2. 如果回滚失败或错误仍然存在：从快照恢复
+3. 恢复后始终还原 `priv_validator_state.json`
+
+---
+
+### 升级后哨兵节点卡住
+
+**症状：** 验证者节点已升级并正在签名，但哨兵节点仍停留在旧的区块高度。
+
+**原因：** 哨兵节点同样需要新的二进制文件才能处理超过升级高度的区块。
+
+**解决方案：** 将哨兵节点升级到与验证者相同的二进制版本。哨兵节点没有 `priv_validator_state.json`（它们不签名），但它们确实需要正确的二进制文件。
+
+---
+
+### 升级后链停滞（投票权不足）
+
+**症状：**
+
+- 链在升级高度之后不再产生新区块
+- 共识轮次编号持续攀升（轮次 50、100、200+）
+- 节点日志记录预投票和预提交，但没有区块被提交
+- `latest_block_height` 一直停留在停机高度
+
+**原因：** CometBFT 要求总投票权的 2/3 以上在线并使用正确的二进制文件参与，才能完成区块的最终确认。在协调升级期间，存在一个验证者以不同速度升级的窗口期。在足够的投票权运行新二进制文件之前，网络无法达成共识。
+
+在此窗口期发生的事情：
+
+1. 链在升级高度处停机（例如：区块 125）
+2. 已完成升级的验证者开始在高度 126 参与共识
+3. 每一轮，网络都尝试最终确认区块 126，但由于投票的投票权不足 2/3 而失败
+4. 轮次编号递增，循环重复：轮次 1、2、3、…… 50、…… 100+
+5. 这种情况持续到足够多的验证者完成升级并上线为止
+
+**这在升级期间是正常的。** 链并没有损坏，它只是在等待法定人数（quorum）。
+
+**应该怎么做：**
+
+- **如果你已经完成升级：** 无需任何操作。你的节点正在参与共识，一旦达到法定人数，就会自动完成下一个区块的最终确认。你会在日志中看到轮次回退错误，因为你的节点正在追赶各轮次。这是预期现象（参见[追赶期间的轮次回退错误](#追赶期间的轮次回退错误)）。
+- **如果你尚未升级：** 你正是缺失投票权的一部分。请尽快完成升级，以帮助链恢复运行。
+- **监控进度：** 检查有多少验证者在线并参与：
+  ```bash
+  curl -s localhost:26657/consensus_state | jq '.result.round_state.votes'
+  ```
+- **在验证者频道中协调：** 在重大升级期间，验证者通常会在经过验证的验证者频道中协调，跟踪升级进度和投票权百分比。
+
+<Note>
+这个窗口期持续得越久，轮次编号攀升得越高。较晚上线的验证者需要追赶所有这些轮次，这正是 `--unsafe-consensus-timeout-precommit-delta=1ms` 标志存在的原因，但请记住在[链稳定后移除它](#追赶期间的轮次回退错误)。
+</Note>
+
+---
+
+### 因停机被监禁（非 tombstoned）
+
+**症状：**
+- 验证者显示为非活跃或被监禁（jailed）
+- 签名信息中显示 `tombstoned: false`
+- 错过区块的计数很高
+
+**原因：** 验证者连续错过了过多区块（通常为最近 10,000 个区块中的 500 个）。
+
+**解决方案：**
+
+1. 确保节点正在运行并已完全追赶到最新区块
+2. 解禁：
+   ```bash
+   injectived tx slashing unjail \
+     --from=<key_name> \
+     --chain-id=injective-1 \
+     --gas=auto \
+     --gas-adjustment=1.5
+   ```
+3. 验证验证者已重新活跃：
+   ```bash
+   injectived query staking validator <injvaloper_address>
+   ```
+
+---
+
+## 协调升级检查清单
+
+### 升级高度之前
+
+- [ ] 从治理提案或链团队处确认目标 halt-height
+- [ ] 下载并验证新的二进制文件（检查 sha256 校验和）
+- [ ] 在节点配置或 CLI 标志中设置 `--halt-height=<target_height>`
+- [ ] 如果使用 Cosmovisor：将新二进制文件放入正确的升级目录
+- [ ] 备份 `priv_validator_state.json`
+- [ ] 确定快照提供商，以备需要回滚时使用
+- [ ] 监控链向停机高度的推进
+
+### 在升级高度时
+
+- [ ] 确认节点已在预期高度停机
+- [ ] 完全停止节点（验证进程已终止）
+  ```bash
+  ps aux | grep injectived
+  ```
+- [ ] 备份 `priv_validator_state.json`
+- [ ] 安装新的二进制文件
+- [ ] 验证版本：
+  ```bash
+  injectived version
+  ```
+
+### 升级之后
+
+- [ ] 使用新的二进制文件启动节点
+- [ ] 监控日志中的共识参与情况
+- [ ] 确认预投票正确（不是每一轮都投 nil）
+- [ ] 在浏览器上监控投票权（[Mintscan](https://www.mintscan.io/injective/validators)）
+- [ ] 如果看到 `wrong Block.Header.LastResultsHash`：停止节点，回滚 1 个区块，还原 `priv_validator_state.json`，然后重启
+- [ ] 如果使用了轮次追赶覆盖设置（`--unsafe-consensus-timeout-precommit-delta`）：在稳定后移除它们
+- [ ] 验证验证者正在签名：
+  ```bash
+  curl -s localhost:26657/consensus_state | jq '.result.round_state["height/round/step"]'
+  ```
+
+---
+
+## 监控参考
+
+### 共识与同步状态
+
+```bash
+# Current consensus state (height, round, step)
+curl -s localhost:26657/consensus_state \
+  | jq '.result.round_state["height/round/step"] | split("/") | {height: .[0], round: .[1], step: .[2]}'
+
+# Latest block height
+curl -s localhost:26657/status | jq '.result.sync_info.latest_block_height'
+
+# Whether the node is still catching up
+curl -s localhost:26657/status | jq '.result.sync_info.catching_up'
+```
+
+### 验证者健康状况
+
+```bash
+# Signing info (missed blocks, jail status, tombstone status)
+injectived query slashing signing-info $(injectived tendermint show-validator)
+
+# Validator status and jail state
+injectived query staking validator <injvaloper_address> --output json | jq '.status, .jailed'
+```
+
+### 节点配置
+
+```bash
+# Current binary version
+injectived version
+
+# Current priv_validator_state (check height/round/step)
+cat ~/.injectived/data/priv_validator_state.json | jq
+
+# Database backend
+grep db_backend ~/.injectived/config/config.toml
+```
+
+---
+
+## 剪枝节点与归档节点对比
+
+| | 剪枝节点 | 归档节点 |
+|---|---|---|
+| **回滚** | 快（数分钟） | 慢（数分钟到数小时），可能失败 |
+| **快照恢复** | 快（10-30 分钟） | 非常慢（数小时，快照 100+ GB） |
+| **典型数据库大小** | 10-50 GB | 500+ GB |
+| **推荐的恢复方式** | 优先回滚，快照作为后备 | 首选快照，回滚有风险 |
+
+---
+
+## 其他资源
+
+- [运行 Injective 节点](/cn/infra/run-node)
+- [Cosmovisor 设置](/cn/infra/cosmovisor)
+- [升级节点](/cn/infra/upgrade-node)
+- [Cosmos 验证者常见问题](https://github.com/cosmos/cosmos/blob/master/VALIDATORS_FAQ.md)
+- [CometBFT 生产环境运行指南](https://docs.tendermint.com/v0.34/tendermint-core/running-in-production.html)
+
+---
+
+## 快照资源
+
+### Injective 官方提供的快照
+
+Injective 在两个区域维护剪枝主网快照。请检查状态端点以获取最新的可用高度和下载 URL：
+
+| 区域 | 状态 | 下载 |
+|---|---|---|
+| **欧洲（OVH）** | [status.json](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/status.json) | `http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/` |
+| **亚洲（GCS）** | [status.json](https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json) | `https://storage.googleapis.com/injective-mainnet-snapshots-asia/` |
+
+要下载最新的快照，请检查状态端点以获取当前的文件名：
+
+```bash
+# Check latest available snapshot (Asia example)
+curl -s https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json | jq
+
+# Download the snapshot
+wget <url from status.json>
+
+# Extract
+lz4 -d <snapshot_file>.tar.lz4 | tar xf - -C ~/.injectived/data/
+```
+
+在协调安全升级期间，Injective 团队也可能在经过验证的验证者频道中分享应急快照。有关归档段快照，请参阅[归档设置](/cn/infra/archival-setup)页面。
+
+### 社区快照提供商
+
+- [Polkachu Injective 快照](https://polkachu.com/tendermint_snapshots/injective)（通常为 goleveldb，剪枝版）
+- [HighStakes Injective 快照](https://tools.highstakes.ch/snapshots/injective)
+- 社区验证者可能会在事故期间在验证者频道中分享应急快照
+
+<Warning>
+**数据库后端兼容性：** 快照与后端相关。goleveldb 快照无法在配置为 pebbledb 的节点上使用，反之亦然。下载前请检查你的配置：
+
+```bash
+grep db_backend ~/.injectived/config/config.toml
+```
+
+**在快照恢复后启动节点之前，你必须将备份的 `priv_validator_state.json` 还原**到数据目录中。完整流程请参阅上面的[从快照恢复](#从快照恢复)。
+</Warning>
