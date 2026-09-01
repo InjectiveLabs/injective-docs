@@ -1,0 +1,221 @@
+---
+title: Permissioned Assets
+description: >-
+  How to issue compliant, permissioned real-world asset tokens on Injective using
+  the TokenFactory and Permissions modules, including roles, namespaces, transfer
+  restrictions, and KYC enforcement.
+updatedAt: "2026-07-09"
+---
+
+Injective's `TokenFactory` and `Permissions` modules together provide the primitives for issuing
+compliant real-world asset tokens natively on-chain. This is suited for regulated assets such as
+tokenized treasuries, money market funds, private credit instruments, and stablecoins that require
+protocol-level enforcement of transfer restrictions, investor whitelisting, and administrative controls.
+
+The two modules work in layers:
+
+1. **TokenFactory** creates the token denom and assigns an admin
+2. **Permissions** adds a namespace on top of that denom, enabling RBAC-based compliance controls
+
+Both must be in place for a fully permissioned asset. The TokenFactory denom must be created first.
+
+---
+
+## How It Works
+
+### Step 1: Create a TokenFactory Denom
+
+Any account can create a new token denom using `TokenFactory`. The denom takes the format
+`factory/{creator_address}/{subdenom}`. The creator becomes the admin of the denom and retains
+the ability to mint and burn the asset.
+
+```bash
+injectived tx tokenfactory create-denom <subdenom> [flags]
+```
+
+> **Important:** Do not transfer the TokenFactory admin to the null address
+> (`inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49`). The Permissions module requires the namespace
+> creator to be the admin of the corresponding TokenFactory denom.
+
+### Step 2: Create a Permissions Namespace
+
+Once the denom exists, create a namespace to add compliance controls. The namespace defines:
+- **Roles**: named permission sets (e.g. `admin`, `user`, `EVERYONE`)
+- **Actions**: what each role is allowed to do (mint, burn, send, receive, and namespace management actions)
+- **Role Managers**: addresses that can assign roles to other addresses
+- **Policy Statuses**: whether each action is enabled, disabled, or permanently sealed
+- **Policy Managers**: addresses that can enable/disable actions
+- **Wasm Contract Hook**: optional smart contract invoked on every receive event
+
+```bash
+injectived tx permissions create-namespace <namespace.json> [flags]
+```
+
+---
+
+## Roles and Actions
+
+### Actions
+
+Actions are the atomic operations that can be permitted or restricted per role:
+
+| Action | Description |
+|--------|-------------|
+| `MINT` | Mint tokens to any address with `RECEIVE` permissions |
+| `RECEIVE` | Receive tokens. Addresses without this permission cannot hold the asset. |
+| `BURN` | Burn tokens from own wallet |
+| `SEND` | Send tokens to any address with `RECEIVE` permissions |
+| `SUPER_BURN` | Burn tokens from any other address's wallet (not own wallet, unless the address also has `BURN`) |
+| `MODIFY_POLICY_MANAGERS` | Update which addresses can change policy statuses |
+| `MODIFY_CONTRACT_HOOK` | Update the Wasm contract hook address |
+| `MODIFY_ROLE_PERMISSIONS` | Update which actions are assigned to which roles |
+| `MODIFY_ROLE_MANAGERS` | Update which addresses manage each role |
+
+### The `EVERYONE` Role
+
+Every namespace must define an `EVERYONE` role, which applies to any address not assigned a specific role.
+This is typically used to allow permissionless transfer (for public tokens) or restrict all actions
+(for fully permissioned assets where only whitelisted addresses can hold the token).
+
+The `EVERYONE` role cannot be assigned `MINT`, `SUPER_BURN`, or any namespace management actions.
+
+### Blacklist Roles
+
+Any role with no permitted actions acts as a blacklist role. Addresses assigned a blacklist role
+have all permissions revoked until the role is removed. This supersedes all other roles the
+address may hold.
+
+---
+
+## Policy Statuses
+
+Each action has a policy status that controls whether it is available across the entire namespace,
+regardless of individual role permissions:
+
+- **Enabled** (default): addresses with the correct role can perform the action
+- **Disabled**: no address can perform the action until it is re-enabled
+- **Sealed**: the current enabled/disabled state is permanently locked and cannot be changed
+
+Sealing a namespace management action effectively disables it permanently, even if sealed while enabled.
+Use sealing carefully, as it is irreversible.
+
+---
+
+## Wasm Contract Hook
+
+The Wasm contract hook allows issuers to extend compliance logic beyond what the Permissions module
+provides natively. The hook is invoked on every receive event for the permissioned asset. The contract
+receives `fromAddr`, `toAddr`, `action`, and `amount`, and can implement custom logic such as
+on-chain KYC checks, transfer limits, or reporting.
+
+The hook address is set in the namespace and can be updated by any address with the `MODIFY_CONTRACT_HOOK`
+role, unless that policy has been sealed.
+
+---
+
+## Example Namespace Configuration
+
+The following is an example namespace for a permissioned RWA token where only whitelisted addresses
+can receive the asset, and an admin address retains full management control:
+
+```json
+{
+  "denom": "factory/inj1address/myRWAToken",
+  "role_permissions": [
+    {
+      "name": "EVERYONE",
+      "role_id": 0,
+      "permissions": 0
+    },
+    {
+      "name": "admin",
+      "role_id": 1,
+      "permissions": 2013265920
+    },
+    {
+      "name": "investor",
+      "role_id": 2,
+      "permissions": 14
+    }
+  ],
+  "actor_roles": [
+    {
+      "actor": "inj1adminaddress",
+      "roles": ["admin"]
+    }
+  ],
+  "role_managers": [
+    {
+      "manager": "inj1adminaddress",
+      "roles": ["admin", "investor"]
+    }
+  ]
+}
+```
+
+In this configuration:
+- `EVERYONE` has no permissions, so by default no address can hold the asset
+- `admin` has full namespace management permissions
+- `investor` can receive, burn, and send the asset (`RECEIVE` + `BURN` + `SEND` = 14)
+- The admin must explicitly assign the `investor` role to each whitelisted address
+
+---
+
+## Managing the Asset
+
+### Adding Whitelisted Addresses
+
+Once the namespace is live, the role manager assigns roles to investor addresses:
+
+```bash
+injectived tx permissions update-namespace-roles <roles.json> [flags]
+```
+
+```json
+{
+  "denom": "factory/inj1address/myRWAToken",
+  "role_actors_to_add": [
+    {
+      "role": "investor",
+      "actors": ["inj1investor1", "inj1investor2"]
+    }
+  ]
+}
+```
+
+### Freezing the Asset
+
+To pause all transfers across the asset, disable the `SEND` and `RECEIVE` actions via a namespace update:
+
+```bash
+injectived tx permissions update-namespace <namespace-update.json> [flags]
+```
+
+```json
+{
+  "denom": "factory/inj1address/myRWAToken",
+  "policy_statuses": [
+    { "action": 2, "is_disabled": true, "is_sealed": false },
+    { "action": 8, "is_disabled": true, "is_sealed": false }
+  ]
+}
+```
+
+### Claiming a Voucher
+
+If a module-initiated transfer fails because the recipient lacks `RECEIVE` permissions, the funds
+are held in escrow. Once the recipient is granted the correct role, they can claim the funds:
+
+```bash
+injectived tx permissions claim-voucher <denom>
+```
+
+---
+
+## Further Reading
+
+- [Permissions Module — Concepts](/developers-native/injective/permissions/01_concepts)
+- [Permissions Module — State](/developers-native/injective/permissions/02_state)
+- [Permissions Module — State Transitions](/developers-native/injective/permissions/03_state_transitions)
+- [TokenFactory Module](/developers-native/injective/tokenfactory/01_concepts)
+- [iAssets](/defi/tokenization/iassets)
