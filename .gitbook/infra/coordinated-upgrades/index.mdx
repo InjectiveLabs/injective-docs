@@ -12,7 +12,7 @@ Troubleshooting reference and operational guide for Injective validators and nod
 
 **What to never do**
 
-1. **Never run two nodes with the same `priv_validator_key.json` simultaneously.** This causes double-signing, a 5% slash, and permanent tombstoning. The validator can never rejoin the active set.
+1. **Never run two nodes with the same `priv_validator_key.json` simultaneously.** This causes double-signing, 0% slash, but permanent tombstoning. The validator can never rejoin the active set.
 2. **Never use `unsafe-reset-all` on a validator node** unless you fully understand the consequences. It wipes consensus state and can produce conflicting votes that lead to tombstoning.
 3. **Never back up `priv_validator_state.json` while the node is still running.** The file changes continuously during consensus. Stop the node fully first, then copy it.
 4. **Never start a node after snapshot recovery without restoring your backed up `priv_validator_state.json`.** Snapshots do not include this file. Starting without it resets your signing state to height 0, which causes double-signing.
