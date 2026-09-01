@@ -1,36 +1,35 @@
 ---
-title: Validator Troubleshooting
+title: "Validator Troubleshooting"
 updatedAt: "2026-09-01"
 ---
 
 Troubleshooting reference and operational guide for Injective validators and node operators. Covers common failure modes, recovery procedures, upgrade checklists, and critical safety practices.
 
 ---
+
 ## Before You Begin: Critical Safety Rules
 
-<Callout icon="warning" color="#FF8C00" iconType="regular">
+<Callout icon="warning" iconType="regular" color="#FF8C00">
+  **What to never do**
 
-**What to never do**
+  1. **Never run two nodes with the same `priv_validator_key.json` simultaneously.** This causes double-signing, 0% slash, but permanent tombstoning. The validator can never rejoin the active set.
+  2. **Never use `unsafe-reset-all` on a validator node** unless you fully understand the consequences. It wipes consensus state and can produce conflicting votes that lead to tombstoning.
+  3. **Never back up `priv_validator_state.json` while the node is still running.** The file changes continuously during consensus. Stop the node fully first, then copy it.
+  4. **Never start a node after snapshot recovery without restoring your backed up `priv_validator_state.json`.** Snapshots do not include this file. Starting without it resets your signing state to height 0, which causes double-signing.
+  5. **Never rollback an archival or large history node without testing first.** Rollback on large databases can take hours or brick the node entirely, especially with PebbleDB.
 
-1. **Never run two nodes with the same `priv_validator_key.json` simultaneously.** This causes double-signing, a 5% slash, and permanent tombstoning. The validator can never rejoin the active set.
-2. **Never use `unsafe-reset-all` on a validator node** unless you fully understand the consequences. It wipes consensus state and can produce conflicting votes that lead to tombstoning.
-3. **Never back up `priv_validator_state.json` while the node is still running.** The file changes continuously during consensus. Stop the node fully first, then copy it.
-4. **Never start a node after snapshot recovery without restoring your backed up `priv_validator_state.json`.** Snapshots do not include this file. Starting without it resets your signing state to height 0, which causes double-signing.
-5. **Never rollback an archival or large history node without testing first.** Rollback on large databases can take hours or brick the node entirely, especially with PebbleDB.
+  **What to always do**
 
-**What to always do**
-
-1. **Always back up `priv_validator_state.json` after fully stopping the node** and before any recovery operation (rollback, snapshot restore, binary upgrade).
-2. **Always restore `priv_validator_state.json`** to its original location after rollback or snapshot recovery, before starting the node.
-3. **Always verify `priv_validator_state.json` is intact before starting the node.** Check that the height, round, and step values are sensible.
-4. **Always set `--halt-height` for coordinated upgrades.** Nodes that skip the halt-height flag require a harder recovery path.
-5. **Always verify the binary version** with `injectived version` before starting after an upgrade.
-6. **Always undo temporary consensus overrides** (like `--unsafe-consensus-timeout-precommit-delta=1ms`) once the chain stabilizes.
-
+  1. **Always back up `priv_validator_state.json` after fully stopping the node** and before any recovery operation (rollback, snapshot restore, binary upgrade).
+  2. **Always restore `priv_validator_state.json`** to its original location after rollback or snapshot recovery, before starting the node.
+  3. **Always verify `priv_validator_state.json` is intact before starting the node.** Check that the height, round, and step values are sensible.
+  4. **Always set `--halt-height` for coordinated upgrades.** Nodes that skip the halt-height flag require a harder recovery path.
+  5. **Always verify the binary version** with `injectived version` before starting after an upgrade.
+  6. **Always undo temporary consensus overrides** (like `--unsafe-consensus-timeout-precommit-delta=1ms`) once the chain stabilizes.
 </Callout>
 
-<Callout icon="info" color="#22C55E" iconType="regular">
-**Need a snapshot to recover?** See [Snapshot Resources](#snapshot-resources) at the bottom of this page for pruned snapshots and community providers. For archival segment snapshots, see the [Archival Setup](/infra/archival-setup) page.
+<Callout icon="info" iconType="regular" color="#22C55E">
+  **Need a snapshot to recover?** See [Snapshot Resources](#snapshot-resources) at the bottom of this page for pruned snapshots and community providers. For archival segment snapshots, see the [Archival Setup](/infra/archival-setup) page.
 </Callout>
 
 ---
@@ -40,6 +39,7 @@ Troubleshooting reference and operational guide for Injective validators and nod
 ### Node stuck at upgrade height
 
 **Symptoms:**
+
 - Node logs show the chain halted at the expected upgrade height
 - `latest_block_height` does not advance past the halt height
 
@@ -59,7 +59,7 @@ Troubleshooting reference and operational guide for Injective validators and nod
 
 **Symptoms:**
 
-```
+```text
 ERR prevote step: consensus deems this block invalid; prevoting nil
 err="wrong Block.Header.LastResultsHash. Expected 284C339C..., got 694706724..."
 ```
@@ -80,7 +80,7 @@ The node continuously prevotes nil and cannot finalize the next block.
 5. Start the node with the new binary
 
 <Warning>
-Rollback on archival nodes with large databases (hundreds of GB) can take a very long time or fail. For these nodes, recover from a snapshot instead.
+  Rollback on archival nodes with large databases (hundreds of GB) can take a very long time or fail. For these nodes, recover from a snapshot instead.
 </Warning>
 
 ---
@@ -89,7 +89,7 @@ Rollback on archival nodes with large databases (hundreds of GB) can take a very
 
 **Symptoms:**
 
-```
+```text
 ERR Found conflicting vote from ourselves; did you unsafe_reset a validator?
 height=181027006 module=consensus round=40 type=SIGNED_MSG_TYPE_PREVOTE
 ```
@@ -99,6 +99,7 @@ This message repeats continuously.
 **Cause:** The node's `priv_validator_state.json` was reset or corrupted, so it is resigning at rounds it already signed for, producing conflicting votes.
 
 **Common triggers:**
+
 - Ran `unsafe-reset-all` on a validator
 - Restored an old or incorrect `priv_validator_state.json`
 - Backed up `priv_validator_state.json` while the node was still running (stale copy)
@@ -114,7 +115,7 @@ This message repeats continuously.
   ```
 
 <Warning>
-If conflicting votes are detected on-chain, the validator will be tombstoned (permanently jailed). There is no on-chain unjail for double-signing.
+  If conflicting votes are detected on-chain, the validator will be tombstoned (permanently jailed). There is no on-chain unjail for double-signing.
 </Warning>
 
 ---
@@ -123,7 +124,7 @@ If conflicting votes are detected on-chain, the validator will be tombstoned (pe
 
 **Symptoms:**
 
-```
+```text
 injectived query slashing signing-info injvalcons1...
   tombstoned: true
   jailed_until: "9999-12-31T23:59:59Z"
@@ -138,14 +139,16 @@ injectived query slashing signing-info injvalcons1...
 **Resolution:**
 
 There is no standard on-chain unjail for tombstoned validators. Resolution paths:
+
 - A governance proposal or upgrade handler that explicitly un-tombstones affected validators
 - Creating a new validator with a new operator key (loses existing delegations)
 
 <Warning>
-**If you were tombstoned during a coordinated security upgrade**, reach out to the Injective team in the verified validators channels immediately. During coordinated upgrades, the team may include an un-tombstone handler in the upgrade binary to restore affected validators. Time sensitive, report as soon as possible so you can be included before the upgrade handler is finalized.
+  **If you were tombstoned during a coordinated security upgrade**, reach out to the Injective team in the verified validators channels immediately. During coordinated upgrades, the team may include an un-tombstone handler in the upgrade binary to restore affected validators. Time sensitive, report as soon as possible so you can be included before the upgrade handler is finalized.
 </Warning>
 
 **Prevention:**
+
 - Use TMKMS or Horcrux for hardware-enforced single-signer semantics
 - Always back up `priv_validator_state.json` after stopping the node
 - Never run two nodes with the same signing key simultaneously
@@ -182,7 +185,7 @@ Here's a practical example showing why the signing state must always be ahead of
 
 **Setup:** A coordinated chain upgrade with halt-height at block 125.
 
-```
+```text
 Block:  100  105  110  115  120  125  126
          |    |    |    |    |    |    |
          |    |    |    |    |    |    Chain resumes with new binary
@@ -205,7 +208,7 @@ At the halt, your `priv_validator_state.json` reads:
 }
 ```
 
-**Why does it say height 126 if the halt height was 125?** The `--halt-height` flag prevents block 126 from being *committed* (finalized), but the CometBFT consensus engine still enters height 126 and begins its rounds -- proposing, prevoting, and precommitting -- before the application layer refuses to process the block and the node shuts down. The high round number (42) reflects the network churning through rounds as validators gradually stop and consensus can't be reached. This is normal behavior: your validator cast real votes at height 126 even though that block was never finalized.
+**Why does it say height 126 if the halt height was 125?** The `--halt-height` flag prevents block 126 from being _committed_ (finalized), but the CometBFT consensus engine still enters height 126 and begins its rounds -- proposing, prevoting, and precommitting -- before the application layer refuses to process the block and the node shuts down. The high round number (42) reflects the network churning through rounds as validators gradually stop and consensus can't be reached. This is normal behavior: your validator cast real votes at height 126 even though that block was never finalized.
 
 This means your validator has already cast votes at height 126, round 42. The available snapshot is from height 115.
 
@@ -239,11 +242,11 @@ Now when the node starts:
 5. No conflicting votes. Your validator is safe.
 
 <Warning>
-**Key rule:** The signing state must always reflect the highest point your validator has ever signed at. It is safe for the signing state to be ahead of the snapshot (the node will catch up). It is never safe for the signing state to be behind what the validator actually signed on the network.
+  **Key rule:** The signing state must always reflect the highest point your validator has ever signed at. It is safe for the signing state to be ahead of the snapshot (the node will catch up). It is never safe for the signing state to be behind what the validator actually signed on the network.
 </Warning>
 
 | Scenario | Signing state height | Snapshot height | Safe? |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Normal recovery | 126 | 115 | Yes -- node replays 116-125, skips already-signed rounds at 126 |
 | Fresh snapshot, kept state | 126 | 120 | Yes -- same logic, fewer blocks to replay |
 | Snapshot without state | 0 | 115 | **No** -- will re-sign at heights it already signed, causing double-sign |
@@ -262,13 +265,15 @@ grep db_backend ~/.injectived/config/config.toml
 **Symptoms:** `injectived rollback` runs but never completes, or produces errors.
 
 **Causes:**
+
 - **PebbleDB backend:** Rollback with pebble has known issues and may hang indefinitely
 - **Very large database:** Rollback time scales with database size
 - **Corrupted WAL** (Write-Ahead Log)
 
 **Solutions:**
+
 - For PebbleDB nodes: recover from a snapshot instead
-- For large nodes: if rollback hasn't completed in 30+ minutes, abort and use a snapshot
+- For large nodes: if rollback hasn't completed in 30\+ minutes, abort and use a snapshot
 - Consider switching to goleveldb. PebbleDB is more space efficient but less tested for rollback
 
 ---
@@ -277,7 +282,7 @@ grep db_backend ~/.injectived/config/config.toml
 
 **Symptoms:**
 
-```
+```text
 ERR Failed signing vote err="error signing vote: round regression at height 181027006.
 Got 108, last round 141"
 ```
@@ -295,9 +300,9 @@ INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
 ```
 
 <Warning>
-**Remove this override once the chain stabilizes and the node is caught up.** Revert to the default (100ms) and restart.
+  **Remove this override once the chain stabilizes and the node is caught up.** Revert to the default (100ms) and restart.
 
-If left on during normal operation, the 1ms delta causes rounds to advance far faster than votes can propagate across the network. Your validator moves to the next round before other validators' precommits arrive, so its votes miss the actual commit round. The result is a steadily climbing missed-block counter, and if enough blocks are missed (typically 500 of the last 10,000), **the validator will be jailed for downtime**.
+  If left on during normal operation, the 1ms delta causes rounds to advance far faster than votes can propagate across the network. Your validator moves to the next round before other validators' precommits arrive, so its votes miss the actual commit round. The result is a steadily climbing missed-block counter, and if enough blocks are missed (typically 500 of the last 10,000), **the validator will be jailed for downtime**.
 </Warning>
 
 ---
@@ -306,7 +311,7 @@ If left on during normal operation, the 1ms delta causes rounds to advance far f
 
 **Symptoms:**
 
-```
+```text
 panic: Tendermint state.AppHash does not match AppHash after replay
 ```
 
@@ -335,18 +340,18 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 **Symptoms:**
 
 - The chain does not produce new blocks after the upgrade height
-- Consensus round numbers climb continuously (round 50, 100, 200+)
+- Consensus round numbers climb continuously (round 50, 100, 200\+)
 - Nodes log prevotes and precommits but no block is committed
 - `latest_block_height` remains stuck at the halt height
 
-**Cause:** CometBFT requires 2/3+ of total voting power to be online and participating with the correct binary to finalize a block. During a coordinated upgrade, there is a window where validators are upgrading at different speeds. Until enough voting power is running the new binary, the network cannot reach consensus.
+**Cause:** CometBFT requires 2/3\+ of total voting power to be online and participating with the correct binary to finalize a block. During a coordinated upgrade, there is a window where validators are upgrading at different speeds. Until enough voting power is running the new binary, the network cannot reach consensus.
 
 What happens during this window:
 
 1. The chain halts at the upgrade height (ex: block 125)
 2. Validators that have upgraded start participating in consensus at height 126
 3. Each round, the network attempts to finalize block 126 but fails because less than 2/3 of voting power is voting
-4. The round number increments and the cycle repeats, round 1, 2, 3, ... 50, ... 100+
+4. The round number increments and the cycle repeats, round 1, 2, 3, ... 50, ... 100\+
 5. This continues until enough validators complete the upgrade and come online
 
 **This is normal during upgrades.** The chain is not broken, it is waiting for quorum.
@@ -362,7 +367,7 @@ What happens during this window:
 - **Coordinate in validator channels:** During major upgrades, validators typically coordinate in the verified validators channels to track upgrade progress and voting power percentage.
 
 <Note>
-The longer this window lasts, the higher the round numbers climb. Validators that come online later will need to catch up through all those rounds, which is why the `--unsafe-consensus-timeout-precommit-delta=1ms` flag exists but remember to [remove it after the chain stabilizes](#round-regression-errors-during-catchup).
+  The longer this window lasts, the higher the round numbers climb. Validators that come online later will need to catch up through all those rounds, which is why the `--unsafe-consensus-timeout-precommit-delta=1ms` flag exists but remember to [remove it after the chain stabilizes](#round-regression-errors-during-catchup).
 </Note>
 
 ---
@@ -370,6 +375,7 @@ The longer this window lasts, the higher the round numbers climb. Validators tha
 ### Jailed for downtime (not tombstoned)
 
 **Symptoms:**
+
 - Validator shows as inactive or jailed
 - `tombstoned: false` in signing info
 - Missed blocks counter is high
@@ -410,15 +416,15 @@ The longer this window lasts, the higher the round numbers climb. Validators tha
 
 - [ ] Confirm the node has halted at the expected height
 - [ ] Stop the node fully (verify the process is dead)
-  ```bash
-  ps aux | grep injectived
-  ```
+      ```bash
+      ps aux | grep injectived
+      ```
 - [ ] Back up `priv_validator_state.json`
 - [ ] Install the new binary
 - [ ] Verify the version:
-  ```bash
-  injectived version
-  ```
+      ```bash
+      injectived version
+      ```
 
 ### After the upgrade
 
@@ -429,9 +435,9 @@ The longer this window lasts, the higher the round numbers climb. Validators tha
 - [ ] If seeing `wrong Block.Header.LastResultsHash`: stop, rollback 1 block, restore `priv_validator_state.json`, restart
 - [ ] If using round-catchup overrides (`--unsafe-consensus-timeout-precommit-delta`): remove them once stable
 - [ ] Verify the validator is signing:
-  ```bash
-  curl -s localhost:26657/consensus_state | jq '.result.round_state["height/round/step"]'
-  ```
+      ```bash
+      curl -s localhost:26657/consensus_state | jq '.result.round_state["height/round/step"]'
+      ```
 
 ---
 
@@ -478,11 +484,11 @@ grep db_backend ~/.injectived/config/config.toml
 
 ## Pruned vs Archival Nodes
 
-| | Pruned Node | Archival Node |
-|---|---|---|
+|  | Pruned Node | Archival Node |
+| --- | --- | --- |
 | **Rollback** | Fast (minutes) | Slow (minutes to hours), may fail |
-| **Snapshot recovery** | Fast (10-30 min) | Very slow (hours, snapshots 100+ GB) |
-| **Typical DB size** | 10-50 GB | 500+ GB |
+| **Snapshot recovery** | Fast (10-30 min) | Very slow (hours, snapshots 100\+ GB) |
+| **Typical DB size** | 10-50 GB | 500\+ GB |
 | **Recommended recovery** | Rollback first, snapshot as fallback | Snapshot preferred, rollback is risky |
 
 ---
@@ -504,7 +510,7 @@ grep db_backend ~/.injectived/config/config.toml
 Injective maintains pruned mainnet snapshots in two regions. Check the status endpoint for the latest available height and download URL:
 
 | Region | Status | Download |
-|---|---|---|
+| --- | --- | --- |
 | **EU (OVH)** | [status.json](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/status.json) | `http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/` |
 | **Asia (GCS)** | [status.json](https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json) | `https://storage.googleapis.com/injective-mainnet-snapshots-asia/` |
 
@@ -530,11 +536,11 @@ During coordinated security upgrades, the Injective team may also share emergenc
 - Community validators may share emergency snapshots during incidents in the validator channels
 
 <Warning>
-**Database backend compatibility:** Snapshots are backend specific. A goleveldb snapshot will not work on a node configured for pebbledb, and vice versa. Check your configuration before downloading:
+  **Database backend compatibility:** Snapshots are backend specific. A goleveldb snapshot will not work on a node configured for pebbledb, and vice versa. Check your configuration before downloading:
 
-```bash
-grep db_backend ~/.injectived/config/config.toml
-```
+  ```bash
+  grep db_backend ~/.injectived/config/config.toml
+  ```
 
-**You must restore your backed up `priv_validator_state.json`** into the data directory before starting the node after a snapshot recovery. See [Recovering from a snapshot](#recovering-from-a-snapshot) above for the full procedure.
+  **You must restore your backed up `priv_validator_state.json`** into the data directory before starting the node after a snapshot recovery. See [Recovering from a snapshot](#recovering-from-a-snapshot) above for the full procedure.
 </Warning>
