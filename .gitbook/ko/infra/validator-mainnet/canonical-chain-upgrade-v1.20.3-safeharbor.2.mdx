@@ -1,0 +1,108 @@
+---
+title: v1.20.3-safeharbor.2로 업그레이드
+description: Injective 메인넷 검증자 노드를 v1.20.3-safeharbor.2로 업그레이드하는 방법
+updatedAt: "2026-09-02"
+---
+
+2026년 9월 2일 수요일
+
+[IIP-690](https://injhub.com/proposal/690/)에 따라 업그레이드 절차는 블록 높이 **181295000**에서 수행되어야 합니다.
+
+* [요약](#summary)
+* [복구](#recovery)
+* [업그레이드 절차](#upgrade-procedure)
+* [검증자 참고 사항](#notes-for-validators)
+
+## 요약
+
+Injective 체인은 약 **2026년 9월 2일 수요일 오후 1:30 EDT / 17:30 UTC**에 예정된 개선 업그레이드를 진행합니다.
+
+업그레이드 단계에 대한 간단한 요약은 다음과 같습니다:
+
+1. 투표하고 노드가 블록 높이 **181295000**에서 패닉할 때까지 기다립니다.
+2. Injective 체인 실행에 사용되는 구성, 데이터, 키를 백업합니다.
+3. [v1.20.3-safeharbor.2](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.3-safeharbor.2-1788352700) 바이너리를 설치합니다.
+4. 새 injectived 바이너리로 노드를 시작하여 업그레이드를 완료합니다.
+
+검증자를 위한 업그레이드 조율과 지원은 [Injective Discord](https://discord.gg/injective)의 `#validators` 비공개 채널에서 제공됩니다.
+
+네트워크 업그레이드는 다음과 같은 경로를 거칠 수 있습니다:
+
+1. **순조로운 경로(Happy path)**:\
+   검증자가 블록체인 히스토리를 삭제하지 않고 체인을 성공적으로 업그레이드하며, 모든 검증자가 업그레이드 후 5-10분 이내에 복귀합니다.
+2. **순조롭지 않은 경로(Not-so-happy path)**:\
+   검증자가 최신 Canonical 체인으로 업그레이드하는 데 어려움을 겪습니다.
+3. **중단 경로(Abort path)**:\
+   드물게 팀이 미처 발견하지 못한 치명적인 문제를 인지하는 경우, Injective 팀은 모든 손상된 상태를 패치하고 36시간 이내에 또 다른 공식 바이너리를 제공하려고 시도합니다.\
+   체인이 36시간 이내에 성공적으로 재개되지 않으면 [Injective Discord](https://discord.gg/injective)의 `#validators` 채널에서 업그레이드 중단이 공지되며, 검증자는 어떠한 업데이트나 변경 없이 기존 체인을 계속 실행해야 합니다.
+
+## 복구
+
+체인 상태를 내보내기 전에 검증자는 내보내기 높이에서 전체 데이터 스냅샷을 먼저 생성하는 것이 좋습니다. 스냅샷 방식은 인프라에 따라 크게 다르지만, 일반적으로 `.injectived` 디렉터리를 백업하여 수행할 수 있습니다.
+
+injectived 프로세스를 중지한 후 `.injectived/data/priv_validator_state.json` 파일을 백업하는 것이 매우 중요합니다. 이 파일은 검증자가 합의 라운드에 참여할 때마다 매 블록 업데이트됩니다. 업그레이드가 실패하여 이전 체인을 다시 시작해야 하는 경우 이중 서명을 방지하는 데 필요한 핵심 파일입니다.
+
+업그레이드가 성공하지 못하는 경우, 검증자와 운영자는 스냅샷을 복원하고 Injective 체인 릴리스 [v1.20.3](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.3-1784976496)으로 다운그레이드한 뒤, 다음 업그레이드 공지가 있을 때까지 이전 체인을 계속 실행해야 합니다.
+
+## 업그레이드 절차
+
+### 검증자 참고 사항
+
+새 버전으로 업그레이드하기 전에 wasm 캐시를 제거해야 합니다:
+
+```shell
+rm -rf .injectived/wasm/wasm/cache/
+```
+
+### 단계
+
+1.  현재 올바른 버전(`v1.20.3`)의 `injectived`를 실행 중인지 확인합니다:
+
+    ```bash
+    $ injectived version
+    Version v1.20.3 (5c3143e)
+    Compiled at 20260725-1049 using Go go1.26.4 (amd64)
+    ```
+
+2.  `.injectived` 디렉터리를 백업합니다:
+
+    ```bash
+    cp -r ~/.injectived ./injectived-backup
+    ```
+
+3. v1.20.3-safeharbor.2용 `injective-chain` 릴리스를 다운로드하고 설치합니다:
+
+    ```bash
+    wget https://github.com/InjectiveFoundation/injective-core/releases/download/v1.20.3-safeharbor.2-1788352700/linux-amd64.zip
+    unzip linux-amd64.zip
+    sudo mv injectived peggo /usr/bin
+    sudo mv libwasmvm.x86_64.so /usr/lib
+    ```
+
+4.  v1.20.3-safeharbor.2 릴리스를 다운로드한 후 현재 올바른 버전(v1.20.3-safeharbor.2)의 `injectived`를 실행 중인지 확인합니다:
+
+    ```bash
+    $ injectived version
+    Version v1.20.3-safeharbor.2 (de8a811)
+    Compiled at 20260902-1239 using Go go1.26.4 (amd64)
+    ```
+
+5.  `injectived`를 시작합니다:
+
+    ```bash
+    injectived start
+    ```
+
+6.  v1.20.3-safeharbor.2 릴리스를 다운로드한 후 현재 올바른 버전(v1.20.3-safeharbor.2)의 `peggo`를 실행 중인지 확인합니다:
+
+    ```bash
+    $ peggo version
+    Version v1.20.3-safeharbor.2 (de8a811)
+    Compiled at 20260902-1247 using Go go1.26.4 (amd64)
+    ```
+
+7.  peggo를 시작합니다:
+
+    ```bash
+    peggo orchestrator
+    ```

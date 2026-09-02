@@ -993,6 +993,7 @@
                       "cn/infra/validator-mainnet/index",
                       "cn/infra/validator-mainnet/peggo",
                       "cn/infra/validator-mainnet/canonical-chain-upgrade",
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2",
                       "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3",
                       "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.1",
                       "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.0",
@@ -1453,7 +1454,8 @@
                     "pages": [
                       "ko/infra/validator-mainnet/index",
                       "ko/infra/validator-mainnet/peggo",
-                      "ko/infra/validator-mainnet/canonical-chain-upgrade"
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2"
                     ]
                   },
                   {
@@ -2033,6 +2035,12 @@
                     "group": "協調アップグレード",
                     "pages": [
                       "jp/infra/coordinated-upgrades/index"
+                    ]
+                  },
+                  {
+                    "group": "メインネットバリデーター",
+                    "pages": [
+                      "jp/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2"
                     ]
                   },
                   "jp/infra/public-endpoints",
