@@ -101,8 +101,8 @@
               {
                 "group": "INJECTIVE",
                 "pages": [
-                  "quickstart",
                   "index",
+                  "about",
                   "add-network-to-wallet",
                   {
                     "group": "Network Infrastructure",
@@ -114,6 +114,7 @@
                         "group": "Node Operation",
                         "pages": [
                           "infra/run-node",
+                          "infra/hardware",
                           "infra/set-up-keyring",
                           {
                             "group": "Validator Setup",
@@ -2219,6 +2220,14 @@
     "eyebrows": "breadcrumbs"
   },
   "redirects": [
+    {
+      "source": "/quickstart",
+      "destination": "/"
+    },
+    {
+      "source": "/infra/validator-mainnet#hardware-requirements",
+      "destination": "/infra/hardware"
+    },
     {
       "source": "/developers/ai/",
       "destination": "/developers-ai/"
