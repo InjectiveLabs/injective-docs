@@ -30,7 +30,7 @@ updatedAt: "2026-02-13"
 "/injective.exchange.v1beta1.MsgWithdraw",
 ```
 
-根据 [cosmos sdk 文档](https://docs.cosmos.network/main/modules/authz)，"授权必须针对特定的 Msg 服务方法逐一授予"，因此以下代码片段必须针对您希望 `grantee` 代表 `granter` 拥有授权的每种消息类型重复执行。
+根据 [cosmos sdk 文档](https://docs.cosmos.network/sdk/latest/modules/authz/README)，"授权必须针对特定的 Msg 服务方法逐一授予"，因此以下代码片段必须针对您希望 `grantee` 代表 `granter` 拥有授权的每种消息类型重复执行。
 
 ```ts
 import { Network } from "@injectivelabs/networks";

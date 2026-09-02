@@ -23,14 +23,14 @@ Users submit transactions client-side to broadcast it to the network. When the t
 3. The `Tx` fields are validated (stateless) using `ValidateBasic()`
 4. The `Tx` is **signed** using the key associated with the sender address and the latest ethereum hard fork (`London`, `Berlin`, etc) from the `ChainConfig`
 5. The `Tx` is **built** from the msg fields using the Cosmos Config builder
-6. The `Tx` is **broadcasted** in [sync mode](https://docs.cosmos.network/master/run-node/txs.html#broadcasting-a-transaction) to ensure to wait for a [`CheckTx`](https://docs.tendermint.com/master/introduction/what-is-tendermint.html#intro-to-abci) execution response. Transactions are validated by the application using `CheckTx()`, before being added to the mempool of the consensus engine.
+6. The `Tx` is **broadcasted** in [sync mode](https://docs.cosmos.network/sdk/latest/node/txs#broadcasting-a-transaction) to ensure to wait for a [`CheckTx`](https://docs.tendermint.com/master/introduction/what-is-tendermint.html#intro-to-abci) execution response. Transactions are validated by the application using `CheckTx()`, before being added to the mempool of the consensus engine.
 7. JSON-RPC user receives a response with the [`RLP`](https://eth.wiki/en/fundamentals/rlp) hash of the transaction fields. This hash is different from the default hash used by SDK Transactions that calculates the `sha256` hash of the transaction bytes.
 
 ## Server-Side
 
 Once a block (containing the `Tx`) has been committed during consensus, it is applied to the application in a series of ABCI msgs server-side.
 
-Each `Tx` is handled by the application by calling [`RunTx`](https://docs.cosmos.network/master/core/baseapp.html#runtx). After a stateless validation on each `sdk.Msg` in the `Tx`, the `AnteHandler` confirms whether the `Tx` is an Ethereum or SDK transaction. As an Ethereum transaction it's containing msgs are then handled by the `x/evm` module to update the application's state.
+Each `Tx` is handled by the application by calling [`RunTx`](https://docs.cosmos.network/sdk/latest/learn/concepts/baseapp#the-transaction-execution-pipeline). After a stateless validation on each `sdk.Msg` in the `Tx`, the `AnteHandler` confirms whether the `Tx` is an Ethereum or SDK transaction. As an Ethereum transaction it's containing msgs are then handled by the `x/evm` module to update the application's state.
 
 ### AnteHandler
 
@@ -54,7 +54,7 @@ The `anteHandler` is run for every transaction. It checks if the `Tx` is an Ethe
 - `CanTransferDecorator(evmKeeper, feeMarketKeeper)` creates an EVM from the message and calls the BlockContext CanTransfer function to see if the address can execute the transaction.
 - `EthIncrementSenderSequenceDecorator(ak)`  handles incrementing the sequence of the signer (i.e sender). If the transaction is a contract creation, the nonce will be incremented during the transaction execution and not within this AnteHandler decorator.
 
-The options `authante.NewMempoolFeeDecorator()`, `authante.NewTxTimeoutHeightDecorator()` and `authante.NewValidateMemoDecorator(ak)` are the same as for a Cosmos `Tx`. Click [here](https://docs.cosmos.network/master/basics/gas-fees.html#antehandler) for more on the `anteHandler`.
+The options `authante.NewMempoolFeeDecorator()`, `authante.NewTxTimeoutHeightDecorator()` and `authante.NewValidateMemoDecorator(ak)` are the same as for a Cosmos `Tx`. Click [here](https://docs.cosmos.network/sdk/latest/learn/concepts/context-gas-events) for more on the `anteHandler`.
 
 ### EVM module
 

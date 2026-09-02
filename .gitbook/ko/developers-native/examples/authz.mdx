@@ -30,7 +30,7 @@ updatedAt: "2026-03-06"
 "/injective.exchange.v1beta1.MsgWithdraw",
 ```
 
-[cosmos sdk 문서](https://docs.cosmos.network/main/modules/authz)에 따르면 "권한은 특정 Msg 서비스 메서드에 대해 하나씩 부여되어야 합니다". 따라서 `granter`를 대신하여 `grantee`가 권한을 갖기를 원하는 각 메시지 유형에 대해 다음 코드 스니펫을 반복해야 합니다.
+[cosmos sdk 문서](https://docs.cosmos.network/sdk/latest/modules/authz/README)에 따르면 "권한은 특정 Msg 서비스 메서드에 대해 하나씩 부여되어야 합니다". 따라서 `granter`를 대신하여 `grantee`가 권한을 갖기를 원하는 각 메시지 유형에 대해 다음 코드 스니펫을 반복해야 합니다.
 
 ```ts
 import { Network } from "@injectivelabs/networks";
