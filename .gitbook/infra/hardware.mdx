@@ -18,9 +18,22 @@ Validator nodes participate in consensus and must maintain consistent performanc
 |          Storage 2TB NVMe        |          Storage 2TB NVMe      |
 |          Network 1Gbps+          |          Network 1Gbps+        |
 
-## Full nodes and RPC nodes
+### Production validator reference
 
-Non-validator full nodes and RPC nodes serving live chain data have similar requirements. While they don't risk slashing, underpowered nodes will lag behind the chain tip and serve unreliable data.
+For reference, production validators on the Injective mainnet typically run hardware in the following range:
+
+| Component | Typical configuration |
+|---|---|
+| **CPU** | AMD EPYC 4585PX or AMD Ryzen 9 9950X (16 cores / 32 threads, 5.75 GHz boost) |
+| **RAM** | 128 GB DDR5 @ 3600 MT/s |
+| **Storage** | 2x ~2 TB NVMe in RAID0, ~3.5 TiB usable |
+| **Network** | 10-25 Gbps |
+
+High single-thread performance (boost clock) is more important than core count for block processing. The network requirements are well above the 1 Gbps minimum listed in the spec table; production validators benefit from 10 Gbps+ links for consistent peer connectivity and fast block propagation.
+
+## RPC nodes
+
+Non-validator nodes serving live chain data have similar requirements. While they don't risk slashing, underpowered nodes will lag behind the chain tip and serve unreliable data.
 
 |           _Minimum_              |        _Recommendation_        |
 | :--------------------------:     | :---------------------------:  |
@@ -57,11 +70,36 @@ If your node is lagging and you suspect hardware limitations:
 - Periodically stop the node and restore from a snapshot to manage disk usage instead
 - For zero-downtime operation, run two nodes and do rolling snapshot recovery
 
+### Storage layout
+
+Production validators typically run two NVMe drives in one of these configurations:
+
+| Layout | How it works | Tradeoff |
+|---|---|---|
+| **RAID0** | Stripes data across both drives (e.g. 512 KiB chunks). Best sequential and random throughput. | No redundancy. If either drive fails, the array is lost. |
+| **LVM linear** | Concatenates drives into a single logical volume. Simpler setup. | No redundancy. If the drive holding active data fails, data is lost. |
+
+Neither layout provides redundancy, but chain state does not require it. If a drive fails, recover from a [snapshot](https://chain-portal.injective.network/snapshots). RAID0 is preferred for the higher throughput.
+
 ## Bare metal vs cloud
 
 Bare metal servers are strongly recommended for validator nodes. The consistent CPU clock speeds and low-latency NVMe storage required for sub-second block times are difficult to guarantee on shared cloud infrastructure.
 
 Cloud deployments can work for non-validator nodes if provisioned correctly (see storage guidance above), but operators should expect to invest more in monitoring and operational tooling to maintain reliability.
+
+### Reference cloud instance types
+
+The following instance types have been validated for Injective nodes. Use these as a starting point when provisioning.
+
+| Provider | Instance | vCPU | RAM | Disk | Suitable for |
+|---|---|---|---|---|---|
+| **GCP** | `c4-standard-16-lssd` | 16 vCPU (Emerald Rapids) | 64 GB | Local SSD (NVMe) | Sentries, RPC nodes |
+| **OVH** | `b3-32` | 8 vCPU | 32 GB | Local SSD | Sentries (undersized for validators) |
+| **OVH** | Dedicated (e.g. Advance-1) | 12 vCPU (Xeon E-2386G @3.5GHz or EPYC 4244P) | 128 GB | Physical NVMe (RAID0/RAID1) | Validators, full nodes |
+
+<Note>
+Cloud instances with local SSDs (not persistent disks) are critical for performance. Standard persistent disks (`pd-balanced`, `pd-ssd`) cannot sustain the IOPS required for Injective's block throughput. Local SSDs are ephemeral, but chain state is recoverable from a snapshot.
+</Note>
 
 ## Networking and peering
 
