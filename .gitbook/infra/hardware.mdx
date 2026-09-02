@@ -76,10 +76,10 @@ Production validators typically run two NVMe drives in one of these configuratio
 
 | Layout | How it works | Tradeoff |
 |---|---|---|
-| **RAID0** | Stripes data across both drives (e.g. 512 KiB chunks). Best sequential and random throughput. | No redundancy. If either drive fails, the array is lost. |
-| **LVM linear** | Concatenates drives into a single logical volume. Simpler setup. | No redundancy. If the drive holding active data fails, data is lost. |
+| **RAID0** | Stripes data across both drives in fixed chunks. Both drives are read/written in parallel, doubling potential IOPS and throughput. | No redundancy. If either drive fails, the array is lost. Requires full snapshot recovery. |
+| **LVM linear** | Concatenates drives into a single volume. Fills one drive first, then spills onto the next. No parallel I/O speed gains. | No redundancy. If either drive fails, the entire Volume Group breaks and the database is corrupted. Constrains performance to a single drive's speed. |
 
-Neither layout provides redundancy, but chain state does not require it. If a drive fails, recover from a [snapshot](https://chain-portal.injective.network/snapshots). RAID0 is preferred for the higher throughput.
+Neither layout provides redundancy, but chain state does not require it. RAID0 is recommended to meet Injective's sub-second block time requirements. If a drive fails, recover from a [snapshot](https://chain-portal.injective.network/snapshots).
 
 ## Bare metal vs cloud
 
