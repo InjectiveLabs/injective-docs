@@ -1239,6 +1239,18 @@
                   }
                 ]
               },
+              {
+                "group": "客户端库",
+                "pages": [
+                  "cn/sdks-index"
+                ]
+              },
+              {
+                "group": "网络资源",
+                "pages": [
+                  "cn/resources-index"
+                ]
+              },
               "cn/faq",
               "cn/glossary",
               "cn/references",
@@ -1852,6 +1864,18 @@
                   }
                 ]
               },
+              {
+                "group": "클라이언트 라이브러리",
+                "pages": [
+                  "ko/sdks-index"
+                ]
+              },
+              {
+                "group": "네트워크 리소스",
+                "pages": [
+                  "ko/resources-index"
+                ]
+              },
               "ko/faq",
               "ko/glossary",
               "ko/references"
@@ -2227,6 +2251,18 @@
                       "jp/developers-defi/injective-trader/strategy-development-guide"
                     ]
                   }
+                ]
+              },
+              {
+                "group": "クライアントライブラリ",
+                "pages": [
+                  "jp/sdks-index"
+                ]
+              },
+              {
+                "group": "ネットワークリソース",
+                "pages": [
+                  "jp/resources-index"
                 ]
               },
               "jp/faq",
