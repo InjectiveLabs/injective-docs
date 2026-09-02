@@ -1,0 +1,18 @@
+/* Make Operator Portal link stand out in navbar */
+nav a[href*="chain-portal"] {
+  color: #0082FA !important;
+  font-weight: 600 !important;
+}
+
+/* Sidebar active item only - blue highlight, not horizontal tabs */
+aside [data-active="true"],
+[data-component-name="sidebar"] [data-active="true"] {
+  color: #0082FA !important;
+  background: rgba(0, 130, 250, 0.08) !important;
+}
+
+/* Undo for horizontal tabs */
+nav [data-active="true"],
+[data-component-name="tabs"] [data-active="true"] {
+  background: transparent !important;
+}
