@@ -1,9 +1,18 @@
 ---
-title: Peggo
+title: Peggo Bridge
 updatedAt: "2025-10-30"
 ---
 
-If you're on this page then you've probably become a Validator on Injective. Congratulations! Configuring `peggo` is the final step of your setup.
+Peggo is the Peggy bridge orchestrator that runs alongside `injectived` on validator nodes. It handles four responsibilities:
+
+- **Oracle** - monitors Ethereum for deposit and bridge events, then reports them to the Injective chain
+- **Signer** - signs validator set updates and transaction batches
+- **Batch Creator** - groups outbound token transfers into batches for efficient bridging
+- **Relayer** - submits signed validator sets and transaction batches to the Ethereum Peggy contract
+
+Validators who do not run peggo will be **jailed** for missing batch confirmations or validator set confirmations within the required signing windows.
+
+### Configuration
 
 Example of `.env` for peggo:
 
