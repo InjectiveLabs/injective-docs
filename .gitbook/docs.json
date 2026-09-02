@@ -145,6 +145,7 @@
                           "infra/upgrade-node",
                           "infra/coordinated-upgrades/index",
                           "infra/validator-mainnet/canonical-chain-upgrade",
+                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2",
                           {
                             "group": "Historical Upgrades",
                             "pages": [
@@ -979,6 +980,12 @@
                   "cn/infra/cosmovisor",
                   "cn/infra/upgrade-node",
                   {
+                    "group": "协调升级",
+                    "pages": [
+                      "cn/infra/coordinated-upgrades/index"
+                    ]
+                  },
+                  {
                     "group": "主网验证者",
                     "pages": [
                       "cn/infra/validator-mainnet/index",
@@ -1421,6 +1428,12 @@
                   "ko/infra/join-a-network",
                   "ko/infra/cosmovisor",
                   "ko/infra/upgrade-node",
+                  {
+                    "group": "조정 업그레이드",
+                    "pages": [
+                      "ko/infra/coordinated-upgrades/index"
+                    ]
+                  },
                   {
                     "group": "메인넷 검증자",
                     "pages": [
@@ -1990,7 +2003,14 @@
                   "jp/infra/join-a-network",
                   "jp/infra/cosmovisor",
                   "jp/infra/upgrade-node",
-                  "jp/infra/public-endpoints"
+                  {
+                    "group": "協調アップグレード",
+                    "pages": [
+                      "jp/infra/coordinated-upgrades/index"
+                    ]
+                  },
+                  "jp/infra/public-endpoints",
+                  "jp/infra/archival-setup"
                 ]
               },
               {

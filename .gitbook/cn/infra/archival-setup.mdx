@@ -1,29 +1,84 @@
 ---
-title: 归档设置
-updatedAt: "2026-02-13"
+title: 归档节点设置与恢复
+updatedAt: "2026-09-01"
 ---
 
-本指南将引导你完成创建一组提供归档数据的节点以及如何使用网关将它们连接在一起的过程
+Injective 归档节点的设置、配置与恢复指南。涵盖如何在网关代理之后部署分段归档节点集群，以及如何在协调升级或计划外停机后恢复归档节点。
 
-## 架构 
+<Callout icon="info" color="#22C55E" iconType="regular">
+**在寻找剪枝快照或验证者恢复方法？** 请参阅[验证者故障排查指南](/cn/infra/coordinated-upgrades)，了解剪枝快照资源和协调安全升级的恢复流程。
+</Callout>
+
+<Callout icon="warning" color="#FF8C00" iconType="regular">
+**正在进行升级或停机后的恢复？** 请直接跳转到[升级或停机后恢复归档节点](#升级或停机后恢复归档节点)查看恢复流程。
+</Callout>
+
+## 归档设置
 
 为了使归档数据的服务更加便捷，我们将数据分成较小的段。这些段存储在 `s3://injective-snapshots/mainnet/subnode`
 
+该存储桶可公开访问。无需 AWS 凭证：
+
+```bash
+# List all available segments using AWS CLI
+aws s3 ls --no-sign-request s3://injective-snapshots/mainnet/subnode/
+
+# Or without AWS CLI, using curl
+curl -s "https://injective-snapshots.s3.amazonaws.com/?prefix=mainnet/subnode/&delimiter=/" \
+  | tr '<' '\n' | sed -n 's/^Prefix>mainnet\/subnode\/\([^/]*\)\/.*/\1/p' | sort -n
+```
+
+#### 命名约定
+
+目录名称以百万为单位编码区块高度范围。例如，`138150` 包含从 138M 到 150M 的区块。当段之间存在重叠时（例如 `8896` 与 `8898`，或 `119127` 与 `119141` 与 `119143`），较新或范围更宽的段通常包含修正或扩展了覆盖范围。请选择在没有不必要重叠的情况下最能覆盖你目标范围的段。
+
+#### 可用段
+
+<Note>
+此表可能未包含最新的段。请运行上面的 `aws s3 ls` 命令检查是否有新发布的段。
+</Note>
+
 | 快照目录 | 高度范围 | Injective 版本 | 推荐磁盘大小 |
 | ------------ | ------------ | ----------------- | --------------------- |
-| `/0073`      | 0 – 73M      | v1.12.1           | 42 TiB                |
-| `/6068`      | 60M – 68M    | v1.12.1           | 7 TiB                 |
-| `/7380`      | 73M – 80M    | v1.12.1           | 7 TiB                 |
-| `/8088`      | 80M – 88M    | v1.13.3           | 7 TiB                 |
-| `/8896`      | 88M – 96M    | v1.13.3           | 7 TiB                 |
-| `/8898`      | 88M – 98M    | v1.13.3           | 7 TiB                 |
-| `/98106`     | 98M – 106M   | v1.13.3           | 7 TiB                 |
-| `/98107`     | 98M – 107M   | v1.14.0           | 7.5 TiB               |
-| `/66101`     | 66M – 101M   | v1.14.0           | 27 TiB                |
-| `/105116`    | 105M – 116M  | v1.15.0           | 7.5 TiB               |
-| `/113127`    | 113M – 127M  | v1.15.0           | 11 TiB                |
-| `/119143`    | 119M – 143M  | v1.17.0           | 16 TiB                |
-| `/138150`    | 138M – 150M  | v1.17.2           | 5.8 TiB               |
+| `0073`       | 0 – 73M      | v1.12.1           | 42 TiB                |
+| `6068`       | 60M – 68M    | v1.12.1           | 7 TiB                 |
+| `7380`       | 73M – 80M    | v1.12.1           | 7 TiB                 |
+| `8088`       | 80M – 88M    | v1.13.3           | 7 TiB                 |
+| `8896`       | 88M – 96M    | v1.13.3           | 7 TiB                 |
+| `8898`       | 88M – 98M    | v1.13.3           | 7 TiB                 |
+| `98106`      | 98M – 106M   | v1.13.3           | 7 TiB                 |
+| `98107`      | 98M – 107M   | v1.14.0           | 7.5 TiB               |
+| `66101`      | 66M – 101M   | v1.14.0           | 27 TiB                |
+| `105116`     | 105M – 116M  | v1.15.0           | 7.5 TiB               |
+| `113127`     | 113M – 127M  | v1.15.0           | 11 TiB                |
+| `119127`     | 119M – 127M  | 待定               | 待定                   |
+| `119141`     | 119M – 141M  | 待定               | 待定                   |
+| `119143`     | 119M – 143M  | v1.17.0           | 16 TiB                |
+| `138150`     | 138M – 150M  | v1.17.2           | 5.8 TiB               |
+| `150181`     | 150M – 181M  | 即将推出           | 即将推出               |
+
+<Warning>
+标记为 **待定** 或 **即将推出** 的行表示这些段已存在于 S3 中，但尚未验证其版本和磁盘大小。在使用这些段之前，请联系基础设施团队或检查段元数据。
+</Warning>
+
+#### 选择段以实现完整覆盖
+
+多个段在高度范围上存在重叠。你不需要全部下载。以下是从创世区块到当前链顶端实现完整归档覆盖的推荐最小集合：
+
+| 节点 | 段 | 高度范围 | 备注 |
+| ---- | ------- | ------------ | ----- |
+| 1    | `0073`  | 0 – 73M      | 从创世到早期链历史 |
+| 2    | `7380`  | 73M – 80M    | |
+| 3    | `8088`  | 80M – 88M    | |
+| 4    | `8898`  | 88M – 98M    | 使用 `8898` 而非 `8896` 以获得更宽的覆盖范围 |
+| 5    | `98107` | 98M – 107M   | 使用 `98107` 而非 `98106` 以获得更宽的覆盖范围和更新的二进制文件 |
+| 6    | `105116`| 105M – 116M  | 与前一段重叠，提供冗余 |
+| 7    | `119143`| 119M – 143M  | 使用最宽的段以减少节点数量 |
+| 8    | `138150`| 138M – 150M  | |
+| 9    | `150181`| 150M – 181M  | 最新的段，覆盖到最近的链高度 |
+| 顶端  | 剪枝节点  | 最新区块 | 剪枝节点覆盖最新段与实时链顶端之间的空缺 |
+
+**剪枝顶端节点**至关重要。归档段是静态快照，不会与实时链同步。网关将对最近区块的查询路由到剪枝节点，该节点通过 p2p 保持同步。有关如何使用 `blocks: [1000]` 配置顶端节点，请参阅下面的[网关配置](#网关配置)。
 
 这些段通过网关连接在一起，网关是一个聚合代理，根据区块范围将查询路由到适当的节点
 
@@ -43,7 +98,8 @@ updatedAt: "2026-02-13"
 ### 在托管归档段的每个节点上：
 #### 1. 使用以下命令下载你的设置所需历史记录的归档段 
 ```bash
-aws s3 cp --recursive s3://injective-snapshots/mainnet/subnode/<SNAPSHOT_DIR> $INJ_HOME
+# SNAPSHOT_DIR matches the "Snapshot Dir" column in the table above (0073, 138150)
+aws s3 cp --no-sign-request --recursive s3://injective-snapshots/mainnet/subnode/$SNAPSHOT_DIR $INJ_HOME
 ```
 
 #### 2. 根据上表下载或设置适当的 injective 二进制文件或镜像标签
@@ -52,15 +108,15 @@ aws s3 cp --recursive s3://injective-snapshots/mainnet/subnode/<SNAPSHOT_DIR> $I
 ```bash
 injectived init $MONIKER --chain-id injective-1 --home $INJ_HOME --overwrite
 ```
-#### 4. 在你的 app.toml 文件中禁用修剪，并在 config.toml 文件中阻止 p2p 并将日志级别设置为 error。
+#### 4. 在你的 app.toml 文件中禁用剪枝，并在 config.toml 文件中阻止 p2p 并将日志级别设置为 error。
 
-这确保数据不会被修剪，节点保持在停止状态。将日志级别设置为 error 可减少磁盘操作并提高性能。
+这确保数据不会被剪枝，节点保持在停止状态。将日志级别设置为 error 可减少磁盘操作并提高性能。
 
 ```bash
-# 在 app.toml 中禁用修剪
+# Disable pruning in app.toml
 sed -i 's/^pruning *= *.*/pruning = "nothing"/' $INJ_HOME/config/app.toml
 
-# 在 config.toml 中禁用 p2p 并禁用创建空块
+# Disable p2p and disable create empty blocks on config.toml
 awk '
     BEGIN { section = "" }
     /^\[/ {
@@ -79,7 +135,7 @@ awk '
     { print }
     ' $INJ_HOME/config/config.toml > $INJ_HOME/config/config.tmp && mv $INJ_HOME/config/config.tmp $INJ_HOME/config/config.toml
 
-# 将日志级别设置为 error（更少的磁盘写入 = 更好的性能）
+# Set log level to error (less disk writes = better performance)
 sed -i 's/^log_level *= *.*/log_level = "error"/' $INJ_HOME/config/app.toml
 ```
 
@@ -89,6 +145,12 @@ injectived start --home $INJ_HOME
 ```
 
 ### 网关配置
+
+网关是一个反向代理，根据请求的区块高度将 RPC、gRPC 和 API 查询路由到正确的归档节点。下面的参考实现来自生态系统贡献者 [Decentrio](https://github.com/decentrio/gateway)。
+
+<Note>
+网关会检查传入请求，确定区块高度，并转发到持有该范围的上游节点。任何具备高度感知能力的反向代理（nginx、Caddy、带自定义路由的 HAProxy）都可以实现同样的功能。
+</Note>
 
 #### 1. 克隆网关仓库
 ```bash
@@ -101,7 +163,7 @@ make build
 #### 3. 创建你的配置文件
 ```yaml
 upstream:
-  # 示例：节点 1 持有区块 0-80M，而节点 2 持有区块 80-88M
+  # example node 1 holds blocks 0-80M while node 2 holds blocks 80-88M
   - rpc: "http://$NODE1:$RPC_PORT"
     grpc: "$NODE1:$GRPC_PORT"
     api: "http://$NODE1:$API_PORT"
@@ -111,9 +173,9 @@ upstream:
     api: "http://$NODE2:$API_PORT"
     blocks: [80000000,88000000]
 
-  # <其他节点在这里>
+  # <OTHER NODES HERE>
 
-  # 归档尖端，这服务于最新的 x 个区块，通常设置为修剪节点
+  # Archival tip, this serves the latest x blocks, usually set as a pruned node
   - rpc: "http://$PRUNED_NODE:$RPC_PORT"
     grpc: "$PRUNED_NODE:$GRPC_PORT"
     api: "http://$PRUNED_NODE:$API_PORT"
@@ -124,7 +186,7 @@ ports:
   rpc: $RPC_PORT
   api: $API_PORT 
   grpc: $GRPC_PORT
-  # 暂时将这些设置为零以禁用
+  # Leave these as zero to disable for now
   jsonrpc: 0
   jsonrpc_ws: 0
 
@@ -133,3 +195,44 @@ ports:
 ```bash
 gateway start --config $CONFIG_FILE
 ```
+
+---
+
+## 升级或停机后恢复归档节点
+
+归档段节点是静态的，因此它们不参与共识，也不通过 p2p 同步。但是，它们仍然可能受到协调升级或计划外链停机的影响，尤其是**剪枝顶端节点**以及覆盖最近区块高度的任何段节点。
+
+### 剪枝顶端节点
+
+剪枝顶端节点是归档集群中唯一与实时链主动同步的节点。在协调升级或计划外停机期间，请像对待其他全节点一样对待它：
+
+1. 停止节点
+2. 切换到新的二进制文件
+3. 验证：`injectived version`
+4. 启动节点
+
+顶端节点没有 `priv_validator_state.json`（它不是验证者），因此不存在双重签名风险。如果顶端节点的状态损坏（AppHash 不匹配），请从剪枝快照恢复。请参阅[验证者故障排查与快照资源](/cn/infra/coordinated-upgrades#快照资源)。
+
+### 覆盖最近高度的段节点
+
+如果某次升级改变了历史区块的处理或存储方式（影响查询结果的状态迁移），覆盖升级边界附近高度的段节点可能会返回不一致的数据。在这种情况下：
+
+1. 停止受影响的段节点
+2. 从 S3 下载更新后的段（基础设施团队可能会在升级后发布修正后的段）：
+   ```bash
+   aws s3 cp --no-sign-request --recursive s3://injective-snapshots/mainnet/subnode/$SNAPSHOT_DIR $INJ_HOME
+   ```
+3. 将二进制文件更新到该段指定的版本
+4. 重启节点
+
+### 较旧的段节点
+
+覆盖历史区块范围的段节点（`0073`、`8088`）通常不受链升级的影响。它们使用生成数据时的二进制版本来提供既有数据。除非升级明确改变了历史查询的处理方式，否则无需任何操作。
+
+### 网关
+
+网关本身是无状态的，在链升级期间不需要升级。但是，如果你添加或替换了段节点，请更新网关配置以反映新的上游端点并重启网关。
+
+<Warning>
+在任何恢复操作之后，请通过查询每个段范围中的一个区块并确认响应，来验证网关的路由是否正确。配置错误的网关可能会在特定高度范围内悄无声息地返回错误或过期数据。
+</Warning>
