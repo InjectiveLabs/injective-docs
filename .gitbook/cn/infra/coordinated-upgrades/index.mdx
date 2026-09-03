@@ -310,13 +310,23 @@ INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
 panic: Tendermint state.AppHash does not match AppHash after replay
 ```
 
-**原因：** 应用状态与共识状态发生了偏离。可能由不完整的升级、区块执行期间的崩溃或数据库损坏引起。
+**原因：** 应用状态与共识状态发生了偏离。可能由不完整的升级、区块执行期间的崩溃、数据库损坏，或 state sync 后缺失 `wasm/` 目录（见下文）引起。
 
 **解决方案：**
 
 1. 尝试回滚：`injectived rollback`
 2. 如果回滚失败或错误仍然存在：从快照恢复
 3. 恢复后始终还原 `priv_validator_state.json`
+
+---
+
+### CometBFT state sync 后 AppHash 不匹配
+
+**症状：** 在 CometBFT state sync 成功恢复完成后，节点在第一个区块处立即出现 AppHash 错误。
+
+**原因：** CometBFT state sync（在 `config.toml` 的 `[statesync]` 中配置的 P2P 协议）会恢复 IAVL 状态树，但**不会**恢复包含已编译 CosmWasm 合约字节码的 `wasm/` 目录。缺少这些文件时，本地计算出的 app hash 将与网络的不匹配。
+
+**解决方案：** 改用手动快照恢复而不是 state sync。Injective 的官方快照包含 `wasm/` 目录。如果你必须使用 state sync，请从可信来源获取 `wasm/` 目录，并在启动节点之前将其放置在 `~/.injectived/data/wasm/`。有关 state sync 与快照恢复之间区别的详细信息，请参阅[加入网络 —— 同步方法](/cn/infra/join-a-network)。
 
 ---
 
@@ -403,7 +413,8 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 - [ ] 在节点配置或 CLI 标志中设置 `--halt-height=<target_height>`
 - [ ] 如果使用 Cosmovisor：将新二进制文件放入正确的升级目录
 - [ ] 备份 `priv_validator_state.json`
-- [ ] 确定快照提供商，以备需要回滚时使用
+- [ ] 确定快照提供商，以备需要回滚时使用（参见[快照 - Chain Portal](https://portal.injective.network/snapshots)）
+- [ ] 如果计划使用 CometBFT state sync 进行恢复：确保你拥有 `~/.injectived/data/wasm/` 的副本。State sync 不会恢复该目录，缺少它会导致 AppHash 不匹配
 - [ ] 监控链向停机高度的推进
 
 ### 在升级高度时
@@ -499,38 +510,18 @@ grep db_backend ~/.injectived/config/config.toml
 
 ## 快照资源
 
-### Injective 官方提供的快照
+<Callout icon="info" color="#22C55E" iconType="regular">
+**[快照 - Chain Portal](https://portal.injective.network/snapshots)**
 
-Injective 在两个区域维护剪枝主网快照。请检查状态端点以获取最新的可用高度和下载 URL：
+Injective 官方提供的剪枝快照（欧洲和亚洲区域）、社区快照提供商、归档段数据的下载链接及使用说明。Chain Portal 是所有快照资源的权威、最新来源。
+</Callout>
 
-| 区域 | 状态 | 下载 |
-|---|---|---|
-| **欧洲（OVH）** | [status.json](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/status.json) | `http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/` |
-| **亚洲（GCS）** | [status.json](https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json) | `https://storage.googleapis.com/injective-mainnet-snapshots-asia/` |
+有关归档段快照和分段节点集群设置，请参阅[归档设置](/cn/infra/archival-setup)页面。
 
-要下载最新的快照，请检查状态端点以获取当前的文件名：
-
-```bash
-# Check latest available snapshot (Asia example)
-curl -s https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json | jq
-
-# Download the snapshot
-wget <url from status.json>
-
-# Extract
-lz4 -d <snapshot_file>.tar.lz4 | tar xf - -C ~/.injectived/data/
-```
-
-在协调安全升级期间，Injective 团队也可能在经过验证的验证者频道中分享应急快照。有关归档段快照，请参阅[归档设置](/cn/infra/archival-setup)页面。
-
-### 社区快照提供商
-
-- [Polkachu Injective 快照](https://polkachu.com/tendermint_snapshots/injective)（通常为 goleveldb，剪枝版）
-- [HighStakes Injective 快照](https://tools.highstakes.ch/snapshots/injective)
-- 社区验证者可能会在事故期间在验证者频道中分享应急快照
+在协调安全升级期间，Injective 团队也可能在经过验证的验证者频道中分享应急快照。
 
 <Warning>
-**数据库后端兼容性：** 快照与后端相关。goleveldb 快照无法在配置为 pebbledb 的节点上使用，反之亦然。下载前请检查你的配置：
+**数据库后端兼容性：** 快照与后端相关。goleveldb 快照无法在配置为 pebbledb 的节点上使用，反之亦然。Injective 的官方快照使用 goleveldb。官方不维护 PebbleDB 快照。下载前请检查你的配置：
 
 ```bash
 grep db_backend ~/.injectived/config/config.toml

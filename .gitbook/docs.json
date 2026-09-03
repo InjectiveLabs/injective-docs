@@ -800,9 +800,75 @@
             "group": "INJECTIVE",
             "pages": [
               "cn/index",
+              "cn/about",
               "cn/add-network-to-wallet",
               {
-                "group": "DeFi",
+                "group": "网络基础设施",
+                "icon": "network-wired",
+                "expanded": false,
+                "pages": [
+                  "cn/infra/index",
+                  {
+                    "group": "节点运维",
+                    "pages": [
+                      "cn/infra/run-node",
+                      "cn/infra/hardware",
+                      "cn/infra/set-up-keyring",
+                      {
+                        "group": "验证者设置",
+                        "pages": [
+                          "cn/infra/validator-mainnet/index",
+                          "cn/infra/validator-testnet/index",
+                          "cn/infra/validator-testnet/peggo"
+                        ]
+                      },
+                      {
+                        "group": "与节点交互",
+                        "expanded": false,
+                        "pages": [
+                          "cn/infra/interact-node/index",
+                          "cn/infra/interact-node/command-line",
+                          "cn/infra/interact-node/grpc",
+                          "cn/infra/interact-node/go",
+                          "cn/infra/interact-node/rest"
+                        ]
+                      },
+                      "cn/infra/cosmovisor"
+                    ]
+                  },
+                  "cn/infra/join-a-network",
+                  {
+                    "group": "升级",
+                    "pages": [
+                      "cn/infra/upgrade-node",
+                      "cn/infra/coordinated-upgrades/index",
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade",
+                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2",
+                      {
+                        "group": "历史升级",
+                        "pages": [
+                          "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3",
+                          "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.1",
+                          "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.0",
+                          "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.19.0"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "索引器与跨链桥",
+                    "pages": [
+                      "cn/developers/concepts/indexer-api",
+                      "redirects/https_injective_notion_site_indexer_service_setup_guide",
+                      "redirects/https_api_injective_network_swagger",
+                      "cn/infra/validator-mainnet/peggo"
+                    ]
+                  },
+                  "cn/infra/archival-setup"
+                ]
+              },
+              {
+                "group": "Injective 上的 DeFi",
                 "icon": "coins",
                 "expanded": false,
                 "pages": [
@@ -819,10 +885,10 @@
                     "group": "交易",
                     "pages": [
                       "cn/defi/trading/index",
+                      "cn/developers/concepts/trading-account",
                       "cn/defi/trading/order-types",
                       "cn/defi/trading/fees",
                       "cn/defi/trading/24-5-equity-feeds",
-                      "cn/defi/trading/oracle-feed-sources",
                       "cn/defi/trading/margin",
                       "cn/defi/trading/margin-liquidation",
                       "cn/defi/trading/margin-funding-rates",
@@ -833,19 +899,44 @@
                       "cn/defi/trading/derivatives-election-perpetual",
                       "cn/defi/trading/derivatives-pre-launch-futures",
                       "cn/defi/trading/derivatives-index-perpetual-futures",
-                      "cn/defi/trading/derivatives-iassets"
+                      "cn/defi/trading/derivatives-iassets",
+                      "cn/defi/trading/oracle-feed-sources"
                     ]
                   },
                   {
-                    "group": "代币标准",
+                    "group": "Token Factory",
                     "pages": [
-                      "cn/defi/tokens/index",
-                      "cn/defi/tokens/inj-coin",
                       "cn/defi/tokens/token-factory",
-                      "cn/defi/tokens/cw20-standard"
+                      {
+                        "group": "代币标准",
+                        "pages": [
+                          "cn/defi/tokens/index",
+                          "cn/defi/tokens/inj-coin",
+                          "cn/defi/tokens/cw20-standard"
+                        ]
+                      }
                     ]
                   },
-                  "cn/defi/bridge",
+                  {
+                    "group": "资产",
+                    "pages": [
+                      "cn/developers/assets/index",
+                      "cn/developers/assets/denom",
+                      "cn/developers/assets/injective-list",
+                      "cn/developers/assets/token-metadata",
+                      "cn/developers/assets/token-create"
+                    ]
+                  },
+                  {
+                    "group": "跨链桥",
+                    "pages": [
+                      "cn/defi/bridge",
+                      "redirects/https_injective_com_blog_how_to_bridge_from_ethereum_to_injective_using_metamask",
+                      "redirects/https_injective_com_blog_how_to_bridge_from_solana_to_injective_using_phantom",
+                      "redirects/https_injective_com_blog_how_to_bridge_to_injective_using_wormhole",
+                      "redirects/https_injective_com_blog_how_to_bridge_from_cosmos_to_injective_using_keplr"
+                    ]
+                  },
                   "cn/defi/staking",
                   "cn/defi/governance",
                   "cn/defi/community-buyback",
@@ -870,19 +961,15 @@
                 ]
               },
               {
-                "group": "开发者",
+                "group": "工具",
                 "icon": "laptop-code",
                 "expanded": false,
                 "pages": [
                   "cn/developers/index",
-                  "cn/developers/convert-addresses",
                   "cn/developers/network-information",
-                  {
-                    "group": "AI 开发",
-                    "pages": [
-                      "cn/developers/ai/mcp"
-                    ]
-                  },
+                  "cn/developers/convert-addresses",
+                  "cn/developers/concepts/grpc-protobuf",
+                  "cn/developers/concepts/networks",
                   {
                     "group": "injectived",
                     "pages": [
@@ -892,125 +979,10 @@
                       "cn/developers/injectived/advanced",
                       "cn/developers/testnet-proposals"
                     ]
-                  },
-                  {
-                    "group": "概念",
-                    "pages": [
-                      "cn/developers/concepts/index",
-                      "cn/developers/concepts/sentry-node",
-                      "cn/developers/concepts/indexer-api",
-                      "cn/developers/concepts/trading-account",
-                      "cn/developers/concepts/grpc-protobuf",
-                      "cn/developers/concepts/token-factory",
-                      "cn/developers/concepts/calculation-min-price-tick-size",
-                      "cn/developers/concepts/calculation-min-quantity-tick-size",
-                      "cn/developers/concepts/cosmjs-support",
-                      "cn/developers/concepts/networks"
-                    ]
-                  },
-                  {
-                    "group": "资产",
-                    "pages": [
-                      "cn/developers/assets/index",
-                      "cn/developers/assets/denom",
-                      "cn/developers/assets/token-metadata",
-                      "cn/developers/assets/injective-list",
-                      "cn/developers/assets/token-create"
-                    ]
-                  },
-                  {
-                    "group": "dApp",
-                    "pages": [
-                      "cn/developers/dapps/index",
-                      "cn/developers/dapps/configure-nuxt",
-                      "cn/developers/dapps/configure-react",
-                      "cn/developers/dapps/run-examples",
-                      "cn/developers/dapps/example-smart-contract",
-                      "cn/developers/dapps/example-dex",
-                      "cn/developers/dapps/example-webpack"
-                    ]
-                  },
-                  "redirects/https_testnet_faucet_injective_network",
-                  "redirects/https_sentry_lcd_injective_network_swagger",
-                  "redirects/https_docs_ts_injective_network",
-                  "redirects/https_github_com_InjectiveLabs_sdk_go",
-                  "redirects/https_github_com_InjectiveLabs_sdk_python",
-                  "redirects/https_github_com_InjectiveLabs_cw_injective",
-                  "redirects/https_github_com_InjectiveLabs_injective_rust",
-                  "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
-                  "redirects/https_api_injective_exchange"
+                  }
                 ]
               },
-              {
-                "group": "AI 开发者",
-                "icon": "brain",
-                "expanded": false,
-                "pages": [
-                  "cn/developers-ai/index",
-                  "cn/developers-ai/ai-sdk",
-                  "cn/developers-ai/injective-cli-skill",
-                  "cn/developers-ai/injective-evm-developer-skill",
-                  "cn/developers-ai/injective-mcp-servers-skill",
-                  "cn/developers-ai/injective-trading-skills",
-                  "cn/developers-ai/documentation-mcp",
-                  "cn/developers-ai/mcp",
-                  "cn/developers-ai/x402"
-                ]
-              },
-              {
-                "group": "基础设施",
-                "icon": "network-wired",
-                "expanded": false,
-                "pages": [
-                  "cn/infra/index",
-                  {
-                    "group": "与节点交互",
-                    "expanded": false,
-                    "pages": [
-                      "cn/infra/interact-node/index",
-                      "cn/infra/interact-node/command-line",
-                      "cn/infra/interact-node/grpc",
-                      "cn/infra/interact-node/go",
-                      "cn/infra/interact-node/rest"
-                    ]
-                  },
-                  "cn/infra/run-node",
-                  "cn/infra/set-up-keyring",
-                  "cn/infra/join-a-network",
-                  "cn/infra/cosmovisor",
-                  "cn/infra/upgrade-node",
-                  {
-                    "group": "协调升级",
-                    "pages": [
-                      "cn/infra/coordinated-upgrades/index"
-                    ]
-                  },
-                  {
-                    "group": "主网验证者",
-                    "pages": [
-                      "cn/infra/validator-mainnet/index",
-                      "cn/infra/validator-mainnet/peggo",
-                      "cn/infra/validator-mainnet/canonical-chain-upgrade",
-                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3",
-                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.1",
-                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.0",
-                      "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.19.0"
-                    ]
-                  },
-                  {
-                    "group": "测试网验证者",
-                    "pages": [
-                      "cn/infra/validator-testnet/index",
-                      "cn/infra/validator-testnet/peggo"
-                    ]
-                  },
-                  "cn/infra/public-endpoints",
-                  "cn/infra/premium-endpoints",
-                  "cn/infra/archival-setup",
-                  "redirects/https_injective_notion_site_indexer_service_setup_guide",
-                  "redirects/https_api_injective_network_swagger"
-                ]
-              },
+              "cn/build-index",
               {
                 "group": "EVM 开发者",
                 "icon": "rectangle-code",
@@ -1062,55 +1034,17 @@
                 ]
               },
               {
-                "group": "CosmWasm 开发者",
-                "icon": "comet",
+                "group": "dApp 开发者",
+                "icon": "grid-2",
                 "expanded": false,
                 "pages": [
-                  "cn/developers-cosmwasm/index",
-                  {
-                    "group": "CosmWasm 智能合约",
-                    "pages": [
-                      "cn/developers-cosmwasm/smart-contracts/index",
-                      "cn/developers-cosmwasm/smart-contracts/your-first-smart-contract",
-                      "cn/developers-cosmwasm/smart-contracts/injective-name-service",
-                      "cn/developers-cosmwasm/smart-contracts/neptune-service",
-                      "cn/developers-cosmwasm/smart-contracts/cw20-convert-market-order"
-                    ]
-                  },
-                  "cn/developers-cosmwasm/local-development-guide",
-                  "cn/developers-cosmwasm/mainnet-deployment-guide",
-                  "cn/developers-cosmwasm/whitelisting-deployment-address-guide",
-                  "cn/developers-cosmwasm/create-your-swap-contract-guide",
-                  "cn/developers-cosmwasm/create-uis-guide",
-                  "cn/developers-cosmwasm/cosmwasm-any",
-                  "cn/developers-cosmwasm/cw20-adapter",
-                  "cn/developers-cosmwasm/injective-test-tube"
-                ]
-              },
-              {
-                "group": "DeFi 开发者",
-                "icon": "money-bill-transfer",
-                "expanded": false,
-                "pages": [
-                  "cn/developers-defi/index",
-                  "cn/developers-defi/calculate-min-price-tick-size",
-                  "cn/developers-defi/min-quantity-tick-size",
-                  "cn/developers-defi/testnet-faucet-integration",
-                  "cn/developers-defi/token-launch",
-                  "cn/developers-defi/market-launch",
-                  "cn/developers-defi/denom-and-bank",
-                  "cn/developers-defi/provider-oracle",
-                  "cn/developers-defi/usdc-stablecoin",
-                  "cn/developers-defi/usdc-cctp-tutorial",
-                  {
-                    "group": "Injective Trader",
-                    "expanded": false,
-                    "pages": [
-                      "cn/developers-defi/injective-trader/index",
-                      "cn/developers-defi/injective-trader/simple-strategy",
-                      "cn/developers-defi/injective-trader/strategy-development-guide"
-                    ]
-                  }
+                  "cn/developers/dapps/index",
+                  "cn/developers/dapps/configure-nuxt",
+                  "cn/developers/dapps/configure-react",
+                  "cn/developers/dapps/run-examples",
+                  "cn/developers/dapps/example-smart-contract",
+                  "cn/developers/dapps/example-dex",
+                  "cn/developers/dapps/example-webpack"
                 ]
               },
               {
@@ -1238,6 +1172,87 @@
                   }
                 ]
               },
+              {
+                "group": "CosmWasm 开发者",
+                "icon": "comet",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-cosmwasm/index",
+                  {
+                    "group": "CosmWasm 智能合约",
+                    "pages": [
+                      "cn/developers-cosmwasm/smart-contracts/index",
+                      "cn/developers-cosmwasm/smart-contracts/your-first-smart-contract",
+                      "cn/developers-cosmwasm/smart-contracts/injective-name-service",
+                      "cn/developers-cosmwasm/smart-contracts/neptune-service",
+                      "cn/developers-cosmwasm/smart-contracts/cw20-convert-market-order"
+                    ]
+                  },
+                  "cn/developers-cosmwasm/local-development-guide",
+                  "cn/developers-cosmwasm/mainnet-deployment-guide",
+                  "cn/developers-cosmwasm/whitelisting-deployment-address-guide",
+                  "cn/developers-cosmwasm/create-your-swap-contract-guide",
+                  "cn/developers-cosmwasm/create-uis-guide",
+                  "cn/developers-cosmwasm/cosmwasm-any",
+                  "cn/developers-cosmwasm/cw20-adapter",
+                  "cn/developers-cosmwasm/injective-test-tube"
+                ]
+              },
+              {
+                "group": "AI 开发者",
+                "icon": "brain",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-ai/index",
+                  "cn/developers-ai/ai-sdk",
+                  "cn/developers-ai/injective-cli-skill",
+                  "cn/developers-ai/injective-evm-developer-skill",
+                  "cn/developers-ai/injective-mcp-servers-skill",
+                  "cn/developers-ai/injective-trading-skills",
+                  "cn/developers-ai/documentation-mcp",
+                  "cn/developers-ai/mcp",
+                  "cn/developers-ai/x402"
+                ]
+              },
+              {
+                "group": "DeFi 开发者",
+                "icon": "money-bill-transfer",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-defi/index",
+                  "cn/developers-defi/calculate-min-price-tick-size",
+                  "cn/developers-defi/min-quantity-tick-size",
+                  "cn/developers-defi/testnet-faucet-integration",
+                  "cn/developers-defi/token-launch",
+                  "cn/developers-defi/market-launch",
+                  "cn/developers-defi/denom-and-bank",
+                  "cn/developers-defi/provider-oracle",
+                  "cn/developers-defi/usdc-stablecoin",
+                  "cn/developers-defi/usdc-cctp-tutorial",
+                  {
+                    "group": "Injective Trader",
+                    "expanded": false,
+                    "pages": [
+                      "cn/developers-defi/injective-trader/index",
+                      "cn/developers-defi/injective-trader/simple-strategy",
+                      "cn/developers-defi/injective-trader/strategy-development-guide"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "客户端库",
+                "pages": [
+                  "cn/sdks-index",
+                  "cn/developers/concepts/cosmjs-support"
+                ]
+              },
+              {
+                "group": "网络资源",
+                "pages": [
+                  "cn/resources-index"
+                ]
+              },
               "cn/faq",
               "cn/glossary",
               "cn/references",
@@ -1253,8 +1268,65 @@
             "group": "INJECTIVE",
             "pages": [
               "ko/index",
+              "ko/about",
               {
-                "group": "DeFi",
+                "group": "네트워크 인프라",
+                "icon": "network-wired",
+                "expanded": false,
+                "pages": [
+                  "ko/infra/index",
+                  {
+                    "group": "노드 운영",
+                    "pages": [
+                      "ko/infra/run-node",
+                      "ko/infra/hardware",
+                      "ko/infra/set-up-keyring",
+                      {
+                        "group": "검증자 설정",
+                        "pages": [
+                          "ko/infra/validator-mainnet/index",
+                          "ko/infra/validator-testnet/index",
+                          "ko/infra/validator-testnet/peggo"
+                        ]
+                      },
+                      {
+                        "group": "노드와 상호작용",
+                        "expanded": false,
+                        "pages": [
+                          "ko/infra/interact-node/index",
+                          "ko/infra/interact-node/command-line",
+                          "ko/infra/interact-node/grpc",
+                          "ko/infra/interact-node/go",
+                          "ko/infra/interact-node/rest"
+                        ]
+                      },
+                      "ko/infra/cosmovisor"
+                    ]
+                  },
+                  "ko/infra/join-a-network",
+                  {
+                    "group": "업그레이드",
+                    "pages": [
+                      "ko/infra/upgrade-node",
+                      "ko/infra/coordinated-upgrades/index",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade",
+                      "ko/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2"
+                    ]
+                  },
+                  {
+                    "group": "인덱서 및 브리지",
+                    "pages": [
+                      "ko/developers/concepts/indexer-api",
+                      "redirects/https_injective_notion_site_indexer_service_setup_guide",
+                      "redirects/https_api_injective_network_swagger",
+                      "ko/infra/validator-mainnet/peggo"
+                    ]
+                  },
+                  "ko/infra/archival-setup"
+                ]
+              },
+              {
+                "group": "Injective의 DeFi",
                 "icon": "coins",
                 "expanded": false,
                 "pages": [
@@ -1271,6 +1343,7 @@
                     "group": "트레이딩",
                     "pages": [
                       "ko/defi/trading/index",
+                      "ko/developers/concepts/trading-account",
                       "ko/defi/trading/order-types",
                       "ko/defi/trading/fees",
                       "ko/defi/trading/24-5-equity-feeds",
@@ -1288,15 +1361,39 @@
                     ]
                   },
                   {
-                    "group": "토큰 표준",
+                    "group": "Token Factory",
                     "pages": [
-                      "ko/defi/tokens/index",
-                      "ko/defi/tokens/inj-coin",
                       "ko/defi/tokens/token-factory",
-                      "ko/defi/tokens/cw20-standard"
+                      {
+                        "group": "토큰 표준",
+                        "pages": [
+                          "ko/defi/tokens/index",
+                          "ko/defi/tokens/inj-coin",
+                          "ko/defi/tokens/cw20-standard"
+                        ]
+                      }
                     ]
                   },
-                  "ko/defi/bridge",
+                  {
+                    "group": "자산",
+                    "pages": [
+                      "ko/developers/assets/index",
+                      "ko/developers/assets/denom",
+                      "ko/developers/assets/injective-list",
+                      "ko/developers/assets/token-metadata",
+                      "ko/developers/assets/token-create"
+                    ]
+                  },
+                  {
+                    "group": "브릿지",
+                    "pages": [
+                      "ko/defi/bridge",
+                      "redirects/https_injective_com_blog_how_to_bridge_from_ethereum_to_injective_using_metamask",
+                      "redirects/https_injective_com_blog_how_to_bridge_from_solana_to_injective_using_phantom",
+                      "redirects/https_injective_com_blog_how_to_bridge_to_injective_using_wormhole",
+                      "redirects/https_injective_com_blog_how_to_bridge_from_cosmos_to_injective_using_keplr"
+                    ]
+                  },
                   "ko/defi/staking",
                   "ko/defi/governance",
                   "ko/defi/community-buyback",
@@ -1321,19 +1418,15 @@
                 ]
               },
               {
-                "group": "개발자",
+                "group": "도구",
                 "icon": "laptop-code",
                 "expanded": false,
                 "pages": [
                   "ko/developers/index",
-                  "ko/developers/convert-addresses",
                   "ko/developers/network-information",
-                  {
-                    "group": "AI 개발",
-                    "pages": [
-                      "ko/developers/ai/mcp"
-                    ]
-                  },
+                  "ko/developers/convert-addresses",
+                  "ko/developers/concepts/grpc-protobuf",
+                  "ko/developers/concepts/networks",
                   {
                     "group": "injectived",
                     "pages": [
@@ -1343,119 +1436,10 @@
                       "ko/developers/injectived/advanced",
                       "ko/developers/testnet-proposals"
                     ]
-                  },
-                  {
-                    "group": "개념",
-                    "pages": [
-                      "ko/developers/concepts/index",
-                      "ko/developers/concepts/sentry-node",
-                      "ko/developers/concepts/indexer-api",
-                      "ko/developers/concepts/trading-account",
-                      "ko/developers/concepts/grpc-protobuf",
-                      "ko/developers/concepts/token-factory",
-                      "ko/developers/concepts/calculation-min-price-tick-size",
-                      "ko/developers/concepts/calculation-min-quantity-tick-size",
-                      "ko/developers/concepts/cosmjs-support",
-                      "ko/developers/concepts/networks"
-                    ]
-                  },
-                  {
-                    "group": "자산",
-                    "pages": [
-                      "ko/developers/assets/index",
-                      "ko/developers/assets/denom",
-                      "ko/developers/assets/token-metadata",
-                      "ko/developers/assets/injective-list",
-                      "ko/developers/assets/token-create"
-                    ]
-                  },
-                  {
-                    "group": "dApp",
-                    "pages": [
-                      "ko/developers/dapps/index",
-                      "ko/developers/dapps/configure-nuxt",
-                      "ko/developers/dapps/configure-react",
-                      "ko/developers/dapps/run-examples",
-                      "ko/developers/dapps/example-smart-contract",
-                      "ko/developers/dapps/example-dex",
-                      "ko/developers/dapps/example-webpack"
-                    ]
-                  },
-                  "redirects/https_testnet_faucet_injective_network",
-                  "redirects/https_sentry_lcd_injective_network_swagger",
-                  "redirects/https_docs_ts_injective_network",
-                  "redirects/https_github_com_InjectiveLabs_sdk_go",
-                  "redirects/https_github_com_InjectiveLabs_sdk_python",
-                  "redirects/https_github_com_InjectiveLabs_cw_injective",
-                  "redirects/https_github_com_InjectiveLabs_injective_rust",
-                  "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
-                  "redirects/https_api_injective_exchange"
+                  }
                 ]
               },
-              {
-                "group": "AI 개발자",
-                "icon": "brain",
-                "expanded": false,
-                "pages": [
-                  "ko/developers-ai/index",
-                  "ko/developers-ai/injective-cli-skill",
-                  "ko/developers-ai/injective-evm-developer-skill",
-                  "ko/developers-ai/injective-mcp-servers-skill",
-                  "ko/developers-ai/injective-trading-skills",
-                  "ko/developers-ai/documentation-mcp",
-                  "ko/developers-ai/mcp"
-                ]
-              },
-              {
-                "group": "인프라",
-                "icon": "network-wired",
-                "expanded": false,
-                "pages": [
-                  "ko/infra/index",
-                  {
-                    "group": "노드와 상호작용",
-                    "expanded": false,
-                    "pages": [
-                      "ko/infra/interact-node/index",
-                      "ko/infra/interact-node/command-line",
-                      "ko/infra/interact-node/grpc",
-                      "ko/infra/interact-node/go",
-                      "ko/infra/interact-node/rest"
-                    ]
-                  },
-                  "ko/infra/run-node",
-                  "ko/infra/set-up-keyring",
-                  "ko/infra/join-a-network",
-                  "ko/infra/cosmovisor",
-                  "ko/infra/upgrade-node",
-                  {
-                    "group": "조정 업그레이드",
-                    "pages": [
-                      "ko/infra/coordinated-upgrades/index"
-                    ]
-                  },
-                  {
-                    "group": "메인넷 검증자",
-                    "pages": [
-                      "ko/infra/validator-mainnet/index",
-                      "ko/infra/validator-mainnet/peggo",
-                      "ko/infra/validator-mainnet/canonical-chain-upgrade"
-                    ]
-                  },
-                  {
-                    "group": "테스트넷 검증자",
-                    "pages": [
-                      "ko/infra/validator-testnet/index",
-                      "ko/infra/validator-testnet/peggo"
-                    ]
-                  },
-                  "ko/infra/public-endpoints",
-                  "ko/infra/premium-endpoints",
-                  "ko/infra/archival-setup",
-                  "redirects/https_injective_notion_site_indexer_service_setup_guide",
-                  "redirects/https_api_injective_network_swagger"
-                ]
-              },
+              "ko/build-index",
               {
                 "group": "EVM 개발자",
                 "icon": "rectangle-code",
@@ -1505,53 +1489,17 @@
                 ]
               },
               {
-                "group": "CosmWasm 개발자",
-                "icon": "comet",
+                "group": "dApp 개발자",
+                "icon": "grid-2",
                 "expanded": false,
                 "pages": [
-                  "ko/developers-cosmwasm/index",
-                  {
-                    "group": "CosmWasm 스마트 컨트랙트",
-                    "pages": [
-                      "ko/developers-cosmwasm/smart-contracts/index",
-                      "ko/developers-cosmwasm/smart-contracts/your-first-smart-contract",
-                      "ko/developers-cosmwasm/smart-contracts/injective-name-service",
-                      "ko/developers-cosmwasm/smart-contracts/neptune-service",
-                      "ko/developers-cosmwasm/smart-contracts/cw20-convert-market-order"
-                    ]
-                  },
-                  "ko/developers-cosmwasm/local-development-guide",
-                  "ko/developers-cosmwasm/mainnet-deployment-guide",
-                  "ko/developers-cosmwasm/whitelisting-deployment-address-guide",
-                  "ko/developers-cosmwasm/create-your-swap-contract-guide",
-                  "ko/developers-cosmwasm/create-uis-guide",
-                  "ko/developers-cosmwasm/cosmwasm-any",
-                  "ko/developers-cosmwasm/cw20-adapter",
-                  "ko/developers-cosmwasm/injective-test-tube"
-                ]
-              },
-              {
-                "group": "DeFi 개발자",
-                "icon": "money-bill-transfer",
-                "expanded": false,
-                "pages": [
-                  "ko/developers-defi/index",
-                  "ko/developers-defi/calculate-min-price-tick-size",
-                  "ko/developers-defi/min-quantity-tick-size",
-                  "ko/developers-defi/testnet-faucet-integration",
-                  "ko/developers-defi/token-launch",
-                  "ko/developers-defi/market-launch",
-                  "ko/developers-defi/denom-and-bank",
-                  "ko/developers-defi/provider-oracle",
-                  {
-                    "group": "Injective Trader",
-                    "expanded": false,
-                    "pages": [
-                      "ko/developers-defi/injective-trader/index",
-                      "ko/developers-defi/injective-trader/simple-strategy",
-                      "ko/developers-defi/injective-trader/strategy-development-guide"
-                    ]
-                  }
+                  "ko/developers/dapps/index",
+                  "ko/developers/dapps/configure-nuxt",
+                  "ko/developers/dapps/configure-react",
+                  "ko/developers/dapps/run-examples",
+                  "ko/developers/dapps/example-smart-contract",
+                  "ko/developers/dapps/example-dex",
+                  "ko/developers/dapps/example-webpack"
                 ]
               },
               {
@@ -1851,6 +1799,83 @@
                   }
                 ]
               },
+              {
+                "group": "CosmWasm 개발자",
+                "icon": "comet",
+                "expanded": false,
+                "pages": [
+                  "ko/developers-cosmwasm/index",
+                  {
+                    "group": "CosmWasm 스마트 컨트랙트",
+                    "pages": [
+                      "ko/developers-cosmwasm/smart-contracts/index",
+                      "ko/developers-cosmwasm/smart-contracts/your-first-smart-contract",
+                      "ko/developers-cosmwasm/smart-contracts/injective-name-service",
+                      "ko/developers-cosmwasm/smart-contracts/neptune-service",
+                      "ko/developers-cosmwasm/smart-contracts/cw20-convert-market-order"
+                    ]
+                  },
+                  "ko/developers-cosmwasm/local-development-guide",
+                  "ko/developers-cosmwasm/mainnet-deployment-guide",
+                  "ko/developers-cosmwasm/whitelisting-deployment-address-guide",
+                  "ko/developers-cosmwasm/create-your-swap-contract-guide",
+                  "ko/developers-cosmwasm/create-uis-guide",
+                  "ko/developers-cosmwasm/cosmwasm-any",
+                  "ko/developers-cosmwasm/cw20-adapter",
+                  "ko/developers-cosmwasm/injective-test-tube"
+                ]
+              },
+              {
+                "group": "AI 개발자",
+                "icon": "brain",
+                "expanded": false,
+                "pages": [
+                  "ko/developers-ai/index",
+                  "ko/developers-ai/injective-cli-skill",
+                  "ko/developers-ai/injective-evm-developer-skill",
+                  "ko/developers-ai/injective-mcp-servers-skill",
+                  "ko/developers-ai/injective-trading-skills",
+                  "ko/developers-ai/documentation-mcp",
+                  "ko/developers-ai/mcp"
+                ]
+              },
+              {
+                "group": "DeFi 개발자",
+                "icon": "money-bill-transfer",
+                "expanded": false,
+                "pages": [
+                  "ko/developers-defi/index",
+                  "ko/developers-defi/calculate-min-price-tick-size",
+                  "ko/developers-defi/min-quantity-tick-size",
+                  "ko/developers-defi/testnet-faucet-integration",
+                  "ko/developers-defi/token-launch",
+                  "ko/developers-defi/market-launch",
+                  "ko/developers-defi/denom-and-bank",
+                  "ko/developers-defi/provider-oracle",
+                  {
+                    "group": "Injective Trader",
+                    "expanded": false,
+                    "pages": [
+                      "ko/developers-defi/injective-trader/index",
+                      "ko/developers-defi/injective-trader/simple-strategy",
+                      "ko/developers-defi/injective-trader/strategy-development-guide"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "클라이언트 라이브러리",
+                "pages": [
+                  "ko/sdks-index",
+                  "ko/developers/concepts/cosmjs-support"
+                ]
+              },
+              {
+                "group": "네트워크 리소스",
+                "pages": [
+                  "ko/resources-index"
+                ]
+              },
               "ko/faq",
               "ko/glossary",
               "ko/references"
@@ -1865,8 +1890,53 @@
             "group": "INJECTIVE",
             "pages": [
               "jp/index",
+              "jp/about",
               {
-                "group": "DeFi",
+                "group": "ネットワークインフラ",
+                "icon": "network-wired",
+                "expanded": false,
+                "pages": [
+                  "jp/infra/index",
+                  {
+                    "group": "ノード運用",
+                    "pages": [
+                      "jp/infra/run-node",
+                      "jp/infra/hardware",
+                      "jp/infra/set-up-keyring",
+                      {
+                        "group": "ノードとの対話",
+                        "expanded": false,
+                        "pages": [
+                          "jp/infra/interact-node/index",
+                          "jp/infra/interact-node/command-line",
+                          "jp/infra/interact-node/grpc",
+                          "jp/infra/interact-node/go",
+                          "jp/infra/interact-node/rest"
+                        ]
+                      },
+                      "jp/infra/cosmovisor"
+                    ]
+                  },
+                  "jp/infra/join-a-network",
+                  {
+                    "group": "アップグレード",
+                    "pages": [
+                      "jp/infra/upgrade-node",
+                      "jp/infra/coordinated-upgrades/index",
+                      "jp/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2"
+                    ]
+                  },
+                  {
+                    "group": "インデクサーとブリッジ",
+                    "pages": [
+                      "jp/developers/concepts/indexer-api"
+                    ]
+                  },
+                  "jp/infra/archival-setup"
+                ]
+              },
+              {
+                "group": "InjectiveでのDeFi",
                 "icon": "coins",
                 "expanded": false,
                 "pages": [
@@ -1883,6 +1953,7 @@
                     "group": "トレーディング",
                     "pages": [
                       "jp/defi/trading/index",
+                      "jp/developers/concepts/trading-account",
                       "jp/defi/trading/order-types",
                       "jp/defi/trading/fees",
                       "jp/defi/trading/24-5-equity-feeds",
@@ -1900,15 +1971,25 @@
                     ]
                   },
                   {
-                    "group": "トークン規格",
+                    "group": "Token Factory",
                     "pages": [
-                      "jp/defi/tokens/index",
-                      "jp/defi/tokens/inj-coin",
                       "jp/defi/tokens/token-factory",
-                      "jp/defi/tokens/cw20-standard"
+                      {
+                        "group": "トークン規格",
+                        "pages": [
+                          "jp/defi/tokens/index",
+                          "jp/defi/tokens/inj-coin",
+                          "jp/defi/tokens/cw20-standard"
+                        ]
+                      }
                     ]
                   },
-                  "jp/defi/bridge",
+                  {
+                    "group": "ブリッジ",
+                    "pages": [
+                      "jp/defi/bridge"
+                    ]
+                  },
                   "jp/defi/staking",
                   "jp/defi/governance",
                   "jp/defi/community-buyback",
@@ -1918,13 +1999,13 @@
                     "group": "Open Liquidity Program",
                     "pages": [
                       "jp/defi/open-liquidity-program/introduction",
+                      "jp/defi/open-liquidity-program/epochs",
                       "jp/defi/open-liquidity-program/eligibility",
                       "jp/defi/open-liquidity-program/scoring",
+                      "jp/defi/open-liquidity-program/formula-parameters",
                       "jp/defi/open-liquidity-program/reward-allocations",
                       "jp/defi/open-liquidity-program/flexible-reward-allocations",
                       "jp/defi/open-liquidity-program/reward-disbursements",
-                      "jp/defi/open-liquidity-program/epochs",
-                      "jp/defi/open-liquidity-program/formula-parameters",
                       "jp/defi/open-liquidity-program/performance-tracking",
                       "jp/defi/open-liquidity-program/volatility-response-modifications",
                       "jp/defi/open-liquidity-program/fee-tiers"
@@ -1933,13 +2014,15 @@
                 ]
               },
               {
-                "group": "開発者",
+                "group": "ツール",
                 "icon": "laptop-code",
                 "expanded": false,
                 "pages": [
                   "jp/developers/index",
                   "jp/developers/network-information",
                   "jp/developers/convert-addresses",
+                  "jp/developers/concepts/grpc-protobuf",
+                  "jp/developers/concepts/networks",
                   {
                     "group": "injectived",
                     "pages": [
@@ -1949,70 +2032,10 @@
                       "jp/developers/injectived/advanced",
                       "jp/developers/testnet-proposals"
                     ]
-                  },
-                  {
-                    "group": "概念",
-                    "pages": [
-                      "jp/developers/concepts/index",
-                      "jp/developers/concepts/sentry-node",
-                      "jp/developers/concepts/indexer-api",
-                      "jp/developers/concepts/trading-account",
-                      "jp/developers/concepts/grpc-protobuf",
-                      "jp/developers/concepts/token-factory",
-                      "jp/developers/concepts/calculation-min-price-tick-size",
-                      "jp/developers/concepts/calculation-min-quantity-tick-size",
-                      "jp/developers/concepts/cosmjs-support",
-                      "jp/developers/concepts/networks"
-                    ]
                   }
                 ]
               },
-              {
-                "group": "AI開発者",
-                "icon": "brain",
-                "expanded": false,
-                "pages": [
-                  "jp/developers-ai/index",
-                  "jp/developers-ai/injective-cli-skill",
-                  "jp/developers-ai/injective-evm-developer-skill",
-                  "jp/developers-ai/injective-mcp-servers-skill",
-                  "jp/developers-ai/injective-trading-skills",
-                  "jp/developers-ai/documentation-mcp",
-                  "jp/developers-ai/mcp"
-                ]
-              },
-              {
-                "group": "インフラストラクチャ",
-                "icon": "network-wired",
-                "expanded": false,
-                "pages": [
-                  "jp/infra/index",
-                  {
-                    "group": "ノードとの対話",
-                    "expanded": false,
-                    "pages": [
-                      "jp/infra/interact-node/index",
-                      "jp/infra/interact-node/command-line",
-                      "jp/infra/interact-node/grpc",
-                      "jp/infra/interact-node/go",
-                      "jp/infra/interact-node/rest"
-                    ]
-                  },
-                  "jp/infra/run-node",
-                  "jp/infra/set-up-keyring",
-                  "jp/infra/join-a-network",
-                  "jp/infra/cosmovisor",
-                  "jp/infra/upgrade-node",
-                  {
-                    "group": "協調アップグレード",
-                    "pages": [
-                      "jp/infra/coordinated-upgrades/index"
-                    ]
-                  },
-                  "jp/infra/public-endpoints",
-                  "jp/infra/archival-setup"
-                ]
-              },
+              "jp/build-index",
               {
                 "group": "EVM開発者",
                 "icon": "rectangle-code",
@@ -2066,32 +2089,6 @@
                   },
                   "jp/developers-evm/evm-integrations-cheat-sheet",
                   "jp/developers-evm/evm-integrations-faq"
-                ]
-              },
-              {
-                "group": "CosmWasm開発者",
-                "icon": "comet",
-                "expanded": false,
-                "pages": [
-                  "jp/developers-cosmwasm/index",
-                  {
-                    "group": "CosmWasmスマートコントラクト",
-                    "pages": [
-                      "jp/developers-cosmwasm/smart-contracts/index",
-                      "jp/developers-cosmwasm/smart-contracts/your-first-smart-contract",
-                      "jp/developers-cosmwasm/smart-contracts/injective-name-service",
-                      "jp/developers-cosmwasm/smart-contracts/neptune-service",
-                      "jp/developers-cosmwasm/smart-contracts/cw20-convert-market-order"
-                    ]
-                  },
-                  "jp/developers-cosmwasm/local-development-guide",
-                  "jp/developers-cosmwasm/mainnet-deployment-guide",
-                  "jp/developers-cosmwasm/whitelisting-deployment-address-guide",
-                  "jp/developers-cosmwasm/create-your-swap-contract-guide",
-                  "jp/developers-cosmwasm/create-uis-guide",
-                  "jp/developers-cosmwasm/cosmwasm-any",
-                  "jp/developers-cosmwasm/cw20-adapter",
-                  "jp/developers-cosmwasm/injective-test-tube"
                 ]
               },
               {
@@ -2203,6 +2200,46 @@
                 ]
               },
               {
+                "group": "CosmWasm開発者",
+                "icon": "comet",
+                "expanded": false,
+                "pages": [
+                  "jp/developers-cosmwasm/index",
+                  {
+                    "group": "CosmWasmスマートコントラクト",
+                    "pages": [
+                      "jp/developers-cosmwasm/smart-contracts/index",
+                      "jp/developers-cosmwasm/smart-contracts/your-first-smart-contract",
+                      "jp/developers-cosmwasm/smart-contracts/injective-name-service",
+                      "jp/developers-cosmwasm/smart-contracts/neptune-service",
+                      "jp/developers-cosmwasm/smart-contracts/cw20-convert-market-order"
+                    ]
+                  },
+                  "jp/developers-cosmwasm/local-development-guide",
+                  "jp/developers-cosmwasm/mainnet-deployment-guide",
+                  "jp/developers-cosmwasm/whitelisting-deployment-address-guide",
+                  "jp/developers-cosmwasm/create-your-swap-contract-guide",
+                  "jp/developers-cosmwasm/create-uis-guide",
+                  "jp/developers-cosmwasm/cosmwasm-any",
+                  "jp/developers-cosmwasm/cw20-adapter",
+                  "jp/developers-cosmwasm/injective-test-tube"
+                ]
+              },
+              {
+                "group": "AI開発者",
+                "icon": "brain",
+                "expanded": false,
+                "pages": [
+                  "jp/developers-ai/index",
+                  "jp/developers-ai/injective-cli-skill",
+                  "jp/developers-ai/injective-evm-developer-skill",
+                  "jp/developers-ai/injective-mcp-servers-skill",
+                  "jp/developers-ai/injective-trading-skills",
+                  "jp/developers-ai/documentation-mcp",
+                  "jp/developers-ai/mcp"
+                ]
+              },
+              {
                 "group": "DeFi開発者",
                 "icon": "money-bill-transfer",
                 "expanded": false,
@@ -2226,6 +2263,19 @@
                       "jp/developers-defi/injective-trader/strategy-development-guide"
                     ]
                   }
+                ]
+              },
+              {
+                "group": "クライアントライブラリ",
+                "pages": [
+                  "jp/sdks-index",
+                  "jp/developers/concepts/cosmjs-support"
+                ]
+              },
+              {
+                "group": "ネットワークリソース",
+                "pages": [
+                  "jp/resources-index"
                 ]
               },
               "jp/faq",

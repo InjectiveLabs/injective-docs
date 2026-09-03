@@ -1,108 +1,79 @@
 ---
-description: >-
-  Injective 是一个高性能、可互操作的 Layer-1 区块链，专为构建顶级 Web3 金融应用而设计。
-title: 关于 Injective
-icon: flag-checkered
-updatedAt: "2026-02-03"
+title: 快速开始
+description: 开始在 Injective 上构建或运营
+icon: rocket
+updatedAt: "2026-09-02"
 ---
 
-## 什么是 Injective？
-
-Injective 是专为金融而生的区块链。
-
-它是唯一一个让开发者可以使用预构建、可定制的[模块](/developers-native/)来创建动态应用的区块链，这些应用在其他网络上是无法实现的。结合对其核心架构的优化和增强的跨链互操作性，Injective 提供了一个高性能网络，能够高效、安全地将全球金融系统带到链上。
-
-----
+Injective 是专为金融打造的高性能 Layer-1 区块链，具有亚秒级最终性、内置的 DeFi 原语和原生跨链互操作性。
 
 <Columns cols={2}>
   <Card
-    title="你是用户吗？"
-    href="/cn/defi/wallet/"
+    title="运行节点"
+    href="/cn/infra"
     arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/start-hero.png">
-    了解如何创建钱包
+    cta="开始使用"
+    icon="server">
+    设置验证者或全节点，与主网同步，运营并升级网络基础设施
   </Card>
   <Card
-    title="你想使用 DeFi 吗？"
-    href="/cn/defi/"
+    title="生态系统"
+    href="/cn/resources-index"
     arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/trader-hero.png">
-    了解如何在 Injective 上开始交易
-  </Card>
-  <Card
-    title="你想运行基础设施吗？"
-    href="/infra/"
-    arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/validator-hero.png">
-    了解如何运行哨兵节点和验证者节点
-  </Card>
-  <Card
-    title="你是开发者吗？"
-    href="/developers/"
-    arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/dev-hero.png">
-    了解如何在 Injective 上构建
-  </Card>
-  <Card
-    title="需要帮助？"
-    href="/references#developer-support"
-    arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/explorer-hero.png">
-    加入 <a href="https://discord.gg/injective">Injective Discord</a>
-    <br />
-    加入 <a href="https://t.me/+qorn-J06fzA0YTZl">开发者 Telegram</a>
+    cta="查看资源"
+    icon="globe">
+    Hub、Explorer、Operator Portal、端点、快照及其他生态系统工具
   </Card>
 </Columns>
 
-# 入门指南
-
-欢迎开始你的 Injective 探索之旅！在提问之前，请尝试使用文档中的搜索功能。我们的目标是使文档自给自足，确保入门顺畅，让每个人都能轻松了解更多关于 Injective 的信息。
-
-## Injective 快速入门指南
-
-<Columns cols={3}>
+<Columns cols={2}>
   <Card
-    title="钱包"
-    href="/cn/defi/wallet/"
+    title="探索 DeFi"
+    href="/cn/defi"
     arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/wallet-hero-2.png">
-    了解如何在 Injective 上创建钱包，以及 Injective 支持的钱包
+    cta="Injective 上的 DeFi"
+    icon="coins">
+    了解 Injective 链上交易所的交易、衍生品、质押和代币标准
   </Card>
   <Card
-    title="代币标准"
-    href="/cn/defi/tokens/"
+    title="开发 DeFi 集成"
+    href="/cn/developers-defi"
     arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/token-hero.png">
-    了解 Injective 上的不同代币标准
-  </Card>
-  <Card
-    title="交易"
-    href="/cn/defi/transactions/"
-    arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/txs-hero.png">
-    了解如何在 Injective 上准备、签名和提交交易
+    cta="集成者指南"
+    icon="chart-line">
+    在 Injective 的 DeFi API 之上构建产品、启动市场并集成 exchange 模块
   </Card>
 </Columns>
 
-## 需要帮助？
+---
 
-如果你有任何问题或反馈，可以通过 Discord 或 Telegram 联系我们：
+## 网络概览
 
-* 加入 [Injective Discord 服务器](https://discord.gg/injective) 并找到相关频道。
-* 加入 [Injective 开发者 Telegram 频道](https://t.me/+8Y_0HOFLhnRlZDU9)。
+| | 主网 | 测试网 |
+|---|---|---|
+| **Chain ID** | `injective-1` | `injective-888` |
+| **出块时间** | ~650ms | ~650ms |
+| **二进制文件** | [`injectived`](https://github.com/InjectiveFoundation/injective-core/releases/latest) | [`injectived`](https://github.com/InjectiveLabs/testnet/releases) |
+| **快照** | [Chain Portal](https://portal.injective.network/snapshots) | [Polkachu](https://polkachu.com/testnets/injective/snapshots) |
+| **端点** | [Chain Portal](https://portal.injective.network/rpcs) | [公共端点](/cn/infra/public-endpoints) |
+
+## 了解更多
+
+<Columns cols={2}>
+  <Card
+    title="关于 Injective"
+    href="/cn/about"
+    arrow="true"
+    cta="阅读更多"
+    icon="flag-checkered">
+    了解 Injective 的与众不同之处、性能基准和常见问题
+  </Card>
+  <Card
+    title="学习"
+    href="https://injective.com/dev"
+    arrow="true"
+    cta="开发者门户"
+    icon="graduation-cap">
+    Injective 开发者学习门户上的教程、指南和资源
+  </Card>
+</Columns>

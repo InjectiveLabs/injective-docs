@@ -1,0 +1,108 @@
+---
+title: v1.20.3-safeharbor.2 へのアップグレード
+description: Injective メインネットバリデーターノードを v1.20.3-safeharbor.2 にアップグレードする方法
+updatedAt: "2026-09-02"
+---
+
+2026年9月2日（水）
+
+[IIP-690](https://injhub.com/proposal/690/) に従い、アップグレード手順はブロック高 **181295000** で実行する必要があります。
+
+* [概要](#summary)
+* [リカバリー](#recovery)
+* [アップグレード手順](#upgrade-procedure)
+* [バリデーター向けの注意事項](#notes-for-validators)
+
+## 概要
+
+Injective チェーンは、およそ **2026年9月2日（水）午後1:30 EDT / 17:30 UTC** に予定された機能強化アップグレードを実施します。
+
+アップグレード手順の概要は次のとおりです：
+
+1. 投票し、ノードがブロック高 **181295000** でパニックするまで待ちます。
+2. Injective チェーンの実行に使用している設定、データ、キーをバックアップします。
+3. [v1.20.3-safeharbor.2](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.3-safeharbor.2-1788352700) のバイナリをインストールします。
+4. 新しい injectived バイナリでノードを起動してアップグレードを完了します。
+
+バリデーター向けのアップグレード調整とサポートは、[Injective Discord](https://discord.gg/injective) の `#validators` プライベートチャンネルで提供されます。
+
+ネットワークアップグレードは、次のいずれかの経路をたどる可能性があります：
+
+1. **順調な経路（Happy path）**:\
+   バリデーターがブロックチェーン履歴を消去することなくチェーンのアップグレードに成功し、すべてのバリデーターがアップグレード後 5〜10 分以内に復帰します。
+2. **順調でない経路（Not-so-happy path）**:\
+   バリデーターが最新の Canonical チェーンへのアップグレードに問題を抱えます。
+3. **中止経路（Abort path）**:\
+   まれにチームが見過ごされていた重大な問題を認識した場合、Injective チームはすべての破壊的な状態の修正を試み、36 時間以内に別の公式バイナリを提供します。\
+   36 時間以内にチェーンが正常に再開されない場合、[Injective の Discord](https://discord.gg/injective) の `#validators` チャンネルでアップグレードの中止が告知され、バリデーターは更新や変更を行わずにチェーンの運用を再開する必要があります。
+
+## リカバリー
+
+チェーン状態をエクスポートする前に、バリデーターはエクスポート高でデータの完全なスナップショットを取得することを推奨します。スナップショットの方法はインフラに大きく依存しますが、一般的には `.injectived` ディレクトリをバックアップすることで実行できます。
+
+injectived プロセスを停止した後、`.injectived/data/priv_validator_state.json` ファイルをバックアップすることが極めて重要です。このファイルは、バリデーターがコンセンサスラウンドに参加するたびにブロックごとに更新されます。アップグレードが失敗して以前のチェーンを再起動する必要がある場合に、二重署名を防ぐために必要な重要なファイルです。
+
+アップグレードが成功しなかった場合、バリデーターとオペレーターはスナップショットを復元し、Injective チェーンのリリース [v1.20.3](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.3-1784976496) にダウングレードして、次のアップグレード告知まで以前のチェーンを継続する必要があります。
+
+## アップグレード手順
+
+### バリデーター向けの注意事項
+
+新しいバージョンにアップグレードする前に、wasm キャッシュを削除する必要があります：
+
+```shell
+rm -rf .injectived/wasm/wasm/cache/
+```
+
+### 手順
+
+1.  現在正しいバージョン（`v1.20.3`）の `injectived` を実行していることを確認します：
+
+    ```bash
+    $ injectived version
+    Version v1.20.3 (5c3143e)
+    Compiled at 20260725-1049 using Go go1.26.4 (amd64)
+    ```
+
+2.  `.injectived` ディレクトリをバックアップします：
+
+    ```bash
+    cp -r ~/.injectived ./injectived-backup
+    ```
+
+3. v1.20.3-safeharbor.2 の `injective-chain` リリースをダウンロードしてインストールします：
+
+    ```bash
+    wget https://github.com/InjectiveFoundation/injective-core/releases/download/v1.20.3-safeharbor.2-1788352700/linux-amd64.zip
+    unzip linux-amd64.zip
+    sudo mv injectived peggo /usr/bin
+    sudo mv libwasmvm.x86_64.so /usr/lib
+    ```
+
+4.  v1.20.3-safeharbor.2 リリースをダウンロードした後、現在正しいバージョン（v1.20.3-safeharbor.2）の `injectived` を実行していることを確認します：
+
+    ```bash
+    $ injectived version
+    Version v1.20.3-safeharbor.2 (de8a811)
+    Compiled at 20260902-1239 using Go go1.26.4 (amd64)
+    ```
+
+5.  `injectived` を起動します：
+
+    ```bash
+    injectived start
+    ```
+
+6.  v1.20.3-safeharbor.2 リリースをダウンロードした後、現在正しいバージョン（v1.20.3-safeharbor.2）の `peggo` を実行していることを確認します：
+
+    ```bash
+    $ peggo version
+    Version v1.20.3-safeharbor.2 (de8a811)
+    Compiled at 20260902-1247 using Go go1.26.4 (amd64)
+    ```
+
+7.  peggo を起動します：
+
+    ```bash
+    peggo orchestrator
+    ```

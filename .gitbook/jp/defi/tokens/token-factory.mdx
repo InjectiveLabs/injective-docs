@@ -1,11 +1,69 @@
 ---
 title: Token Factory
+updatedAt: "2026-09-02"
 ---
 
-TokenFactoryトークンは、Cosmos SDKのBankモジュールにネイティブに統合されたトークンです。名前は`factory/{creatorAddress}/{subdenom}`の形式を取ります。トークンは作成者アドレスで名前空間化されているため、名前の衝突を解決する必要がなく、パーミッションレスなトークン作成が可能です。
+TokenFactoryトークンは、チェーンのbankモジュールにネイティブに統合されています。名前は`factory/{creatorAddress}/{subdenom}`の形式を取ります。トークンは作成者アドレスで名前空間化されているため、名前の衝突を解決する必要がなく、パーミッションレスなトークン作成が可能です。
 
 この統合により、CW20規格とは異なり、スマートコントラクトに直接クエリする必要なく、すべての資産の総供給量の追跡とクエリがサポートされます。このため、TokenFactory規格の使用が推奨されます。HelixやMitoなどのプロダクトは、bankトークンのみを使用するInjective exchangeモジュール上に構築されています。TokenFactoryトークンは、injectived CLIやスマートコントラクトを通じて作成できます。Wormholeを介してInjectiveにブリッジされたトークンもTokenFactoryトークンです。
 
-Injectiveでのトークン作成の詳細については、[トークンローンチ](../../developers-defi/token-launch/)をご覧ください。
+## CW20アダプター
 
-TokenFactory規格の詳細については、[Token Factoryモジュール](../../developers-native/injective/tokenfactory/)をご覧ください。
+`CW20AdapterContract`は、CW20資産をToken FactoryのdenomとしてInjective上でネイティブに表現できるようにします。CW20資産はアダプターコントラクトに保持され、Injectiveアドレスに対してfactory denomとしてミントされます。CW20に戻す（redeem）際には、bankモジュールからバーンされ、アダプターコントラクトから所有者アドレスへアンロックされます。
+
+### factory denomをCW20にredeemする
+
+```ts
+import {
+  MsgExecuteContractCompat,
+  ExecArgCW20AdapterRedeemAndTransfer,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+
+const message = MsgExecuteContractCompat.fromJSON({
+  sender: injectiveAddress,
+  contractAddress: CW20_ADAPTER_CONTRACT,
+  funds: {
+    denom: `factory/${CW20_ADAPTER_CONTRACT}/${contractCw20Address}`,
+    amount: actualAmount.toFixed(),
+  },
+  execArgs: ExecArgCW20AdapterRedeemAndTransfer.fromJSON({
+    recipient: injectiveAddress,
+  }),
+})
+
+// Then pack the message in a transaction, sign it and broadcast to the chain
+```
+
+### CW20をfactory denomに変換する
+
+```ts
+import {
+  ExecArgCW20Send,
+  MsgExecuteContractCompat,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+const amount = '1000000' // 1 USDT represented as on the chain as it has 6 decimals
+
+const message = MsgExecuteContractCompat.fromJSON({
+  contractAddress: contractCw20Address,
+  sender: injectiveAddress,
+  execArgs: ExecArgCW20Send.fromJSON({
+    amount,
+    contractAddress: CW20_ADAPTER_CONTRACT,
+  }),
+})
+
+// Then pack the message in a transaction, sign it and broadcast to the chain
+```
+
+## 参考資料
+
+- [トークンローンチガイド](../../developers-defi/token-launch/) - Injectiveでトークンを作成するためのステップバイステップガイド
+- [Token Factoryモジュールリファレンス](../../developers-native/injective/tokenfactory/) - 詳細なモジュール仕様

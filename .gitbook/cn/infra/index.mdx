@@ -1,9 +1,71 @@
 ---
-description: >-
-  本节帮助节点运营者和验证者运行、升级和维护其哨兵节点/验证者节点。
 title: 概述
-updatedAt: "2026-02-13"
+description: >-
+  运行、升级和维护 Injective 验证者节点、哨兵节点及配套基础设施。
+updatedAt: "2026-09-02"
 ---
 
-* [主网验证者](/cn/infra/validator-mainnet/)
-* [测试网验证者](/cn/infra/validator-testnet/)
+本节涵盖在 Injective 网络上运营所需的一切：设置节点、管理升级、运行跨链桥编排器以及配置索引器服务。
+
+<Columns cols={2}>
+  <Card
+    title="架构"
+    href="#架构"
+    arrow="true"
+    cta="了解更多"
+    icon="sitemap">
+    节点类型、网络拓扑、共识层和进程管理
+  </Card>
+  <Card
+    title="节点运维"
+    href="/cn/infra/run-node"
+    arrow="true"
+    cta="开始使用"
+    icon="server">
+    设置你的 keyring、配置验证者、与节点交互并管理 Cosmovisor
+  </Card>
+</Columns>
+
+<Columns cols={2}>
+  <Card
+    title="加入网络"
+    href="/cn/infra/join-a-network"
+    arrow="true"
+    cta="同步节点"
+    icon="network-wired">
+    安装二进制文件，通过快照、state sync 或区块同步与主网或测试网同步
+  </Card>
+  <Card
+    title="升级"
+    href="/cn/infra/upgrade-node"
+    arrow="true"
+    cta="升级指南"
+    icon="arrow-up">
+    链升级流程、协调升级故障排查以及 Operator Portal
+  </Card>
+</Columns>
+
+---
+
+## 架构
+
+Injective 使用 CometBFT（前身为 Tendermint）共识和拜占庭容错（BFT）机制，实现亚秒级最终性。网络需要具备企业级规格（128GB 内存、高时钟频率 CPU、NVMe 存储）的裸机服务器来处理高吞吐量的交易活动。
+
+### 节点类型
+
+| 节点 | 角色 |
+|------|------|
+| **验证者节点** | 通过提议和投票区块参与共识。需要质押 INJ 作为抵押品以及高可用性硬件。 |
+| **[哨兵节点](/cn/developers/concepts/sentry-node)** | 通过中继流量使验证者免于直接暴露在公网中的全节点，充当验证者与公共网络之间的网关。 |
+
+### 关键组件
+
+| 组件 | 用途 |
+|-----------|---------|
+| **[Cosmovisor](/cn/infra/cosmovisor)** | 自动化链二进制文件升级的进程管理器，在治理批准的升级发生时实现零停机切换。设置方法请参阅[节点运维](/cn/infra/run-node)。 |
+| **[Peggo](/cn/infra/validator-mainnet/peggo)** | 在 Ethereum 和 Injective 之间中继消息的跨链桥编排器。验证者必须运行。 |
+| **[WebSocket 服务器](https://github.com/InjectiveFoundation/injective-core)** | 通过 WebSocket 流式传输实时链事件，封装 gRPC Chain Stream 服务器以支持标准 WebSocket 连接。 |
+
+### 链升级
+
+Injective 会定期在预定的区块高度进行协调软件升级。所有节点都必须切换到新的二进制文件以维持共识。有关升级流程，请参阅[升级](/cn/infra/upgrade-node)；有关故障排查，请参阅[协调升级](/cn/infra/coordinated-upgrades)指南。
