@@ -1,41 +1,71 @@
 ---
 title: Overview
 description: >-
-  This section helps Injective node operators and validators to run, upgrade, and maintain
-  their validator nodes and sentry nodes.
-updatedAt: "2025-12-04"
+  Run, upgrade, and maintain Injective validator nodes, sentry nodes, and supporting infrastructure.
+updatedAt: "2026-09-02"
 ---
 
-This section provides comprehensive guidance for node operators, validators, and infrastructure providers
-participating in the Injective network.
-Whether you're setting up a validator node to secure the chain, running a full node for data indexing,
-or managing node operations at scale, you'll find step-by-step instructions for installation, configuration, maintenance, and upgrades.
+This section covers everything needed to operate on the Injective network: setting up nodes, managing upgrades, running the bridge orchestrator, and configuring indexer services.
 
-Injective is built for high-performance financial applications, requiring robust infrastructure that can handle
-sub-second block times and high-throughput trading activity.
-Unlike general-purpose chains, Injective's validator set must maintain bare metal servers with
-enterprise-grade specifications (128GB RAM, high-clock-speed CPUs, NVMe storage)
-to process complex exchange module transactions and derivatives calculations efficiently.
-The network employs Tendermint consensus with a Byzantine Fault Tolerant (BFT) mechanism,
-ensuring finality within seconds while supporting advanced features like Frequent Batch Auctions.
-Infrastructure operators benefit from comprehensive tooling including Cosmovisor for seamless upgrades,
-multiple snapshot providers for rapid sync, and extensive documentation for both mainnet and testnet deployments.
+<Columns cols={2}>
+  <Card
+    title="Architecture"
+    href="#architecture"
+    arrow="true"
+    cta="Learn more"
+    icon="sitemap">
+    Node types, network topology, consensus layer, and process management
+  </Card>
+  <Card
+    title="Node Operation"
+    href="/infra/run-node"
+    arrow="true"
+    cta="Get started"
+    icon="server">
+    Set up your keyring, configure validators, interact with nodes, and manage Cosmovisor
+  </Card>
+</Columns>
 
-## Key Concepts
+<Columns cols={2}>
+  <Card
+    title="Join A Network"
+    href="/infra/join-a-network"
+    arrow="true"
+    cta="Sync a node"
+    icon="network-wired">
+    Install the binary, sync with mainnet or testnet via snapshots, state sync, or block sync
+  </Card>
+  <Card
+    title="Upgrades"
+    href="/infra/upgrade-node"
+    arrow="true"
+    cta="Upgrade guide"
+    icon="arrow-up">
+    Chain upgrade procedures, Coordinated Upgrades troubleshooting, and the Operator Portal
+  </Card>
+</Columns>
 
-| Term | Definition |
-|------|------------|
-| **Validator Node** | A full node that participates in consensus by proposing and voting on blocks, requiring staked INJ as collateral and high-availability hardware (128GB RAM, 16 cores). |
-| **Sentry Node** | A full node that protects validators from direct public exposure by relaying traffic, acting as a gateway between the validator and the public network for enhanced security. |
-| **Cosmovisor** | A process manager for Cosmos SDK blockchains that automates chain binary upgrades, enabling zero-downtime transitions when governance-approved upgrades occur. |
-| **Chain Upgrade** | A coordinated software update that occurs at a predetermined block height, requiring all nodes to switch to new binaries to maintain consensus and network compatibility. |
-| **Peggo (Bridge Relayer)** | A mandatory component for validators that relays messages between Ethereum and Injective, ensuring accurate token bridging and preventing validator slashing. |
+---
 
-## Navigation
+## Architecture
 
-- **[Mainnet Validator](/infra/validator-mainnet/)** —
-  Complete guide for setting up and running a validator node on Injective Mainnet, covering hardware requirements, key management,
-  self-delegation, commission configuration, and mandatory Peggo bridge relayer setup.
-- **[Testnet Validator](/infra/validator-testnet/)** —
-  Step-by-step instructions for joining the Injective Testnet (injective-888), including obtaining testnet INJ from the faucet,
-  validator creation, and network participation for testing and development.
+Injective uses CometBFT (formerly Tendermint) consensus with a Byzantine Fault Tolerant (BFT) mechanism, achieving sub-second finality. The network requires bare metal servers with enterprise-grade specifications (128GB RAM, high-clock-speed CPUs, NVMe storage) to handle high-throughput trading activity.
+
+### Node types
+
+| Node | Role |
+|------|------|
+| **Validator Node** | Participates in consensus by proposing and voting on blocks. Requires staked INJ as collateral and high-availability hardware. |
+| **[Sentry Node](/developers/concepts/sentry-node)** | A full node that shields validators from direct public exposure by relaying traffic, acting as a gateway between the validator and the public network. |
+
+### Key components
+
+| Component | Purpose |
+|-----------|---------|
+| **[Cosmovisor](/infra/cosmovisor)** | Process manager that automates chain binary upgrades, enabling zero-downtime transitions when governance-approved upgrades occur. See [Node Operation](/infra/run-node) for setup. |
+| **[Peggo](/infra/validator-mainnet/peggo)** | Bridge orchestrator that relays messages between Ethereum and Injective. Mandatory for validators. |
+| **[WebSocket Server](https://github.com/InjectiveFoundation/injective-core)** | Streams real-time chain events over WebSocket, wrapping the gRPC Chain Stream server for standard WebSocket connections. |
+
+### Chain upgrades
+
+Injective periodically undergoes coordinated software upgrades at predetermined block heights. All nodes must switch to the new binary to maintain consensus. See [Upgrades](/infra/upgrade-node) for procedures and the [Coordinated Upgrades](/infra/coordinated-upgrades) guide for troubleshooting.

@@ -102,60 +102,106 @@
                 "group": "INJECTIVE",
                 "pages": [
                   "index",
+                  "about",
                   "add-network-to-wallet",
                   {
-                    "group": "Network & Tools",
-                    "icon": "laptop-code",
+                    "group": "Network Infrastructure",
+                    "icon": "network-wired",
                     "expanded": false,
                     "pages": [
-                      "developers/index",
-                      "developers/network-information",
-                      "developers/convert-addresses",
+                      "infra/index",
                       {
-                        "group": "injectived",
+                        "group": "Node Operation",
                         "pages": [
-                          "developers/injectived/index",
-                          "developers/injectived/install",
-                          "developers/injectived/use",
-                          "developers/injectived/advanced",
-                          "developers/testnet-proposals"
+                          "infra/run-node",
+                          "infra/hardware",
+                          "infra/set-up-keyring",
+                          {
+                            "group": "Validator Setup",
+                            "pages": [
+                              "infra/validator-mainnet/index",
+                              "infra/validator-testnet/index",
+                              "infra/validator-testnet/peggo"
+                            ]
+                          },
+                          {
+                            "group": "Interact with nodes",
+                            "expanded": false,
+                            "pages": [
+                              "infra/interact-node/index",
+                              "infra/interact-node/command-line",
+                              "infra/interact-node/grpc",
+                              "infra/interact-node/go",
+                              "infra/interact-node/rest"
+                            ]
+                          },
+                          "infra/cosmovisor"
+                        ]
+                      },
+                      "infra/join-a-network",
+                      {
+                        "group": "Upgrades",
+                        "pages": [
+                          "infra/upgrade-node",
+                          "infra/coordinated-upgrades/index",
+                          "infra/validator-mainnet/canonical-chain-upgrade",
+                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2",
+                          {
+                            "group": "Historical Upgrades",
+                            "pages": [
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.20.3",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.20.1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.20.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.20.0-flag-changes",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.19.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.18.3",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.18.2",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.18.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.17.2",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.17.1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.17.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.16.4",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.16.2",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.16.1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.16.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.15.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.14.1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.14.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.13.3",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.13.2",
+                              "infra/validator-mainnet/canonical-chain-upgrade-1.13.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.12.1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.12.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.11.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.10.0",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10009",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10008",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10007-rc1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10006-rc1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10005-rc1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1-patch",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10003-rc1",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10002-rc2",
+                              "infra/validator-mainnet/canonical-chain-upgrade-10002-rc1"
+                            ]
+                          }
                         ]
                       },
                       {
-                        "group": "Concepts",
+                        "group": "Indexer & Bridges",
                         "pages": [
-                          "developers/concepts/index",
-                          "developers/concepts/sentry-node",
                           "developers/concepts/indexer-api",
-                          "developers/concepts/trading-account",
-                          "developers/concepts/grpc-protobuf",
-                          "developers/concepts/token-factory",
-                          "developers/concepts/calculation-min-price-tick-size",
-                          "developers/concepts/calculation-min-quantity-tick-size",
-                          "developers/concepts/cosmjs-support",
-                          "developers/concepts/networks"
+                          "redirects/https_injective_notion_site_indexer_service_setup_guide",
+                          "redirects/https_api_injective_network_swagger",
+                          "infra/validator-mainnet/peggo"
                         ]
                       },
-                      {
-                        "group": "Assets",
-                        "pages": [
-                          "developers/assets/index",
-                          "developers/assets/denom",
-                          "developers/assets/token-metadata",
-                          "developers/assets/injective-list",
-                          "developers/assets/token-create"
-                        ]
-                      },
-                      "redirects/https_testnet_faucet_injective_network",
-                      "redirects/https_sentry_lcd_injective_network_swagger",
-                      "redirects/https_github_com_InjectiveLabs_cw_injective",
-                      "redirects/https_github_com_InjectiveLabs_injective_rust",
-                      "redirects/https_docs_substreams_dev_documentation_how_to_guides_injective",
-                      "redirects/https_api_injective_exchange"
+                      "infra/archival-setup"
                     ]
                   },
                   {
-                    "group": "DeFi",
+                    "group": "DeFi on Injective",
                     "icon": "coins",
                     "expanded": false,
                     "pages": [
@@ -172,6 +218,7 @@
                         "group": "Trading",
                         "pages": [
                           "defi/trading/index",
+                          "developers/concepts/trading-account",
                           "defi/trading/order-types",
                           "defi/trading/fees",
                           "defi/trading/24-5-equity-feeds",
@@ -190,12 +237,27 @@
                         ]
                       },
                       {
-                        "group": "Token Standards",
+                        "group": "Token Factory",
                         "pages": [
-                          "defi/tokens/index",
-                          "defi/tokens/inj-coin",
                           "defi/tokens/token-factory",
-                          "defi/tokens/cw20-standard"
+                          {
+                            "group": "Token Standards",
+                            "pages": [
+                              "defi/tokens/index",
+                              "defi/tokens/inj-coin",
+                              "defi/tokens/cw20-standard"
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "group": "Assets",
+                        "pages": [
+                          "developers/assets/index",
+                          "developers/assets/denom",
+                          "developers/assets/injective-list",
+                          "developers/assets/token-metadata",
+                          "developers/assets/token-create"
                         ]
                       },
                       {
@@ -228,96 +290,29 @@
                           "defi/open-liquidity-program/volatility-response-modifications",
                           "defi/open-liquidity-program/fee-tiers"
                         ]
-                      },
-                      "redirects/https_hub_injective_network",
-                      "redirects/https_explorer_injective_network"
+                      }
                     ]
                   },
                   {
-                    "group": "Infrastructure",
-                    "icon": "network-wired",
+                    "group": "Tools",
+                    "icon": "laptop-code",
                     "expanded": false,
                     "pages": [
-                      "infra/index",
+                      "developers/index",
+                      "developers/network-information",
+                      "developers/convert-addresses",
+                      "developers/concepts/grpc-protobuf",
+                      "developers/concepts/networks",
                       {
-                        "group": "Interact with nodes",
-                        "expanded": false,
+                        "group": "injectived",
                         "pages": [
-                          "infra/interact-node/index",
-                          "infra/interact-node/command-line",
-                          "infra/interact-node/grpc",
-                          "infra/interact-node/go",
-                          "infra/interact-node/rest"
+                          "developers/injectived/index",
+                          "developers/injectived/install",
+                          "developers/injectived/use",
+                          "developers/injectived/advanced",
+                          "developers/testnet-proposals"
                         ]
-                      },
-                      "infra/run-node",
-                      "infra/set-up-keyring",
-                      "infra/join-a-network",
-                      "infra/cosmovisor",
-                      "infra/upgrade-node",
-                      {
-                        "group": "Coordinated Upgrades",
-                        "pages": [
-                          "infra/coordinated-upgrades/index"
-                        ]
-                      },
-                      {
-                        "group": "Mainnet Validator",
-                        "pages": [
-                          "infra/validator-mainnet/index",
-                          "infra/validator-mainnet/peggo",
-                          "infra/validator-mainnet/canonical-chain-upgrade",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.3",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.0-flag-changes",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.19.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.18.3",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.18.2",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.18.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.17.2",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.17.1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.17.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.16.4",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.16.2",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.16.1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.16.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.15.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.14.1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.14.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.13.3",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.13.2",
-                          "infra/validator-mainnet/canonical-chain-upgrade-1.13.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.12.1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.12.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.11.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.10.0",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10009",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10008",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10007-rc1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10006-rc1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10005-rc1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1-patch",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10004-rc1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10003-rc1",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10002-rc2",
-                          "infra/validator-mainnet/canonical-chain-upgrade-10002-rc1"
-                        ]
-                      },
-                      {
-                        "group": "Testnet Validator",
-                        "pages": [
-                          "infra/validator-testnet/index",
-                          "infra/validator-testnet/peggo"
-                        ]
-                      },
-                      "infra/public-endpoints",
-                      "infra/premium-endpoints",
-                      "infra/archival-setup",
-                      "infra/websocket-server",
-                      "redirects/https_injective_notion_site_indexer_service_setup_guide",
-                      "redirects/https_api_injective_network_swagger"
+                      }
                     ]
                   },
                   "faq",
@@ -334,6 +329,7 @@
               {
                 "group": "BUILD",
                 "pages": [
+                  "build-index",
                   {
                     "group": "EVM Developers",
                     "icon": "rectangle-code",
@@ -542,6 +538,7 @@
                               "developers-native/injective/exchange/09_events",
                               "developers-native/injective/exchange/10_params",
                               "developers-native/injective/exchange/11_msg_privileged_execute_contract",
+                              "developers-native/injective/exchange/12_gas_heuristics",
                               "developers-native/injective/exchange/99_errors"
                             ]
                           },
@@ -746,7 +743,8 @@
               {
                 "group": "Client Libraries",
                 "pages": [
-                  "sdks-index"
+                  "sdks-index",
+                  "developers/concepts/cosmjs-support"
                 ]
               }
             ]
@@ -2287,6 +2285,14 @@
     "eyebrows": "breadcrumbs"
   },
   "redirects": [
+    {
+      "source": "/quickstart",
+      "destination": "/"
+    },
+    {
+      "source": "/infra/validator-mainnet#hardware-requirements",
+      "destination": "/infra/hardware"
+    },
     {
       "source": "/developers/ai/",
       "destination": "/developers-ai/"
