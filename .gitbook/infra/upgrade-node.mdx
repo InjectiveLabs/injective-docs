@@ -1,13 +1,36 @@
 ---
-title: Upgrade your node
-updatedAt: "2025-10-30"
+title: Overview
+updatedAt: "2026-09-02"
 ---
+
+<Columns cols={2}>
+  <Card
+    title="Live Upgrades"
+    href="https://chain-portal.injective.network/upgrades"
+    arrow="true"
+    cta="Operator Portal"
+    icon="arrow-up">
+    Track active and upcoming network upgrades, governance proposals, and activation timelines
+  </Card>
+  <Card
+    title="Release Binaries"
+    href="https://github.com/InjectiveFoundation/injective-core/releases"
+    arrow="true"
+    cta="GitHub Releases"
+    icon="code-branch">
+    Download the latest and prior injectived and peggo binaries from InjectiveFoundation/injective-core
+  </Card>
+</Columns>
+
+<Callout icon="warning" color="#FF8C00" iconType="regular">
+**Validators:** Before upgrading, read the [Validator Troubleshooting Guide](/infra/coordinated-upgrades) for critical safety rules, common failure modes, and recovery procedures. Mishandling `priv_validator_state.json` during upgrades can lead to double-signing and permanent tombstoning.
+
+If you are not already a member of the verified validator channels, reach out to the Injective team via [Discord](https://discord.gg/injective) to get added. Upgrade coordination, emergency snapshots, and incident communication happen in these channels.
+</Callout>
 
 ### Chain Upgrades
 
 Injective periodically undergoes software upgrades. When a chain upgrade governance proposal is passed, a block height will be specified at which all nodes will automatically panic and stop running. At this point, the upgraded `injectived` binaries can be installed, and the node can be restarted.
-
-See [InjectiveFoundation/injective-core](https://github.com/InjectiveFoundation/injective-core/releases) for the most recent and prior chain releases.
 
 ### Node Upgrade Directions
 
@@ -18,12 +41,16 @@ To summarize, follow these steps to upgrade your node:
 3. Remove the old binaries and install the new release binaries.
 4. Restart the node.
 
+<Note>
+If the upgrade fails or a sentry node becomes corrupted, see the [Snapshots page](https://chain-portal.injective.network/snapshots) for options to resync your node from a fresh snapshot.
+</Note>
+
 ### Upgrading with Cosmovisor
 
 To manage chain upgrades, use [Cosmovisor](./cosmovisor/).
 
 ### Node Maintenance (Managing Storage)
 
-As Injective state grows, your disk space may fill up. It’s recommended you periodically prune the chain data by downloading new snapshots. Beyond the overhead on the disk, the node is more performant when the chain state is smaller.
+As Injective state grows, your disk space may fill up. It's recommended you periodically prune the chain data by downloading new snapshots. Beyond the overhead on the disk, the node is more performant when the chain state is smaller.
 
-Injective validators take daily light snapshots that you can use to clean the chain state, which grows at about 10-15 GB daily. These snapshots are normally only around 2-3 GB. We recommend pruning the chain data every 300-400 GB. For links to snapshots as well as directions for applying the snapshot/syncing the node, see [Join Mainnet](./join-a-network/).
+Injective validators take daily light snapshots that you can use to clean the chain state, which grows at about 10-15 GB daily. These snapshots are normally only around 2-3 GB. We recommend pruning the chain data every 300-400 GB. For snapshot download links and usage instructions, see the [Snapshots page on the Chain Portal](https://portal.injective.network/snapshots). For directions on syncing your node, see [Join A Network](./join-a-network/).

@@ -1,14 +1,363 @@
 ---
-title: Join a network
-updatedAt: "2025-10-30"
+title: Join a Network
+updatedAt: "2026-09-02"
 ---
 
-This guide will walk you through the process of setting up a standalone network locally,
-as well as running a node on Mainnet or Testnet.
-
-You can also find the hardware requirements for each network in the respective tabs.
+Set up and sync an Injective node on Mainnet, Testnet, or a local development network.
 
 <Tabs>
+<Tab title="Mainnet">
+
+Injective Mainnet has a chain-id of `injective-1`.
+
+<Columns cols={3}>
+  <Card
+    title="Sync Options"
+    href="#sync-options"
+    arrow="true"
+    cta="Jump to section"
+    icon="panel-left-close">
+    Snapshot restore, state sync, and block sync
+  </Card>
+  <Card
+    title="Node Software"
+    href="#node-software"
+    arrow="true"
+    cta="Jump to section"
+    icon="panel-left-close">
+    Install injectived, configure, and run
+  </Card>
+  <Card
+    title="Hardware"
+    href="#hardware"
+    arrow="true"
+    cta="Jump to section"
+    icon="panel-left-close">
+    Minimum and recommended specifications
+  </Card>
+</Columns>
+
+---
+
+### Sync Options
+
+Choose how to bootstrap your node with chain data. For most operators, snapshot restore is the fastest path to a running node.
+
+**Option 1. Snapshot Restore (recommended)**
+
+Download a pre-built snapshot and extract it into your data directory. This is the fastest and most reliable way to sync a new node.
+
+Injective provides official pruned snapshots (goleveldb, ~2-3 GB) and the community maintains additional options. See the [Snapshots page on the Chain Portal](https://portal.injective.network/snapshots) for download links, usage instructions, and community providers.
+
+<Callout icon="warning" color="#FFA500" iconType="regular">
+**Validators:** You must back up and restore `priv_validator_state.json` during snapshot recovery. See the [Validator Troubleshooting Guide](/infra/coordinated-upgrades#recovering-from-a-snapshot) for the full procedure.
+</Callout>
+
+```bash
+# Example: download and extract
+sudo systemctl stop injectived
+rm -rf ~/.injectived/data
+wget -O snapshot.lz4 <SNAPSHOT_URL>
+lz4 -d snapshot.lz4 | tar xf - -C ~/.injectived/
+sudo systemctl start injectived
+```
+
+**Option 2. State Sync (CometBFT P2P)**
+
+State sync bootstraps a node by downloading a state machine snapshot from peers via the CometBFT P2P layer, rather than replaying all historical blocks. It requires two trusted RPC servers. See the [RPC Providers page on the Chain Portal](https://portal.injective.network/rpcs) for available endpoints. Configure it in `config.toml` under `[statesync]`:
+
+```toml
+[statesync]
+enable = true
+rpc_servers = "<rpc_server_1>,<rpc_server_2>"
+trust_height = <recent_height>
+trust_hash = "<block_hash_at_trust_height>"
+trust_period = "168h0m0s"
+```
+
+To obtain the trust height and hash:
+
+```bash
+# Get a recent height and its hash from a trusted RPC
+LATEST=$(curl -s https://sentry.tm.injective.network/block | jq -r '.result.block.header.height')
+TRUST_HEIGHT=$((LATEST - 2000))
+TRUST_HASH=$(curl -s "https://sentry.tm.injective.network/block?height=$TRUST_HEIGHT" | jq -r '.result.block_id.hash')
+echo "trust_height = $TRUST_HEIGHT"
+echo "trust_hash = \"$TRUST_HASH\""
+```
+
+<Warning>
+**State sync does not restore the `wasm/` directory.** CometBFT state sync restores the IAVL state tree but not the CosmWasm compiled contract bytecode stored in `~/.injectived/data/wasm/`. Without these files, the node will produce an **AppHash mismatch** immediately after sync completes.
+
+If you encounter this, either:
+1. Switch to **snapshot restore** (Option 1). Injective's official snapshots include the `wasm/` directory
+2. Obtain the `wasm/` directory from a trusted source and place it at `~/.injectived/data/wasm/` before starting the node
+
+**PebbleDB users:** Injective's official snapshots use goleveldb only. PebbleDB snapshots are not maintained. If you run PebbleDB and cannot use a snapshot restore, you must source the `wasm/` directory separately when using state sync.
+</Warning>
+
+**Option 3. Block Sync (full replay)**
+
+The default behavior. The node downloads and replays every block from peers. Slowest method but requires no external snapshots. Not practical for mainnet unless syncing from a recent snapshot height.
+
+**Sync method comparison:**
+
+| Method | Speed | Includes wasm? | Notes |
+|---|---|---|---|
+| **Snapshot Restore** | Fast (minutes) | Yes (official snapshots) | Recommended for most operators |
+| **State Sync** | Fast (minutes) | **No** - causes AppHash mismatch without manual wasm restore | Configured in `config.toml` `[statesync]` |
+| **Block Sync** | Slow (days) | N/A (builds from execution) | Default, not practical for mainnet from genesis |
+
+#### Peer discovery
+
+Your node needs peers to sync with the network. Add seeds or persistent peers to the `[p2p]` section of `~/.injectived/config/config.toml`. Community providers maintain up-to-date seed and peer lists:
+
+- [Polkachu Injective Seeds](https://polkachu.com/seeds/injective)
+- [Decentrio Injective Infrastructure](https://decentrio.ventures/infrastructure/injective) (seeds, peers, address book)
+
+You can also download a pre-built address book for faster peer discovery:
+
+```bash
+# Decentrio address book
+wget -O ~/.injectived/config/addrbook.json \
+  https://backend.decentrio.ventures/snapshots/injective/addrbook.json
+```
+
+---
+
+### Node Software
+
+#### Install `injectived`
+
+Each [Injective core release](https://github.com/InjectiveFoundation/injective-core/releases/latest) includes `injectived`, [`peggo`](/infra/validator-mainnet/peggo) (the Peggy bridge orchestrator), and `libwasmvm` in a single zip. Validators must run `peggo` alongside their node. Non-validator node operators only need `injectived`.
+
+```bash
+# Download the latest release
+wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib
+
+# Validators also need peggo
+sudo mv peggo /usr/bin
+```
+
+#### Initialize a New Injective Node
+
+Before running an Injective node, initialize the chain and genesis file:
+
+```bash
+# The argument <moniker> is the custom username of your node. It should be human-readable.
+export MONIKER=<moniker>
+injectived init $MONIKER --chain-id injective-1
+```
+
+Running the `init` command will create `injectived` default configuration files at `~/.injectived`.
+
+#### Prepare Configuration to Join Mainnet
+
+Download the mainnet genesis file. Injective provides this alongside the official snapshots:
+
+```bash
+# Download the mainnet genesis file
+wget -O ~/.injectived/config/genesis.json \
+  http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/genesis.json
+```
+
+Verify the checksum:
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+# Expected: 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
+```
+
+Configure seeds for peer discovery (see [Peer discovery](#peer-discovery) in the Sync Options section) and set `timeout_commit` to `300ms` in `~/.injectived/config/config.toml`.
+
+#### Configuring the node using `app.toml` and `config.toml`
+
+Two configuration files are automatically generated inside `~/.injectived/config`:
+
+* `config.toml`: configures the consensus layer (CometBFT). [Learn more in the consensus layer documentation](https://docs.cometbft.com/v0.38/core/configuration).
+* `app.toml`: configures the application and execution layer of the node, including state pruning strategies,
+  telemetry, gRPC and REST server configurations, state sync, and more.
+
+#### Configure `systemd` service for `injectived` (optional)
+
+Edit the config at `/etc/systemd/system/injectived.service`:
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+Starting and restarting the systemd service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# enable start on system boot
+sudo systemctl enable injectived
+
+# To check Logs
+journalctl -u injectived -f
+```
+
+The service should be stopped before and started after snapshot data has been loaded into the correct directory.
+
+```bash
+# to stop the node
+sudo systemctl stop injectived
+
+# to start the node
+sudo systemctl start injectived
+```
+
+---
+
+### Hardware
+
+Node operators should deploy bare metal servers to achieve optimal performance.
+Validator nodes must meet the recommended hardware specifications, particularly the CPU requirements,
+to ensure high uptime.
+
+|       _Minimum_       |    _Recommendation_   |
+| :-------------------: | :-------------------: |
+|    RAM Memory 128GB   |    RAM Memory 128GB   |
+|      CPU 12 cores     |      CPU 16 cores     |
+| CPU base clock 3.7GHz | CPU base clock 4.2GHz |
+|    Storage 2TB NVMe   |    Storage 2TB NVMe   |
+|     Network 1Gbps+    |     Network 1Gbps+    |
+
+---
+
+**Support**
+
+For any further questions, you can always connect with the Injective Team via [Discord](https://discord.gg/injective),
+[Telegram](https://t.me/joininjective), or [email](mailto:contact@injectivelabs.org)
+</Tab>
+
+<Tab title="Testnet">
+#### Hardware Specification
+
+Node operators should deploy bare metal servers to achieve optimal performance.
+Additionally, validator nodes must meet the recommended hardware specifications and particularly the CPU requirements,
+to ensure high uptime.
+
+|       _Minimum_       |    _Recommendation_   |
+| :-------------------: | :-------------------: |
+|    RAM Memory 128GB   |    RAM Memory 128GB   |
+|      CPU 12 cores     |      CPU 16 cores     |
+| CPU base clock 3.7GHz | CPU base clock 4.2GHz |
+|    Storage 2TB NVMe   |    Storage 2TB NVMe   |
+|     Network 1Gbps+    |     Network 1Gbps+    |
+
+#### Install `injectived` and `peggo`
+
+See the [Injective releases repo](https://github.com/InjectiveLabs/testnet/releases) for the most recent releases.
+Non-validator node operators do not need to install `peggo`.
+
+```bash
+wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv peggo /usr/bin
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib 
+```
+
+#### Initialize a New Injective Chain Node
+
+Before running Injective node, we need to initialize the chain as well as the node's genesis file:
+
+```bash
+# The argument <moniker> is the custom username of your node, it should be human-readable.
+export MONIKER=<moniker>
+# Injective Testnet has a chain-id of "injective-888"
+injectived init $MONIKER --chain-id injective-888
+```
+
+Running the `init` command will create `injectived` default configuration files at `~/.injectived`.
+
+#### Prepare Configuration to Join Testnet
+
+You should now update the default configuration with the Testnet's genesis file and application config file,
+as well as configure your persistent peers with seed nodes.
+
+```bash
+git clone https://github.com/InjectiveLabs/testnet.git
+
+# copy genesis file to config directory
+aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
+mv genesis.json ~/.injectived/config/
+
+# copy config file to config directory
+cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
+cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
+```
+
+You can also run verify the checksum of the genesis checksum - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+```
+
+#### Configure `systemd` Service for `injectived`
+
+Edit the config at `/etc/systemd/system/injectived.service`:
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+Starting and restarting the systemd service
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# enable start on system boot
+sudo systemctl enable injectived
+
+# To check Logs
+journalctl -u injectived -f
+```
+
+#### Sync with the network
+
+Refer to the [Polkachu Injective Testnet Node Snapshot](https://polkachu.com/testnets/injective/snapshots)
+to download a snapshot and sync with the network.
+
+**Support**
+
+For any further questions, you can always connect with the Injective Team via [Discord](https://discord.gg/injective),
+[Telegram](https://t.me/joininjective), or [email](mailto:contact@injectivelabs.org).
+</Tab>
+
 <Tab title="Local Network">
 To easily set up a local node, download and run the `setup.sh` script from the
 [injective-core](https://github.com/InjectiveFoundation/injective-core) repository.
@@ -151,7 +500,7 @@ Two configuration files are automatically generated inside `~/.injectived/config
 * `app.toml`: generated by the Cosmos SDK (which Injective is built on), and used for configurations such as state pruning strategies,
   telemetry, gRPC and REST server configurations, state sync, and more.
 
-Both files are heavily commented—please refer to them directly to tweak your node.
+Both files are heavily commented. Refer to them directly to tweak your node.
 
 One example config to tweak is the `minimum-gas-prices` field inside `app.toml`,
 which defines the minimum gas prices the validator node is willing to accept for processing a transaction.
@@ -176,255 +525,5 @@ injectived start # Blocks should start coming in after running this
 
 This command allows you to run a single node, which is is enough to interact with the chain through the node,
 but you may wish to run multiple nodes at the same time to see how consensus occurs between them.
-</Tab>
-
-<Tab title="Testnet Network">
-#### Hardware Specification
-
-Node operators should deploy bare metal servers to achieve optimal performance.
-Additionally, validator nodes must meet the recommended hardware specifications and particularly the CPU requirements,
-to ensure high uptime.
-
-|       _Minimum_       |    _Recommendation_   |
-| :-------------------: | :-------------------: |
-|    RAM Memory 128GB   |    RAM Memory 128GB   |
-|      CPU 12 cores     |      CPU 16 cores     |
-| CPU base clock 3.7GHz | CPU base clock 4.2GHz |
-|    Storage 2TB NVMe   |    Storage 2TB NVMe   |
-|     Network 1Gbps+    |     Network 1Gbps+    |
-
-#### Install `injectived` and `peggo`
-
-See the [Injective releases repo](https://github.com/InjectiveLabs/testnet/releases) for the most recent releases.
-Non-validator node operators do not need to install `peggo`.
-
-```bash
-wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
-
-#### Initialize a New Injective Chain Node
-
-Before running Injective node, we need to initialize the chain as well as the node's genesis file:
-
-```bash
-# The argument <moniker> is the custom username of your node, it should be human-readable.
-export MONIKER=<moniker>
-# Injective Testnet has a chain-id of "injective-888"
-injectived init $MONIKER --chain-id injective-888
-```
-
-Running the `init` command will create `injectived` default configuration files at `~/.injectived`.
-
-#### Prepare Configuration to Join Testnet
-
-You should now update the default configuration with the Testnet's genesis file and application config file,
-as well as configure your persistent peers with seed nodes.
-
-```bash
-git clone https://github.com/InjectiveLabs/testnet.git
-
-# copy genesis file to config directory
-aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
-mv genesis.json ~/.injectived/config/
-
-# copy config file to config directory
-cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
-cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
-```
-
-You can also run verify the checksum of the genesis checksum - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
-
-```bash
-sha256sum ~/.injectived/config/genesis.json
-```
-
-#### Configure `systemd` Service for `injectived`
-
-Edit the config at `/etc/systemd/system/injectived.service`:
-
-```bash
-[Unit]
-  Description=injectived
-
-[Service]
-  WorkingDirectory=/usr/bin
-  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
-  Type=simple
-  Restart=always
-  RestartSec=5
-  User=root
-
-[Install]
-  WantedBy=multi-user.target
-```
-
-Starting and restarting the systemd service
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart injectived
-sudo systemctl status injectived
-
-# enable start on system boot
-sudo systemctl enable injectived
-
-# To check Logs
-journalctl -u injectived -f
-```
-
-#### Sync with the network
-
-Refer to the [Polkachu Injective Testnet Node Snapshot](https://polkachu.com/testnets/injective/snapshots)
-to download a snapshot and sync with the network.
-
-**Support**
-
-For any further questions, you can always connect with the Injective Team via [Discord](https://discord.gg/injective),
-[Telegram](https://t.me/joininjective), or [email](mailto:contact@injectivelabs.org).
-</Tab>
-
-<Tab title="Mainnet Network">
-#### Hardware Specification
-
-Node operators should deploy bare metal servers to achieve optimal performance.
-Additionally, validator nodes must meet the recommended hardware specifications and particularly the CPU requirements,
-to ensure high uptime.
-
-|       _Minimum_       |    _Recommendation_   |
-| :-------------------: | :-------------------: |
-|    RAM Memory 128GB   |    RAM Memory 128GB   |
-|      CPU 12 cores     |      CPU 16 cores     |
-| CPU base clock 3.7GHz | CPU base clock 4.2GHz |
-|    Storage 2TB NVMe   |    Storage 2TB NVMe   |
-|     Network 1Gbps+    |     Network 1Gbps+    |
-
-#### Install `injectived` and `peggo`
-
-See the [Injective core releases](https://github.com/InjectiveFoundation/injective-core/releases) for the most recent releases.
-Non-validator node operators do not need to install `peggo`.
-
-```bash
-# Replace the URL with the latest release from https://github.com/InjectiveFoundation/injective-core/releases
-wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
-
-#### Initialize a New Injective Node
-
-Before running Injective node, we need to initialize the chain as well as the node's genesis file:
-
-```bash
-# The argument <moniker> is the custom username of your node. It should be human-readable.
-export MONIKER=<moniker>
-# Injective Mainnet has a chain-id of "injective-1"
-injectived init $MONIKER --chain-id injective-1
-```
-
-Running the `init` command will create `injectived` default configuration files at `~/.injectived`.
-
-#### Prepare Configuration to Join Mainnet
-
-You should now update the default configuration with the Mainnet's genesis file and application config file,
-as well as configure your persistent peers with seed nodes.
-
-```bash
-git clone https://github.com/InjectiveLabs/mainnet-config
-
-# copy genesis file to config directory
-cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
-
-# copy config file to config directory
-cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
-```
-
-You can also run verify the checksum of the genesis checksum - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
-
-```bash
-sha256sum ~/.injectived/config/genesis.json
-```
-
-Then update the `seeds` field in `~/.injectived/config/config.toml` with the contents of `mainnet-config/10001/seeds.txt`
-and update the `timeout_commit` to `300ms`.
-
-```bash
-cat mainnet-config/10001/seeds.txt
-nano ~/.injectived/config/config.toml
-```
-
-#### Configure `systemd` Service for `injectived`
-
-Edit the config at `/etc/systemd/system/injectived.service`:
-
-```bash
-[Unit]
-  Description=injectived
-
-[Service]
-  WorkingDirectory=/usr/bin
-  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
-  Type=simple
-  Restart=always
-  RestartSec=5
-  User=root
-
-[Install]
-  WantedBy=multi-user.target
-```
-
-Starting and restarting the systemd service:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart injectived
-sudo systemctl status injectived
-
-# enable start on system boot
-sudo systemctl enable injectived
-
-# To check Logs
-journalctl -u injectived -f
-```
-
-The service should be stopped before and started after the snapshot data has been loaded into the correct directory.
-
-```bash
-# to stop the node
-sudo systemctl stop injectived
-
-# to start the node
-sudo systemctl start injectived
-```
-
-#### Sync with the network
-
-**Option 1. State-Sync**
-
-_To be added soon_
-
-**Option 2. Snapshots**
-
-**Pruned**
-
-1. [Polkachu](https://polkachu.com/tendermint_snapshots/injective).
-2. [HighStakes](https://tools.highstakes.ch/files/injective.tar.gz).
-3. [Imperator](https://www.imperator.co/services/chain-services/mainnets/injective).
-4. [Bware Labs](https://bwarelabs.com/snapshots).
-5. [AutoStake](https://autostake.com/networks/injective/#validator).
-
-Should the Injective `mainnet-config seeds.txt` list not work (the node fails to sync blocks),
-ChainLayer, Polkachu, and Autostake maintain peer lists (can be used in the `persistent_peers` field in `config.toml`)
-or addressbooks (for faster peer discovery).
-
-**Support**
-
-For any further questions, you can always connect with the Injective Team via [Discord](https://discord.gg/injective),
-[Telegram](https://t.me/joininjective), or [email](mailto:contact@injectivelabs.org)
 </Tab>
 </Tabs>

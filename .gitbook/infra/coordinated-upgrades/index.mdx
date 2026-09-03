@@ -310,13 +310,23 @@ If left on during normal operation, the 1ms delta causes rounds to advance far f
 panic: Tendermint state.AppHash does not match AppHash after replay
 ```
 
-**Cause:** The application state diverged from the consensus state. Can result from an incomplete upgrade, a crash during block execution, or a corrupted database.
+**Cause:** The application state diverged from the consensus state. Can result from an incomplete upgrade, a crash during block execution, a corrupted database, or a missing `wasm/` directory after state sync (see below).
 
 **Solution:**
 
 1. Try rollback: `injectived rollback`
 2. If rollback fails or the error persists: recover from a snapshot
 3. Always restore `priv_validator_state.json` after recovery
+
+---
+
+### AppHash mismatch after CometBFT state sync
+
+**Symptoms:** AppHash error immediately after a successful CometBFT state sync restore, at the very first block.
+
+**Cause:** CometBFT state sync (the P2P protocol configured in `[statesync]` in `config.toml`) restores the IAVL state tree but does **not** restore the `wasm/` directory containing compiled CosmWasm contract bytecode. Without these files, the locally computed app hash will not match the network's.
+
+**Solution:** Use a manual snapshot restore instead of state sync. Injective's official snapshots include the `wasm/` directory. If you must use state sync, obtain the `wasm/` directory from a trusted source and place it at `~/.injectived/data/wasm/` before starting the node. See [Joining a Network — Sync Methods](/infra/join-a-network) for details on the difference between state sync and snapshot restore.
 
 ---
 
@@ -403,7 +413,8 @@ The longer this window lasts, the higher the round numbers climb. Validators tha
 - [ ] Set `--halt-height=<target_height>` in node config or CLI flags
 - [ ] If using Cosmovisor: place the new binary in the correct upgrade directory
 - [ ] Back up `priv_validator_state.json`
-- [ ] Identify snapshot providers in case rollback is needed
+- [ ] Identify snapshot providers in case rollback is needed (see [Snapshots - Chain Portal](https://portal.injective.network/snapshots))
+- [ ] If planning to use CometBFT state sync for recovery: ensure you have a copy of `~/.injectived/data/wasm/`. State sync does not restore this directory and its absence causes AppHash mismatches
 - [ ] Monitor chain progression toward the halt height
 
 ### At the upgrade height
@@ -499,38 +510,18 @@ grep db_backend ~/.injectived/config/config.toml
 
 ## Snapshot Resources
 
-### Injective Provided Snapshots
+<Callout icon="info" color="#22C55E" iconType="regular">
+**[Snapshots - Chain Portal](https://portal.injective.network/snapshots)**
 
-Injective maintains pruned mainnet snapshots in two regions. Check the status endpoint for the latest available height and download URL:
+Download links for Injective-provided pruned snapshots (EU and Asia regions), community snapshot providers, archival segment data, and usage instructions. The Chain Portal is the canonical, up-to-date source for all snapshot resources.
+</Callout>
 
-| Region | Status | Download |
-|---|---|---|
-| **EU (OVH)** | [status.json](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/status.json) | `http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/` |
-| **Asia (GCS)** | [status.json](https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json) | `https://storage.googleapis.com/injective-mainnet-snapshots-asia/` |
+For archival segment snapshots and segmented node fleet setup, see the [Archival Setup](/infra/archival-setup) page.
 
-To download the latest snapshot, check the status endpoint for the current filename:
-
-```bash
-# Check latest available snapshot (Asia example)
-curl -s https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json | jq
-
-# Download the snapshot
-wget <url from status.json>
-
-# Extract
-lz4 -d <snapshot_file>.tar.lz4 | tar xf - -C ~/.injectived/data/
-```
-
-During coordinated security upgrades, the Injective team may also share emergency snapshots in the verified validators channels. For archival segment snapshots, see the [Archival Setup](/infra/archival-setup) page.
-
-### Community Snapshot Providers
-
-- [Polkachu Injective Snapshots](https://polkachu.com/tendermint_snapshots/injective) (typically goleveldb, pruned)
-- [HighStakes Injective Snapshots](https://tools.highstakes.ch/snapshots/injective)
-- Community validators may share emergency snapshots during incidents in the validator channels
+During coordinated security upgrades, the Injective team may also share emergency snapshots in the verified validators channels.
 
 <Warning>
-**Database backend compatibility:** Snapshots are backend specific. A goleveldb snapshot will not work on a node configured for pebbledb, and vice versa. Check your configuration before downloading:
+**Database backend compatibility:** Snapshots are backend specific. A goleveldb snapshot will not work on a node configured for pebbledb, and vice versa. Injective's official snapshots use goleveldb. PebbleDB snapshots are not maintained. Check your configuration before downloading:
 
 ```bash
 grep db_backend ~/.injectived/config/config.toml

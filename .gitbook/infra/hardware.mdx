@@ -1,0 +1,111 @@
+---
+title: Hardware Requirements
+description: Minimum and recommended hardware specifications for running Injective nodes
+updatedAt: "2026-09-02"
+---
+
+Injective's sub-second block times and high-throughput transaction processing place significant demands on hardware. Underprovisioned nodes will fall behind the chain tip, miss blocks (validators), or serve stale data (RPC nodes).
+
+## Validator nodes
+
+Validator nodes participate in consensus and must maintain consistent performance to avoid jailing. Bare metal servers are strongly recommended.
+
+|           _Minimum_              |        _Recommendation_        |
+| :--------------------------:     | :---------------------------:  |
+|          RAM Memory 128GB        |          RAM Memory 128GB      |
+|          CPU 12 cores            |          CPU 16 cores          |
+|          CPU base clock 3.7GHz   |          CPU base clock 4.2GHz |
+|          Storage 2TB NVMe        |          Storage 2TB NVMe      |
+|          Network 1Gbps+          |          Network 1Gbps+        |
+
+### Production validator reference
+
+For reference, production validators on the Injective mainnet typically run hardware in the following range:
+
+| Component | Typical configuration |
+|---|---|
+| **CPU** | AMD EPYC 4585PX or AMD Ryzen 9 9950X (16 cores / 32 threads, 5.75 GHz boost) |
+| **RAM** | 128 GB DDR5 @ 3600 MT/s |
+| **Storage** | 2x ~2 TB NVMe in RAID0, ~3.5 TiB usable |
+| **Network** | 10-25 Gbps |
+
+High single-thread performance (boost clock) is more important than core count for block processing. The network requirements are well above the 1 Gbps minimum listed in the spec table; production validators benefit from 10 Gbps+ links for consistent peer connectivity and fast block propagation.
+
+## RPC nodes
+
+Non-validator nodes serving live chain data have similar requirements. While they don't risk slashing, underpowered nodes will lag behind the chain tip and serve unreliable data.
+
+|           _Minimum_              |        _Recommendation_        |
+| :--------------------------:     | :---------------------------:  |
+|          RAM Memory 64GB         |          RAM Memory 128GB      |
+|          CPU 8 cores             |          CPU 16 cores          |
+|          CPU base clock 3.4GHz   |          CPU base clock 4.0GHz+|
+|          Storage 1TB NVMe/SSD    |          Storage 2TB NVMe      |
+|          Network 1Gbps+          |          Network 1Gbps+        |
+
+<Warning>
+**CPU clock speed matters more than core count.** Injective's block processing is largely single-threaded during execution. Nodes running on low-clock CPUs (e.g. 2.6GHz cloud instances) will consistently fall behind the chain tip regardless of core count.
+</Warning>
+
+## Storage
+
+### Disk I/O requirements
+
+Disk throughput is the most common bottleneck for Injective nodes. The chain produces blocks every ~650ms with potentially large transaction payloads, requiring sustained high IOPS.
+
+- **Bare metal:** Local NVMe drives are ideal. RAID0 across multiple NVMe drives provides the best throughput.
+- **Cloud (GCP):** Standard persistent disks (`pd-balanced`, `pd-ssd`) often cannot sustain the required IOPS. Use **local SSDs in RAID0** for the chain data directory. Local SSDs are ephemeral but chain state is easily recoverable from a [snapshot](https://chain-portal.injective.network/snapshots). Alternatively, provision `hyperdisk-balanced` or `hyperdisk-extreme` with explicitly provisioned IOPS and throughput.
+- **Cloud (AWS):** Use `io2` or `gp3` volumes with provisioned IOPS. Instance store NVMe (e.g. `i3`, `i4i` instances) provides the best performance.
+
+### Chain data growth
+
+Injective chain data grows at approximately 10-15 GB per day. For pruned nodes, it is recommended to restore from a fresh snapshot every 300-400 GB to reclaim disk space and maintain performance. For snapshot download links, see the [Snapshots page on the Chain Portal](https://portal.injective.network/snapshots).
+
+### Pruning configuration
+
+Pruning removes old state to save disk space but is itself CPU and I/O intensive. On underpowered hardware, the pruning process can cause the node to fall behind the chain tip.
+
+If your node is lagging and you suspect hardware limitations:
+- Consider setting `pruning = "nothing"` in `app.toml` to eliminate the pruning overhead
+- Periodically stop the node and restore from a snapshot to manage disk usage instead
+- For zero-downtime operation, run two nodes and do rolling snapshot recovery
+
+### Storage layout
+
+Production validators typically run two NVMe drives in one of these configurations:
+
+| Layout | How it works | Tradeoff |
+|---|---|---|
+| **RAID0** | Stripes data across both drives in fixed chunks. Both drives are read/written in parallel, doubling potential IOPS and throughput. | No redundancy. If either drive fails, the array is lost. Requires full snapshot recovery. |
+| **LVM linear** | Concatenates drives into a single volume. Fills one drive first, then spills onto the next. No parallel I/O speed gains. | No redundancy. If either drive fails, the entire Volume Group breaks and the database is corrupted. Constrains performance to a single drive's speed. |
+
+Neither layout provides redundancy, but chain state does not require it. RAID0 is recommended to meet Injective's sub-second block time requirements. If a drive fails, recover from a [snapshot](https://chain-portal.injective.network/snapshots).
+
+## Bare metal vs cloud
+
+Bare metal servers are strongly recommended for validator nodes. The consistent CPU clock speeds and low-latency NVMe storage required for sub-second block times are difficult to guarantee on shared cloud infrastructure.
+
+Cloud deployments can work for non-validator nodes if provisioned correctly (see storage guidance above), but operators should expect to invest more in monitoring and operational tooling to maintain reliability.
+
+### Reference cloud instance types
+
+The following instance types have been validated for Injective nodes. Use these as a starting point when provisioning.
+
+| Provider | Instance | vCPU | RAM | Disk | Suitable for |
+|---|---|---|---|---|---|
+| **GCP** | `c4-standard-16-lssd` | 16 vCPU (Emerald Rapids) | 64 GB | Local SSD (NVMe) | Sentries, RPC nodes |
+| **OVH** | `b3-32` | 8 vCPU | 32 GB | Local SSD | Sentries (undersized for validators) |
+| **OVH** | Dedicated (e.g. Advance-1) | 12 vCPU (Xeon E-2386G @3.5GHz or EPYC 4244P) | 128 GB | Physical NVMe (RAID0/RAID1) | Validators, full nodes |
+
+<Note>
+Cloud instances with local SSDs (not persistent disks) are critical for performance. Standard persistent disks (`pd-balanced`, `pd-ssd`) cannot sustain the IOPS required for Injective's block throughput. Local SSDs are ephemeral, but chain state is recoverable from a snapshot.
+</Note>
+
+## Networking and peering
+
+Nodes need a healthy set of peers to stay in sync. Insufficient peering, especially in regions far from the majority of the validator set, can cause intermittent sync lag.
+
+- Maintain **15-25 active peers** minimum. Check with `curl -s localhost:26657/net_info | jq '.result.n_peers'`
+- Configure **persistent peers** in `config.toml` to ensure your node always has known-good connections. See [Peer discovery](/infra/join-a-network#peer-discovery) for community-maintained peer lists
+- Nodes in regions with fewer Injective peers (e.g. Asia-Pacific) may need additional persistent peers to maintain consistent sync
+- Use **Premium Tier networking** on cloud providers for lower latency and more consistent routing

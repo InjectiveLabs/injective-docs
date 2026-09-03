@@ -1,150 +1,79 @@
 ---
-description: >-
-  Injective is a high-performance, interoperable layer-one blockchain for
-  building premier Web3 financial applications.
-  Learn what makes Injective different, how performant it is, frequently asked questions,
-  what you can do, how to get started, and where to get help.
-title: About Injective
-icon: flag-checkered
-updatedAt: "2026-03-30"
+title: Quickstart
+description: Get started building on or operating Injective
+icon: rocket
+updatedAt: "2026-09-02"
 ---
 
-## What is Injective?
-
-Injective is the **blockchain** built for **finance**.
-
-## What makes Injective different?
-
-Injective offers a fully on-chain orderbook exchange,
-MEV-resistant transaction ordering via frequent batch auctions (FBA),
-cross-chain interoperability with 110+ IBC networks and Ethereum,
-EVM smart contracts,
-and generative AI and agentic builder tools.
-
-Injective is the only blockchain where developers can use pre-built, customizable
-[modules](./developers-native/) to create dynamic applications that aren't possible on other networks.
-Combined with optimizations to its core architecture and enhanced cross-chain interoperability,
-Injective offers a high-performance network,
-ready to efficiently and securely bring the global financial system on-chain.
-
-## How performant is Injective?
-
-Injective is highly scalable too:
-
-  |  |  |
-  |---|---|
-  | Throughput, sustained | 25,000 tx/s |
-  | Throughput, theoretical upper bound | 600,000 tx/s |
-  | Block time | 650ms |
-  | Transaction finality | Instant, via custom Tendermint (CometBFT) |
-  | Standard transaction fee | ~ $0.0003 |
-  | Average transaction fee | &lt; $0.01 |
-
-<Info>
-  The above stats are accurate as of April 2026.
-  Note that they may change based on market movements and usage.
-</Info>
-
-## Frequently asked questions about Injective
-
-More questions about Injective?
-Check out the [FAQ page](/faq/).
-
-## What can you do on Injective?
-
-If you are a blockchain user, DeFi trader, infrastructure provider, developer,
-or simply interested in joining the community, we have you covered:
+Injective is a high-performance layer-one blockchain built for finance, with sub-second finality, built-in DeFi primitives, and native cross-chain interoperability.
 
 <Columns cols={2}>
   <Card
-    title="Are you a User?"
-    href="/defi/wallet/"
+    title="Run a Node"
+    href="/infra"
     arrow="true"
-    cta="Create a wallet"
-    icon="panel-left-close"
-    img="/img/start-hero.png">
-    Learn how to create a wallet
+    cta="Get started"
+    icon="server">
+    Set up a validator or full node, sync with mainnet, and operate and upgrade network infrastructure
   </Card>
   <Card
-    title="Do you want to use DeFi?"
-    href="/defi/"
+    title="Ecosystem"
+    href="/resources-index"
     arrow="true"
-    cta="Explore DeFi"
-    icon="panel-left-close"
-    img="/img/trader-hero.png">
-    Learn how to start trading on Injective
-  </Card>
-  <Card
-    title="Do you want to run infrastructure?"
-    href="/infra/"
-    arrow="true"
-    cta="Run a node"
-    icon="panel-left-close"
-    img="/img/validator-hero.png">
-    Learn how to run sentry and validator nodes
-  </Card>
-  <Card
-    title="Are you a developer?"
-    href="/developers/"
-    arrow="true"
-    cta="Start building"
-    icon="panel-left-close"
-    img="/img/dev-hero.png">
-    Learn how to build on Injective
-  </Card>
-  <Card
-    title="Need Help?"
-    href="/references#developer-support"
-    arrow="true"
-    cta="Get help"
-    icon="panel-left-close"
-    img="/img/explorer-hero.png">
-    Join the <a href="https://discord.gg/injective">Injective Discord</a>
-    <br />
-    Join the <a href="https://t.me/+qorn-J06fzA0YTZl">Developer Telegram</a>
+    cta="View resources"
+    icon="globe">
+    Hub, Explorer, Operator Portal, endpoints, snapshots, and other ecosystem tools
   </Card>
 </Columns>
 
-## How to get started on Injective?
-
-Welcome to your journey on Injective!
-Use the search functionality to find what you need.
-Our goal is to make the documentation self-sufficient!
-If you are unable to find what you are after, get in touch with us.
-
-<Columns cols={3}>
+<Columns cols={2}>
   <Card
-    title="Wallet"
-    href="/defi/wallet/"
+    title="Explore DeFi"
+    href="/defi"
     arrow="true"
-    cta="Click here"
-    icon="panel-left-close"
-    img="/img/wallet-hero-2.png">
-    Learn how to create a wallet on Injective and see the supported wallets on Injective
+    cta="DeFi on Injective"
+    icon="coins">
+    Learn about trading, derivatives, staking, and token standards on Injective's on-chain exchange
   </Card>
   <Card
-    title="Token Standards"
-    href="/defi/tokens/"
+    title="Develop DeFi Integrations"
+    href="/developers-defi"
     arrow="true"
-    cta="Click here"
-    icon="panel-left-close"
-    img="/img/token-hero.png">
-    Learn about different Token Standards on Injective
-  </Card>
-  <Card
-    title="Transactions"
-    href="/defi/transactions/"
-    arrow="true"
-    cta="Click here"
-    icon="panel-left-close"
-    img="/img/txs-hero.png">
-    Learn how to prepare, sign and submit transactions on Injective
+    cta="Integrator guide"
+    icon="chart-line">
+    Build products on top of Injective's DeFi APIs, launch markets, and integrate the exchange module
   </Card>
 </Columns>
 
-## Need help building on Injective or using Injective?
+---
 
-Reach out to us on Discord or Telegram:
+## Network at a glance
 
-* Join the [Injective Discord server](https://discord.gg/injective), and find the relevant channel.
-* Join the [Injective Developer Telegram channel](https://t.me/+8Y_0HOFLhnRlZDU9).
+| | Mainnet | Testnet |
+|---|---|---|
+| **Chain ID** | `injective-1` | `injective-888` |
+| **Block time** | ~650ms | ~650ms |
+| **Binary** | [`injectived`](https://github.com/InjectiveFoundation/injective-core/releases/latest) | [`injectived`](https://github.com/InjectiveLabs/testnet/releases) |
+| **Snapshots** | [Chain Portal](https://portal.injective.network/snapshots) | [Polkachu](https://polkachu.com/testnets/injective/snapshots) |
+| **Endpoints** | [Chain Portal](https://portal.injective.network/rpcs) | [Public Endpoints](/infra/public-endpoints) |
+
+## Learn more
+
+<Columns cols={2}>
+  <Card
+    title="About Injective"
+    href="/about"
+    arrow="true"
+    cta="Read more"
+    icon="flag-checkered">
+    What makes Injective different, performance benchmarks, and frequently asked questions
+  </Card>
+  <Card
+    title="Learn"
+    href="https://injective.com/dev"
+    arrow="true"
+    cta="Developer portal"
+    icon="graduation-cap">
+    Tutorials, guides, and resources on the Injective developer learning portal
+  </Card>
+</Columns>
