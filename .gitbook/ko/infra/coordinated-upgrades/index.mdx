@@ -310,13 +310,23 @@ INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
 panic: Tendermint state.AppHash does not match AppHash after replay
 ```
 
-**원인:** 애플리케이션 상태가 합의 상태에서 벗어났습니다. 불완전한 업그레이드, 블록 실행 중 크래시, 또는 손상된 데이터베이스로 인해 발생할 수 있습니다.
+**원인:** 애플리케이션 상태가 합의 상태에서 벗어났습니다. 불완전한 업그레이드, 블록 실행 중 크래시, 손상된 데이터베이스, 또는 state sync 후 누락된 `wasm/` 디렉터리(아래 참조)로 인해 발생할 수 있습니다.
 
 **해결 방법:**
 
 1. 롤백 시도: `injectived rollback`
 2. 롤백이 실패하거나 오류가 지속되는 경우: 스냅샷에서 복구
 3. 복구 후에는 항상 `priv_validator_state.json`을 복원
+
+---
+
+### CometBFT state sync 후 AppHash 불일치
+
+**증상:** CometBFT state sync 복원이 성공한 직후, 바로 첫 번째 블록에서 AppHash 오류가 발생합니다.
+
+**원인:** CometBFT state sync(`config.toml`의 `[statesync]`에 구성된 P2P 프로토콜)는 IAVL 상태 트리를 복원하지만 컴파일된 CosmWasm 컨트랙트 바이트코드가 들어 있는 `wasm/` 디렉터리는 복원하지 **않습니다**. 이 파일이 없으면 로컬에서 계산된 app hash가 네트워크의 값과 일치하지 않습니다.
+
+**해결 방법:** state sync 대신 수동 스냅샷 복원을 사용하세요. Injective의 공식 스냅샷에는 `wasm/` 디렉터리가 포함되어 있습니다. state sync를 반드시 사용해야 하는 경우, 신뢰할 수 있는 소스에서 `wasm/` 디렉터리를 확보하여 노드를 시작하기 전에 `~/.injectived/data/wasm/`에 배치하세요. state sync와 스냅샷 복원의 차이점에 대한 자세한 내용은 [네트워크 참여 — 동기화 방법](/ko/infra/join-a-network)을 참조하세요.
 
 ---
 
@@ -403,7 +413,8 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 - [ ] 노드 구성 또는 CLI 플래그에 `--halt-height=<target_height>` 설정
 - [ ] Cosmovisor 사용 시: 올바른 업그레이드 디렉터리에 새 바이너리 배치
 - [ ] `priv_validator_state.json` 백업
-- [ ] 롤백이 필요할 경우에 대비해 스냅샷 제공자 파악
+- [ ] 롤백이 필요할 경우에 대비해 스냅샷 제공자 파악 ([스냅샷 - Chain Portal](https://portal.injective.network/snapshots) 참조)
+- [ ] 복구에 CometBFT state sync를 사용할 계획이라면: `~/.injectived/data/wasm/`의 사본을 확보해 두세요. state sync는 이 디렉터리를 복원하지 않으며, 이 디렉터리가 없으면 AppHash 불일치가 발생합니다
 - [ ] 중단 높이까지의 체인 진행 상황 모니터링
 
 ### 업그레이드 높이에서
@@ -499,38 +510,18 @@ grep db_backend ~/.injectived/config/config.toml
 
 ## 스냅샷 리소스
 
-### Injective 제공 스냅샷
+<Callout icon="info" color="#22C55E" iconType="regular">
+**[스냅샷 - Chain Portal](https://portal.injective.network/snapshots)**
 
-Injective는 두 개의 리전에서 프루닝된 메인넷 스냅샷을 유지 관리합니다. 최신 사용 가능 높이와 다운로드 URL은 상태 엔드포인트를 확인하세요:
+Injective 제공 프루닝 스냅샷(EU 및 Asia 리전), 커뮤니티 스냅샷 제공자, 아카이벌 세그먼트 데이터의 다운로드 링크와 사용 지침을 제공합니다. Chain Portal은 모든 스냅샷 리소스의 표준이자 최신 소스입니다.
+</Callout>
 
-| 리전 | 상태 | 다운로드 |
-|---|---|---|
-| **EU (OVH)** | [status.json](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/status.json) | `http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/` |
-| **Asia (GCS)** | [status.json](https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json) | `https://storage.googleapis.com/injective-mainnet-snapshots-asia/` |
+아카이벌 세그먼트 스냅샷과 세그먼트 노드 플릿 설정은 [아카이벌 설정](/ko/infra/archival-setup) 페이지를 참조하세요.
 
-최신 스냅샷을 다운로드하려면 상태 엔드포인트에서 현재 파일 이름을 확인하세요:
-
-```bash
-# Check latest available snapshot (Asia example)
-curl -s https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json | jq
-
-# Download the snapshot
-wget <url from status.json>
-
-# Extract
-lz4 -d <snapshot_file>.tar.lz4 | tar xf - -C ~/.injectived/data/
-```
-
-조정 보안 업그레이드 중에는 Injective 팀이 검증된 검증자 채널에서 긴급 스냅샷을 공유할 수도 있습니다. 아카이벌 세그먼트 스냅샷은 [아카이벌 설정](/ko/infra/archival-setup) 페이지를 참조하세요.
-
-### 커뮤니티 스냅샷 제공자
-
-- [Polkachu Injective Snapshots](https://polkachu.com/tendermint_snapshots/injective) (일반적으로 goleveldb, 프루닝)
-- [HighStakes Injective Snapshots](https://tools.highstakes.ch/snapshots/injective)
-- 인시던트 중에는 커뮤니티 검증자들이 검증자 채널에서 긴급 스냅샷을 공유할 수 있음
+조정 보안 업그레이드 중에는 Injective 팀이 검증된 검증자 채널에서 긴급 스냅샷을 공유할 수도 있습니다.
 
 <Warning>
-**데이터베이스 백엔드 호환성:** 스냅샷은 백엔드 종속적입니다. goleveldb 스냅샷은 pebbledb로 구성된 노드에서 작동하지 않으며, 그 반대도 마찬가지입니다. 다운로드하기 전에 구성을 확인하세요:
+**데이터베이스 백엔드 호환성:** 스냅샷은 백엔드 종속적입니다. goleveldb 스냅샷은 pebbledb로 구성된 노드에서 작동하지 않으며, 그 반대도 마찬가지입니다. Injective의 공식 스냅샷은 goleveldb를 사용합니다. PebbleDB 스냅샷은 유지 관리되지 않습니다. 다운로드하기 전에 구성을 확인하세요:
 
 ```bash
 grep db_backend ~/.injectived/config/config.toml

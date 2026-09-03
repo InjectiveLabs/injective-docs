@@ -1,33 +1,369 @@
 ---
 title: 네트워크 참여
-updatedAt: "2026-02-26"
+updatedAt: "2026-09-02"
 ---
 
-이 가이드는 로컬에서 독립형 네트워크를 설정하고 메인넷 또는 테스트넷에서 노드를 실행하는 과정을 안내합니다.
-
-각 네트워크의 하드웨어 요구 사항도 해당 탭에서 확인할 수 있습니다.
+메인넷, 테스트넷 또는 로컬 개발 네트워크에서 Injective 노드를 설정하고 동기화하세요.
 
 <Tabs>
+<Tab title="메인넷">
+
+Injective 메인넷의 chain-id는 `injective-1`입니다.
+
+<Columns cols={3}>
+  <Card
+    title="동기화 옵션"
+    href="#동기화-옵션"
+    arrow="true"
+    cta="섹션으로 이동"
+    icon="panel-left-close">
+    스냅샷 복원, state sync 및 block sync
+  </Card>
+  <Card
+    title="노드 소프트웨어"
+    href="#노드-소프트웨어"
+    arrow="true"
+    cta="섹션으로 이동"
+    icon="panel-left-close">
+    injectived 설치, 구성 및 실행
+  </Card>
+  <Card
+    title="하드웨어"
+    href="#하드웨어"
+    arrow="true"
+    cta="섹션으로 이동"
+    icon="panel-left-close">
+    최소 및 권장 사양
+  </Card>
+</Columns>
+
+---
+
+### 동기화 옵션
+
+노드를 체인 데이터로 부트스트랩하는 방법을 선택하세요. 대부분의 운영자에게는 스냅샷 복원이 노드를 실행하는 가장 빠른 방법입니다.
+
+**옵션 1. 스냅샷 복원 (권장)**
+
+사전 빌드된 스냅샷을 다운로드하여 데이터 디렉터리에 압축을 해제합니다. 새 노드를 동기화하는 가장 빠르고 신뢰할 수 있는 방법입니다.
+
+Injective는 공식 프루닝 스냅샷(goleveldb, 약 2-3 GB)을 제공하며, 커뮤니티도 추가 옵션을 유지 관리합니다. 다운로드 링크, 사용 지침, 커뮤니티 제공자는 [Chain Portal의 스냅샷 페이지](https://portal.injective.network/snapshots)를 참조하세요.
+
+<Callout icon="warning" color="#FFA500" iconType="regular">
+**검증자:** 스냅샷 복구 중에는 반드시 `priv_validator_state.json`을 백업하고 복원해야 합니다. 전체 절차는 [검증자 문제 해결 가이드](/ko/infra/coordinated-upgrades#스냅샷에서-복구)를 참조하세요.
+</Callout>
+
+```bash
+# 예시: 다운로드 및 압축 해제
+sudo systemctl stop injectived
+rm -rf ~/.injectived/data
+wget -O snapshot.lz4 <SNAPSHOT_URL>
+lz4 -d snapshot.lz4 | tar xf - -C ~/.injectived/
+sudo systemctl start injectived
+```
+
+**옵션 2. State Sync (CometBFT P2P)**
+
+State sync는 모든 과거 블록을 재생하는 대신 CometBFT P2P 레이어를 통해 피어로부터 상태 머신 스냅샷을 다운로드하여 노드를 부트스트랩합니다. 신뢰할 수 있는 RPC 서버 두 개가 필요합니다. 사용 가능한 엔드포인트는 [Chain Portal의 RPC 제공자 페이지](https://portal.injective.network/rpcs)를 참조하세요. `config.toml`의 `[statesync]` 아래에서 구성합니다:
+
+```toml
+[statesync]
+enable = true
+rpc_servers = "<rpc_server_1>,<rpc_server_2>"
+trust_height = <recent_height>
+trust_hash = "<block_hash_at_trust_height>"
+trust_period = "168h0m0s"
+```
+
+trust height와 hash를 얻으려면:
+
+```bash
+# 신뢰할 수 있는 RPC에서 최근 높이와 해당 해시 가져오기
+LATEST=$(curl -s https://sentry.tm.injective.network/block | jq -r '.result.block.header.height')
+TRUST_HEIGHT=$((LATEST - 2000))
+TRUST_HASH=$(curl -s "https://sentry.tm.injective.network/block?height=$TRUST_HEIGHT" | jq -r '.result.block_id.hash')
+echo "trust_height = $TRUST_HEIGHT"
+echo "trust_hash = \"$TRUST_HASH\""
+```
+
+<Warning>
+**State sync는 `wasm/` 디렉터리를 복원하지 않습니다.** CometBFT state sync는 IAVL 상태 트리를 복원하지만 `~/.injectived/data/wasm/`에 저장된 CosmWasm 컴파일된 컨트랙트 바이트코드는 복원하지 않습니다. 이 파일이 없으면 동기화 완료 직후 노드에서 **AppHash 불일치**가 발생합니다.
+
+이 문제가 발생하면 다음 중 하나를 수행하세요:
+1. **스냅샷 복원**(옵션 1)으로 전환하세요. Injective의 공식 스냅샷에는 `wasm/` 디렉터리가 포함되어 있습니다
+2. 신뢰할 수 있는 소스에서 `wasm/` 디렉터리를 확보하여 노드를 시작하기 전에 `~/.injectived/data/wasm/`에 배치하세요
+
+**PebbleDB 사용자:** Injective의 공식 스냅샷은 goleveldb만 사용합니다. PebbleDB 스냅샷은 유지 관리되지 않습니다. PebbleDB를 실행 중이고 스냅샷 복원을 사용할 수 없는 경우, state sync를 사용할 때 `wasm/` 디렉터리를 별도로 확보해야 합니다.
+</Warning>
+
+**옵션 3. Block Sync (전체 재생)**
+
+기본 동작입니다. 노드가 피어로부터 모든 블록을 다운로드하고 재생합니다. 가장 느린 방법이지만 외부 스냅샷이 필요하지 않습니다. 최근 스냅샷 높이에서 동기화하는 경우가 아니라면 메인넷에서는 실용적이지 않습니다.
+
+**동기화 방법 비교:**
+
+| 방법 | 속도 | wasm 포함 여부 | 참고 |
+|---|---|---|---|
+| **스냅샷 복원** | 빠름 (수 분) | 예 (공식 스냅샷) | 대부분의 운영자에게 권장 |
+| **State Sync** | 빠름 (수 분) | **아니요** - 수동 wasm 복원 없이는 AppHash 불일치 발생 | `config.toml`의 `[statesync]`에서 구성 |
+| **Block Sync** | 느림 (수일) | 해당 없음 (실행을 통해 구축) | 기본값, 제네시스부터 메인넷 동기화에는 실용적이지 않음 |
+
+#### 피어 검색
+
+노드가 네트워크와 동기화하려면 피어가 필요합니다. `~/.injectived/config/config.toml`의 `[p2p]` 섹션에 시드 또는 persistent peers를 추가하세요. 커뮤니티 제공자들이 최신 시드 및 피어 목록을 유지 관리합니다:
+
+- [Polkachu Injective Seeds](https://polkachu.com/seeds/injective)
+- [Decentrio Injective Infrastructure](https://decentrio.ventures/infrastructure/injective) (시드, 피어, 주소록)
+
+더 빠른 피어 검색을 위해 사전 빌드된 주소록을 다운로드할 수도 있습니다:
+
+```bash
+# Decentrio 주소록
+wget -O ~/.injectived/config/addrbook.json \
+  https://backend.decentrio.ventures/snapshots/injective/addrbook.json
+```
+
+---
+
+### 노드 소프트웨어
+
+#### `injectived` 설치
+
+각 [Injective core 릴리스](https://github.com/InjectiveFoundation/injective-core/releases/latest)에는 `injectived`, [`peggo`](/ko/infra/validator-mainnet/peggo)(Peggy 브릿지 오케스트레이터), `libwasmvm`이 하나의 zip에 포함되어 있습니다. 검증자는 노드와 함께 `peggo`를 실행해야 합니다. 검증자가 아닌 노드 운영자는 `injectived`만 필요합니다.
+
+```bash
+# 최신 릴리스 다운로드
+wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib
+
+# 검증자는 peggo도 필요합니다
+sudo mv peggo /usr/bin
+```
+
+#### 새 Injective 노드 초기화
+
+Injective 노드를 실행하기 전에 체인과 제네시스 파일을 초기화합니다:
+
+```bash
+# <moniker> 인수는 노드의 사용자 지정 사용자 이름입니다. 사람이 읽을 수 있어야 합니다.
+export MONIKER=<moniker>
+injectived init $MONIKER --chain-id injective-1
+```
+
+`init` 명령을 실행하면 `~/.injectived`에 `injectived` 기본 구성 파일이 생성됩니다.
+
+#### 메인넷 참여를 위한 구성 준비
+
+메인넷 제네시스 파일을 다운로드합니다. Injective는 공식 스냅샷과 함께 이 파일을 제공합니다:
+
+```bash
+# 메인넷 제네시스 파일 다운로드
+wget -O ~/.injectived/config/genesis.json \
+  http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/genesis.json
+```
+
+체크섬을 확인합니다:
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+# 예상 값: 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
+```
+
+피어 검색을 위한 시드를 구성하고(동기화 옵션 섹션의 [피어 검색](#피어-검색) 참조) `~/.injectived/config/config.toml`에서 `timeout_commit`을 `300ms`로 설정하세요.
+
+#### `app.toml` 및 `config.toml`을 사용한 노드 구성
+
+`~/.injectived/config` 내에 두 개의 구성 파일이 자동으로 생성됩니다:
+
+* `config.toml`: 합의 레이어(CometBFT)를 구성합니다. [합의 레이어 문서에서 자세히 알아보기](https://docs.cometbft.com/v0.38/core/configuration).
+* `app.toml`: 상태 프루닝 전략, 텔레메트리, gRPC 및 REST 서버 구성, state sync 등
+  노드의 애플리케이션 및 실행 레이어를 구성합니다.
+
+#### `injectived`용 `systemd` 서비스 구성 (선택 사항)
+
+`/etc/systemd/system/injectived.service`에서 구성을 편집합니다:
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+systemd 서비스 시작 및 재시작:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# 시스템 부팅 시 시작 활성화
+sudo systemctl enable injectived
+
+# 로그 확인
+journalctl -u injectived -f
+```
+
+스냅샷 데이터가 올바른 디렉터리에 로드되기 전에 서비스를 중지하고 이후에 시작해야 합니다.
+
+```bash
+# 노드 중지
+sudo systemctl stop injectived
+
+# 노드 시작
+sudo systemctl start injectived
+```
+
+---
+
+### 하드웨어
+
+노드 운영자는 최적의 성능을 달성하기 위해 베어메탈 서버를 배포해야 합니다.
+검증자 노드는 높은 가동 시간을 보장하기 위해 권장 하드웨어 사양,
+특히 CPU 요구 사항을 충족해야 합니다.
+
+|       _최소_       |    _권장_   |
+| :-------------------: | :-------------------: |
+|    RAM 메모리 128GB   |    RAM 메모리 128GB   |
+|      CPU 12 코어     |      CPU 16 코어     |
+| CPU 기본 클럭 3.7GHz | CPU 기본 클럭 4.2GHz |
+|    스토리지 2TB NVMe   |    스토리지 2TB NVMe   |
+|     네트워크 1Gbps+    |     네트워크 1Gbps+    |
+
+---
+
+**지원**
+
+추가 질문이 있으시면 [Discord](https://discord.gg/injective), [Telegram](https://t.me/joininjective) 또는 [이메일](mailto:contact@injectivelabs.org)을 통해 언제든지 Injective 팀에 문의하세요.
+</Tab>
+
+<Tab title="테스트넷">
+#### 하드웨어 사양
+
+노드 운영자는 최적의 성능을 달성하기 위해 베어메탈 서버를 배포해야 합니다. 또한 검증자 노드는 높은 가동 시간을 보장하기 위해 권장 하드웨어 사양, 특히 CPU 요구 사항을 충족해야 합니다.
+
+|       _최소_       |    _권장_   |
+| :-------------------: | :-------------------: |
+|    RAM 메모리 128GB   |    RAM 메모리 128GB   |
+|      CPU 12 코어     |      CPU 16 코어     |
+| CPU 기본 클럭 3.7GHz | CPU 기본 클럭 4.2GHz |
+|    스토리지 2TB NVMe   |    스토리지 2TB NVMe   |
+|     네트워크 1Gbps+    |     네트워크 1Gbps+    |
+
+#### `injectived` 및 `peggo` 설치
+
+가장 최근 릴리스는 [Injective 릴리스 저장소](https://github.com/InjectiveLabs/testnet/releases)를 참조하세요. 검증자가 아닌 노드 운영자는 `peggo`를 설치할 필요가 없습니다.
+
+```bash
+wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv peggo /usr/bin
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib 
+```
+
+#### 새 Injective 체인 노드 초기화
+
+Injective 노드를 실행하기 전에 체인과 노드의 제네시스 파일을 초기화해야 합니다:
+
+```bash
+# <moniker> 인수는 노드의 사용자 지정 사용자 이름입니다. 사람이 읽을 수 있어야 합니다.
+export MONIKER=<moniker>
+# Injective 테스트넷의 chain-id는 "injective-888"입니다
+injectived init $MONIKER --chain-id injective-888
+```
+
+`init` 명령을 실행하면 `~/.injectived`에 `injectived` 기본 구성 파일이 생성됩니다.
+
+#### 테스트넷 참여를 위한 구성 준비
+
+이제 기본 구성을 테스트넷의 제네시스 파일과 애플리케이션 구성 파일로 업데이트하고, 시드 노드로 영구 피어를 구성해야 합니다.
+
+```bash
+git clone https://github.com/InjectiveLabs/testnet.git
+
+# 제네시스 파일을 config 디렉터리에 복사
+aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
+mv genesis.json ~/.injectived/config/
+
+# config 파일을 config 디렉터리에 복사
+cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
+cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
+```
+
+제네시스 체크섬도 확인할 수 있습니다 - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+```
+
+#### `injectived`용 `systemd` 서비스 구성
+
+`/etc/systemd/system/injectived.service`에서 구성을 편집합니다:
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+systemd 서비스 시작 및 재시작
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# 시스템 부팅 시 시작 활성화
+sudo systemctl enable injectived
+
+# 로그 확인
+journalctl -u injectived -f
+```
+
+#### 네트워크와 동기화
+
+스냅샷을 다운로드하고 네트워크와 동기화하려면 [Polkachu Injective 테스트넷 노드 스냅샷](https://polkachu.com/testnets/injective/snapshots)을 참조하세요.
+
+**지원**
+
+추가 질문이 있으시면 [Discord](https://discord.gg/injective), [Telegram](https://t.me/joininjective) 또는 [이메일](mailto:contact@injectivelabs.org)을 통해 Injective 팀에 문의하세요.
+</Tab>
+
 <Tab title="로컬 네트워크">
 로컬 노드를 쉽게 설정하려면 [injective-core](https://github.com/InjectiveFoundation/injective-core) 저장소에서 `setup.sh` 스크립트를 다운로드하고 실행하세요. 설치된 `injectived` 버전에 맞는 스크립트 버전을 사용하세요.
 
 ```bash
 # 버전 태그를 설치된 injectived 바이너리 버전으로 교체하세요
+# 예를 들어, v1.18.3용 스크립트를 사용하려면:
 wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.18.3/setup.sh
 chmod +x ./setup.sh # 스크립트를 실행 가능하게 만들기
 ./setup.sh
 ```
 
-예를 들어, v1.17.2용 스크립트를 사용하려면:
-
-```bash
-wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.17.2/setup.sh
-chmod +x ./setup.sh
-./setup.sh
-```
-
 <Callout icon="warning" color="#FFA500" iconType="regular">
-레거시 [injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases) 저장소의 `setup.sh` 스크립트는 더 이상 사용되지 않으며 `injectived` v1.14.1에서만 호환됩니다. 항상 체인 버전에 맞는 [InjectiveFoundation/injective-core](https://github.com/InjectiveFoundation/injective-core) 저장소의 스크립트를 사용하세요.
+레거시 [injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases) 저장소의 `setup.sh` 스크립트는 더 이상 사용되지 않으며 `injectived` v1.14.1 이하에서만 호환됩니다. 항상 체인 버전에 맞는 [InjectiveFoundation/injective-core](https://github.com/InjectiveFoundation/injective-core) 저장소의 스크립트를 사용하세요.
 </Callout>
 
 다음을 실행하여 노드를 시작합니다:
@@ -151,241 +487,5 @@ injectived start # 이 명령을 실행하면 블록이 들어오기 시작합�
 ```
 
 이 명령을 사용하면 단일 노드를 실행할 수 있으며, 이것만으로도 노드를 통해 체인과 상호작용하기에 충분하지만 여러 노드를 동시에 실행하여 노드 간의 합의가 어떻게 이루어지는지 확인할 수도 있습니다.
-</Tab>
-
-<Tab title="테스트넷 네트워크">
-#### 하드웨어 사양
-
-노드 운영자는 최적의 성능을 달성하기 위해 베어메탈 서버를 배포해야 합니다. 또한 검증자 노드는 높은 가동 시간을 보장하기 위해 권장 하드웨어 사양, 특히 CPU 요구 사항을 충족해야 합니다.
-
-|       _최소_       |    _권장_   |
-| :-------------------: | :-------------------: |
-|    RAM 메모리 128GB   |    RAM 메모리 128GB   |
-|      CPU 12 코어     |      CPU 16 코어     |
-| CPU 기본 클럭 3.7GHz | CPU 기본 클럭 4.2GHz |
-|    스토리지 2TB NVMe   |    스토리지 2TB NVMe   |
-|     네트워크 1Gbps+    |     네트워크 1Gbps+    |
-
-#### `injectived` 및 `peggo` 설치
-
-가장 최근 릴리스는 [Injective 릴리스 저장소](https://github.com/InjectiveLabs/testnet/releases)를 참조하세요. 검증자가 아닌 노드 운영자는 `peggo`를 설치할 필요가 없습니다.
-
-```bash
-wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
-
-#### 새 Injective 체인 노드 초기화
-
-Injective 노드를 실행하기 전에 체인과 노드의 제네시스 파일을 초기화해야 합니다:
-
-```bash
-# <moniker> 인수는 노드의 사용자 지정 사용자 이름입니다. 사람이 읽을 수 있어야 합니다.
-export MONIKER=<moniker>
-# Injective 테스트넷의 chain-id는 "injective-888"입니다
-injectived init $MONIKER --chain-id injective-888
-```
-
-`init` 명령을 실행하면 `~/.injectived`에 `injectived` 기본 구성 파일이 생성됩니다.
-
-#### 테스트넷 참여를 위한 구성 준비
-
-이제 기본 구성을 테스트넷의 제네시스 파일과 애플리케이션 구성 파일로 업데이트하고, 시드 노드로 영구 피어를 구성해야 합니다.
-
-```bash
-git clone https://github.com/InjectiveLabs/testnet.git
-
-# 제네시스 파일을 config 디렉터리에 복사
-aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
-mv genesis.json ~/.injectived/config/
-
-# config 파일을 config 디렉터리에 복사
-cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
-cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
-```
-
-제네시스 체크섬도 확인할 수 있습니다 - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
-
-```bash
-sha256sum ~/.injectived/config/genesis.json
-```
-
-#### `injectived`용 `systemd` 서비스 구성
-
-`/etc/systemd/system/injectived.service`에서 구성을 편집합니다:
-
-```bash
-[Unit]
-  Description=injectived
-
-[Service]
-  WorkingDirectory=/usr/bin
-  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
-  Type=simple
-  Restart=always
-  RestartSec=5
-  User=root
-
-[Install]
-  WantedBy=multi-user.target
-```
-
-systemd 서비스 시작 및 재시작
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart injectived
-sudo systemctl status injectived
-
-# 시스템 부팅 시 시작 활성화
-sudo systemctl enable injectived
-
-# 로그 확인
-journalctl -u injectived -f
-```
-
-#### 네트워크와 동기화
-
-스냅샷을 다운로드하고 네트워크와 동기화하려면 [Polkachu Injective 테스트넷 노드 스냅샷](https://polkachu.com/testnets/injective/snapshots)을 참조하세요.
-
-**지원**
-
-추가 질문이 있으시면 [Discord](https://discord.gg/injective), [Telegram](https://t.me/joininjective) 또는 [이메일](mailto:contact@injectivelabs.org)을 통해 Injective 팀에 문의하세요.
-</Tab>
-
-<Tab title="메인넷 네트워크">
-#### 하드웨어 사양
-
-노드 운영자는 최적의 성능을 달성하기 위해 베어메탈 서버를 배포해야 합니다. 또한 검증자 노드는 높은 가동 시간을 보장하기 위해 권장 하드웨어 사양, 특히 CPU 요구 사항을 충족해야 합니다.
-
-|       _최소_       |    _권장_   |
-| :-------------------: | :-------------------: |
-|    RAM 메모리 128GB   |    RAM 메모리 128GB   |
-|      CPU 12 코어     |      CPU 16 코어     |
-| CPU 기본 클럭 3.7GHz | CPU 기본 클럭 4.2GHz |
-|    스토리지 2TB NVMe   |    스토리지 2TB NVMe   |
-|     네트워크 1Gbps+    |     네트워크 1Gbps+    |
-
-#### `injectived` 및 `peggo` 설치
-
-가장 최근 릴리스는 [Injective core releases](https://github.com/InjectiveFoundation/injective-core/releases)를 참조하세요. 검증자가 아닌 노드 운영자는 `peggo`를 설치할 필요가 없습니다.
-
-```bash
-# https://github.com/InjectiveFoundation/injective-core/releases 에서 최신 릴리스 URL로 교체하세요
-wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
-
-#### 새 Injective 노드 초기화
-
-Injective 노드를 실행하기 전에 체인과 노드의 제네시스 파일을 초기화해야 합니다:
-
-```bash
-# <moniker> 인수는 노드의 사용자 지정 사용자 이름입니다. 사람이 읽을 수 있어야 합니다.
-export MONIKER=<moniker>
-# Injective 메인넷의 chain-id는 "injective-1"입니다
-injectived init $MONIKER --chain-id injective-1
-```
-
-`init` 명령을 실행하면 `~/.injectived`에 `injectived` 기본 구성 파일이 생성됩니다.
-
-#### 메인넷 참여를 위한 구성 준비
-
-이제 기본 구성을 메인넷의 제네시스 파일과 애플리케이션 구성 파일로 업데이트하고, 시드 노드로 영구 피어를 구성해야 합니다.
-
-```bash
-git clone https://github.com/InjectiveLabs/mainnet-config
-
-# 제네시스 파일을 config 디렉터리에 복사
-cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
-
-# config 파일을 config 디렉터리에 복사
-cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
-```
-
-제네시스 체크섬도 확인할 수 있습니다 - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
-
-```bash
-sha256sum ~/.injectived/config/genesis.json
-```
-
-그런 다음 `~/.injectived/config/config.toml`의 `seeds` 필드를 `mainnet-config/10001/seeds.txt`의 내용으로 업데이트하고 `timeout_commit`을 `300ms`로 업데이트합니다.
-
-```bash
-cat mainnet-config/10001/seeds.txt
-nano ~/.injectived/config/config.toml
-```
-
-#### `injectived`용 `systemd` 서비스 구성
-
-`/etc/systemd/system/injectived.service`에서 구성을 편집합니다:
-
-```bash
-[Unit]
-  Description=injectived
-
-[Service]
-  WorkingDirectory=/usr/bin
-  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
-  Type=simple
-  Restart=always
-  RestartSec=5
-  User=root
-
-[Install]
-  WantedBy=multi-user.target
-```
-
-systemd 서비스 시작 및 재시작:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart injectived
-sudo systemctl status injectived
-
-# 시스템 부팅 시 시작 활성화
-sudo systemctl enable injectived
-
-# 로그 확인
-journalctl -u injectived -f
-```
-
-스냅샷 데이터가 올바른 디렉터리에 로드되기 전에 서비스를 중지하고 이후에 시작해야 합니다.
-
-```bash
-# 노드 중지
-sudo systemctl stop injectived
-
-# 노드 시작
-sudo systemctl start injectived
-```
-
-#### 네트워크와 동기화
-
-**옵션 1. State-Sync**
-
-_곧 추가 예정_
-
-**옵션 2. 스냅샷**
-
-**정리됨**
-
-1. [Polkachu](https://polkachu.com/tendermint_snapshots/injective).
-2. [HighStakes](https://tools.highstakes.ch/files/injective.tar.gz).
-3. [Imperator](https://www.imperator.co/services/chain-services/mainnets/injective).
-4. [Bware Labs](https://bwarelabs.com/snapshots).
-5. [AutoStake](https://autostake.com/networks/injective/#validator).
-
-Injective `mainnet-config seeds.txt` 목록이 작동하지 않는 경우(노드가 블록 동기화에 실패), ChainLayer, Polkachu 및 Autostake는 피어 목록(`config.toml`의 `persistent_peers` 필드에 사용 가능) 또는 주소록(더 빠른 피어 검색용)을 유지 관리합니다.
-
-**지원**
-
-추가 질문이 있으시면 [Discord](https://discord.gg/injective), [Telegram](https://t.me/joininjective) 또는 [이메일](mailto:contact@injectivelabs.org)을 통해 Injective 팀에 문의하세요.
 </Tab>
 </Tabs>

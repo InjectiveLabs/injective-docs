@@ -1,13 +1,37 @@
 ---
-title: ノードのアップグレード
+title: 概要
+updatedAt: "2026-09-02"
 ---
+
+<Columns cols={2}>
+  <Card
+    title="実施中のアップグレード"
+    href="https://chain-portal.injective.network/upgrades"
+    arrow="true"
+    cta="Operator Portal"
+    icon="arrow-up">
+    実施中および今後のネットワークアップグレード、ガバナンスプロポーザル、実施スケジュールを追跡する
+  </Card>
+  <Card
+    title="リリースバイナリ"
+    href="https://github.com/InjectiveFoundation/injective-core/releases"
+    arrow="true"
+    cta="GitHub Releases"
+    icon="code-branch">
+    InjectiveFoundation/injective-coreから最新および過去のinjectivedとpeggoのバイナリをダウンロードする
+  </Card>
+</Columns>
+
+<Callout icon="warning" color="#FF8C00" iconType="regular">
+**バリデーターの皆様へ：** アップグレードの前に、[バリデーターのトラブルシューティングガイド](/jp/infra/coordinated-upgrades)を読んで、重要な安全ルール、よくある障害パターン、復旧手順を確認してください。アップグレード中の`priv_validator_state.json`の取り扱いを誤ると、二重署名や恒久的なトゥームストーンにつながる可能性があります。
+
+認証済みバリデーターチャンネルのメンバーでない場合は、[Discord](https://discord.gg/injective)でInjectiveチームに連絡して追加してもらってください。アップグレードの調整、緊急スナップショット、インシデントに関する連絡はこれらのチャンネルで行われます。
+</Callout>
 
 ### チェーンアップグレード
 
 Injectiveは定期的にソフトウェアアップグレードを実施します。
 チェーンアップグレードのガバナンスプロポーザルが可決されると、すべてのノードが自動的に停止（パニック）するブロック高が指定されます。この時点で、アップグレードされた`injectived`バイナリをインストールし、ノードを再起動することができます。
-
-最新および過去のチェーンリリースについては[InjectiveLabs/injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases/releases)を参照してください。
 
 ### ノードアップグレードの手順
 
@@ -18,6 +42,10 @@ Injectiveは定期的にソフトウェアアップグレードを実施しま�
 3. 古いバイナリを削除し、新しいリリースバイナリをインストールします。
 4. ノードを再起動します。
 
+<Note>
+アップグレードが失敗した場合やセントリーノードが破損した場合は、[スナップショットページ](https://chain-portal.injective.network/snapshots)で、新しいスナップショットからノードを再同期するための選択肢を確認してください。
+</Note>
+
 ### Cosmovisorによるアップグレード
 
 チェーンアップグレードを管理するには、[Cosmovisor](./cosmovisor/)を使用してください。
@@ -26,4 +54,4 @@ Injectiveは定期的にソフトウェアアップグレードを実施しま�
 
 Injectiveのstateが増大すると、ディスク容量が不足する場合があります。新しいスナップショットをダウンロードして定期的にチェーンデータをプルーニングすることを推奨します。ディスクへの負荷だけでなく、チェーンstateが小さいほどノードのパフォーマンスが向上します。
 
-Injectiveのバリデーターは毎日軽量スナップショットを取得しており、チェーンstateのクリーンアップに使用できます。チェーンstateは1日あたり約10〜15 GB増加します。これらのスナップショットは通常約2〜3 GBです。300〜400 GBごとにチェーンデータをプルーニングすることを推奨します。スナップショットへのリンクとスナップショットの適用/ノードの同期方法については、[ネットワークへの参加](./join-a-network/)を参照してください。
+Injectiveのバリデーターは毎日軽量スナップショットを取得しており、チェーンstateのクリーンアップに使用できます。チェーンstateは1日あたり約10〜15 GB増加します。これらのスナップショットは通常約2〜3 GBです。300〜400 GBごとにチェーンデータをプルーニングすることを推奨します。スナップショットのダウンロードリンクと使用手順については、[Chain Portalのスナップショットページ](https://portal.injective.network/snapshots)を参照してください。ノードの同期方法については、[ネットワークへの参加](./join-a-network/)を参照してください。

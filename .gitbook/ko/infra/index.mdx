@@ -1,9 +1,71 @@
 ---
-description: >-
-  이 섹션은 노드 운영자 및 검증자가 센트리/검증자 노드를 실행, 업그레이드 및 유지 관리하는 데 도움을 제공합니다.
 title: 개요
-updatedAt: "2026-02-26"
+description: >-
+  Injective 검증자 노드, 센트리 노드 및 지원 인프라를 실행, 업그레이드 및 유지 관리하세요.
+updatedAt: "2026-09-02"
 ---
 
-* [메인넷 검증자](/ko/infra/validator-mainnet/)
-* [테스트넷 검증자](/ko/infra/validator-testnet/)
+이 섹션은 Injective 네트워크에서 운영에 필요한 모든 것을 다룹니다: 노드 설정, 업그레이드 관리, 브릿지 오케스트레이터 실행, 인덱서 서비스 구성.
+
+<Columns cols={2}>
+  <Card
+    title="아키텍처"
+    href="#아키텍처"
+    arrow="true"
+    cta="자세히 보기"
+    icon="sitemap">
+    노드 유형, 네트워크 토폴로지, 합의 레이어 및 프로세스 관리
+  </Card>
+  <Card
+    title="노드 운영"
+    href="/ko/infra/run-node"
+    arrow="true"
+    cta="시작하기"
+    icon="server">
+    keyring 설정, 검증자 구성, 노드와 상호작용 및 Cosmovisor 관리
+  </Card>
+</Columns>
+
+<Columns cols={2}>
+  <Card
+    title="네트워크 참여"
+    href="/ko/infra/join-a-network"
+    arrow="true"
+    cta="노드 동기화"
+    icon="network-wired">
+    바이너리를 설치하고 스냅샷, state sync 또는 block sync를 통해 메인넷 또는 테스트넷과 동기화
+  </Card>
+  <Card
+    title="업그레이드"
+    href="/ko/infra/upgrade-node"
+    arrow="true"
+    cta="업그레이드 가이드"
+    icon="arrow-up">
+    체인 업그레이드 절차, 조정 업그레이드 문제 해결 및 Operator Portal
+  </Card>
+</Columns>
+
+---
+
+## 아키텍처
+
+Injective는 비잔틴 장애 허용(BFT) 메커니즘을 갖춘 CometBFT(구 Tendermint) 합의를 사용하여 1초 미만의 최종성을 달성합니다. 네트워크는 높은 처리량의 트레이딩 활동을 처리하기 위해 엔터프라이즈급 사양(128GB RAM, 고클럭 CPU, NVMe 스토리지)의 베어메탈 서버를 요구합니다.
+
+### 노드 유형
+
+| 노드 | 역할 |
+|------|------|
+| **검증자 노드** | 블록을 제안하고 투표하여 합의에 참여합니다. 담보로 스테이킹된 INJ와 고가용성 하드웨어가 필요합니다. |
+| **[센트리 노드](/ko/developers/concepts/sentry-node)** | 트래픽을 중계하여 검증자를 직접적인 퍼블릭 노출로부터 보호하는 풀 노드로, 검증자와 퍼블릭 네트워크 사이의 게이트웨이 역할을 합니다. |
+
+### 핵심 구성 요소
+
+| 구성 요소 | 목적 |
+|-----------|---------|
+| **[Cosmovisor](/ko/infra/cosmovisor)** | 체인 바이너리 업그레이드를 자동화하는 프로세스 관리자로, 거버넌스 승인 업그레이드 시 무중단 전환을 가능하게 합니다. 설정은 [노드 운영](/ko/infra/run-node)을 참조하세요. |
+| **[Peggo](/ko/infra/validator-mainnet/peggo)** | Ethereum과 Injective 간 메시지를 중계하는 브릿지 오케스트레이터입니다. 검증자에게 필수입니다. |
+| **[WebSocket 서버](https://github.com/InjectiveFoundation/injective-core)** | gRPC Chain Stream 서버를 래핑하여 표준 WebSocket 연결로 실시간 체인 이벤트를 스트리밍합니다. |
+
+### 체인 업그레이드
+
+Injective는 미리 정해진 블록 높이에서 주기적으로 조정 소프트웨어 업그레이드를 진행합니다. 합의를 유지하려면 모든 노드가 새 바이너리로 전환해야 합니다. 절차는 [업그레이드](/ko/infra/upgrade-node)를, 문제 해결은 [조정 업그레이드](/ko/infra/coordinated-upgrades) 가이드를 참조하세요.

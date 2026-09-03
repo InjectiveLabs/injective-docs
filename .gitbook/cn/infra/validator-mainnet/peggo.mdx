@@ -1,9 +1,18 @@
 ---
-title: Peggo
-updatedAt: "2026-02-13"
+title: Peggo 跨链桥
+updatedAt: "2025-10-30"
 ---
 
-如果你在这个页面上，那么你可能已经成为 Injective 的验证者。恭喜！配置 `peggo` 是你设置的最后一步。
+Peggo 是与 `injectived` 一起运行在验证者节点上的 Peggy 跨链桥编排器。它承担四项职责：
+
+- **Oracle（预言机）** —— 监控 Ethereum 上的存款和跨链桥事件，然后将其报告给 Injective 链
+- **Signer（签名者）** —— 签署验证者集更新和交易批次
+- **Batch Creator（批次创建者）** —— 将出站代币转账分组为批次，以实现高效的跨链桥接
+- **Relayer（中继者）** —— 将已签名的验证者集和交易批次提交到 Ethereum 上的 Peggy 合约
+
+未运行 peggo 的验证者将因未能在要求的签名窗口内完成批次确认或验证者集确认而被**监禁（jailed）**。
+
+### 配置
 
 `.env` 文件示例：
 

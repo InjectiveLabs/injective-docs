@@ -1,20 +1,367 @@
 ---
 title: ネットワークへの参加
+updatedAt: "2026-09-02"
 ---
 
-このガイドでは、ローカルにスタンドアロンネットワークをセットアップするプロセスと、メインネットまたはテストネットでノードを実行する方法について説明します。
-
-各ネットワークのハードウェア要件は、それぞれのタブで確認できます。
+メインネット、テストネット、またはローカル開発ネットワーク上でInjectiveノードをセットアップして同期します。
 
 <Tabs>
-<Tab title="ローカルネットワーク">
-ローカルノードを簡単にセットアップするには、`setup.sh`スクリプトをダウンロードして実行します。これにより、ローカルInjectiveネットワークが初期化されます。
+<Tab title="メインネット">
+
+Injectiveメインネットのchain-idは`injective-1`です。
+
+<Columns cols={3}>
+  <Card
+    title="同期オプション"
+    href="#同期オプション"
+    arrow="true"
+    cta="セクションへ移動"
+    icon="panel-left-close">
+    スナップショット復元、state sync、block sync
+  </Card>
+  <Card
+    title="ノードソフトウェア"
+    href="#ノードソフトウェア"
+    arrow="true"
+    cta="セクションへ移動"
+    icon="panel-left-close">
+    injectivedのインストール、設定、実行
+  </Card>
+  <Card
+    title="ハードウェア"
+    href="#ハードウェア"
+    arrow="true"
+    cta="セクションへ移動"
+    icon="panel-left-close">
+    最小および推奨仕様
+  </Card>
+</Columns>
+
+---
+
+### 同期オプション
+
+ノードにチェーンデータをブートストラップする方法を選択します。ほとんどのオペレーターにとって、スナップショット復元がノードを稼働させる最速の方法です。
+
+**オプション1. スナップショット復元（推奨）**
+
+事前に構築されたスナップショットをダウンロードし、データディレクトリに展開します。これは新しいノードを同期する最も高速で信頼性の高い方法です。
+
+Injectiveは公式のプルーニング済みスナップショット（goleveldb、約2〜3 GB）を提供しており、コミュニティも追加の選択肢を管理しています。ダウンロードリンク、使用手順、コミュニティプロバイダーについては、[Chain Portalのスナップショットページ](https://portal.injective.network/snapshots)を参照してください。
+
+<Callout icon="warning" color="#FFA500" iconType="regular">
+**バリデーター：** スナップショット復旧の際には、`priv_validator_state.json`のバックアップと復元が必須です。完全な手順については、[バリデーターのトラブルシューティングガイド](/jp/infra/coordinated-upgrades#スナップショットからの復旧)を参照してください。
+</Callout>
 
 ```bash
-wget https://raw.githubusercontent.com/InjectiveLabs/injective-chain-releases/master/scripts/setup.sh
+# Example: download and extract
+sudo systemctl stop injectived
+rm -rf ~/.injectived/data
+wget -O snapshot.lz4 <SNAPSHOT_URL>
+lz4 -d snapshot.lz4 | tar xf - -C ~/.injectived/
+sudo systemctl start injectived
+```
+
+**オプション2. State Sync（CometBFT P2P）**
+
+State syncは、すべての過去のブロックをリプレイする代わりに、CometBFT P2Pレイヤーを介してピアからステートマシンのスナップショットをダウンロードすることでノードをブートストラップします。信頼できる2つのRPCサーバーが必要です。利用可能なエンドポイントについては、[Chain PortalのRPCプロバイダーページ](https://portal.injective.network/rpcs)を参照してください。`config.toml`の`[statesync]`で設定します：
+
+```toml
+[statesync]
+enable = true
+rpc_servers = "<rpc_server_1>,<rpc_server_2>"
+trust_height = <recent_height>
+trust_hash = "<block_hash_at_trust_height>"
+trust_period = "168h0m0s"
+```
+
+trust heightとhashを取得するには：
+
+```bash
+# Get a recent height and its hash from a trusted RPC
+LATEST=$(curl -s https://sentry.tm.injective.network/block | jq -r '.result.block.header.height')
+TRUST_HEIGHT=$((LATEST - 2000))
+TRUST_HASH=$(curl -s "https://sentry.tm.injective.network/block?height=$TRUST_HEIGHT" | jq -r '.result.block_id.hash')
+echo "trust_height = $TRUST_HEIGHT"
+echo "trust_hash = \"$TRUST_HASH\""
+```
+
+<Warning>
+**State syncは`wasm/`ディレクトリを復元しません。** CometBFTのstate syncはIAVLのstateツリーを復元しますが、`~/.injectived/data/wasm/`に保存されているCosmWasmのコンパイル済みコントラクトバイトコードは復元しません。これらのファイルがないと、同期完了直後にノードは**AppHashの不一致**を引き起こします。
+
+これに遭遇した場合は、以下のいずれかを行ってください：
+1. **スナップショット復元**（オプション1）に切り替える。Injectiveの公式スナップショットには`wasm/`ディレクトリが含まれています
+2. 信頼できるソースから`wasm/`ディレクトリを入手し、ノードを起動する前に`~/.injectived/data/wasm/`に配置する
+
+**PebbleDBユーザー：** Injectiveの公式スナップショットはgoleveldbのみを使用しています。PebbleDBのスナップショットは維持されていません。PebbleDBを実行していてスナップショット復元が使用できない場合、state syncを使用する際には`wasm/`ディレクトリを別途入手する必要があります。
+</Warning>
+
+**オプション3. Block Sync（完全リプレイ）**
+
+デフォルトの動作です。ノードはピアからすべてのブロックをダウンロードしてリプレイします。最も時間がかかる方法ですが、外部スナップショットは不要です。最近のスナップショット高から同期する場合を除き、メインネットでは実用的ではありません。
+
+**同期方法の比較：**
+
+| 方法 | 速度 | wasmを含むか？ | 備考 |
+|---|---|---|---|
+| **スナップショット復元** | 高速（数分） | はい（公式スナップショット） | ほとんどのオペレーターに推奨 |
+| **State Sync** | 高速（数分） | **いいえ** - wasmを手動で復元しないとAppHashの不一致が発生 | `config.toml`の`[statesync]`で設定 |
+| **Block Sync** | 低速（数日） | 該当なし（実行により構築） | デフォルト、genesisからのメインネット同期には非実用的 |
+
+#### ピアディスカバリー
+
+ノードがネットワークと同期するにはピアが必要です。`~/.injectived/config/config.toml`の`[p2p]`セクションにシードまたはpersistent peersを追加してください。コミュニティプロバイダーが最新のシードおよびピアリストを管理しています：
+
+- [Polkachu Injective Seeds](https://polkachu.com/seeds/injective)
+- [Decentrio Injective Infrastructure](https://decentrio.ventures/infrastructure/injective)（シード、ピア、アドレスブック）
+
+より高速なピアディスカバリーのために、事前構築されたアドレスブックをダウンロードすることもできます：
+
+```bash
+# Decentrio address book
+wget -O ~/.injectived/config/addrbook.json \
+  https://backend.decentrio.ventures/snapshots/injective/addrbook.json
+```
+
+---
+
+### ノードソフトウェア
+
+#### `injectived`のインストール
+
+各[Injective coreリリース](https://github.com/InjectiveFoundation/injective-core/releases/latest)には、`injectived`、[`peggo`](/infra/validator-mainnet/peggo)（Peggyブリッジオーケストレーター）、`libwasmvm`が1つのzipに含まれています。バリデーターはノードと並行して`peggo`を実行する必要があります。非バリデーターノードオペレーターに必要なのは`injectived`のみです。
+
+```bash
+# Download the latest release
+wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib
+
+# Validators also need peggo
+sudo mv peggo /usr/bin
+```
+
+#### 新しいInjectiveノードの初期化
+
+Injectiveノードを実行する前に、チェーンとgenesisファイルを初期化します：
+
+```bash
+# <moniker>引数はノードのカスタムユーザー名です。人間が読める形式にしてください。
+export MONIKER=<moniker>
+injectived init $MONIKER --chain-id injective-1
+```
+
+`init`コマンドを実行すると、`~/.injectived`に`injectived`のデフォルト設定ファイルが作成されます。
+
+#### メインネットに参加するための設定の準備
+
+メインネットのgenesisファイルをダウンロードします。Injectiveは公式スナップショットと併せてこれを提供しています：
+
+```bash
+# メインネットのgenesisファイルをダウンロード
+wget -O ~/.injectived/config/genesis.json \
+  http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/genesis.json
+```
+
+チェックサムを検証します：
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+# Expected: 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
+```
+
+ピアディスカバリー用のシードを設定し（同期オプションセクションの[ピアディスカバリー](#ピアディスカバリー)を参照）、`~/.injectived/config/config.toml`で`timeout_commit`を`300ms`に設定してください。
+
+#### `app.toml`と`config.toml`を使用したノードの設定
+
+2つの設定ファイルが`~/.injectived/config`内に自動生成されます：
+
+* `config.toml`: コンセンサスレイヤー（CometBFT）を設定します。[詳細はコンセンサスレイヤーのドキュメントを参照してください](https://docs.cometbft.com/v0.38/core/configuration)。
+* `app.toml`: stateプルーニング戦略、テレメトリ、gRPCおよびRESTサーバーの設定、state syncなど、ノードのアプリケーションおよび実行レイヤーを設定します。
+
+#### `injectived`用の`systemd`サービスの設定（オプション）
+
+`/etc/systemd/system/injectived.service`の設定を編集します：
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+systemdサービスの起動と再起動：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# システム起動時の自動起動を有効にする
+sudo systemctl enable injectived
+
+# ログを確認する場合
+journalctl -u injectived -f
+```
+
+スナップショットデータを正しいディレクトリにロードする前にサービスを停止し、ロード後に開始する必要があります。
+
+```bash
+# ノードを停止する
+sudo systemctl stop injectived
+
+# ノードを起動する
+sudo systemctl start injectived
+```
+
+---
+
+### ハードウェア
+
+ノードオペレーターは、最適なパフォーマンスを達成するためにベアメタルサーバーにデプロイすることを推奨します。バリデーターノードは、高いアップタイムを確保するために、推奨されるハードウェア仕様、特にCPU要件を満たす必要があります。
+
+|       _最小要件_       |    _推奨_   |
+| :-------------------: | :-------------------: |
+|    RAMメモリ 128GB   |    RAMメモリ 128GB   |
+|      CPU 12コア     |      CPU 16コア     |
+| CPUベースクロック 3.7GHz | CPUベースクロック 4.2GHz |
+|    ストレージ 2TB NVMe   |    ストレージ 2TB NVMe   |
+|     ネットワーク 1Gbps+    |     ネットワーク 1Gbps+    |
+
+---
+
+**サポート**
+
+ご質問がある場合は、[Discord](https://discord.gg/injective)、[Telegram](https://t.me/joininjective)、または[メール](mailto:contact@injectivelabs.org)でInjectiveチームに連絡できます。
+</Tab>
+
+<Tab title="テストネット">
+#### ハードウェア仕様
+
+ノードオペレーターは、最適なパフォーマンスを達成するためにベアメタルサーバーにデプロイすることを推奨します。また、バリデーターノードは推奨されるハードウェア仕様、特にCPU要件を満たし、高いアップタイムを確保する必要があります。
+
+|       _最小要件_       |    _推奨_   |
+| :-------------------: | :-------------------: |
+|    RAMメモリ 128GB   |    RAMメモリ 128GB   |
+|      CPU 12コア     |      CPU 16コア     |
+| CPUベースクロック 3.7GHz | CPUベースクロック 4.2GHz |
+|    ストレージ 2TB NVMe   |    ストレージ 2TB NVMe   |
+|     ネットワーク 1Gbps+    |     ネットワーク 1Gbps+    |
+
+#### `injectived`と`peggo`のインストール
+
+最新のリリースについては[Injective releases repo](https://github.com/InjectiveLabs/testnet/releases)を参照してください。非バリデーターノードオペレーターは`peggo`をインストールする必要はありません。
+
+```bash
+wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
+unzip linux-amd64.zip
+sudo mv peggo /usr/bin
+sudo mv injectived /usr/bin
+sudo mv libwasmvm.x86_64.so /usr/lib 
+```
+
+#### 新しいInjectiveチェーンノードの初期化
+
+Injectiveノードを実行する前に、チェーンとノードのgenesisファイルを初期化する必要があります：
+
+```bash
+# <moniker>引数はノードのカスタムユーザー名です。人間が読める形式にしてください。
+export MONIKER=<moniker>
+# Injectiveテストネットのchain-idは"injective-888"です
+injectived init $MONIKER --chain-id injective-888
+```
+
+`init`コマンドを実行すると、`~/.injectived`に`injectived`のデフォルト設定ファイルが作成されます。
+
+#### テストネットに参加するための設定の準備
+
+テストネットのgenesisファイルとアプリケーション設定ファイルでデフォルト設定を更新し、シードノードでpersistent peersを設定する必要があります。
+
+```bash
+git clone https://github.com/InjectiveLabs/testnet.git
+
+# genesisファイルを設定ディレクトリにコピー
+aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
+mv genesis.json ~/.injectived/config/
+
+# 設定ファイルを設定ディレクトリにコピー
+cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
+cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
+```
+
+genesisのチェックサムを検証することもできます - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
+
+```bash
+sha256sum ~/.injectived/config/genesis.json
+```
+
+#### `injectived`用の`systemd`サービスの設定
+
+`/etc/systemd/system/injectived.service`の設定を編集します：
+
+```bash
+[Unit]
+  Description=injectived
+
+[Service]
+  WorkingDirectory=/usr/bin
+  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
+  Type=simple
+  Restart=always
+  RestartSec=5
+  User=root
+
+[Install]
+  WantedBy=multi-user.target
+```
+
+systemdサービスの起動と再起動
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart injectived
+sudo systemctl status injectived
+
+# システム起動時の自動起動を有効にする
+sudo systemctl enable injectived
+
+# ログを確認する場合
+journalctl -u injectived -f
+```
+
+#### ネットワークとの同期
+
+スナップショットをダウンロードしてネットワークと同期するには、[Polkachu Injective Testnet Node Snapshot](https://polkachu.com/testnets/injective/snapshots)を参照してください。
+
+**サポート**
+
+ご質問がある場合は、[Discord](https://discord.gg/injective)、[Telegram](https://t.me/joininjective)、または[メール](mailto:contact@injectivelabs.org)でInjectiveチームに連絡できます。
+</Tab>
+
+<Tab title="ローカルネットワーク">
+ローカルノードを簡単にセットアップするには、[injective-core](https://github.com/InjectiveFoundation/injective-core)リポジトリから`setup.sh`スクリプトをダウンロードして実行します。インストール済みの`injectived`のバージョンに一致するバージョンのスクリプトを使用してください。
+
+```bash
+# バージョンタグは、お使いのinjectivedバイナリに一致するものに置き換えてください
+# 例えば、v1.18.3用のスクリプトを使用する場合：
+wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.18.3/setup.sh
 chmod +x ./setup.sh # スクリプトを実行可能にする
 ./setup.sh
 ```
+
+<Callout icon="warning" color="#FFA500" iconType="regular">
+レガシーの[injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases)リポジトリにある`setup.sh`スクリプトは古く、`injectived` v1.14.1以前とのみ互換性があります。常に、お使いのチェーンバージョンに対応する[InjectiveFoundation/injective-core](https://github.com/InjectiveFoundation/injective-core)リポジトリのスクリプトを使用してください。
+</Callout>
 
 以下のコマンドでノードを起動します：
 
@@ -137,240 +484,5 @@ injectived start # このコマンドの実行後、ブロックの生成が開�
 ```
 
 このコマンドでは単一のノードを実行できます。チェーンとの対話には十分ですが、複数のノードを同時に実行してコンセンサスの動作を確認することもできます。
-</Tab>
-
-<Tab title="テストネット">
-#### ハードウェア仕様
-
-ノードオペレーターは、最適なパフォーマンスを達成するためにベアメタルサーバーにデプロイすることを推奨します。また、バリデーターノードは推奨されるハードウェア仕様、特にCPU要件を満たし、高いアップタイムを確保する必要があります。
-
-|       _最小要件_       |    _推奨_   |
-| :-------------------: | :-------------------: |
-|    RAMメモリ 128GB   |    RAMメモリ 128GB   |
-|      CPU 12コア     |      CPU 16コア     |
-| CPUベースクロック 3.7GHz | CPUベースクロック 4.2GHz |
-|    ストレージ 2TB NVMe   |    ストレージ 2TB NVMe   |
-|     ネットワーク 1Gbps+    |     ネットワーク 1Gbps+    |
-
-#### `injectived`と`peggo`のインストール
-
-最新のリリースについては[Injective releases repo](https://github.com/InjectiveLabs/testnet/releases)を参照してください。非バリデーターノードオペレーターは`peggo`をインストールする必要はありません。
-
-```bash
-wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
-
-#### 新しいInjectiveチェーンノードの初期化
-
-Injectiveノードを実行する前に、チェーンとノードのgenesisファイルを初期化する必要があります：
-
-```bash
-# <moniker>引数はノードのカスタムユーザー名です。人間が読める形式にしてください。
-export MONIKER=<moniker>
-# Injectiveテストネットのchain-idは"injective-888"です
-injectived init $MONIKER --chain-id injective-888
-```
-
-`init`コマンドを実行すると、`~/.injectived`に`injectived`のデフォルト設定ファイルが作成されます。
-
-#### テストネットに参加するための設定の準備
-
-テストネットのgenesisファイルとアプリケーション設定ファイルでデフォルト設定を更新し、シードノードでpersistent peersを設定する必要があります。
-
-```bash
-git clone https://github.com/InjectiveLabs/testnet.git
-
-# genesisファイルを設定ディレクトリにコピー
-aws s3 cp --no-sign-request s3://injective-snapshots/testnet/genesis.json .
-mv genesis.json ~/.injectived/config/
-
-# 設定ファイルを設定ディレクトリにコピー
-cp testnet/corfu/70001/app.toml  ~/.injectived/config/app.toml
-cp testnet/corfu/70001/config.toml ~/.injectived/config/config.toml
-```
-
-genesisのチェックサムを検証することもできます - a4abe4e1f5511d4c2f821c1c05ecb44b493eec185c0eec13b1dcd03d36e1a779
-
-```bash
-sha256sum ~/.injectived/config/genesis.json
-```
-
-#### `injectived`用の`systemd`サービスの設定
-
-`/etc/systemd/system/injectived.service`の設定を編集します：
-
-```bash
-[Unit]
-  Description=injectived
-
-[Service]
-  WorkingDirectory=/usr/bin
-  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
-  Type=simple
-  Restart=always
-  RestartSec=5
-  User=root
-
-[Install]
-  WantedBy=multi-user.target
-```
-
-systemdサービスの起動と再起動
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart injectived
-sudo systemctl status injectived
-
-# システム起動時の自動起動を有効にする
-sudo systemctl enable injectived
-
-# ログを確認する場合
-journalctl -u injectived -f
-```
-
-#### ネットワークとの同期
-
-スナップショットをダウンロードしてネットワークと同期するには、[Polkachu Injective Testnet Node Snapshot](https://polkachu.com/testnets/injective/snapshots)を参照してください。
-
-**サポート**
-
-ご質問がある場合は、[Discord](https://discord.gg/injective)、[Telegram](https://t.me/joininjective)、または[メール](mailto:contact@injectivelabs.org)でInjectiveチームに連絡できます。
-</Tab>
-
-<Tab title="メインネット">
-#### ハードウェア仕様
-
-ノードオペレーターは、最適なパフォーマンスを達成するためにベアメタルサーバーにデプロイすることを推奨します。また、バリデーターノードは推奨されるハードウェア仕様、特にCPU要件を満たし、高いアップタイムを確保する必要があります。
-
-|       _最小要件_       |    _推奨_   |
-| :-------------------: | :-------------------: |
-|    RAMメモリ 128GB   |    RAMメモリ 128GB   |
-|      CPU 12コア     |      CPU 16コア     |
-| CPUベースクロック 3.7GHz | CPUベースクロック 4.2GHz |
-|    ストレージ 2TB NVMe   |    ストレージ 2TB NVMe   |
-|     ネットワーク 1Gbps+    |     ネットワーク 1Gbps+    |
-
-#### `injectived`と`peggo`のインストール
-
-最新のリリースについては[Injective chain releases repo](https://github.com/InjectiveLabs/injective-chain-releases/releases/)を参照してください。非バリデーターノードオペレーターは`peggo`をインストールする必要はありません。
-
-```bash
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
-
-#### 新しいInjectiveノードの初期化
-
-Injectiveノードを実行する前に、チェーンとノードのgenesisファイルを初期化する必要があります：
-
-```bash
-# <moniker>引数はノードのカスタムユーザー名です。人間が読める形式にしてください。
-export MONIKER=<moniker>
-# Injectiveメインネットのchain-idは"injective-1"です
-injectived init $MONIKER --chain-id injective-1
-```
-
-`init`コマンドを実行すると、`~/.injectived`に`injectived`のデフォルト設定ファイルが作成されます。
-
-#### メインネットに参加するための設定の準備
-
-メインネットのgenesisファイルとアプリケーション設定ファイルでデフォルト設定を更新し、シードノードでpersistent peersを設定する必要があります。
-
-```bash
-git clone https://github.com/InjectiveLabs/mainnet-config
-
-# genesisファイルを設定ディレクトリにコピー
-cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
-
-# 設定ファイルを設定ディレクトリにコピー
-cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
-```
-
-genesisのチェックサムを検証することもできます - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
-
-```bash
-sha256sum ~/.injectived/config/genesis.json
-```
-
-次に、`~/.injectived/config/config.toml`の`seeds`フィールドを`mainnet-config/10001/seeds.txt`の内容で更新し、`timeout_commit`を`300ms`に更新します。
-
-```bash
-cat mainnet-config/10001/seeds.txt
-nano ~/.injectived/config/config.toml
-```
-
-#### `injectived`用の`systemd`サービスの設定
-
-`/etc/systemd/system/injectived.service`の設定を編集します：
-
-```bash
-[Unit]
-  Description=injectived
-
-[Service]
-  WorkingDirectory=/usr/bin
-  ExecStart=/bin/bash -c '/usr/bin/injectived --log-level=error start'
-  Type=simple
-  Restart=always
-  RestartSec=5
-  User=root
-
-[Install]
-  WantedBy=multi-user.target
-```
-
-systemdサービスの起動と再起動：
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart injectived
-sudo systemctl status injectived
-
-# システム起動時の自動起動を有効にする
-sudo systemctl enable injectived
-
-# ログを確認する場合
-journalctl -u injectived -f
-```
-
-スナップショットデータを正しいディレクトリにロードする前にサービスを停止し、ロード後に開始する必要があります。
-
-```bash
-# ノードを停止する
-sudo systemctl stop injectived
-
-# ノードを起動する
-sudo systemctl start injectived
-```
-
-#### ネットワークとの同期
-
-**オプション1. State-Sync**
-
-_近日追加予定_
-
-**オプション2. スナップショット**
-
-**プルーニング済み**
-
-1. [Polkachu](https://polkachu.com/tendermint_snapshots/injective)
-2. [HighStakes](https://tools.highstakes.ch/files/injective.tar.gz)
-3. [Imperator](https://www.imperator.co/services/chain-services/mainnets/injective)
-4. [Bware Labs](https://bwarelabs.com/snapshots)
-5. [AutoStake](https://autostake.com/networks/injective/#validator)
-
-Injectiveの`mainnet-config seeds.txt`リストが機能しない場合（ノードがブロックの同期に失敗する場合）、ChainLayer、Polkachu、およびAutostakeがピアリスト（`config.toml`の`persistent_peers`フィールドで使用可能）またはアドレスブック（より高速なピア検出用）を管理しています。
-
-**サポート**
-
-ご質問がある場合は、[Discord](https://discord.gg/injective)、[Telegram](https://t.me/joininjective)、または[メール](mailto:contact@injectivelabs.org)でInjectiveチームに連絡できます。
 </Tab>
 </Tabs>
