@@ -818,6 +818,7 @@
                 "expanded": false,
                 "pages": [
                   "cn/infra/index",
+                  "cn/developers/concepts/sentry-node",
                   {
                     "group": "节点运维",
                     "pages": [
@@ -874,7 +875,9 @@
                       "cn/infra/validator-mainnet/peggo"
                     ]
                   },
-                  "cn/infra/archival-setup"
+                  "cn/infra/archival-setup",
+                  "cn/infra/public-endpoints",
+                  "cn/infra/premium-endpoints"
                 ]
               },
               {
@@ -980,6 +983,9 @@
                   "cn/developers/convert-addresses",
                   "cn/developers/concepts/grpc-protobuf",
                   "cn/developers/concepts/networks",
+                  "cn/developers/concepts/token-factory",
+                  "cn/developers/concepts/calculation-min-price-tick-size",
+                  "cn/developers/concepts/calculation-min-quantity-tick-size",
                   {
                     "group": "injectived",
                     "pages": [
@@ -1285,6 +1291,7 @@
                 "expanded": false,
                 "pages": [
                   "ko/infra/index",
+                  "ko/developers/concepts/sentry-node",
                   {
                     "group": "노드 운영",
                     "pages": [
@@ -1332,7 +1339,9 @@
                       "ko/infra/validator-mainnet/peggo"
                     ]
                   },
-                  "ko/infra/archival-setup"
+                  "ko/infra/archival-setup",
+                  "ko/infra/public-endpoints",
+                  "ko/infra/premium-endpoints"
                 ]
               },
               {
@@ -1437,6 +1446,9 @@
                   "ko/developers/convert-addresses",
                   "ko/developers/concepts/grpc-protobuf",
                   "ko/developers/concepts/networks",
+                  "ko/developers/concepts/token-factory",
+                  "ko/developers/concepts/calculation-min-price-tick-size",
+                  "ko/developers/concepts/calculation-min-quantity-tick-size",
                   {
                     "group": "injectived",
                     "pages": [
@@ -1907,6 +1919,7 @@
                 "expanded": false,
                 "pages": [
                   "jp/infra/index",
+                  "jp/developers/concepts/sentry-node",
                   {
                     "group": "ノード運用",
                     "pages": [
@@ -1942,7 +1955,8 @@
                       "jp/developers/concepts/indexer-api"
                     ]
                   },
-                  "jp/infra/archival-setup"
+                  "jp/infra/archival-setup",
+                  "jp/infra/public-endpoints"
                 ]
               },
               {
@@ -2033,6 +2047,9 @@
                   "jp/developers/convert-addresses",
                   "jp/developers/concepts/grpc-protobuf",
                   "jp/developers/concepts/networks",
+                  "jp/developers/concepts/token-factory",
+                  "jp/developers/concepts/calculation-min-price-tick-size",
+                  "jp/developers/concepts/calculation-min-quantity-tick-size",
                   {
                     "group": "injectived",
                     "pages": [
