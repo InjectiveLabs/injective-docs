@@ -110,6 +110,7 @@
                     "expanded": false,
                     "pages": [
                       "infra/index",
+                      "developers/concepts/sentry-node",
                       {
                         "group": "Node Operation",
                         "pages": [
@@ -197,7 +198,10 @@
                           "infra/validator-mainnet/peggo"
                         ]
                       },
-                      "infra/archival-setup"
+                      "infra/archival-setup",
+                      "infra/public-endpoints",
+                      "infra/premium-endpoints",
+                      "infra/websocket-server"
                     ]
                   },
                   {
@@ -303,6 +307,9 @@
                       "developers/convert-addresses",
                       "developers/concepts/grpc-protobuf",
                       "developers/concepts/networks",
+                      "developers/concepts/token-factory",
+                      "developers/concepts/calculation-min-price-tick-size",
+                      "developers/concepts/calculation-min-quantity-tick-size",
                       {
                         "group": "injectived",
                         "pages": [
@@ -496,11 +503,14 @@
                         "pages": [
                           "developers-native/query-indexer-stream/index",
                           "developers-native/query-indexer-stream/account",
+                          "developers-native/query-indexer-stream/archiver",
                           "developers-native/query-indexer-stream/auction",
                           "developers-native/query-indexer-stream/derivatives",
+                          "developers-native/query-indexer-stream/mito",
                           "developers-native/query-indexer-stream/oracle",
                           "developers-native/query-indexer-stream/portfolio",
                           "developers-native/query-indexer-stream/spot",
+                          "developers-native/query-indexer-stream/trading",
                           "developers-native/query-indexer-stream/explorer"
                         ]
                       },
