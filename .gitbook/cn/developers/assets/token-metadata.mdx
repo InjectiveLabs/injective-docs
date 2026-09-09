@@ -1,25 +1,158 @@
 ---
 title: Token 元数据
-updatedAt: "2026-02-13"
+description: 如何在 Injective 上为各类 denom 设置代币元数据——链上（bank 模块）与链下（injective-lists）。
+updatedAt: "2026-09-09"
 ---
 
-Injective 上的资产以 denom 表示。Denom（及其数量）不是人类可读的，这就是为什么我们需要有一种方式为特定 denom "附加"代币元数据信息。
+代币元数据（名称、符号、小数位数）控制着你的代币在两个系统中的显示方式：
 
-让我们回顾一下入门部分中的 denom 类型：
+| 系统 | 读取方 | 设置方式 |
+|---|---|---|
+| **链上（bank 模块）** | MetaMask、Blockscout、调用 `symbol()` / `name()` / `decimals()` 的 Solidity 合约、任何 EVM 工具 | 取决于 denom 类型（见下文） |
+| **链下（injective-lists）** | Injective 原生前端（Hub、Explorer、使用 TypeScript SDK 构建的交易 dApp） | 向 [injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) 提交 PR |
 
-* **原生 denom** - 这种类型只有一个 denom，即 `inj` denom，代表 Injective 的原生代币，
-* **Peggy denom** - 这些 denom 代表通过 Peggy 桥从 Ethereum 桥接到 Injective 的资产。它们的格式为 `peggy{ERC20_CONTRACT_ADDRESS}`
-* **IBC denom** - 这些 denom 代表通过 IBC 从其他 Cosmos 链桥接过来的资产。它们的格式为 `ibc/{hash}`。
-* **保险基金 Denom** - 这些 denom 代表在 Injective 上创建的保险基金的代币份额。它们的格式为 `share{id}`
-* **Factory Denom** - 这些 denom 代表 Cosmwasm 上 CW20 代币在 Injective 原生 bank 模块上的表示。它们的格式为 `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`，其中 `CW20_ADAPTER_CONTRACT` 是执行 CW20 和原生 Bank 模块之间转换的适配器合约地址。
+完整的集成需要两者兼备。链上元数据确保 EVM 兼容性；链下元数据确保在 Injective dApp 中正常显示。
 
-我们在 [injective-lists](https://github.com/InjectiveLabs/injective-lists/tree/master/tokens) 仓库中维护链下代币元数据列表以便更快访问。
+## 设置链上元数据
 
-## Token 验证
+设置 bank 模块元数据的方式取决于你的 denom 类型：
 
-验证你的代币元数据可以通过几种方式完成。以下是验证级别及其含义：
+<Tabs>
 
-* **Verified** → 你的资产元数据已**提交并验证**到 `@injectivelabs/token-metadata` 包。你可以在[这里](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)找到如何将代币元数据添加到包的教程。
-* **Internal** → 你的资产元数据已使用 `MsgSetDenomMetadata` 消息在链上验证，如[这里](/developers-native/examples/token-factory)所述。
-* **External** → 你的资产元数据已在某些外部来源（如 Ethereum 的合约详情等）上验证。
-* **Unverified** → 你的资产元数据尚未在任何地方提供。
+<Tab title="TokenFactory (factory/...)" icon="hammer">
+
+denom 管理员可以使用 `MsgSetDenomMetadata` 直接设置元数据：
+
+```bash
+injectived tx tokenfactory set-denom-metadata metadata.json \
+  --from=ADMIN_KEY \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+其中 `metadata.json`：
+
+```json
+{
+  "base": "factory/YOUR_ADDRESS/MYTOKEN",
+  "name": "My Token",
+  "symbol": "MYTOKEN",
+  "display": "MYTOKEN",
+  "description": "Description of your token",
+  "decimals": 18,
+  "denom_units": [
+    { "denom": "factory/YOUR_ADDRESS/MYTOKEN", "exponent": 0, "aliases": [] },
+    { "denom": "MYTOKEN", "exponent": 18, "aliases": [] }
+  ]
+}
+```
+
+设置完成后，MTS ERC20 合约会立即为 `name()`、`symbol()` 和 `decimals()` 返回正确的值。
+
+有关 TypeScript SDK 用法，请参阅 [TokenFactory 示例](/cn/developers-native/examples/token-factory)。
+
+</Tab>
+
+<Tab title="Peggy (peggy0x...)" icon="bridge">
+
+Peggy 桥接的代币不会继承 Ethereum 上的元数据。Peggy 跨链桥会创建 denom，但不会设置名称、符号或小数位数。
+
+**要为 Peggy denom 设置元数据，你需要提交[治理提案](/cn/developers/testnet-proposals)。** 这是因为 Peggy denom 没有管理员权限——对于这些 denom，只有治理模块才能写入 bank 模块的元数据存储。
+
+[提交一个提案](/cn/developers/testnet-proposals)，其中包含 `MsgSetDenomMetadata`，且 sender 为治理模块账户：
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.tokenfactory.v1beta1.MsgSetDenomMetadata",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "metadata": {
+        "base": "peggy0xYOUR_TOKEN_ADDRESS",
+        "name": "Your Token Name",
+        "symbol": "SYMBOL",
+        "display": "SYMBOL",
+        "description": "Your token description",
+        "decimals": 18,
+        "denom_units": [
+          { "denom": "peggy0xYOUR_TOKEN_ADDRESS", "exponent": 0, "aliases": [] },
+          { "denom": "SYMBOL", "exponent": 18, "aliases": [] }
+        ]
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "100000000000000000000inj",
+  "title": "Set TOKEN metadata",
+  "summary": "Set bank denom metadata for peggy0xYOUR_TOKEN_ADDRESS so the MTS ERC20 returns correct name, symbol, and decimals.",
+  "expedited": true
+}
+```
+
+提交命令：
+
+```bash
+injectived tx gov submit-proposal proposal.json \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+提案通过后，MTS ERC20 合约会立即返回正确的元数据——无需重新部署。
+
+<Tip>
+**测试网提案：** 使用略低于 `min_deposit` 的押金，这样提案不会立即进入投票阶段。提交后，请通过 [Discord](https://discord.gg/injective) 或[开发者 Telegram](https://t.me/+Nsy2KjGWtOE5NTY9) 联系团队以协调验证者投票。详情请参阅[测试网提案指南](/cn/developers/testnet-proposals)。
+</Tip>
+
+<Warning>
+如果你在设置元数据之前创建 MTS 代币对，ERC20 合约将返回空白名称、空白符号和 0 位小数。MetaMask 将无法正确显示该代币，Blockscout 也不会按名称对其进行索引。可以在创建代币对之前或之后设置元数据——ERC20 合约在每次调用时都会从 bank 模块读取。
+</Warning>
+
+有关包含治理提案模板的完整演练，请参阅 [ACME 跨链桥示例](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/acme-bridge)。
+
+</Tab>
+
+<Tab title="IBC (ibc/...)" icon="arrows-left-right">
+
+与 Peggy denom 相同——IBC denom 没有管理员权限。元数据必须通过治理提案设置，使用 Peggy 标签页中所示的相同 `MsgSetDenomMetadata` 模式。
+
+将 `base` 和 `denom_units[0].denom` 替换为你的 IBC denom（例如 `ibc/2CBC2EA121AE42563B08028B51D50FB7B0DABBEE2F1E37C98EBB4347B7BE8FBC`）。
+
+</Tab>
+
+<Tab title="ERC20 (erc20:0x...)" icon="ethereum">
+
+对于原生部署在 Injective EVM 上（而非桥接）的代币，代币部署者可以通过 bank 预编译合约的 `setMetadata` 函数设置元数据：
+
+```solidity
+// Call from the same account that deployed the ERC20
+IBankModule(0x0000000000000000000000000000000000000064).setMetadata(
+    tokenAddress,
+    "Token Name",
+    "SYMBOL",
+    18
+);
+```
+
+这会直接写入 bank 模块。仅适用于 `erc20:` denom——预编译合约会拒绝其他 denom 类型。
+
+</Tab>
+
+</Tabs>
+
+## 前端元数据（injective-lists）
+
+若要在 Injective 原生 dApp（Hub、Explorer、使用 `@injectivelabs/sdk-ts` 构建的交易界面）中显示，请将你的代币提交到 [injective-lists](https://github.com/InjectiveLabs/injective-lists) 仓库。
+
+这与**链上元数据是分开的**。injective-lists 控制 Injective 前端中的显示，而 bank 模块元数据控制 EVM 工具（MetaMask、Blockscout、Solidity）看到的内容。
+
+请按照[贡献指南](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)提交包含你的代币元数据的 PR。
+
+<Info>
+如果你的代币不在 injective-lists 中，`TokenFactoryStatic` 对该 denom 将返回 `undefined`。设置方法请参阅 [injective-lists 集成指南](/cn/developers/assets/injective-list)。
+</Info>

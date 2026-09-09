@@ -1,26 +1,161 @@
 ---
 title: 测试网提案
-updatedAt: "2026-02-13"
+description: 如何在 Injective 测试网上提交和协调治理提案。
+updatedAt: "2026-09-09"
 ---
 
-假设你想在 `testnet` 上提交一个提案。由于提案的投票时间较短，我们建议降低提案的押金，以避免提案直接进入投票阶段。基本上，押金应该略低于 `min_deposit` 值。
+测试网上的治理提案与主网机制相同，但投票期更短。请使用略低于 `min_deposit` 的押金，使提案不会立即进入投票阶段，为你留出协调时间。
 
-提交提案后，你应该联系团队：
+## 提交提案
 
-1. 加入 [Injective Discord 服务器](https://discord.gg/injective) 并找到相关频道。
-2. 加入 [Injective 开发者 Telegram 频道](https://t.me/+8Y_0HOFLhnRlZDU9)。
-
-以下是 `GrantProviderPrivilegeProposal` 的示例：
+所有提案都使用相同的 CLI 命令并搭配一个 JSON 文件：
 
 ```bash
-injectived tx oracle grant-provider-privilege-proposal YOUR_PROVIDER \
-  YOUR_ADDRESS_HERE \
-  --title="提案标题" \
-  --description="将 PROVIDER 注册为 oracle 提供者" \
+injectived tx gov submit-proposal proposal.json \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
   --chain-id=injective-888 \
-  --from=local_key \
   --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 \
   --gas-prices=160000000inj \
-  --gas=20000000 \
-  --deposit="40000000000000000000inj" <-- 使用此金额
+  --deposit="40000000000000000000inj" \
+  --yes
 ```
+
+<Tip>
+使用 `--deposit="40000000000000000000inj"`（40 INJ）使提案初始押金保持在 `min_deposit` 以下，这样在你与验证者协调之前，提案不会进入投票阶段。
+</Tip>
+
+## 协调验证者投票
+
+提交提案后，请联系团队以协调测试网验证者投票：
+
+1. 加入 [Injective Discord 服务器](https://discord.gg/injective)并找到相关的开发者频道
+2. 分享你的提案 ID 以及提案作用的简要说明
+
+你也可以在[测试网 Hub](https://testnet.hub.injective.network) 上跟踪你的提案。
+
+## 提案示例
+
+每个提案 JSON 都遵循相同的结构。`messages` 数组包含一条或多条在提案通过后执行的 SDK 消息。每条消息中的 `sender` 必须是治理模块账户：`inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt`。
+
+### 设置代币元数据（Peggy/IBC Denom）
+
+当你通过 Peggy 或 IBC 桥接了代币，需要设置其名称、符号和小数位数以便 MetaMask 和 Blockscout 正确显示时，使用此提案。
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.tokenfactory.v1beta1.MsgSetDenomMetadata",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "metadata": {
+        "base": "peggy0xYOUR_TOKEN_ADDRESS",
+        "name": "Your Token Name",
+        "symbol": "SYMBOL",
+        "display": "SYMBOL",
+        "description": "Description of your token",
+        "decimals": 18,
+        "denom_units": [
+          { "denom": "peggy0xYOUR_TOKEN_ADDRESS", "exponent": 0, "aliases": [] },
+          { "denom": "SYMBOL", "exponent": 18, "aliases": [] }
+        ]
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Set SYMBOL token metadata",
+  "summary": "Set bank denom metadata for peggy0xYOUR_TOKEN_ADDRESS so the MTS ERC20 returns correct name, symbol, and decimals.",
+  "expedited": true
+}
+```
+
+关于为什么需要此操作以及各类 denom 的处理方式，请参阅[代币元数据指南](/cn/developers/assets/token-metadata)。
+
+### 删除代币对
+
+使用此提案删除损坏或不正确的 MTS 代币对（例如使用错误元数据部署的代币对）。
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.erc20.v1beta1.MsgDeleteTokenPair",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "bank_denom": "peggy0xYOUR_TOKEN_ADDRESS"
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Delete incorrect token pair",
+  "summary": "Remove the MTS token pair for peggy0xYOUR_TOKEN_ADDRESS so it can be recreated.",
+  "expedited": true
+}
+```
+
+### 注册 Oracle Provider
+
+使用此提案为衍生品市场注册自定义价格馈送 provider。
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.oracle.v1beta1.MsgGrantProviderPrivilege",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "provider": "YOUR_PROVIDER_NAME",
+      "relayers": ["inj1YOUR_RELAYER_ADDRESS"]
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Register oracle provider",
+  "summary": "Register YOUR_PROVIDER_NAME as an oracle provider with relayer permissions.",
+  "expedited": true
+}
+```
+
+有关设置价格馈送的详细信息，请参阅 [oracle provider 指南](/cn/developers-defi/provider-oracle)。
+
+### 软件升级
+
+由核心团队用于协调链升级。此处仅作参考。
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+      "authority": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "plan": {
+        "name": "v1.21.0",
+        "height": "12345678",
+        "info": "Upgrade to v1.21.0"
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Upgrade to v1.21.0",
+  "summary": "Chain upgrade to v1.21.0 at block height 12345678.",
+  "expedited": true
+}
+```
+
+## 查询提案
+
+检查你的提案状态：
+
+```bash
+# List recent proposals
+injectived query gov proposals \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --output=json | jq '.proposals[-1] | {id, title, status}'
+
+# Check a specific proposal
+injectived query gov proposal PROPOSAL_ID \
+  --node=https://testnet.sentry.tm.injective.network:443
+```
+
+或在[测试网 Hub](https://testnet.hub.injective.network) 上查看提案。

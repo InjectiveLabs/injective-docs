@@ -1,0 +1,118 @@
+---
+title: トークンのブリッジとデプロイ
+description: Peggyを介して既存のERC-20をEthereumからInjectiveへ持ち込み、MTSトークンペアを作成し、spotマーケットをローンチします。
+updatedAt: "2026-09-09"
+---
+
+このガイドでは、既存のERC-20トークンをEthereumからInjectiveへ持ち込み、完全に運用可能な状態にするまでの手順を解説します。MetaMaskで表示され、ネイティブorderbookで取引でき、DeFiプロトコルとコンポーザブルに連携できる状態を目指します。
+
+## 標準で得られるもの
+
+<CardGroup cols={2}>
+  <Card title="Peggyブリッジ" icon="bridge" href="/jp/developers-native/bridges/ethereum">
+    EthereumとInjectiveをつなぐ、バリデーターが運用する非中央集権型のブリッジ。あなたのERC-20はInjectiveのネイティブなdenomになります。
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/jp/developers-evm/multivm-token-standard">
+    EVMとNative Injectiveをまたいで1つのトークン、1つの残高。MetaMask、Solidityコントラクト、ネイティブモジュールがすべて同一のアセットを参照します。
+  </Card>
+  <Card title="ネイティブCLOB" icon="chart-line" href="/developers-native/injective/exchange">
+    1トランザクションでトークンのspotマーケットをローンチ。makerリベートとFBAによる保護を備えたオンチェーンorderbook。
+  </Card>
+  <Card title="USDC流動性" icon="dollar-sign" href="/jp/developers-defi/usdc-stablecoin">
+    CCTPを介したネイティブUSDCがすでにInjective上で稼働中。トークンをUSDCとペアにして即座に流動性を確保できます。
+  </Card>
+</CardGroup>
+
+## ステップバイステップ
+
+<img src="/img/bridge-deploy-flow.svg" alt="Bridge and deploy flow: Ethereum to Injective" />
+
+### 1. Peggyでブリッジする
+
+Peggyブリッジコントラクトを使用して、ERC-20トークンをEthereumからInjectiveへ送信します。
+
+Ethereum側では2つのトランザクションを実行します:
+1. Peggyコントラクトにトークンの支払いを許可する **Approve**
+2. Peggyコントラクトに対して、トークンアドレス・自身のInjectiveアドレス・数量を指定して実行する **sendToInjective**
+
+あるERC-20に対する最初のブリッジトランザクションで、Injective上に `peggy0x{CONTRACT_ADDRESS}` としてdenomが自動的に作成されます。
+
+<Info>
+Peggoリレイヤーは通常2分以内にデポジットを処理します。残高は [Injectiveテストネットエクスプローラー](https://testnet.explorer.injective.network) またはREST APIで確認できます。
+</Info>
+
+詳細は [Peggyブリッジガイド](/jp/developers-native/bridges/ethereum) を参照してください。
+
+### 2. MTSトークンペアを作成する
+
+トークンペアを作成して、PeggyのdenomをEVM側（MetaMask、Solidityコントラクト、Blockscout）からアクセスできるようにします。
+
+```bash
+injectived tx erc20 create-token-pair \
+  "peggy0xYOUR_TOKEN_ADDRESS" \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=3000000 \
+  --gas-prices=160000000inj \
+  --yes
+```
+
+<Warning>
+**ガス要件:** このトランザクションには最低でも `--gas=3000000` が必要です。ERC20モジュールは内部で、ガスリミットが2Mにハードコードされたコントラクトを EVM にデプロイします。ガス値が約2.1Mを下回ると、`gas computation overflow/underflow` エラーで失敗します。
+</Warning>
+
+Peggyのdenomについては、**誰でも**トークンペアを作成できます。管理者権限は不要です。モジュールが `FixedSupplyBankERC20` コントラクトを自動的にデプロイします。
+
+トランザクションが成功したら、新しいERC20アドレスを照会します:
+
+```bash
+curl -s "https://testnet.sentry.lcd.injective.network:443/injective/erc20/v1beta1/all_token_pairs" \
+  | jq '.token_pairs[] | select(.bank_denom | contains("YOUR_TOKEN_ADDRESS"))'
+```
+
+詳細は [ERC20モジュールのドキュメント](/jp/developers-evm/erc20-module) を参照してください。
+
+### 3. トークンメタデータを設定する
+
+トークンメタデータ（name、symbol、decimals）は、MetaMask、Blockscout、およびコントラクト上で `symbol()`、`name()`、`decimals()` を呼び出すあらゆるEVMツールにおけるトークンの表示内容を決定します。
+
+<Warning>
+PeggyでブリッジされたトークンはEthereumからメタデータを自動的に引き継ぎません。MTSのERC20コントラクトはInjectiveのbankモジュールからメタデータを読み取ります。bankメタデータが設定されていない場合、トークンは名前が空欄、シンボルが空欄、decimalsが0の状態で表示されます。
+</Warning>
+
+**Peggyのdenom（`peggy0x...`）の場合:** メタデータは [ガバナンス提案](/jp/developers/testnet-proposals) によって設定する必要があります。Peggyのdenomには管理者権限が存在せず、bankモジュールのメタデータストアへ書き込めるのはガバナンスのみであるためです。提案テンプレートの全文と、テストネットのバリデーター投票についてチームと調整する方法は、[トークンメタデータガイド](/developers/assets/token-metadata) を参照してください。
+
+**TokenFactoryのdenom（`factory/...`）の場合:** denomの管理者が `MsgSetDenomMetadata` を直接呼び出せます。[TokenFactoryの例](/jp/developers-native/examples/token-factory) を参照してください。
+
+**InjectiveのdAppにおけるフロントエンド表示の場合:** トークンを [injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) に提出してください。これはオンチェーンメタデータとは別のものであり、MetaMaskやBlockscoutには影響しません。
+
+## 次にできること
+
+トークンがMTS対応でInjective上で稼働したら（ステップ3の完了後）、以下はすべて独立して選択できるオプションです:
+
+<CardGroup cols={2}>
+  <Card title="spotマーケットをローンチ" icon="chart-line" href="/jp/developers-defi/market-launch">
+    ネイティブCLOB上にトークンのorderbookを作成。1トランザクション、makerリベート、40%の手数料シェア。
+  </Card>
+  <Card title="DeFi統合" icon="building-columns" href="/jp/developers-defi/defi-integration">
+    Injectiveのネイティブモジュールとprecompileを使用して、トークンを活用したレンディングプロトコル、担保付き借入、利回りプロダクトを構築。
+  </Card>
+  <Card title="oracleフィードをセットアップ" icon="satellite-dish" href="/jp/developers-defi/provider-oracle">
+    カスタムのoracleプロバイダーを登録し、価格付けや担保評価のためのオフチェーン評価額をオンチェーンで公開。
+  </Card>
+  <Card title="パーミッションを追加" icon="shield-halved" href="/developers-native/injective/permissions">
+    機関利用のためのロールベースのコンプライアンス制御。コンソーシアムのロールをオンチェーンのパーミッションにマッピングし、KYC/AML向けのコントラクトフックを利用。
+  </Card>
+  <Card title="Vault戦略" icon="vault" href="/jp/developers-defi/defi-integration#vaults">
+    <a href="https://mito.fi" target="_blank">Mito</a> またはカスタムのvaultコントラクトによる自動化された利回り戦略。
+  </Card>
+  <Card title="クロスチェーンフロー" icon="arrows-left-right" href="/jp/developers-defi/usdc-stablecoin">
+    CCTPによるクロスチェーン送金向けのネイティブUSDC。収益をEthereumやその他の対応ネットワークへブリッジ。
+  </Card>
+</CardGroup>
+
+## 動作するサンプル
+
+[ACMEブリッジのサンプル](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/acme-bridge) は、SepoliaへのERC-20のデプロイから、MTSトークンペアの作成、メタデータの設定まで、上記のすべてのステップをカバーする完全に動作するコードベースを提供しています。

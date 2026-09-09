@@ -1,0 +1,41 @@
+---
+title: エクスチェンジとトレーディング
+description: Injectiveのネイティブなオンチェーンorderbook上で、トークン、マーケット、oracle、トレーディングインフラをローンチします。
+updatedAt: "2026-09-09"
+---
+
+Injectiveは、プロトコル層に直接組み込まれたマッチングエンジン機能を持つ、完全オンチェーンのorderbookを提供します。Injective上に構築されたエクスチェンジは、独自のUIとユーザーとの関係を維持しながらグローバルに統合された流動性プールを共有し、自身が起点となった注文の取引手数料の40%を獲得します。
+
+spot、perpetual swap、futures、そしてパーミッションレスなマーケット作成をサブ秒のブロックタイムでネイティブにサポート。構築すべきバックエンドインフラも、流動性の分断もありません。
+
+<CardGroup cols={3}>
+  <Card title="トークンをローンチ" icon="coin" href="/jp/developers-defi/token-launch">
+    TokenFactoryによる新規トークンの作成、既存トークンのブリッジ、またはInjective HubやTokenStationのようなUIツールの利用。
+  </Card>
+  <Card title="マーケットをローンチ" icon="chart-line" href="/jp/developers-defi/market-launch">
+    ネイティブCLOB上にspotまたはデリバティブの取引ペアを作成。1トランザクション、パーミッションレス。
+  </Card>
+  <Card title="oracleを設定" icon="satellite-dish" href="/jp/developers-defi/provider-oracle">
+    カスタムのoracleプロバイダーを登録し、デリバティブマーケットや担保評価のためのオフチェーン価格データを中継。
+  </Card>
+  <Card title="エクスチェンジをローンチ" icon="laptop-code" href="/developers/dapps/example-dex">
+    共有orderbookに接続するDEXフロントエンドをブートストラップ。自身が起点となった注文の取引手数料の40%を獲得。
+  </Card>
+  <Card title="Injective Trader" icon="robot" href="/jp/developers-defi/injective-trader">
+    リスク管理と分析機能を内蔵した、アルゴリズミックトレーディング戦略のためのプロフェッショナルグレードのPythonフレームワーク。
+  </Card>
+  <Card title="Denom & Bank" icon="database" href="/jp/developers-defi/denom-and-bank">
+    ネイティブのbankモジュールにおけるトークンのdenomination、bank残高、メタデータの扱い。
+  </Card>
+</CardGroup>
+
+## 主要な概念
+
+| 用語 | 説明 |
+|------|-------------|
+| **Exchangeモジュール** | orderbook管理、取引執行、注文マッチング、決済を処理するネイティブなオンチェーンモジュール。[完全なリファレンス](/developers-native/injective/exchange) |
+| **FBA（Frequent Batch Auction）** | ブロック内のすべての注文が、ブロック終了時に単一の清算価格でマッチングされます。フロントランニングを排除します。 |
+| **40%の手数料シェア** | 注文の起点となったエクスチェンジは取引手数料の40%を獲得します。残りの60%はコミュニティのburn/バイバックに充てられます。 |
+| **Tick Size** | トレーディングマーケットにおける価格と数量の最小増分。[価格tick計算ツール](/jp/developers-defi/calculate-min-price-tick-size) と [数量tick計算ツール](/jp/developers-defi/min-quantity-tick-size) を参照してください。 |
+| **Token Factory** | `factory/{creator}/{subdenom}` フォーマットによるパーミッションレスなトークン作成のためのネイティブモジュール。 |
+| **Subaccounts** | メインウォレットから分離された、マージンとポジション管理のための独立した [トレーディングアカウント](/jp/developers/concepts/trading-account)。 |

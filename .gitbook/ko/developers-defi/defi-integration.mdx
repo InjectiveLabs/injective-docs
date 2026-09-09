@@ -1,0 +1,56 @@
+---
+title: DeFi 통합
+description: 네이티브 모듈과 EVM 프리컴파일을 사용하여 Injective에서 대출 프로토콜, 담보 대출, 볼트 전략, 수익률 상품을 구축하세요.
+updatedAt: "2026-09-09"
+---
+
+Injective는 DeFi 애플리케이션을 위한 빌딩 블록을 네이티브 체인 모듈로 제공합니다. 독립적인 프로토콜 컨트랙트를 배포하고 감사하는 대신, 체인 레벨에 이미 존재하는 인프라 위에 구축할 수 있습니다.
+
+## 사용 가능한 기능
+
+| 기능 | 접근 방법 | 가능한 것 |
+|---|---|---|
+| **Exchange 모듈** | Solidity에서 [Exchange 프리컴파일](/ko/developers-evm/precompiles)(`0x68`) 또는 네이티브 SDK | 네이티브 CLOB에 대한 주문 제출, 오더북 조회, 스왑 실행 |
+| **Bank 모듈** | Solidity에서 [Bank 프리컴파일](/ko/developers-evm/bank-precompile)(`0x64`) | EVM과 네이티브 전반에서 토큰 전송, 잔액 조회, 허용량 관리 |
+| **Oracle 모듈** | [커스텀 오라클 제공자](/ko/developers-defi/provider-oracle) | 오프체인 가격 피드 또는 자산 평가를 온체인에 게시 |
+| **서브계정** | [트레이딩 계정](/ko/developers/concepts/trading-account) | 메인 지갑과 분리된 격리 마진, 포지션 관리 |
+| **Insurance fund** | [Insurance 모듈](/ko/developers-native/injective/insurance) | 파생상품 마켓 인수, 청산 부족분 흡수 |
+| **Permissions** | [Permissions 모듈](/ko/developers-native/injective/permissions) | 컴플라이언스 게이트 DeFi를 위한 역할 기반 접근 제어 |
+
+## 대출 및 담보 대출
+
+Injective의 대출 프로토콜은 다음을 사용할 수 있습니다:
+
+1. 담보 토큰을 보유하고 전송하기 위한 **Bank 프리컴파일**
+2. 실시간 담보 평가를 위한 **오라클 피드**(온체인 가격 데이터 또는 오라클 제공자를 통한 커스텀 오프체인 피드)
+3. 청산을 위한 **Exchange 프리컴파일**(담보 비율이 하락할 때 CLOB에 대해 reduce-only 주문 제출)
+4. 참여 가능 주체를 제한하기 위한 **Permissions 모듈**(규제 대상 대출 상품용)
+
+Solidity 대출 컨트랙트는 프리컴파일을 통해 이들과 상호작용하므로, 표준 EVM 컨트랙트에서 네이티브 모듈 기능을 사용할 수 있습니다. 별도의 오라클 네트워크, 청산 봇 인프라, 오더북을 구축할 필요가 없습니다.
+
+프리컴파일 인터페이스와 배포 가이드는 [EVM 프리컴파일](/ko/developers-evm/precompiles)을 참조하세요.
+
+## 볼트
+
+볼트 전략은 Injective의 DeFi 인프라에 자본을 배치하여 수익률 생성을 자동화합니다:
+
+- 네이티브 CLOB에서의 관리형 전략을 위한 **[Mito](https://mito.fi) 볼트**
+- Exchange 프리컴파일을 사용하여 거래 실행, 포지션 관리, 리밸런싱을 수행하는 Solidity **커스텀 볼트 컨트랙트**
+- 격리된 포지션 관리를 위해 서브계정을 사용하는 **LP 전략**
+
+## 시작하기
+
+<CardGroup cols={2}>
+  <Card title="EVM 프리컴파일" icon="microchip" href="/ko/developers-evm/precompiles">
+    Solidity 컨트랙트를 위한 Bank, Exchange, Oracle, Staking 프리컴파일 인터페이스.
+  </Card>
+  <Card title="스마트 컨트랙트 배포" icon="rocket" href="/ko/developers-evm/smart-contracts">
+    Hardhat 또는 Foundry를 사용하여 Injective EVM에 DeFi 컨트랙트를 배포하세요.
+  </Card>
+  <Card title="오라클 제공자" icon="satellite-dish" href="/ko/developers-defi/provider-oracle">
+    담보 평가나 마켓 가격 산정을 위한 커스텀 가격 피드 제공자를 등록하세요.
+  </Card>
+  <Card title="프리컴파일 예제" icon="github" href="https://github.com/InjectiveLabs/inj-examples/tree/main/examples/precompiles">
+    Bank, Exchange, Oracle, Staking 프리컴파일 사용법을 보여주는 작동하는 Foundry 프로젝트.
+  </Card>
+</CardGroup>

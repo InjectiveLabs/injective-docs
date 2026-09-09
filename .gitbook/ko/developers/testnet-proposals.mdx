@@ -1,26 +1,161 @@
 ---
 title: 테스트넷 제안
-updatedAt: "2026-03-03"
+description: Injective 테스트넷에서 거버넌스 제안을 제출하고 조율하는 방법.
+updatedAt: "2026-09-09"
 ---
 
-`테스트넷`에서 제안을 제출하고 싶다고 가정해 보겠습니다. 제안에 대한 투표 기간이 짧기 때문에 제안이 바로 투표 단계로 들어가지 않도록 제안의 예치금을 낮추는 것이 좋습니다. 기본적으로 `min_deposit` 값보다 약간 낮아야 합니다.
+테스트넷의 거버넌스 제안은 메인넷과 동일한 메커니즘을 따르지만 투표 기간이 더 짧습니다. 제안이 즉시 투표 단계로 들어가지 않도록 `min_deposit`보다 약간 낮은 예치금을 사용하여 조율할 시간을 확보하세요.
 
-제안을 제출한 후에는 팀에 연락해야 합니다:
+## 제안 제출하기
 
-1. [Injective Discord 서버](https://discord.gg/injective)에 가입하여 관련 채널을 찾으세요.
-2. [Injective 개발자 Telegram 채널](https://t.me/+8Y_0HOFLhnRlZDU9)에 가입하세요.
-
-다음은 `GrantProviderPrivilegeProposal`의 예시입니다
+모든 제안은 JSON 파일과 함께 동일한 CLI 명령을 사용합니다:
 
 ```bash
-injectived tx oracle grant-provider-privilege-proposal YOUR_PROVIDER \
-  YOUR_ADDRESS_HERE \
-  --title="제안 제목" \
-  --description="PROVIDER를 오라클 제공자로 등록" \
+injectived tx gov submit-proposal proposal.json \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
   --chain-id=injective-888 \
-  --from=local_key \
   --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 \
   --gas-prices=160000000inj \
-  --gas=20000000 \
-  --deposit="40000000000000000000inj" <-- 이 금액을 사용하세요
+  --deposit="40000000000000000000inj" \
+  --yes
 ```
+
+<Tip>
+검증자와 조율하기 전에 제안이 투표 단계로 들어가지 않도록, 처음에는 `--deposit="40000000000000000000inj"`(40 INJ)를 사용하여 제안을 `min_deposit` 아래로 유지하세요.
+</Tip>
+
+## 검증자 투표 조율하기
+
+제안을 제출한 후 팀에 연락하여 테스트넷 검증자 투표를 조율하세요:
+
+1. [Injective Discord 서버](https://discord.gg/injective)에 가입하여 관련 개발자 채널을 찾으세요
+2. 제안 ID와 제안 내용에 대한 간단한 설명을 공유하세요
+
+[Testnet Hub](https://testnet.hub.injective.network)에서 제안을 추적할 수도 있습니다.
+
+## 제안 예시
+
+모든 제안 JSON은 동일한 구조를 따릅니다. `messages` 배열에는 제안이 통과되면 실행되는 하나 이상의 SDK 메시지가 포함됩니다. 각 메시지의 `sender`는 거버넌스 모듈 계정 `inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt`여야 합니다.
+
+### 토큰 메타데이터 설정 (Peggy/IBC Denom)
+
+Peggy 또는 IBC를 통해 토큰을 브릿징한 후 MetaMask와 Blockscout가 올바르게 표시할 수 있도록 이름, 심볼, 소수점 자릿수를 설정해야 할 때 사용하세요.
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.tokenfactory.v1beta1.MsgSetDenomMetadata",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "metadata": {
+        "base": "peggy0xYOUR_TOKEN_ADDRESS",
+        "name": "Your Token Name",
+        "symbol": "SYMBOL",
+        "display": "SYMBOL",
+        "description": "Description of your token",
+        "decimals": 18,
+        "denom_units": [
+          { "denom": "peggy0xYOUR_TOKEN_ADDRESS", "exponent": 0, "aliases": [] },
+          { "denom": "SYMBOL", "exponent": 18, "aliases": [] }
+        ]
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Set SYMBOL token metadata",
+  "summary": "Set bank denom metadata for peggy0xYOUR_TOKEN_ADDRESS so the MTS ERC20 returns correct name, symbol, and decimals.",
+  "expedited": true
+}
+```
+
+이것이 필요한 이유와 각 denom 유형별 작동 방식은 [토큰 메타데이터 가이드](/ko/developers/assets/token-metadata)를 참조하세요.
+
+### 토큰 페어 삭제
+
+손상되었거나 잘못된 MTS 토큰 페어(예: 잘못된 메타데이터로 배포된 페어)를 제거할 때 사용하세요.
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.erc20.v1beta1.MsgDeleteTokenPair",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "bank_denom": "peggy0xYOUR_TOKEN_ADDRESS"
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Delete incorrect token pair",
+  "summary": "Remove the MTS token pair for peggy0xYOUR_TOKEN_ADDRESS so it can be recreated.",
+  "expedited": true
+}
+```
+
+### 오라클 제공자 등록
+
+파생상품 마켓을 위한 커스텀 가격 피드 제공자를 등록할 때 사용하세요.
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.oracle.v1beta1.MsgGrantProviderPrivilege",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "provider": "YOUR_PROVIDER_NAME",
+      "relayers": ["inj1YOUR_RELAYER_ADDRESS"]
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Register oracle provider",
+  "summary": "Register YOUR_PROVIDER_NAME as an oracle provider with relayer permissions.",
+  "expedited": true
+}
+```
+
+가격 피드 설정에 대한 자세한 내용은 [오라클 제공자 가이드](/ko/developers-defi/provider-oracle)를 참조하세요.
+
+### 소프트웨어 업그레이드
+
+코어 팀이 체인 업그레이드를 조율할 때 사용합니다. 참조용으로 포함되어 있습니다.
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+      "authority": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "plan": {
+        "name": "v1.21.0",
+        "height": "12345678",
+        "info": "Upgrade to v1.21.0"
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Upgrade to v1.21.0",
+  "summary": "Chain upgrade to v1.21.0 at block height 12345678.",
+  "expedited": true
+}
+```
+
+## 제안 조회하기
+
+제안의 상태를 확인하세요:
+
+```bash
+# List recent proposals
+injectived query gov proposals \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --output=json | jq '.proposals[-1] | {id, title, status}'
+
+# Check a specific proposal
+injectived query gov proposal PROPOSAL_ID \
+  --node=https://testnet.sentry.tm.injective.network:443
+```
+
+또는 [Testnet Hub](https://testnet.hub.injective.network)에서 제안을 확인하세요.

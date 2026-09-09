@@ -1,15 +1,56 @@
 ---
 title: Permissions
-updatedAt: "2026-03-07"
+description: Injective의 권한 관리형 자산을 위한 네이티브 역할 기반 접근 제어. 체인에 내장된 컴플라이언스 제어로 규제 대상 스테이블코인, 토큰화된 증권, 컨소시엄 디지털 화폐를 발행하세요.
+updatedAt: "2026-09-09"
 ---
 
-## 개요
+## 할 수 있는 것
 
-실물 자산의 권한 관리형 자산(예: 토큰화된 국채 수익률 상품)을 온체인으로 가져오려면 전송, 보유자(화이트리스트) 등과 같은 자산 행위/속성에 대한 특정 수준의 제어가 필요합니다.
+Permissions 모듈은 Injective의 모든 토큰에 대해 네이티브 체인 레벨 접근 제어를 제공합니다. 기관, 은행, 규제 대상 기업이 커스텀 스마트 컨트랙트 인프라를 배포하지 않고도 컴플라이언스가 내장된 자산을 발행할 수 있게 합니다.
 
-`permissions` 모듈은 체인 레벨에서 namespace 내에 생성된 실물 자산 및 권한 관리형 denom에 대해 특정 접두사가 붙은 행위와 역할을 관리할 수 있게 합니다. 이 모듈은 권한과 역할을 정의하고 시행하는 유연하고 확장 가능한 방법을 제공하며, Injective에서 실물 자산을 네이티브하게 발행하고 관리할 수 있는 진입점 역할을 합니다.
+### 지원되는 행위
 
-## 목차
+| 행위 | 제어 대상 |
+|---|---|
+| **MINT** | 새로운 토큰 공급량 생성 |
+| **BURN** | 보유자 자신의 주소에서 토큰 소각 |
+| **SEND** | 다른 주소로 토큰 전송 |
+| **RECEIVE** | 들어오는 토큰 전송 수락 |
+| **SUPER_BURN** | 모든 주소의 토큰 소각(규제 압류) |
+
+### 역할이 실제 사용 사례에 매핑되는 방식
+
+| 사용 사례 | 역할 | 권한 |
+|---|---|---|
+| 발행 은행 | 토큰 관리자 | MINT, BURN |
+| 회원 은행 / 검증된 보유자 | 화이트리스트에 등록된 참여자 | SEND, RECEIVE |
+| 컴플라이언스 관리자 | 규제 당국 | SUPER_BURN |
+| 컨소시엄 거버넌스 | 정책 관리자 | 역할 수정, 권한 수정, 행위 일시 중지 |
+| KYC/AML 시행 | 컨트랙트 훅 | 실행 전에 모든 전송을 컴플라이언스 규칙에 따라 검증 |
+| 리테일 / 일반 | EVERYONE(기본값) | 권한 없음(보유하거나 거래할 수 없음) |
+
+### 컨트랙트 훅
+
+이 모듈은 모든 전송 시 호출되는 Solidity 또는 WasmVM 훅을 지원합니다. 이를 통해 AML 임계값 확인, KYC 검증, 제재 대상 스크리닝, 은행 간 전송 제한 같은 커스텀 컴플라이언스 로직을 구현할 수 있습니다. Circle은 Injective에서의 USDC 컴플라이언스에 이 패턴을 사용합니다([참조 구현](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol)).
+
+## 시작하기
+
+<CardGroup cols={2}>
+  <Card title="아키텍처 및 개념" icon="sitemap" href="/ko/developers-native/injective/permissions/01_concepts">
+    Namespace, 역할, 행위, 정책 관리자 및 체인 레벨에서 RBAC가 작동하는 방식.
+  </Card>
+  <Card title="권한 관리형 자산 출시" icon="rocket" href="/ko/developers-native/injective/permissions/04_launch_permissioned_asset">
+    CLI 및 TypeScript 예제가 포함된 단계별 가이드.
+  </Card>
+  <Card title="권한 관리형 MTS 토큰" icon="lock" href="/ko/developers-evm/permissioned-multivm-token">
+    IPermissionsHook Solidity 인터페이스를 사용하여 EVM에 배포된 토큰에 권한 제어를 추가하세요.
+  </Card>
+  <Card title="Permissions API 예제" icon="code" href="/developers-native/examples/permissions">
+    모든 permissions 메시지에 대한 TypeScript SDK 예제.
+  </Card>
+</CardGroup>
+
+## 기술 참조
 
 1. [핵심 개념](/developers-native/injective/permissions/01_concepts)
 2. [State](/developers-native/injective/permissions/02_state)

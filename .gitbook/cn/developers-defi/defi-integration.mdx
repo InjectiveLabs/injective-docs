@@ -1,0 +1,56 @@
+---
+title: DeFi 集成
+description: 使用原生模块和 EVM 预编译合约在 Injective 上构建借贷协议、抵押借款、金库策略和收益产品。
+updatedAt: "2026-09-09"
+---
+
+Injective 以原生链模块的形式提供 DeFi 应用的构建模块。你无需部署和审计独立的协议合约，而是可以在链级已有的基础设施之上进行构建。
+
+## 可用能力
+
+| 能力 | 访问方式 | 可实现什么 |
+|---|---|---|
+| **Exchange 模块** | 从 Solidity 使用 [Exchange 预编译合约](/cn/developers-evm/precompiles)（`0x68`），或使用原生 SDK | 下单、查询订单簿、针对原生 CLOB 执行兑换 |
+| **Bank 模块** | 从 Solidity 使用 [Bank 预编译合约](/cn/developers-evm/bank-precompile)（`0x64`） | 在 EVM 和原生环境之间转移代币、查询余额、管理授权额度 |
+| **Oracle 模块** | [自定义 oracle provider](/cn/developers-defi/provider-oracle) | 将链下价格馈送或资产估值发布到链上 |
+| **子账户** | [交易账户](/cn/developers/concepts/trading-account) | 隔离保证金、持仓管理，与主钱包余额分离 |
+| **保险基金** | [Insurance 模块](/developers-native/injective/insurance) | 为衍生品市场承保，吸收清算缺口 |
+| **权限控制** | [Permissions 模块](/developers-native/injective/permissions) | 面向合规门控 DeFi 的基于角色的访问控制 |
+
+## 借贷与抵押借款
+
+Injective 上的借贷协议可以使用：
+
+1. **Bank 预编译合约**来持有和转移抵押代币
+2. **预言机价格馈送**获取实时抵押品估值（链上价格数据或通过 oracle provider 提供的自定义链下馈送）
+3. **Exchange 预编译合约**执行清算（当抵押率下降时向 CLOB 提交只减仓订单）
+4. **Permissions 模块**限制参与者（用于受监管的借贷产品）
+
+你的 Solidity 借贷合约通过预编译合约与这些模块交互，这意味着你可以从标准 EVM 合约获得原生模块功能。无需自建独立的预言机网络、清算机器人基础设施或订单簿。
+
+有关预编译合约接口和部署指南，请参阅 [EVM 预编译合约](/cn/developers-evm/precompiles)。
+
+## 金库
+
+金库策略通过将资金部署到 Injective 的 DeFi 基础设施来实现自动化收益：
+
+- **[Mito](https://mito.fi) 金库**：原生 CLOB 上的托管策略
+- **自定义 Solidity 金库合约**：使用 exchange 预编译合约执行交易、管理持仓和再平衡
+- **LP 策略**：使用子账户进行隔离持仓管理
+
+## 快速开始
+
+<CardGroup cols={2}>
+  <Card title="EVM 预编译合约" icon="microchip" href="/cn/developers-evm/precompiles">
+    面向 Solidity 合约的 Bank、Exchange、Oracle 和 Staking 预编译合约接口。
+  </Card>
+  <Card title="部署智能合约" icon="rocket" href="/cn/developers-evm/smart-contracts">
+    使用 Hardhat 或 Foundry 在 Injective EVM 上部署你的 DeFi 合约。
+  </Card>
+  <Card title="Oracle Provider" icon="satellite-dish" href="/cn/developers-defi/provider-oracle">
+    注册自定义价格馈送 provider，用于抵押品估值或市场定价。
+  </Card>
+  <Card title="预编译合约示例" icon="github" href="https://github.com/InjectiveLabs/inj-examples/tree/main/examples/precompiles">
+    演示 Bank、Exchange、Oracle 和 Staking 预编译合约用法的可运行 Foundry 项目。
+  </Card>
+</CardGroup>

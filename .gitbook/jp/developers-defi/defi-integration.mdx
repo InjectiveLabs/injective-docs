@@ -1,0 +1,56 @@
+---
+title: DeFi統合
+description: InjectiveのネイティブモジュールとEVM precompileを使用して、レンディングプロトコル、担保付き借入、Vault戦略、利回りプロダクトを構築します。
+updatedAt: "2026-09-09"
+---
+
+Injectiveは、DeFiアプリケーションの構成要素をネイティブなチェーンモジュールとして提供します。スタンドアロンのプロトコルコントラクトをデプロイして監査する代わりに、チェーンレベルですでに存在するインフラの上に構築できます。
+
+## 利用できる機能
+
+| 機能 | アクセス方法 | 実現できること |
+|---|---|---|
+| **Exchangeモジュール** | Solidityからの [Exchange precompile](/jp/developers-evm/precompiles)（`0x68`）、またはネイティブSDK | 注文の発注、orderbookの照会、ネイティブCLOBに対するスワップの実行 |
+| **Bankモジュール** | Solidityからの [Bank precompile](/jp/developers-evm/bank-precompile)（`0x64`） | EVMとネイティブをまたぐトークンの送金、残高の照会、アローワンスの管理 |
+| **Oracleモジュール** | [カスタムoracleプロバイダー](/jp/developers-defi/provider-oracle) | オフチェーンの価格フィードやアセット評価額をオンチェーンで公開 |
+| **Subaccounts** | [トレーディングアカウント](/jp/developers/concepts/trading-account) | メインウォレット残高から分離された、独立したマージンとポジションの管理 |
+| **保険基金** | [Insuranceモジュール](/developers-native/injective/insurance) | デリバティブマーケットの引受、清算時の不足分の吸収 |
+| **Permissions** | [Permissionsモジュール](/developers-native/injective/permissions) | コンプライアンスゲート付きDeFiのためのロールベースのアクセス制御 |
+
+## レンディングと担保付き借入
+
+Injective上のレンディングプロトコルでは、次のものを利用できます:
+
+1. 担保トークンの保有と送金のための **Bank precompile**
+2. リアルタイムの担保評価のための **oracleフィード**（オンチェーン価格データ、またはoracleプロバイダーによるカスタムのオフチェーンフィード）
+3. 清算のための **Exchange precompile**（担保比率が低下した際にCLOBに対してreduce-only注文を発注）
+4. 参加者を制限するための **Permissionsモジュール**（規制対象のレンディングプロダクト向け）
+
+Solidityのレンディングコントラクトはprecompileを介してこれらとやり取りするため、標準的なEVMコントラクトからネイティブモジュールの機能を利用できます。独自のoracleネットワーク、清算ボットのインフラ、orderbookを構築する必要はありません。
+
+precompileのインターフェースとデプロイガイドについては、[EVM Precompiles](/jp/developers-evm/precompiles) を参照してください。
+
+## Vaults
+
+Vault戦略は、InjectiveのDeFiインフラに資本を投入することで利回りの獲得を自動化します:
+
+- ネイティブCLOB上のマネージド戦略のための **[Mito](https://mito.fi) vault**
+- exchange precompileを使用して取引の執行、ポジション管理、リバランスを行うSolidityの**カスタムvaultコントラクト**
+- 独立したポジション管理のためにsubaccountを使用する**LP戦略**
+
+## はじめに
+
+<CardGroup cols={2}>
+  <Card title="EVM Precompiles" icon="microchip" href="/jp/developers-evm/precompiles">
+    Solidityコントラクト向けのBank、Exchange、Oracle、Staking precompileインターフェース。
+  </Card>
+  <Card title="スマートコントラクトのデプロイ" icon="rocket" href="/jp/developers-evm/smart-contracts">
+    HardhatまたはFoundryを使用してInjective EVMにDeFiコントラクトをデプロイ。
+  </Card>
+  <Card title="oracleプロバイダー" icon="satellite-dish" href="/jp/developers-defi/provider-oracle">
+    担保評価やマーケット価格付けのためのカスタム価格フィードプロバイダーを登録。
+  </Card>
+  <Card title="precompileのサンプル" icon="github" href="https://github.com/InjectiveLabs/inj-examples/tree/main/examples/precompiles">
+    Bank、Exchange、Oracle、Staking precompileの使用方法を示す、動作するFoundryプロジェクト。
+  </Card>
+</CardGroup>

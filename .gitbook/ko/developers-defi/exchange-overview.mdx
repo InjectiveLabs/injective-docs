@@ -1,0 +1,41 @@
+---
+title: 거래소 및 트레이딩
+description: Injective의 네이티브 온체인 오더북에서 토큰, 마켓, 오라클, 트레이딩 인프라를 출시하세요.
+updatedAt: "2026-09-09"
+---
+
+Injective는 프로토콜 레이어에 직접 내장된 매칭 엔진 기능을 갖춘 완전한 온체인 오더북을 제공합니다. Injective에서 구축된 거래소는 자체 UI와 사용자 관계를 유지하면서 전역 통합 유동성 풀을 공유하며, 자신이 발생시킨 주문의 거래 수수료 중 40%를 받습니다.
+
+현물, 무기한 스왑, 선물 및 무허가형 마켓 생성을 1초 미만의 블록 타임으로 네이티브 지원합니다. 구축해야 할 백엔드 인프라도, 유동성 파편화도 없습니다.
+
+<CardGroup cols={3}>
+  <Card title="토큰 출시" icon="coin" href="/ko/developers-defi/token-launch">
+    TokenFactory로 새 토큰을 생성하거나, 기존 토큰을 브릿징하거나, Injective Hub 또는 TokenStation 같은 UI 도구를 사용하세요.
+  </Card>
+  <Card title="마켓 출시" icon="chart-line" href="/ko/developers-defi/market-launch">
+    네이티브 CLOB에서 현물 또는 파생상품 거래 페어를 생성하세요. 트랜잭션 한 번, 무허가형.
+  </Card>
+  <Card title="오라클 구성" icon="satellite-dish" href="/ko/developers-defi/provider-oracle">
+    파생상품 마켓과 담보 평가를 위해 오프체인 가격 데이터를 릴레이하는 커스텀 오라클 제공자를 등록하세요.
+  </Card>
+  <Card title="거래소 출시" icon="laptop-code" href="/ko/developers/dapps/example-dex">
+    공유 오더북에 연결되는 DEX 프론트엔드를 부트스트랩하세요. 자신이 발생시킨 주문의 거래 수수료 중 40%를 받으세요.
+  </Card>
+  <Card title="Injective Trader" icon="robot" href="/ko/developers-defi/injective-trader">
+    리스크 관리와 분석 기능이 내장된 알고리즘 트레이딩 전략을 위한 전문가급 Python 프레임워크.
+  </Card>
+  <Card title="Denom 및 Bank" icon="database" href="/ko/developers-defi/denom-and-bank">
+    네이티브 bank 모듈에서 토큰 denomination, bank 잔액, 메타데이터를 다루세요.
+  </Card>
+</CardGroup>
+
+## 핵심 개념
+
+| 용어 | 설명 |
+|------|-------------|
+| **Exchange 모듈** | 오더북 관리, 거래 실행, 주문 매칭, 정산을 처리하는 네이티브 온체인 모듈. [전체 참조](/ko/developers-native/injective/exchange) |
+| **FBA (Frequent Batch Auction)** | 블록 내의 모든 주문이 블록 종료 시 단일 청산 가격으로 매칭됩니다. 프론트러닝을 제거합니다. |
+| **40% 수수료 분배** | 주문을 발생시킨 거래소는 거래 수수료의 40%를 받습니다. 나머지 60%는 커뮤니티 소각/바이백에 사용됩니다. |
+| **틱 사이즈** | 거래 마켓에서 가격과 수량의 최소 증가 단위. [가격 틱 계산기](/ko/developers-defi/calculate-min-price-tick-size)와 [수량 틱 계산기](/ko/developers-defi/min-quantity-tick-size)를 참조하세요. |
+| **Token Factory** | `factory/{creator}/{subdenom}` 형식의 무허가형 토큰 생성을 위한 네이티브 모듈. |
+| **서브계정** | 메인 지갑과 분리된, 마진 및 포지션 관리를 위한 격리된 [트레이딩 계정](/ko/developers/concepts/trading-account). |

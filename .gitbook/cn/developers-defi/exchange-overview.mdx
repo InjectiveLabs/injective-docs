@@ -1,0 +1,41 @@
+---
+title: 交易所与交易
+description: 在 Injective 的原生链上订单簿上发行代币、市场、预言机和交易基础设施。
+updatedAt: "2026-09-09"
+---
+
+Injective 提供完全链上的订单簿，撮合引擎能力直接内置于协议层。构建在 Injective 上的交易所共享全球统一流动性池，同时保有自己的 UI 和用户关系，并可从其发起的订单中赚取 40% 的交易费用。
+
+原生支持现货、永续合约、期货以及无需许可的市场创建，出块时间为亚秒级。无需构建后端基础设施，没有流动性碎片化。
+
+<CardGroup cols={3}>
+  <Card title="发行代币" icon="coin" href="/cn/developers-defi/token-launch">
+    通过 TokenFactory 创建新代币、桥接现有代币，或使用 Injective Hub 或 TokenStation 等 UI 工具。
+  </Card>
+  <Card title="发行市场" icon="chart-line" href="/cn/developers-defi/market-launch">
+    在原生 CLOB 上创建现货或衍生品交易对。一笔交易，无需许可。
+  </Card>
+  <Card title="配置预言机" icon="satellite-dish" href="/cn/developers-defi/provider-oracle">
+    注册自定义 oracle provider，为衍生品市场和抵押品估值中继链下价格数据。
+  </Card>
+  <Card title="启动交易所" icon="laptop-code" href="/cn/developers/dapps/example-dex">
+    搭建接入共享订单簿的 DEX 前端。从你发起的订单中赚取 40% 的交易费用。
+  </Card>
+  <Card title="Injective Trader" icon="robot" href="/cn/developers-defi/injective-trader">
+    专业级 Python 算法交易策略框架，内置风险管理和分析功能。
+  </Card>
+  <Card title="Denom 与 Bank" icon="database" href="/cn/developers-defi/denom-and-bank">
+    在原生 bank 模块中使用代币 denom、bank 余额和元数据。
+  </Card>
+</CardGroup>
+
+## 核心概念
+
+| 术语 | 描述 |
+|------|-------------|
+| **Exchange 模块** | 处理订单簿管理、交易执行、订单撮合和结算的原生链上模块。[完整参考](/developers-native/injective/exchange) |
+| **FBA（频繁批量拍卖）** | 一个区块内的所有订单在区块结束时以单一清算价格撮合。消除抢跑。 |
+| **40% 费用分成** | 发起订单的交易所赚取 40% 的交易费用。其余 60% 用于社区销毁/回购。 |
+| **Tick Size** | 交易市场中价格和数量的最小增量。参见[价格 tick 计算器](/cn/developers-defi/calculate-min-price-tick-size)和[数量 tick 计算器](/cn/developers-defi/min-quantity-tick-size)。 |
+| **Token Factory** | 用于无需许可创建代币的原生模块，格式为 `factory/{creator}/{subdenom}`。 |
+| **子账户** | 用于保证金和持仓管理的隔离[交易账户](/cn/developers/concepts/trading-account)，与主钱包分离。 |
