@@ -1,0 +1,59 @@
+---
+title: Build on Injective
+description: Choose your use case. Bridge an existing token, issue permissioned assets, build with stablecoins, or launch an exchange.
+updatedAt: "2026-09-09"
+---
+
+Injective provides native financial infrastructure (on-chain orderbook, cross-VM token standard, compliance primitives, stablecoin liquidity) as chain-level modules, not smart contract dependencies. **Less integration surface area, more out of the box.**
+
+## **Choose Your Use Case**
+
+<a href="/developers-defi/bridge-deploy" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M4 20h16"/><path d="M4 20c0-8 4-12 8-12s8 4 8 12"/><line x1="8" y1="20" x2="8" y2="14"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/></svg>
+  <span><strong>Bridge & Deploy a Token</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>Bring an existing ERC-20 from Ethereum to Injective. EVM visibility via MTS, spot markets, DeFi composability.</span></span>
+</a>
+
+<a href="/developers-defi/permissioned-assets" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <span><strong>Issue Permissioned Assets</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>Compliance-gated tokens for institutions. RBAC, KYC hooks, consortium governance as native chain primitives.</span></span>
+</a>
+
+<a href="/developers-defi/usdc-stablecoin" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><line x1="12" y1="6" x2="12" y2="18"/><path d="M15 8.5H10.5a2.5 2.5 0 0 0 0 5h3a2.5 2.5 0 0 1 0 5H9"/></svg>
+  <span><strong>Stablecoins & Payments</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>Native USDC via CCTP. Cross-chain transfers, fee mechanics, burn-attest-mint flow.</span></span>
+</a>
+
+<a href="/developers-defi/defi-integration" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+  <span><strong>DeFi Protocols</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>Lending, vaults, and yield products using native precompiles for token management, oracle feeds, and liquidations.</span></span>
+</a>
+
+<a href="/developers-defi/exchange-overview" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M6 20V14"/><path d="M6 10V4"/><path d="M12 20V10"/><path d="M12 6V4"/><path d="M18 20V16"/><path d="M18 12V4"/><line x1="4" y1="14" x2="8" y2="14"/><line x1="10" y1="10" x2="14" y2="10"/><line x1="16" y1="16" x2="20" y2="16"/></svg>
+  <span><strong>Exchange & Trading</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>On-chain CLOB with FBA. Market launch, oracle providers, trading bots, 40% fee share.</span></span>
+</a>
+
+## What Every Integrator Gets
+
+| Capability | What it means |
+|---|---|
+| **MultiVM Token Standard** | One token, one balance across EVM and Native Injective. No wrapping. |
+| **Native CLOB** | On-chain orderbook with FBA. Launch a spot market in one transaction. |
+| **Sub-second finality** | ~0.65s block time with instant finality. |
+| **USDC liquidity** | Native USDC via Circle's CCTP. Already live. |
+| **40% fee share** | Exchange dApps earn 40% of trading fees from orders they originate. |
+| **Testnet + faucets** | Full testnet with INJ and USDC faucets, EVM and Native explorers. |
+
+## Resources
+
+<CardGroup cols={3}>
+  <Card title="Testnet Resources" icon="flask-vial" href="https://chain-portal.injective.network/testnet">
+    Faucets, explorers, contracts, RPCs.
+  </Card>
+  <Card title="SDKs" icon="rectangle-code" href="/sdks-index">
+    TypeScript, Python, Go, Rust.
+  </Card>
+  <Card title="Example Projects" icon="github" href="https://github.com/InjectiveLabs/inj-examples">
+    USDC CCTP, precompiles, ACME bridge.
+  </Card>
+</CardGroup>
