@@ -1,0 +1,56 @@
+---
+title: DeFi Integration
+description: Build lending protocols, collateralized borrowing, vault strategies, and yield products on Injective using native modules and EVM precompiles.
+updatedAt: "2026-09-09"
+---
+
+Injective provides the building blocks for DeFi applications as native chain modules. Instead of deploying and auditing standalone protocol contracts, you can build on top of infrastructure that already exists at the chain level.
+
+## What's Available
+
+| Capability | How to access | What it enables |
+|---|---|---|
+| **Exchange module** | [Exchange precompile](/developers-evm/precompiles) (`0x68`) from Solidity, or native SDK | Place orders, query orderbooks, execute swaps against the native CLOB |
+| **Bank module** | [Bank precompile](/developers-evm/bank-precompile) (`0x64`) from Solidity | Transfer tokens, query balances, manage allowances across EVM and Native |
+| **Oracle module** | [Custom oracle providers](/developers-defi/provider-oracle) | Publish off-chain price feeds or asset valuations on-chain |
+| **Subaccounts** | [Trading accounts](/developers/concepts/trading-account) | Isolated margin, position management, separated from main wallet balance |
+| **Insurance fund** | [Insurance module](/developers-native/injective/insurance) | Underwrite derivative markets, absorb liquidation shortfalls |
+| **Permissions** | [Permissions module](/developers-native/injective/permissions) | Role-based access control for compliance-gated DeFi |
+
+## Lending and Collateralized Borrowing
+
+A lending protocol on Injective can use:
+
+1. **Bank precompile** to hold and transfer collateral tokens
+2. **Oracle feeds** for real-time collateral valuations (on-chain price data or custom off-chain feeds via the oracle provider)
+3. **Exchange precompile** for liquidations (place reduce-only orders against the CLOB when collateral ratios drop)
+4. **Permissions module** to restrict who can participate (for regulated lending products)
+
+Your Solidity lending contract interacts with these through precompiles, meaning you get native module functionality from standard EVM contracts. No need to build a separate oracle network, liquidation bot infrastructure, or orderbook.
+
+For precompile interfaces and deployment guides, see [EVM Precompiles](/developers-evm/precompiles).
+
+## Vaults
+
+Vault strategies automate yield generation by deploying capital into Injective's DeFi infrastructure:
+
+- **[Mito](https://mito.fi) vaults** for managed strategies on the native CLOB
+- **Custom vault contracts** in Solidity that use the exchange precompile to execute trades, manage positions, and rebalance
+- **LP strategies** using subaccounts for isolated position management
+
+## Getting Started
+
+<CardGroup cols={2}>
+  <Card title="EVM Precompiles" icon="microchip" href="/developers-evm/precompiles">
+    Bank, Exchange, Oracle, and Staking precompile interfaces for Solidity contracts.
+  </Card>
+  <Card title="Deploy Smart Contracts" icon="rocket" href="/developers-evm/smart-contracts">
+    Deploy your DeFi contracts on Injective EVM using Hardhat or Foundry.
+  </Card>
+  <Card title="Oracle Provider" icon="satellite-dish" href="/developers-defi/provider-oracle">
+    Register a custom price feed provider for collateral valuations or market pricing.
+  </Card>
+  <Card title="Precompiles Example" icon="github" href="https://github.com/InjectiveLabs/inj-examples/tree/main/examples/precompiles">
+    Working Foundry project demonstrating Bank, Exchange, Oracle, and Staking precompile usage.
+  </Card>
+</CardGroup>

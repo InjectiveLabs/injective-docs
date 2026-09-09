@@ -1,0 +1,158 @@
+---
+title: Issue Permissioned Assets
+description: Issue compliance-gated tokens on Injective with role-based access control, KYC hooks, and consortium governance.
+updatedAt: "2026-09-09"
+---
+
+This guide walks through issuing a permissioned token on Injective for institutional use cases - regulated stablecoins, tokenized securities, consortium digital money, or any asset that requires compliance controls over who can mint, burn, send, or receive.
+
+## What You Get Out of the Box
+
+<CardGroup cols={2}>
+  <Card title="TokenFactory" icon="hammer" href="/defi/tokens/token-factory">
+    Create and admin your own token. Full control over minting, burning, metadata, and admin transfer.
+  </Card>
+  <Card title="Permissions Module" icon="shield-halved" href="/developers-native/injective/permissions">
+    Role-based access control: MINT, BURN, SEND, RECEIVE, SUPER_BURN. Role managers, policy managers, and global action controls.
+  </Card>
+  <Card title="Contract Hooks" icon="code" href="/developers-evm/permissioned-multivm-token">
+    KYC/AML enforcement via Solidity or WasmVM hooks. Every transfer is validated before execution.
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/developers-evm/multivm-token-standard">
+    One token across EVM and Native Injective. Standard EVM tools (MetaMask, Hardhat) work alongside native modules.
+  </Card>
+  <Card title="Native CLOB" icon="chart-line" href="/developers-native/injective/exchange">
+    Launch a compliance-gated secondary market. Only addresses with the right permissions can trade.
+  </Card>
+  <Card title="Insurance Fund" icon="shield" href="/developers-native/injective/insurance">
+    Native insurance fund for derivative markets. Underwriters absorb liquidation shortfalls.
+  </Card>
+</CardGroup>
+
+## Consortium Role Mapping
+
+The permissions module maps directly to institutional roles:
+
+| Consortium Role | Injective Permission | What it does |
+|---|---|---|
+| **Issuer bank** | MINT, BURN | Create and destroy token supply |
+| **Member banks** | SEND, RECEIVE | Transfer tokens between whitelisted addresses |
+| **Compliance administrator** | SUPER_BURN | Burn tokens from any address (regulatory seizure) |
+| **Consortium governance** | MODIFY_ROLE_PERMISSIONS, MODIFY_ROLE_MANAGERS | Change who can assign roles and what roles can do |
+| **KYC/AML** | Contract hook | Validate every transfer against compliance rules |
+| **Retail / public** | EVERYONE role with no permissions | Cannot hold or transact the token |
+
+## Step by Step
+
+### 1. Create a TokenFactory Denom
+
+```bash
+injectived tx tokenfactory create-denom MYTOKEN \
+  --from=ADMIN_KEY \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+This creates `factory/{YOUR_ADDRESS}/MYTOKEN`. You are the admin with full control.
+
+See the [token launch guide](/developers-defi/token-launch) for UI-based and programmatic alternatives.
+
+### 2. Set Denom Metadata
+
+```bash
+injectived tx tokenfactory set-denom-metadata \
+  --from=ADMIN_KEY \
+  --metadata='{"base":"factory/YOUR_ADDRESS/MYTOKEN","name":"My Token","symbol":"MYTOKEN","display":"MYTOKEN","decimals":18,"denom_units":[{"denom":"factory/YOUR_ADDRESS/MYTOKEN","exponent":0},{"denom":"MYTOKEN","exponent":18}]}' \
+  ...
+```
+
+This sets the name, symbol, and decimals that MetaMask, Blockscout, and Solidity contracts will read. See [token metadata](/developers/assets/token-metadata) for full details.
+
+### 3. Create Permissions Namespace
+
+Define roles, assign them to addresses, and optionally attach a compliance hook:
+
+```json
+{
+  "denom": "factory/YOUR_ADDRESS/MYTOKEN",
+  "role_permissions": [
+    { "name": "ISSUER", "permissions": 5 },
+    { "name": "MEMBER", "permissions": 10 },
+    { "name": "COMPLIANCE", "permissions": 16 },
+    { "name": "EVERYONE", "permissions": 0 }
+  ],
+  "actor_roles": [
+    { "actor": "inj1_issuer_address", "roles": ["ISSUER"] },
+    { "actor": "inj1_member_bank_a", "roles": ["MEMBER"] },
+    { "actor": "inj1_compliance_admin", "roles": ["COMPLIANCE"] }
+  ]
+}
+```
+
+Permission values: MINT=1, RECEIVE=2, BURN=4, SEND=8, SUPER_BURN=16. Combine with addition (e.g., MINT+BURN = 5, SEND+RECEIVE = 10).
+
+```bash
+injectived tx permissions create-namespace namespace.json \
+  --from=ADMIN_KEY ...
+```
+
+See [how to launch a permissioned asset](/developers-native/injective/permissions/04_launch_permissioned_asset) for the full walkthrough with CLI and TypeScript examples.
+
+### 4. Create MTS Token Pair
+
+For TokenFactory denoms, the admin can provide a **custom ERC20 contract** with hardcoded compliance logic:
+
+```bash
+injectived tx erc20 create-token-pair \
+  "factory/YOUR_ADDRESS/MYTOKEN" \
+  --erc20=0xYOUR_CUSTOM_ERC20 \
+  --from=ADMIN_KEY ...
+```
+
+Or omit `--erc20` for the default `MintBurnBankERC20` deployment.
+
+See the [ERC20 module docs](/developers-evm/erc20-module) and [permissioned MTS tokens](/developers-evm/permissioned-multivm-token) for implementing a custom `IPermissionsHook`.
+
+### 5. Launch a Compliant Market
+
+Launch a spot market where only permissioned addresses can trade:
+
+```bash
+injectived tx exchange instant-spot-market-launch \
+  --ticker="MYTOKEN/USDC" \
+  --base-denom="factory/YOUR_ADDRESS/MYTOKEN" \
+  --quote-denom="erc20:0xa00C59fF5a080D2b954d0c75e46E22a0c371235a" \
+  ...
+```
+
+The permissions namespace ensures that only addresses with SEND/RECEIVE roles can hold the token - so all market participants are compliance-gated by default.
+
+See the [market launch guide](/developers-defi/market-launch).
+
+## What You Can Build After
+
+- **Oracle-backed collateral** - Publish off-chain asset valuations on-chain via a [custom oracle provider](/developers-defi/provider-oracle), then use them as collateral for lending or margin
+- **Cross-border settlement** - Instant settlement between member banks using permissioned transfers
+- **Yield distribution** - Periodic `MsgMint` to distribute yield to verified holders
+- **Regulatory seizure** - SUPER_BURN for compliance-mandated asset recovery
+- **Secondary markets** - Compliance-gated spot and derivatives markets on the native CLOB
+- **Cross-chain flows** - Bridge proceeds via [CCTP](/developers-defi/usdc-cctp-tutorial) (USDC) or [IBC](/developers-native/core/ibc)
+
+## Reference
+
+<CardGroup cols={2}>
+  <Card title="Permissions Module" icon="shield-halved" href="/developers-native/injective/permissions">
+    Architecture, concepts, roles, hooks, and policy managers.
+  </Card>
+  <Card title="Permissioned MTS Tokens" icon="lock" href="/developers-evm/permissioned-multivm-token">
+    Implement IPermissionsHook in Solidity for custom compliance logic.
+  </Card>
+  <Card title="Permissions API" icon="code" href="/developers-native/examples/permissions">
+    TypeScript SDK examples for all permissions messages.
+  </Card>
+  <Card title="Stablecoin Reference" icon="building-columns" href="https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol">
+    Circle's USDC permissions hook implementation - the production reference.
+  </Card>
+</CardGroup>
