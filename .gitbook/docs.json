@@ -331,7 +331,84 @@
             ]
           },
           {
-            "tab": "Build",
+            "tab": "Build on Injective",
+            "groups": [
+              {
+                "group": "Overview",
+                "icon": "route",
+                "expanded": true,
+                "pages": [
+                  "developers-defi/integrator-guide"
+                ]
+              },
+              {
+                "group": "Bridge & Deploy a Token",
+                "icon": "bridge",
+                "expanded": false,
+                "pages": [
+                  "developers-defi/bridge-deploy"
+                ]
+              },
+              {
+                "group": "Issue Permissioned Assets",
+                "icon": "shield-halved",
+                "expanded": false,
+                "pages": [
+                  "developers-defi/permissioned-assets"
+                ]
+              },
+              {
+                "group": "Stablecoins & Payments",
+                "icon": "coins",
+                "expanded": false,
+                "pages": [
+                  "developers-defi/usdc-stablecoin",
+                  "developers-defi/usdc-cctp-tutorial"
+                ]
+              },
+              {
+                "group": "DeFi",
+                "icon": "building-columns",
+                "expanded": false,
+                "pages": [
+                  "developers-defi/defi-integration"
+                ]
+              },
+              {
+                "group": "Exchange & Trading",
+                "icon": "chart-line",
+                "expanded": false,
+                "pages": [
+                  "developers-defi/exchange-overview",
+                  "developers-defi/token-launch",
+                  "developers-defi/market-launch",
+                  "developers-defi/calculate-min-price-tick-size",
+                  "developers-defi/min-quantity-tick-size",
+                  "developers-defi/provider-oracle",
+                  "developers-defi/denom-and-bank",
+                  {
+                    "group": "Injective Trader",
+                    "expanded": false,
+                    "pages": [
+                      "developers-defi/injective-trader/index",
+                      "developers-defi/injective-trader/simple-strategy",
+                      "developers-defi/injective-trader/strategy-development-guide"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Resources",
+                "icon": "book",
+                "expanded": false,
+                "pages": [
+                  "developers-defi/testnet-faucet-integration"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Develop",
             "groups": [
               {
                 "group": "BUILD",
@@ -755,37 +832,6 @@
                 "pages": [
                   "sdks-index",
                   "developers/concepts/cosmjs-support"
-                ]
-              }
-            ]
-          },
-          {
-            "tab": "Integrators",
-            "groups": [
-              {
-                "group": "DeFi Developers",
-                "icon": "money-bill-transfer",
-                "expanded": false,
-                "pages": [
-                  "developers-defi/index",
-                  "developers-defi/calculate-min-price-tick-size",
-                  "developers-defi/min-quantity-tick-size",
-                  "developers-defi/testnet-faucet-integration",
-                  "developers-defi/token-launch",
-                  "developers-defi/market-launch",
-                  "developers-defi/denom-and-bank",
-                  "developers-defi/provider-oracle",
-                  "developers-defi/usdc-stablecoin",
-                  "developers-defi/usdc-cctp-tutorial",
-                  {
-                    "group": "Injective Trader",
-                    "expanded": false,
-                    "pages": [
-                      "developers-defi/injective-trader/index",
-                      "developers-defi/injective-trader/simple-strategy",
-                      "developers-defi/injective-trader/strategy-development-guide"
-                    ]
-                  }
                 ]
               }
             ]

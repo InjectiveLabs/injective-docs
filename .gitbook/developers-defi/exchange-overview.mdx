@@ -1,0 +1,41 @@
+---
+title: Exchange & Trading
+description: Launch tokens, markets, oracles, and trading infrastructure on Injective's native on-chain orderbook.
+updatedAt: "2026-09-09"
+---
+
+Injective offers a fully on-chain orderbook with matching engine capabilities built directly into the protocol layer. Exchanges built on Injective share a global unified liquidity pool while maintaining their own UI and user relationships, earning 40% of trading fees from orders they originate.
+
+Native support for spot, perpetual swaps, futures, and permissionless market creation with sub-second block times. No backend infrastructure to build, no liquidity fragmentation.
+
+<CardGroup cols={3}>
+  <Card title="Launch a Token" icon="coin" href="/developers-defi/token-launch">
+    Create a new token via TokenFactory, bridge an existing one, or use a UI tool like Injective Hub or TokenStation.
+  </Card>
+  <Card title="Launch a Market" icon="chart-line" href="/developers-defi/market-launch">
+    Create spot or derivatives trading pairs on the native CLOB. One transaction, permissionless.
+  </Card>
+  <Card title="Configure an Oracle" icon="satellite-dish" href="/developers-defi/provider-oracle">
+    Register a custom oracle provider to relay off-chain price data for derivative markets and collateral valuations.
+  </Card>
+  <Card title="Launch an Exchange" icon="laptop-code" href="/developers/dapps/example-dex">
+    Bootstrap a DEX frontend that plugs into the shared orderbook. Earn 40% of trading fees from orders you originate.
+  </Card>
+  <Card title="Injective Trader" icon="robot" href="/developers-defi/injective-trader">
+    Professional-grade Python framework for algorithmic trading strategies with built-in risk management and analytics.
+  </Card>
+  <Card title="Denom & Bank" icon="database" href="/developers-defi/denom-and-bank">
+    Work with token denominations, bank balances, and metadata in the native bank module.
+  </Card>
+</CardGroup>
+
+## Key Concepts
+
+| Term | Description |
+|------|-------------|
+| **Exchange Module** | Native on-chain module handling orderbook management, trade execution, order matching, and settlement. [Full reference](/developers-native/injective/exchange) |
+| **FBA (Frequent Batch Auction)** | All orders in a block are matched at a single clearing price at block end. Eliminates front-running. |
+| **40% Fee Share** | Exchanges that originate orders earn 40% of trading fees. Remaining 60% goes to community burn/buyback. |
+| **Tick Size** | Minimum increment for price and quantity in trading markets. See [price tick calculator](/developers-defi/calculate-min-price-tick-size) and [quantity tick calculator](/developers-defi/min-quantity-tick-size). |
+| **Token Factory** | Native module for permissionless token creation with `factory/{creator}/{subdenom}` format. |
+| **Subaccounts** | Isolated [trading accounts](/developers/concepts/trading-account) for margin and position management, separated from main wallet. |

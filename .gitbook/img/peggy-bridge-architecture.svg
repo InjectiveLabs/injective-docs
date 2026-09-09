@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrowRight" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#0082FA"/>
+    </marker>
+    <marker id="arrowLeft" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
+      <polygon points="8 0, 0 3, 8 6" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrowDown" markerWidth="6" markerHeight="8" refX="3" refY="8" orient="auto">
+      <polygon points="0 0, 3 8, 6 0" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="520" rx="16" fill="url(#bg)"/>
+
+  <!-- ==================== -->
+  <!-- ARCHITECTURE SECTION -->
+  <!-- ==================== -->
+  <text x="400" y="30" font-size="14" font-weight="700" fill="#1e293b" text-anchor="middle" letter-spacing="0.5">PEGGY BRIDGE ARCHITECTURE</text>
+
+  <!-- Ethereum side -->
+  <rect x="30" y="55" width="240" height="180" rx="14" fill="white" filter="url(#shadow)" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="30" y="55" width="240" height="36" rx="14" fill="#627eea"/>
+  <rect x="30" y="77" width="240" height="14" fill="#627eea"/>
+  <text x="150" y="79" font-size="12" font-weight="700" fill="white" text-anchor="middle">ETHEREUM</text>
+
+  <!-- Peggy Contract box -->
+  <rect x="55" y="108" width="190" height="52" rx="8" fill="#eef2ff" stroke="#627eea" stroke-width="1.5"/>
+  <text x="150" y="130" font-size="12" font-weight="600" fill="#4338ca" text-anchor="middle">Peggy Contract</text>
+  <text x="150" y="148" font-size="10" fill="#64748b" text-anchor="middle">Lock / unlock ERC-20 tokens</text>
+
+  <!-- ERC-20 tokens -->
+  <rect x="55" y="172" width="190" height="36" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="150" y="195" font-size="11" fill="#64748b" text-anchor="middle">ERC-20 Tokens (USDT, WETH, ...)</text>
+
+  <!-- Injective side -->
+  <rect x="530" y="55" width="240" height="180" rx="14" fill="white" filter="url(#shadow)" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="530" y="55" width="240" height="36" rx="14" fill="#0082FA"/>
+  <rect x="530" y="77" width="240" height="14" fill="#0082FA"/>
+  <text x="650" y="79" font-size="12" font-weight="700" fill="white" text-anchor="middle">INJECTIVE</text>
+
+  <!-- Peggy Module box -->
+  <rect x="555" y="108" width="190" height="52" rx="8" fill="#e6f2ff" stroke="#0082FA" stroke-width="1.5"/>
+  <text x="650" y="130" font-size="12" font-weight="600" fill="#0052a3" text-anchor="middle">Peggy Module</text>
+  <text x="650" y="148" font-size="10" fill="#64748b" text-anchor="middle">Mint / burn peggy denoms</text>
+
+  <!-- Bank Module -->
+  <rect x="555" y="172" width="190" height="36" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="650" y="195" font-size="11" fill="#64748b" text-anchor="middle">Bank Module (peggy0x... denoms)</text>
+
+  <!-- Peggo Orchestrator in the middle -->
+  <rect x="295" y="95" width="210" height="70" rx="12" fill="white" filter="url(#shadow)" stroke="#16a34a" stroke-width="2"/>
+  <text x="400" y="122" font-size="12" font-weight="600" fill="#15803d" text-anchor="middle">Peggo Orchestrator</text>
+  <text x="400" y="140" font-size="10" fill="#64748b" text-anchor="middle">Off-chain relayer (per validator)</text>
+
+  <!-- Arrows between components -->
+  <!-- Ethereum to Peggo -->
+  <path d="M 270 130 L 293 130" stroke="#0082FA" stroke-width="1.5" fill="none" marker-end="url(#arrowRight)"/>
+  <!-- Peggo to Injective -->
+  <path d="M 507 130 L 553 130" stroke="#0082FA" stroke-width="1.5" fill="none" marker-end="url(#arrowRight)"/>
+
+  <!-- Validator label -->
+  <text x="400" y="186" font-size="9" fill="#94a3b8" text-anchor="middle">Secured by 2/3+ validator consensus</text>
+
+  <!-- ==================== -->
+  <!-- DEPOSIT FLOW         -->
+  <!-- ==================== -->
+  <text x="30" y="270" font-size="12" font-weight="700" fill="#0082FA" letter-spacing="0.5">DEPOSIT (Ethereum to Injective)</text>
+
+  <!-- Step boxes -->
+  <rect x="30" y="285" width="155" height="64" rx="10" fill="white" filter="url(#shadow)" stroke="#0082FA" stroke-width="1.5"/>
+  <text x="48" y="308" font-size="10" font-weight="700" fill="#0082FA">1</text>
+  <text x="62" y="308" font-size="11" font-weight="600" fill="#1e293b">Approve ERC-20</text>
+  <text x="48" y="326" font-size="10" fill="#64748b">Set allowance for</text>
+  <text x="48" y="338" font-size="10" fill="#64748b">Peggy contract</text>
+
+  <path d="M 185 317 L 210 317" stroke="#0082FA" stroke-width="1.5" fill="none" marker-end="url(#arrowRight)"/>
+
+  <rect x="220" y="285" width="155" height="64" rx="10" fill="white" filter="url(#shadow)" stroke="#0082FA" stroke-width="1.5"/>
+  <text x="238" y="308" font-size="10" font-weight="700" fill="#0082FA">2</text>
+  <text x="252" y="308" font-size="11" font-weight="600" fill="#1e293b">sendToInjective</text>
+  <text x="238" y="326" font-size="10" fill="#64748b">Lock tokens in</text>
+  <text x="238" y="338" font-size="10" fill="#64748b">Peggy contract</text>
+
+  <path d="M 375 317 L 400 317" stroke="#0082FA" stroke-width="1.5" fill="none" marker-end="url(#arrowRight)"/>
+
+  <rect x="410" y="285" width="155" height="64" rx="10" fill="white" filter="url(#shadow)" stroke="#0082FA" stroke-width="1.5"/>
+  <text x="428" y="308" font-size="10" font-weight="700" fill="#0082FA">3</text>
+  <text x="442" y="308" font-size="11" font-weight="600" fill="#1e293b">Peggo relays</text>
+  <text x="428" y="326" font-size="10" fill="#64748b">Validators attest to</text>
+  <text x="428" y="338" font-size="10" fill="#64748b">the deposit (~2 min)</text>
+
+  <path d="M 565 317 L 590 317" stroke="#0082FA" stroke-width="1.5" fill="none" marker-end="url(#arrowRight)"/>
+
+  <rect x="600" y="285" width="155" height="64" rx="10" fill="white" filter="url(#shadow)" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="618" y="308" font-size="10" font-weight="700" fill="#16a34a">4</text>
+  <text x="632" y="308" font-size="11" font-weight="600" fill="#1e293b">Tokens minted</text>
+  <text x="618" y="326" font-size="10" fill="#64748b">peggy0x... denom</text>
+  <text x="618" y="338" font-size="10" fill="#64748b">in bank module</text>
+
+  <!-- ==================== -->
+  <!-- WITHDRAWAL FLOW      -->
+  <!-- ==================== -->
+  <text x="30" y="390" font-size="12" font-weight="700" fill="#f59e0b" letter-spacing="0.5">WITHDRAWAL (Injective to Ethereum)</text>
+
+  <!-- Step boxes -->
+  <rect x="30" y="405" width="155" height="64" rx="10" fill="white" filter="url(#shadow)" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="48" y="428" font-size="10" font-weight="700" fill="#f59e0b">1</text>
+  <text x="62" y="428" font-size="11" font-weight="600" fill="#1e293b">MsgSendToEth</text>
+  <text x="48" y="446" font-size="10" fill="#64748b">Cosmos tx with</text>
+  <text x="48" y="458" font-size="10" fill="#64748b">amount + bridge fee</text>
+
+  <path d="M 185 437 L 210 437" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#arrowRight)"/>
+
+  <rect x="220" y="405" width="155" height="64" rx="10" fill="white" filter="url(#shadow)" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="238" y="428" font-size="10" font-weight="700" fill="#f59e0b">2</text>
+  <text x="252" y="428" font-size="11" font-weight="600" fill="#1e293b">Tokens burned</text>
+  <text x="238" y="446" font-size="10" fill="#64748b">Peggy module burns</text>
+  <text x="238" y="458" font-size="10" fill="#64748b">on Injective</text>
+
+  <path d="M 375 437 L 400 437" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#arrowRight)"/>
+
+  <rect x="410" y="405" width="155" height="64" rx="10" fill="white" filter="url(#shadow)" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="428" y="428" font-size="10" font-weight="700" fill="#f59e0b">3</text>
+  <text x="442" y="428" font-size="11" font-weight="600" fill="#1e293b">Batch + relay</text>
+  <text x="428" y="446" font-size="10" fill="#64748b">Validators batch</text>
+  <text x="428" y="458" font-size="10" fill="#64748b">withdrawals together</text>
+
+  <path d="M 565 437 L 590 437" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#arrowRight)"/>
+
+  <rect x="600" y="405" width="155" height="64" rx="10" fill="white" filter="url(#shadow)" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="618" y="428" font-size="10" font-weight="700" fill="#16a34a">4</text>
+  <text x="632" y="428" font-size="11" font-weight="600" fill="#1e293b">ERC-20 unlocked</text>
+  <text x="618" y="446" font-size="10" fill="#64748b">Peggy contract</text>
+  <text x="618" y="458" font-size="10" fill="#64748b">releases on Ethereum</text>
+
+  <!-- Bottom note -->
+  <text x="400" y="500" font-size="10" fill="#94a3b8" text-anchor="middle">Bridge fee (in withdrawn asset) incentivizes validators to process withdrawals</text>
+</svg>
