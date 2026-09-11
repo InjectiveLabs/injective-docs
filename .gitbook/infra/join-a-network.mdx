@@ -110,7 +110,16 @@ The default behavior. The node downloads and replays every block from peers. Slo
 
 #### Peer discovery
 
-Your node needs peers to sync with the network. Add seeds or persistent peers to the `[p2p]` section of `~/.injectived/config/config.toml`. Community providers maintain up-to-date seed and peer lists:
+Your node needs peers to sync with the network. Add seeds or persistent peers to the `[p2p]` section of `~/.injectived/config/config.toml`.
+
+Injective operates a seed node in the Asia region for operators who want geographically close peers:
+
+```toml
+# ~/.injectived/config/config.toml
+seeds = "d58582c3d49b6cffc465ee12e0d57b3d73f539f7@seed.mainnet.asia.injective.network:26656"
+```
+
+Community providers maintain up-to-date seed and peer lists:
 
 - [Polkachu Injective Seeds](https://polkachu.com/seeds/injective)
 - [Decentrio Injective Infrastructure](https://decentrio.ventures/infrastructure/injective) (seeds, peers, address book)
