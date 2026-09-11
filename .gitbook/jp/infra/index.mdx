@@ -1,8 +1,71 @@
 ---
-description: >-
-  このセクションでは、ノードオペレーターおよびバリデーターがsentry/バリデーターノードの運用、アップグレード、メンテナンスを行う方法について説明します。
 title: 概要
+description: >-
+  Injectiveのバリデーターノード、セントリーノード、および周辺インフラの運用、アップグレード、メンテナンスを行います。
+updatedAt: "2026-09-02"
 ---
 
-* [メインネットバリデーター](/jp/infra/validator-mainnet/)
-* [テストネットバリデーター](/jp/infra/validator-testnet/)
+このセクションでは、Injectiveネットワーク上での運用に必要なすべてを説明します：ノードのセットアップ、アップグレードの管理、ブリッジオーケストレーターの実行、インデクサーサービスの設定などです。
+
+<Columns cols={2}>
+  <Card
+    title="アーキテクチャ"
+    href="#アーキテクチャ"
+    arrow="true"
+    cta="詳しく見る"
+    icon="sitemap">
+    ノードの種類、ネットワークトポロジー、コンセンサスレイヤー、プロセス管理
+  </Card>
+  <Card
+    title="ノード運用"
+    href="/jp/infra/run-node"
+    arrow="true"
+    cta="始める"
+    icon="server">
+    keyringのセットアップ、バリデーターの設定、ノードとの対話、Cosmovisorの管理
+  </Card>
+</Columns>
+
+<Columns cols={2}>
+  <Card
+    title="ネットワークへの参加"
+    href="/jp/infra/join-a-network"
+    arrow="true"
+    cta="ノードを同期"
+    icon="network-wired">
+    バイナリのインストール、スナップショット・state sync・block syncによるメインネットまたはテストネットとの同期
+  </Card>
+  <Card
+    title="アップグレード"
+    href="/jp/infra/upgrade-node"
+    arrow="true"
+    cta="アップグレードガイド"
+    icon="arrow-up">
+    チェーンアップグレードの手順、協調アップグレードのトラブルシューティング、Operator Portal
+  </Card>
+</Columns>
+
+---
+
+## アーキテクチャ
+
+Injectiveは、Byzantine Fault Tolerant（BFT）メカニズムを備えたCometBFT（旧Tendermint）コンセンサスを採用し、サブ秒のファイナリティを実現しています。高スループットの取引活動を処理するために、ネットワークにはエンタープライズグレードの仕様（128GB RAM、高クロックCPU、NVMeストレージ）を備えたベアメタルサーバーが必要です。
+
+### ノードの種類
+
+| ノード | 役割 |
+|------|------|
+| **バリデーターノード** | ブロックの提案と投票を通じてコンセンサスに参加します。担保としてステーキングされたINJと高可用性のハードウェアが必要です。 |
+| **[セントリーノード](/jp/developers/concepts/sentry-node)** | トラフィックを中継することでバリデーターを直接の公開露出から保護するフルノードで、バリデーターとパブリックネットワークの間のゲートウェイとして機能します。 |
+
+### 主要コンポーネント
+
+| コンポーネント | 目的 |
+|-----------|---------|
+| **[Cosmovisor](/jp/infra/cosmovisor)** | チェーンバイナリのアップグレードを自動化するプロセスマネージャーで、ガバナンスで承認されたアップグレード時にダウンタイムなしの移行を可能にします。セットアップについては[ノード運用](/jp/infra/run-node)を参照してください。 |
+| **[Peggo](/infra/validator-mainnet/peggo)** | EthereumとInjectiveの間でメッセージを中継するブリッジオーケストレーターです。バリデーターには必須です。 |
+| **[WebSocketサーバー](https://github.com/InjectiveFoundation/injective-core)** | gRPC Chain Streamサーバーをラップして標準的なWebSocket接続を提供し、リアルタイムのチェーンイベントをWebSocket経由でストリーミングします。 |
+
+### チェーンアップグレード
+
+Injectiveは、事前に定められたブロック高で定期的に協調ソフトウェアアップグレードを実施します。コンセンサスを維持するには、すべてのノードが新しいバイナリに切り替える必要があります。手順については[アップグレード](/jp/infra/upgrade-node)を、トラブルシューティングについては[協調アップグレード](/jp/infra/coordinated-upgrades)ガイドを参照してください。

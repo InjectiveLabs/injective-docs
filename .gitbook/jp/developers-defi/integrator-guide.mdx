@@ -1,0 +1,59 @@
+---
+title: Injective上で構築する
+description: ユースケースを選択しましょう。既存トークンのブリッジ、パーミッションドアセットの発行、ステーブルコインを使った構築、またはエクスチェンジのローンチ。
+updatedAt: "2026-09-09"
+---
+
+Injectiveは、ネイティブな金融インフラ（オンチェーンorderbook、クロスVMトークン規格、コンプライアンスプリミティブ、ステーブルコイン流動性）を、スマートコントラクトへの依存としてではなくチェーンレベルのモジュールとして提供します。**統合に必要な作業は少なく、標準で使えるものは多く。**
+
+## **ユースケースを選択する**
+
+<a href="/jp/developers-defi/bridge-deploy" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M4 20h16"/><path d="M4 20c0-8 4-12 8-12s8 4 8 12"/><line x1="8" y1="20" x2="8" y2="14"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/></svg>
+  <span><strong>トークンのブリッジとデプロイ</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>既存のERC-20をEthereumからInjectiveへ持ち込みます。MTSによるEVM側での可視化、spotマーケット、DeFiコンポーザビリティ。</span></span>
+</a>
+
+<a href="/jp/developers-defi/permissioned-assets" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <span><strong>パーミッションドアセットの発行</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>機関向けのコンプライアンスゲート付きトークン。RBAC、KYCフック、コンソーシアムガバナンスをネイティブなチェーンプリミティブとして提供。</span></span>
+</a>
+
+<a href="/jp/developers-defi/usdc-stablecoin" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><line x1="12" y1="6" x2="12" y2="18"/><path d="M15 8.5H10.5a2.5 2.5 0 0 0 0 5h3a2.5 2.5 0 0 1 0 5H9"/></svg>
+  <span><strong>ステーブルコインと決済</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>CCTPによるネイティブUSDC。クロスチェーン送金、手数料メカニクス、burn-attest-mintフロー。</span></span>
+</a>
+
+<a href="/jp/developers-defi/defi-integration" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+  <span><strong>DeFiプロトコル</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>トークン管理、oracleフィード、清算のためのネイティブprecompileを利用したレンディング、ボールト、利回りプロダクト。</span></span>
+</a>
+
+<a href="/jp/developers-defi/exchange-overview" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M6 20V14"/><path d="M6 10V4"/><path d="M12 20V10"/><path d="M12 6V4"/><path d="M18 20V16"/><path d="M18 12V4"/><line x1="4" y1="14" x2="8" y2="14"/><line x1="10" y1="10" x2="14" y2="10"/><line x1="16" y1="16" x2="20" y2="16"/></svg>
+  <span><strong>エクスチェンジとトレーディング</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>FBAを備えたオンチェーンCLOB。マーケットローンチ、oracleプロバイダー、トレーディングボット、40%の手数料シェア。</span></span>
+</a>
+
+## すべてのインテグレーターが得られるもの
+
+| 機能 | 意味するところ |
+|---|---|
+| **MultiVM Token Standard** | EVMとNative Injectiveをまたいで1つのトークン、1つの残高。ラッピング不要。 |
+| **ネイティブCLOB** | FBAを備えたオンチェーンorderbook。1トランザクションでspotマーケットをローンチ。 |
+| **サブ秒ファイナリティ** | 約0.65秒のブロックタイムと即時ファイナリティ。 |
+| **USDC流動性** | CircleのCCTPによるネイティブUSDC。すでに稼働中。 |
+| **40%の手数料シェア** | エクスチェンジdAppは、自身が起点となった注文の取引手数料の40%を獲得。 |
+| **テストネット + faucet** | INJおよびUSDCのfaucet、EVMとネイティブのエクスプローラーを備えた完全なテストネット。 |
+
+## リソース
+
+<CardGroup cols={3}>
+  <Card title="テストネットリソース" icon="flask-vial" href="https://chain-portal.injective.network/testnet">
+    faucet、エクスプローラー、コントラクト、RPC。
+  </Card>
+  <Card title="SDK" icon="rectangle-code" href="/jp/sdks-index">
+    TypeScript、Python、Go、Rust。
+  </Card>
+  <Card title="サンプルプロジェクト" icon="github" href="https://github.com/InjectiveLabs/inj-examples">
+    USDC CCTP、precompile、ACMEブリッジ。
+  </Card>
+</CardGroup>

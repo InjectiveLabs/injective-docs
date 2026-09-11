@@ -1,26 +1,161 @@
 ---
 title: Testnet Proposals
-updatedAt: "2025-10-30"
+description: Injectiveテストネットでガバナンス提案を提出し、調整する方法。
+updatedAt: "2026-09-09"
 ---
 
-`testnet`でプロポーザルを提出したい場合を考えてみましょう。プロポーザルの投票期間が短いため、プロポーザルが直ちに投票段階に進まないようにするため、プロポーザルのデポジットを下げることをお勧めします。基本的に、`min_deposit`の値よりわずかに少ない金額にする必要があります。
+テストネットのガバナンス提案はメインネットと同じ仕組みで動作しますが、投票期間が短くなっています。提案がすぐに投票段階に入らないよう、`min_deposit`をわずかに下回るデポジットを使用し、調整のための時間を確保してください。
 
-プロポーザルを提出したら、チームに連絡する必要があります:
+## 提案の提出
 
-1. [Injective Discordサーバー](https://discord.gg/injective)に参加し、該当するチャンネルを見つけてください。
-2. [Injective Developer Telegramチャンネル](https://t.me/+8Y_0HOFLhnRlZDU9)に参加してください。
-
-以下は`GrantProviderPrivilegeProposal`の例です。
+すべての提案は、JSONファイルを指定した同じCLIコマンドを使用します:
 
 ```bash
-injectived tx oracle grant-provider-privilege-proposal YOUR_PROVIDER \
-  YOUR_ADDRESS_HERE \
-  --title="TITLE OF THE PROPOSAL" \
-  --description="Registering PROVIDER as an oracle provider" \
+injectived tx gov submit-proposal proposal.json \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
   --chain-id=injective-888 \
-  --from=local_key \
   --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 \
   --gas-prices=160000000inj \
-  --gas=20000000 \
-  --deposit="40000000000000000000inj" <-- use this amount
+  --deposit="40000000000000000000inj" \
+  --yes
 ```
+
+<Tip>
+`--deposit="40000000000000000000inj"`（40 INJ）を使用して、提案を最初は`min_deposit`未満に保ち、バリデーターとの調整が完了する前に投票段階へ進まないようにしてください。
+</Tip>
+
+## バリデーター投票の調整
+
+提案を提出したら、チームに連絡してテストネットのバリデーター投票を調整してください:
+
+1. [Injective Discordサーバー](https://discord.gg/injective)に参加し、該当する開発者チャンネルを見つける
+2. 提案IDと、提案内容の簡単な説明を共有する
+
+提案は [Testnet Hub](https://testnet.hub.injective.network) でも追跡できます。
+
+## 提案の例
+
+すべての提案JSONは同じ構造に従います。`messages`配列には、提案が可決された際に実行される1つ以上のSDKメッセージが含まれます。各メッセージの`sender`は、ガバナンスモジュールアカウント `inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt` である必要があります。
+
+### トークンメタデータの設定（Peggy/IBC Denom）
+
+PeggyまたはIBC経由でトークンをブリッジし、MetaMaskやBlockscoutで正しく表示されるようにname、symbol、decimalsを設定する必要がある場合に使用します。
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.tokenfactory.v1beta1.MsgSetDenomMetadata",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "metadata": {
+        "base": "peggy0xYOUR_TOKEN_ADDRESS",
+        "name": "Your Token Name",
+        "symbol": "SYMBOL",
+        "display": "SYMBOL",
+        "description": "Description of your token",
+        "decimals": 18,
+        "denom_units": [
+          { "denom": "peggy0xYOUR_TOKEN_ADDRESS", "exponent": 0, "aliases": [] },
+          { "denom": "SYMBOL", "exponent": 18, "aliases": [] }
+        ]
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Set SYMBOL token metadata",
+  "summary": "Set bank denom metadata for peggy0xYOUR_TOKEN_ADDRESS so the MTS ERC20 returns correct name, symbol, and decimals.",
+  "expedited": true
+}
+```
+
+なぜこれが必要なのか、denomタイプごとにどのように機能するのかについては、[トークンメタデータガイド](/developers/assets/token-metadata) を参照してください。
+
+### トークンペアの削除
+
+壊れている、または誤ったMTSトークンペア（例: 誤ったメタデータでデプロイされたもの）を削除する場合に使用します。
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.erc20.v1beta1.MsgDeleteTokenPair",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "bank_denom": "peggy0xYOUR_TOKEN_ADDRESS"
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Delete incorrect token pair",
+  "summary": "Remove the MTS token pair for peggy0xYOUR_TOKEN_ADDRESS so it can be recreated.",
+  "expedited": true
+}
+```
+
+### oracleプロバイダーの登録
+
+デリバティブマーケット向けのカスタム価格フィードプロバイダーを登録する場合に使用します。
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.oracle.v1beta1.MsgGrantProviderPrivilege",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "provider": "YOUR_PROVIDER_NAME",
+      "relayers": ["inj1YOUR_RELAYER_ADDRESS"]
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Register oracle provider",
+  "summary": "Register YOUR_PROVIDER_NAME as an oracle provider with relayer permissions.",
+  "expedited": true
+}
+```
+
+価格フィードのセットアップの詳細については、[oracleプロバイダーガイド](/jp/developers-defi/provider-oracle) を参照してください。
+
+### ソフトウェアアップグレード
+
+コアチームがチェーンアップグレードの調整に使用します。参考として掲載しています。
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+      "authority": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "plan": {
+        "name": "v1.21.0",
+        "height": "12345678",
+        "info": "Upgrade to v1.21.0"
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Upgrade to v1.21.0",
+  "summary": "Chain upgrade to v1.21.0 at block height 12345678.",
+  "expedited": true
+}
+```
+
+## 提案の照会
+
+提案のステータスを確認します:
+
+```bash
+# List recent proposals
+injectived query gov proposals \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --output=json | jq '.proposals[-1] | {id, title, status}'
+
+# Check a specific proposal
+injectived query gov proposal PROPOSAL_ID \
+  --node=https://testnet.sentry.tm.injective.network:443
+```
+
+または [Testnet Hub](https://testnet.hub.injective.network) で提案を確認してください。

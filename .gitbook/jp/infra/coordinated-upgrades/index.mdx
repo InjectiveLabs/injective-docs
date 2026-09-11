@@ -310,13 +310,23 @@ INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
 panic: Tendermint state.AppHash does not match AppHash after replay
 ```
 
-**原因：** アプリケーションstateがコンセンサスstateから乖離しました。不完全なアップグレード、ブロック実行中のクラッシュ、またはデータベースの破損によって発生する可能性があります。
+**原因：** アプリケーションstateがコンセンサスstateから乖離しました。不完全なアップグレード、ブロック実行中のクラッシュ、データベースの破損、またはstate sync後の`wasm/`ディレクトリの欠如（下記参照）によって発生する可能性があります。
 
 **解決策：**
 
 1. ロールバックを試す：`injectived rollback`
 2. ロールバックが失敗するかエラーが続く場合：スナップショットから復旧する
 3. 復旧後は必ず `priv_validator_state.json` を復元する
+
+---
+
+### CometBFT state sync後のAppHashの不一致
+
+**症状：** CometBFTのstate syncによる復元が成功した直後、最初のブロックでAppHashエラーが発生する。
+
+**原因：** CometBFTのstate sync（`config.toml`の`[statesync]`で設定されるP2Pプロトコル）はIAVLのstateツリーを復元しますが、CosmWasmのコンパイル済みコントラクトバイトコードを含む`wasm/`ディレクトリは復元**しません**。これらのファイルがないと、ローカルで計算されたapp hashがネットワークのものと一致しなくなります。
+
+**解決策：** state syncの代わりに手動のスナップショット復元を使用してください。Injectiveの公式スナップショットには`wasm/`ディレクトリが含まれています。どうしてもstate syncを使用する必要がある場合は、信頼できるソースから`wasm/`ディレクトリを入手し、ノードを起動する前に`~/.injectived/data/wasm/`に配置してください。state syncとスナップショット復元の違いの詳細については、[ネットワークへの参加 — 同期方法](/jp/infra/join-a-network)を参照してください。
 
 ---
 
@@ -403,7 +413,8 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 - [ ] ノード設定またはCLIフラグで `--halt-height=<target_height>` を設定する
 - [ ] Cosmovisorを使用している場合：正しいアップグレードディレクトリに新しいバイナリを配置する
 - [ ] `priv_validator_state.json` をバックアップする
-- [ ] ロールバックが必要になった場合に備えて、スナップショットプロバイダーを把握しておく
+- [ ] ロールバックが必要になった場合に備えて、スナップショットプロバイダーを把握しておく（[スナップショット - Chain Portal](https://portal.injective.network/snapshots)を参照）
+- [ ] 復旧にCometBFTのstate syncを使用する予定の場合：`~/.injectived/data/wasm/` のコピーを確保しておく。state syncはこのディレクトリを復元せず、その欠如はAppHashの不一致を引き起こします
 - [ ] チェーンが停止高に向かって進行するのを監視する
 
 ### アップグレード高の時点
@@ -499,38 +510,18 @@ grep db_backend ~/.injectived/config/config.toml
 
 ## スナップショットリソース
 
-### Injective提供のスナップショット
+<Callout icon="info" color="#22C55E" iconType="regular">
+**[スナップショット - Chain Portal](https://portal.injective.network/snapshots)**
 
-Injectiveは、2つのリージョンでプルーニングされたメインネットスナップショットを維持しています。最新の利用可能なブロック高とダウンロードURLについては、ステータスエンドポイントを確認してください：
+Injective提供のプルーニング済みスナップショット（EUおよびアジアリージョン）、コミュニティのスナップショットプロバイダー、アーカイブセグメントデータのダウンロードリンクと使用手順です。Chain Portalは、すべてのスナップショットリソースの正規かつ最新の情報源です。
+</Callout>
 
-| リージョン | ステータス | ダウンロード |
-|---|---|---|
-| **EU (OVH)** | [status.json](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/status.json) | `http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/` |
-| **アジア (GCS)** | [status.json](https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json) | `https://storage.googleapis.com/injective-mainnet-snapshots-asia/` |
+アーカイブセグメントのスナップショットとセグメント化されたノードフリートのセットアップについては、[アーカイブセットアップ](/jp/infra/archival-setup)ページを参照してください。
 
-最新のスナップショットをダウンロードするには、ステータスエンドポイントで現在のファイル名を確認してください：
-
-```bash
-# Check latest available snapshot (Asia example)
-curl -s https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json | jq
-
-# Download the snapshot
-wget <url from status.json>
-
-# Extract
-lz4 -d <snapshot_file>.tar.lz4 | tar xf - -C ~/.injectived/data/
-```
-
-協調セキュリティアップグレードの際、Injectiveチームが認証済みバリデーターチャンネルで緊急スナップショットを共有することもあります。アーカイブセグメントのスナップショットについては、[アーカイブセットアップ](/jp/infra/archival-setup)ページを参照してください。
-
-### コミュニティのスナップショットプロバイダー
-
-- [Polkachu Injective Snapshots](https://polkachu.com/tendermint_snapshots/injective)（通常goleveldb、プルーニング済み）
-- [HighStakes Injective Snapshots](https://tools.highstakes.ch/snapshots/injective)
-- コミュニティのバリデーターがインシデント時にバリデーターチャンネルで緊急スナップショットを共有することがあります
+協調セキュリティアップグレードの際、Injectiveチームが認証済みバリデーターチャンネルで緊急スナップショットを共有することもあります。
 
 <Warning>
-**データベースバックエンドの互換性：** スナップショットはバックエンド固有です。goleveldbのスナップショットはpebbledb向けに設定されたノードでは動作せず、その逆も同様です。ダウンロードする前に設定を確認してください：
+**データベースバックエンドの互換性：** スナップショットはバックエンド固有です。goleveldbのスナップショットはpebbledb向けに設定されたノードでは動作せず、その逆も同様です。Injectiveの公式スナップショットはgoleveldbを使用しています。PebbleDBのスナップショットは維持されていません。ダウンロードする前に設定を確認してください：
 
 ```bash
 grep db_backend ~/.injectived/config/config.toml

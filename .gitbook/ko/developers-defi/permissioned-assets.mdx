@@ -1,0 +1,158 @@
+---
+title: 권한 관리형 자산 발행
+description: 역할 기반 접근 제어, KYC 훅, 컨소시엄 거버넌스를 갖춘 컴플라이언스 게이트 토큰을 Injective에서 발행하세요.
+updatedAt: "2026-09-09"
+---
+
+이 가이드는 기관용 사용 사례를 위해 Injective에서 권한 관리형 토큰을 발행하는 과정을 안내합니다 - 규제 대상 스테이블코인, 토큰화된 증권, 컨소시엄 디지털 화폐, 또는 발행, 소각, 전송, 수신 주체에 대한 컴플라이언스 제어가 필요한 모든 자산에 해당합니다.
+
+## 기본으로 제공되는 것
+
+<CardGroup cols={2}>
+  <Card title="TokenFactory" icon="hammer" href="/ko/defi/tokens/token-factory">
+    자신만의 토큰을 생성하고 관리하세요. 발행, 소각, 메타데이터, 관리자 이전에 대한 완전한 제어.
+  </Card>
+  <Card title="Permissions 모듈" icon="shield-halved" href="/ko/developers-native/injective/permissions">
+    역할 기반 접근 제어: MINT, BURN, SEND, RECEIVE, SUPER_BURN. 역할 관리자, 정책 관리자, 전역 행위 제어.
+  </Card>
+  <Card title="컨트랙트 훅" icon="code" href="/ko/developers-evm/permissioned-multivm-token">
+    Solidity 또는 WasmVM 훅을 통한 KYC/AML 시행. 모든 전송은 실행 전에 검증됩니다.
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/ko/developers-evm/multivm-token-standard">
+    EVM과 네이티브 Injective 전반에서 하나의 토큰. 표준 EVM 도구(MetaMask, Hardhat)가 네이티브 모듈과 함께 작동합니다.
+  </Card>
+  <Card title="네이티브 CLOB" icon="chart-line" href="/ko/developers-native/injective/exchange">
+    컴플라이언스 게이트 유통 시장을 출시하세요. 올바른 권한을 가진 주소만 거래할 수 있습니다.
+  </Card>
+  <Card title="Insurance Fund" icon="shield" href="/ko/developers-native/injective/insurance">
+    파생상품 마켓을 위한 네이티브 insurance fund. 인수자가 청산 부족분을 흡수합니다.
+  </Card>
+</CardGroup>
+
+## 컨소시엄 역할 매핑
+
+permissions 모듈은 기관 역할에 직접 매핑됩니다:
+
+| 컨소시엄 역할 | Injective 권한 | 역할 |
+|---|---|---|
+| **발행 은행** | MINT, BURN | 토큰 공급량 생성 및 소멸 |
+| **회원 은행** | SEND, RECEIVE | 화이트리스트에 등록된 주소 간 토큰 전송 |
+| **컴플라이언스 관리자** | SUPER_BURN | 모든 주소의 토큰 소각(규제 압류) |
+| **컨소시엄 거버넌스** | MODIFY_ROLE_PERMISSIONS, MODIFY_ROLE_MANAGERS | 역할 할당 권한자와 역할이 할 수 있는 일 변경 |
+| **KYC/AML** | 컨트랙트 훅 | 모든 전송을 컴플라이언스 규칙에 따라 검증 |
+| **리테일 / 일반** | 권한이 없는 EVERYONE 역할 | 토큰을 보유하거나 거래할 수 없음 |
+
+## 단계별 안내
+
+### 1. TokenFactory Denom 생성
+
+```bash
+injectived tx tokenfactory create-denom MYTOKEN \
+  --from=ADMIN_KEY \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+이렇게 하면 `factory/{YOUR_ADDRESS}/MYTOKEN`이 생성됩니다. 여러분이 완전한 제어권을 가진 관리자가 됩니다.
+
+UI 기반 및 프로그래밍 방식의 대안은 [토큰 출시 가이드](/ko/developers-defi/token-launch)를 참조하세요.
+
+### 2. Denom 메타데이터 설정
+
+```bash
+injectived tx tokenfactory set-denom-metadata \
+  --from=ADMIN_KEY \
+  --metadata='{"base":"factory/YOUR_ADDRESS/MYTOKEN","name":"My Token","symbol":"MYTOKEN","display":"MYTOKEN","decimals":18,"denom_units":[{"denom":"factory/YOUR_ADDRESS/MYTOKEN","exponent":0},{"denom":"MYTOKEN","exponent":18}]}' \
+  ...
+```
+
+이렇게 하면 MetaMask, Blockscout, Solidity 컨트랙트가 읽을 이름, 심볼, 소수점 자릿수가 설정됩니다. 자세한 내용은 [토큰 메타데이터](/ko/developers/assets/token-metadata)를 참조하세요.
+
+### 3. Permissions Namespace 생성
+
+역할을 정의하고, 주소에 할당하고, 선택적으로 컴플라이언스 훅을 연결하세요:
+
+```json
+{
+  "denom": "factory/YOUR_ADDRESS/MYTOKEN",
+  "role_permissions": [
+    { "name": "ISSUER", "permissions": 5 },
+    { "name": "MEMBER", "permissions": 10 },
+    { "name": "COMPLIANCE", "permissions": 16 },
+    { "name": "EVERYONE", "permissions": 0 }
+  ],
+  "actor_roles": [
+    { "actor": "inj1_issuer_address", "roles": ["ISSUER"] },
+    { "actor": "inj1_member_bank_a", "roles": ["MEMBER"] },
+    { "actor": "inj1_compliance_admin", "roles": ["COMPLIANCE"] }
+  ]
+}
+```
+
+권한 값: MINT=1, RECEIVE=2, BURN=4, SEND=8, SUPER_BURN=16. 덧셈으로 조합합니다(예: MINT+BURN = 5, SEND+RECEIVE = 10).
+
+```bash
+injectived tx permissions create-namespace namespace.json \
+  --from=ADMIN_KEY ...
+```
+
+CLI 및 TypeScript 예제가 포함된 전체 안내는 [권한 관리형 자산 출시 방법](/ko/developers-native/injective/permissions/04_launch_permissioned_asset)을 참조하세요.
+
+### 4. MTS 토큰 페어 생성
+
+TokenFactory denom의 경우 관리자가 컴플라이언스 로직이 하드코딩된 **커스텀 ERC20 컨트랙트**를 제공할 수 있습니다:
+
+```bash
+injectived tx erc20 create-token-pair \
+  "factory/YOUR_ADDRESS/MYTOKEN" \
+  --erc20=0xYOUR_CUSTOM_ERC20 \
+  --from=ADMIN_KEY ...
+```
+
+또는 `--erc20`을 생략하면 기본 `MintBurnBankERC20`이 배포됩니다.
+
+커스텀 `IPermissionsHook` 구현에 대해서는 [ERC20 모듈 문서](/ko/developers-evm/erc20-module)와 [권한 관리형 MTS 토큰](/ko/developers-evm/permissioned-multivm-token)을 참조하세요.
+
+### 5. 컴플라이언스 준수 마켓 출시
+
+권한이 부여된 주소만 거래할 수 있는 현물 마켓을 출시하세요:
+
+```bash
+injectived tx exchange instant-spot-market-launch \
+  --ticker="MYTOKEN/USDC" \
+  --base-denom="factory/YOUR_ADDRESS/MYTOKEN" \
+  --quote-denom="erc20:0xa00C59fF5a080D2b954d0c75e46E22a0c371235a" \
+  ...
+```
+
+permissions namespace는 SEND/RECEIVE 역할을 가진 주소만 토큰을 보유할 수 있도록 보장하므로, 모든 마켓 참여자가 기본적으로 컴플라이언스 게이트를 통과하게 됩니다.
+
+[마켓 출시 가이드](/ko/developers-defi/market-launch)를 참조하세요.
+
+## 이후에 구축할 수 있는 것
+
+- **오라클 기반 담보** - [커스텀 오라클 제공자](/ko/developers-defi/provider-oracle)를 통해 오프체인 자산 평가를 온체인에 게시한 후, 대출이나 마진의 담보로 사용
+- **국경 간 정산** - 권한 관리형 전송을 사용한 회원 은행 간 즉시 정산
+- **수익률 분배** - 주기적인 `MsgMint`로 검증된 보유자에게 수익률 분배
+- **규제 압류** - 컴플라이언스에 따른 자산 회수를 위한 SUPER_BURN
+- **유통 시장** - 네이티브 CLOB에서의 컴플라이언스 게이트 현물 및 파생상품 마켓
+- **크로스체인 흐름** - [CCTP](/developers-defi/usdc-cctp-tutorial)(USDC) 또는 [IBC](/developers-native/core/ibc)를 통한 수익금 브릿징
+
+## 참조
+
+<CardGroup cols={2}>
+  <Card title="Permissions 모듈" icon="shield-halved" href="/ko/developers-native/injective/permissions">
+    아키텍처, 개념, 역할, 훅, 정책 관리자.
+  </Card>
+  <Card title="권한 관리형 MTS 토큰" icon="lock" href="/ko/developers-evm/permissioned-multivm-token">
+    커스텀 컴플라이언스 로직을 위해 Solidity로 IPermissionsHook을 구현하세요.
+  </Card>
+  <Card title="Permissions API" icon="code" href="/developers-native/examples/permissions">
+    모든 permissions 메시지에 대한 TypeScript SDK 예제.
+  </Card>
+  <Card title="스테이블코인 참조" icon="building-columns" href="https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol">
+    Circle의 USDC permissions 훅 구현 - 프로덕션 참조 자료.
+  </Card>
+</CardGroup>

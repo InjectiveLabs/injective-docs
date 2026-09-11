@@ -1,0 +1,158 @@
+---
+title: パーミッションドアセットの発行
+description: ロールベースのアクセス制御、KYCフック、コンソーシアムガバナンスを備えたコンプライアンスゲート付きトークンをInjective上で発行します。
+updatedAt: "2026-09-09"
+---
+
+このガイドでは、機関向けユースケースのためにInjective上でパーミッションドトークンを発行する手順を解説します。規制対象のステーブルコイン、トークン化された証券、コンソーシアム型デジタルマネーなど、誰がmint・burn・送信・受領できるかをコンプライアンスで制御する必要のあるあらゆるアセットが対象です。
+
+## 標準で得られるもの
+
+<CardGroup cols={2}>
+  <Card title="TokenFactory" icon="hammer" href="/jp/defi/tokens/token-factory">
+    独自トークンの作成と管理。mint、burn、メタデータ、管理者権限の移転を完全にコントロールできます。
+  </Card>
+  <Card title="Permissionsモジュール" icon="shield-halved" href="/developers-native/injective/permissions">
+    ロールベースのアクセス制御: MINT、BURN、SEND、RECEIVE、SUPER_BURN。ロールマネージャー、ポリシーマネージャー、グローバルなアクション制御。
+  </Card>
+  <Card title="コントラクトフック" icon="code" href="/jp/developers-evm/permissioned-multivm-token">
+    SolidityまたはWasmVMのフックによるKYC/AMLの強制。すべての送金が実行前に検証されます。
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/jp/developers-evm/multivm-token-standard">
+    EVMとNative Injectiveをまたぐ1つのトークン。標準的なEVMツール（MetaMask、Hardhat）がネイティブモジュールと並行して機能します。
+  </Card>
+  <Card title="ネイティブCLOB" icon="chart-line" href="/developers-native/injective/exchange">
+    コンプライアンスゲート付きのセカンダリーマーケットをローンチ。適切なパーミッションを持つアドレスのみが取引できます。
+  </Card>
+  <Card title="保険基金" icon="shield" href="/developers-native/injective/insurance">
+    デリバティブマーケット向けのネイティブ保険基金。引受人が清算時の不足分を吸収します。
+  </Card>
+</CardGroup>
+
+## コンソーシアムロールのマッピング
+
+permissionsモジュールは機関のロールに直接対応します:
+
+| コンソーシアムのロール | Injectiveのパーミッション | 役割 |
+|---|---|---|
+| **発行銀行** | MINT, BURN | トークン供給量の生成と消却 |
+| **加盟銀行** | SEND, RECEIVE | ホワイトリスト登録されたアドレス間でのトークン送金 |
+| **コンプライアンス管理者** | SUPER_BURN | 任意のアドレスからのトークンburn（規制上の差し押さえ） |
+| **コンソーシアムガバナンス** | MODIFY_ROLE_PERMISSIONS, MODIFY_ROLE_MANAGERS | ロールを割り当てられる主体と、各ロールで可能な操作の変更 |
+| **KYC/AML** | コントラクトフック | すべての送金をコンプライアンスルールに照らして検証 |
+| **リテール / 一般** | パーミッションを持たないEVERYONEロール | トークンの保有・取引不可 |
+
+## ステップバイステップ
+
+### 1. TokenFactoryのdenomを作成する
+
+```bash
+injectived tx tokenfactory create-denom MYTOKEN \
+  --from=ADMIN_KEY \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+これにより `factory/{YOUR_ADDRESS}/MYTOKEN` が作成されます。あなたが完全な権限を持つ管理者になります。
+
+UIベースやプログラムによる代替手段については、[トークンローンチガイド](/jp/developers-defi/token-launch) を参照してください。
+
+### 2. denomメタデータを設定する
+
+```bash
+injectived tx tokenfactory set-denom-metadata \
+  --from=ADMIN_KEY \
+  --metadata='{"base":"factory/YOUR_ADDRESS/MYTOKEN","name":"My Token","symbol":"MYTOKEN","display":"MYTOKEN","decimals":18,"denom_units":[{"denom":"factory/YOUR_ADDRESS/MYTOKEN","exponent":0},{"denom":"MYTOKEN","exponent":18}]}' \
+  ...
+```
+
+これにより、MetaMask、Blockscout、Solidityコントラクトが読み取るname、symbol、decimalsが設定されます。詳細は [トークンメタデータ](/developers/assets/token-metadata) を参照してください。
+
+### 3. permissionsネームスペースを作成する
+
+ロールを定義してアドレスに割り当て、必要に応じてコンプライアンスフックをアタッチします:
+
+```json
+{
+  "denom": "factory/YOUR_ADDRESS/MYTOKEN",
+  "role_permissions": [
+    { "name": "ISSUER", "permissions": 5 },
+    { "name": "MEMBER", "permissions": 10 },
+    { "name": "COMPLIANCE", "permissions": 16 },
+    { "name": "EVERYONE", "permissions": 0 }
+  ],
+  "actor_roles": [
+    { "actor": "inj1_issuer_address", "roles": ["ISSUER"] },
+    { "actor": "inj1_member_bank_a", "roles": ["MEMBER"] },
+    { "actor": "inj1_compliance_admin", "roles": ["COMPLIANCE"] }
+  ]
+}
+```
+
+パーミッション値: MINT=1、RECEIVE=2、BURN=4、SEND=8、SUPER_BURN=16。加算で組み合わせます（例: MINT+BURN = 5、SEND+RECEIVE = 10）。
+
+```bash
+injectived tx permissions create-namespace namespace.json \
+  --from=ADMIN_KEY ...
+```
+
+CLIとTypeScriptの例を含む完全なウォークスルーは、[パーミッションドアセットのローンチ方法](/developers-native/injective/permissions/04_launch_permissioned_asset) を参照してください。
+
+### 4. MTSトークンペアを作成する
+
+TokenFactoryのdenomでは、管理者はコンプライアンスロジックをハードコードした**カスタムERC20コントラクト**を指定できます:
+
+```bash
+injectived tx erc20 create-token-pair \
+  "factory/YOUR_ADDRESS/MYTOKEN" \
+  --erc20=0xYOUR_CUSTOM_ERC20 \
+  --from=ADMIN_KEY ...
+```
+
+または `--erc20` を省略すると、デフォルトの `MintBurnBankERC20` がデプロイされます。
+
+カスタムの `IPermissionsHook` の実装については、[ERC20モジュールのドキュメント](/jp/developers-evm/erc20-module) と [パーミッションドMTSトークン](/jp/developers-evm/permissioned-multivm-token) を参照してください。
+
+### 5. コンプライアンス対応マーケットをローンチする
+
+パーミッションを持つアドレスのみが取引できるspotマーケットをローンチします:
+
+```bash
+injectived tx exchange instant-spot-market-launch \
+  --ticker="MYTOKEN/USDC" \
+  --base-denom="factory/YOUR_ADDRESS/MYTOKEN" \
+  --quote-denom="erc20:0xa00C59fF5a080D2b954d0c75e46E22a0c371235a" \
+  ...
+```
+
+permissionsネームスペースにより、SEND/RECEIVEロールを持つアドレスのみがトークンを保有できることが保証されるため、すべてのマーケット参加者はデフォルトでコンプライアンスゲートの対象になります。
+
+[マーケットローンチガイド](/jp/developers-defi/market-launch) を参照してください。
+
+## この後に構築できるもの
+
+- **oracleに裏付けられた担保** - [カスタムoracleプロバイダー](/jp/developers-defi/provider-oracle) を介してオフチェーンのアセット評価額をオンチェーンで公開し、レンディングやマージンの担保として利用
+- **クロスボーダー決済** - パーミッションド送金による加盟銀行間の即時決済
+- **利回りの分配** - 定期的な `MsgMint` による検証済み保有者への利回り分配
+- **規制上の差し押さえ** - コンプライアンス上必要なアセット回収のためのSUPER_BURN
+- **セカンダリーマーケット** - ネイティブCLOB上のコンプライアンスゲート付きspot・デリバティブマーケット
+- **クロスチェーンフロー** - [CCTP](/jp/developers-defi/usdc-cctp-tutorial)（USDC）または [IBC](/developers-native/core/ibc) による収益のブリッジ
+
+## リファレンス
+
+<CardGroup cols={2}>
+  <Card title="Permissionsモジュール" icon="shield-halved" href="/developers-native/injective/permissions">
+    アーキテクチャ、概念、ロール、フック、ポリシーマネージャー。
+  </Card>
+  <Card title="パーミッションドMTSトークン" icon="lock" href="/jp/developers-evm/permissioned-multivm-token">
+    カスタムのコンプライアンスロジックのためにSolidityでIPermissionsHookを実装。
+  </Card>
+  <Card title="Permissions API" icon="code" href="/jp/developers-native/examples/permissions">
+    すべてのpermissionsメッセージのTypeScript SDKサンプル。
+  </Card>
+  <Card title="ステーブルコインリファレンス" icon="building-columns" href="https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol">
+    CircleによるUSDCのpermissionsフック実装。プロダクションレベルのリファレンスです。
+  </Card>
+</CardGroup>

@@ -1,13 +1,36 @@
 ---
-title: 升级你的节点
-updatedAt: "2026-02-13"
+title: 概述
+updatedAt: "2026-09-02"
 ---
+
+<Columns cols={2}>
+  <Card
+    title="实时升级"
+    href="https://chain-portal.injective.network/upgrades"
+    arrow="true"
+    cta="Operator Portal"
+    icon="arrow-up">
+    跟踪进行中和即将到来的网络升级、治理提案和激活时间表
+  </Card>
+  <Card
+    title="发布二进制文件"
+    href="https://github.com/InjectiveFoundation/injective-core/releases"
+    arrow="true"
+    cta="GitHub Releases"
+    icon="code-branch">
+    从 InjectiveFoundation/injective-core 下载最新及之前版本的 injectived 和 peggo 二进制文件
+  </Card>
+</Columns>
+
+<Callout icon="warning" color="#FF8C00" iconType="regular">
+**验证者：** 在升级之前，请阅读[验证者故障排查指南](/cn/infra/coordinated-upgrades)，了解关键安全规则、常见故障模式和恢复流程。在升级期间对 `priv_validator_state.json` 处理不当，可能导致双重签名和永久性 tombstoned。
+
+如果你还不是经过验证的验证者频道的成员，请通过 [Discord](https://discord.gg/injective) 联系 Injective 团队以获取加入权限。升级协调、应急快照和事故沟通都在这些频道中进行。
+</Callout>
 
 ### 链升级
 
 Injective 定期进行软件升级。当链升级治理提案通过时，将指定一个区块高度，届时所有节点将自动 panic 并停止运行。此时，可以安装升级后的 `injectived` 二进制文件，并重新启动节点。
-
-请参阅 [InjectiveLabs/injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases/releases) 获取最新和之前的链版本。
 
 ### 节点升级步骤
 
@@ -18,6 +41,10 @@ Injective 定期进行软件升级。当链升级治理提案通过时，将指�
 3. 删除旧的二进制文件并安装新版本的二进制文件。
 4. 重新启动节点。
 
+<Note>
+如果升级失败或哨兵节点损坏，请参阅[快照页面](https://chain-portal.injective.network/snapshots)，了解从新快照重新同步节点的选项。
+</Note>
+
 ### 使用 Cosmovisor 升级
 
 要管理链升级，请使用 [Cosmovisor](./cosmovisor/)。
@@ -26,4 +53,4 @@ Injective 定期进行软件升级。当链升级治理提案通过时，将指�
 
 随着 Injective 状态的增长，你的磁盘空间可能会被填满。建议你通过下载新快照定期修剪链数据。除了磁盘开销外，当链状态较小时，节点性能也会更好。
 
-Injective validator 每天都会创建轻量级快照，你可以使用这些快照来清理链状态，链状态每天大约增长 10-15 GB。这些快照通常只有 2-3 GB 左右。我们建议每 300-400 GB 修剪一次链数据。有关快照链接以及应用快照/同步节点的说明，请参阅[加入 Mainnet](./join-a-network/)。
+Injective validator 每天都会创建轻量级快照，你可以使用这些快照来清理链状态，链状态每天大约增长 10-15 GB。这些快照通常只有 2-3 GB 左右。我们建议每 300-400 GB 修剪一次链数据。有关快照下载链接和使用说明，请参阅 [Chain Portal 上的快照页面](https://portal.injective.network/snapshots)。有关同步节点的说明，请参阅[加入网络](./join-a-network/)。

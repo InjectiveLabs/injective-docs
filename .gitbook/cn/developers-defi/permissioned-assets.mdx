@@ -1,0 +1,158 @@
+---
+title: 发行权限化资产
+description: 在 Injective 上发行带有基于角色的访问控制、KYC 钩子和联盟治理的合规门控代币。
+updatedAt: "2026-09-09"
+---
+
+本指南将带你在 Injective 上为机构用例发行权限化代币——受监管稳定币、代币化证券、联盟数字货币，或任何需要对铸造、销毁、发送或接收进行合规控制的资产。
+
+## 开箱即用的能力
+
+<CardGroup cols={2}>
+  <Card title="TokenFactory" icon="hammer" href="/cn/defi/tokens/token-factory">
+    创建并管理你自己的代币。对铸造、销毁、元数据和管理员转移拥有完全控制权。
+  </Card>
+  <Card title="Permissions 模块" icon="shield-halved" href="/developers-native/injective/permissions">
+    基于角色的访问控制：MINT、BURN、SEND、RECEIVE、SUPER_BURN。角色管理者、策略管理者和全局操作控制。
+  </Card>
+  <Card title="合约钩子" icon="code" href="/cn/developers-evm/permissioned-multivm-token">
+    通过 Solidity 或 WasmVM 钩子强制执行 KYC/AML。每笔转账在执行前都会被验证。
+  </Card>
+  <Card title="MultiVM 代币标准" icon="arrows-repeat" href="/cn/developers-evm/multivm-token-standard">
+    一份代币，通用于 EVM 和原生 Injective。标准 EVM 工具（MetaMask、Hardhat）与原生模块并行可用。
+  </Card>
+  <Card title="原生 CLOB" icon="chart-line" href="/developers-native/injective/exchange">
+    发行合规门控的二级市场。只有拥有相应权限的地址才能交易。
+  </Card>
+  <Card title="保险基金" icon="shield" href="/developers-native/injective/insurance">
+    衍生品市场的原生保险基金。承保方吸收清算缺口。
+  </Card>
+</CardGroup>
+
+## 联盟角色映射
+
+permissions 模块可直接映射到机构角色：
+
+| 联盟角色 | Injective 权限 | 作用 |
+|---|---|---|
+| **发行银行** | MINT, BURN | 创建和销毁代币供应量 |
+| **成员银行** | SEND, RECEIVE | 在白名单地址之间转移代币 |
+| **合规管理员** | SUPER_BURN | 从任意地址销毁代币（监管没收） |
+| **联盟治理** | MODIFY_ROLE_PERMISSIONS, MODIFY_ROLE_MANAGERS | 更改谁可以分配角色以及角色可以做什么 |
+| **KYC/AML** | 合约钩子 | 根据合规规则验证每笔转账 |
+| **零售 / 公众** | 无任何权限的 EVERYONE 角色 | 无法持有或交易该代币 |
+
+## 分步指南
+
+### 1. 创建 TokenFactory Denom
+
+```bash
+injectived tx tokenfactory create-denom MYTOKEN \
+  --from=ADMIN_KEY \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+这会创建 `factory/{YOUR_ADDRESS}/MYTOKEN`。你是拥有完全控制权的管理员。
+
+有关基于 UI 和编程方式的替代方案，请参阅[代币发行指南](/cn/developers-defi/token-launch)。
+
+### 2. 设置 Denom 元数据
+
+```bash
+injectived tx tokenfactory set-denom-metadata \
+  --from=ADMIN_KEY \
+  --metadata='{"base":"factory/YOUR_ADDRESS/MYTOKEN","name":"My Token","symbol":"MYTOKEN","display":"MYTOKEN","decimals":18,"denom_units":[{"denom":"factory/YOUR_ADDRESS/MYTOKEN","exponent":0},{"denom":"MYTOKEN","exponent":18}]}' \
+  ...
+```
+
+这会设置 MetaMask、Blockscout 和 Solidity 合约将读取的名称、符号和小数位数。完整细节请参阅[代币元数据](/cn/developers/assets/token-metadata)。
+
+### 3. 创建 Permissions 命名空间
+
+定义角色、将其分配给地址，并可选择附加一个合规钩子：
+
+```json
+{
+  "denom": "factory/YOUR_ADDRESS/MYTOKEN",
+  "role_permissions": [
+    { "name": "ISSUER", "permissions": 5 },
+    { "name": "MEMBER", "permissions": 10 },
+    { "name": "COMPLIANCE", "permissions": 16 },
+    { "name": "EVERYONE", "permissions": 0 }
+  ],
+  "actor_roles": [
+    { "actor": "inj1_issuer_address", "roles": ["ISSUER"] },
+    { "actor": "inj1_member_bank_a", "roles": ["MEMBER"] },
+    { "actor": "inj1_compliance_admin", "roles": ["COMPLIANCE"] }
+  ]
+}
+```
+
+权限值：MINT=1、RECEIVE=2、BURN=4、SEND=8、SUPER_BURN=16。通过加法组合（例如 MINT+BURN = 5，SEND+RECEIVE = 10）。
+
+```bash
+injectived tx permissions create-namespace namespace.json \
+  --from=ADMIN_KEY ...
+```
+
+包含 CLI 和 TypeScript 示例的完整演练请参阅[如何发行权限化资产](/developers-native/injective/permissions/04_launch_permissioned_asset)。
+
+### 4. 创建 MTS 代币对
+
+对于 TokenFactory denom，管理员可以提供硬编码合规逻辑的**自定义 ERC20 合约**：
+
+```bash
+injectived tx erc20 create-token-pair \
+  "factory/YOUR_ADDRESS/MYTOKEN" \
+  --erc20=0xYOUR_CUSTOM_ERC20 \
+  --from=ADMIN_KEY ...
+```
+
+或者省略 `--erc20` 以使用默认的 `MintBurnBankERC20` 部署。
+
+有关实现自定义 `IPermissionsHook`，请参阅 [ERC20 模块文档](/cn/developers-evm/erc20-module)和[权限化 MTS 代币](/cn/developers-evm/permissioned-multivm-token)。
+
+### 5. 发行合规市场
+
+发行一个只有权限化地址才能交易的现货市场：
+
+```bash
+injectived tx exchange instant-spot-market-launch \
+  --ticker="MYTOKEN/USDC" \
+  --base-denom="factory/YOUR_ADDRESS/MYTOKEN" \
+  --quote-denom="erc20:0xa00C59fF5a080D2b954d0c75e46E22a0c371235a" \
+  ...
+```
+
+permissions 命名空间确保只有拥有 SEND/RECEIVE 角色的地址才能持有该代币——因此所有市场参与者默认都受到合规门控。
+
+请参阅[市场发行指南](/cn/developers-defi/market-launch)。
+
+## 之后可以构建什么
+
+- **预言机支持的抵押品** - 通过[自定义 oracle provider](/cn/developers-defi/provider-oracle) 将链下资产估值发布到链上，然后将其用作借贷或保证金的抵押品
+- **跨境结算** - 使用权限化转账在成员银行之间进行即时结算
+- **收益分配** - 定期执行 `MsgMint` 向已验证的持有者分配收益
+- **监管没收** - 使用 SUPER_BURN 进行合规要求的资产追回
+- **二级市场** - 在原生 CLOB 上建立合规门控的现货和衍生品市场
+- **跨链流程** - 通过 [CCTP](/cn/developers-defi/usdc-cctp-tutorial)（USDC）或 [IBC](/developers-native/core/ibc) 桥接资金
+
+## 参考
+
+<CardGroup cols={2}>
+  <Card title="Permissions 模块" icon="shield-halved" href="/developers-native/injective/permissions">
+    架构、概念、角色、钩子和策略管理者。
+  </Card>
+  <Card title="权限化 MTS 代币" icon="lock" href="/cn/developers-evm/permissioned-multivm-token">
+    在 Solidity 中实现 IPermissionsHook 以实现自定义合规逻辑。
+  </Card>
+  <Card title="Permissions API" icon="code" href="/cn/developers-native/examples/permissions">
+    所有 permissions 消息的 TypeScript SDK 示例。
+  </Card>
+  <Card title="稳定币参考实现" icon="building-columns" href="https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol">
+    Circle 的 USDC permissions 钩子实现——生产级参考。
+  </Card>
+</CardGroup>

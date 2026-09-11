@@ -1,25 +1,158 @@
 ---
 title: 토큰 메타데이터
-updatedAt: "2026-03-03"
+description: Injective에서 각 denom 유형별로 온체인(bank 모듈)과 오프체인(injective-lists) 토큰 메타데이터를 설정하는 방법.
+updatedAt: "2026-09-09"
 ---
 
-Injective의 자산은 denom으로 표현됩니다. Denom(및 금액)은 사람이 읽을 수 없으므로 특정 denom에 대한 토큰 메타데이터 정보를 "첨부"할 수 있는 방법이 필요합니다.
+토큰 메타데이터(이름, 심볼, 소수점 자릿수)는 두 시스템에서 토큰이 표시되는 방식을 제어합니다:
 
-시작하기 섹션에서 우리가 가진 denom 유형을 다시 살펴보겠습니다:
+| 시스템 | 읽는 주체 | 설정 방법 |
+|---|---|---|
+| **온체인 (bank 모듈)** | MetaMask, Blockscout, `symbol()` / `name()` / `decimals()`를 호출하는 Solidity 컨트랙트, 모든 EVM 도구 | denom 유형에 따라 다름(아래 참조) |
+| **오프체인 (injective-lists)** | Injective 네이티브 프론트엔드(Hub, Explorer, TypeScript SDK로 구축된 트레이딩 dApp) | [injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)에 PR 제출 |
 
-* **Native denom** - 이 유형의 denom은 Injective의 네이티브 코인을 나타내는 `inj` denom 하나만 있습니다.
-* **Peggy denom** - 이러한 denom은 Peggy 브릿지를 사용하여 Ethereum에서 Injective로 브릿지된 자산을 나타냅니다. `peggy{ERC20_CONTRACT_ADDRESS}` 형식입니다.
-* **IBC denom** - 이러한 denom은 IBC를 통해 다른 Cosmos 체인에서 브릿지된 자산을 나타냅니다. `ibc/{hash}` 형식입니다.
-* **Insurance Fund Denom** - 이러한 denom은 Injective에서 생성된 insurance fund의 토큰 지분을 나타냅니다. `share{id}` 형식입니다.
-* **Factory Denom** - 이러한 denom은 Injective 네이티브 bank 모듈에서 Cosmwasm의 CW20 토큰을 표현한 것입니다. `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` 형식이며, 여기서 `CW20_ADAPTER_CONTRACT`는 CW20과 네이티브 Bank 모듈을 변환하는 어댑터 컨트랙트 주소입니다.
+완전한 통합을 위해서는 둘 다 필요합니다. 온체인 메타데이터는 EVM 호환성을 보장하고, 오프체인 메타데이터는 Injective dApp에서의 표시를 보장합니다.
 
-빠른 액세스를 위해 오프체인에서 [injective-lists](https://github.com/InjectiveLabs/injective-lists/tree/master/tokens) 저장소에 토큰 메타데이터 목록을 유지합니다.
+## 온체인 메타데이터 설정
 
-## 토큰 검증
+bank 모듈 메타데이터를 설정하는 방법은 denom 유형에 따라 다릅니다:
 
-토큰의 메타데이터를 검증하는 것은 몇 가지 방법으로 수행할 수 있습니다. 다음은 검증 수준과 그 의미입니다:
+<Tabs>
 
-* **Verified** → 자산 메타데이터가 `@injectivelabs/token-metadata` 패키지에 **제출되고 검증**되었습니다. 패키지에 토큰 메타데이터를 추가하는 방법에 대한 튜토리얼은 [여기](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)에서 찾을 수 있습니다.
-* **Internal** → [여기](/developers-native/examples/token-factory)에서 설명한 대로 `MsgSetDenomMetadata` 메시지를 사용하여 온체인에서 자산의 메타데이터가 검증되었습니다.
-* **External** → 자산의 메타데이터가 Ethereum의 컨트랙트 세부 정보 등 외부 소스에서 검증되었습니다.
-* **Unverified** → 자산의 메타데이터가 어디에도 제공되지 않았습니다.
+<Tab title="TokenFactory (factory/...)" icon="hammer">
+
+denom 관리자가 `MsgSetDenomMetadata`를 사용하여 직접 메타데이터를 설정할 수 있습니다:
+
+```bash
+injectived tx tokenfactory set-denom-metadata metadata.json \
+  --from=ADMIN_KEY \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+여기서 `metadata.json`은 다음과 같습니다:
+
+```json
+{
+  "base": "factory/YOUR_ADDRESS/MYTOKEN",
+  "name": "My Token",
+  "symbol": "MYTOKEN",
+  "display": "MYTOKEN",
+  "description": "Description of your token",
+  "decimals": 18,
+  "denom_units": [
+    { "denom": "factory/YOUR_ADDRESS/MYTOKEN", "exponent": 0, "aliases": [] },
+    { "denom": "MYTOKEN", "exponent": 18, "aliases": [] }
+  ]
+}
+```
+
+설정이 완료되면 MTS ERC20 컨트랙트는 즉시 `name()`, `symbol()`, `decimals()`에 대해 올바른 값을 반환합니다.
+
+TypeScript SDK 사용법은 [TokenFactory 예제](/developers-native/examples/token-factory)를 참조하세요.
+
+</Tab>
+
+<Tab title="Peggy (peggy0x...)" icon="bridge">
+
+Peggy로 브릿징된 토큰은 Ethereum의 메타데이터를 상속받지 않습니다. Peggy 브릿지는 denom을 생성하지만 이름, 심볼, 소수점 자릿수는 설정하지 않습니다.
+
+**Peggy denom의 메타데이터를 설정하려면 [거버넌스 제안](/ko/developers/testnet-proposals)이 필요합니다.** Peggy denom에는 관리자 권한이 없기 때문입니다 - 거버넌스 모듈만이 이러한 denom에 대해 bank 모듈의 메타데이터 저장소에 쓸 수 있습니다.
+
+sender가 거버넌스 모듈 계정인 `MsgSetDenomMetadata`로 [제안을 제출](/ko/developers/testnet-proposals)하세요:
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.tokenfactory.v1beta1.MsgSetDenomMetadata",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "metadata": {
+        "base": "peggy0xYOUR_TOKEN_ADDRESS",
+        "name": "Your Token Name",
+        "symbol": "SYMBOL",
+        "display": "SYMBOL",
+        "description": "Your token description",
+        "decimals": 18,
+        "denom_units": [
+          { "denom": "peggy0xYOUR_TOKEN_ADDRESS", "exponent": 0, "aliases": [] },
+          { "denom": "SYMBOL", "exponent": 18, "aliases": [] }
+        ]
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "100000000000000000000inj",
+  "title": "Set TOKEN metadata",
+  "summary": "Set bank denom metadata for peggy0xYOUR_TOKEN_ADDRESS so the MTS ERC20 returns correct name, symbol, and decimals.",
+  "expedited": true
+}
+```
+
+다음 명령으로 제출하세요:
+
+```bash
+injectived tx gov submit-proposal proposal.json \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+제안이 통과되면 MTS ERC20 컨트랙트가 즉시 올바른 메타데이터를 반환합니다 - 재배포가 필요하지 않습니다.
+
+<Tip>
+**테스트넷 제안:** 제안이 즉시 투표 단계로 들어가지 않도록 `min_deposit`보다 약간 낮은 예치금을 사용하세요. 제출 후 [Discord](https://discord.gg/injective) 또는 [개발자 Telegram](https://t.me/+Nsy2KjGWtOE5NTY9)에서 팀에 연락하여 검증자 투표를 조율하세요. 자세한 내용은 [테스트넷 제안 가이드](/ko/developers/testnet-proposals)를 참조하세요.
+</Tip>
+
+<Warning>
+메타데이터를 설정하기 전에 MTS 토큰 페어를 생성하면 ERC20 컨트랙트는 빈 이름, 빈 심볼, 0 소수점 자릿수를 반환합니다. MetaMask는 토큰을 올바르게 표시하지 못하고, Blockscout는 이름으로 인덱싱하지 않습니다. 메타데이터는 페어 생성 전후 어느 시점에든 설정할 수 있습니다 - ERC20은 매 호출마다 bank 모듈에서 읽습니다.
+</Warning>
+
+거버넌스 제안 템플릿을 포함한 전체 안내는 [ACME 브릿지 예제](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/acme-bridge)를 참조하세요.
+
+</Tab>
+
+<Tab title="IBC (ibc/...)" icon="arrows-left-right">
+
+Peggy denom과 동일합니다 - IBC denom에는 관리자 권한이 없습니다. Peggy 탭에 표시된 것과 동일한 `MsgSetDenomMetadata` 패턴을 사용하여 거버넌스 제안을 통해 메타데이터를 설정해야 합니다.
+
+`base`와 `denom_units[0].denom`을 여러분의 IBC denom(예: `ibc/2CBC2EA121AE42563B08028B51D50FB7B0DABBEE2F1E37C98EBB4347B7BE8FBC`)으로 교체하세요.
+
+</Tab>
+
+<Tab title="ERC20 (erc20:0x...)" icon="ethereum">
+
+Injective의 EVM에 네이티브로 배포된(브릿징되지 않은) 토큰의 경우, 토큰 배포자가 bank 프리컴파일의 `setMetadata` 함수를 통해 메타데이터를 설정할 수 있습니다:
+
+```solidity
+// Call from the same account that deployed the ERC20
+IBankModule(0x0000000000000000000000000000000000000064).setMetadata(
+    tokenAddress,
+    "Token Name",
+    "SYMBOL",
+    18
+);
+```
+
+이는 bank 모듈에 직접 씁니다. `erc20:` denom에만 작동하며, 프리컴파일은 다른 denom 유형을 거부합니다.
+
+</Tab>
+
+</Tabs>
+
+## 프론트엔드 메타데이터 (injective-lists)
+
+Injective 네이티브 dApp(Hub, Explorer, `@injectivelabs/sdk-ts`로 구축된 트레이딩 인터페이스)에서의 표시를 위해서는 [injective-lists](https://github.com/InjectiveLabs/injective-lists) 저장소에 토큰을 제출하세요.
+
+이는 **온체인 메타데이터와 별개**입니다. injective-lists는 Injective 프론트엔드에서의 표시를 제어하고, bank 모듈 메타데이터는 EVM 도구(MetaMask, Blockscout, Solidity)가 보는 것을 제어합니다.
+
+[기여 가이드](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)에 따라 토큰 메타데이터가 포함된 PR을 제출하세요.
+
+<Info>
+토큰이 injective-lists에 없으면 `TokenFactoryStatic`은 해당 denom에 대해 `undefined`를 반환합니다. 설정 방법은 [injective-lists 통합 가이드](/ko/developers/assets/injective-list)를 참조하세요.
+</Info>

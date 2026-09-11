@@ -1,0 +1,59 @@
+---
+title: Injective에서 구축하기
+description: 사용 사례를 선택하세요. 기존 토큰을 브릿징하거나, 권한 관리형 자산을 발행하거나, 스테이블코인으로 구축하거나, 거래소를 출시하세요.
+updatedAt: "2026-09-09"
+---
+
+Injective는 네이티브 금융 인프라(온체인 오더북, 크로스 VM 토큰 표준, 컴플라이언스 프리미티브, 스테이블코인 유동성)를 스마트 컨트랙트 의존성이 아닌 체인 레벨 모듈로 제공합니다. **더 적은 통합 작업으로, 더 많은 기능을 기본 제공합니다.**
+
+## **사용 사례 선택하기**
+
+<a href="/ko/developers-defi/bridge-deploy" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M4 20h16"/><path d="M4 20c0-8 4-12 8-12s8 4 8 12"/><line x1="8" y1="20" x2="8" y2="14"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/></svg>
+  <span><strong>토큰 브릿징 및 배포</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>기존 ERC-20을 Ethereum에서 Injective로 가져오세요. MTS를 통한 EVM 가시성, 현물 마켓, DeFi 컴포저빌리티.</span></span>
+</a>
+
+<a href="/ko/developers-defi/permissioned-assets" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <span><strong>권한 관리형 자산 발행</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>기관을 위한 컴플라이언스 게이트 토큰. 네이티브 체인 프리미티브로 제공되는 RBAC, KYC 훅, 컨소시엄 거버넌스.</span></span>
+</a>
+
+<a href="/developers-defi/usdc-stablecoin" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><line x1="12" y1="6" x2="12" y2="18"/><path d="M15 8.5H10.5a2.5 2.5 0 0 0 0 5h3a2.5 2.5 0 0 1 0 5H9"/></svg>
+  <span><strong>스테이블코인 및 결제</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>CCTP를 통한 네이티브 USDC. 크로스체인 전송, 수수료 메커니즘, burn-attest-mint 흐름.</span></span>
+</a>
+
+<a href="/ko/developers-defi/defi-integration" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+  <span><strong>DeFi 프로토콜</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>토큰 관리, 오라클 피드, 청산을 위한 네이티브 프리컴파일을 사용하는 대출, 볼트, 수익률 상품.</span></span>
+</a>
+
+<a href="/ko/developers-defi/exchange-overview" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M6 20V14"/><path d="M6 10V4"/><path d="M12 20V10"/><path d="M12 6V4"/><path d="M18 20V16"/><path d="M18 12V4"/><line x1="4" y1="14" x2="8" y2="14"/><line x1="10" y1="10" x2="14" y2="10"/><line x1="16" y1="16" x2="20" y2="16"/></svg>
+  <span><strong>거래소 및 트레이딩</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>FBA 기반 온체인 CLOB. 마켓 출시, 오라클 제공자, 트레이딩 봇, 40% 수수료 분배.</span></span>
+</a>
+
+## 모든 통합 개발자가 얻는 것
+
+| 기능 | 의미 |
+|---|---|
+| **MultiVM Token Standard** | EVM과 네이티브 Injective 전반에서 하나의 토큰, 하나의 잔액. 래핑이 필요 없습니다. |
+| **네이티브 CLOB** | FBA 기반 온체인 오더북. 트랜잭션 한 번으로 현물 마켓을 출시하세요. |
+| **1초 미만의 최종성** | ~0.65초의 블록 타임과 즉각적인 최종성. |
+| **USDC 유동성** | Circle의 CCTP를 통한 네이티브 USDC. 이미 라이브 상태입니다. |
+| **40% 수수료 분배** | 거래소 dApp은 자신이 발생시킨 주문의 거래 수수료 중 40%를 받습니다. |
+| **테스트넷 + faucet** | INJ 및 USDC faucet, EVM 및 네이티브 익스플로러를 갖춘 완전한 테스트넷. |
+
+## 리소스
+
+<CardGroup cols={3}>
+  <Card title="테스트넷 리소스" icon="flask-vial" href="https://chain-portal.injective.network/testnet">
+    Faucet, 익스플로러, 컨트랙트, RPC.
+  </Card>
+  <Card title="SDK" icon="rectangle-code" href="/ko/sdks-index">
+    TypeScript, Python, Go, Rust.
+  </Card>
+  <Card title="예제 프로젝트" icon="github" href="https://github.com/InjectiveLabs/inj-examples">
+    USDC CCTP, 프리컴파일, ACME 브릿지.
+  </Card>
+</CardGroup>

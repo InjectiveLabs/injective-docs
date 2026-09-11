@@ -7,9 +7,11 @@ updatedAt: "2026-02-13"
 前置阅读 [Injective Oracle 模块](/developers-native/injective/oracle/)
 </Callout>
 
-本节的目标是为用户提供如何在 Injective 上启动和维护 oracle provider 的指南。这些 oracle 可用于各种目的，如永续市场、到期期货市场、[二元期权市场](/developers-native/injective/exchange/02_binary_options_markets/)等。
+<img src="/img/oracle-provider-architecture.svg" alt="Oracle provider architecture" />
 
-首先，什么是 oracle provider？它是一种 oracle **类型**，允许外部方向 Injective 链中继价格馈送。这些外部方称为 provider。provider 标识每个外部方，所有在链上提供的价格馈送都存储在该特定 provider 下。这允许在 Injective 上创建自定义价格馈送，可以为在 Injective 上启动的创意和高级市场（如[二元期权市场](/developers-native/injective/exchange/02_binary_options_markets/)）提供支持。
+本节的目标是为用户提供如何在 Injective 上启动和维护 oracle provider 的指南。这些 oracle 可用于各种目的，如永续市场、到期期货市场、DeFi 协议的自定义价格馈送以及抵押品估值。
+
+首先，什么是 oracle provider？它是一种 oracle **类型**，允许外部方向 Injective 链中继价格馈送。这些外部方称为 provider。provider 标识每个外部方，所有在链上提供的价格馈送都存储在该特定 provider 下。这允许在 Injective 上创建自定义价格馈送，可以为衍生品市场、借贷协议以及任何需要链上价格数据的应用提供支持。
 
 开发者需要做的第一件事是在 Oracle Provider 类型下注册他们的 provider。你可以通过提交 `GrantProviderPrivilegeProposal` 治理提案来做到这一点。一旦提案通过，你的 provider 将被注册，你可以中继价格馈送。你可以在 CLI 环境中使用 `injectived`（`grant-provider-privilege-proposal [providerName] [relayers] --title [title] --description [desc] [flags]`）或使用我们的任何 SDK 创建消息并将其广播到链上。
 

@@ -1,0 +1,118 @@
+---
+title: 토큰 브릿징 및 배포
+description: Peggy를 통해 기존 ERC-20을 Ethereum에서 Injective로 가져오고, MTS 토큰 페어를 생성하고, 현물 마켓을 출시하세요.
+updatedAt: "2026-09-09"
+---
+
+이 가이드는 기존 ERC-20 토큰을 Ethereum에서 Injective로 가져와 완전히 작동하도록 만드는 과정을 안내합니다 - MetaMask에서 표시되고, 네이티브 오더북에서 거래 가능하며, DeFi 프로토콜과 컴포저블한 상태가 됩니다.
+
+## 기본으로 제공되는 것
+
+<CardGroup cols={2}>
+  <Card title="Peggy 브릿지" icon="bridge" href="/ko/developers-native/bridges/ethereum">
+    Ethereum과 Injective 간의 탈중앙화된 검증자 운영 브릿지. ERC-20이 네이티브 Injective denom이 됩니다.
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/ko/developers-evm/multivm-token-standard">
+    EVM과 네이티브 Injective 전반에서 하나의 토큰, 하나의 잔액. MetaMask, Solidity 컨트랙트, 네이티브 모듈 모두 동일한 자산을 봅니다.
+  </Card>
+  <Card title="네이티브 CLOB" icon="chart-line" href="/ko/developers-native/injective/exchange">
+    트랜잭션 한 번으로 토큰의 현물 마켓을 출시하세요. 메이커 리베이트와 FBA 보호 기능을 갖춘 온체인 오더북.
+  </Card>
+  <Card title="USDC 유동성" icon="dollar-sign" href="/developers-defi/usdc-stablecoin">
+    CCTP를 통해 Injective에 이미 라이브 상태인 네이티브 USDC. 토큰을 USDC와 페어링하여 즉각적인 유동성을 확보하세요.
+  </Card>
+</CardGroup>
+
+## 단계별 안내
+
+<img src="/img/bridge-deploy-flow.svg" alt="Bridge and deploy flow: Ethereum to Injective" />
+
+### 1. Peggy를 통한 브릿징
+
+Peggy 브릿지 컨트랙트를 사용하여 ERC-20 토큰을 Ethereum에서 Injective로 전송하세요.
+
+Ethereum에서 두 개의 트랜잭션이 필요합니다:
+1. Peggy 컨트랙트가 토큰을 사용할 수 있도록 **Approve**
+2. 토큰 주소, Injective 주소, 금액과 함께 Peggy 컨트랙트에서 **sendToInjective** 호출
+
+특정 ERC-20에 대한 첫 번째 브릿지 트랜잭션은 Injective에 `peggy0x{CONTRACT_ADDRESS}` 형식으로 denom을 자동으로 생성합니다.
+
+<Info>
+Peggo 릴레이어는 일반적으로 2분 이내에 입금을 처리합니다. [Injective 테스트넷 익스플로러](https://testnet.explorer.injective.network) 또는 REST API를 통해 잔액을 확인할 수 있습니다.
+</Info>
+
+자세한 내용은 [Peggy 브릿지 가이드](/ko/developers-native/bridges/ethereum)를 참조하세요.
+
+### 2. MTS 토큰 페어 생성
+
+Peggy denom을 EVM 측(MetaMask, Solidity 컨트랙트, Blockscout)에서 접근할 수 있도록 토큰 페어를 생성하세요.
+
+```bash
+injectived tx erc20 create-token-pair \
+  "peggy0xYOUR_TOKEN_ADDRESS" \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=3000000 \
+  --gas-prices=160000000inj \
+  --yes
+```
+
+<Warning>
+**가스 요구 사항:** 이 트랜잭션은 최소 `--gas=3000000`이 필요합니다. ERC20 모듈은 내부적으로 2M 가스 한도가 하드코딩된 EVM 컨트랙트를 배포합니다. 약 2.1M 미만의 가스 값은 `gas computation overflow/underflow` 에러로 실패합니다.
+</Warning>
+
+Peggy denom의 경우 **누구나** 토큰 페어를 생성할 수 있습니다 - 관리자 권한이 필요하지 않습니다. 모듈이 `FixedSupplyBankERC20` 컨트랙트를 자동으로 배포합니다.
+
+트랜잭션이 성공하면 새 ERC20 주소를 조회하세요:
+
+```bash
+curl -s "https://testnet.sentry.lcd.injective.network:443/injective/erc20/v1beta1/all_token_pairs" \
+  | jq '.token_pairs[] | select(.bank_denom | contains("YOUR_TOKEN_ADDRESS"))'
+```
+
+자세한 내용은 [ERC20 모듈 문서](/ko/developers-evm/erc20-module)를 참조하세요.
+
+### 3. 토큰 메타데이터 설정
+
+토큰 메타데이터(이름, 심볼, 소수점 자릿수)는 MetaMask, Blockscout 및 컨트랙트에서 `symbol()`, `name()`, `decimals()`를 호출하는 모든 EVM 도구에서 토큰이 표시되는 방식을 결정합니다.
+
+<Warning>
+Peggy로 브릿징된 토큰은 Ethereum의 메타데이터를 자동으로 상속받지 않습니다. MTS ERC20 컨트랙트는 Injective의 bank 모듈에서 메타데이터를 읽습니다. bank 메타데이터가 설정되어 있지 않으면 토큰은 빈 이름, 빈 심볼, 0 소수점 자릿수로 표시됩니다.
+</Warning>
+
+**Peggy denom(`peggy0x...`)의 경우:** 메타데이터는 [거버넌스 제안](/ko/developers/testnet-proposals)을 통해 설정해야 합니다. Peggy denom에는 관리자 권한이 없기 때문입니다 - 거버넌스만이 bank 모듈의 메타데이터 저장소에 쓸 수 있습니다. 전체 제안 템플릿과 테스트넷 검증자 투표를 위해 팀과 조율하는 방법은 [토큰 메타데이터 가이드](/ko/developers/assets/token-metadata)를 참조하세요.
+
+**TokenFactory denom(`factory/...`)의 경우:** denom 관리자가 `MsgSetDenomMetadata`를 직접 호출할 수 있습니다. [TokenFactory 예제](/developers-native/examples/token-factory)를 참조하세요.
+
+**Injective dApp의 프론트엔드 표시를 위해:** [injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)에 토큰을 제출하세요. 이는 온체인 메타데이터와 별개이며 MetaMask나 Blockscout에는 영향을 주지 않습니다.
+
+## 다음에 할 수 있는 것
+
+토큰이 MTS와 함께 Injective에서 라이브 상태가 되면(3단계 이후), 다음은 모두 독립적으로 선택할 수 있는 옵션입니다:
+
+<CardGroup cols={2}>
+  <Card title="현물 마켓 출시" icon="chart-line" href="/ko/developers-defi/market-launch">
+    네이티브 CLOB에서 토큰의 오더북을 생성하세요. 트랜잭션 한 번, 메이커 리베이트, 40% 수수료 분배.
+  </Card>
+  <Card title="DeFi 통합" icon="building-columns" href="/ko/developers-defi/defi-integration">
+    Injective의 네이티브 모듈과 프리컴파일을 사용하여 토큰으로 대출 프로토콜, 담보 대출 또는 수익률 상품을 구축하세요.
+  </Card>
+  <Card title="오라클 피드 설정" icon="satellite-dish" href="/ko/developers-defi/provider-oracle">
+    커스텀 오라클 제공자를 등록하여 가격 산정이나 담보를 위한 오프체인 평가를 온체인에 게시하세요.
+  </Card>
+  <Card title="권한 추가" icon="shield-halved" href="/ko/developers-native/injective/permissions">
+    기관용 역할 기반 컴플라이언스 제어. KYC/AML을 위한 컨트랙트 훅과 함께 컨소시엄 역할을 온체인 권한에 매핑하세요.
+  </Card>
+  <Card title="볼트 전략" icon="vault" href="/ko/developers-defi/defi-integration#vaults">
+    <a href="https://mito.fi" target="_blank">Mito</a> 또는 커스텀 볼트 컨트랙트에서의 자동화된 수익률 전략.
+  </Card>
+  <Card title="크로스체인 흐름" icon="arrows-left-right" href="/developers-defi/usdc-stablecoin">
+    크로스체인 전송을 위한 CCTP 기반 네이티브 USDC. 수익금을 Ethereum이나 다른 지원 네트워크로 브릿징하세요.
+  </Card>
+</CardGroup>
+
+## 작동하는 예제
+
+[ACME 브릿지 예제](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/acme-bridge)는 Sepolia에 ERC-20을 배포하는 것부터 MTS 토큰 페어 생성과 메타데이터 설정까지 위의 모든 단계를 다루는 완전한 작동 코드베이스를 제공합니다.
