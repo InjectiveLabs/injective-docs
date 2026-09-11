@@ -110,7 +110,16 @@ echo "trust_hash = \"$TRUST_HASH\""
 
 #### ピアディスカバリー
 
-ノードがネットワークと同期するにはピアが必要です。`~/.injectived/config/config.toml`の`[p2p]`セクションにシードまたはpersistent peersを追加してください。コミュニティプロバイダーが最新のシードおよびピアリストを管理しています：
+ノードがネットワークと同期するにはピアが必要です。`~/.injectived/config/config.toml`の`[p2p]`セクションにシードまたはpersistent peersを追加してください。
+
+Injectiveは、地理的に近いピアを利用したいオペレーター向けに、アジアリージョンでシードノードを運用しています：
+
+```toml
+# ~/.injectived/config/config.toml
+seeds = "d58582c3d49b6cffc465ee12e0d57b3d73f539f7@seed.mainnet.asia.injective.network:26656"
+```
+
+コミュニティプロバイダーが最新のシードおよびピアリストを管理しています：
 
 - [Polkachu Injective Seeds](https://polkachu.com/seeds/injective)
 - [Decentrio Injective Infrastructure](https://decentrio.ventures/infrastructure/injective)（シード、ピア、アドレスブック）

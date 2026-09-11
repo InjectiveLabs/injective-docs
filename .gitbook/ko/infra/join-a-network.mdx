@@ -110,7 +110,16 @@ echo "trust_hash = \"$TRUST_HASH\""
 
 #### 피어 검색
 
-노드가 네트워크와 동기화하려면 피어가 필요합니다. `~/.injectived/config/config.toml`의 `[p2p]` 섹션에 시드 또는 persistent peers를 추가하세요. 커뮤니티 제공자들이 최신 시드 및 피어 목록을 유지 관리합니다:
+노드가 네트워크와 동기화하려면 피어가 필요합니다. `~/.injectived/config/config.toml`의 `[p2p]` 섹션에 시드 또는 persistent peers를 추가하세요.
+
+Injective는 지리적으로 가까운 피어를 원하는 운영자를 위해 아시아 리전에서 시드 노드를 운영합니다:
+
+```toml
+# ~/.injectived/config/config.toml
+seeds = "d58582c3d49b6cffc465ee12e0d57b3d73f539f7@seed.mainnet.asia.injective.network:26656"
+```
+
+커뮤니티 제공자들이 최신 시드 및 피어 목록을 유지 관리합니다:
 
 - [Polkachu Injective Seeds](https://polkachu.com/seeds/injective)
 - [Decentrio Injective Infrastructure](https://decentrio.ventures/infrastructure/injective) (시드, 피어, 주소록)
