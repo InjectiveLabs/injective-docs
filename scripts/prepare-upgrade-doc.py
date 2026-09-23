@@ -346,8 +346,9 @@ def main():
         "halt_time_utc": halt_time_utc,
         "today": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "indexer_version": "TBD",
-        # evm-gateway is a private repo; its release can't be fetched here
-        "evm_gateway": "TBD",
+        # evm-gateway is private: resolves only when GITHUB_TOKEN can read it
+        # (e.g. running locally with user auth); falls back to TBD in CI.
+        "evm_gateway": latest_tag("evm-gateway"),
         "sdk_go": latest_tag("sdk-go"),
         "sdk_python": latest_tag("sdk-python"),
     }
