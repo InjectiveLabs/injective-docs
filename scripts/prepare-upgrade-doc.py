@@ -161,6 +161,7 @@ Component versions verified against Injective Mainnet {ctx['version']}. Always r
 | Indexer API                   | {ctx['indexer_version']}                                                 |
 | `sdk-go`                      | [{ctx['sdk_go']}](https://github.com/InjectiveLabs/sdk-go/releases/tag/{ctx['sdk_go']}) |
 | `sdk-python`                  | [{ctx['sdk_python']}](https://github.com/InjectiveLabs/sdk-python/releases/tag/{ctx['sdk_python']}) |
+| [`evm-gateway`](/developers-evm/evm-gateway) | {ctx['evm_gateway']}                                                    |
 
 ## Recovery
 
@@ -345,6 +346,8 @@ def main():
         "halt_time_utc": halt_time_utc,
         "today": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "indexer_version": "TBD",
+        # evm-gateway is a private repo; its release can't be fetched here
+        "evm_gateway": "TBD",
         "sdk_go": latest_tag("sdk-go"),
         "sdk_python": latest_tag("sdk-python"),
     }

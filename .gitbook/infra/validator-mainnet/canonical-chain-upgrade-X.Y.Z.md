@@ -47,6 +47,7 @@ Component versions verified against Injective Mainnet {/* $VERSION */}. Always r
 | Indexer API                   | {/* $INDEXER_VERSION */}                                                                                            |
 | `sdk-go`                      | [{/* $SDK_GO_VERSION */}](https://github.com/InjectiveLabs/sdk-go/releases/tag/{/* $SDK_GO_VERSION */})             |
 | `sdk-python`                  | [{/* $SDK_PYTHON_VERSION */}](https://github.com/InjectiveLabs/sdk-python/releases/tag/{/* $SDK_PYTHON_VERSION */}) |
+| [`evm-gateway`](/developers-evm/evm-gateway) | {/* $EVM_GATEWAY_VERSION */}                                            |
 
 ## Recovery
 

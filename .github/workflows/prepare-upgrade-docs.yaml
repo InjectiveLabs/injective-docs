@@ -57,5 +57,5 @@ jobs:
             **cc @maxim-inj — action required before merging:**
             - [ ] Fill in the `libwasmvm` sha256 checksum
             - [ ] Fill in the `injectived version` / `peggo version` command outputs (marked `TBD`)
-            - [ ] Fill in the Indexer API version in the compatibility matrix
+            - [ ] Fill in the Indexer API and evm-gateway versions in the compatibility matrix
             - [ ] Confirm the halt date/time and proposal details
