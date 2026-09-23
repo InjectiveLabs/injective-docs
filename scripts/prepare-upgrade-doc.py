@@ -153,7 +153,7 @@ The network upgrade can take the following potential pathways:
 
 ## Compatibility for Integrators
 
-Component versions verified against Injective Mainnet {ctx['version']}. The official SDK releases are identical to the `-rc` versions published during the testnet cycle — if you are already running the `-rc` build, no migration is required.
+Component versions verified against Injective Mainnet {ctx['version']}. Always run the official releases below on mainnet. They contain the same changes as the `-rc` versions published during the testnet cycle, so switching from an `-rc` build to the official release requires no code changes.
 
 | Component                     | Compatible Version                                                       |
 | ----------------------------- | ------------------------------------------------------------------------ |
