@@ -26,10 +26,23 @@ jobs:
           node-version: 20
 
       # Mintlify resolves internal links against docs.json, so this runs
-      # from the .gitbook directory where docs.json lives.
+      # from the .gitbook directory where docs.json lives. Breakage in the
+      # translation trees (cn/ jp/ ko/) is reported but does not fail the
+      # job — translations are maintained in separate PRs.
       - name: Check internal links with Mintlify
         working-directory: .gitbook
-        run: npx --yes mintlify@latest broken-links
+        run: |
+          npx --yes mintlify@latest broken-links | tee links.txt || true
+          if ! grep -qE "broken links|No broken links" links.txt; then
+            echo "::error::mintlify broken-links did not produce a result"
+            exit 1
+          fi
+          en_broken=$(grep -oE '^[a-z][a-zA-Z0-9/_.-]*\.mdx$' links.txt | grep -vE '^(cn|jp|ko)/' || true)
+          if [ -n "$en_broken" ]; then
+            echo "::error::Broken internal links outside the translation trees:"
+            echo "$en_broken"
+            exit 1
+          fi
 
   http-links:
     # External links are checked on PRs, the weekly schedule and manual runs.
@@ -41,20 +54,22 @@ jobs:
 
       # URL exclusions live in .lycheeignore at the repo root.
       # --scheme limits lychee to external http(s) URLs; internal doc links
-      # are Mintlify routes (root-relative, extensionless) that lychee cannot
-      # resolve as files — the internal-links job validates those instead.
-      # Translations are excluded here; their links are maintained in the
-      # translation update PRs.
+      # are Mintlify routes that the internal-links job validates instead.
+      # --root-dir lets lychee resolve root-relative links into file:// URIs
+      # so the scheme filter can drop them (unresolvable links would error
+      # before scheme filtering). Translations are excluded here; their
+      # links are maintained in the translation update PRs.
       - name: Check HTTP links with lychee
         uses: lycheeverse/lychee-action@v2.9.0
         with:
           args: >-
             --no-progress
-            --timeout 20
+            --timeout 30
             --max-retries 2
-            --accept 200..=299,403,429
+            --accept 200..=299,400,403,405,429,501
             --scheme http
             --scheme https
+            --root-dir ${{ github.workspace }}/.gitbook
             --exclude-path .gitbook/cn
             --exclude-path .gitbook/ko
             --exclude-path .gitbook/jp

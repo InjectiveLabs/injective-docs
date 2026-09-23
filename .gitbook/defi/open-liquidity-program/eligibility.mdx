@@ -8,7 +8,7 @@ updatedAt: "2026-06-25"
 
 An Injective address can qualify for OLP by meeting the following criteria:
 
-- The **address must be opted out of the Trade & Earn (T&E) program** prior to the start of the qualification process. The address will not earn T&E rewards during the qualification process. See examples in [Python](https://github.com/InjectiveLabs/sdk-python/blob/master/examples/chain_client/24_MsgRewardsOptOut.py), [Go](https://github.com/InjectiveLabs/sdk-go/blob/master/examples/chain/24_MsgRegisterAsDMM/example.go), and [TS](https://github.com/InjectiveLabs/injective-ts/wiki/04CoreModulesExchange#msgrewardsoptout) for opting out programatically.
+- The **address must be opted out of the Trade & Earn (T&E) program** prior to the start of the qualification process. The address will not earn T&E rewards during the qualification process. See examples in [Python](https://github.com/InjectiveLabs/sdk-python/tree/master/examples/chain_client), [Go](https://github.com/InjectiveLabs/sdk-go/tree/master/examples), and [TS](https://github.com/InjectiveLabs/injective-ts/wiki/04CoreModulesExchange#msgrewardsoptout) for opting out programatically.
   - Note: Eligibility for the qualification process begins at 00:00 UTC the day after the opt out is complete. To check if an address has been successfully opted out of T&E, [this list can be cross referenced](https://lcd.injective.network/injective/exchange/v1beta1/opted_out_of_rewards_accounts).
 - The address's maker volume must account for **at least 0.25% of the total daily exchange maker volume of** [**eligible markets**](https://trading.injective.network/program/liquidity) **for 3 days in a row** in the same epoch. Self trading is strictly prohibited.
 
@@ -17,7 +17,7 @@ Assuming both of these requirements have been met, the address will qualify for 
 <Info>
   It may be prudent to consolidate trading strategies into a single address to increase maker volume. Otherwise, addresses with less maker volume than the required threshold will not qualify for rewards even if volume on an aggregate level between multiple addresses exceeds the threshold.
 
-  See [`documentation on the Injective authz module`](https://docs.injective.network/develop/modules/Core/authz/) for a method of executing multiple strategies from a single address while retaining trading [fee discounts](https://helixapp.com/fee-discounts).
+  See [`documentation on the Injective authz module`](/developers-native/core/authz) for a method of executing multiple strategies from a single address while retaining trading [fee discounts](https://helixapp.com/fee-discounts).
 </Info>
 
 ## Maintaining Next Epoch Eligibility/Pre-Qualification

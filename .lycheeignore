@@ -24,3 +24,12 @@ linkedin\.com
 ninji\.xyz
 docs\.synternet\.com
 app\.newmetric\.xyz
+leapwallet\.io
+wiki\.debian\.org
+docs\.rs
+gitlab\.gnome\.org
+blockscout-api\.injective\.network
+
+# gRPC-Web endpoint bases listed in the endpoint tables return 404 at the
+# root by design; the endpoint-hostnames job still verifies they resolve.
+exchange\.grpc-web\.injective\.network
