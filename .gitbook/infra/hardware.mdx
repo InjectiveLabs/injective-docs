@@ -54,7 +54,7 @@ Non-validator nodes serving live chain data have similar requirements. While the
 Disk throughput is the most common bottleneck for Injective nodes. The chain produces blocks every ~650ms with potentially large transaction payloads, requiring sustained high IOPS.
 
 - **Bare metal:** Local NVMe drives are ideal. RAID0 across multiple NVMe drives provides the best throughput.
-- **Cloud (GCP):** Standard persistent disks (`pd-balanced`, `pd-ssd`) often cannot sustain the required IOPS. Use **local SSDs in RAID0** for the chain data directory. Local SSDs are ephemeral but chain state is easily recoverable from a [snapshot](https://chain-portal.injective.network/snapshots). Alternatively, provision `hyperdisk-balanced` or `hyperdisk-extreme` with explicitly provisioned IOPS and throughput.
+- **Cloud (GCP):** Standard persistent disks (`pd-balanced`, `pd-ssd`) often cannot sustain the required IOPS. Use **local SSDs in RAID0** for the chain data directory. Local SSDs are ephemeral but chain state is easily recoverable from a [snapshot](https://chain.injective.network/snapshots). Alternatively, provision `hyperdisk-balanced` or `hyperdisk-extreme` with explicitly provisioned IOPS and throughput.
 - **Cloud (AWS):** Use `io2` or `gp3` volumes with provisioned IOPS. Instance store NVMe (e.g. `i3`, `i4i` instances) provides the best performance.
 
 ### Chain data growth
@@ -79,7 +79,7 @@ Production validators typically run two NVMe drives in one of these configuratio
 | **RAID0** | Stripes data across both drives in fixed chunks. Both drives are read/written in parallel, doubling potential IOPS and throughput. | No redundancy. If either drive fails, the array is lost. Requires full snapshot recovery. |
 | **LVM linear** | Concatenates drives into a single volume. Fills one drive first, then spills onto the next. No parallel I/O speed gains. | No redundancy. If either drive fails, the entire Volume Group breaks and the database is corrupted. Constrains performance to a single drive's speed. |
 
-Neither layout provides redundancy, but chain state does not require it. RAID0 is recommended to meet Injective's sub-second block time requirements. If a drive fails, recover from a [snapshot](https://chain-portal.injective.network/snapshots).
+Neither layout provides redundancy, but chain state does not require it. RAID0 is recommended to meet Injective's sub-second block time requirements. If a drive fails, recover from a [snapshot](https://chain.injective.network/snapshots).
 
 ## Bare metal vs cloud
 

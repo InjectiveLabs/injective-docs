@@ -1,0 +1,21 @@
+# URL patterns (regex, one per line) that lychee skips during link checks.
+# Extend this list instead of editing the workflow.
+
+# Local and placeholder addresses
+localhost
+127\.0\.0\.1
+0\.0\.0\.0
+example\.(com|org|net)
+
+# Template placeholders in code samples
+\$\{
+
+# Auth-walled or bot-blocked services
+linear\.app
+notion\.(so|site|com)
+discord\.(gg|com/invite)
+(twitter|x)\.com
+linkedin\.com
+
+# Private GitHub repos return 404 without auth. Add each one here, e.g.:
+# github\.com/InjectiveLabs/<private-repo>

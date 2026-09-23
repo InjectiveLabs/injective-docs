@@ -1,7 +1,7 @@
 ---
 title: Upgrade to v1.20.4
 description: How to upgrade Injective Mainnet Validator node to v1.20.4
-updatedAt: "2026-09-18"
+updatedAt: "2026-09-23"
 ---
 
 Thursday, September 24th, 2026
@@ -9,6 +9,7 @@ Thursday, September 24th, 2026
 Following [IIP-701](https://injhub.com/proposal/701/), the upgrade procedure should be performed at block height **184394000**.
 
 * [Summary](#summary)
+* [Compatibility for Integrators](#compatibility-for-integrators)
 * [Recovery](#recovery)
 * [Upgrade Procedure](#upgrade-procedure)
 * [Notes for Validators](#notes-for-validators)
@@ -35,6 +36,17 @@ The network upgrade can take the following potential pathways:
 3. **Abort path**:\
    In the rare event that the team becomes aware of unnoticed critical issues, the Injective team will attempt to patch all the breaking states and provide another official binary within 36 hours.\
    If the chain is not successfully resumed within 36 hours, the upgrade will be announced as aborted on the `#validators` channel in [Injective's Discord](https://discord.gg/injective), and validators will need to resume running the chain without any updates or changes.
+
+## Compatibility for Integrators
+
+Component versions verified against Injective Mainnet v1.20.4. The official SDK releases are identical to the `-rc` versions published during the testnet cycle — if you are already running the `-rc` build, no migration is required.
+
+| Component                     | Compatible Version                                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `injective-core` (injectived) | [v1.20.4](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-1789748350)       |
+| Indexer API                   | v1.20.171                                                                                              |
+| `sdk-go`                      | [v1.63.2](https://github.com/InjectiveLabs/sdk-go/releases/tag/v1.63.2)                                |
+| `sdk-python`                  | [v1.16.2](https://github.com/InjectiveLabs/sdk-python/releases/tag/v1.16.2)                            |
 
 ## Recovery
 
