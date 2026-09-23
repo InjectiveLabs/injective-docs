@@ -47,7 +47,7 @@ Choose how to bootstrap your node with chain data. For most operators, snapshot 
 
 Download a pre-built snapshot and extract it into your data directory. This is the fastest and most reliable way to sync a new node.
 
-Injective provides official pruned snapshots (goleveldb, ~2-3 GB) and the community maintains additional options. See the [Snapshots page on the Chain Portal](https://portal.injective.network/snapshots) for download links, usage instructions, and community providers.
+Injective provides official pruned snapshots (goleveldb, ~2-3 GB) and the community maintains additional options. See the [Snapshots page on the Chain Portal](https://chain.injective.network/snapshots) for download links, usage instructions, and community providers.
 
 <Callout icon="warning" color="#FFA500" iconType="regular">
 **Validators:** You must back up and restore `priv_validator_state.json` during snapshot recovery. See the [Validator Troubleshooting Guide](/infra/coordinated-upgrades#recovering-from-a-snapshot) for the full procedure.
@@ -64,7 +64,7 @@ sudo systemctl start injectived
 
 **Option 2. State Sync (CometBFT P2P)**
 
-State sync bootstraps a node by downloading a state machine snapshot from peers via the CometBFT P2P layer, rather than replaying all historical blocks. It requires two trusted RPC servers. See the [RPC Providers page on the Chain Portal](https://portal.injective.network/rpcs) for available endpoints. Configure it in `config.toml` under `[statesync]`:
+State sync bootstraps a node by downloading a state machine snapshot from peers via the CometBFT P2P layer, rather than replaying all historical blocks. It requires two trusted RPC servers. See the [RPC Providers page on the Chain Portal](https://chain.injective.network/rpcs) for available endpoints. Configure it in `config.toml` under `[statesync]`:
 
 ```toml
 [statesync]

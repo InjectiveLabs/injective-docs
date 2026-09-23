@@ -473,10 +473,10 @@ Now you have successfully created `testuser` an Injective Testnet. It should als
 
 To confirm, search for your address on the [Injective Testnet Explorer](https://testnet.explorer.injective.network/) to check your balance.
 
-Alternatively, you can verify it by [querying the bank balance](https://sentry.testnet.lcd.injective.network/swagger/#/Query/AllBalances) or with curl:
+Alternatively, you can verify it by [querying the bank balance](https://sentry.lcd.testnet.injective.network/swagger/#/Query/AllBalances) or with curl:
 
 ```bash
-curl -X GET "https://sentry.testnet.lcd.injective.network/cosmos/bank/v1beta1/balances/<your_INJ_address>" -H "accept: application/json"
+curl -X GET "https://sentry.lcd.testnet.injective.network/cosmos/bank/v1beta1/balances/<your_INJ_address>" -H "accept: application/json"
 ```
 
 ## Upload the Wasm Contract

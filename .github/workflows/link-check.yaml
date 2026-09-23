@@ -40,6 +40,11 @@ jobs:
       - uses: actions/checkout@v4
 
       # URL exclusions live in .lycheeignore at the repo root.
+      # --scheme limits lychee to external http(s) URLs; internal doc links
+      # are Mintlify routes (root-relative, extensionless) that lychee cannot
+      # resolve as files — the internal-links job validates those instead.
+      # Translations are excluded here; their links are maintained in the
+      # translation update PRs.
       - name: Check HTTP links with lychee
         uses: lycheeverse/lychee-action@v2.9.0
         with:
@@ -48,8 +53,11 @@ jobs:
             --timeout 20
             --max-retries 2
             --accept 200..=299,403,429
+            --scheme http
+            --scheme https
             --exclude-path .gitbook/cn
             --exclude-path .gitbook/ko
+            --exclude-path .gitbook/jp
             '.gitbook/**/*.mdx'
           fail: true
 
@@ -59,11 +67,14 @@ jobs:
       - uses: actions/checkout@v4
 
       # HTTP checkers skip bare gRPC hosts and wss:// URLs; a hostname that
-      # no longer resolves (dead endpoint) is caught here instead.
+      # no longer resolves (dead endpoint) is caught here instead. Hostnames
+      # in a URL *path* (e.g. uptime.com/statuspage/<host>) are page slugs,
+      # not endpoints, so only host positions match: after `//` or not
+      # preceded by `/`.
       - name: Verify every *.injective.network hostname resolves
         run: |
           dead=0
-          for host in $(grep -rhoE '[a-z0-9][a-z0-9.-]*\.injective\.network' .gitbook --include='*.mdx' | sort -u); do
+          for host in $(find .gitbook -name '*.mdx' -print0 | xargs -0 perl -ne 'while (/(?:(?<=\/\/)|(?<![\/a-z0-9.-]))([a-z0-9][a-z0-9.-]*\.injective\.network)/g) { print "$1\n" }' | sort -u); do
             if [ -z "$(dig +short "$host")" ]; then
               echo "::error::does not resolve: $host"
               grep -rln "$host" .gitbook --include='*.mdx' | sed 's/^/  referenced in: /'

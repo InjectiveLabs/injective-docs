@@ -413,7 +413,7 @@ The longer this window lasts, the higher the round numbers climb. Validators tha
 - [ ] Set `--halt-height=<target_height>` in node config or CLI flags
 - [ ] If using Cosmovisor: place the new binary in the correct upgrade directory
 - [ ] Back up `priv_validator_state.json`
-- [ ] Identify snapshot providers in case rollback is needed (see [Snapshots - Chain Portal](https://portal.injective.network/snapshots))
+- [ ] Identify snapshot providers in case rollback is needed (see [Snapshots - Chain Portal](https://chain.injective.network/snapshots))
 - [ ] If planning to use CometBFT state sync for recovery: ensure you have a copy of `~/.injectived/data/wasm/`. State sync does not restore this directory and its absence causes AppHash mismatches
 - [ ] Monitor chain progression toward the halt height
 
@@ -511,7 +511,7 @@ grep db_backend ~/.injectived/config/config.toml
 ## Snapshot Resources
 
 <Callout icon="info" color="#22C55E" iconType="regular">
-**[Snapshots - Chain Portal](https://portal.injective.network/snapshots)**
+**[Snapshots - Chain Portal](https://chain.injective.network/snapshots)**
 
 Download links for Injective-provided pruned snapshots (EU and Asia regions), community snapshot providers, archival segment data, and usage instructions. The Chain Portal is the canonical, up-to-date source for all snapshot resources.
 </Callout>

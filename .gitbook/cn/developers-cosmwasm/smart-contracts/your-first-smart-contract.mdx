@@ -473,10 +473,10 @@ export INJ_ADDRESS= <your inj address>
 
 要确认，请在 [Injective 测试网浏览器](https://testnet.explorer.injective.network/) 上搜索你的地址以检查你的余额。
 
-或者，你可以通过[查询银行余额](https://sentry.testnet.lcd.injective.network/swagger/#/Query/AllBalances)或使用 curl 来验证：
+或者，你可以通过[查询银行余额](https://sentry.lcd.testnet.injective.network/swagger/#/Query/AllBalances)或使用 curl 来验证：
 
 ```bash
-curl -X GET "https://sentry.testnet.lcd.injective.network/cosmos/bank/v1beta1/balances/<your_INJ_address>" -H "accept: application/json"
+curl -X GET "https://sentry.lcd.testnet.injective.network/cosmos/bank/v1beta1/balances/<your_INJ_address>" -H "accept: application/json"
 ```
 
 ## 上传 Wasm 合约

@@ -473,10 +473,10 @@ export INJ_ADDRESS= <your inj address>
 
 確認するには、[Injective Testnet Explorer](https://testnet.explorer.injective.network/)でアドレスを検索して残高を確認してください。
 
-または、[Bank残高のクエリ](https://sentry.testnet.lcd.injective.network/swagger/#/Query/AllBalances)またはcurlで確認することもできます：
+または、[Bank残高のクエリ](https://sentry.lcd.testnet.injective.network/swagger/#/Query/AllBalances)またはcurlで確認することもできます：
 
 ```bash
-curl -X GET "https://sentry.testnet.lcd.injective.network/cosmos/bank/v1beta1/balances/<your_INJ_address>" -H "accept: application/json"
+curl -X GET "https://sentry.lcd.testnet.injective.network/cosmos/bank/v1beta1/balances/<your_INJ_address>" -H "accept: application/json"
 ```
 
 ## Wasmコントラクトのアップロード
