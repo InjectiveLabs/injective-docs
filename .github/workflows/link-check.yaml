@@ -1,0 +1,113 @@
+name: Link check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".gitbook/**"
+  pull_request:
+    paths:
+      - ".gitbook/**"
+  schedule:
+    - cron: "0 8 * * 1" # Every Monday at 08:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+
+jobs:
+  internal-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Mintlify resolves internal links against docs.json, so this runs
+      # from the .gitbook directory where docs.json lives. Breakage in the
+      # translation trees (cn/ jp/ ko/) is reported but does not fail the
+      # job — translations are maintained in separate PRs.
+      - name: Check internal links with Mintlify
+        working-directory: .gitbook
+        run: |
+          npx --yes mintlify@latest broken-links | tee links.txt || true
+          if ! grep -qE "broken links|No broken links" links.txt; then
+            echo "::error::mintlify broken-links did not produce a result"
+            exit 1
+          fi
+          en_broken=$(grep -oE '^[a-z][a-zA-Z0-9/_.-]*\.mdx$' links.txt | grep -vE '^(cn|jp|ko)/' || true)
+          if [ -n "$en_broken" ]; then
+            echo "::error::Broken internal links outside the translation trees:"
+            echo "$en_broken"
+            exit 1
+          fi
+
+  http-links:
+    # External links are checked on PRs, the weekly schedule and manual runs.
+    # Pushes to main only run the faster internal check above.
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # URL exclusions live in .lycheeignore at the repo root.
+      # --scheme limits lychee to external http(s) URLs; internal doc links
+      # are Mintlify routes that the internal-links job validates instead.
+      # --root-dir lets lychee resolve root-relative links into file:// URIs
+      # so the scheme filter can drop them (unresolvable links would error
+      # before scheme filtering). Translations are excluded here; their
+      # links are maintained in the translation update PRs.
+      - name: Check HTTP links with lychee
+        uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          args: >-
+            --no-progress
+            --timeout 30
+            --max-retries 3
+            --max-concurrency 32
+            --accept 200..=299,400,403,405,429,501,503
+            --scheme http
+            --scheme https
+            --root-dir ${{ github.workspace }}/.gitbook
+            --exclude-path .gitbook/cn
+            --exclude-path .gitbook/ko
+            --exclude-path .gitbook/jp
+            '.gitbook/**/*.mdx'
+          fail: true
+
+  endpoint-hostnames:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # HTTP checkers skip bare gRPC hosts and wss:// URLs; a hostname that
+      # no longer resolves (dead endpoint) is caught here instead. Hostnames
+      # in a URL *path* (e.g. uptime.com/statuspage/<host>) are page slugs,
+      # not endpoints, so only host positions match: after `//` or not
+      # preceded by `/`.
+      - name: Verify every *.injective.network hostname resolves
+        run: |
+          dead=0
+          for host in $(find .gitbook -name '*.mdx' -print0 | xargs -0 perl -ne 'while (/(?:(?<=\/\/)|(?<![\/a-z0-9.-]))([a-z0-9][a-z0-9.-]*\.injective\.network)/g) { print "$1\n" }' | sort -u); do
+            if [ -z "$(dig +short "$host")" ]; then
+              echo "::error::does not resolve: $host"
+              grep -rln "$host" .gitbook --include='*.mdx' | sed 's/^/  referenced in: /'
+              dead=1
+            fi
+          done
+          exit $dead
+
+  # Optional cross-repo trigger: asks the website repo to run its own link
+  # check. Needs a WEBSITE_DISPATCH_TOKEN secret (a PAT with permission to
+  # dispatch on InjectiveLabs/website). Uncomment to enable.
+  # notify-website:
+  #   if: github.event_name == 'schedule'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: peter-evans/repository-dispatch@v4
+  #       with:
+  #         token: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+  #         repository: InjectiveLabs/website
+  #         event-type: link-check
