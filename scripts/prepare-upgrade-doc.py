@@ -163,6 +163,8 @@ Component versions verified against Injective Mainnet {ctx['version']}. Always r
 | `sdk-python`                  | [{ctx['sdk_python']}](https://github.com/InjectiveLabs/sdk-python/releases/tag/{ctx['sdk_python']}) |
 | `evm-gateway`                 | [{ctx['evm_gateway']}](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name={ctx['evm_gateway']}) (Docker) |
 
+The `injective-indexer` version applies to all indexer services alike (exchange, eventprovider, explorer, and chart process/API): they are entrypoints of the same image, so every `*_VERSION` variable in the [indexer setup guide](https://injective.notion.site/Injective-Indexer-Service-Setup-Guide-7e59980634d54991862300670583d46a)'s docker environment uses this tag.
+
 ## Recovery
 
 Prior to exporting chain state, validators are encouraged to take a full data snapshot at the export height before proceeding. Snapshotting depends heavily on infrastructure, but generally this can be done by backing up the `.injectived` directory.
