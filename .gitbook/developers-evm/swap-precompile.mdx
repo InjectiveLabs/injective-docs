@@ -1,0 +1,84 @@
+---
+title: Swap Precompile
+updatedAt: "2026-09-24"
+---
+
+# Swap Precompile
+
+The Swap Precompile is a system smart contract residing at the fixed address `0x0000000000000000000000000000000000000068`, introduced in the v1.20.4 (Meridian) upgrade.
+
+It gives EVM developers native spot swaps against Injective's on-chain orderbook through the **exchange module** (`x/exchange`), using a router-style API that will feel familiar from AMM routers: quote, set a minimum output and a deadline, swap in a single call. Unlike an AMM, execution fills against live orderbook liquidity, and the swap either fills within your constraints or reverts. There is no partial-fill residue to manage.
+
+Swaps execute on the caller's default subaccount with revert-on-failure semantics. The caller must hold the input amount of `tokenIn`. Because MTS bank-backed ERC20 balances are bank balances, no separate approval against the precompile is required.
+
+## Market Allowlist
+
+Swappable markets are governed by `SwapParams` (an enable flag plus a market allowlist), updated through `MsgUpdateSwapParams` and seeded by the v1.20.4 upgrade handler. Calling the precompile on a market that is not allowlisted reverts with:
+
+```
+market <id> is not allowlisted for swaps: invalid swap route
+```
+
+Receiving this revert still confirms you have reached the precompile on a live node.
+
+## Swap Precompile Interface
+
+```solidity
+interface ISwapModule {
+    /// Quote the output for an exact input amount. Read-only.
+    function quoteExactInputV1(
+        address tokenIn,
+        string calldata marketId,
+        uint256 amountIn
+    ) external view returns (uint256 amountOut);
+
+    /// Quote the input required for an exact output amount. Read-only.
+    function quoteExactOutputV1(
+        address tokenOut,
+        string calldata marketId,
+        uint256 amountOut
+    ) external view returns (uint256 amountIn);
+
+    /// Swap an exact input amount. Reverts if the output would fall below
+    /// minOut or the deadline (unix seconds) has passed.
+    function swapExactInputV1(
+        address tokenIn,
+        string calldata marketId,
+        uint256 amountIn,
+        uint256 minOut,
+        address recipient,
+        uint256 deadline
+    ) external returns (uint256 amountOut);
+}
+```
+
+Parameter notes:
+
+* `tokenIn` / `tokenOut` are ERC20 addresses of MTS bank-backed tokens. Map bank denoms to ERC20 addresses with the ERC20 module query `/injective/erc20/v1beta1/all_token_pairs`.
+* `marketId` is the spot market id string (`0x`-prefixed). List active markets with `/injective/exchange/v1beta1/spot/markets?status=Active`.
+* Amounts use the token's ERC20 decimals.
+
+## Quote and Swap Pattern
+
+```solidity
+uint256 quoted = SWAP.quoteExactInputV1(tokenIn, marketId, amountIn);
+uint256 minOut = (quoted * (10_000 - slippageBps)) / 10_000;
+uint256 amountOut = SWAP.swapExactInputV1(
+    tokenIn, marketId, amountIn, minOut, recipient, block.timestamp + 120
+);
+```
+
+## Calling From the Command Line
+
+Precompiles exist only on real Injective nodes. Foundry's local simulation has no `0x68`, so `forge script` and `forge test` revert with `call to non-contract address` on any code path touching it. This applies to all Injective precompiles. Use `cast` against a live RPC, or deploy a contract and drive it with transactions:
+
+```bash
+cast call 0x0000000000000000000000000000000000000068 \
+  "quoteExactInputV1(address,string,uint256)(uint256)" \
+  <TOKEN_IN> "<MARKET_ID>" <AMOUNT_IN> \
+  --rpc-url https://sentry.evm-rpc.injective.network/
+```
+
+## Start building
+
+A complete Foundry example, with a quote-then-swap contract, Makefile targets for quoting and swapping via `cast`, and testnet defaults, is available in the [swap precompile demo](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/swap-precompile). Testnet has run the precompile since v1.20.4-beta; mainnet since the v1.20.4 upgrade.
