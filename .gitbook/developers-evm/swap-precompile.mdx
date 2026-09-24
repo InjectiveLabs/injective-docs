@@ -14,6 +14,7 @@ Swaps execute on the caller's default subaccount and revert on failure. The call
 ## How It Works
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#FFFFFF", "primaryColor": "#FFFFFF", "lineColor": "#4D3DFF", "textColor": "#14151F"}}}%%
 flowchart LR
     subgraph EVM["Injective EVM"]
         CALLER["dApp contract<br/>or EOA"]
@@ -24,12 +25,13 @@ flowchart LR
         EXCH["x/exchange<br/>orderbook"]
         BANK["x/bank balances<br/>MultiVM Token Standard"]
     end
-    CALLER -->|"1 · quoteExactInputV1 (read)"| SWAP
-    CALLER -->|"2 · swapExactInputV1 (tx)"| SWAP
-    SWAP -->|"3 · market allowed?"| PARAMS
-    SWAP -->|"4 · execute on default subaccount"| EXCH
-    EXCH -->|"5 · fill, or revert below minOut"| SWAP
-    SWAP -->|"6 · credit amountOut to recipient"| BANK
+    CALLER -->|"1 · quoteExactInputV1<br/>what would amountIn return right now?"| SWAP
+    SWAP -.->|"2 · quoted amountOut<br/>caller derives minOut from it"| CALLER
+    CALLER -->|"3 · swapExactInputV1<br/>with minOut and deadline"| SWAP
+    SWAP -->|"4 · market<br/>allowed?"| PARAMS
+    SWAP -->|"5 · execute on<br/>default subaccount"| EXCH
+    EXCH -->|"6 · fill, or revert<br/>below minOut"| SWAP
+    SWAP -->|"7 · credit amountOut<br/>to recipient"| BANK
     BANK -.->|"same balance readable as ERC20"| CALLER
 
     classDef caller fill:#EEF0FF,stroke:#4D3DFF,color:#14151F
@@ -38,11 +40,15 @@ flowchart LR
     class CALLER caller
     class SWAP precompile
     class PARAMS,EXCH,BANK native
-    style EVM fill:transparent,stroke:#4D3DFF,stroke-dasharray:4
-    style NATIVE fill:transparent,stroke:#8B94A7,stroke-dasharray:4
+    style EVM fill:#FFFFFF,stroke:#4D3DFF,stroke-dasharray:4
+    style NATIVE fill:#FFFFFF,stroke:#8B94A7,stroke-dasharray:4
 ```
 
-One transaction covers the whole path: the precompile validates the market against `SwapParams`, places the order on the caller's default subaccount, and either credits the output to the recipient or reverts the entire call. The quote functions follow the same path without changing state.
+The flow has two phases:
+
+**Quote (steps 1 and 2).** `quoteExactInputV1` is a read call that answers one question: how much `amountOut` would this exact `amountIn` receive against the orderbook right now? Orderbook prices move block to block, so the caller uses the quoted value to set `minOut`, typically the quote minus a slippage tolerance. Without this step you would have to guess `minOut`: too tight and the swap reverts on normal price movement, too loose and you accept a worse fill than needed.
+
+**Swap (steps 3 to 7).** `swapExactInputV1` runs the whole execution in one transaction: the precompile checks the market against the `SwapParams` allowlist, places the order on the caller's default subaccount, and either credits at least `minOut` to the recipient before the `deadline` or reverts the entire call. Nothing is left partially done. The output lands as a bank balance, which the MultiVM Token Standard makes immediately readable as an ERC20 balance.
 
 ## Market Allowlist
 
