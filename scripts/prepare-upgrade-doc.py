@@ -158,10 +158,10 @@ Component versions verified against Injective Mainnet {ctx['version']}. Always r
 | Component                     | Compatible Version                                                       |
 | ----------------------------- | ------------------------------------------------------------------------ |
 | `injective-core` (injectived) | [{ctx['version']}]({ctx['release_url']})                                 |
-| Indexer API                   | {ctx['indexer_version']}                                                 |
+| `injective-indexer`           | [{ctx['indexer_version']}](https://gallery.ecr.aws/l9h3g6c6/injective-indexer) (Docker) |
 | `sdk-go`                      | [{ctx['sdk_go']}](https://github.com/InjectiveLabs/sdk-go/releases/tag/{ctx['sdk_go']}) |
 | `sdk-python`                  | [{ctx['sdk_python']}](https://github.com/InjectiveLabs/sdk-python/releases/tag/{ctx['sdk_python']}) |
-| `evm-gateway`                 | {ctx['evm_gateway']}                                                     |
+| `evm-gateway`                 | [{ctx['evm_gateway']}](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name={ctx['evm_gateway']}) (Docker) |
 
 ## Recovery
 
@@ -333,6 +333,19 @@ def main():
         except Exception:
             return "TBD"
 
+    def docker_hub_latest_tag(repo):
+        try:
+            data = fetch_json(
+                f"https://hub.docker.com/v2/repositories/injectivelabs/{repo}/tags?page_size=25"
+            )
+            for t in data.get("results", []):
+                name = t.get("name", "")
+                if re.match(r"^v\d", name) and not NON_STABLE.search(name):
+                    return name
+        except Exception:
+            pass
+        return "TBD"
+
     ctx = {
         "version": version,
         "build_id": build_id,
@@ -345,10 +358,11 @@ def main():
         "halt_day": halt_day,
         "halt_time_utc": halt_time_utc,
         "today": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        "indexer_version": "TBD",
-        # evm-gateway is private: resolves only when GITHUB_TOKEN can read it
-        # (e.g. running locally with user auth); falls back to TBD in CI.
-        "evm_gateway": latest_tag("evm-gateway"),
+        # injective-indexer is private with no public artifact: resolves only
+        # when GITHUB_TOKEN can read it (e.g. locally with user auth); falls
+        # back to TBD in CI. evm-gateway ships publicly on Docker Hub.
+        "indexer_version": latest_tag("injective-indexer"),
+        "evm_gateway": docker_hub_latest_tag("evm-gateway"),
         "sdk_go": latest_tag("sdk-go"),
         "sdk_python": latest_tag("sdk-python"),
     }

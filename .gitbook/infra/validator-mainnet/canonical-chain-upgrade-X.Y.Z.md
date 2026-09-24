@@ -44,10 +44,10 @@ Component versions verified against Injective Mainnet {/* $VERSION */}. Always r
 | Component                     | Compatible Version                                                                                                |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `injective-core` (injectived) | [{/* $VERSION */}](https://github.com/InjectiveFoundation/injective-core/releases/tag/{/* $VERSION */}-{/* $VERSION_ID */}) |
-| Indexer API                   | {/* $INDEXER_VERSION */}                                                                                            |
+| `injective-indexer`           | [{/* $INDEXER_VERSION */}](https://gallery.ecr.aws/l9h3g6c6/injective-indexer) (Docker)                             |
 | `sdk-go`                      | [{/* $SDK_GO_VERSION */}](https://github.com/InjectiveLabs/sdk-go/releases/tag/{/* $SDK_GO_VERSION */})             |
 | `sdk-python`                  | [{/* $SDK_PYTHON_VERSION */}](https://github.com/InjectiveLabs/sdk-python/releases/tag/{/* $SDK_PYTHON_VERSION */}) |
-| `evm-gateway`                 | {/* $EVM_GATEWAY_VERSION */}                                                                        |
+| `evm-gateway`                 | [{/* $EVM_GATEWAY_VERSION */}](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name={/* $EVM_GATEWAY_VERSION */}) (Docker) |
 
 ## Recovery
 

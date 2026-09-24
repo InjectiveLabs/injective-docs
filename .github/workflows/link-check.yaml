@@ -65,8 +65,9 @@ jobs:
           args: >-
             --no-progress
             --timeout 30
-            --max-retries 2
-            --accept 200..=299,400,403,405,429,501
+            --max-retries 3
+            --max-concurrency 32
+            --accept 200..=299,400,403,405,429,501,503
             --scheme http
             --scheme https
             --root-dir ${{ github.workspace }}/.gitbook
