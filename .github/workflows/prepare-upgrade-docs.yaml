@@ -1,0 +1,61 @@
+name: Prepare chain upgrade docs
+
+# Drafts the canonical-chain-upgrade doc (with the integrator compatibility
+# matrix) as a PR for the chain team to complete whenever a new stable
+# injective-core release is cut.
+#
+# Primary trigger: repository_dispatch sent by the notify-docs job of
+# release-core.yaml (the pipeline that publishes releases to
+# InjectiveFoundation/injective-core). The daily cron is only a fallback in
+# case a dispatch is missed; the run is idempotent either way.
+
+on:
+  repository_dispatch:
+    types: [core-release]
+  schedule:
+    - cron: "17 6 * * *" # Daily fallback at 06:17 UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for new injective-core release and draft upgrade doc
+        id: draft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/prepare-upgrade-doc.py
+
+      - name: Create pull request
+        if: steps.draft.outputs.has_new == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: docs/chain-upgrade-${{ steps.draft.outputs.version }}
+          commit-message: "docs: draft canonical chain upgrade doc for ${{ steps.draft.outputs.version }}"
+          title: "docs: canonical chain upgrade ${{ steps.draft.outputs.version }}"
+          assignees: maxim-inj
+          reviewers: maxim-inj
+          labels: documentation
+          body: |
+            ## New injective-core release detected
+
+            Release [`${{ steps.draft.outputs.tag }}`](${{ steps.draft.outputs.release_url }}) was cut and no upgrade doc existed for it, so this PR drafts `${{ steps.draft.outputs.doc_path }}` and features it in the docs navigation (the previous upgrade page moves to Historical Upgrades).
+
+            Auto-filled from the chain and GitHub:
+            - Governance proposal: #${{ steps.draft.outputs.proposal_id }}
+            - Halt height: ${{ steps.draft.outputs.halt_height }}
+            - Halt date/time (estimated from live block time — please confirm)
+            - Rollback version (currently running mainnet binary)
+            - `sdk-go` / `sdk-python` versions in the compatibility matrix (latest releases — please confirm they are the ones cut for this upgrade)
+
+            **cc @maxim-inj — action required before merging:**
+            - [ ] Fill in the `libwasmvm` sha256 checksum
+            - [ ] Fill in the `injectived version` / `peggo version` command outputs (marked `TBD`)
+            - [ ] Fill in the Indexer API and evm-gateway versions in the compatibility matrix
+            - [ ] Confirm the halt date/time and proposal details

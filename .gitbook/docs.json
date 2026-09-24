@@ -72,7 +72,7 @@
               "items": [
                 {
                   "label": "Operator Portal",
-                  "href": "https://chain-portal.injective.network"
+                  "href": "https://chain.injective.network"
                 },
                 {
                   "label": "Network Status",
@@ -3463,7 +3463,7 @@
       },
       {
         "label": "Operator Portal",
-        "href": "https://chain-portal.injective.network"
+        "href": "https://chain.injective.network"
       }
     ]
   }

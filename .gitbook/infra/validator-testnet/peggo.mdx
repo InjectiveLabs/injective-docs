@@ -29,7 +29,7 @@ Update the `PEGGO_COSMOS_FROM` to your validator key name (or account address) a
 
 Keyring path must be pointing to homedir of your injectived node, if you want reuse the keys from there.
 
-Learn more about Keyring setup [here](https://docs.cosmos.network/v0.46/run-node/keyring.html).
+Learn more about Keyring setup [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/user/run-node/00-keyring.md).
 
 ### **2. Cosmos Private Key (Unsafe)**
 
@@ -163,7 +163,7 @@ journalctl -f -u peggo
 This is an advanced DevOps topic, consult with your sysadmin.
 </Callout>
 
-Learn more about Cosmos Keyring setup [here](https://docs.cosmos.network/v0.46/run-node/keyring.html). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually, the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
+Learn more about Cosmos Keyring setup [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/user/run-node/00-keyring.md). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually, the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
 
 Some sections of the Injective Staking documentation will guide you through using this key for governance purposes, i.e., submitting transactions and setting up an Ethereum bridge. In order to protect the keys from unauthorized access, even when the keyring passphrase is leaked via configs, you can set OS permissions to allow disk access to `injectived` / `peggo` processes only.
 
@@ -244,7 +244,7 @@ Please note that the default keyring backend is `file` and that, as such, peggo 
 
 To use the default injectived key configuration, you should set the keyring path to the home directory of your injectived node, e.g. `~/.injectived`.
 
-You can also read more about the Cosmos Keyring setup [here](https://docs.cosmos.network/v0.46/run-node/keyring.html).
+You can also read more about the Cosmos Keyring setup [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/user/run-node/00-keyring.md).
 
 #### **Option 2. Cosmos Private Key (Unsafe)**
 
@@ -338,7 +338,7 @@ Example:
 injectived tx peggy set-orchestrator-address inj10m247khat0esnl0x66vu9mhlanfftnvww67j9n inj1x7kvxlz2epqx3hpq6v8j8w859t29pgca4z92l2 0xf79D16a79130a07e77eE36e8067AeA783aBdA3b6 --from validator-key-name --chain-id=injective-888 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
 ```
 
-You can verify successful registration by checking for your Validator's mapped Ethereum address on https://testnet.lcd.injective.dev/peggy/v1/valset/current.
+You can verify successful registration by checking for your Validator's mapped Ethereum address on https://sentry.lcd.testnet.injective.network/peggy/v1/valset/current.
 
 ## Step 3: Start the Relayer
 
@@ -390,7 +390,7 @@ journalctl -f -u peggo
 This is an advanced DevOps topic, consult with your sysadmin.
 </Callout>
 
-Learn more about Cosmos Keyring setup [here](https://docs.cosmos.network/v0.46/run-node/keyring.html). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually, the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
+Learn more about Cosmos Keyring setup [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/user/run-node/00-keyring.md). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually, the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
 
 Some sections of the Injective Staking documentation will guide you through using this key for governance purposes, i.e., submitting transactions and setting up an Ethereum bridge. In order to protect the keys from unauthorized access, even when the keyring passphrase is leaked via configs, you can set OS permissions to allow disk access to `injectived` / `peggo` processes only.
 

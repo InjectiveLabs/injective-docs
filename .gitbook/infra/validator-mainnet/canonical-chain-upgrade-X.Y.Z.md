@@ -9,6 +9,7 @@ updatedAt: "2025-12-03"
 Following [IIP {/* $PROPOSAL_NUM */}](https://injhub.com/proposal/{/* $PROPOSAL_NUM */}/) This indicates that the upgrade procedure should be performed on block number **{/* $BLOCK_NUM */}**
 
 * [Summary](#summary)
+* [Compatibility for Integrators](#compatibility-for-integrators)
 * [Recovery](#recovery)
 * [Upgrade Procedure](#upgrade-procedure)
 * [Notes for Validators](#notes-for-validators)
@@ -35,6 +36,18 @@ The network upgrade can take the following potential pathways:
 3. **Abort path**:\
    In the rare event that the team becomes aware of unnoticed critical issues, the Injective team will attempt to patch all the breaking states and provide another official binary within 36 hours.\
    If the chain is not successfully resumed within 36 hours, the upgrade will be announced as aborted on the `#validators` channel in [Injective's Discord](https://discord.gg/injective), and validators will need to resume running the chain without any updates or changes.
+
+## Compatibility for Integrators
+
+Component versions verified against Injective Mainnet {/* $VERSION */}. Always run the official releases below on mainnet. They contain the same changes as the `-rc` versions published during the testnet cycle, so switching from an `-rc` build to the official release requires no code changes.
+
+| Component                     | Compatible Version                                                                                                |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `injective-core` (injectived) | [{/* $VERSION */}](https://github.com/InjectiveFoundation/injective-core/releases/tag/{/* $VERSION */}-{/* $VERSION_ID */}) |
+| `injective-indexer`           | [{/* $INDEXER_VERSION */}](https://gallery.ecr.aws/l9h3g6c6/injective-indexer) (Docker)                             |
+| `sdk-go`                      | [{/* $SDK_GO_VERSION */}](https://github.com/InjectiveLabs/sdk-go/releases/tag/{/* $SDK_GO_VERSION */})             |
+| `sdk-python`                  | [{/* $SDK_PYTHON_VERSION */}](https://github.com/InjectiveLabs/sdk-python/releases/tag/{/* $SDK_PYTHON_VERSION */}) |
+| `evm-gateway`                 | [{/* $EVM_GATEWAY_VERSION */}](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name={/* $EVM_GATEWAY_VERSION */}) (Docker) |
 
 ## Recovery
 
