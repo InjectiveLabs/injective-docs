@@ -1364,6 +1364,7 @@
                 "group": "INJECTIVE",
                 "pages": [
                   "ko/index",
+                  "ko/add-network-to-wallet",
                   {
                     "group": "DeFi",
                     "icon": "coins",
@@ -2027,6 +2028,7 @@
                 "group": "INJECTIVE",
                 "pages": [
                   "jp/index",
+                  "jp/add-network-to-wallet",
                   {
                     "group": "DeFi",
                     "icon": "coins",
