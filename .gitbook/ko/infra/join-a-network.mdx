@@ -47,7 +47,7 @@ Injective 메인넷의 chain-id는 `injective-1`입니다.
 
 사전 빌드된 스냅샷을 다운로드하여 데이터 디렉터리에 압축을 해제합니다. 새 노드를 동기화하는 가장 빠르고 신뢰할 수 있는 방법입니다.
 
-Injective는 공식 프루닝 스냅샷(goleveldb, 약 2-3 GB)을 제공하며, 커뮤니티도 추가 옵션을 유지 관리합니다. 다운로드 링크, 사용 지침, 커뮤니티 제공자는 [Chain Portal의 스냅샷 페이지](https://portal.injective.network/snapshots)를 참조하세요.
+Injective는 공식 프루닝 스냅샷(goleveldb, 약 2-3 GB)을 제공하며, 커뮤니티도 추가 옵션을 유지 관리합니다. 다운로드 링크, 사용 지침, 커뮤니티 제공자는 [Chain Portal의 스냅샷 페이지](https://chain.injective.network/snapshots)를 참조하세요.
 
 <Callout icon="warning" color="#FFA500" iconType="regular">
 **검증자:** 스냅샷 복구 중에는 반드시 `priv_validator_state.json`을 백업하고 복원해야 합니다. 전체 절차는 [검증자 문제 해결 가이드](/ko/infra/coordinated-upgrades#스냅샷에서-복구)를 참조하세요.
@@ -64,7 +64,7 @@ sudo systemctl start injectived
 
 **옵션 2. State Sync (CometBFT P2P)**
 
-State sync는 모든 과거 블록을 재생하는 대신 CometBFT P2P 레이어를 통해 피어로부터 상태 머신 스냅샷을 다운로드하여 노드를 부트스트랩합니다. 신뢰할 수 있는 RPC 서버 두 개가 필요합니다. 사용 가능한 엔드포인트는 [Chain Portal의 RPC 제공자 페이지](https://portal.injective.network/rpcs)를 참조하세요. `config.toml`의 `[statesync]` 아래에서 구성합니다:
+State sync는 모든 과거 블록을 재생하는 대신 CometBFT P2P 레이어를 통해 피어로부터 상태 머신 스냅샷을 다운로드하여 노드를 부트스트랩합니다. 신뢰할 수 있는 RPC 서버 두 개가 필요합니다. 사용 가능한 엔드포인트는 [Chain Portal의 RPC 제공자 페이지](https://chain.injective.network/rpcs)를 참조하세요. `config.toml`의 `[statesync]` 아래에서 구성합니다:
 
 ```toml
 [statesync]

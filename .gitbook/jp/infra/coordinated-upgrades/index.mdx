@@ -413,7 +413,7 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 - [ ] ノード設定またはCLIフラグで `--halt-height=<target_height>` を設定する
 - [ ] Cosmovisorを使用している場合：正しいアップグレードディレクトリに新しいバイナリを配置する
 - [ ] `priv_validator_state.json` をバックアップする
-- [ ] ロールバックが必要になった場合に備えて、スナップショットプロバイダーを把握しておく（[スナップショット - Chain Portal](https://portal.injective.network/snapshots)を参照）
+- [ ] ロールバックが必要になった場合に備えて、スナップショットプロバイダーを把握しておく（[スナップショット - Chain Portal](https://chain.injective.network/snapshots)を参照）
 - [ ] 復旧にCometBFTのstate syncを使用する予定の場合：`~/.injectived/data/wasm/` のコピーを確保しておく。state syncはこのディレクトリを復元せず、その欠如はAppHashの不一致を引き起こします
 - [ ] チェーンが停止高に向かって進行するのを監視する
 
@@ -511,7 +511,7 @@ grep db_backend ~/.injectived/config/config.toml
 ## スナップショットリソース
 
 <Callout icon="info" color="#22C55E" iconType="regular">
-**[スナップショット - Chain Portal](https://portal.injective.network/snapshots)**
+**[スナップショット - Chain Portal](https://chain.injective.network/snapshots)**
 
 Injective提供のプルーニング済みスナップショット（EUおよびアジアリージョン）、コミュニティのスナップショットプロバイダー、アーカイブセグメントデータのダウンロードリンクと使用手順です。Chain Portalは、すべてのスナップショットリソースの正規かつ最新の情報源です。
 </Callout>

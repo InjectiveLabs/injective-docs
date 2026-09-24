@@ -1,7 +1,7 @@
 ---
 title: v1.20.4 へのアップグレード
 description: Injective メインネットバリデーターノードを v1.20.4 にアップグレードする方法
-updatedAt: "2026-09-18"
+updatedAt: "2026-09-23"
 ---
 
 2026年9月24日（木）
@@ -9,6 +9,7 @@ updatedAt: "2026-09-18"
 [IIP-701](https://injhub.com/proposal/701/) に従い、アップグレード手順はブロック高 **184394000** で実行する必要があります。
 
 * [概要](#summary)
+* [インテグレーター向け互換性](#compatibility-for-integrators)
 * [リカバリー](#recovery)
 * [アップグレード手順](#upgrade-procedure)
 * [バリデーター向けの注意事項](#notes-for-validators)
@@ -35,6 +36,18 @@ Injective チェーンは、およそ **2026年9月24日（木）午前11:00 EDT
 3. **中止経路（Abort path）**:\
    まれにチームが見過ごされていた重大な問題を認識した場合、Injective チームはすべての破壊的な状態の修正を試み、36 時間以内に別の公式バイナリを提供します。\
    36 時間以内にチェーンが正常に再開されない場合、[Injective の Discord](https://discord.gg/injective) の `#validators` チャンネルでアップグレードの中止が告知され、バリデーターは更新や変更を行わずにチェーンの運用を再開する必要があります。
+
+## インテグレーター向け互換性
+
+以下のコンポーネントバージョンは Injective メインネット v1.20.4 に対して検証済みです。メインネットでは必ず以下の公式リリースを実行してください。これらはテストネットサイクル中に公開された `-rc` バージョンと同じ変更を含むため、`-rc` ビルドから公式リリースへの切り替えにコード変更は不要です。
+
+| コンポーネント                | 互換バージョン                                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `injective-core` (injectived) | [v1.20.4](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-1789748350)       |
+| `injective-indexer`           | [v1.20.168](https://gallery.ecr.aws/l9h3g6c6/injective-indexer) (Docker)                               |
+| `sdk-go`                      | [v1.63.2](https://github.com/InjectiveLabs/sdk-go/releases/tag/v1.63.2)                                |
+| `sdk-python`                  | [v1.16.2](https://github.com/InjectiveLabs/sdk-python/releases/tag/v1.16.2)                            |
+| `evm-gateway`                 | [v1.4.4](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name=v1.4.4) (Docker)                 |
 
 ## リカバリー
 

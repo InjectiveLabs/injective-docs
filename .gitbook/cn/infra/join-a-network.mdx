@@ -47,7 +47,7 @@ Injective Mainnet 的 chain-id 为 `injective-1`。
 
 下载预构建的快照并将其解压到你的数据目录。这是同步新节点最快、最可靠的方式。
 
-Injective 提供官方剪枝快照（goleveldb，约 2-3 GB），社区也维护其他选项。有关下载链接、使用说明和社区提供商，请参阅 [Chain Portal 上的快照页面](https://portal.injective.network/snapshots)。
+Injective 提供官方剪枝快照（goleveldb，约 2-3 GB），社区也维护其他选项。有关下载链接、使用说明和社区提供商，请参阅 [Chain Portal 上的快照页面](https://chain.injective.network/snapshots)。
 
 <Callout icon="warning" color="#FFA500" iconType="regular">
 **验证者：** 在快照恢复期间，你必须备份并还原 `priv_validator_state.json`。完整流程请参阅[验证者故障排查指南](/cn/infra/coordinated-upgrades#从快照恢复)。
@@ -64,7 +64,7 @@ sudo systemctl start injectived
 
 **选项 2. State Sync（CometBFT P2P）**
 
-State sync 通过 CometBFT P2P 层从对等节点下载状态机快照来引导节点，而不是重放所有历史区块。它需要两个可信的 RPC 服务器。有关可用端点，请参阅 [Chain Portal 上的 RPC 提供商页面](https://portal.injective.network/rpcs)。请在 `config.toml` 的 `[statesync]` 下进行配置：
+State sync 通过 CometBFT P2P 层从对等节点下载状态机快照来引导节点，而不是重放所有历史区块。它需要两个可信的 RPC 服务器。有关可用端点，请参阅 [Chain Portal 上的 RPC 提供商页面](https://chain.injective.network/rpcs)。请在 `config.toml` 的 `[statesync]` 下进行配置：
 
 ```toml
 [statesync]

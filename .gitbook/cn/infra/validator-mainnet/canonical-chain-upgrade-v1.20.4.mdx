@@ -1,7 +1,7 @@
 ---
 title: 升级到 v1.20.4
 description: 如何将 Injective 主网验证者节点升级到 v1.20.4
-updatedAt: "2026-09-18"
+updatedAt: "2026-09-23"
 ---
 
 2026 年 9 月 24 日（周四）
@@ -9,6 +9,7 @@ updatedAt: "2026-09-18"
 根据 [IIP-701](https://injhub.com/proposal/701/)，升级流程应在区块高度 **184394000** 执行。
 
 * [概览](#summary)
+* [集成方兼容性](#compatibility-for-integrators)
 * [回滚](#recovery)
 * [升级流程](#upgrade-procedure)
 * [验证者须知](#notes-for-validators)
@@ -35,6 +36,18 @@ Injective 链将大约在 **2026 年 9 月 24 日（周四）美东时间上午 
 3. **中止路径（Abort path）**：\
    在极少数情况下，如果团队发现此前未察觉的严重问题，Injective 团队将尝试修复所有破坏性状态，并在 36 小时内提供另一个官方二进制文件。\
    如果链未能在 36 小时内成功恢复，将在 [Injective Discord](https://discord.gg/injective) 的 `#validators` 频道公告本次升级中止，验证者需要继续运行原链而不进行任何升级或改动。
+
+## 集成方兼容性
+
+以下组件版本已针对 Injective 主网 v1.20.4 完成验证。请务必在主网上运行下方的官方发布版本。它们与测试网周期中发布的 `-rc` 版本包含相同的更改，因此从 `-rc` 构建切换到官方发布版本无需修改任何代码。
+
+| 组件                          | 兼容版本                                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `injective-core` (injectived) | [v1.20.4](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-1789748350)       |
+| `injective-indexer`           | [v1.20.168](https://gallery.ecr.aws/l9h3g6c6/injective-indexer) (Docker)                               |
+| `sdk-go`                      | [v1.63.2](https://github.com/InjectiveLabs/sdk-go/releases/tag/v1.63.2)                                |
+| `sdk-python`                  | [v1.16.2](https://github.com/InjectiveLabs/sdk-python/releases/tag/v1.16.2)                            |
+| `evm-gateway`                 | [v1.4.4](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name=v1.4.4) (Docker)                 |
 
 ## 回滚
 

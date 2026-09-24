@@ -80,10 +80,10 @@ Geth 구현에서 엔드포인트 호출은 대략 다음 단계를 거칩니다
 Injective 구현은 유사하며 Cosmos SDK에 포함된 gRPC query client를 사용합니다:
 
 1. `eth_call` 요청은 `eth` 네임스페이스를 사용하여 `func (e *PublicAPI) Call` 함수를 호출하도록 변환됩니다
-2. [`Call()`](https://github.com/InjectiveLabs/injective-core/injective-chain/blob/main/rpc/namespaces/ethereum/eth/api.go#L639)은 `doCall()`을 호출합니다
-3. [`doCall()`](https://github.com/InjectiveLabs/injective-core/injective-chain/blob/main/rpc/namespaces/ethereum/eth/api.go#L656)은 인수를 `EthCallRequest`로 변환하고 evm 모듈의 query client를 사용하여 `EthCall()`을 호출합니다.
-4. [`EthCall()`](https://github.com/InjectiveLabs/injective-core/injective-chain/blob/main/x/evm/keeper/grpc_query.go#L212)은 인수를 `ethtypes.message`로 변환하고 `ApplyMessageWithConfig()`를 호출합니다
-5. [`ApplyMessageWithConfig()`](https://github.com/InjectiveLabs/injective-core/injective-chain/blob/d5598932a7f06158b7a5e3aa031bbc94eaaae32c/x/evm/keeper/state_transition.go#L341)는 EVM을 인스턴스화하고 Geth 구현을 사용하여 새 컨트랙트를 `Create()`하거나 컨트랙트를 `Call()`합니다.
+2. `Call()`은 `doCall()`을 호출합니다
+3. `doCall()`은 인수를 `EthCallRequest`로 변환하고 evm 모듈의 query client를 사용하여 `EthCall()`을 호출합니다.
+4. `EthCall()`은 인수를 `ethtypes.message`로 변환하고 `ApplyMessageWithConfig()`를 호출합니다
+5. `ApplyMessageWithConfig()`는 EVM을 인스턴스화하고 Geth 구현을 사용하여 새 컨트랙트를 `Create()`하거나 컨트랙트를 `Call()`합니다.
 
 ### StateDB
 

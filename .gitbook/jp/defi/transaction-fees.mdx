@@ -39,7 +39,7 @@ Cosmos SDKでは、Gasはメインの`GasMeter`と`BlockGasMeter`で追跡され
 * `GasMeter`：状態遷移の実行中に消費されたGasを追跡します。トランザクション実行ごとにリセットされます。
 * `BlockGasMeter`：ブロック内で消費されたGasを追跡し、Gasが事前に定義された制限を超えないようにします。この制限はTendermintコンセンサスパラメーターで定義され、ガバナンスパラメーター変更プロポーザルを通じて変更できます。
 
-Cosmos SDKにおけるGasの詳細については、[こちら](https://docs.cosmos.network/main/learn/beginner/gas-fees)をご覧ください。
+Cosmos SDKにおけるGasの詳細については、[こちら](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/learn/beginner/04-gas-fees.md)をご覧ください。
 
 Cosmosでは、トランザクションによってトリガーされない操作でも状態遷移を引き起こすことがあります。具体的な例としては、`BeginBlock`と`EndBlock`の操作、およびトランザクションからの状態遷移を実行する前にストアの読み取りと書き込みを行う可能性のある`AnteHandler`チェックがあります。
 
@@ -49,4 +49,4 @@ Cosmosでは、トランザクションによってトリガーされない操�
 
 #### `AnteHandler`
 
-Cosmos SDK [`AnteHandler`](https://docs.cosmos.network/v0.45/modules/auth/03_antehandlers.html)は、トランザクション実行前に基本的なチェックを行います。これらのチェックは通常、署名検証、トランザクションフィールドの検証、トランザクション手数料の検証・徴収などです。
+Cosmos SDK [`AnteHandler`](https://docs.cosmos.network/sdk/latest/modules/auth)は、トランザクション実行前に基本的なチェックを行います。これらのチェックは通常、署名検証、トランザクションフィールドの検証、トランザクション手数料の検証・徴収などです。

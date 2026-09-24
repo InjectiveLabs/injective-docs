@@ -76,4 +76,4 @@ FBA 방식의 limit order 매칭 예시는 [여기](https://api.injective.exchan
   3. Order가 더 좋은 가격에 매칭되어 다른 fee가 발생합니다.
      - Buy orders의 경우 더 좋은 가격은 더 낮은 가격을 의미하고 따라서 더 낮은 fee입니다. Fee price delta를 refund합니다.
      - Sell orders의 경우 더 좋은 가격은 더 높은 가격을 의미하고 따라서 더 높은 fee입니다. Fee price delta를 charge합니다.
-  - 예시와 함께 해당 코드는 [여기](https://github.com/InjectiveLabs/injective-core/blob/80dbc4e9558847ff0354be5d19a4d8b0bba7da96/injective-chain/modules/exchange/keeper/derivative_orders_processor.go#L502)에서 찾을 수 있습니다. 최신 체인 코드는 master 브랜치를 확인하세요.
+  - 해당 코드는 `injective-chain/modules/exchange/keeper/derivative_orders_processor.go`에 있습니다.

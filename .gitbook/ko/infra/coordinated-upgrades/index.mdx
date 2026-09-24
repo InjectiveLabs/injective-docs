@@ -413,7 +413,7 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 - [ ] 노드 구성 또는 CLI 플래그에 `--halt-height=<target_height>` 설정
 - [ ] Cosmovisor 사용 시: 올바른 업그레이드 디렉터리에 새 바이너리 배치
 - [ ] `priv_validator_state.json` 백업
-- [ ] 롤백이 필요할 경우에 대비해 스냅샷 제공자 파악 ([스냅샷 - Chain Portal](https://portal.injective.network/snapshots) 참조)
+- [ ] 롤백이 필요할 경우에 대비해 스냅샷 제공자 파악 ([스냅샷 - Chain Portal](https://chain.injective.network/snapshots) 참조)
 - [ ] 복구에 CometBFT state sync를 사용할 계획이라면: `~/.injectived/data/wasm/`의 사본을 확보해 두세요. state sync는 이 디렉터리를 복원하지 않으며, 이 디렉터리가 없으면 AppHash 불일치가 발생합니다
 - [ ] 중단 높이까지의 체인 진행 상황 모니터링
 
@@ -511,7 +511,7 @@ grep db_backend ~/.injectived/config/config.toml
 ## 스냅샷 리소스
 
 <Callout icon="info" color="#22C55E" iconType="regular">
-**[스냅샷 - Chain Portal](https://portal.injective.network/snapshots)**
+**[스냅샷 - Chain Portal](https://chain.injective.network/snapshots)**
 
 Injective 제공 프루닝 스냅샷(EU 및 Asia 리전), 커뮤니티 스냅샷 제공자, 아카이벌 세그먼트 데이터의 다운로드 링크와 사용 지침을 제공합니다. Chain Portal은 모든 스냅샷 리소스의 표준이자 최신 소스입니다.
 </Callout>

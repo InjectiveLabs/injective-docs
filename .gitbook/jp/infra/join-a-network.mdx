@@ -47,7 +47,7 @@ Injectiveメインネットのchain-idは`injective-1`です。
 
 事前に構築されたスナップショットをダウンロードし、データディレクトリに展開します。これは新しいノードを同期する最も高速で信頼性の高い方法です。
 
-Injectiveは公式のプルーニング済みスナップショット（goleveldb、約2〜3 GB）を提供しており、コミュニティも追加の選択肢を管理しています。ダウンロードリンク、使用手順、コミュニティプロバイダーについては、[Chain Portalのスナップショットページ](https://portal.injective.network/snapshots)を参照してください。
+Injectiveは公式のプルーニング済みスナップショット（goleveldb、約2〜3 GB）を提供しており、コミュニティも追加の選択肢を管理しています。ダウンロードリンク、使用手順、コミュニティプロバイダーについては、[Chain Portalのスナップショットページ](https://chain.injective.network/snapshots)を参照してください。
 
 <Callout icon="warning" color="#FFA500" iconType="regular">
 **バリデーター：** スナップショット復旧の際には、`priv_validator_state.json`のバックアップと復元が必須です。完全な手順については、[バリデーターのトラブルシューティングガイド](/jp/infra/coordinated-upgrades#スナップショットからの復旧)を参照してください。
@@ -64,7 +64,7 @@ sudo systemctl start injectived
 
 **オプション2. State Sync（CometBFT P2P）**
 
-State syncは、すべての過去のブロックをリプレイする代わりに、CometBFT P2Pレイヤーを介してピアからステートマシンのスナップショットをダウンロードすることでノードをブートストラップします。信頼できる2つのRPCサーバーが必要です。利用可能なエンドポイントについては、[Chain PortalのRPCプロバイダーページ](https://portal.injective.network/rpcs)を参照してください。`config.toml`の`[statesync]`で設定します：
+State syncは、すべての過去のブロックをリプレイする代わりに、CometBFT P2Pレイヤーを介してピアからステートマシンのスナップショットをダウンロードすることでノードをブートストラップします。信頼できる2つのRPCサーバーが必要です。利用可能なエンドポイントについては、[Chain PortalのRPCプロバイダーページ](https://chain.injective.network/rpcs)を参照してください。`config.toml`の`[statesync]`で設定します：
 
 ```toml
 [statesync]

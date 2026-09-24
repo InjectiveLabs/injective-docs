@@ -413,7 +413,7 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 - [ ] 在节点配置或 CLI 标志中设置 `--halt-height=<target_height>`
 - [ ] 如果使用 Cosmovisor：将新二进制文件放入正确的升级目录
 - [ ] 备份 `priv_validator_state.json`
-- [ ] 确定快照提供商，以备需要回滚时使用（参见[快照 - Chain Portal](https://portal.injective.network/snapshots)）
+- [ ] 确定快照提供商，以备需要回滚时使用（参见[快照 - Chain Portal](https://chain.injective.network/snapshots)）
 - [ ] 如果计划使用 CometBFT state sync 进行恢复：确保你拥有 `~/.injectived/data/wasm/` 的副本。State sync 不会恢复该目录，缺少它会导致 AppHash 不匹配
 - [ ] 监控链向停机高度的推进
 
@@ -511,7 +511,7 @@ grep db_backend ~/.injectived/config/config.toml
 ## 快照资源
 
 <Callout icon="info" color="#22C55E" iconType="regular">
-**[快照 - Chain Portal](https://portal.injective.network/snapshots)**
+**[快照 - Chain Portal](https://chain.injective.network/snapshots)**
 
 Injective 官方提供的剪枝快照（欧洲和亚洲区域）、社区快照提供商、归档段数据的下载链接及使用说明。Chain Portal 是所有快照资源的权威、最新来源。
 </Callout>

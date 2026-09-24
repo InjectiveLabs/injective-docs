@@ -1,7 +1,7 @@
 ---
 title: v1.20.4로 업그레이드
 description: Injective 메인넷 검증자 노드를 v1.20.4로 업그레이드하는 방법
-updatedAt: "2026-09-18"
+updatedAt: "2026-09-23"
 ---
 
 2026년 9월 24일 목요일
@@ -9,6 +9,7 @@ updatedAt: "2026-09-18"
 [IIP-701](https://injhub.com/proposal/701/)에 따라 업그레이드 절차는 블록 높이 **184394000**에서 수행되어야 합니다.
 
 * [요약](#summary)
+* [통합자를 위한 호환성](#compatibility-for-integrators)
 * [복구](#recovery)
 * [업그레이드 절차](#upgrade-procedure)
 * [검증자 참고 사항](#notes-for-validators)
@@ -35,6 +36,18 @@ Injective 체인은 약 **2026년 9월 24일 목요일 오전 11:00 EDT / 15:00 
 3. **중단 경로(Abort path)**:\
    드물게 팀이 미처 발견하지 못한 치명적인 문제를 인지하는 경우, Injective 팀은 모든 손상된 상태를 패치하고 36시간 이내에 또 다른 공식 바이너리를 제공하려고 시도합니다.\
    체인이 36시간 이내에 성공적으로 재개되지 않으면 [Injective Discord](https://discord.gg/injective)의 `#validators` 채널에서 업그레이드 중단이 공지되며, 검증자는 어떠한 업데이트나 변경 없이 기존 체인을 계속 실행해야 합니다.
+
+## 통합자를 위한 호환성
+
+다음 구성 요소 버전은 Injective 메인넷 v1.20.4에 대해 검증되었습니다. 메인넷에서는 항상 아래의 공식 릴리스를 실행하세요. 이 릴리스는 테스트넷 주기 동안 게시된 `-rc` 버전과 동일한 변경 사항을 포함하므로, `-rc` 빌드에서 공식 릴리스로 전환할 때 코드 변경이 필요하지 않습니다.
+
+| 구성 요소                     | 호환 버전                                                                                             |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `injective-core` (injectived) | [v1.20.4](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-1789748350)       |
+| `injective-indexer`           | [v1.20.168](https://gallery.ecr.aws/l9h3g6c6/injective-indexer) (Docker)                               |
+| `sdk-go`                      | [v1.63.2](https://github.com/InjectiveLabs/sdk-go/releases/tag/v1.63.2)                                |
+| `sdk-python`                  | [v1.16.2](https://github.com/InjectiveLabs/sdk-python/releases/tag/v1.16.2)                            |
+| `evm-gateway`                 | [v1.4.4](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name=v1.4.4) (Docker)                 |
 
 ## 복구
 
