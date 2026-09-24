@@ -1,0 +1,16 @@
+<svg width="75" height="84" viewBox="0 0 75 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Source: Trust Wallet official press kit, https://trustwallet.com/download/logos.zip -->
+  <title>Trust Wallet</title>
+  <path d="M0 12.134L37.4967 0V84C10.713 72.799 0 51.3325 0 39.201V12.134Z" fill="#0500FF"/>
+  <path d="M74.9962 12.134L37.4995 0V84C64.2832 72.799 74.9962 51.3325 74.9962 39.201V12.134Z" fill="url(#trust-gradient)"/>
+  <defs>
+    <linearGradient id="trust-gradient" x1="65.036" y1="-5.88222" x2="36.938" y2="82.9237" gradientUnits="userSpaceOnUse">
+      <stop offset="0.02" stop-color="#0000FF"/>
+      <stop offset="0.08" stop-color="#0094FF"/>
+      <stop offset="0.16" stop-color="#48FF91"/>
+      <stop offset="0.42" stop-color="#0094FF"/>
+      <stop offset="0.68" stop-color="#0038FF"/>
+      <stop offset="0.9" stop-color="#0500FF"/>
+    </linearGradient>
+  </defs>
+</svg>

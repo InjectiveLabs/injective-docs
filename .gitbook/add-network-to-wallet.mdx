@@ -2,19 +2,18 @@
 title: Add Network to Your Wallet
 description: >-
   Add Injective networks to your browser wallet in one click. Interactive
-  wallet buttons for Injective EVM (MetaMask and other EVM wallets) and
-  Injective native (Keplr, Leap), covering mainnet and testnet.
+  wallet options for Injective EVM (MetaMask and Trust Wallet) and Injective
+  native (Keplr), covering mainnet and testnet.
 icon: wallet
-updatedAt: "2026-07-20"
+updatedAt: "2026-07-28"
 ---
 
 Add Injective to your browser wallet with a single click, or use the manual
 configuration details below. Injective exposes two interoperable interfaces:
 
 - **Injective EVM** is an Ethereum-compatible JSON-RPC layer. Use it with EVM
-  wallets such as MetaMask, Rabby, or any injected `window.ethereum` wallet.
-- **Injective (CosmWasm / native)** is the native Cosmos SDK chain. Use it with
-  Cosmos wallets such as Keplr and Leap.
+  wallets such as MetaMask and Trust Wallet.
+- **Injective (native)** is the native Cosmos SDK chain. Use it with Keplr.
 
 <Info>
 Injective EVM and Injective native map to the same network. They use different
@@ -25,8 +24,8 @@ chain IDs but share the same underlying state. See
 
 ## Injective EVM
 
-Injective EVM works with EVM wallets like MetaMask, Rabby, and SubWallet. Pick a
-network and click your wallet — it will prompt you to add or switch to Injective.
+Injective EVM works with EVM wallets like MetaMask and Trust Wallet. Pick a
+network and choose a wallet option to add or switch to Injective.
 
 <div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
@@ -59,16 +58,46 @@ network and click your wallet — it will prompt you to add or switch to Injecti
         label.textContent = "Connecting...";
         button.disabled = true;
         button.style.opacity = "0.72";
-        const eth = typeof window !== "undefined" ? window.ethereum : null;
-        if (!eth) { finish("Wallet not found", false); alert("Please install MetaMask or another EVM wallet."); return; }
-        const list = eth.providers && eth.providers.length ? eth.providers : [eth];
-        const provider = list.find((p) => p && p.isMetaMask) || eth;
-        provider.request({ method: "eth_requestAccounts" })
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = list.find((p) => p && p.isMetaMask) || null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "io.metamask" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("Wallet not found", false); alert("Please install MetaMask."); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: "0x6f0" }]
           }).catch((error) => {
-            if (error && error.code === 4902) {
+            if (getErrorCode(error) === 4902) {
               return provider.request({
                 method: "wallet_addEthereumChain",
                 params: [{
@@ -82,19 +111,22 @@ network and click your wallet — it will prompt you to add or switch to Injecti
             }
             throw error;
           }))
-          .then(() => {
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
             label.textContent = "Connected ✓";
             finish(label.textContent, true);
           })
           .catch((error) => {
             console.error("Add or switch network failed:", error);
-            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            label.textContent = getErrorCode(error) === 4001 ? "Request cancelled" : "Try again";
             finish(label.textContent, false);
           });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
     >
-      <img src="/img/wallets/metamask.svg" alt="MetaMask" width="22" height="22" style={{ flexShrink: 0 }} />
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/metamask.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
       <span data-wallet-label aria-live="polite">Add to MetaMask</span>
     </button>
     <button
@@ -122,14 +154,48 @@ network and click your wallet — it will prompt you to add or switch to Injecti
         label.textContent = "Connecting...";
         button.disabled = true;
         button.style.opacity = "0.72";
-        const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
-        if (!provider) { finish("Wallet not found", false); alert("Please install SubWallet."); return; }
-        provider.request({ method: "eth_requestAccounts" })
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = typeof window !== "undefined"
+          ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)) || null)
+          : null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "com.trustwallet.app" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("Wallet not found", false); alert("Please install Trust Wallet."); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: "0x6f0" }]
           }).catch((error) => {
-            if (error && error.code === 4902) {
+            if (getErrorCode(error) === 4902) {
               return provider.request({
                 method: "wallet_addEthereumChain",
                 params: [{
@@ -143,20 +209,23 @@ network and click your wallet — it will prompt you to add or switch to Injecti
             }
             throw error;
           }))
-          .then(() => {
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
             label.textContent = "Connected ✓";
             finish(label.textContent, true);
           })
           .catch((error) => {
             console.error("Add or switch network failed:", error);
-            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            label.textContent = getErrorCode(error) === 4001 ? "Request cancelled" : "Try again";
             finish(label.textContent, false);
           });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
     >
-      <img src="/img/wallets/subwallet.svg" alt="SubWallet" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
-      <span data-wallet-label aria-live="polite">Add to SubWallet</span>
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/trust-wallet.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Add to Trust Wallet</span>
     </button>
   </div>
 </div>
@@ -192,16 +261,46 @@ network and click your wallet — it will prompt you to add or switch to Injecti
         label.textContent = "Connecting...";
         button.disabled = true;
         button.style.opacity = "0.72";
-        const eth = typeof window !== "undefined" ? window.ethereum : null;
-        if (!eth) { finish("Wallet not found", false); alert("Please install MetaMask or another EVM wallet."); return; }
-        const list = eth.providers && eth.providers.length ? eth.providers : [eth];
-        const provider = list.find((p) => p && p.isMetaMask) || eth;
-        provider.request({ method: "eth_requestAccounts" })
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = list.find((p) => p && p.isMetaMask) || null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "io.metamask" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("Wallet not found", false); alert("Please install MetaMask."); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: "0x59f" }]
           }).catch((error) => {
-            if (error && error.code === 4902) {
+            if (getErrorCode(error) === 4902) {
               return provider.request({
                 method: "wallet_addEthereumChain",
                 params: [{
@@ -215,19 +314,22 @@ network and click your wallet — it will prompt you to add or switch to Injecti
             }
             throw error;
           }))
-          .then(() => {
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
             label.textContent = "Connected ✓";
             finish(label.textContent, true);
           })
           .catch((error) => {
             console.error("Add or switch network failed:", error);
-            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            label.textContent = getErrorCode(error) === 4001 ? "Request cancelled" : "Try again";
             finish(label.textContent, false);
           });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
     >
-      <img src="/img/wallets/metamask.svg" alt="MetaMask" width="22" height="22" style={{ flexShrink: 0 }} />
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/metamask.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
       <span data-wallet-label aria-live="polite">Add to MetaMask</span>
     </button>
     <button
@@ -255,14 +357,48 @@ network and click your wallet — it will prompt you to add or switch to Injecti
         label.textContent = "Connecting...";
         button.disabled = true;
         button.style.opacity = "0.72";
-        const provider = typeof window !== "undefined" ? (window.SubWallet || window.ethereum) : null;
-        if (!provider) { finish("Wallet not found", false); alert("Please install SubWallet."); return; }
-        provider.request({ method: "eth_requestAccounts" })
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = typeof window !== "undefined"
+          ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)) || null)
+          : null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "com.trustwallet.app" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("Wallet not found", false); alert("Please install Trust Wallet."); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: "0x59f" }]
           }).catch((error) => {
-            if (error && error.code === 4902) {
+            if (getErrorCode(error) === 4902) {
               return provider.request({
                 method: "wallet_addEthereumChain",
                 params: [{
@@ -276,28 +412,32 @@ network and click your wallet — it will prompt you to add or switch to Injecti
             }
             throw error;
           }))
-          .then(() => {
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
             label.textContent = "Connected ✓";
             finish(label.textContent, true);
           })
           .catch((error) => {
             console.error("Add or switch network failed:", error);
-            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
+            label.textContent = getErrorCode(error) === 4001 ? "Request cancelled" : "Try again";
             finish(label.textContent, false);
           });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
     >
-      <img src="/img/wallets/subwallet.svg" alt="SubWallet" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
-      <span data-wallet-label aria-live="polite">Add to SubWallet</span>
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/trust-wallet.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Add to Trust Wallet</span>
     </button>
   </div>
 </div>
 
 <Info>
-The button uses the standard `wallet_addEthereumChain` request. If the network
-is already added, your wallet shows a switch prompt instead. If nothing happens,
-add it manually with the values below.
+The MetaMask and Trust Wallet buttons use the standard `wallet_addEthereumChain`
+request. If the network is already added, the wallet shows a switch prompt instead.
+If nothing happens with an injected wallet, add the network manually with the
+values below.
 </Info>
 
 ### Manual configuration
@@ -335,11 +475,10 @@ add it manually with the values below.
 
 </Tabs>
 
-## Injective (CosmWasm / Native)
+## Injective (Native)
 
-The native Injective chain works with Cosmos wallets like Keplr and Leap.
-Injective ships built into both wallets, so it is available out of the box.
-Pick a network and click your wallet to unlock the chain.
+The native Injective chain works with Keplr. Injective is built into Keplr, so it
+is available out of the box. Choose a network below to unlock it in Keplr.
 
 <div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
@@ -385,53 +524,10 @@ Pick a network and click your wallet to unlock the chain.
             finish(label.textContent, false);
           });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
     >
-      <img src="/img/wallets/keplr.png" alt="Keplr" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", borderRadius: "5px", backgroundImage: "url('/img/wallets/keplr.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
       <span data-wallet-label aria-live="polite">Add to Keplr</span>
-    </button>
-    <button
-      type="button"
-      onClick={(event) => {
-        const button = event.currentTarget;
-        const label = button.querySelector("[data-wallet-label]");
-        const originalLabel = label.textContent;
-        const originalBorder = button.style.borderColor;
-        const originalBackground = button.style.background;
-        const originalOpacity = button.style.opacity;
-        const finish = (message, success) => {
-          label.textContent = message;
-          button.style.borderColor = success ? "#22c55e" : "#ef4444";
-          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
-          button.style.opacity = "1";
-          window.setTimeout(() => {
-            label.textContent = originalLabel;
-            button.style.borderColor = originalBorder;
-            button.style.background = originalBackground;
-            button.style.opacity = originalOpacity;
-            button.disabled = false;
-          }, 2500);
-        };
-        label.textContent = "Connecting...";
-        button.disabled = true;
-        button.style.opacity = "0.72";
-        const p = typeof window !== "undefined" ? window.leap : null;
-        if (!p) { finish("Wallet not found", false); alert("Please install the Leap wallet."); return; }
-        p.enable("injective-1")
-          .then(() => {
-            label.textContent = "Connected ✓";
-            finish(label.textContent, true);
-          })
-          .catch((error) => {
-            console.error("Leap enable failed:", error);
-            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
-            finish(label.textContent, false);
-          });
-      }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
-    >
-      <img src="/img/wallets/leap.svg" alt="Leap" width="22" height="22" style={{ flexShrink: 0 }} />
-      <span data-wallet-label aria-live="polite">Add to Leap</span>
     </button>
   </div>
 </div>
@@ -480,61 +576,17 @@ Pick a network and click your wallet to unlock the chain.
             finish(label.textContent, false);
           });
       }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
     >
-      <img src="/img/wallets/keplr.png" alt="Keplr" width="22" height="22" style={{ flexShrink: 0, borderRadius: "5px" }} />
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", borderRadius: "5px", backgroundImage: "url('/img/wallets/keplr.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
       <span data-wallet-label aria-live="polite">Add to Keplr</span>
-    </button>
-    <button
-      type="button"
-      onClick={(event) => {
-        const button = event.currentTarget;
-        const label = button.querySelector("[data-wallet-label]");
-        const originalLabel = label.textContent;
-        const originalBorder = button.style.borderColor;
-        const originalBackground = button.style.background;
-        const originalOpacity = button.style.opacity;
-        const finish = (message, success) => {
-          label.textContent = message;
-          button.style.borderColor = success ? "#22c55e" : "#ef4444";
-          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
-          button.style.opacity = "1";
-          window.setTimeout(() => {
-            label.textContent = originalLabel;
-            button.style.borderColor = originalBorder;
-            button.style.background = originalBackground;
-            button.style.opacity = originalOpacity;
-            button.disabled = false;
-          }, 2500);
-        };
-        label.textContent = "Connecting...";
-        button.disabled = true;
-        button.style.opacity = "0.72";
-        const p = typeof window !== "undefined" ? window.leap : null;
-        if (!p) { finish("Wallet not found", false); alert("Please install the Leap wallet."); return; }
-        p.enable("injective-888")
-          .then(() => {
-            label.textContent = "Connected ✓";
-            finish(label.textContent, true);
-          })
-          .catch((error) => {
-            console.error("Leap enable failed:", error);
-            label.textContent = error && error.code === 4001 ? "Request cancelled" : "Try again";
-            finish(label.textContent, false);
-          });
-      }}
-      style={{ display: "inline-flex", alignItems: "center", gap: "9px", padding: "9px 16px", borderRadius: "11px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "150px", transition: "all 160ms ease" }}
-    >
-      <img src="/img/wallets/leap.svg" alt="Leap" width="22" height="22" style={{ flexShrink: 0 }} />
-      <span data-wallet-label aria-live="polite">Add to Leap</span>
     </button>
   </div>
 </div>
 
 <Info>
-Keplr and Leap include Injective by default, so the button simply unlocks the
-chain in your wallet. For a full wallet integration guide, see
-[Wallets](/defi/wallet/index).
+Keplr includes Injective by default, so its button simply unlocks the chain in
+the wallet. For a full wallet integration guide, see [Wallets](/defi/wallet/index).
 </Info>
 
 ### Manual configuration
