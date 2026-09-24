@@ -121,11 +121,24 @@ network and choose a wallet option to add or switch to Injective.
         label.textContent = "Connecting...";
         button.disabled = true;
         button.style.opacity = "0.72";
+        const announcedProviders = [];
+        const onAnnounceProvider = (event) => {
+          const detail = event && event.detail;
+          if (detail && detail.info && detail.info.rdns === "com.trustwallet.app" && detail.provider) {
+            announcedProviders.push(detail.provider);
+          }
+        };
+        if (typeof window !== "undefined") {
+          window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+          window.dispatchEvent(new Event("eip6963:requestProvider"));
+          window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+        }
         const injected = typeof window !== "undefined" ? window.ethereum : null;
         const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
-        const provider = typeof window !== "undefined"
+        const legacyProvider = typeof window !== "undefined"
           ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)))
           : null;
+        const provider = announcedProviders[0] || legacyProvider;
         if (!provider) { finish("Wallet not found", false); alert("Please install Trust Wallet."); return; }
         provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({
@@ -258,11 +271,24 @@ network and choose a wallet option to add or switch to Injective.
         label.textContent = "Connecting...";
         button.disabled = true;
         button.style.opacity = "0.72";
+        const announcedProviders = [];
+        const onAnnounceProvider = (event) => {
+          const detail = event && event.detail;
+          if (detail && detail.info && detail.info.rdns === "com.trustwallet.app" && detail.provider) {
+            announcedProviders.push(detail.provider);
+          }
+        };
+        if (typeof window !== "undefined") {
+          window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+          window.dispatchEvent(new Event("eip6963:requestProvider"));
+          window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+        }
         const injected = typeof window !== "undefined" ? window.ethereum : null;
         const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
-        const provider = typeof window !== "undefined"
+        const legacyProvider = typeof window !== "undefined"
           ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)))
           : null;
+        const provider = announcedProviders[0] || legacyProvider;
         if (!provider) { finish("Wallet not found", false); alert("Please install Trust Wallet."); return; }
         provider.request({ method: "eth_requestAccounts" })
           .then(() => provider.request({

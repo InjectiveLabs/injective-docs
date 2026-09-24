@@ -6,7 +6,8 @@
   "scripts": {
     "generate:core-specs": "./scripts/injective-core-specs.sh",
     "updated-at-markdown-frontmatter": "./scripts/updated-at-markdown-frontmatter.js",
-    "llms-txt-builder": "./scripts/llms-txt-builder.js"
+    "llms-txt-builder": "./scripts/llms-txt-builder.js",
+    "validate:wallet-options": "node ./scripts/validate-wallet-options.mjs"
   },
   "dependencies": {
     "dotenv": "16.4.5"
