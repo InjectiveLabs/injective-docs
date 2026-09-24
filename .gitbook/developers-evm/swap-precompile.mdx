@@ -25,10 +25,10 @@ flowchart LR
         EXCH["x/exchange<br/>orderbook"]
         BANK["x/bank balances<br/>MultiVM Token Standard"]
     end
-    CALLER -->|"1 · quoteExactInputV1<br/>what would amountIn return right now?"| SWAP
-    SWAP -.->|"2 · quoted amountOut<br/>caller derives minOut from it"| CALLER
+    CALLER -->|"1 · quoteExactInputV1<br/>request current amountOut for amountIn"| SWAP
+    SWAP -.->|"2 · quoted amountOut<br/>used to derive minOut"| CALLER
     CALLER -->|"3 · swapExactInputV1<br/>with minOut and deadline"| SWAP
-    SWAP -->|"4 · market<br/>allowed?"| PARAMS
+    SWAP -->|"4 · verify market<br/>is allowlisted"| PARAMS
     SWAP -->|"5 · execute on<br/>default subaccount"| EXCH
     EXCH -->|"6 · fill, or revert<br/>below minOut"| SWAP
     SWAP -->|"7 · credit amountOut<br/>to recipient"| BANK
@@ -46,7 +46,7 @@ flowchart LR
 
 The flow has two phases:
 
-**Quote (steps 1 and 2).** `quoteExactInputV1` is a read call that answers one question: how much `amountOut` would this exact `amountIn` receive against the orderbook right now? Orderbook prices move block to block, so the caller uses the quoted value to set `minOut`, typically the quote minus a slippage tolerance. Without this step you would have to guess `minOut`: too tight and the swap reverts on normal price movement, too loose and you accept a worse fill than needed.
+**Quote (steps 1 and 2).** `quoteExactInputV1` is a read call that returns the `amountOut` the given `amountIn` would currently receive against the orderbook. Orderbook prices change block to block, so the caller derives `minOut` from the quoted value, typically by applying a slippage tolerance. Setting `minOut` without a current quote risks either reverting on normal price movement when set too tight, or accepting a worse fill than necessary when set too loose.
 
 **Swap (steps 3 to 7).** `swapExactInputV1` runs the whole execution in one transaction: the precompile checks the market against the `SwapParams` allowlist, places the order on the caller's default subaccount, and either credits at least `minOut` to the recipient before the `deadline` or reverts the entire call. Nothing is left partially done. The output lands as a bank balance, which the MultiVM Token Standard makes immediately readable as an ERC20 balance.
 
