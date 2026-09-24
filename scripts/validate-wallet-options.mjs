@@ -3,71 +3,44 @@ import assert from 'node:assert/strict';
 
 const source = fs.readFileSync(new URL('../.gitbook/add-network-to-wallet.mdx', import.meta.url), 'utf8');
 const trustButtonCount = (source.match(/Add to Trust Wallet/g) || []).length;
-assert.equal(trustButtonCount, 2, 'expected mainnet and testnet Trust Wallet buttons');
+const metamaskButtonCount = (source.match(/Add to MetaMask/g) || []).length;
+const walletButtonCount = trustButtonCount + metamaskButtonCount;
 
+assert.equal(trustButtonCount, 2, 'expected mainnet and testnet Trust Wallet buttons');
+assert.equal(metamaskButtonCount, 2, 'expected mainnet and testnet MetaMask buttons');
 assert.equal(
   (source.match(/addEventListener\("eip6963:announceProvider"/g) || []).length,
-  trustButtonCount,
-  'each Trust Wallet button must listen for EIP-6963 provider announcements',
+  walletButtonCount,
+  'each EVM wallet button must listen for asynchronous EIP-6963 announcements',
 );
 assert.equal(
   (source.match(/eip6963:requestProvider/g) || []).length,
-  trustButtonCount,
-  'each Trust Wallet button must request EIP-6963 providers',
+  walletButtonCount,
+  'each EVM wallet button must request EIP-6963 providers',
 );
+assert.equal((source.match(/com\.trustwallet\.app/g) || []).length, trustButtonCount);
+assert.equal((source.match(/io\.metamask/g) || []).length, metamaskButtonCount);
 assert.equal(
-  (source.match(/com\.trustwallet\.app/g) || []).length,
-  trustButtonCount,
-  'each Trust Wallet button must select rdns com.trustwallet.app',
+  (source.match(/window\.setTimeout\(\(\) => settle\(legacyProvider\), 500\)/g) || []).length,
+  walletButtonCount,
+  'provider listeners must remain active for asynchronous announcements',
 );
+assert.ok(!source.includes('list.find((p) => p && p.isMetaMask) || eth'), 'MetaMask must not fall back to an unrelated injected provider');
 
 for (const chainId of ['0x6f0', '0x59f']) {
   assert.ok(source.includes(`params: [{ chainId: "${chainId}" }]`), `missing switch request for ${chainId}`);
 }
 
-const discoveryBlocks = source.match(/const announcedProviders = \[\];[\s\S]*?const provider = announcedProviders\[0\] \|\| legacyProvider;/g) || [];
-assert.equal(discoveryBlocks.length, trustButtonCount, 'expected one provider discovery block per Trust Wallet button');
-
-class TestEvent {
-  constructor(type) {
-    this.type = type;
-  }
+const errorCodeBlocks = source.match(/const getErrorCode = \(error\) => \{[\s\S]*?\n        \};/g) || [];
+assert.equal(errorCodeBlocks.length, walletButtonCount, 'expected normalized wallet error handling for every EVM wallet button');
+for (const [index, block] of errorCodeBlocks.entries()) {
+  const getErrorCode = new Function(`${block}; return getErrorCode;`)();
+  assert.equal(
+    getErrorCode({ code: -32603, data: { originalError: { code: 4902 } } }),
+    4902,
+    `handler ${index + 1} must recognize nested unknown-chain errors`,
+  );
+  assert.equal(getErrorCode({ code: 4001 }), 4001, `handler ${index + 1} must preserve rejection errors`);
 }
 
-for (const [index, block] of discoveryBlocks.entries()) {
-  const trustProvider = { request: () => Promise.resolve([]) };
-  const listeners = new Map();
-  const eip6963Window = {
-    ethereum: { isMetaMask: true },
-    addEventListener(type, listener) { listeners.set(type, listener); },
-    removeEventListener(type, listener) {
-      if (listeners.get(type) === listener) listeners.delete(type);
-    },
-    dispatchEvent(event) {
-      if (event.type === 'eip6963:requestProvider') {
-        listeners.get('eip6963:announceProvider')?.({
-          detail: {
-            info: { rdns: 'com.trustwallet.app' },
-            provider: trustProvider,
-          },
-        });
-      }
-    },
-  };
-  const discover = new Function('window', 'Event', `${block}; return provider;`);
-  assert.equal(discover(eip6963Window, TestEvent), trustProvider, `handler ${index + 1} must select the EIP-6963 Trust provider`);
-
-  const legacyProvider = { request: () => Promise.resolve([]) };
-  const legacyWindow = {
-    trustwallet: legacyProvider,
-    ethereum: null,
-    addEventListener(type, listener) { listeners.set(type, listener); },
-    removeEventListener(type, listener) {
-      if (listeners.get(type) === listener) listeners.delete(type);
-    },
-    dispatchEvent() {},
-  };
-  assert.equal(discover(legacyWindow, TestEvent), legacyProvider, `handler ${index + 1} must retain legacy fallback`);
-}
-
-console.log('Trust Wallet EIP-6963 regression checks passed');
+console.log('MetaMask and Trust Wallet EIP-6963 regression checks passed');
