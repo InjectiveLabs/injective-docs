@@ -4,6 +4,10 @@ title: Gas Heuristics
 updatedAt: "2026-06-29"
 ---
 
+<Callout icon="info" color="#22C55E" iconType="regular">
+**Live on testnet.** These gas heuristics require `fixed_gas_enabled` to be set to `true` in the Exchange module params. This is currently enabled on testnet and will be activated on mainnet via a forthcoming governance params proposal.
+</Callout>
+
 This doc contains suggested `gasWanted` values for specific Exchange messages. Values were obtained heuristically 
 by observing gas consumption during MsgServer execution for a transaction containing a single Msg type. Conceptually, 
 for any transaction the following formula applies:

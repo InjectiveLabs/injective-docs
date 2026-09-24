@@ -1,0 +1,118 @@
+---
+title: Bridge & Deploy a Token
+description: Bring an existing ERC-20 from Ethereum to Injective via Peggy, create an MTS token pair, and launch a spot market.
+updatedAt: "2026-09-09"
+---
+
+This guide walks through bringing an existing ERC-20 token from Ethereum to Injective and making it fully operational - visible in MetaMask, tradeable on the native orderbook, and composable with DeFi protocols.
+
+## What You Get Out of the Box
+
+<CardGroup cols={2}>
+  <Card title="Peggy Bridge" icon="bridge" href="/developers-native/bridges/ethereum">
+    Decentralized, validator-operated bridge between Ethereum and Injective. Your ERC-20 becomes a native Injective denom.
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/developers-evm/multivm-token-standard">
+    One token, one balance across EVM and Native Injective. MetaMask, Solidity contracts, and native modules all see the same asset.
+  </Card>
+  <Card title="Native CLOB" icon="chart-line" href="/developers-native/injective/exchange">
+    Launch a spot market for your token in one transaction. On-chain orderbook with maker rebates and FBA protection.
+  </Card>
+  <Card title="USDC Liquidity" icon="dollar-sign" href="/developers-defi/usdc-stablecoin">
+    Native USDC already live on Injective via CCTP. Pair your token against USDC for instant liquidity.
+  </Card>
+</CardGroup>
+
+## Step by Step
+
+<img src="/img/bridge-deploy-flow.svg" alt="Bridge and deploy flow: Ethereum to Injective" />
+
+### 1. Bridge via Peggy
+
+Send your ERC-20 token from Ethereum to Injective using the Peggy bridge contract.
+
+On Ethereum, two transactions:
+1. **Approve** the Peggy contract to spend your token
+2. **sendToInjective** on the Peggy contract with the token address, your Injective address, and amount
+
+The first bridge transaction for a given ERC-20 automatically creates the denom on Injective as `peggy0x{CONTRACT_ADDRESS}`.
+
+<Info>
+Peggo relayers typically process deposits within 2 minutes. You can verify your balance via the [Injective testnet explorer](https://testnet.explorer.injective.network) or the REST API.
+</Info>
+
+For full details, see the [Peggy bridge guide](/developers-native/bridges/ethereum).
+
+### 2. Create MTS Token Pair
+
+Create a token pair to make your Peggy denom accessible from the EVM side (MetaMask, Solidity contracts, Blockscout).
+
+```bash
+injectived tx erc20 create-token-pair \
+  "peggy0xYOUR_TOKEN_ADDRESS" \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=3000000 \
+  --gas-prices=160000000inj \
+  --yes
+```
+
+<Warning>
+**Gas requirement:** This transaction requires `--gas=3000000` minimum. The ERC20 module internally deploys an EVM contract with a hardcoded 2M gas limit. Any gas value below ~2.1M will fail with a `gas computation overflow/underflow` error.
+</Warning>
+
+For Peggy denoms, **anyone** can create the token pair - no admin required. The module deploys a `FixedSupplyBankERC20` contract automatically.
+
+After the transaction succeeds, query the new ERC20 address:
+
+```bash
+curl -s "https://testnet.sentry.lcd.injective.network:443/injective/erc20/v1beta1/all_token_pairs" \
+  | jq '.token_pairs[] | select(.bank_denom | contains("YOUR_TOKEN_ADDRESS"))'
+```
+
+For full details, see the [ERC20 module docs](/developers-evm/erc20-module).
+
+### 3. Set Token Metadata
+
+Token metadata (name, symbol, decimals) determines how your token appears in MetaMask, Blockscout, and any EVM tool that calls `symbol()`, `name()`, or `decimals()` on the contract.
+
+<Warning>
+Peggy-bridged tokens do not inherit metadata from Ethereum automatically. The MTS ERC20 contract reads metadata from Injective's bank module. If bank metadata is not set, the token will display with a blank name, blank symbol, and 0 decimals.
+</Warning>
+
+**For Peggy denoms (`peggy0x...`):** Metadata must be set via a [governance proposal](/developers/testnet-proposals). This is because Peggy denoms have no admin authority - only governance can write to the bank module's metadata store. See the [token metadata guide](/developers/assets/token-metadata) for the full proposal template and how to coordinate with the team for testnet validator votes.
+
+**For TokenFactory denoms (`factory/...`):** The denom admin can call `MsgSetDenomMetadata` directly. See [TokenFactory examples](/developers-native/examples/token-factory).
+
+**For frontend display in Injective dApps:** Submit your token to [injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md). This is separate from on-chain metadata and does not affect MetaMask or Blockscout.
+
+## What You Can Do Next
+
+Once your token is live on Injective with MTS (after Step 3), these are all independent options:
+
+<CardGroup cols={2}>
+  <Card title="Launch a Spot Market" icon="chart-line" href="/developers-defi/market-launch">
+    Create an orderbook for your token on the native CLOB. One transaction, maker rebates, 40% fee share.
+  </Card>
+  <Card title="DeFi Integration" icon="building-columns" href="/developers-defi/defi-integration">
+    Build lending protocols, collateralized borrowing, or yield products using your token with Injective's native modules and precompiles.
+  </Card>
+  <Card title="Set Up Oracle Feeds" icon="satellite-dish" href="/developers-defi/provider-oracle">
+    Register a custom oracle provider to publish off-chain valuations on-chain for pricing or collateral.
+  </Card>
+  <Card title="Add Permissions" icon="shield-halved" href="/developers-native/injective/permissions">
+    Role-based compliance controls for institutional use. Map consortium roles to on-chain permissions with contract hooks for KYC/AML.
+  </Card>
+  <Card title="Vault Strategies" icon="vault" href="/developers-defi/defi-integration#vaults">
+    Automated yield strategies on <a href="https://mito.fi" target="_blank">Mito</a> or custom vault contracts.
+  </Card>
+  <Card title="Cross-Chain Flows" icon="arrows-left-right" href="/developers-defi/usdc-stablecoin">
+    Native USDC via CCTP for cross-chain transfers. Bridge proceeds to Ethereum or other supported networks.
+  </Card>
+</CardGroup>
+
+## Working Example
+
+The [ACME bridge example](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/acme-bridge) provides a complete working codebase that covers every step above - from deploying an ERC-20 on Sepolia through creating the MTS token pair and setting metadata.

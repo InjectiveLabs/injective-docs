@@ -1,0 +1,62 @@
+---
+title: パブリックエンドポイント
+updatedAt: "2026-02-12"
+---
+
+<Callout icon="info" color="#07C1FF" iconType="regular">
+利用量やトラフィックの多いアプリケーションの本番環境では、これらの使用を**推奨しません**。数千人の開発者がパブリックインフラを利用しており、100% の稼働時間と信頼性を保証することはできません。
+</Callout>
+
+## メインネット
+
+| サービス          			| アドレス                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| Chain Swagger          | https://sentry.lcd.injective.network/swagger/#/               		 |
+| Chain LCD              | https://sentry.lcd.injective.network:443                      |
+| Chain RPC              | https://sentry.tm.injective.network:443                       |
+| Chain WebSocket        | wss://sentry.tm.injective.network:443/websocket               |
+| Chain Streamer     | sentry.chain.stream.injective.network:443                     		 |
+| Chain gRPC             | sentry.chain.grpc.injective.network:443                       |
+| Chain gRPC-Web         | https://sentry.chain.grpc-web.injective.network:443           |
+| EVM JSON-RPC           | https://sentry.evm-rpc.injective.network/                     |
+| EVM WebSocket          | wss://sentry.evm-ws.injective.network                         |
+| Indexer Swagger  | https://sentry.exchange.grpc-web.injective.network/swagger/#/ 		 |
+| Indexer gRPC     | sentry.exchange.grpc.injective.network:443                 |
+| Indexer gRPC-Web | https://sentry.exchange.grpc-web.injective.network:443     |
+| Indexer EventProvider | k8s.global.mainnet.events.grpc.injective.network:443     |
+| Hub              | https://injhub.com/                                |
+| Explorer         | https://explorer.injective.network/                           |
+| Faucet           | https://inj.supply/                                           |
+| Status           | https://uptime.com/statuspage/status.injective.network                                           |
+
+<Info>
+チェーン ID、コントラクト、その他のプロバイダーを含む EVM ネットワークの詳細については、[EVM ネットワーク情報](/jp/developers-evm/network-information)を参照してください。
+</Info>
+
+## テストネット
+
+| サービス          | アドレス                                                               |
+| ---------------- | --------------------------------------------------------------------- |
+| Chain Swagger          | https://testnet.sentry.lcd.injective.network/swagger/                 |
+| Chain RPC              | https://testnet.sentry.tm.injective.network:443                       |
+| Chain LCD              | https://testnet.sentry.lcd.injective.network:443                      |
+| Chain WebSocket        | wss://testnet.sentry.tm.injective.network:443/websocket               |
+| Chain Streamer     | testnet.sentry.chain.stream.injective.network:443                     |
+| Chain gRPC             | testnet.sentry.chain.grpc.injective.network:443                       |
+| Chain gRPC-Web         | https://testnet.sentry.chain.grpc-web.injective.network:443           |
+| EVM JSON-RPC           | https://k8s.testnet.json-rpc.injective.network/                       |
+| EVM WebSocket          | wss://k8s.testnet.ws.injective.network/                               |
+| Indexer Swagger  | https://testnet.sentry.exchange.grpc-web.injective.network/swagger/#/ |
+| Indexer gRPC     | testnet.sentry.exchange.grpc.injective.network:443                    |
+| Indexer gRPC-Web | https://testnet.sentry.exchange.grpc-web.injective.network:443        |
+| Indexer EventProvider | k8s.global.testnet.events.grpc.injective.network:443     |
+| Hub              | https://testnet.hub.injective.network/                                |
+| Explorer         | https://testnet.explorer.injective.network/                           |
+| Faucet           | https://testnet.faucet.injective.network/                             |
+| Status           | https://uptime.com/statuspage/testnet.status.injective.network                            |
+
+## パブリックレイテンシベンチマーク
+
+パブリック Injective RPC プロバイダーを比較したい開発者向けに、[OpenChainBench](https://openchainbench.com/benchmarks/injective-rpc) が Injective Foundation エンドポイントとコミュニティプロバイダー（PublicNode、Polkachu、LavenderFive）を対象に、Tendermint `status` メソッドの継続的なレイテンシベンチマークを公開しています。プローブはアムステルダム、バージニア、シンガポールから 60 秒ごとに実行されます。
+
+ソースと方法論: [github.com/ChainBench/openchainbench](https://github.com/ChainBench/openchainbench)。

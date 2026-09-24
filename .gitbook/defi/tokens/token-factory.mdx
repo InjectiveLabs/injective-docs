@@ -2,10 +2,10 @@
 title: Token Factory
 description: >-
     Create and manage custom tokens on Injective without deploying a smart contract, using the native Token Factory module.
-updatedAt: "2025-10-31"
+updatedAt: "2026-09-02"
 ---
 
-TokenFactory tokens are tokens that are natively integrated into the bank module of the Cosmos SDK.
+TokenFactory tokens are natively integrated into the bank module of the chain.
 Their name takes on the format `factory/{creatorAddress}/{subdenom}`.
 Because tokens are namespaced by the creator address, this allows for permissionless token minting,
 due to not needing to resolve name collisions.
@@ -17,6 +17,63 @@ Products such as Helix or Mito, for example, are built on the Injective exchange
 TokenFactory tokens can be created via the injectived CLI, as well as via smart contract.
 Tokens bridged into Injective via Wormhole are also TokenFactory tokens.
 
-To learn more about creating your token on Injective, see [token launch](../../developers-defi/token-launch/).
+## CW20 adapter
 
-To read more about the TokenFactory standard, see [token factory module](../../developers-native/injective/tokenfactory/).
+The `CW20AdapterContract` allows CW20 assets to be natively represented on Injective as Token Factory denoms. CW20 assets are held by the adapter contract and minted as a factory denom for the Injective address. When redeeming back to CW20, they are burned from the bank module and unlocked from the adapter contract back to the owner address.
+
+### Redeem a factory denom to CW20
+
+```ts
+import {
+  MsgExecuteContractCompat,
+  ExecArgCW20AdapterRedeemAndTransfer,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+
+const message = MsgExecuteContractCompat.fromJSON({
+  sender: injectiveAddress,
+  contractAddress: CW20_ADAPTER_CONTRACT,
+  funds: {
+    denom: `factory/${CW20_ADAPTER_CONTRACT}/${contractCw20Address}`,
+    amount: actualAmount.toFixed(),
+  },
+  execArgs: ExecArgCW20AdapterRedeemAndTransfer.fromJSON({
+    recipient: injectiveAddress,
+  }),
+})
+
+// Then pack the message in a transaction, sign it and broadcast to the chain
+```
+
+### Convert CW20 to a factory denom
+
+```ts
+import {
+  ExecArgCW20Send,
+  MsgExecuteContractCompat,
+} from '@injectivelabs/sdk-ts/core/modules'
+
+const CW20_ADAPTER_CONTRACT = 'inj...'
+const contractCw20Address = 'inj...'
+const injectiveAddress = 'inj...'
+const amount = '1000000' // 1 USDT represented as on the chain as it has 6 decimals
+
+const message = MsgExecuteContractCompat.fromJSON({
+  contractAddress: contractCw20Address,
+  sender: injectiveAddress,
+  execArgs: ExecArgCW20Send.fromJSON({
+    amount,
+    contractAddress: CW20_ADAPTER_CONTRACT,
+  }),
+})
+
+// Then pack the message in a transaction, sign it and broadcast to the chain
+```
+
+## Further reading
+
+- [Token launch guide](../../developers-defi/token-launch/) - step-by-step guide to creating your token on Injective
+- [Token Factory module reference](../../developers-native/injective/tokenfactory/) - detailed module specification

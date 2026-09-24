@@ -1,26 +1,161 @@
 ---
 title: Testnet Proposals
-updatedAt: "2025-10-30"
+description: How to submit and coordinate governance proposals on Injective testnet.
+updatedAt: "2026-09-09"
 ---
 
-Let's say that you want to submit a proposal on `testnet`. Because there is a short period of voting time for the proposals, we recommend lowering the deposit on the proposal to not make the proposal go into voting stage directly. Basically, it should be slightly less than `min_deposit` value.
+Governance proposals on testnet follow the same mechanics as mainnet, but with shorter voting periods. Use a deposit slightly below `min_deposit` so the proposal doesn't enter voting immediately, giving you time to coordinate.
 
-Once you submit the proposal, you should reach out to the team:
+## Submitting a Proposal
 
-1. Join the [Injective Discord server](https://discord.gg/injective) and find the relevant channel.
-2. Join the [Injective Developer Telegram channel](https://t.me/+8Y_0HOFLhnRlZDU9).
-
-Here is an example for the `GrantProviderPrivilegeProposal`
+All proposals use the same CLI command with a JSON file:
 
 ```bash
-injectived tx oracle grant-provider-privilege-proposal YOUR_PROVIDER \
-  YOUR_ADDRESS_HERE \
-  --title="TITLE OF THE PROPOSAL" \
-  --description="Registering PROVIDER as an oracle provider" \
+injectived tx gov submit-proposal proposal.json \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
   --chain-id=injective-888 \
-  --from=local_key \
   --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 \
   --gas-prices=160000000inj \
-  --gas=20000000 \
-  --deposit="40000000000000000000inj" <-- use this amount
+  --deposit="40000000000000000000inj" \
+  --yes
 ```
+
+<Tip>
+Use `--deposit="40000000000000000000inj"` (40 INJ) to keep the proposal below `min_deposit` initially, so it doesn't enter voting before you've coordinated with validators.
+</Tip>
+
+## Coordinating Validator Votes
+
+After submitting your proposal, reach out to the team to coordinate testnet validator votes:
+
+1. Join the [Injective Discord server](https://discord.gg/injective) and find the relevant developer channel
+2. Share your proposal ID and a brief description of what it does
+
+You can also track your proposal on the [Testnet Hub](https://testnet.hub.injective.network).
+
+## Proposal Examples
+
+Every proposal JSON follows the same structure. The `messages` array contains one or more SDK messages that execute when the proposal passes. The `sender` in each message must be the governance module account: `inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt`.
+
+### Set Token Metadata (Peggy/IBC Denoms)
+
+Use this when you've bridged a token via Peggy or IBC and need to set its name, symbol, and decimals so MetaMask and Blockscout display it correctly.
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.tokenfactory.v1beta1.MsgSetDenomMetadata",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "metadata": {
+        "base": "peggy0xYOUR_TOKEN_ADDRESS",
+        "name": "Your Token Name",
+        "symbol": "SYMBOL",
+        "display": "SYMBOL",
+        "description": "Description of your token",
+        "decimals": 18,
+        "denom_units": [
+          { "denom": "peggy0xYOUR_TOKEN_ADDRESS", "exponent": 0, "aliases": [] },
+          { "denom": "SYMBOL", "exponent": 18, "aliases": [] }
+        ]
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Set SYMBOL token metadata",
+  "summary": "Set bank denom metadata for peggy0xYOUR_TOKEN_ADDRESS so the MTS ERC20 returns correct name, symbol, and decimals.",
+  "expedited": true
+}
+```
+
+See the [token metadata guide](/developers/assets/token-metadata) for why this is needed and how it works for each denom type.
+
+### Delete a Token Pair
+
+Use this to remove a broken or incorrect MTS token pair (e.g., one deployed with wrong metadata).
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.erc20.v1beta1.MsgDeleteTokenPair",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "bank_denom": "peggy0xYOUR_TOKEN_ADDRESS"
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Delete incorrect token pair",
+  "summary": "Remove the MTS token pair for peggy0xYOUR_TOKEN_ADDRESS so it can be recreated.",
+  "expedited": true
+}
+```
+
+### Register an Oracle Provider
+
+Use this to register a custom price feed provider for derivative markets.
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.oracle.v1beta1.MsgGrantProviderPrivilege",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "provider": "YOUR_PROVIDER_NAME",
+      "relayers": ["inj1YOUR_RELAYER_ADDRESS"]
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Register oracle provider",
+  "summary": "Register YOUR_PROVIDER_NAME as an oracle provider with relayer permissions.",
+  "expedited": true
+}
+```
+
+See the [oracle provider guide](/developers-defi/provider-oracle) for details on setting up price feeds.
+
+### Software Upgrade
+
+Used by the core team to coordinate chain upgrades. Included here for reference.
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+      "authority": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "plan": {
+        "name": "v1.21.0",
+        "height": "12345678",
+        "info": "Upgrade to v1.21.0"
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "40000000000000000000inj",
+  "title": "Upgrade to v1.21.0",
+  "summary": "Chain upgrade to v1.21.0 at block height 12345678.",
+  "expedited": true
+}
+```
+
+## Querying Proposals
+
+Check the status of your proposal:
+
+```bash
+# List recent proposals
+injectived query gov proposals \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --output=json | jq '.proposals[-1] | {id, title, status}'
+
+# Check a specific proposal
+injectived query gov proposal PROPOSAL_ID \
+  --node=https://testnet.sentry.tm.injective.network:443
+```
+
+Or view proposals on the [Testnet Hub](https://testnet.hub.injective.network).

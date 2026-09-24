@@ -1,15 +1,56 @@
 ---
 title: Permissions
-updatedAt: "2025-12-05"
+description: Native role-based access control for permissioned assets on Injective. Issue regulated stablecoins, tokenized securities, or consortium digital money with compliance controls built into the chain.
+updatedAt: "2026-09-09"
 ---
 
-## Abstract
+## What You Can Do
 
-Bringing real world permissioned assets (e.g. tokenized treasury yield products) on-chain require certain levels of control over asset actions/properties such as transfers, holders (whitelists), and more.
+The Permissions module provides native, chain-level access control for any token on Injective. It enables institutions, banks, and regulated entities to issue assets with built-in compliance without deploying custom smart contract infrastructure.
 
-The `permissions` module allows managing certain prefixed actions and roles for real world assets and permissioned denoms created within a namespace on the chain-level. It provides a flexible and extensible way to define and enforce permissions and roles and serves as the entry point through which real world assets can be natively issued and managed on Injective.  
+### Supported actions
 
-## Contents
+| Action | What it controls |
+|---|---|
+| **MINT** | Create new token supply |
+| **BURN** | Destroy tokens from the holder's own address |
+| **SEND** | Transfer tokens to another address |
+| **RECEIVE** | Accept incoming token transfers |
+| **SUPER_BURN** | Burn tokens from any address (regulatory seizure) |
+
+### How roles map to real-world use cases
+
+| Use case | Role | Permissions |
+|---|---|---|
+| Issuer bank | Token admin | MINT, BURN |
+| Member banks / verified holders | Whitelisted participants | SEND, RECEIVE |
+| Compliance administrator | Regulatory authority | SUPER_BURN |
+| Consortium governance | Policy manager | Modify roles, modify permissions, pause actions |
+| KYC/AML enforcement | Contract hook | Validates every transfer against compliance rules before execution |
+| Retail / public | EVERYONE (default) | No permissions (cannot hold or transact) |
+
+### Contract hooks
+
+The module supports Solidity or WasmVM hooks that are called on every transfer. This enables custom compliance logic like AML threshold checks, KYC verification, sanctions screening, or bank-to-bank transfer restrictions. Circle uses this pattern for USDC compliance on Injective ([reference implementation](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol)).
+
+## Getting Started
+
+<CardGroup cols={2}>
+  <Card title="Architecture and Concepts" icon="sitemap" href="/developers-native/injective/permissions/01_concepts">
+    Namespaces, roles, actions, policy managers, and how RBAC works at the chain level.
+  </Card>
+  <Card title="Launch a Permissioned Asset" icon="rocket" href="/developers-native/injective/permissions/04_launch_permissioned_asset">
+    Step-by-step guide with CLI and TypeScript examples.
+  </Card>
+  <Card title="Permissioned MTS Tokens" icon="lock" href="/developers-evm/permissioned-multivm-token">
+    Add permission controls to EVM-deployed tokens using the IPermissionsHook Solidity interface.
+  </Card>
+  <Card title="Permissions API Examples" icon="code" href="/developers-native/examples/permissions">
+    TypeScript SDK examples for all permissions messages.
+  </Card>
+</CardGroup>
+
+## Technical Reference
 
 1. [Concepts](/developers-native/injective/permissions/01_concepts)
 2. [State](/developers-native/injective/permissions/02_state)

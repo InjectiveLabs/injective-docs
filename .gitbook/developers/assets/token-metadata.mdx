@@ -1,25 +1,158 @@
 ---
 title: Token Metadata
-updatedAt: "2025-11-27"
+description: How to set token metadata on Injective - on-chain (bank module) and off-chain (injective-lists) - for each denom type.
+updatedAt: "2026-09-09"
 ---
 
-Assets on Injective are represented as denoms. Denoms (and the amounts) are not human readable and this is why we need to have a way to "attach" token metadata information for a particular denom.
+Token metadata (name, symbol, decimals) controls how your token appears across two systems:
 
-Let's recap the types of denoms we have in the Getting Started section:
+| System | What reads it | How it's set |
+|---|---|---|
+| **On-chain (bank module)** | MetaMask, Blockscout, Solidity contracts calling `symbol()` / `name()` / `decimals()`, any EVM tool | Depends on denom type (see below) |
+| **Off-chain (injective-lists)** | Injective-native frontends (Hub, Explorer, trading dApps built with the TypeScript SDK) | Submit a PR to [injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) |
 
-* **Native denoms** - there is only one denom of this type, the `inj` denom which represented the native coin of Injective,
-* **Peggy denoms** - these denoms represent assets bridged over from Ethereum to Injective using the Peggy bridge. They have the following format `peggy{ERC20_CONTRACT_ADDRESS}`
-* **IBC denoms** - these denoms represent assets bridged over from other Cosmos chains through IBC. They have the following format `ibc/{hash}`.
-* **Insurance Fund Denoms** - these denoms represent token shares of the insurance funds created on Injective. The have the following format `share{id}`
-* **Factory Denoms** - these denoms represent a CW20 token from Cosmwasm on the Injective native bank module. They have the following format `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` where the `CW20_ADAPTER_CONTRACT` is the adapter contract address that converts CW20 and the native Bank module.
+Both are needed for a complete integration. On-chain metadata ensures EVM compatibility; off-chain metadata ensures display in Injective dApps.
 
-We maintain our token metadata list off-chain for faster access to the[ injective-lists](https://github.com/InjectiveLabs/injective-lists/tree/master/tokens) repository.
+## Setting On-Chain Metadata
 
-## Token Verification
+How you set bank module metadata depends on your denom type:
 
-Verifying your token's metadata can be done in a couple of ways. Here are the verification levels and what they mean:
+<Tabs>
 
-* **Verified** → Your asset metadata has been **submitted and verified** to the `@injectivelabs/token-metadata` package. You can find a tutorial on how to add your token's metadata to the package [here](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md).
-* **Internal** → Your asset's metadata has been verified on-chain using the `MsgSetDenomMetadata` message, as explained [here](/developers-native/examples/token-factory).
-* **External** → Your asset's metadata has been verified on some external source like from Ethereum's contract details, etc.
-* **Unverified** → Your asset's metadata has not been provided anywhere.
+<Tab title="TokenFactory (factory/...)" icon="hammer">
+
+The denom admin can set metadata directly using `MsgSetDenomMetadata`:
+
+```bash
+injectived tx tokenfactory set-denom-metadata metadata.json \
+  --from=ADMIN_KEY \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+Where `metadata.json`:
+
+```json
+{
+  "base": "factory/YOUR_ADDRESS/MYTOKEN",
+  "name": "My Token",
+  "symbol": "MYTOKEN",
+  "display": "MYTOKEN",
+  "description": "Description of your token",
+  "decimals": 18,
+  "denom_units": [
+    { "denom": "factory/YOUR_ADDRESS/MYTOKEN", "exponent": 0, "aliases": [] },
+    { "denom": "MYTOKEN", "exponent": 18, "aliases": [] }
+  ]
+}
+```
+
+Once set, the MTS ERC20 contract will immediately return the correct values for `name()`, `symbol()`, and `decimals()`.
+
+See [TokenFactory examples](/developers-native/examples/token-factory) for TypeScript SDK usage.
+
+</Tab>
+
+<Tab title="Peggy (peggy0x...)" icon="bridge">
+
+Peggy-bridged tokens do not inherit metadata from Ethereum. The Peggy bridge creates the denom but does not set name, symbol, or decimals.
+
+**To set metadata for a Peggy denom, you need a [governance proposal](/developers/testnet-proposals).** This is because Peggy denoms have no admin authority - only the governance module can write to the bank module's metadata store for these denoms.
+
+[Submit a proposal](/developers/testnet-proposals) with `MsgSetDenomMetadata` where the sender is the governance module account:
+
+```json
+{
+  "messages": [
+    {
+      "@type": "/injective.tokenfactory.v1beta1.MsgSetDenomMetadata",
+      "sender": "inj10d07y265gmmuvt4z0w9aw880jnsr700jstypyt",
+      "metadata": {
+        "base": "peggy0xYOUR_TOKEN_ADDRESS",
+        "name": "Your Token Name",
+        "symbol": "SYMBOL",
+        "display": "SYMBOL",
+        "description": "Your token description",
+        "decimals": 18,
+        "denom_units": [
+          { "denom": "peggy0xYOUR_TOKEN_ADDRESS", "exponent": 0, "aliases": [] },
+          { "denom": "SYMBOL", "exponent": 18, "aliases": [] }
+        ]
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "100000000000000000000inj",
+  "title": "Set TOKEN metadata",
+  "summary": "Set bank denom metadata for peggy0xYOUR_TOKEN_ADDRESS so the MTS ERC20 returns correct name, symbol, and decimals.",
+  "expedited": true
+}
+```
+
+Submit with:
+
+```bash
+injectived tx gov submit-proposal proposal.json \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=auto --gas-adjustment=1.5 --gas-prices=160000000inj \
+  --yes
+```
+
+Once the proposal passes, the MTS ERC20 contract will immediately return the correct metadata - no redeployment needed.
+
+<Tip>
+**Testnet proposals:** Use a deposit slightly below `min_deposit` so it doesn't enter voting immediately. After submitting, reach out to the team on [Discord](https://discord.gg/injective) or the [Developer Telegram](https://t.me/+Nsy2KjGWtOE5NTY9) to coordinate validator votes. See the [testnet proposals guide](/developers/testnet-proposals) for details.
+</Tip>
+
+<Warning>
+If you create an MTS token pair before setting metadata, the ERC20 contract will return blank name, blank symbol, and 0 decimals. MetaMask will not display the token correctly, and Blockscout will not index it by name. Set metadata before or after creating the pair - the ERC20 reads from the bank module on every call.
+</Warning>
+
+See the [ACME bridge example](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/acme-bridge) for a complete walkthrough including the governance proposal template.
+
+</Tab>
+
+<Tab title="IBC (ibc/...)" icon="arrows-left-right">
+
+Same as Peggy denoms - IBC denoms have no admin authority. Metadata must be set via a governance proposal using the same `MsgSetDenomMetadata` pattern shown in the Peggy tab.
+
+Replace the `base` and `denom_units[0].denom` with your IBC denom (e.g., `ibc/2CBC2EA121AE42563B08028B51D50FB7B0DABBEE2F1E37C98EBB4347B7BE8FBC`).
+
+</Tab>
+
+<Tab title="ERC20 (erc20:0x...)" icon="ethereum">
+
+For tokens deployed natively on Injective's EVM (not bridged), the token deployer can set metadata via the bank precompile's `setMetadata` function:
+
+```solidity
+// Call from the same account that deployed the ERC20
+IBankModule(0x0000000000000000000000000000000000000064).setMetadata(
+    tokenAddress,
+    "Token Name",
+    "SYMBOL",
+    18
+);
+```
+
+This writes directly to the bank module. Only works for `erc20:` denoms - the precompile rejects other denom types.
+
+</Tab>
+
+</Tabs>
+
+## Frontend Metadata (injective-lists)
+
+For display in Injective-native dApps (Hub, Explorer, trading interfaces built with `@injectivelabs/sdk-ts`), submit your token to the [injective-lists](https://github.com/InjectiveLabs/injective-lists) repository.
+
+This is **separate from on-chain metadata**. Injective-lists controls display in Injective frontends, while bank module metadata controls what EVM tools (MetaMask, Blockscout, Solidity) see.
+
+Follow the [contributing guide](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) to submit a PR with your token's metadata.
+
+<Info>
+If your token is missing from injective-lists, `TokenFactoryStatic` will return `undefined` for that denom. See the [injective-lists integration guide](/developers/assets/injective-list) for setup.
+</Info>
