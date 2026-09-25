@@ -1,6 +1,6 @@
 ---
 title: Swap Precompile
-updatedAt: "2026-09-24"
+updatedAt: "2026-09-25"
 ---
 
 # Swap Precompile
@@ -52,13 +52,62 @@ The flow has two phases:
 
 ## Market Allowlist
 
-Swappable markets are governed by `SwapParams` (an enable flag plus a market allowlist), updated through `MsgUpdateSwapParams` and seeded by the v1.20.4 upgrade handler. Calling the precompile on a market that is not allowlisted reverts with:
+Swappable markets are governed by `SwapParams`, an enable flag plus a market allowlist inside the exchange module parameters. Calling the precompile on a market that is not allowlisted reverts with:
 
 ```
 market <id> is not allowlisted for swaps: invalid swap route
 ```
 
 Receiving this revert still confirms you have reached the precompile on a live node.
+
+### Checking the current allowlist
+
+The live allowlist is part of the exchange module's v2 parameters:
+
+```bash
+curl -s https://sentry.lcd.injective.network/injective/exchange/v2/exchangeParams \
+  | jq '.params.swap_params'
+```
+
+The same query's `.params.exchange_admins` field lists the addresses authorized to update it.
+
+### Requesting a market
+
+If you are building on the swap precompile and need a market allowlisted, reach out in the `#developers` channel of the [Injective Discord](https://discord.gg/injective) with the spot market id, or raise it with your Injective partner contact. Market ids for active spot markets are listed at `/injective/exchange/v1beta1/spot/markets?status=Active`.
+
+### Updating the allowlist (exchange admins)
+
+`MsgUpdateSwapParams` is callable by the governance authority or any address in the `exchange_admins` parameter. It takes effect immediately, with no governance vote required when sent by an admin.
+
+The message **fully replaces** the swap parameter group. Always include every market that should remain allowlisted and keep `enabled: true`, because omitting an existing market removes it and omitting the flag pauses all swaps.
+
+```json
+{
+  "body": {
+    "messages": [
+      {
+        "@type": "/injective.exchange.v2.MsgUpdateSwapParams",
+        "sender": "<admin inj1... address>",
+        "swap_params": {
+          "enabled": true,
+          "allowed_markets": [
+            "0x<existing market id>",
+            "0x<new market id>"
+          ]
+        }
+      }
+    ]
+  },
+  "auth_info": {
+    "fee": {
+      "amount": [{ "denom": "inj", "amount": "200000000000000" }],
+      "gas_limit": "400000"
+    }
+  }
+}
+```
+
+Sign and broadcast the transaction document with `injectived tx sign` and `injectived tx broadcast` from the admin key.
 
 ## Swap Precompile Interface
 
