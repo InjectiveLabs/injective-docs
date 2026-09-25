@@ -1076,6 +1076,7 @@
                       "cn/developers-evm/bank-precompile",
                       "cn/developers-evm/exchange-precompile",
                       "cn/developers-evm/oracle-precompile",
+                      "cn/developers-evm/swap-precompile",
                       "cn/developers-evm/erc20-module",
                       "cn/developers-evm/infrastructure-and-tooling",
                       "cn/developers-evm/evm-gateway",
@@ -1572,6 +1573,7 @@
                       "ko/developers-evm/bank-precompile",
                       "ko/developers-evm/exchange-precompile",
                       "ko/developers-evm/oracle-precompile",
+                      "ko/developers-evm/swap-precompile",
                       "ko/developers-evm/erc20-module",
                       "ko/developers-evm/infrastructure-and-tooling",
                       "ko/developers-evm/add-injective-to-your-dapp",
@@ -2229,7 +2231,8 @@
                         "pages": [
                           "jp/developers-evm/precompiles",
                           "jp/developers-evm/bank-precompile",
-                          "jp/developers-evm/exchange-precompile"
+                          "jp/developers-evm/exchange-precompile",
+                          "jp/developers-evm/swap-precompile"
                         ]
                       },
                       "jp/developers-evm/evm-integrations-cheat-sheet",
