@@ -80,6 +80,25 @@ x402 is network-neutral:
 The open standard supports EVM-compatible networks, SVM-compatible networks, and others.
 This tutorial shows you how to use x402 on *Injective*.
 
+### What settlement assets can an `exact` charge carry?
+
+The `exact` scheme is asset-agnostic: the same `402 -> PAYMENT-SIGNATURE -> verify -> retry`
+loop that carries USDC on an EVM or SVM network also carries a fee-free *native* coin, with no
+facilitator step and no gas token for the buyer. If a seller's priority is the smallest possible
+cost per call, a native-network `exact` entry removes settlement fees entirely. A live example:
+the [Vend extract API](https://extract.paypercall.dev/api/v1/extract) answers an unpaid request
+with an `exact` charge for `network: nano:mainnet`, `asset: XNO`, at 0.0001 XNO per call:
+
+```bash
+curl -s 'https://extract.paypercall.dev/api/v1/extract?url=https%3A%2F%2Fexample.com'
+# -> HTTP 402 with accepts[0] = {
+#      scheme: "exact", network: "nano:mainnet", asset: "XNO", amount: "...", payTo: "nano_1yo6..."
+#    }
+```
+
+The same client wrapper that auto-pays a USDC charge handles this entry too — the handshake is
+identical, the asset and network differ.
+
 ### Why use x402 on Injective?
 
 Injective has a very high throughput and low latency,
