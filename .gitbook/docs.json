@@ -454,6 +454,7 @@
                       "developers-evm/bank-precompile",
                       "developers-evm/exchange-precompile",
                       "developers-evm/oracle-precompile",
+                      "developers-evm/swap-precompile",
                       "developers-evm/erc20-module",
                       "developers-evm/infrastructure-and-tooling",
                       "developers-evm/evm-gateway",
