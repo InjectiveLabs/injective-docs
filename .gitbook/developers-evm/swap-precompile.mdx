@@ -1,9 +1,18 @@
 ---
 title: Swap Precompile
-updatedAt: "2026-09-25"
+updatedAt: "2026-10-01"
 ---
 
 # Swap Precompile
+
+<Warning>
+**Rollout status (October 2026).** The swap precompile is deployed on mainnet, but specific routes and token pairs are still being tested and enabled incrementally. Two conditions must hold for a swap to succeed:
+
+1. The market must be on the [allowlist](#market-allowlist). Mainnet currently allowlists three spot markets: INJ/USDC, USDC/USDT, and USDC/USDCnb.
+2. `tokenIn` must be native INJ (`address(0)`) or a token whose ERC20 address has a stored token pair in the erc20 module. Tokens whose bank denom is of the `erc20:` type, including native USDC (`erc20:0xa00C59fF5a080D2b954d0c75e46E22a0c371235a`), have no stored pair and revert as `tokenIn` with `token <address> is not registered as a bank token pair`. They can only be received as swap output. Note that the `all_token_pairs` and `token_pair_by_erc20_address` queries report these tokens as paired because they synthesize virtual pairs for `erc20:` denoms, so do not rely on them to predict `tokenIn` eligibility.
+
+On mainnet today the working directions are INJ to USDC, USDT to USDC, and USDCnb to USDC. The reverse directions, such as buying INJ with USDC, currently revert.
+</Warning>
 
 The Swap Precompile is a system smart contract residing at the fixed address `0x0000000000000000000000000000000000000068`, introduced in the v1.20.4 (Meridian) upgrade.
 
@@ -170,3 +179,5 @@ cast call 0x0000000000000000000000000000000000000068 \
 ## Start building
 
 A complete Foundry example, with a quote-then-swap contract, Makefile targets for quoting and swapping via `cast`, and testnet defaults, is available in the [swap precompile demo](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/swap-precompile). Testnet has run the precompile since v1.20.4-beta; mainnet since the v1.20.4 upgrade.
+
+The same example includes `localnet-demo.sh`, which runs the whole lifecycle on a fresh local chain in one command: market launch, the allowlist update as an exchange admin configured in genesis (no governance proposal needed), orderbook liquidity, and a real swap through the precompile. It is the fastest way to exercise the full flow, allowlisting included, without touching testnet.
