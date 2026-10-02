@@ -1,9 +1,13 @@
 ---
 title: Swap Precompile
-updatedAt: "2026-09-25"
+updatedAt: "2026-10-01"
 ---
 
 # Swap Precompile
+
+<Warning>
+**Rollout status (October 2026).** The swap precompile is deployed on mainnet, but specific routes and token pairs are still being tested. The working directions today are INJ to USDC, USDT to USDC, and USDCnb to USDC on the three [allowlisted markets](#market-allowlist). Other directions, such as buying INJ with USDC, revert for now during testing.
+</Warning>
 
 The Swap Precompile is a system smart contract residing at the fixed address `0x0000000000000000000000000000000000000068`, introduced in the v1.20.4 (Meridian) upgrade.
 
@@ -170,3 +174,5 @@ cast call 0x0000000000000000000000000000000000000068 \
 ## Start building
 
 A complete Foundry example, with a quote-then-swap contract, Makefile targets for quoting and swapping via `cast`, and testnet defaults, is available in the [swap precompile demo](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/swap-precompile). Testnet has run the precompile since v1.20.4-beta; mainnet since the v1.20.4 upgrade.
+
+The same example includes `localnet-demo.sh`, which runs the whole lifecycle on a fresh local chain in one command: market launch, the allowlist update as an exchange admin configured in genesis (no governance proposal needed), orderbook liquidity, and a real swap through the precompile. It is the fastest way to exercise the full flow, allowlisting included, without touching testnet.
