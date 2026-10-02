@@ -1,9 +1,13 @@
 ---
 title: Swap 预编译（Precompile）
-updatedAt: "2026-09-25"
+updatedAt: "2026-10-01"
 ---
 
 # Swap 预编译（Precompile）
+
+<Warning>
+**上线状态（2026 年 10 月）。** Swap precompile 已部署在主网上，但部分路由和交易对仍在测试中。目前可用的兑换方向为 INJ 兑 USDC、USDT 兑 USDC，以及 USDCnb 兑 USDC，均在三个[白名单市场](#市场白名单)上进行。其他方向（例如用 USDC 购买 INJ）在测试期间暂时会回滚（revert）。
+</Warning>
 
 Swap Precompile 是一个位于固定地址 `0x0000000000000000000000000000000000000068` 的系统智能合约，在 v1.20.4（Meridian）升级中引入。
 
@@ -17,22 +21,22 @@ Swap Precompile 是一个位于固定地址 `0x000000000000000000000000000000000
 %%{init: {"theme": "base", "themeVariables": {"background": "#FFFFFF", "primaryColor": "#FFFFFF", "lineColor": "#4D3DFF", "textColor": "#14151F"}}}%%
 flowchart LR
     subgraph EVM["Injective EVM"]
-        CALLER["dApp contract<br/>or EOA"]
+        CALLER["dApp 合约<br/>或 EOA"]
         SWAP["Swap Precompile<br/>0x68"]
     end
-    subgraph NATIVE["Native modules"]
-        PARAMS["SwapParams<br/>market allowlist"]
-        EXCH["x/exchange<br/>orderbook"]
-        BANK["x/bank balances<br/>MultiVM Token Standard"]
+    subgraph NATIVE["原生模块"]
+        PARAMS["SwapParams<br/>市场白名单"]
+        EXCH["x/exchange<br/>订单簿"]
+        BANK["x/bank 余额<br/>MultiVM Token Standard"]
     end
-    CALLER -->|"1 · quoteExactInputV1<br/>request current amountOut for amountIn"| SWAP
-    SWAP -.->|"2 · quoted amountOut<br/>used to derive minOut"| CALLER
-    CALLER -->|"3 · swapExactInputV1<br/>with minOut and deadline"| SWAP
-    SWAP -->|"4 · verify market<br/>is allowlisted"| PARAMS
-    SWAP -->|"5 · execute on<br/>default subaccount"| EXCH
-    EXCH -->|"6 · fill, or revert<br/>below minOut"| SWAP
-    SWAP -->|"7 · credit amountOut<br/>to recipient"| BANK
-    BANK -.->|"same balance readable as ERC20"| CALLER
+    CALLER -->|"1 · quoteExactInputV1<br/>请求 amountIn 对应的当前 amountOut"| SWAP
+    SWAP -.->|"2 · 报价 amountOut<br/>用于推导 minOut"| CALLER
+    CALLER -->|"3 · swapExactInputV1<br/>附带 minOut 和 deadline"| SWAP
+    SWAP -->|"4 · 验证市场<br/>是否在白名单中"| PARAMS
+    SWAP -->|"5 · 在默认<br/>子账户上执行"| EXCH
+    EXCH -->|"6 · 成交，或低于<br/>minOut 时回滚"| SWAP
+    SWAP -->|"7 · 将 amountOut<br/>记入 recipient"| BANK
+    BANK -.->|"同一余额可作为 ERC20 读取"| CALLER
 
     classDef caller fill:#EEF0FF,stroke:#4D3DFF,color:#14151F
     classDef precompile fill:#4D3DFF,stroke:#4D3DFF,color:#FFFFFF
@@ -170,3 +174,5 @@ cast call 0x0000000000000000000000000000000000000068 \
 ## 开始构建
 
 完整的 Foundry 示例可在 [swap precompile 演示](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/swap-precompile) 中找到，其中包含一个先报价后兑换的合约、通过 `cast` 进行报价和兑换的 Makefile 目标，以及测试网默认配置。测试网自 v1.20.4-beta 起已运行该 precompile；主网自 v1.20.4 升级起运行。
+
+同一示例还包含 `localnet-demo.sh`，可通过一条命令在全新的本地链上运行完整生命周期：市场上线、由创世文件中配置的 exchange 管理员更新白名单（无需治理提案）、订单簿流动性，以及通过 precompile 执行的真实兑换。这是在不接触测试网的情况下演练完整流程（包括白名单配置）的最快方式。

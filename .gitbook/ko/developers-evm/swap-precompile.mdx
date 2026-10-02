@@ -1,9 +1,13 @@
 ---
 title: Swap Precompile
-updatedAt: "2026-09-25"
+updatedAt: "2026-10-01"
 ---
 
 # Swap Precompile
+
+<Warning>
+**출시 현황(2026년 10월).** Swap precompile은 메인넷에 배포되었지만, 일부 경로와 토큰 페어는 아직 테스트 중입니다. 현재 작동하는 방향은 세 개의 [허용 목록 마켓](#마켓-허용-목록)에서 INJ에서 USDC로, USDT에서 USDC로, USDCnb에서 USDC로의 스왑입니다. USDC로 INJ를 구매하는 것과 같은 다른 방향은 테스트 기간 동안 현재 revert됩니다.
+</Warning>
 
 Swap Precompile은 고정 주소 `0x0000000000000000000000000000000000000068`에 있는 시스템 스마트 컨트랙트로, v1.20.4(Meridian) 업그레이드에서 도입되었습니다.
 
@@ -17,22 +21,22 @@ EVM 개발자는 이를 통해 **exchange 모듈**(`x/exchange`)을 거쳐 Injec
 %%{init: {"theme": "base", "themeVariables": {"background": "#FFFFFF", "primaryColor": "#FFFFFF", "lineColor": "#4D3DFF", "textColor": "#14151F"}}}%%
 flowchart LR
     subgraph EVM["Injective EVM"]
-        CALLER["dApp contract<br/>or EOA"]
+        CALLER["dApp 컨트랙트<br/>또는 EOA"]
         SWAP["Swap Precompile<br/>0x68"]
     end
-    subgraph NATIVE["Native modules"]
-        PARAMS["SwapParams<br/>market allowlist"]
-        EXCH["x/exchange<br/>orderbook"]
-        BANK["x/bank balances<br/>MultiVM Token Standard"]
+    subgraph NATIVE["네이티브 모듈"]
+        PARAMS["SwapParams<br/>마켓 허용 목록"]
+        EXCH["x/exchange<br/>오더북"]
+        BANK["x/bank 잔액<br/>MultiVM Token Standard"]
     end
-    CALLER -->|"1 · quoteExactInputV1<br/>request current amountOut for amountIn"| SWAP
-    SWAP -.->|"2 · quoted amountOut<br/>used to derive minOut"| CALLER
-    CALLER -->|"3 · swapExactInputV1<br/>with minOut and deadline"| SWAP
-    SWAP -->|"4 · verify market<br/>is allowlisted"| PARAMS
-    SWAP -->|"5 · execute on<br/>default subaccount"| EXCH
-    EXCH -->|"6 · fill, or revert<br/>below minOut"| SWAP
-    SWAP -->|"7 · credit amountOut<br/>to recipient"| BANK
-    BANK -.->|"same balance readable as ERC20"| CALLER
+    CALLER -->|"1 · quoteExactInputV1<br/>amountIn에 대한 현재 amountOut 요청"| SWAP
+    SWAP -.->|"2 · 견적 amountOut<br/>minOut 산출에 사용"| CALLER
+    CALLER -->|"3 · swapExactInputV1<br/>minOut 및 deadline 포함"| SWAP
+    SWAP -->|"4 · 마켓 허용 목록<br/>포함 여부 확인"| PARAMS
+    SWAP -->|"5 · 기본 서브계정에서<br/>실행"| EXCH
+    EXCH -->|"6 · 체결, 또는 minOut<br/>미만 시 revert"| SWAP
+    SWAP -->|"7 · recipient에게<br/>amountOut 입금"| BANK
+    BANK -.->|"동일 잔액을 ERC20으로 조회 가능"| CALLER
 
     classDef caller fill:#EEF0FF,stroke:#4D3DFF,color:#14151F
     classDef precompile fill:#4D3DFF,stroke:#4D3DFF,color:#FFFFFF
@@ -170,3 +174,5 @@ cast call 0x0000000000000000000000000000000000000068 \
 ## 개발 시작하기
 
 견적 후 스왑 컨트랙트, `cast`를 통한 견적 및 스왑용 Makefile 타깃, 테스트넷 기본 설정을 포함한 완전한 Foundry 예제는 [swap precompile 데모](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/swap-precompile)에서 확인할 수 있습니다. 테스트넷에서는 v1.20.4-beta부터, 메인넷에서는 v1.20.4 업그레이드부터 이 precompile이 운영되고 있습니다.
+
+같은 예제에는 `localnet-demo.sh`도 포함되어 있으며, 새 로컬 체인에서 명령 하나로 전체 수명 주기를 실행합니다: 마켓 출시, 제네시스에 구성된 exchange 관리자로서의 허용 목록 업데이트(거버넌스 제안 불필요), 오더북 유동성, 그리고 precompile을 통한 실제 스왑까지 포함됩니다. 테스트넷을 건드리지 않고 허용 목록 설정을 포함한 전체 흐름을 실행해 보는 가장 빠른 방법입니다.

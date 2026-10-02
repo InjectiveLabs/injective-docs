@@ -1,9 +1,13 @@
 ---
 title: Swap Precompile
-updatedAt: "2026-09-25"
+updatedAt: "2026-10-01"
 ---
 
 # Swap Precompile
+
+<Warning>
+**ロールアウト状況（2026 年 10 月）。** Swap precompile はメインネットにデプロイ済みですが、一部のルートとトークンペアはまだテスト中です。現在利用可能な方向は、3 つの[許可リスト掲載マーケット](#マーケット許可リスト)における INJ から USDC、USDT から USDC、USDCnb から USDC へのスワップです。USDC で INJ を購入するなどの他の方向は、テスト期間中は現在 revert されます。
+</Warning>
 
 Swap Precompileは、固定アドレス`0x0000000000000000000000000000000000000068`に存在するシステムスマートコントラクトで、v1.20.4（Meridian）アップグレードで導入されました。
 
@@ -17,22 +21,22 @@ EVM開発者に、**exchangeモジュール**（`x/exchange`）を通じてInjec
 %%{init: {"theme": "base", "themeVariables": {"background": "#FFFFFF", "primaryColor": "#FFFFFF", "lineColor": "#4D3DFF", "textColor": "#14151F"}}}%%
 flowchart LR
     subgraph EVM["Injective EVM"]
-        CALLER["dApp contract<br/>or EOA"]
+        CALLER["dApp コントラクト<br/>または EOA"]
         SWAP["Swap Precompile<br/>0x68"]
     end
-    subgraph NATIVE["Native modules"]
-        PARAMS["SwapParams<br/>market allowlist"]
-        EXCH["x/exchange<br/>orderbook"]
-        BANK["x/bank balances<br/>MultiVM Token Standard"]
+    subgraph NATIVE["ネイティブモジュール"]
+        PARAMS["SwapParams<br/>マーケット許可リスト"]
+        EXCH["x/exchange<br/>オーダーブック"]
+        BANK["x/bank 残高<br/>MultiVM Token Standard"]
     end
-    CALLER -->|"1 · quoteExactInputV1<br/>request current amountOut for amountIn"| SWAP
-    SWAP -.->|"2 · quoted amountOut<br/>used to derive minOut"| CALLER
-    CALLER -->|"3 · swapExactInputV1<br/>with minOut and deadline"| SWAP
-    SWAP -->|"4 · verify market<br/>is allowlisted"| PARAMS
-    SWAP -->|"5 · execute on<br/>default subaccount"| EXCH
-    EXCH -->|"6 · fill, or revert<br/>below minOut"| SWAP
-    SWAP -->|"7 · credit amountOut<br/>to recipient"| BANK
-    BANK -.->|"same balance readable as ERC20"| CALLER
+    CALLER -->|"1 · quoteExactInputV1<br/>amountIn に対する現在の amountOut を要求"| SWAP
+    SWAP -.->|"2 · 見積もり amountOut<br/>minOut の算出に使用"| CALLER
+    CALLER -->|"3 · swapExactInputV1<br/>minOut と deadline を指定"| SWAP
+    SWAP -->|"4 · マーケットが許可リストに<br/>含まれるか確認"| PARAMS
+    SWAP -->|"5 · デフォルトサブアカウント<br/>で実行"| EXCH
+    EXCH -->|"6 · 約定、または minOut<br/>未満なら revert"| SWAP
+    SWAP -->|"7 · recipient に<br/>amountOut を入金"| BANK
+    BANK -.->|"同じ残高を ERC20 として読み取り可能"| CALLER
 
     classDef caller fill:#EEF0FF,stroke:#4D3DFF,color:#14151F
     classDef precompile fill:#4D3DFF,stroke:#4D3DFF,color:#FFFFFF
@@ -170,3 +174,5 @@ cast call 0x0000000000000000000000000000000000000068 \
 ## 開発を始める
 
 見積もり後にスワップするコントラクト、`cast`による見積もりとスワップ用のMakefileターゲット、テストネットのデフォルト設定を含む完全なFoundryの例が、[swap precompileデモ](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/swap-precompile)で利用可能です。テストネットではv1.20.4-betaから、メインネットではv1.20.4アップグレード以降、このprecompileが稼働しています。
+
+同じ例には `localnet-demo.sh` も含まれており、新しいローカルチェーン上でライフサイクル全体を 1 つのコマンドで実行できます：マーケットのローンチ、ジェネシスで設定された exchange 管理者による許可リストの更新（ガバナンス提案は不要）、オーダーブックの流動性、そして precompile を通じた実際のスワップです。テストネットに触れることなく、許可リスト設定を含むフロー全体を試す最速の方法です。
