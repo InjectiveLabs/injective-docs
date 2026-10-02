@@ -39,11 +39,11 @@ ensure a transaction does not run out of gas:
 | MsgCreateBinaryOptionsMarketOrder               | 310,000                      |
 | MsgCancelBinaryOptionsOrder                     | 200,000                      |
 | MsgDeposit                                      | 330,000                      |
-| MsgWithdrawGas                                  | 320,000                      |
-| MsgSubaccountTransferGas                        | 220,000                      |
-| MsgExternalTransferGas                          | 300,000                      |
-| MsgIncreasePositionMarginGas                    | 185,000                      |
-| MsgDecreasePositionMarginGas                    | 200,000                      |
+| MsgWithdraw                                     | 320,000                      |
+| MsgSubaccountTransfer                           | 220,000                      |
+| MsgExternalTransfer                             | 300,000                      |
+| MsgIncreasePositionMargin                       | 185,000                      |
+| MsgDecreasePositionMargin                       | 200,000                      |
 
 If the order in question is also a GTB (Good-Till-Block) order, an amount of gas equal to 10% of the above values should be added on top. 
 
