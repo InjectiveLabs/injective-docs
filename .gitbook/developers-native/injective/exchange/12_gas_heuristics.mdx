@@ -54,7 +54,7 @@ number of orders (noticeably around 3000 added gas, included in this formula).
 
 `N` - is the number of orders
 
-- `MsgBatchCreateSpotLimitOrders`: `tx_gas = 120_000 + N x 103_000` (e.g. for 3 orders you get `429_000`)
+- `MsgBatchCreateSpotLimitOrders`: `tx_gas = 120_000 + N x 103_000`
 - `MsgBatchCancelSpotOrders`: `tx_gas = 120_000 + N x 74_000`
 - `MsgBatchCreateDerivativeLimitOrders`: `tx_gas = 120_000 + N x 123_000`
 - `MsgBatchCancelDerivativeOrders`: `tx_gas = 120_000 + N x 74_000`
@@ -84,7 +84,7 @@ For example, let's suppose you want to:
 
 - cancel 3 spot orders in market A
 - create 2 derivative orders in market B
-- create 1 binary-options post-only order in market C
+- create 1 binary options post-only order in market C
 - cancel all orders in spot markets X and Y (2 orders in X and 2 orders in Y)
 
 The resulting gas would be computed as such:
@@ -93,7 +93,7 @@ The resulting gas would be computed as such:
     total_gas = 120_000                   // ante_gas base
                 + 3 x 71_000 + 3 x 3000   // cancel 3x spot
                 + 2 x 120_000 + 2 x 3000  // create 2x derv
-                + 140_000 + 3000          // create 1x post-only bo
+                + 140_000 + 3000          // create 1x post-only binary options
                 + 4 x 71_000              // cancel-all 4x spot orders
 ```
 
