@@ -22,30 +22,30 @@ by MsgServer of each particular msg (highest observed `ante_gas` is 120_000).
 With `fixed_gas_enabled` set to `true` in Exchange params, the following values can be used as `gasWanted` in order to
 ensure a transaction does not run out of gas:
 
-> **Note**: This table assumes the transaction contains a single message.
+> **Note**: The following values are the fixed gas costs for message execution. Add ante-handler gas to determine the transaction’s total gasWanted.
 
-| Message Type                                  | Gas Wanted |
-|-----------------------------------------------|------------|
-| MsgCreateDerivativeLimitOrder                 | 240,000    |
-| MsgCreateDerivativeLimitOrder (post-only)      | 260,000    |
-| MsgCreateDerivativeMarketOrder                | 225,000    |
-| MsgCancelDerivativeOrder                      | 191,000    |
-| MsgCreateSpotLimitOrder                       | 220,000    |
-| MsgCreateSpotLimitOrder (post-only)            | 240,000    |
-| MsgCreateSpotMarketOrder                      | 170,000    |
-| MsgCancelSpotOrder                            | 191,000    |
-| MsgCreateBinaryOptionsLimitOrder              | 240,000    |
-| MsgCreateBinaryOptionsLimitOrder (post-only)   | 260,000    |
-| MsgCreateBinaryOptionsMarketOrder             | 225,000    |
-| MsgCancelBinaryOptionsOrder                   | 191,000    |
-| MsgDeposit                                    | 158,000    |
-| MsgWithdraw                                   | 240,000    |
-| MsgSubaccountTransfer                         | 220,000    |
-| MsgExternalTransfer                           | 220,000    |
-| MsgIncreasePositionMargin                     | 185,000    |
-| MsgDecreasePositionMargin                     | 200,000    |
+| Message Type | Fixed Message Gas | Total with 120,000 Ante Allowance |
+|---|---:|---:|
+| MsgCreateDerivativeLimitOrder | 120,000 | 240,000 |
+| MsgCreateDerivativeLimitOrder (post-only) | 140,000 | 260,000 |
+| MsgCreateDerivativeMarketOrder | 105,000 | 225,000 |
+| MsgCancelDerivativeOrder | 71,000 | 191,000 |
+| MsgCreateSpotLimitOrder | 100,000 | 220,000 |
+| MsgCreateSpotLimitOrder (post-only) | 120,000 | 240,000 |
+| MsgCreateSpotMarketOrder | 50,000 | 170,000 |
+| MsgCancelSpotOrder | 71,000 | 191,000 |
+| MsgCreateBinaryOptionsLimitOrder | 120,000 | 240,000 |
+| MsgCreateBinaryOptionsLimitOrder (post-only) | 140,000 | 260,000 |
+| MsgCreateBinaryOptionsMarketOrder | 105,000 | 225,000 |
+| MsgCancelBinaryOptionsOrder | 71,000 | 191,000 |
+| MsgDeposit | 38,000 | 158,000 |
+| MsgWithdraw | 120,000 | 240,000 |
+| MsgSubaccountTransfer | 100,000 | 220,000 |
+| MsgExternalTransfer | 100,000 | 220,000 |
+| MsgIncreasePositionMargin | 65,000 | 185,000 |
+| MsgDecreasePositionMargin | 80,000 | 200,000 |
 
-If the order in question is also a GTB (Good-Till-Block) order, an amount of gas equal to 10% of the above values should be added on top.
+For a GTB (Good-Till-Block) limit order, multiply the fixed message gas by 1.1, equivalent to adding 10%, as defined by `GTBOrdersGasMultiplier = math.LegacyMustNewDecFromStr("1.1")`. Reminder that when adding the ante-handler allowance. the multiplier only applies to the fixed base fee.
 
 **Batch Msg types**
 
