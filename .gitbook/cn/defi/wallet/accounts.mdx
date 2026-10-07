@@ -10,9 +10,9 @@ updatedAt: "2026-02-03"
 
 前置阅读：
 
-* [Cosmos SDK 账户](https://docs.cosmos.network/main/basics/accounts)
-* [Ethereum 账户](https://ethereum.org/en/whitepaper/#ethereum-accounts)
-</Callout>
+- [Cosmos SDK 账户](https://docs.cosmos.network/main/basics/accounts)
+- [Ethereum 账户](https://ethereum.org/en/whitepaper/#ethereum-accounts)
+  </Callout>
 
 Injective 定义了自定义的 `Account` 类型，使用 Ethereum 的 ECDSA secp256k1 曲线作为密钥。这满足了 [EIP84](https://github.com/ethereum/EIPs/issues/84) 对完整 [BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) 路径的要求。Injective 账户的根 HD 路径是 `m/44'/60'/0'/0`。
 
@@ -20,15 +20,15 @@ Injective 定义了自定义的 `Account` 类型，使用 Ethereum 的 ECDSA sec
 
 Injective 默认有 3 种主要类型的 `Addresses`/`PubKeys`：
 
-* **账户**的地址和密钥，用于识别用户（即 `message` 的发送者）。它们使用 **`eth_secp256k1`** 曲线派生。
-* **验证者操作员**的地址和密钥，用于识别验证者的操作员。它们使用 **`eth_secp256k1`** 曲线派生。
-* **共识节点**的地址和密钥，用于识别参与共识的验证者节点。它们使用 **`ed25519`** 曲线派生。
+- **账户**的地址和密钥，用于识别用户（即 `message` 的发送者）。它们使用 **`eth_secp256k1`** 曲线派生。
+- **验证者操作员**的地址和密钥，用于识别验证者的操作员。它们使用 **`eth_secp256k1`** 曲线派生。
+- **共识节点**的地址和密钥，用于识别参与共识的验证者节点。它们使用 **`ed25519`** 曲线派生。
 
-|                    | 地址 bech32 前缀 | 公钥 bech32 前缀 | 曲线           | 地址字节长度 | 公钥字节长度 |
-| ------------------ | --------------------- | -------------------- | --------------- | ------------------- | ------------------ |
-| 账户           | `inj`                 | `injpub`             | `eth_secp256k1` | `20`                | `33` (压缩)  |
-| 验证者操作员 | `injvaloper`          | `injvaloperpub`      | `eth_secp256k1` | `20`                | `33` (压缩)  |
-| 共识节点    | `injvalcons`          | `injvalconspub`      | `ed25519`       | `20`                | `32`               |
+|              | 地址 bech32 前缀 | 公钥 bech32 前缀 | 曲线            | 地址字节长度 | 公钥字节长度 |
+| ------------ | ---------------- | ---------------- | --------------- | ------------ | ------------ |
+| 账户         | `inj`            | `injpub`         | `eth_secp256k1` | `20`         | `33` (压缩)  |
+| 验证者操作员 | `injvaloper`     | `injvaloperpub`  | `eth_secp256k1` | `20`         | `33` (压缩)  |
+| 共识节点     | `injvalcons`     | `injvalconspub`  | `ed25519`       | `20`         | `32`         |
 
 ### 客户端的地址格式
 
@@ -36,9 +36,9 @@ Injective 默认有 3 种主要类型的 `Addresses`/`PubKeys`：
 
 Bech32 格式是通过 CLI 和 REST 客户端进行 Cosmos-SDK 查询和交易的默认格式。十六进制格式是 Cosmos `sdk.AccAddress` 的 Ethereum `common.Address` 表示。
 
-* 地址 (Bech32): `inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku`
-* 地址 ([EIP55](https://eips.ethereum.org/EIPS/eip-55) 十六进制): `0xAF79152AC5dF276D9A8e1E2E22822f9713474902`
-* 压缩公钥: `{"@type":"/injective.crypto.v1beta1.ethsecp256k1.PubKey","key":"ApNNebT58zlZxO2yjHiRTJ7a7ufjIzeq5HhLrbmtg9Y/"}`
+- 地址 (Bech32): `inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku`
+- 地址 ([EIP55](https://eips.ethereum.org/EIPS/eip-55) 十六进制): `0xAF79152AC5dF276D9A8e1E2E22822f9713474902`
+- 压缩公钥: `{"@type":"/injective.crypto.v1beta1.ethsecp256k1.PubKey","key":"ApNNebT58zlZxO2yjHiRTJ7a7ufjIzeq5HhLrbmtg9Y/"}`
 
 你可以使用 Cosmos CLI 或 REST 客户端查询账户地址：
 
@@ -60,10 +60,10 @@ injectived q auth account $(injectived keys show <MYKEY> -a) -o text
 curl -X GET "http://localhost:10337/cosmos/auth/v1beta1/accounts/inj14au322k9munkmx5wrchz9q30juf5wjgz2cfqku" -H "accept: application/json"
 ```
 
-有关账户 API 的完整文档，请参阅 [Swagger API](https://lcd.injective.network/swagger/)。
+有关账户 API 的完整文档，请参阅 [Swagger API](https://sentry.lcd.injective.network/swagger/)。
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-Cosmos SDK Keyring 输出（即 `injectived keys`）仅支持 Bech32 格式的地址。
+  Cosmos SDK Keyring 输出（即 `injectived keys`）仅支持 Bech32 格式的地址。
 </Callout>
 
 ### 从私钥/助记词派生 Injective 账户
@@ -89,18 +89,19 @@ const injectiveAddress = bech32.encode(defaultBech32Prefix, bech32.toWords(addre
 以下是如何从私钥派生公钥的示例：
 
 ```js
-import secp256k1 from 'secp256k1'
+import secp256k1 from "secp256k1";
 
-const privateKey = "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890"
-const privateKeyHex = Buffer.from(privateKey.toString(), 'hex')
-const publicKeyByte = secp256k1.publicKeyCreate(privateKeyHex)
+const privateKey =
+  "afdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890";
+const privateKeyHex = Buffer.from(privateKey.toString(), "hex");
+const publicKeyByte = secp256k1.publicKeyCreate(privateKeyHex);
 
-const buf1 = Buffer.from([10])
-const buf2 = Buffer.from([publicKeyByte.length])
-const buf3 = Buffer.from(publicKeyByte)
+const buf1 = Buffer.from([10]);
+const buf2 = Buffer.from([publicKeyByte.length]);
+const buf3 = Buffer.from(publicKeyByte);
 
-const publicKey = Buffer.concat([buf1, buf2, buf3]).toString('base64')
-const type = '/injective.crypto.v1beta1.ethsecp256k1.PubKey'
+const publicKey = Buffer.concat([buf1, buf2, buf3]).toString("base64");
+const type = "/injective.crypto.v1beta1.ethsecp256k1.PubKey";
 ```
 
 ## 子账户
@@ -108,7 +109,7 @@ const type = '/injective.crypto.v1beta1.ethsecp256k1.PubKey'
 Injective 子账户允许单个主钱包地址管理多个独立的交易账户。这对于高级用户，特别是专业交易者和做市商非常有用。
 
 <Tip>
-有关子账户的技术实现细节，请参阅[交易账户](/developers/concepts/trading-account)开发者文档。
+  有关子账户的技术实现细节，请参阅[交易账户](/developers/concepts/trading-account)开发者文档。
 </Tip>
 
 ### 主要功能和说明

@@ -12,19 +12,13 @@ First of, we need to prepare the transaction for signing. To use Ethereum native
 Using our custom abstraction for the Messages which allows the developer to get EIP712 TypedData straight from the proto file of the particular message.
 
 ```ts
-import {
-  MsgSend,
-} from "@injectivelabs/sdk-ts/core/modules";
-import {
-  BaseAccount,
-} from "@injectivelabs/sdk-ts/core/accounts";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
 import {
   ChainRestAuthApi,
   ChainRestTendermintApi,
 } from "@injectivelabs/sdk-ts/client/chain";
-import {
-  getEip712TypedDataV2,
-} from "@injectivelabs/sdk-ts/core/tx";
+import { getEip712TypedDataV2 } from "@injectivelabs/sdk-ts/core/tx";
 import {
   toBigNumber,
   toChainFormat,
@@ -37,7 +31,7 @@ const injectiveAddress = "inj1";
 const chainId = ChainId.Mainnet;
 const evmChainId = EvmChainId.Mainnet;
 const restEndpoint =
-  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+  "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
 const amount = {
   denom: "inj",
   amount: toChainFormat(0.01).toFixed(),
@@ -45,9 +39,8 @@ const amount = {
 
 /** Account Details **/
 const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
-const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
-  injectiveAddress
-);
+const accountDetailsResponse =
+  await chainRestAuthApi.fetchAccount(injectiveAddress);
 const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
 const accountDetails = baseAccount.toAccountDetails();
 
@@ -56,7 +49,7 @@ const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
 const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
 const latestHeight = latestBlock.header.height;
 const timeoutHeight = toBigNumber(latestHeight).plus(
-  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 );
 
 /** Preparing the transaction */
@@ -137,7 +130,7 @@ txRawEip712.signatures = [signatureBuff /* From previous step */];
 
 /** Broadcast the Transaction */
 const restEndpoint =
-  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+  "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
 const txRestApi = new TxRestApi(restEndpoint);
 
 const txHash = await txRestApi.broadcast(txRawEip712);
@@ -158,12 +151,8 @@ const response = await txRestApi.fetchTxPoll(txHash);
 Let's have a look at the whole flow (using Metamask as a signing wallet)
 
 ```ts
-import {
-  MsgSend,
-} from "@injectivelabs/sdk-ts/core/modules";
-import {
-  BaseAccount,
-} from "@injectivelabs/sdk-ts/core/accounts";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
 import {
   TxRestApi,
   SIGN_AMINO,
@@ -178,9 +167,7 @@ import {
   ChainRestAuthApi,
   ChainRestTendermintApi,
 } from "@injectivelabs/sdk-ts/client/chain";
-import {
-  getEthereumAddress,
-} from "@injectivelabs/sdk-ts/utils";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
 import {
   toBigNumber,
   toChainFormat,
@@ -202,9 +189,8 @@ const amount = {
 
 /** Account Details **/
 const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
-const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
-  injectiveAddress
-);
+const accountDetailsResponse =
+  await chainRestAuthApi.fetchAccount(injectiveAddress);
 const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
 const accountDetails = baseAccount.toAccountDetails();
 
@@ -213,7 +199,7 @@ const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
 const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
 const latestHeight = latestBlock.header.height;
 const timeoutHeight = toBigNumber(latestHeight).plus(
-  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 );
 
 /** Preparing the transaction */

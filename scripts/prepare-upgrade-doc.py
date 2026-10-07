@@ -23,7 +23,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS_DIR = os.path.join(REPO_ROOT, ".gitbook", "infra", "validator-mainnet")
 DOCS_JSON = os.path.join(REPO_ROOT, ".gitbook", "docs.json")
 
-LCD = "https://lcd.injective.network"
+LCD = "https://sentry.lcd.injective.network"
 TM_RPC = "https://sentry.tm.injective.network"
 CORE_RELEASES = (
     "https://api.github.com/repos/InjectiveFoundation/injective-core/releases?per_page=30"

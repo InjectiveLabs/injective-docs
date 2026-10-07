@@ -35,7 +35,7 @@ const address = privateKey.toAddress();
 const pubKey = privateKey.toPublicKey().toBase64();
 const chainId = "injective-1"; /* ChainId.Mainnet */
 const restEndpoint =
-  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+  "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
 const amount = {
   denom: "inj",
   amount: toChainFormat(0.01).toFixed(),
@@ -43,9 +43,8 @@ const amount = {
 
 /** 账户详情 **/
 const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
-const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
-  injectiveAddress
-);
+const accountDetailsResponse =
+  await chainRestAuthApi.fetchAccount(injectiveAddress);
 const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
 const accountDetails = baseAccount.toAccountDetails();
 
@@ -54,7 +53,7 @@ const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
 const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
 const latestHeight = latestBlock.header.height;
 const timeoutHeight = toBigNumber(latestHeight).plus(
-  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 );
 
 /** 准备交易 */
@@ -163,7 +162,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
 
   /** 账户详情 **/
   const accountDetails = await new ChainRestAuthApi(network.rest).fetchAccount(
-    injectiveAddress
+    injectiveAddress,
   );
 
   /** 准备消息 */
@@ -187,7 +186,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
     sequence: parseInt(accountDetails.account.base_account.sequence, 10),
     accountNumber: parseInt(
       accountDetails.account.base_account.account_number,
-      10
+      10,
     ),
     chainId: network.chainId,
   });
@@ -207,8 +206,8 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
   const simulationResponse = await txService.simulate(txRaw);
   console.log(
     `Transaction simulation response: ${JSON.stringify(
-      simulationResponse.gasInfo
-    )}`
+      simulationResponse.gasInfo,
+    )}`,
   );
 
   /** 广播交易 */
@@ -218,7 +217,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
     console.log(`Transaction failed: ${txResponse.rawLog}`);
   } else {
     console.log(
-      `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`
+      `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`,
     );
   }
 })();

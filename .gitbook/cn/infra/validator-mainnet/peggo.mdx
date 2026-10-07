@@ -39,14 +39,14 @@ PEGGO_ETH_MAX_GAS_PRICE="500gwei"     # 发送以太坊交易允许的最大 gas
 PEGGO_ETH_CHAIN_ID=1                  # 以太坊网络的链 ID
 PEGGO_ETH_RPC="http://localhost:8545" # 你的以太坊节点的 RPC
 PEGGO_ETH_ALCHEMY_WS=""               # 可选的 websocket 端点，用于监听 Peggy.sol 上的待处理交易
-PEGGO_ETH_USE_LEDGER=false 
+PEGGO_ETH_USE_LEDGER=false
 
 # 代币资产的价格源提供者（批次创建者）
 PEGGO_COINGECKO_API="https://api.coingecko.com/api/v3"
 
 # 中继器配置
 PEGGO_RELAY_VALSETS=true                      # 设置为 `true` 以中继验证者集
-PEGGO_RELAY_VALSET_OFFSET_DUR="5m"            # 验证者集有资格中继前需要过期的持续时间 
+PEGGO_RELAY_VALSET_OFFSET_DUR="5m"            # 验证者集有资格中继前需要过期的持续时间
 PEGGO_RELAY_BATCHES=true                      # 设置为 `true` 以中继代币批次
 PEGGO_RELAY_BATCH_OFFSET_DUR="5m"             # 代币批次有资格中继前需要过期的持续时间
 PEGGO_RELAY_PENDING_TX_WAIT_DURATION="20m"    # 等待待处理交易处理的时间
@@ -63,13 +63,15 @@ PEGGO_STATSD_DISABLED=true
 ```
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-**重要提示：** 如果你正在运行自己的 `injectived`（Injective 节点）和 `geth`（以太坊节点）进程，请确保它们与最新状态同步。过时的节点可能会使 `peggo` 的业务逻辑出现偏差，有时会显示"误报"日志。
+  **重要提示：** 如果你正在运行自己的 `injectived`（Injective 节点）和
+  `geth`（以太坊节点）进程，请确保它们与最新状态同步。过时的节点可能会使 `peggo`
+  的业务逻辑出现偏差，有时会显示"误报"日志。
 </Callout>
 
 ## 步骤 1：配置 .env
 
 ```bash
-# 官方 Injective 主网 .env 配置 
+# 官方 Injective 主网 .env 配置
 mkdir ~/.peggo
 cp mainnet-config/10001/peggo-config.env ~/.peggo/.env
 cd ~/.peggo
@@ -135,8 +137,8 @@ PEGGO_ETH_PASSPHRASE=12345678
 
 你的 peggo 编排者可以：
 
-* 使用专门用于发送验证者特定 Peggy 交易（即 `ValsetConfirm`、`BatchConfirm` 和 `SendToCosmos` 交易）的显式委托账户密钥，或
-* 简单地使用你的验证者账户密钥（"你的验证者就是你的编排者"）
+- 使用专门用于发送验证者特定 Peggy 交易（即 `ValsetConfirm`、`BatchConfirm` 和 `SendToCosmos` 交易）的显式委托账户密钥，或
+- 简单地使用你的验证者账户密钥（"你的验证者就是你的编排者"）
 
 出于隔离目的，我们建议创建一个委托 Cosmos 密钥来发送 Injective 交易，而不是使用你的验证者账户密钥。
 
@@ -217,8 +219,8 @@ injectived tx peggy set-orchestrator-address $VALIDATOR_INJ_ADDRESS $ORCHESTRATO
 
 ```
 
-* 要获取你的验证者的 inj 地址，运行 `injectived keys list $VALIDATOR_KEY_NAME`
-* 要获取你的编排者的 inj 地址，运行 `injectived keys list $ORCHESTRATOR_KEY_NAME`
+- 要获取你的验证者的 inj 地址，运行 `injectived keys list $VALIDATOR_KEY_NAME`
+- 要获取你的编排者的 inj 地址，运行 `injectived keys list $ORCHESTRATOR_KEY_NAME`
 
 示例：
 
@@ -226,10 +228,13 @@ injectived tx peggy set-orchestrator-address $VALIDATOR_INJ_ADDRESS $ORCHESTRATO
 injectived tx peggy set-orchestrator-address inj10m247khat0esnl0x66vu9mhlanfftnvww67j9n inj1x7kvxlz2epqx3hpq6v8j8w859t29pgca4z92l2 0xf79D16a79130a07e77eE36e8067AeA783aBdA3b6 --from validator-key-name --chain-id=injective-1 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
 ```
 
-你可以通过在 https://lcd.injective.network/peggy/v1/valset/current 检查你的验证者映射的以太坊地址来验证注册是否成功。
+你可以通过在 https://sentry.lcd.injective.network/peggy/v1/valset/current 检查你的验证者映射的以太坊地址来验证注册是否成功。
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-**注意：** 一旦你使用 `set-orchestrator-address` 消息注册了你的编排者，你就**无法**再次注册。完成此步骤后，你的 `Validator` 将绑定到提供的以太坊地址（以及你可能提供的委托地址）。换句话说，你的 peggo 必须始终使用你为注册提供的地址运行。
+  **注意：** 一旦你使用 `set-orchestrator-address`
+  消息注册了你的编排者，你就**无法**再次注册。完成此步骤后，你的 `Validator`
+  将绑定到提供的以太坊地址（以及你可能提供的委托地址）。换句话说，你的 peggo
+  必须始终使用你为注册提供的地址运行。
 </Callout>
 
 ### 步骤 3：启动中继器
@@ -279,7 +284,7 @@ journalctl -f -u peggo
 ### 步骤 5：（可选）保护 Cosmos Keyring 免受未授权访问
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-这是一个高级 DevOps 主题，请咨询你的系统管理员。
+  这是一个高级 DevOps 主题，请咨询你的系统管理员。
 </Callout>
 
 在[这里](https://docs.cosmos.network/v0.46/run-node/keyring.html)了解更多关于 Cosmos Keyring 设置的信息。一旦你启动了节点，默认的 keyring 将以加密形式将验证者操作员密钥存储在磁盘上。通常 keyring 位于节点的主目录中，即 `~/.injectived/keyring-file`。
@@ -288,9 +293,9 @@ Injective 质押文档的某些部分将指导你使用此密钥进行治理目�
 
 在 Debian、Ubuntu 和 RHEL 等 Linux 系统中，可以使用 POSIX 访问控制列表（ACL）来实现。在开始使用 ACL 之前，必须在启用 ACL 的情况下挂载文件系统。每个发行版都有一些官方指南：
 
-* [Ubuntu](https://help.ubuntu.com/community/FilePermissionsACLs)
-* [Debian](https://wiki.debian.org/Permissions)
-* [Amazon Linux (RHEL)](https://www.redhat.com/sysadmin/linux-access-control-lists)
+- [Ubuntu](https://help.ubuntu.com/community/FilePermissionsACLs)
+- [Debian](https://wiki.debian.org/Permissions)
+- [Amazon Linux (RHEL)](https://www.redhat.com/sysadmin/linux-access-control-lists)
 
 ### 贡献
 
