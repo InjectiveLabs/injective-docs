@@ -8,7 +8,7 @@ title: "資格要件"
 Injectiveアドレスは、以下の基準を満たすことでOLPの資格を取得できます：
 
 - **アドレスは、資格取得プロセスの開始前にTrade & Earn（T&E）プログラムからオプトアウトしている必要があります**。アドレスは資格取得プロセス中にT&E報酬を獲得しません。プログラムによるオプトアウトの例については、[Python](https://github.com/InjectiveLabs/sdk-python/blob/master/examples/chain_client/24_MsgRewardsOptOut.py)、[Go](https://github.com/InjectiveLabs/sdk-go/blob/master/examples/chain/24_MsgRegisterAsDMM/example.go)、[TS](https://github.com/InjectiveLabs/injective-ts/wiki/04CoreModulesExchange#msgrewardsoptout)を参照してください。
-  - 注意：資格取得プロセスの対象となるのは、オプトアウト完了翌日の00:00 UTCからです。アドレスがT&Eからのオプトアウトに成功したかどうかを確認するには、[このリスト](https://lcd.injective.network/injective/exchange/v1beta1/opted_out_of_rewards_accounts)を参照してください。
+  - 注意：資格取得プロセスの対象となるのは、オプトアウト完了翌日の00:00 UTCからです。アドレスがT&Eからのオプトアウトに成功したかどうかを確認するには、[このリスト](https://sentry.lcd.injective.network/injective/exchange/v1beta1/opted_out_of_rewards_accounts)を参照してください。
 - アドレスのメイカーボリュームが、[**対象市場**](./eligible-markets/)の**1日の合計exchangeメイカーボリュームの少なくとも0.25%を3日連続で**占める必要があります。セルフトレーディングは厳格に禁止されています。
 
 これらの要件が両方とも満たされた場合、アドレスは4日目の00:00 UTCにOLP報酬の資格を取得します。資格取得後、特別な状況（システムの悪用、ウォッシュトレーディングなど）によりアドレスが除外されない限り、epochの残りの期間を通じて報酬の資格が維持されます。資格取得前のアクティビティは報酬にカウントされないことにご注意ください。
@@ -16,7 +16,8 @@ Injectiveアドレスは、以下の基準を満たすことでOLPの資格を�
 <Info>
   メイカーボリュームを増やすために、取引戦略を単一のアドレスに集約することが賢明です。そうしないと、必要な閾値よりもメイカーボリュームが少ないアドレスは、複数アドレスの合計ボリュームが閾値を超えていても報酬の資格を得ることができません。
 
-  単一のアドレスから複数の戦略を実行しながら取引[手数料割引](https://helixapp.com/fee-discounts)を維持する方法については、[`Injective authzモジュールのドキュメント`](https://docs.injective.network/develop/modules/Core/authz/)を参照してください。
+単一のアドレスから複数の戦略を実行しながら取引[手数料割引](https://helixapp.com/fee-discounts)を維持する方法については、[`Injective authzモジュールのドキュメント`](https://docs.injective.network/develop/modules/Core/authz/)を参照してください。
+
 </Info>
 
 ## 次のEpochの資格維持・事前資格

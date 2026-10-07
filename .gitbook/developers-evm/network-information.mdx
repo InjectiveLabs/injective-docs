@@ -1,8 +1,8 @@
 ---
 title: EVM Network Information
 description: >-
-    Essential information about the Injective EVM network.
-    Chain IDs, RPC endpoints, block explorer URLs, and network configuration for Injective's EVM layer.
+  Essential information about the Injective EVM network.
+  Chain IDs, RPC endpoints, block explorer URLs, and network configuration for Injective's EVM layer.
 updatedAt: "2026-5-23"
 ---
 
@@ -12,13 +12,13 @@ updatedAt: "2026-5-23"
 
 ## Network Info
 
-* Chain ID: `1776`
-* JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
-* EVM Gateway JSON-RPC Endpoint: `https://evm.archival.chain.virtual.json-rpc.injective.network/`
-* WS Endpoint: `wss://sentry.evm-ws.injective.network`
-* Faucet: N/A, to obtain Mainnet INJ see [`injective.com/getinj`](https://injective.com/getinj/)
-* Explorer: [`blockscout.injective.network`](https://blockscout.injective.network/)
-* Explorer API: `https://blockscout-api.injective.network/api`
+- Chain ID: `1776`
+- JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
+- EVM Gateway JSON-RPC Endpoint: `https://evm.archival.chain.virtual.json-rpc.injective.network/`
+- WS Endpoint: `wss://sentry.evm-ws.injective.network`
+- Faucet: N/A, to obtain Mainnet INJ see [`injective.com/getinj`](https://injective.com/getinj/)
+- Explorer: [`blockscout.injective.network`](https://blockscout.injective.network/)
+- Explorer API: `https://blockscout-api.injective.network/api`
 
 <Info>
 Note that the Injective Chain ID is natively `injective-1`.
@@ -26,19 +26,20 @@ However, EVM uses a numeric chain ID of `1776`.
 While these are different, they map to the **same** network.
 
 See [Injective Mainnet network information](/developers/network-information/#injective-mainnet) for more details.
+
 </Info>
 
 ## Contracts
 
-* **wINJ** wrapped INJ (MTS) -
+- **wINJ** wrapped INJ (MTS) -
   [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
-* **wETH** wrapped ETH (MTS) -
+- **wETH** wrapped ETH (MTS) -
   [`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`](https://blockscout.injective.network/address/0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7)
-* **USDC** USD Coin (MTS) -
+- **USDC** USD Coin (MTS) -
   See [USDC on Injective](/developers-defi/usdc-stablecoin) for the addresses of USDC and USDC CCTP smart contracts.
-* **USDT** USDT (MTS) -
+- **USDT** USDT (MTS) -
   [`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`](https://blockscout.injective.network/address/0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13)
-* **MultiCall** -
+- **MultiCall** -
   [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://blockscout.injective.network/address/0xcA11bde05977b3631167028862bE2a173976CA11)
 
 <Info>
@@ -46,22 +47,23 @@ Note that tokens that are **MTS** follow the
 [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard).
 
 This means the same token can be used in all Injective modules (EVM, Cosmos) without using a bridge.
+
 </Info>
 
 ## More Providers
 
-* Explorers
-  * Blockscout mirror: [`injective.cloud.blockscout.com`](https://injective.cloud.blockscout.com)
-* JSON-RPC Providers
-  * Alchemy: [`alchemy.com`](https://www.alchemy.com/)
-    * Note that you will need to create an account on Alchemy to obtain an endpoint URL
-    * [Alchemy RPC Setup guide](/developers-evm/alchemy-rpc-setup)
-  * Quicknode [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
-    * Note that you will need to create an account on quicknode to obtain an endpoint URL
-    * [Quicknode JSON-RPC documentation](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
-  * ThirdWeb [`thirdweb.com/injective`](https://thirdweb.com/injective)
-    * Note that you will need to create an account on thirdweb to obtain an endpoint URL
-    * [ThirdWeb Playground](https://playground.thirdweb.com/)
+- Explorers
+  - Blockscout mirror: [`blockscout.injective.network`](https://blockscout.injective.network)
+- JSON-RPC Providers
+  - Alchemy: [`alchemy.com`](https://www.alchemy.com/)
+    - Note that you will need to create an account on Alchemy to obtain an endpoint URL
+    - [Alchemy RPC Setup guide](/developers-evm/alchemy-rpc-setup)
+  - Quicknode [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
+    - Note that you will need to create an account on quicknode to obtain an endpoint URL
+    - [Quicknode JSON-RPC documentation](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
+  - ThirdWeb [`thirdweb.com/injective`](https://thirdweb.com/injective)
+    - Note that you will need to create an account on thirdweb to obtain an endpoint URL
+    - [ThirdWeb Playground](https://playground.thirdweb.com/)
 
 </Tab>
 
@@ -69,16 +71,15 @@ This means the same token can be used in all Injective modules (EVM, Cosmos) wit
 
 ## Network Info
 
-* Chain ID: `1439`
-* JSON-RPC Endpoint: `https://k8s.testnet.json-rpc.injective.network/`
-* EVM Gateway JSON-RPC Endpoint: `https://testnet.evm.archival.chain.virtual.json-rpc.injective.network/`
-* WS Endpoint: `wss://k8s.testnet.ws.injective.network/`
-* Faucet (Injective): [`testnet.faucet.injective.network/`](https://testnet.faucet.injective.network/)
-* Faucet (Google): [`cloud.google.com/application/web3/faucet/injective/testnet`](https://cloud.google.com/application/web3/faucet/injective/testnet)
-* Faucet (Circle): [`faucet.circle.com/`](https://faucet.circle.com/)
-* Explorer: [`testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/)
-* Explorer API: `https://testnet.blockscout-api.injective.network/api`
-
+- Chain ID: `1439`
+- JSON-RPC Endpoint: `https://k8s.testnet.json-rpc.injective.network/`
+- EVM Gateway JSON-RPC Endpoint: `https://testnet.evm.archival.chain.virtual.json-rpc.injective.network/`
+- WS Endpoint: `wss://k8s.testnet.ws.injective.network/`
+- Faucet (Injective): [`testnet.faucet.injective.network/`](https://testnet.faucet.injective.network/)
+- Faucet (Google): [`cloud.google.com/application/web3/faucet/injective/testnet`](https://cloud.google.com/application/web3/faucet/injective/testnet)
+- Faucet (Circle): [`faucet.circle.com/`](https://faucet.circle.com/)
+- Explorer: [`testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/)
+- Explorer API: `https://testnet.blockscout-api.injective.network/api`
 
 <Info>
 Note that the Injective Chain ID is natively `injective-888`.
@@ -86,15 +87,16 @@ However, EVM uses a numeric chain ID of `1439`.
 While these are different, they map to the **same** network.
 
 See [Injective Testnet network information](/developers/network-information/#injective-testnet) for more details.
+
 </Info>
 
 ## Contracts
 
-* **wINJ** wrapped INJ (MTS) -
+- **wINJ** wrapped INJ (MTS) -
   [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](https://testnet.blockscout.injective.network/address/0x0000000088827d2d103ee2d9A6b781773AE03FfB)
-* **USDC** USD Coin (MTS) -
+- **USDC** USD Coin (MTS) -
   See [USDC on Injective](/developers-defi/usdc-stablecoin) for the addresses of USDC and USDC CCTP smart contracts.
-* **USDT** USDT (MTS) -
+- **USDT** USDT (MTS) -
   [`0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60`](https://testnet.blockscout.injective.network/address/0xaDC7bcB5d8fe053Ef19b4E0C861c262Af6e0db60)
 
 <Info>
@@ -102,35 +104,36 @@ Note that tokens that are **MTS** follow the
 [MultiVM Token Standard](https://docs.injective.network/developers-evm/multivm-token-standard).
 
 This means the same token can be used in all Injective modules (EVM, Cosmos) without using a bridge.
+
 </Info>
 
 ## More Providers
 
-* Explorers
-  * Blockscout mirror: [`testnet-injective.cloud.blockscout.com/`](https://testnet-injective.cloud.blockscout.com/)
-* JSON-RPC Providers
-  * Alchemy: [`alchemy.com`](https://www.alchemy.com/)
-    * Note that you will need to create an account on Alchemy to obtain an endpoint URL
-    * [Alchemy RPC Setup guide](/developers-evm/alchemy-rpc-setup)
-  * Quicknode: [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
-    * Note that you will need to create an account on Quicknode to obtain an endpoint URL
-    * [Quicknode JSON-RPC documentation](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
-  * ThirdWeb: [`thirdweb.com/injective-evm-testnet`](https://thirdweb.com/injective-evm-testnet)
-    * Note that you will need to create an account on ThirdWeb to obtain an endpoint URL
-    * [ThirdWeb Playground](https://playground.thirdweb.com/)
+- Explorers
+  - Blockscout mirror: [`testnet.blockscout.injective.network/`](https://testnet.blockscout.injective.network/)
+- JSON-RPC Providers
+  - Alchemy: [`alchemy.com`](https://www.alchemy.com/)
+    - Note that you will need to create an account on Alchemy to obtain an endpoint URL
+    - [Alchemy RPC Setup guide](/developers-evm/alchemy-rpc-setup)
+  - Quicknode: [`quicknode.com/chains/inj`](https://www.quicknode.com/chains/inj)
+    - Note that you will need to create an account on Quicknode to obtain an endpoint URL
+    - [Quicknode JSON-RPC documentation](https://www.quicknode.com/docs/injective/evm/eth_blockNumber)
+  - ThirdWeb: [`thirdweb.com/injective-evm-testnet`](https://thirdweb.com/injective-evm-testnet)
+    - Note that you will need to create an account on ThirdWeb to obtain an endpoint URL
+    - [ThirdWeb Playground](https://playground.thirdweb.com/)
 
 ## More Info
 
 For more information about Injective EVM Testnet see the following pages:
 
-* Basics:
-  * [Start Building on EVM](/developers-evm)
-  * [Your first EVM smart contract](/developers-evm/smart-contracts)
-  * [Your first EVM dApp](/developers-evm/dapps)
-* Advanced:
-  * [EVM Equivalence](/developers-evm/evm-equivalence)
-  * [MultiVM Token Standard](/developers-evm/multivm-token-standard)
-  * [Precompiles](/developers-evm/precompiles)
+- Basics:
+  - [Start Building on EVM](/developers-evm)
+  - [Your first EVM smart contract](/developers-evm/smart-contracts)
+  - [Your first EVM dApp](/developers-evm/dapps)
+- Advanced:
+  - [EVM Equivalence](/developers-evm/evm-equivalence)
+  - [MultiVM Token Standard](/developers-evm/multivm-token-standard)
+  - [Precompiles](/developers-evm/precompiles)
 
 </Tab>
 

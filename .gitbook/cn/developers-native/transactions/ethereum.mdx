@@ -12,19 +12,13 @@ Injective 上的每笔交易都遵循相同的流程。该流程包含三个步�
 使用我们对消息的自定义抽象，允许开发者直接从特定消息的 proto 文件获取 EIP712 TypedData。
 
 ```ts
-import {
-  MsgSend,
-} from "@injectivelabs/sdk-ts/core/modules";
-import {
-  BaseAccount,
-} from "@injectivelabs/sdk-ts/core/accounts";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
 import {
   ChainRestAuthApi,
   ChainRestTendermintApi,
 } from "@injectivelabs/sdk-ts/client/chain";
-import {
-  getEip712TypedDataV2,
-} from "@injectivelabs/sdk-ts/core/tx";
+import { getEip712TypedDataV2 } from "@injectivelabs/sdk-ts/core/tx";
 import {
   toBigNumber,
   toChainFormat,
@@ -37,7 +31,7 @@ const injectiveAddress = "inj1";
 const chainId = ChainId.Mainnet;
 const evmChainId = EvmChainId.Mainnet;
 const restEndpoint =
-  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+  "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
 const amount = {
   denom: "inj",
   amount: toChainFormat(0.01).toFixed(),
@@ -45,9 +39,8 @@ const amount = {
 
 /** 账户详情 **/
 const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
-const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
-  injectiveAddress
-);
+const accountDetailsResponse =
+  await chainRestAuthApi.fetchAccount(injectiveAddress);
 const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
 const accountDetails = baseAccount.toAccountDetails();
 
@@ -56,7 +49,7 @@ const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
 const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
 const latestHeight = latestBlock.header.height;
 const timeoutHeight = toBigNumber(latestHeight).plus(
-  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 );
 
 /** 准备交易 */
@@ -87,10 +80,7 @@ const eip712TypedData = getEip712TypedDataV2({
 /** 使用你喜欢的方法签名 EIP712 TypedData，以 Metamask 为例 */
 const signature = await window.ethereum.request({
   method: "eth_signTypedData_v4",
-  params: [
-    ethereumAddress,
-    JSON.stringify(eip712TypedData /* 来自上一步 */),
-  ],
+  params: [ethereumAddress, JSON.stringify(eip712TypedData /* 来自上一步 */)],
 });
 
 /** 获取签名者的公钥 */
@@ -137,7 +127,7 @@ txRawEip712.signatures = [signatureBuff /* 来自上一步 */];
 
 /** 广播交易 */
 const restEndpoint =
-  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+  "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
 const txRestApi = new TxRestApi(restEndpoint);
 
 const txHash = await txRestApi.broadcast(txRawEip712);
@@ -158,12 +148,8 @@ const response = await txRestApi.fetchTxPoll(txHash);
 让我们看看完整的流程（使用 Metamask 作为签名钱包）
 
 ```ts
-import {
-  MsgSend,
-} from "@injectivelabs/sdk-ts/core/modules";
-import {
-  BaseAccount,
-} from "@injectivelabs/sdk-ts/core/accounts";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
 import {
   TxRestApi,
   SIGN_AMINO,
@@ -178,9 +164,7 @@ import {
   ChainRestAuthApi,
   ChainRestTendermintApi,
 } from "@injectivelabs/sdk-ts/client/chain";
-import {
-  getEthereumAddress,
-} from "@injectivelabs/sdk-ts/utils";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
 import {
   toBigNumber,
   toChainFormat,
@@ -202,9 +186,8 @@ const amount = {
 
 /** 账户详情 **/
 const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
-const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
-  injectiveAddress
-);
+const accountDetailsResponse =
+  await chainRestAuthApi.fetchAccount(injectiveAddress);
 const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
 const accountDetails = baseAccount.toAccountDetails();
 
@@ -213,7 +196,7 @@ const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
 const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
 const latestHeight = latestBlock.header.height;
 const timeoutHeight = toBigNumber(latestHeight).plus(
-  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 );
 
 /** 准备交易 */

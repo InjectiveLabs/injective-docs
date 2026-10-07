@@ -35,7 +35,7 @@ const address = privateKey.toAddress();
 const pubKey = privateKey.toPublicKey().toBase64();
 const chainId = "injective-1"; /* ChainId.Mainnet */
 const restEndpoint =
-  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+  "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
 const amount = {
   denom: "inj",
   amount: toChainFormat(0.01).toFixed(),
@@ -43,9 +43,8 @@ const amount = {
 
 /** 계정 세부 정보 **/
 const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
-const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
-  injectiveAddress
-);
+const accountDetailsResponse =
+  await chainRestAuthApi.fetchAccount(injectiveAddress);
 const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
 const accountDetails = baseAccount.toAccountDetails();
 
@@ -54,7 +53,7 @@ const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
 const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
 const latestHeight = latestBlock.header.height;
 const timeoutHeight = toBigNumber(latestHeight).plus(
-  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 );
 
 /** 트랜잭션 준비 */
@@ -163,7 +162,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
 
   /** 계정 세부 정보 **/
   const accountDetails = await new ChainRestAuthApi(network.rest).fetchAccount(
-    injectiveAddress
+    injectiveAddress,
   );
 
   /** 메시지 준비 */
@@ -187,7 +186,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
     sequence: parseInt(accountDetails.account.base_account.sequence, 10),
     accountNumber: parseInt(
       accountDetails.account.base_account.account_number,
-      10
+      10,
     ),
     chainId: network.chainId,
   });
@@ -206,9 +205,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
   /** 트랜잭션 시뮬레이션 */
   const simulationResponse = await txService.simulate(txRaw);
   console.log(
-    `트랜잭션 시뮬레이션 응답: ${JSON.stringify(
-      simulationResponse.gasInfo
-    )}`
+    `트랜잭션 시뮬레이션 응답: ${JSON.stringify(simulationResponse.gasInfo)}`,
   );
 
   /** 트랜잭션 브로드캐스트 */
@@ -218,7 +215,7 @@ import { toChainFormat, getDefaultStdFee } from "@injectivelabs/utils";
     console.log(`트랜잭션 실패: ${txResponse.rawLog}`);
   } else {
     console.log(
-      `브로드캐스트된 트랜잭션 해시: ${JSON.stringify(txResponse.txHash)}`
+      `브로드캐스트된 트랜잭션 해시: ${JSON.stringify(txResponse.txHash)}`,
     );
   }
 })();

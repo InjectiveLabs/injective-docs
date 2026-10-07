@@ -48,14 +48,14 @@ PEGGO_ETH_MAX_GAS_PRICE="500gwei"     # max gas price allowed for sending Eth tr
 PEGGO_ETH_CHAIN_ID=1                  # chain ID of Ethereum network
 PEGGO_ETH_RPC="http://localhost:8545" # RPC of your Ethereum node
 PEGGO_ETH_ALCHEMY_WS=""               # optional websocket endpoint for listening pending transactions on Peggy.sol
-PEGGO_ETH_USE_LEDGER=false 
+PEGGO_ETH_USE_LEDGER=false
 
 # Price feed provider for token assets (Batch Creator)
 PEGGO_COINGECKO_API="https://api.coingecko.com/api/v3"
 
 # Relayer config
 PEGGO_RELAY_VALSETS=true                      # set to `true` to relay Validator Sets
-PEGGO_RELAY_VALSET_OFFSET_DUR="5m"            # duration which needs to expire before a Valset is eligible for relaying 
+PEGGO_RELAY_VALSET_OFFSET_DUR="5m"            # duration which needs to expire before a Valset is eligible for relaying
 PEGGO_RELAY_BATCHES=true                      # set to `true` to relay Token Batches
 PEGGO_RELAY_BATCH_OFFSET_DUR="5m"             # duration which needs to expire before a Token Batch is eligible for relaying
 PEGGO_RELAY_PENDING_TX_WAIT_DURATION="20m"    # time to wait until a pending tx is processed
@@ -72,13 +72,16 @@ PEGGO_STATSD_DISABLED=true
 ```
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-**IMPORTANT NOTE:** if you're running your own `injectived` (Injective node) and `geth` (Ethereum node) processes, ensure that they are in sync with the latest state. Outdated nodes can skew the business logic of `peggo` to display "false alarm" logs sometimes.
+  **IMPORTANT NOTE:** if you're running your own `injectived` (Injective node)
+  and `geth` (Ethereum node) processes, ensure that they are in sync with the
+  latest state. Outdated nodes can skew the business logic of `peggo` to display
+  "false alarm" logs sometimes.
 </Callout>
 
 ## Step 1: Configuring .env
 
 ```bash
-# official Injective mainnet .env config 
+# official Injective mainnet .env config
 mkdir ~/.peggo
 cp mainnet-config/10001/peggo-config.env ~/.peggo/.env
 cd ~/.peggo
@@ -144,8 +147,8 @@ Then ensure that your Ethereum address has enough ETH.
 
 Your peggo orchestrator can either:
 
-* Use an explicitly delegated account key specific for sending validator specific Peggy transactions (i.e., `ValsetConfirm`, `BatchConfirm`, and `SendToCosmos` transactions) or
-* Simply use your validator's account key ("your Validator is your Orchestrator")
+- Use an explicitly delegated account key specific for sending validator specific Peggy transactions (i.e., `ValsetConfirm`, `BatchConfirm`, and `SendToCosmos` transactions) or
+- Simply use your validator's account key ("your Validator is your Orchestrator")
 
 For isolation purposes, we recommend creating a delegated Cosmos key to send Injective transactions instead of using your validator account key.
 
@@ -226,8 +229,8 @@ injectived tx peggy set-orchestrator-address $VALIDATOR_INJ_ADDRESS $ORCHESTRATO
 
 ```
 
-* To obtain your validator's inj address, run, `injectived keys list $VALIDATOR_KEY_NAME`
-* To obtain your orchestrators's inj address, `injectived keys list $ORCHESTRATOR_KEY_NAME`
+- To obtain your validator's inj address, run, `injectived keys list $VALIDATOR_KEY_NAME`
+- To obtain your orchestrators's inj address, `injectived keys list $ORCHESTRATOR_KEY_NAME`
 
 Example:
 
@@ -235,10 +238,14 @@ Example:
 injectived tx peggy set-orchestrator-address inj10m247khat0esnl0x66vu9mhlanfftnvww67j9n inj1x7kvxlz2epqx3hpq6v8j8w859t29pgca4z92l2 0xf79D16a79130a07e77eE36e8067AeA783aBdA3b6 --from validator-key-name --chain-id=injective-1 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
 ```
 
-You can verify successful registration by checking for your Validator's mapped Ethereum address on https://lcd.injective.network/peggy/v1/valset/current.
+You can verify successful registration by checking for your Validator's mapped Ethereum address on https://sentry.lcd.injective.network/peggy/v1/valset/current.
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-**NOTE:** Once you've registered your Orchestrator with the `set-orchestrator-address` message, you **CANNOT** register again. Once this step is complete, your `Validator` is bound to the provided Ethereum address (as well the Delegated address you may have provided). In other words, your peggo must always run with the addresses you provided for registration.
+  **NOTE:** Once you've registered your Orchestrator with the
+  `set-orchestrator-address` message, you **CANNOT** register again. Once this
+  step is complete, your `Validator` is bound to the provided Ethereum address
+  (as well the Delegated address you may have provided). In other words, your
+  peggo must always run with the addresses you provided for registration.
 </Callout>
 
 ### Step 3: Start the Relayer
@@ -288,7 +295,7 @@ journalctl -f -u peggo
 ### Step 5: (Optional) Protect Cosmos Keyring from unauthorized access
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-This is an advanced DevOps topic, consult with your sysadmin.
+  This is an advanced DevOps topic, consult with your sysadmin.
 </Callout>
 
 Learn more about Cosmos Keyring setup [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/user/run-node/00-keyring.md). Once you've launched your node, the default keyring will have the validator operator key stored on disk in the encrypted form. Usually the keyring is located within node's homedir, i.e. `~/.injectived/keyring-file`.
@@ -297,9 +304,9 @@ Some sections of the Injective Staking documentation will guide you through usin
 
 In Linux systems like Debian, Ubuntu and RHEL, this can be achieved using POSIX Access Control Lists (ACLs). Before beginning to work with ACLs, the file system must be mounted with ACLs turned on. There are some official guides for each distro:
 
-* [Ubuntu](https://help.ubuntu.com/community/FilePermissionsACLs)
-* [Debian](https://wiki.debian.org/Permissions)
-* [Amazon Linux (RHEL)](https://www.redhat.com/sysadmin/linux-access-control-lists)
+- [Ubuntu](https://help.ubuntu.com/community/FilePermissionsACLs)
+- [Debian](https://wiki.debian.org/Permissions)
+- [Amazon Linux (RHEL)](https://www.redhat.com/sysadmin/linux-access-control-lists)
 
 ### Contribute
 
