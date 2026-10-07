@@ -26,7 +26,11 @@ On October 7, a transaction involving a blocked address exposed the difference b
 
 This applies to validators, sentries, full nodes, public and private RPC/broadcast nodes, and nodes serving exchanges, explorers, and other integrations.
 
-## 1. Download and verify the release
+## 1. Choose and verify your release
+
+Choose either the binary archive or Docker image. **Docker operators can skip the archive downloads and use the image directly.**
+
+### Option A: binary archive
 
 The [official release manifest](https://storage.googleapis.com/injective-chain-releases/status.json) lists the hosted binaries. Download the archive for your platform:
 
@@ -53,31 +57,45 @@ unzip injective-v1.20.4-bl.2-linux-amd64.zip
 
 For macOS, use `shasum -a 256` and compare the archive against the corresponding entry in the checksum file.
 
-### Docker
+### Option B: Docker image
 
-Use the following image in your existing deployment:
+The initial release distributed the patch as the following Docker image:
 
 ```text
 injectivelabs/injective-core:v1.20.4-bl.2
 ```
 
-You can verify the image's binary without mounting your node data:
+Pull the image and verify its binary without mounting your node data:
 
 ```bash
+docker pull injectivelabs/injective-core:v1.20.4-bl.2
 docker run --rm injectivelabs/injective-core:v1.20.4-bl.2 injectived version
 ```
 
-Expected version and commit:
+The initial release recorded the following output for AMD64:
 
 ```text
 Version v1.20.4-bl.2 (1ffa252)
+Compiled at 20260928-0409 using Go go1.26.8 (amd64)
 ```
+
+Continue through the stop, backup, recovery, and restart steps below using your existing container deployment. Keep the old image available: affected nodes must complete rollback with that image before switching to the patch. The Docker image includes the runtime libraries, so container operators do not need to install the archive's `libwasmvm` on the host.
 
 ## 2. Stop the node and back up its state
 
 Stop the node through your existing service manager or container deployment. Stop its supervisor as well so it cannot automatically restart during recovery. Confirm that no `injectived` process is accessing the node's data directory.
 
 Back up your node configuration, keys, and data before proceeding. Keep the existing binary available until any required rollback is complete. The commands below assume the default home directory, `~/.injectived`; use your configured `--home` path if different.
+
+**Docker Compose example:** Run the commands from your existing Compose project, using the same Compose files and environment as your normal deployment. Set `node_service` to your actual service name and `container_node_home` to its existing home path **inside the container**; the values below are examples. Confirm that this home is backed by your existing bind mount or named volume, then stop the service:
+
+```bash
+node_service=injectived
+container_node_home=/root/.injectived
+docker compose stop "$node_service"
+```
+
+Back up that mounted node home after shutdown. Keep these variables set for the Compose commands below. If you use plain Docker or another orchestrator, stop the existing node container through that deployment and preserve its mounts and settings.
 
 <Warning>
 **Validators:** After the node has fully stopped, separately back up `~/.injectived/data/priv_validator_state.json` outside the data directory. Preserve this exact signing state through rollback or snapshot recovery and restore it before restarting. For a remote signer, preserve its signing state using your existing signer procedure. Never reset signing state or run two instances with the same validator key.
@@ -104,6 +122,15 @@ This one-block rollback followed by the binary upgrade was tested during the inc
 - **Cosmovisor:** Run rollback using the existing `$DAEMON_HOME/cosmovisor/current/bin/injectived`, with `--home` pointing to that node's home directory.
 - **Containers:** Run the rollback as a one-off command using the **old image**, the same data volume, node home, and user permissions. Keep the normal node container stopped throughout.
 
+For Docker Compose, leave the service's `image` set to the exact old image used by the affected node until rollback succeeds. Run this **instead of** the host rollback command above, after completing the backup:
+
+```bash
+docker compose run --rm --no-deps --pull never --entrypoint injectived \
+  "$node_service" rollback --hard -n 1 --home "$container_node_home"
+```
+
+This reuses the service's configured mounts, environment, and user. The example assumes `injectived` is available directly in the image; preserve any required initialization if your deployment uses a custom wrapper.
+
 Wait for rollback to finish successfully before replacing the binary. The incident recovery instructions estimate roughly 10 seconds to one minute; large or archival databases can take substantially longer. Do not repeatedly roll back additional blocks if the command fails or the mismatch persists. Keep the node stopped and contact support with its version, height, and logs.
 
 If rollback is unavailable or fails, obtain a suitable snapshot through the [Chain Portal](https://chain.injective.network/snapshots) or your Injective support contact. A snapshot from before block **186,223,485** can be replayed with the patched binary. Preserve your validator signing state and follow the [snapshot recovery procedure](/infra/coordinated-upgrades#recovering-from-a-snapshot).
@@ -115,6 +142,13 @@ Once any required rollback has completed:
 - **Binary deployments:** Replace the `injectived` executable used by your service with the one from the verified archive. Install the bundled `libwasmvm` library in the library location used by your deployment, and preserve the service's ownership and permissions.
 - **Cosmovisor:** Replace `injectived` in `$DAEMON_HOME/cosmovisor/current/bin` and place the bundled library where your service loads it. There is no upgrade handler for this patch, so placing it in a new `upgrades` directory will not activate it automatically.
 - **Containers:** Update the existing deployment to `injectivelabs/injective-core:v1.20.4-bl.2`, retaining its data volume, configuration, user, and startup flags.
+
+For Docker Compose, change only the node service's `image` value (or the environment variable supplying it) to `injectivelabs/injective-core:v1.20.4-bl.2`. Pull and verify the configured image while the node remains stopped:
+
+```bash
+docker compose pull "$node_service"
+docker compose run --rm --no-deps --entrypoint injectived "$node_service" version
+```
 
 Before starting, run `version` against the exact executable or image your service will use and confirm:
 
@@ -137,6 +171,16 @@ If the key already exists, update it without duplicating the key or removing any
 ## 5. Restart and verify
 
 Validators must restore and verify the signing-state backup taken after stopping the node before restarting. Start the node through your existing service manager or container deployment.
+
+For Docker Compose, recreate the service with the new image, then verify the binary inside the running container and inspect its logs:
+
+```bash
+docker compose up -d --no-deps "$node_service"
+docker compose exec "$node_service" injectived version
+docker compose logs --tail 100 "$node_service"
+```
+
+Use `up` to apply the image change; restarting the old container alone does not replace its image. For plain Docker or another orchestrator, recreate the stopped node container from the patched image using its existing mounts, ports, environment, user, and startup arguments. Keep only one instance using the node's data and validator key.
 
 Check your logs for successful startup and confirm that the AppHash mismatch no longer appears. Query your node's local RPC endpoint (adjust the address if needed):
 
