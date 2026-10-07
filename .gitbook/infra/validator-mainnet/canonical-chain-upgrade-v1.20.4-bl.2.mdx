@@ -1,0 +1,159 @@
+---
+title: Emergency upgrade to v1.20.4-bl.2
+description: Upgrade and AppHash recovery instructions for Injective mainnet validators, exchanges, and node operators.
+updatedAt: "2026-10-07"
+---
+
+<Warning>
+**Why this emergency upgrade happened**
+
+BitGet, an exchange unrelated to Injective, reported a compromise and requested assistance recovering its funds, some of which may have interacted with Injective alongside other major chains. This patch introduced an on-chain blocklist to prevent an attacker from moving **BitGet's affected funds**. It was a **one-time emergency intervention to assist BitGet's fund recovery and support the wider ecosystem**. Initial distribution and coordination focused on validators, with public communication limited to avoid alerting the attacker before containment was in place.
+
+We recognize that exchanges and other node operators did not receive sufficient advance notice or clear instructions that they also needed to upgrade. We apologize for the resulting disruption. This exceptional response does not replace the normal coordinated upgrade process.
+
+On October 7, a transaction involving a blocked address exposed the difference between patched and unpatched nodes. Unpatched nodes encountered an AppHash mismatch while the network continued producing blocks. **All mainnet nodes must run the patch, including sentries, RPC nodes, and exchange infrastructure.**
+</Warning>
+
+## Summary
+
+`v1.20.4-bl.2` is an emergency patch on the `v1.20.4` release line for **Injective mainnet (`injective-1`)**. Its consensus blocklist activated at block **184,950,000**, which has already passed. Upgrade now; there is no scheduled chain halt, governance upgrade handler, or state migration for this patch. Do not wait for a halt or set a new `--halt-height`.
+
+| Node status | Required action |
+| --- | --- |
+| Running an unpatched binary and stopped with the October 7 AppHash mismatch | Stop the node, back up its state, roll back one block **using the existing binary**, then install the patch and restart. |
+| Running an unpatched binary without the mismatch | Stop the node, back up its state, install the patch, and restart. Skip rollback. |
+| Already running `v1.20.4-bl.2` and syncing normally | No rollback or reinstall is needed. Check that every sentry, RPC, and other node you operate is also patched. |
+
+This applies to validators, sentries, full nodes, public and private RPC/broadcast nodes, and nodes serving exchanges, explorers, and other integrations.
+
+## 1. Download and verify the release
+
+The [official release manifest](https://storage.googleapis.com/injective-chain-releases/status.json) lists the hosted binaries. Download the archive for your platform:
+
+| Platform | Download |
+| --- | --- |
+| Linux AMD64 | [injective-v1.20.4-bl.2-linux-amd64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/injective-v1.20.4-bl.2-linux-amd64.zip) |
+| macOS Apple Silicon | [injective-v1.20.4-bl.2-darwin-arm64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/injective-v1.20.4-bl.2-darwin-arm64.zip) |
+| SHA-256 checksums | [SHA256SUMS.zip.txt](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/SHA256SUMS.zip.txt) |
+
+For Linux AMD64, download into a staging directory without replacing your running binary:
+
+```bash
+mkdir -p ~/injective-v1.20.4-bl.2
+cd ~/injective-v1.20.4-bl.2
+curl -fLO https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/injective-v1.20.4-bl.2-linux-amd64.zip
+echo '81f49009d1652fe8688bf6662c6d4d42ad65d7039207fd77ec2a161050973df2  injective-v1.20.4-bl.2-linux-amd64.zip' | sha256sum -c -
+```
+
+Continue only if the checksum reports `OK`. Then extract the archive:
+
+```bash
+unzip injective-v1.20.4-bl.2-linux-amd64.zip
+```
+
+For macOS, use `shasum -a 256` and compare the archive against the corresponding entry in the checksum file.
+
+### Docker
+
+Use the following image in your existing deployment:
+
+```text
+injectivelabs/injective-core:v1.20.4-bl.2
+```
+
+You can verify the image's binary without mounting your node data:
+
+```bash
+docker run --rm injectivelabs/injective-core:v1.20.4-bl.2 injectived version
+```
+
+Expected version and commit:
+
+```text
+Version v1.20.4-bl.2 (1ffa252)
+```
+
+## 2. Stop the node and back up its state
+
+Stop the node through your existing service manager or container deployment. Stop its supervisor as well so it cannot automatically restart during recovery. Confirm that no `injectived` process is accessing the node's data directory.
+
+Back up your node configuration, keys, and data before proceeding. Keep the existing binary available until any required rollback is complete. The commands below assume the default home directory, `~/.injectived`; use your configured `--home` path if different.
+
+<Warning>
+**Validators:** After the node has fully stopped, separately back up `~/.injectived/data/priv_validator_state.json` outside the data directory. Preserve this exact signing state through rollback or snapshot recovery and restore it before restarting. For a remote signer, preserve its signing state using your existing signer procedure. Never reset signing state or run two instances with the same validator key.
+</Warning>
+
+## 3. Recover an affected node, if needed
+
+Only perform this step if your node encountered the October 7 AppHash mismatch. A reported error was:
+
+```text
+panic: Precommit step; +2/3 prevoted for an invalid block: wrong Block.Header.AppHash.
+```
+
+For archival nodes or nodes with large databases, contact support to confirm a recovery approach before attempting rollback; restoring a suitable snapshot may be preferable.
+
+With the node stopped, **use the same binary version that was running when the mismatch occurred**, before installing the patch:
+
+```bash
+injectived rollback --hard -n 1 --home ~/.injectived
+```
+
+This one-block rollback followed by the binary upgrade was tested during the incident. Use the actual executable from your service configuration, not a different `injectived` on your shell's `PATH`.
+
+- **Cosmovisor:** Run rollback using the existing `$DAEMON_HOME/cosmovisor/current/bin/injectived`, with `--home` pointing to that node's home directory.
+- **Containers:** Run the rollback as a one-off command using the **old image**, the same data volume, node home, and user permissions. Keep the normal node container stopped throughout.
+
+Wait for rollback to finish successfully before replacing the binary. The incident recovery instructions estimate roughly 10 seconds to one minute; large or archival databases can take substantially longer. Do not repeatedly roll back additional blocks if the command fails or the mismatch persists. Keep the node stopped and contact support with its version, height, and logs.
+
+If rollback is unavailable or fails, obtain a suitable snapshot through the [Chain Portal](https://chain.injective.network/snapshots) or your Injective support contact. A snapshot from before block **186,223,485** can be replayed with the patched binary. Preserve your validator signing state and follow the [snapshot recovery procedure](/infra/coordinated-upgrades#recovering-from-a-snapshot).
+
+## 4. Install the patch
+
+Once any required rollback has completed:
+
+- **Binary deployments:** Replace the `injectived` executable used by your service with the one from the verified archive. Install the bundled `libwasmvm` library in the library location used by your deployment, and preserve the service's ownership and permissions.
+- **Cosmovisor:** Replace `injectived` in `$DAEMON_HOME/cosmovisor/current/bin` and place the bundled library where your service loads it. There is no upgrade handler for this patch, so placing it in a new `upgrades` directory will not activate it automatically.
+- **Containers:** Update the existing deployment to `injectivelabs/injective-core:v1.20.4-bl.2`, retaining its data volume, configuration, user, and startup flags.
+
+Before starting, run `version` against the exact executable or image your service will use and confirm:
+
+```text
+Version v1.20.4-bl.2 (1ffa252)
+```
+
+### Optional: local mempool blocklist
+
+The consensus blocklist is built into the patched binary and requires no configuration. The following `app.toml` entry adds local transaction-admission filtering and is **optional**; it is not a substitute for upgrading the binary.
+
+If you enable it, add this entry at the **top level** of `~/.injectived/config/app.toml`, before any TOML section headers such as `[api]`:
+
+```toml
+mempool-blocked-signers = ["inj134wrp6mctpq4czhw6rghekt3js3ac7c4s8ya3d"]
+```
+
+If the key already exists, update it without duplicating the key or removing any other configured addresses. Invalid addresses prevent the node from starting.
+
+## 5. Restart and verify
+
+Validators must restore and verify the signing-state backup taken after stopping the node before restarting. Start the node through your existing service manager or container deployment.
+
+Check your logs for successful startup and confirm that the AppHash mismatch no longer appears. Query your node's local RPC endpoint (adjust the address if needed):
+
+```bash
+curl -fsS http://localhost:26657/status \
+  | jq '.result | {network: .node_info.network, latest_block_height: .sync_info.latest_block_height, catching_up: .sync_info.catching_up}'
+```
+
+Confirm that:
+
+- The network is `injective-1`.
+- The block height advances across successive checks and catches up to the network.
+- `catching_up` becomes `false` once synchronization completes.
+- Validators resume signing, and exchange/RPC operators verify their downstream services receive current blocks.
+
+Repeat the upgrade for every node you operate, including sentries and RPC nodes that do not participate in validation.
+
+## Support
+
+If recovery fails, keep the node stopped and share the binary version, last processed height, database backend, and relevant error logs with your existing Injective coordination contact or the team on [Discord](https://discord.gg/injective). Do not share private keys or signer credentials.
