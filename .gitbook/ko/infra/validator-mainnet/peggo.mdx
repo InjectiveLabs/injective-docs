@@ -63,7 +63,10 @@ PEGGO_STATSD_DISABLED=true
 ```
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-**중요 참고:** 자체 `injectived`(Injective 노드)와 `geth`(Ethereum 노드) 프로세스를 실행하는 경우, 최신 상태와 동기화되어 있는지 확인하세요. 오래된 노드는 `peggo`의 비즈니스 로직을 왜곡하여 때때로 "거짓 경보" 로그를 표시할 수 있습니다.
+  **중요 참고:** 자체 `injectived`(Injective 노드)와 `geth`(Ethereum 노드)
+  프로세스를 실행하는 경우, 최신 상태와 동기화되어 있는지 확인하세요. 오래된
+  노드는 `peggo`의 비즈니스 로직을 왜곡하여 때때로 "거짓 경보" 로그를 표시할 수
+  있습니다.
 </Callout>
 
 ## Step 1: .env 구성
@@ -141,10 +144,12 @@ orchestrator와 ethereum 주소는 한 번만 등록할 수 있습니다. 나중
 injectived tx peggy set-orchestrator-address $VALIDATOR_INJ_ADDRESS $ORCHESTRATOR_INJ_ADDRESS $ETHEREUM_ADDRESS --from $VALIDATOR_KEY_NAME --chain-id=injective-1 --keyring-backend=file --yes --node=tcp://localhost:26657 --gas-prices=500000000inj
 ```
 
-https://lcd.injective.network/peggy/v1/valset/current 에서 성공적인 등록을 확인할 수 있습니다.
+https://sentry.lcd.injective.network/peggy/v1/valset/current 에서 성공적인 등록을 확인할 수 있습니다.
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-**참고:** `set-orchestrator-address` 메시지로 Orchestrator를 등록한 후에는 다시 등록**할 수 없습니다**. 이 단계가 완료되면 `검증자`는 제공된 Ethereum 주소에 바인딩됩니다.
+  **참고:** `set-orchestrator-address` 메시지로 Orchestrator를 등록한 후에는
+  다시 등록**할 수 없습니다**. 이 단계가 완료되면 `검증자`는 제공된 Ethereum
+  주소에 바인딩됩니다.
 </Callout>
 
 ### Step 3: Relayer 시작
@@ -183,7 +188,7 @@ journalctl -f -u peggo
 ### Step 5: (선택사항) 무단 액세스로부터 Cosmos Keyring 보호
 
 <Callout icon="info" color="#07C1FF" iconType="regular">
-이것은 고급 DevOps 주제입니다. 시스템 관리자와 상담하세요.
+  이것은 고급 DevOps 주제입니다. 시스템 관리자와 상담하세요.
 </Callout>
 
 Cosmos Keyring 설정에 대해 [여기](https://docs.cosmos.network/v0.46/run-node/keyring.html)에서 자세히 알아보세요.

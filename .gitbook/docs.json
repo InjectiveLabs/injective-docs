@@ -146,6 +146,7 @@
                           "infra/upgrade-node",
                           "infra/coordinated-upgrades/index",
                           "infra/validator-mainnet/canonical-chain-upgrade",
+                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.2",
                           "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4",
                           {
                             "group": "Historical Upgrades",

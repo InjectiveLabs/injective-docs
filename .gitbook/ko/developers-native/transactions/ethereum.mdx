@@ -12,19 +12,13 @@ Injective의 모든 트랜잭션은 동일한 흐름을 따릅니다. 이 흐름
 특정 메시지의 proto 파일에서 직접 EIP712 TypedData를 가져올 수 있는 메시지에 대한 우리의 커스텀 추상화를 사용합니다.
 
 ```ts
-import {
-  MsgSend,
-} from "@injectivelabs/sdk-ts/core/modules";
-import {
-  BaseAccount,
-} from "@injectivelabs/sdk-ts/core/accounts";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
 import {
   ChainRestAuthApi,
   ChainRestTendermintApi,
 } from "@injectivelabs/sdk-ts/client/chain";
-import {
-  getEip712TypedDataV2,
-} from "@injectivelabs/sdk-ts/core/tx";
+import { getEip712TypedDataV2 } from "@injectivelabs/sdk-ts/core/tx";
 import {
   toBigNumber,
   toChainFormat,
@@ -37,7 +31,7 @@ const injectiveAddress = "inj1";
 const chainId = ChainId.Mainnet;
 const evmChainId = EvmChainId.Mainnet;
 const restEndpoint =
-  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+  "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
 const amount = {
   denom: "inj",
   amount: toChainFormat(0.01).toFixed(),
@@ -45,9 +39,8 @@ const amount = {
 
 /** 계정 세부 정보 **/
 const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
-const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
-  injectiveAddress
-);
+const accountDetailsResponse =
+  await chainRestAuthApi.fetchAccount(injectiveAddress);
 const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
 const accountDetails = baseAccount.toAccountDetails();
 
@@ -56,7 +49,7 @@ const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
 const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
 const latestHeight = latestBlock.header.height;
 const timeoutHeight = toBigNumber(latestHeight).plus(
-  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 );
 
 /** 트랜잭션 준비 */
@@ -137,7 +130,7 @@ txRawEip712.signatures = [signatureBuff /* 이전 단계에서 */];
 
 /** 트랜잭션 브로드캐스트 */
 const restEndpoint =
-  "https://lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
+  "https://sentry.lcd.injective.network"; /* getNetworkEndpoints(Network.Mainnet).rest */
 const txRestApi = new TxRestApi(restEndpoint);
 
 const txHash = await txRestApi.broadcast(txRawEip712);
@@ -158,12 +151,8 @@ const response = await txRestApi.fetchTxPoll(txHash);
 전체 흐름을 살펴보겠습니다 (Metamask를 서명 지갑으로 사용)
 
 ```ts
-import {
-  MsgSend,
-} from "@injectivelabs/sdk-ts/core/modules";
-import {
-  BaseAccount,
-} from "@injectivelabs/sdk-ts/core/accounts";
+import { MsgSend } from "@injectivelabs/sdk-ts/core/modules";
+import { BaseAccount } from "@injectivelabs/sdk-ts/core/accounts";
 import {
   TxRestApi,
   SIGN_AMINO,
@@ -178,9 +167,7 @@ import {
   ChainRestAuthApi,
   ChainRestTendermintApi,
 } from "@injectivelabs/sdk-ts/client/chain";
-import {
-  getEthereumAddress,
-} from "@injectivelabs/sdk-ts/utils";
+import { getEthereumAddress } from "@injectivelabs/sdk-ts/utils";
 import {
   toBigNumber,
   toChainFormat,
@@ -202,9 +189,8 @@ const amount = {
 
 /** 계정 세부 정보 **/
 const chainRestAuthApi = new ChainRestAuthApi(restEndpoint);
-const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
-  injectiveAddress
-);
+const accountDetailsResponse =
+  await chainRestAuthApi.fetchAccount(injectiveAddress);
 const baseAccount = BaseAccount.fromRestApi(accountDetailsResponse);
 const accountDetails = baseAccount.toAccountDetails();
 
@@ -213,7 +199,7 @@ const chainRestTendermintApi = new ChainRestTendermintApi(restEndpoint);
 const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
 const latestHeight = latestBlock.header.height;
 const timeoutHeight = toBigNumber(latestHeight).plus(
-  DEFAULT_BLOCK_TIMEOUT_HEIGHT
+  DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 );
 
 /** 트랜잭션 준비 */
