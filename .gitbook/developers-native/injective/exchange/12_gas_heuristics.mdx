@@ -1,7 +1,7 @@
 ---
 sidebar_position: 13
 title: Gas Heuristics
-updatedAt: "2026-10-06"
+updatedAt: "2026-10-09"
 ---
 
 <Callout icon="info" color="#22C55E" iconType="regular">
@@ -51,8 +51,7 @@ apply to market orders or cancellations.
 
 **Batch Msg types**
 
-Gas for batch message types varies based on the content of the message itself. Additionally, `ante_gas` scales with the
-number of orders (noticeably around 3000 added gas, included in this formula).
+Gas for batch message types varies depending on the message content. Additionally, `ante_gas` scales with the number of orders (it's estimated that 3000 gas provides for sufficient ante handler headroom).
 
 `N` is the number of orders.
 
@@ -69,9 +68,9 @@ type MsgBatchUpdateOrders struct {
     Sender string
 
     SubaccountId                      string             // used only with cancel all, see the note below
-    SpotMarketIdsToCancelAll          []string           // total orders across the listed markets x 65_000
-    DerivativeMarketIdsToCancelAll    []string           // total orders across the listed markets x 80_000
-    BinaryOptionsMarketIdsToCancelAll []string           // total orders across the listed markets x 80_000
+    SpotMarketIdsToCancelAll          []string           // total orders across the listed markets x 65_000 + 3000 per market ID
+    DerivativeMarketIdsToCancelAll    []string           // total orders across the listed markets x 80_000 + 3000 per market ID
+    BinaryOptionsMarketIdsToCancelAll []string           // total orders across the listed markets x 80_000 + 3000 per market ID
 
     SpotOrdersToCancel                []*OrderData       // N x  65_000 + N x 3000
     DerivativeOrdersToCancel          []*OrderData       // N x  80_000 + N x 3000
@@ -79,11 +78,13 @@ type MsgBatchUpdateOrders struct {
     SpotOrdersToCreate                []*SpotOrder       // N x 180_000 (210_000 if post-only) + N x 3000
     DerivativeOrdersToCreate          []*DerivativeOrder // N x 210_000 (250_000 if post-only) + N x 3000
     BinaryOptionsOrdersToCreate       []*DerivativeOrder // N x 210_000 (250_000 if post-only) + N x 3000
+
+    SpotMarketOrdersToCreate          []*SpotOrder       // N x 180_000 + N x 3000
+    DerivativeMarketOrdersToCreate    []*DerivativeOrder // N x 190_000 + N x 3000
+    BinaryOptionsMarketOrdersToCreate []*DerivativeOrder // N x 190_000 + N x 3000
 }
 ```
-
-For cancel all, gas is charged per order found in each listed market. Sum the order counts across markets rather
-than multiplying by an average.
+For cancel all, gas is charged per order found in each listed market. Sum the order counts across markets rather than multiplying by an average. Additionally, the batch-create formulas above are for normal orders, as post-only and GTB orders are priced individually.
 
 For example, let's suppose you want to:
 
@@ -100,6 +101,7 @@ The resulting gas would be computed as such:
                 + 2 x 210_000 + 2 x 3000  // create 2x derivative
                 + 250_000 + 3000          // create 1x post-only binary options
                 + 4 x  65_000             // cancel all 4x spot orders
+                + 2 x   3000              // two cancel all market IDs
 ```
 
-which ends up being `1_263_000` gas.
+which ends up resulting in a total of `1_269_000` gas.
