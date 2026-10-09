@@ -965,6 +965,7 @@
                           "cn/infra/validator-mainnet/index",
                           "cn/infra/validator-mainnet/peggo",
                           "cn/infra/validator-mainnet/canonical-chain-upgrade",
+                          "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.2",
                           "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.3",
                           "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.1",
                           "cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.0",
@@ -1077,6 +1078,7 @@
                       "cn/developers-evm/bank-precompile",
                       "cn/developers-evm/exchange-precompile",
                       "cn/developers-evm/oracle-precompile",
+                      "cn/developers-evm/swap-precompile",
                       "cn/developers-evm/erc20-module",
                       "cn/developers-evm/infrastructure-and-tooling",
                       "cn/developers-evm/evm-gateway",
@@ -1366,6 +1368,7 @@
                 "group": "INJECTIVE",
                 "pages": [
                   "ko/index",
+                  "ko/add-network-to-wallet",
                   {
                     "group": "DeFi",
                     "icon": "coins",
@@ -1466,7 +1469,8 @@
                         "pages": [
                           "ko/infra/validator-mainnet/index",
                           "ko/infra/validator-mainnet/peggo",
-                          "ko/infra/validator-mainnet/canonical-chain-upgrade"
+                          "ko/infra/validator-mainnet/canonical-chain-upgrade",
+                          "ko/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.2"
                         ]
                       },
                       {
@@ -1572,6 +1576,7 @@
                       "ko/developers-evm/bank-precompile",
                       "ko/developers-evm/exchange-precompile",
                       "ko/developers-evm/oracle-precompile",
+                      "ko/developers-evm/swap-precompile",
                       "ko/developers-evm/erc20-module",
                       "ko/developers-evm/infrastructure-and-tooling",
                       "ko/developers-evm/add-injective-to-your-dapp",
@@ -2029,6 +2034,7 @@
                 "group": "INJECTIVE",
                 "pages": [
                   "jp/index",
+                  "jp/add-network-to-wallet",
                   {
                     "group": "DeFi",
                     "icon": "coins",
@@ -2118,6 +2124,7 @@
                       "jp/infra/join-a-network",
                       "jp/infra/cosmovisor",
                       "jp/infra/upgrade-node",
+                      "jp/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.2",
                       {
                         "group": "協調アップグレード",
                         "pages": [
@@ -2228,7 +2235,8 @@
                         "pages": [
                           "jp/developers-evm/precompiles",
                           "jp/developers-evm/bank-precompile",
-                          "jp/developers-evm/exchange-precompile"
+                          "jp/developers-evm/exchange-precompile",
+                          "jp/developers-evm/swap-precompile"
                         ]
                       },
                       "jp/developers-evm/evm-integrations-cheat-sheet",
