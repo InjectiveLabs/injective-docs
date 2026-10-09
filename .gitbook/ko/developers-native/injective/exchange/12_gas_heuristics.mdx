@@ -1,7 +1,7 @@
 ---
 sidebar_position: 13
 title: Gas Heuristics
-updatedAt: "2026-03-07"
+updatedAt: "2026-10-09"
 ---
 
 이 문서는 특정 Exchange 메시지에 대한 권장 `gasWanted` 값을 포함합니다. 값은 단일 Msg 유형을 포함하는 트랜잭션에 대한 MsgServer 실행 중 가스 소비를 관찰하여 경험적으로 얻어졌습니다. 개념적으로 모든 트랜잭션에 다음 공식이 적용됩니다:
@@ -14,73 +14,84 @@ updatedAt: "2026-03-07"
 
 Exchange params에서 `fixed_gas_enabled`가 `true`로 설정된 경우, 다음 값을 `gasWanted`로 사용하여 트랜잭션이 가스 부족으로 실패하지 않도록 할 수 있습니다:
 
-> **참고**: 트랜잭션이 단일 메시지를 포함한다고 가정합니다.
+> **참고**: 값은 트랜잭션에 단일 메시지가 포함된 경우를 가정합니다. 권장 `gasWanted`는 고정 메시지 가스에 120,000 ante 허용량을 더한 값입니다.
 
-| Message Type                                    | Gas Wanted                   |
-|-------------------------------------------------|------------------------------|
-| MsgCreateDerivativeLimitOrder                   | 240,000 (post-only: 260,000) |
-| MsgCreateDerivativeMarketOrder                  | 235,000                      |
-| MsgCancelDerivativeOrder                        | 190,000                      |
-| MsgCreateSpotLimitOrder                         | 220,000 (post-only: 240,000) |
-| MsgCreateSpotMarketOrder                        | 170,000                      |
-| MsgCancelSpotOrder                              | 185,000                      |
-| MsgCreateBinaryOptionsLimitOrder                | 240,000 (post-only: 260,000) |
-| MsgCreateBinaryOptionsMarketOrder               | 225,000                      |
-| MsgCancelBinaryOptionsOrder                     | 190,000                      |
-| MsgDeposit                                      | 158,000                      |
-| MsgWithdraw                                     | 155,000                      |
-| MsgSubaccountTransfer                           | 135,000                      |
-| MsgExternalTransfer                             | 160,000                      |
-| MsgIncreasePositionMargin                       | 171,000                      |
-| MsgDecreasePositionMargin                       | 180,000                      |
+| Message Type                                 | 고정 Msg 가스 | 권장 gasWanted |
+|----------------------------------------------|--------------:|--------------------:|
+| MsgCreateDerivativeLimitOrder                |       210,000 |             330,000 |
+| MsgCreateDerivativeLimitOrder (post-only)    |       250,000 |             370,000 |
+| MsgCreateDerivativeMarketOrder               |       190,000 |             310,000 |
+| MsgCancelDerivativeOrder                     |        80,000 |             200,000 |
+| MsgCreateSpotLimitOrder                      |       180,000 |             300,000 |
+| MsgCreateSpotLimitOrder (post-only)          |       210,000 |             330,000 |
+| MsgCreateSpotMarketOrder                     |       180,000 |             300,000 |
+| MsgCancelSpotOrder                           |        65,000 |             185,000 |
+| MsgCreateBinaryOptionsLimitOrder             |       210,000 |             330,000 |
+| MsgCreateBinaryOptionsLimitOrder (post-only) |       250,000 |             370,000 |
+| MsgCreateBinaryOptionsMarketOrder            |       190,000 |             310,000 |
+| MsgCancelBinaryOptionsOrder                  |        80,000 |             200,000 |
+| MsgDeposit                                   |       210,000 |             330,000 |
+| MsgWithdraw                                  |       200,000 |             320,000 |
+| MsgSubaccountTransfer                        |       100,000 |             220,000 |
+| MsgExternalTransfer                          |       180,000 |             300,000 |
+| MsgIncreasePositionMargin                    |        65,000 |             185,000 |
+| MsgDecreasePositionMargin                    |        80,000 |             200,000 |
 
-해당 order가 GTB (Good-Till-Block) order인 경우, 위 값의 10%에 해당하는 가스 양을 추가해야 합니다.
+GTB (Good Till Block) limit order의 경우, 고정 메시지 가스에 `1.1`(`GTBOrdersGasMultiplier`)을 곱한 다음 ante 허용량을 더합니다. 이 배수는 post-only 변형을 포함하여 고정 메시지 가스에만 적용됩니다. market orders나 취소에는 적용되지 않습니다.
 
 **Batch Msg 유형**
 
-Batch 메시지 유형의 가스는 메시지 자체의 내용에 따라 달라집니다. 또한 `ante_gas`는 orders 수에 따라 확장됩니다 (이 공식에 포함된 약 3000 추가 가스로 눈에 띄게):
+Batch 메시지 유형의 가스는 메시지 내용에 따라 달라집니다. 또한 `ante_gas`는 orders 수에 따라 증가합니다 (3000 가스면 ante handler 여유분으로 충분한 것으로 추정됩니다).
 
-`N` - orders 수
+`N`은 orders 수입니다.
 
-- `MsgBatchCreateSpotLimitOrders`:           `tx_gas = 120_000 + N x 103_000` (예: 3개 orders의 경우 `329_000`)
-- `MsgBatchCancelSpotOrders`:                `tx_gas = 120_000 + N x 68_000`
-- `MsgBatchCreateDerivativeLimitOrders`:     `tx_gas = 120_000 + N x 123_000` 
-- `MsgBatchCancelDerivativeOrders`:          `tx_gas = 120_000 + N x 73_000` 
-- `MsgBatchCancelBinaryOptionsOrders`:       `tx_gas = 120_000 + N x 123_000`
+- `MsgBatchCreateSpotLimitOrders`:        `tx_gas = 120_000 + N x 183_000` (3개 orders의 경우 결과는 `669_000`)
+- `MsgBatchCancelSpotOrders`:             `tx_gas = 120_000 + N x  68_000`
+- `MsgBatchCreateDerivativeLimitOrders`:  `tx_gas = 120_000 + N x 213_000`
+- `MsgBatchCancelDerivativeOrders`:       `tx_gas = 120_000 + N x  83_000`
+- `MsgBatchCancelBinaryOptionsOrders`:    `tx_gas = 120_000 + N x  83_000`
 
 ***MsgBatchUpdateOrders***
 
 ```go
 type MsgBatchUpdateOrders struct {
-	Sender string
-	
-	SubaccountId                      string             // cancel-all과 함께만 사용 ((M - markets 수, N - market의 orders 수) 
-	SpotMarketIdsToCancelAll          []string           // M x N x 65_000 
-	DerivativeMarketIdsToCancelAll    []string           // M x N x 70_000
-	BinaryOptionsMarketIdsToCancelAll []string           // M x N x 70_000
-	
-	SpotOrdersToCancel                []*OrderData       // N x 65_000 + N x 3000
-	DerivativeOrdersToCancel          []*OrderData       // N x 70_000 + N x 3000
-    BinaryOptionsOrdersToCancel       []*OrderData       // N x 70_000 + N x 3000
-    SpotOrdersToCreate                []*SpotOrder       // N x 100_000 (post-only인 경우 120_000) + N x 3000
-    DerivativeOrdersToCreate          []*DerivativeOrder // N x 120_000 (post-only인 경우 140_000) + N x 3000
-	BinaryOptionsOrdersToCreate       []*DerivativeOrder // N x 120_000 (post-only인 경우 140_000) + N x 3000
+    Sender string
+
+    SubaccountId                      string             // cancel all과 함께만 사용, 아래 참고 내용 참조
+    SpotMarketIdsToCancelAll          []string           // 나열된 markets 전체의 총 orders 수 x 65_000 + market ID당 3000
+    DerivativeMarketIdsToCancelAll    []string           // 나열된 markets 전체의 총 orders 수 x 80_000 + market ID당 3000
+    BinaryOptionsMarketIdsToCancelAll []string           // 나열된 markets 전체의 총 orders 수 x 80_000 + market ID당 3000
+
+    SpotOrdersToCancel                []*OrderData       // N x  65_000 + N x 3000
+    DerivativeOrdersToCancel          []*OrderData       // N x  80_000 + N x 3000
+    BinaryOptionsOrdersToCancel       []*OrderData       // N x  80_000 + N x 3000
+    SpotOrdersToCreate                []*SpotOrder       // N x 180_000 (post-only인 경우 210_000) + N x 3000
+    DerivativeOrdersToCreate          []*DerivativeOrder // N x 210_000 (post-only인 경우 250_000) + N x 3000
+    BinaryOptionsOrdersToCreate       []*DerivativeOrder // N x 210_000 (post-only인 경우 250_000) + N x 3000
+
+    SpotMarketOrdersToCreate          []*SpotOrder       // N x 180_000 + N x 3000
+    DerivativeMarketOrdersToCreate    []*DerivativeOrder // N x 190_000 + N x 3000
+    BinaryOptionsMarketOrdersToCreate []*DerivativeOrder // N x 190_000 + N x 3000
 }
 ```
+cancel all의 경우, 가스는 나열된 각 market에서 발견된 order마다 부과됩니다. 평균값을 곱하지 말고 markets 전체의 order 수를 합산하세요. 또한 위의 batch 생성 공식은 일반 orders 기준이며, post-only 및 GTB orders는 개별적으로 가격이 책정됩니다.
 
 예를 들어, 다음을 원한다고 가정해 봅시다:
 
 - Market A에서 3개 spot orders 취소
 - Market B에서 2개 derivative orders 생성
-- Market C에서 1개 binary-options post-only order 생성
+- Market C에서 1개 binary options post-only order 생성
 - Spot markets X와 Y의 모든 orders 취소 (X에 2개 orders, Y에 2개 orders)
 
 결과 가스는 다음과 같이 계산됩니다:
+
 ```
-    total_gas = 3 x 100_000 + 3 x 3000  // 3x spot 취소
-                + 2 x 120_000 + 2 x 3000 // 2x derv 생성
-                + 140_000 // 1x post-only bo 생성
-                + 4 x 65_000 // 4x spot orders 모두 취소
+    total_gas = 120_000                   // ante_gas 기본값
+                + 3 x  65_000 + 3 x 3000  // 3x spot 취소
+                + 2 x 210_000 + 2 x 3000  // 2x derivative 생성
+                + 250_000 + 3000          // 1x post-only binary options 생성
+                + 4 x  65_000             // 4x spot orders 모두 취소
+                + 2 x   3000              // cancel all market ID 2개
 ```
 
-결과는 `955_000` gas입니다.
+결과적으로 총 `1_269_000` gas가 됩니다.
