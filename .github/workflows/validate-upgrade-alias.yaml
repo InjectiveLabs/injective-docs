@@ -1,0 +1,39 @@
+name: Validate Latest Upgrade shortcut
+
+# The navbar's "Latest Upgrade" link points at the fixed path /upgrade/latest,
+# which docs.json redirects to whichever upgrade guide is currently featured.
+#
+# prepare-upgrade-doc.py keeps those in step for scheduled releases, but
+# emergency guides are added by hand — builds like v1.20.4-bl.2 have no
+# published injective-core release, so the drafting workflow never fires for
+# them. This job catches a hand-written PR that features a second guide at the
+# top level, or that promotes a guide without moving the alias.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".gitbook/docs.json"
+      - ".gitbook/infra/validator-mainnet/**"
+  pull_request:
+    paths:
+      - ".gitbook/docs.json"
+      - ".gitbook/infra/validator-mainnet/**"
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+
+jobs:
+  upgrade-alias:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # No dependencies — the script only reads docs.json and the docs tree.
+      - name: Check the Latest Upgrade shortcut resolves to the featured guide
+        run: node scripts/validate-upgrade-alias.mjs
