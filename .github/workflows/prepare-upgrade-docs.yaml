@@ -45,7 +45,7 @@ jobs:
           body: |
             ## New injective-core release detected
 
-            Release [`${{ steps.draft.outputs.tag }}`](${{ steps.draft.outputs.release_url }}) was cut and no upgrade doc existed for it, so this PR drafts `${{ steps.draft.outputs.doc_path }}` and features it in the docs navigation (the previous upgrade page moves to Historical Upgrades).
+            Release [`${{ steps.draft.outputs.tag }}`](${{ steps.draft.outputs.release_url }}) was cut and no upgrade doc existed for it, so this PR drafts `${{ steps.draft.outputs.doc_path }}` and features it in the docs navigation (the previous upgrade page moves to Historical Upgrades). The navbar's **Latest Upgrade** shortcut (`/upgrade/latest`) is repointed at the new page, so merging this makes it live.
 
             Auto-filled from the chain and GitHub:
             - Governance proposal: #${{ steps.draft.outputs.proposal_id }}
