@@ -9,6 +9,9 @@
 .docusaurus
 .cache-loader
 
+# Python (scripts/)
+__pycache__/
+
 # Webreels
 /.webreel
 /webreels/*.mp4
