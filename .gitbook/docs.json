@@ -147,10 +147,10 @@
                           "infra/coordinated-upgrades/index",
                           "infra/validator-mainnet/canonical-chain-upgrade",
                           "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.2",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4",
                           {
                             "group": "Historical Upgrades",
                             "pages": [
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.3-safeharbor.2",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.3",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.1",
@@ -3316,6 +3316,10 @@
     {
       "source": "/toolkits/injectived/advanced",
       "destination": "/developers/injectived/advanced"
+    },
+    {
+      "source": "/upgrade/latest",
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.2"
     }
   ],
   "navbar": {
@@ -3339,6 +3343,10 @@
       {
         "label": "Operator Portal",
         "href": "https://chain.injective.network"
+      },
+      {
+        "label": "Latest Upgrade",
+        "href": "/upgrade/latest"
       }
     ]
   }

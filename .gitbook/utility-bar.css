@@ -16,3 +16,12 @@ nav [data-active="true"],
 [data-component-name="tabs"] [data-active="true"] {
   background: transparent !important;
 }
+
+/* Latest Upgrade link in navbar - reads apart from utility links */
+nav a[href*="/upgrade/latest"] {
+  color: #0082FA !important;
+  font-weight: 600 !important;
+  background: #E6F2FF !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+}

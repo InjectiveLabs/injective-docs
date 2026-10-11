@@ -29,6 +29,8 @@ CORE_RELEASES = (
     "https://api.github.com/repos/InjectiveFoundation/injective-core/releases?per_page=30"
 )
 NAV_ANCHOR = "infra/validator-mainnet/canonical-chain-upgrade"
+# Fixed path behind the navbar's "Latest Upgrade" link; redirected to the featured guide
+LATEST_ALIAS = "/upgrade/latest"
 
 # Tags that are not mainnet canonical releases
 NON_STABLE = re.compile(r"-(rc|beta|alpha|dev)", re.IGNORECASE)
@@ -289,6 +291,17 @@ def update_nav(new_page):
 
     if new_page not in pages:
         pages.insert(pages.index(NAV_ANCHOR) + 1, new_page)
+
+    # Repoint the navbar's Latest Upgrade shortcut at the newly featured guide.
+    # scripts/validate-upgrade-alias.mjs fails CI if these ever drift apart.
+    redirects = docs.setdefault("redirects", [])
+    destination = "/" + new_page
+    for r in redirects:
+        if r.get("source") == LATEST_ALIAS:
+            r["destination"] = destination
+            break
+    else:
+        redirects.append({"source": LATEST_ALIAS, "destination": destination})
 
     with open(DOCS_JSON, "w") as f:
         json.dump(docs, f, indent=2, ensure_ascii=False)
