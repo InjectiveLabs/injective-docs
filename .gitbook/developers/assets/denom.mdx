@@ -1,17 +1,26 @@
 ---
 title: Denom
-updatedAt: "2025-11-27"
+updatedAt: "2026-10-12"
 ---
 
 A denom is how assets are represented within the Bank module of Injective. These assets can be used for trading, creating new markets on the exchange module, participating in auctions, transferring to another address, etc.
 
 Depending on the origin of the denom and how it was created on Injective we have different types of denoms:
 
-* **Native denoms** - there is only one denom of this type, the `inj` denom which represented the native coin of Injective,
-* **Peggy denoms** - these denoms represent assets bridged over from Ethereum to Injective using the Peggy bridge. They have the following format `peggy{ERC20_CONTRACT_ADDRESS}`
-* **IBC denoms** - these denoms represent assets bridged over from other Cosmos chains through IBC. They have the following format `ibc/{hash}`.
-* **Insurance Fund Denoms** - these denoms represent token shares of the insurance funds created on Injective. They have the following format `share{id}`
-* **Factory Denoms** - these denoms are a representation of a CW20 token from Cosmwasm on the Injective native bank module. They have the following format `factory/{OWNER}/{SUBDENOM}` where the `OWNER` is the owner who created the factory denom. One example is the CW20 token factory denom `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` where the `CW20_ADAPTER_CONTRACT` is the adapter contract address which does the conversion between CW20 and the native Bank module.
+* **Native denom** - `inj`, the native coin of Injective, which is also the EVM gas token.
+* **Factory denoms** - `factory/{creator}/{subdenom}`, created permissionlessly through [TokenFactory](/defi/tokens/token-factory).
+* **Peggy denoms** - `peggy0x{ERC20_CONTRACT_ADDRESS}`, bridged from Ethereum via the Peggy bridge.
+* **IBC denoms** - `ibc/{hash}`, bridged from another IBC chain.
+* **EVM denoms** - `erc20:0x{CONTRACT_ADDRESS}`, deployed directly on the Injective EVM against the [Bank precompile](/developers-evm/bank-precompile).
+* **Insurance fund denoms** - `share{id}`, token shares of an insurance fund.
+
+A CW20 asset is not a bank denom, since its balances live in contract storage. It can be represented as
+`factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` through the
+[CW20 adapter](/developers-cosmwasm/cw20-adapter), which is not recommended for new integrations.
+
+See [Token Standards](/defi/tokens/index) for the same taxonomy with links, and
+[MultiVM Token Standard](/developers-evm/multivm-token-standard) for how a single denom is reachable
+from both the native layer and the EVM.
 
 ## Token
 

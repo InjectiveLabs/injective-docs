@@ -29,7 +29,7 @@ This allows the same token to act as a fungible token not only on Injective's EV
 but also on Injective native (specifically as Cosmos Denoms).
 Should Injective add other VMs in the future, MTS tokens will also work on those.
 Read more about MTS:
-[General article](https://injective.com/blog/multivm-token-standard-wrapped-inj), and
+[Technical article](https://blog.injective.dev/one-token-one-balance-creating-and-bridging-under-injectives-multivm-token-standard/), and
 [technical reference](/developers-evm/multivm-token-standard).
 
 **Does Injective EVM Support EIP-1559?**
@@ -56,19 +56,23 @@ A: Injective's [EVM precompiles](/developers-evm/precompiles)
 access Injective native functions that are not available in generic EVMs.
 This means that if you use, for example Foundry and connect it to:
 
-- Injective EVM Testnet, it will work
-- `localhost` simulated EVM network, it will not work
+- Injective EVM Testnet or Mainnet, it will work
+- Foundry's in-memory EVM or a vanilla `anvil` node, precompile calls will fail
 
-To address the latter issue, we've forked the Foundry tools to support
-Injective precompiles (starting with Bank precompile needed for `BankERC20.sol` and MTS),
-if you are using Solidity tests or deployment scripts as a Foundry project,
-you will need this so `forge`/ `cast` can do local simulations.
+Two options cover local development:
 
-Latest releases, with pre-built binaries for x86_64 Linux and macOS ARM64,
-can be found at [github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases).
+- **Forked Foundry tools.** Injective maintains a fork of Foundry with precompile support
+  (starting with the Bank precompile needed for `BankERC20.sol` and MTS), so `forge` and `cast`
+  can run Solidity tests and deployment scripts against local simulations. Pre-built binaries
+  are published per release at
+  [github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases).
+- **Local Injective devnet.** [inj-examples](https://github.com/InjectiveLabs/inj-examples)
+  includes a dockerized local environment (see `templates/foundry` and `examples/precompiles`)
+  that runs a real `injectived` node with every precompile available at `localhost:8545`, plus
+  a local Blockscout explorer. This is the full chain environment, not a simulation.
 
 <Warning>
-In order to enable support for Injective precompiles on this forked version of Foundry, you must set `injective = true` inside config file `foundry.toml` or use an environment variable `FOUNDRY_INJECTIVE=true`.
+In order to enable support for Injective precompiles on the forked version of Foundry, you must set `injective = true` inside config file `foundry.toml` or use an environment variable `FOUNDRY_INJECTIVE=true`. This setting applies to the fork only, not to the dockerized devnet.
 </Warning>
 
 ## Which EVM development infrastructure is available on Injective?
