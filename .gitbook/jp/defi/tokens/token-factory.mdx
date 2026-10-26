@@ -1,11 +1,105 @@
 ---
 title: Token Factory
+description: >-
+    スマートコントラクトをデプロイすることなく、供給量、メタデータ、権限をオンチェーンの管理者権限で制御しながら、Injective上でネイティブトークンを作成・管理できます。
+updatedAt: "2026-10-12"
 ---
 
-TokenFactoryトークンは、Cosmos SDKのBankモジュールにネイティブに統合されたトークンです。名前は`factory/{creatorAddress}/{subdenom}`の形式を取ります。トークンは作成者アドレスで名前空間化されているため、名前の衝突を解決する必要がなく、パーミッションレスなトークン作成が可能です。
+TokenFactoryを使用すると、どのアカウントでもコントラクトを作成・デプロイすることなくネイティブトークンをmintできます。denomは
+`factory/{creatorAddress}/{subdenom}`の形式を取ります。作成者アドレスで名前空間化されているため、
+作成はパーミッションレスであり、解決すべき名前の衝突もありません。
 
-この統合により、CW20規格とは異なり、スマートコントラクトに直接クエリする必要なく、すべての資産の総供給量の追跡とクエリがサポートされます。このため、TokenFactory規格の使用が推奨されます。HelixやMitoなどのプロダクトは、bankトークンのみを使用するInjective exchangeモジュール上に構築されています。TokenFactoryトークンは、injectived CLIやスマートコントラクトを通じて作成できます。Wormholeを介してInjectiveにブリッジされたトークンもTokenFactoryトークンです。
+TokenFactoryトークンはbank denomであり、これがInjective上で推奨されるトークンローンチ方法である理由です。exchange、
+auction、insurance、permissionsモジュールはすべてbank denomとネイティブに連携するため、TokenFactoryトークンは
+間にアダプタを挟むことなく、ネイティブのオーダーブックで取引したり、担保として使用したり、コンプライアンスルールで制限したりできます。
 
-Injectiveでのトークン作成の詳細については、[トークンローンチ](../../developers-defi/token-launch/)をご覧ください。
+<Card title="ローンチの準備はできましたか？" icon="rocket" href="/jp/developers-defi/token-launch">
+  **Launch a Token**はステップバイステップのガイドです：作成、メタデータの設定、mint、EVM向けのペアリング、上場、
+  マーケットのローンチ。
+</Card>
 
-TokenFactory規格の詳細については、[Token Factoryモジュール](../../developers-native/injective/tokenfactory/)をご覧ください。
+## 管理者権限で可能になること
+
+`MsgCreateDenom`の送信者がdenomの管理者に割り当てられます。メッセージには管理者フィールドがないため、
+初期の管理者は常に作成者です。TokenFactoryは`MsgChangeAdmin`による管理者の再割り当てを許可しており、
+権限そのものはコントラクトコードではなく、denomの権限メタデータの一部としてネイティブモジュールに保存されます。
+
+管理者権限は、日常的なトークン操作をgovernanceの外で行うために存在します。管理者は単一のメッセージでmint、
+許可されている場合のburn、name、symbol、decimalsの更新を行うことができ、即時に反映されます。
+対照的に、peggyおよびIBCのdenomには管理者がいません。それらのメタデータはブリッジまたは転送によって最初に作成されたときに自動的に設定され、
+修正にはgovernanceプロポーザルが必要です。
+
+EVM発のdenom（`erc20:0x...`）は第3のモデルに従います：権限はトークンコントラクト自体に存在します。
+bank precompileは、呼び出し元アドレスからdenomを解決し、ペアリングされたコントラクトからの`setMetadata`、mint、burnの呼び出しのみを受け付けます。
+したがって管理者権限は、`MintBurnBankERC20`のownerロールのように、コントラクトコードが付与するものになります。
+これらのdenomにはTokenFactoryの管理者レコードは存在せず、governanceも不要です。
+
+| 機能 | メッセージ | 備考 |
+|---|---|---|
+| 任意のアカウントへのmint | `MsgMint` | permissions namespaceで上書きされない限り、管理者のみ |
+| アカウントからのburn | `MsgBurn` | 作成時にのみ設定できる`allow_admin_burn`が必要 |
+| name、symbol、decimalsの設定 | `MsgSetDenomMetadata` | 即時反映、governance不要 |
+| 管理者の移転または放棄 | `MsgChangeAdmin` | 放棄すると供給量は変更不可になります |
+| 別のアカウントへの委任 | `authz`グラント | 管理者権限を移転せずに共有 |
+
+コントラクトベースのトークンとは異なり、総供給量はbankモジュールを通じて直接追跡・照会でき、
+コントラクトの呼び出しは不要です。
+
+## 上に重ねられる機能
+
+| 機能 | 得られるもの | ガイド |
+|---|---|---|
+| **ERC20ペア** | MetaMaskでの表示とSolidityからのアクセス。ネイティブとInjective EVMで1つの残高を共有 | [ERC20 Module](/jp/developers-evm/erc20-module) |
+| **Permissions namespace** | ロールベースのMINT、BURN、SEND、RECEIVE、SUPER_BURNの制御とKYCフック | [Permissioned Assets](/developers-defi/permissioned-assets) |
+| **スポットマーケット** | トークンのネイティブオーダーブックマーケット | [Launch a Market](/jp/developers-defi/market-launch) |
+| **レジストリへの掲載** | Injective dAppフロントエンドでのロゴとラベル | [Injective List](/developers/assets/injective-list) |
+
+TokenFactory denomは、ERC20ペアを登録するまでEVMからは**見えません**。それまでは、
+MetaMaskやSolidityコントラクトはそれを認識できません。
+[MultiVM Token Standard](/jp/developers-evm/multivm-token-standard)を参照してください。
+
+## TokenFactoryの選択
+
+| 代替案 | TokenFactoryを選ぶべき場合 |
+|---|---|
+| **Injective EVMへのデプロイ** | EVMベースの権限ではなく、供給量とメタデータに対するネイティブの管理者権限が必要な場合。トークンのロジックがコントラクト内にある場合は、EVMデプロイの方が適しています |
+| **CW20** | 新規の開発では常に。以下の非推奨に関する通知を参照してください |
+
+Wormholeを介してInjectiveにブリッジされたトークンもTokenFactory denomです。
+
+## 元に戻せない選択
+
+3つの設定は後から変更できません：ゼロでない値になった後の`decimals`、falseまたは無効になった後の`allow_admin_burn`、
+そして管理者を放棄した後のメタデータ権限です。
+[Launch a Token](/jp/developers-defi/token-launch#作成時に固定される設定)ガイドでそれぞれを説明しています。
+
+## CW20アダプタ
+
+<Warning>
+**CW20は新規の統合には推奨されず、非推奨化が予定されています。** 新しいトークンにはTokenFactoryを使用し、
+ERC20インターフェースが必要な場合は[MultiVM Token Standard](/jp/developers-evm/multivm-token-standard)を使用してください。
+CW20アダプタは既存の資産向けに引き続き利用可能です。
+</Warning>
+
+`CW20AdapterContract`は、既存のCW20資産を`factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`形式の
+TokenFactory denomとして表現します。アダプタはCW20トークンを保持してfactory denomをmintし、
+償還時にはdenomをburnしてCW20をオーナーに返却します。
+
+変換と償還の例については、[CW20アダプタ](/jp/developers-cosmwasm/cw20-adapter)を参照してください。
+
+## リファレンス
+
+<CardGroup cols={2}>
+  <Card title="Launch a Token" icon="rocket" href="/jp/developers-defi/token-launch">
+    作成からマーケットまでのエンドツーエンドのローンチガイド。
+  </Card>
+  <Card title="Module Specification" icon="file-code" href="/developers-native/injective/tokenfactory">
+    メッセージ、状態、パラメータ、エラー。
+  </Card>
+  <Card title="SDK Examples" icon="code" href="/jp/developers-native/examples/token-factory">
+    すべてのTokenFactoryメッセージのTypeScript例。
+  </Card>
+  <Card title="Token Metadata" icon="tag" href="/developers/assets/token-metadata">
+    メタデータのフィールドとウォレットによる読み取り方法。
+  </Card>
+</CardGroup>

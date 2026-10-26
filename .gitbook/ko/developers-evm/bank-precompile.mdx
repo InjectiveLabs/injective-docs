@@ -1,6 +1,6 @@
 ---
 title: Bank Precompile
-updatedAt: "2026-02-23"
+updatedAt: "2026-10-12"
 ---
 
 # Bank Precompile
@@ -18,11 +18,20 @@ Bank precompile로 지원되는 다양한 ERC-20 구현과 precompile 인터페�
 
 이러한 구현은 OpenZeppelin의 ERC20 컨트랙트를 기반으로 합니다. 개발자는 Bank precompile을 활용하는 사용자 정의 ERC20 컨트랙트를 자유롭게 만들 수 있습니다.
 
-## ERC20 컨트랙트 배포
+## Denom 생성 수수료
 
-**ℹ️ 참고:**
+denom 스팸을 방지하기 위해 새 `erc20:0x...` denom을 생성하는 데는 **1 INJ**가 소요되며,
+`/injective/erc20/v1beta1/params`에서 조회할 수 있습니다.
 
-denom 스팸을 방지하기 위해 ERC20 모듈을 통한 ERC20 컨트랙트 배포는 **유료 작업**이며 **1 INJ**의 배포 수수료가 필요합니다. ERC20 컨트랙트 배포 트랜잭션에 이 금액이 포함되어 있는지 확인하세요. 그렇지 않으면 작업이 거부됩니다.
+수수료는 배포 시가 아니라 **첫 민트** 시에 부과되며, 호출자가 아닌 **컨트랙트 자체의
+INJ 잔액**에서 차감됩니다. `BankERC20` 생성자는 `payable`이므로 배포 트랜잭션에서
+컨트랙트에 미리 자금을 넣을 수 있으며, 이 때문에 흔히 배포 수수료라고 불립니다.
+
+<Warning>
+수수료는 denom의 생애 동안 한 번만이 아니라, denom의 공급량이 0일 때마다 부과됩니다. 총
+공급량이 다시 0이 되면 denom은 상태에서 제거되며, 다음 민트 시 denom이 재생성되고 수수료가
+다시 부과됩니다. 전체 버닝 후 민트가 재개될 수 있다면 컨트랙트에 자금을 유지하세요.
+</Warning>
 
 ## Bank Precompile 인터페이스
 
@@ -37,6 +46,34 @@ interface IBankModule {
     function setMetadata(string memory,string memory,uint8) external payable returns (bool);
 }
 ```
+
+### Denom 결정 방식
+
+모든 메서드는 상태를 변경하기 전에 호출 컨트랙트의 주소를 bank denom으로 결정합니다:
+
+1. ERC20 모듈에 해당 주소에 대한 **토큰 쌍**이 등록되어 있으면 페어링된 bank denom이 사용됩니다
+   (`factory/...`, `peggy0x...` 또는 `ibc/...`),
+2. 그렇지 않으면 denom은 `erc20:0x<ChecksummedAddress>`로 파생됩니다.
+
+이 때문에 TokenFactory denom과 페어링된 컨트랙트는 해당 denom의 메타데이터와 공급량을 보고하고,
+페어링되지 않은 컨트랙트는 자체 `erc20:` denom을 소유합니다. 두 경우 모두 컨트랙트 코드는 동일합니다.
+레지스트리 항목만 다릅니다.
+
+### 메서드 동작 방식
+
+| 메서드 | 알아두어야 할 동작 |
+|---|---|
+| `mint` / `burn` | `erc20:` denom의 경우 ERC20 모듈이 직접 민트 또는 버닝합니다. 페어링된 TokenFactory denom의 경우 precompile이 **컨트랙트 주소를 발신자로 하여** 네이티브 `MsgMint` 또는 `MsgBurn`을 제출하므로, 네이티브 권한 검사는 EVM 호출자가 아닌 컨트랙트에 적용됩니다. 페어링된 Peggy 및 IBC denom은 둘 다 지원하지 않습니다. |
+| `setMetadata` | `erc20:` denom에만 유효합니다. TokenFactory, Peggy 또는 IBC denom과 페어링된 컨트랙트에서 호출하면 `denom ... does not support setting metadata through bank precompile`로 revert됩니다. 해당 denom의 메타데이터는 네이티브 측에서 설정합니다. |
+| `metadata` | 결정된 denom의 bank 메타데이터를 읽습니다. |
+| `balanceOf` / `totalSupply` / `transfer` | 결정된 denom의 bank 상태를 읽고 씁니다. |
+
+<Warning>
+`BankERC20`의 생성자는 name 또는 symbol이 비어 있지 않거나 decimals가 0이 아닐 때마다
+`setMetadata`를 호출합니다. 기존 TokenFactory denom과 페어링하려는 컨트랙트에서는 이로 인해 잘못된
+denom에 메타데이터가 기록되고 페어링이 차단됩니다. 이러한 컨트랙트는 빈 name, 빈 symbol, 0 decimals로
+배포하세요. [ERC20 모듈](/ko/developers-evm/erc20-module#tokenfactory-denom용-사용자-정의-컨트랙트)을 참조하세요.
+</Warning>
 
 ## 예제
 

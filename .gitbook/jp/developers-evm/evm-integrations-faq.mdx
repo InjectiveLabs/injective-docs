@@ -1,6 +1,7 @@
 ---
 title: "EVM統合FAQ"
 description: Injective EVMとの統合に関するよくある質問。
+updatedAt: "2026-01-30"
 ---
 
 ## Injective EVMは...をサポートしていますか？
@@ -54,18 +55,22 @@ A: Injectiveの[EVM precompile](/developers-evm/precompiles)は、
 汎用的なEVMでは利用できないInjectiveネイティブ関数にアクセスします。
 これは、例えばFoundryを使用して以下に接続する場合：
 
-- Injective EVMテストネット - 動作します
-- `localhost`シミュレーションEVMネットワーク - 動作しません
+- Injective EVMテストネットまたはメインネット - 動作します
+- Foundryのインメモリ EVMまたは素の`anvil`ノード - precompileの呼び出しは失敗します
 
-後者の問題に対処するため、InjectiveのprecompileをサポートするFoundryツールのフォーク版を作成しました（MTSに必要な`BankERC20.sol`用のBank precompileから開始）。
-SolidityテストやデプロイメントスクリプトをFoundryプロジェクトとして使用する場合、
-`forge`/`cast`がローカルシミュレーションを実行できるようにこのフォーク版が必要です。
+ローカル開発には2つの選択肢があります：
 
-x86_64 LinuxおよびmacOS ARM64用のプリビルドバイナリを含む最新リリースは、
-[github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)で確認できます。
+- **フォーク版Foundryツール。** Injectiveは、precompileをサポートするFoundryのフォーク版を管理しています
+  （MTSに必要な`BankERC20.sol`用のBank precompileから開始）。これにより、`forge`と`cast`は
+  ローカルシミュレーションに対してSolidityテストやデプロイメントスクリプトを実行できます。プリビルドバイナリは
+  リリースごとに[github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)で公開されています。
+- **ローカルInjective devnet。** [inj-examples](https://github.com/InjectiveLabs/inj-examples)には
+  Docker化されたローカル環境（`templates/foundry`および`examples/precompiles`を参照）が含まれており、
+  すべてのprecompileが`localhost:8545`で利用可能な実際の`injectived`ノードと、
+  ローカルのBlockscoutエクスプローラーを実行します。これはシミュレーションではなく、完全なチェーン環境です。
 
 <Warning>
-このフォーク版FoundryでInjectiveのprecompileサポートを有効にするには、設定ファイル`foundry.toml`内で`injective = true`を設定するか、環境変数`FOUNDRY_INJECTIVE=true`を使用する必要があります。
+フォーク版FoundryでInjectiveのprecompileサポートを有効にするには、設定ファイル`foundry.toml`内で`injective = true`を設定するか、環境変数`FOUNDRY_INJECTIVE=true`を使用する必要があります。この設定はフォーク版にのみ適用され、Docker化されたdevnetには適用されません。
 </Warning>
 
 ## InjectiveではどのようなEVM開発インフラストラクチャが利用可能ですか？

@@ -1,240 +1,144 @@
 ---
 title: 发行代币
-updatedAt: "2026-02-13"
+description: Injective 上的代币来源、TokenFactory denom 创建、元数据、供应量、EVM 访问与上架。
+updatedAt: "2026-10-12"
 ---
 
-在本文档中，我们将解释如何在 Injective 上发行代币。
+## 代币来源
 
-在 Injective 上发行代币有两种选择：桥接现有代币或创建新代币。
+代币通过以下四种来源之一进入 Injective。来源决定了 denom 格式、由哪个账户控制元数据，以及让代币在 EVM 中可见需要做些什么。
 
-## 桥接 <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+| 起点 | 来源 | Denom | 参考 |
+|---|---|---|---|
+| 新代币 | **TokenFactory** | `factory/...` | 本页 |
+| 现有的 Ethereum ERC20 | **Peggy** | `peggy0x...` | [Bridge & Deploy](/developers-defi/bridge-deploy) |
+| 其他 IBC 链上的代币 | **IBC** | `ibc/...` | [IBC 转账](/cn/developers-native/examples/ibc) |
+| 部署在 Injective EVM 上的合约 | **Injective EVM** | `erc20:0x...` | [MultiVM Token Standard](/cn/developers-evm/multivm-token-standard) |
 
-在 Injective 上发行代币最简单的方法是从 Injective 可互操作的支持网络之一桥接你现有的资产。你可以参考[桥接](/defi/bridge/ "mention")部分的指南，将资产从其他网络桥接到 Injective。
+每种来源都会产生一个 bank denom。exchange、auction、insurance 和 permissions 模块都基于 bank denom 运行，因此来源不会限制代币之后的用途。[MultiVM Token Standard](/cn/developers-evm/multivm-token-standard) 介绍了其底层模型。
 
-桥接过程完成后，将在 Injective 上创建一个代币，然后你可以使用它来[发行市场](/cn/developers-defi/market-launch/ "mention")。
+<Note>
+合规准入资产遵循下面的 TokenFactory 流程，并在其之上叠加一个 permissions 命名空间。[发行许可型资产](/developers-defi/permissioned-assets)介绍了角色、策略和 KYC 钩子。
+</Note>
 
-## 创建新代币
+## 创建时固定的设置
 
-你也可以使用 `TokenFactory` 模块在 Injective 上创建新代币。有多种方法可以实现这一点。
+TokenFactory denom 的三项属性一经设置便无法更改。
 
-### 使用 Injective Hub <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+**小数位数（Decimals）** 在 bank 元数据记录了非零值之后便无法更改。之后的更改会失败并报错 `cannot update denom metadata decimals`，因此错误的值将是永久性的。
 
-[Injective Hub](https://injhub.com/token-factory/) Web 应用程序使你能够无缝创建和管理代币，在 Injective 的[原生订单簿](/developers-native/injective/exchange)上创建市场等。
+**管理员销毁（Admin burn）** 由 `create-denom` 上的 `--allow-admin-burn` 设置，并且只能被关闭。一旦其为 false 或已被禁用，重新启用将会失败。当其为 false 时，任何账户都无法从其他地址销毁代币，而配对的 ERC20 则完全无法销毁，因为 ERC20 的销毁总是以从持有者（而非合约）处销毁的形式到达链上。设置该标志本身并不会授权配对合约进行销毁；这需要 EVM 访问一节中所述的单独原生权限。
 
-### 使用 TokenStation[​](/developers-defi/token-launch) <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+**管理员权限（Admin authority）** 一旦放弃便无法恢复。将管理员设置为零地址 `inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49` 会冻结供应量，这通常正是目的所在。但这也会使 `MsgSetDenomMetadata` 没有任何授权发送者（包括治理），并移除配对 ERC20 所依赖的铸造权限。
 
-[TokenStation](https://www.tokenstation.app/) Web 应用程序使你能够无缝创建和管理代币，在 Injective 的[原生订单簿](/developers-native/injective/exchange/)上创建市场，发起空投等。
+## 创建 Denom
 
-### 使用 DojoSwap[​](/developers-defi/token-launch/#4-via-dojoswap) <a href="#id-4-via-dojoswap" id="id-4-via-dojoswap"></a>
-
-与上述类似，你可以利用 [DojoSwap 的市场创建模块](https://docs.dojo.trading/introduction/market-creation)来创建、管理和上架你的代币，以及其他几个有用的功能。
-
-### 编程方式
-
-#### 使用 TypeScript
-
-了解更多关于[发行代币](/developers/assets/token-create)的信息。
-
-#### 使用 Injective CLI
-
-<Callout icon="info" color="#07C1FF" iconType="regular">
-在继续本教程之前，你必须在本地安装 `injectived`。你可以在 [injectived](/developers/injectived/ "mention") 页面了解更多信息。
-</Callout>
-
-安装 `injectived` 并添加密钥后，你可以使用 CLI 发行代币：
-
-1. **创建 `TokenFactory` denom**
-
-创建 factory denom 的费用为 `0.1 INJ`。
+创建费用由创建者支付，并且因网络而异。在撰写本文时，主网为 0.1 INJ，测试网为 1 INJ。当前值保存在模块参数中：
 
 ```bash
-injectived tx tokenfactory create-denom [subdenom] [name] [symbol] [decimals] --from=YOUR_KEY --chain-id=injective-888 --node=https://testnet.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+curl --fail --silent --show-error \
+  "https://sentry.lcd.injective.network/injective/tokenfactory/v1beta1/params" | jq
 ```
 
-代币按创建者地址命名空间，以实现无需许可并避免名称冲突。在上面的示例中，subdenom 是 `ak`，但 denom 命名将是 `factory/{creator address}/{subdenom}`。
+### Web 应用
 
-2. **提交代币元数据**
+[Injective Hub](https://injhub.com/token-factory/) 和 [DojoSwap](https://docs.dojo.trading/) 都可以创建和管理代币，并可为其发行市场。[TokenStation](https://www.tokenstation.app/) 还提供空投和发行工具。
 
-要使你的代币在 Injective dApp 上可见，你必须提交其元数据。
+### injectived
 
 ```bash
-injectived tx tokenfactory set-denom-metadata "My Token Description" 'factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak' AKK AKCoin AK '' '' '[
-{"denom":"factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak","exponent":0,"aliases":[]},
-{"denom":"AKK","exponent":6,"aliases":[]}
-]' 6 --from=YOUR_KEY --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+CHAIN_ID="injective-888"
+NODE="https://testnet.sentry.tm.injective.network:443"
+ADMIN_KEY="admin"
+ADMIN=$(injectived keys show "$ADMIN_KEY" -a)
+TX="--from=$ADMIN_KEY --chain-id=$CHAIN_ID --node=$NODE --gas-prices=500000000inj --gas=1000000"
+
+# create-denom [subdenom] [name] [symbol] [decimals]
+injectived tx tokenfactory create-denom ak "AK Coin" AKK 6 --allow-admin-burn $TX
+
+DENOM="factory/${ADMIN}/ak"
 ```
 
-此命令需要以下参数：
+Denom 按创建者地址划分命名空间，这使得创建无需许可，并消除了名称冲突。在主网上，对应的值为 `--chain-id=injective-1` 和 `--node=https://sentry.tm.injective.network:443`。
+
+### SDK 与合约
+
+- **TypeScript：** [TokenFactory SDK 示例](/cn/developers-native/examples/token-factory)
+- **Wasm 合约：** [`injective-cosmwasm`](https://github.com/InjectiveLabs/cw-injective) 提供了 `create_new_denom_msg`、`create_set_token_metadata_msg`、`create_mint_tokens_msg` 和 `create_burn_tokens_msg`
+- **消息参考：** [TokenFactory 消息](/developers-native/injective/tokenfactory/03_messages)
+
+## 元数据
+
+钱包、浏览器和 Solidity 调用方从 bank 元数据中读取名称、符号和小数位数。没有元数据的 denom 会显示为空白，且小数位数为零。
 
 ```bash
-injectived tx tokenfactory set-denom-metadata [description] [base] [display] [name] [symbol] [uri] [uri-hash] [denom-unit (json)] [decimals]
+# set-denom-metadata [description] [base] [display] [name] [symbol] \
+#                    [uri] [uri-hash] [denom-unit (json)] [decimals] [shouldDisableAdminBurn]
+injectived tx tokenfactory set-denom-metadata \
+  "My token description" "$DENOM" AKK "AK Coin" AKK "" "" \
+  "[{\"denom\":\"$DENOM\",\"exponent\":0,\"aliases\":[]},
+    {\"denom\":\"AKK\",\"exponent\":6,\"aliases\":[]}]" \
+  6 false $TX
 ```
 
-3. **铸造代币**
+该命令接受十个位置参数。最后一个参数为 `true` 时会永久禁用管理员销毁。
 
-创建代币并提交代币元数据后，就可以铸造代币了。
+[代币元数据](/cn/developers/assets/token-metadata)记录了各个字段的说明。
+
+## 供应量
 
 ```bash
-injectived tx tokenfactory mint 1000000factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+# mint [amount] [receiver]
+injectived tx tokenfactory mint "1000000$DENOM" "$ADMIN" $TX
+
+# burn [amount] [burn_from]
+injectived tx tokenfactory burn "1000000$DENOM" "$ADMIN" $TX
 ```
 
-假设你的代币有 6 位小数，此命令将铸造 1 个代币。
+这两个命令都接受两个参数。在 6 位小数的情况下，上述数量代表 1 个代币。
 
-4. **销毁代币**
+## EVM 访问
 
-代币的管理员也可以销毁代币。
+在为 TokenFactory denom 注册 ERC20 对之前，它对 MetaMask 或 Solidity 合约是不可见的。
 
 ```bash
-injectived tx tokenfactory burn 1000000factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+injectived tx erc20 create-token-pair "$DENOM" --from="$ADMIN_KEY" \
+  --chain-id="$CHAIN_ID" --node="$NODE" --gas=3000000 --gas-prices=160000000inj
 ```
 
-5. **更改管理员**
+创建代币对要求供应量不为零，因此需在初始铸造之后进行。省略 `--erc20` 时，链会部署一个由代币对创建者拥有的 `MintBurnBankERC20`。如果改为提供合约地址，则需满足更多限制条件，详见 [ERC20 Module](/cn/developers-evm/erc20-module)。
 
-建议在铸造初始供应量后将管理员更改为 `null` 地址，以确保代币的供应量不能被操纵。再次强调，代币的管理员可以随时铸造和销毁供应量。如上所述，`NEW_ADDRESS` 在大多数情况下应设置为 `inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49`。
+注册代币对不会修改合约、不会授予其任何原生权限，也不会改变由谁控制元数据。它只记录 denom 与地址之间的映射，仅此而已。
 
-```bash
-injectived tx tokenfactory change-admin factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak NEW_ADDRESS --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
-```
+<Warning>
+ERC20 所有权并不赋予原生铸造权限。预编译合约以**合约地址**作为发送者提交原生铸造，因此原生检查针对的是该地址，而不是 EVM 调用方。没有 permissions 命名空间时，该地址必须是 denom 管理员。存在命名空间时，它必须持有 `MINT`，仅是 denom 管理员是不够的。
 
-<Callout icon="info" color="#07C1FF" iconType="regular">
-上述示例适用于测试网。如果你想在主网上运行它们，请进行以下更改：
+销毁的要求更为严格。它们还需要 denom 上启用 `allow_admin_burn`，并且在存在命名空间时需要 `SUPER_BURN` 而非 `BURN`。请参阅[铸造与销毁权限](/cn/developers-evm/erc20-module#铸造和销毁权限)。
+</Warning>
 
-`injective-888` > `injective-1`
+## 发现
 
-`https://testnet.sentry.tm.injective.network:443` > `http://sentry.tm.injective.network:443`
-</Callout>
+链上元数据并不会让代币出现在 dApp 前端中，前端是从注册表读取数据的。[injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) 为各个 Injective dApp 提供 logo 和标签，相关文档见 [Injective List](/cn/developers/assets/injective-list)。
 
-#### 使用 CosmWasm
+代币之间的符号并不唯一。集成说明只有通过网络、bank denom 和 ERC20 地址才能明确标识一个资产。
 
-要通过智能合约以编程方式创建和管理 bank 代币，可以使用 [`injective-cosmwasm`](https://github.com/InjectiveLabs/cw-injective/blob/6b2d549ff99912b9b16dbf91a06c83db99b5dace/packages/injective-cosmwasm/src/msg.rs#L399-L434) 包中的以下消息：
+## 市场
 
-`create_new_denom_msg`
+一旦存在供应量并设置了元数据，就可以在原生订单簿上创建现货市场。请参阅[发行市场](/cn/developers-defi/market-launch)。
 
-```rust
-pub fn create_new_denom_msg(sender: String, subdenom: String) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::CreateDenom { sender, subdenom },
-    }
-    .into()
-}
-```
+## 参考
 
-用途：创建一条消息，使用 tokenfactory 模块创建新的代币面额。
-
-参数：
-
-* `sender`：发起创建的账户地址。
-* `subdenom`：新代币的子面额标识符。
-
-返回：包装在 `InjectiveMsgWrapper` 中的 `CosmosMsg`，准备发送到 Injective 区块链。
-
-示例：
-
-```rust
-let new_denom_message = create_new_denom_msg(
-    env.contract.address,  // 发送者地址
-    "mytoken".to_string(), // 子面额标识符
-);
-```
-
-#### `create_set_token_metadata_msg`
-
-```rust
-pub fn create_set_token_metadata_msg(denom: String, name: String, symbol: String, decimals: u8) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::SetTokenMetadata {
-            denom,
-            name,
-            symbol,
-            decimals,
-        },
-    }
-    .into()
-}
-```
-
-用途：创建一条消息来设置或更新代币的元数据。
-
-参数：
-
-* `denom`：代币的面额标识符。
-* `name`：代币的全名。
-* `symbol`：代币的符号。
-* `decimals`：代币使用的小数位数。
-
-返回：包装在 `InjectiveMsgWrapper` 中的 `CosmosMsg`，准备发送到 Injective 区块链。
-
-示例：
-
-```rust
-let metadata_message = create_set_token_metadata_msg(
-    "mytoken".to_string(),         // 面额标识符
-    "My Custom Token".to_string(), // 全名
-    "MYT".to_string(),             // 符号
-    18,                            // 小数位数
-);
-```
-
-#### `create_mint_tokens_msg`
-
-```rust
-pub fn create_mint_tokens_msg(sender: Addr, amount: Coin, mint_to: String) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::Mint { sender, amount, mint_to },
-    }
-    .into()
-}
-```
-
-用途：创建一条消息来铸造新代币。代币必须是 tokenfactory 代币，发送者必须是代币管理员。
-
-参数：
-
-* `sender`：发起铸造操作的账户地址。
-* `amount`：要铸造的代币数量。
-* `mint_to`：新铸造代币应发送到的接收者地址。
-
-返回：包装在 `InjectiveMsgWrapper` 中的 `CosmosMsg`，准备发送到 Injective 区块链。
-
-示例：
-
-```rust
-let mint_message = create_mint_tokens_msg(
-    env.contract.address,                                   // 发送者地址
-    Coin::new(1000, "factory/<creator-address>/mytoken"),   // 要铸造的数量
-    "inj1...".to_string(),                                  // 接收者地址
-);
-```
-
-#### `create_burn_tokens_msg`
-
-```rust
-pub fn create_burn_tokens_msg(sender: Addr, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::Burn { sender, amount },
-    }
-    .into()
-}
-```
-
-用途：创建一条消息来销毁代币。代币必须是 tokenfactory 代币，发送者必须是代币管理员。
-
-参数：
-
-* `sender`：发起销毁操作的账户地址。
-* `amount`：要销毁的代币数量。
-
-返回：包装在 `InjectiveMsgWrapper` 中的 `CosmosMsg`，准备发送到 Injective 区块链。
-
-示例：
-
-```rust
-let burn_message = create_burn_tokens_msg(
-    env.contract.address,                                    // 发送者地址
-    Coin::new(500, "factory/<creator-address>/mytoken"),     // 要销毁的数量
-);
-```
+<CardGroup cols={2}>
+  <Card title="Token Factory" icon="hammer" href="/cn/defi/tokens/token-factory">
+    模块功能以及管理员控制的范围。
+  </Card>
+  <Card title="TokenFactory 消息" icon="file-code" href="/developers-native/injective/tokenfactory/03_messages">
+    消息和状态规范，包括授权规则。
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/cn/developers-evm/multivm-token-standard">
+    在原生层和 EVM 之间共享同一余额。
+  </Card>
+  <Card title="发行许可型资产" icon="shield-halved" href="/developers-defi/permissioned-assets">
+    带有角色、策略和钩子的合规准入发行。
+  </Card>
+</CardGroup>
