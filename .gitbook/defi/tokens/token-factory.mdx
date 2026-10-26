@@ -1,79 +1,108 @@
 ---
 title: Token Factory
 description: >-
-    Create and manage custom tokens on Injective without deploying a smart contract, using the native Token Factory module.
-updatedAt: "2026-09-02"
+    Create and manage native tokens on Injective without deploying a smart contract, with on-chain admin control over supply, metadata and permissions.
+updatedAt: "2026-10-12"
 ---
 
-TokenFactory tokens are natively integrated into the bank module of the chain.
-Their name takes on the format `factory/{creatorAddress}/{subdenom}`.
-Because tokens are namespaced by the creator address, this allows for permissionless token minting,
-due to not needing to resolve name collisions.
+TokenFactory lets any account mint a native token without writing or deploying a contract. Denoms take
+the form `factory/{creatorAddress}/{subdenom}`. Because they are namespaced by creator address,
+creation is permissionless and there are no name collisions to resolve.
 
-This integration provides support for tracking and querying the total supply of all assets, unlike the CW20 standard,
-which requires querying the smart contract directly.
-For this reason, using the TokenFactory standard is recommended.
-Products such as Helix or Mito, for example, are built on the Injective exchange module, which exclusively uses bank tokens.
-TokenFactory tokens can be created via the injectived CLI, as well as via smart contract.
-Tokens bridged into Injective via Wormhole are also TokenFactory tokens.
+TokenFactory tokens are bank denoms, which is what makes them the preferred token launch method on Injective. The exchange,
+auction, insurance and permissions modules all interface natively with bank denoms, so a TokenFactory token can be
+traded on the native orderbook, used as collateral, or gated by compliance rules with no adapter in
+between.
 
-## CW20 adapter
+<Card title="Ready to launch?" icon="rocket" href="/developers-defi/token-launch">
+  **Launch a Token** is the step-by-step guide: create, set metadata, mint, pair for the EVM, list and
+  launch a market.
+</Card>
 
-The `CW20AdapterContract` allows CW20 assets to be natively represented on Injective as Token Factory denoms. CW20 assets are held by the adapter contract and minted as a factory denom for the Injective address. When redeeming back to CW20, they are burned from the bank module and unlocked from the adapter contract back to the owner address.
+## What Admin Control Gives You
 
-### Redeem a factory denom to CW20
+The sender of `MsgCreateDenom` is assigned as the denom's admin. The message carries no admin field,
+so the initial admin is always the creator. TokenFactory allows admin reassignment through
+`MsgChangeAdmin`, and the authority itself is stored in the native module as part of the denom's
+authority metadata, not in contract code.
 
-```ts
-import {
-  MsgExecuteContractCompat,
-  ExecArgCW20AdapterRedeemAndTransfer,
-} from '@injectivelabs/sdk-ts/core/modules'
+Admin authority exists to keep routine token operations out of governance. The admin mints, burns
+where permitted, and updates name, symbol and decimals with a single message, effective immediately.
+By contrast, peggy and IBC denoms have no admin. Their metadata is set automatically when the bridge
+or transfer first creates them, and correcting it requires a governance proposal.
 
-const CW20_ADAPTER_CONTRACT = 'inj...'
-const contractCw20Address = 'inj...'
-const injectiveAddress = 'inj...'
+EVM originated denoms (`erc20:0x...`) follow a third model: authority lives in the token contract itself.
+The bank precompile accepts `setMetadata`, mint and burn calls only from the paired contract, resolving
+the denom from the calling address, so admin control is whatever the contract code grants, such as the
+owner role of a `MintBurnBankERC20`. No TokenFactory admin record exists for these denoms and no
+governance is required.
 
-const message = MsgExecuteContractCompat.fromJSON({
-  sender: injectiveAddress,
-  contractAddress: CW20_ADAPTER_CONTRACT,
-  funds: {
-    denom: `factory/${CW20_ADAPTER_CONTRACT}/${contractCw20Address}`,
-    amount: actualAmount.toFixed(),
-  },
-  execArgs: ExecArgCW20AdapterRedeemAndTransfer.fromJSON({
-    recipient: injectiveAddress,
-  }),
-})
+| Capability | Message | Notes |
+|---|---|---|
+| Mint to any account | `MsgMint` | Admin only, unless a permissions namespace overrides it |
+| Burn from an account | `MsgBurn` | Requires `allow_admin_burn`, set at creation only |
+| Set name, symbol, decimals | `MsgSetDenomMetadata` | Effective immediately, no governance needed |
+| Transfer or renounce admin | `MsgChangeAdmin` | Renouncing makes supply immutable |
+| Delegate to another account | `authz` grants | Share admin rights without transferring them |
 
-// Then pack the message in a transaction, sign it and broadcast to the chain
-```
+Unlike contract based tokens, total supply is tracked and queryable through the bank module directly,
+with no contract call required.
 
-### Convert CW20 to a factory denom
+## What You Can Layer On Top
 
-```ts
-import {
-  ExecArgCW20Send,
-  MsgExecuteContractCompat,
-} from '@injectivelabs/sdk-ts/core/modules'
+| Feature | What it gives you | Guide |
+|---|---|---|
+| **ERC20 pair** | MetaMask visibility and Solidity access, sharing one balance across native and Injective EVM | [ERC20 Module](/developers-evm/erc20-module) |
+| **Permissions namespace** | Role based MINT, BURN, SEND, RECEIVE and SUPER_BURN control, plus KYC hooks | [Permissioned Assets](/developers-defi/permissioned-assets) |
+| **Spot market** | A native orderbook market for the token | [Launch a Market](/developers-defi/market-launch) |
+| **Registry listing** | Logos and labels in Injective dApp frontends | [Injective List](/developers/assets/injective-list) |
 
-const CW20_ADAPTER_CONTRACT = 'inj...'
-const contractCw20Address = 'inj...'
-const injectiveAddress = 'inj...'
-const amount = '1000000' // 1 USDT represented as on the chain as it has 6 decimals
+A TokenFactory denom is **not** visible to the EVM until you register an ERC20 pair. Until then,
+MetaMask and Solidity contracts cannot see it. See
+[MultiVM Token Standard](/developers-evm/multivm-token-standard).
 
-const message = MsgExecuteContractCompat.fromJSON({
-  contractAddress: contractCw20Address,
-  sender: injectiveAddress,
-  execArgs: ExecArgCW20Send.fromJSON({
-    amount,
-    contractAddress: CW20_ADAPTER_CONTRACT,
-  }),
-})
+## Choosing TokenFactory
 
-// Then pack the message in a transaction, sign it and broadcast to the chain
-```
+| Instead of | Choose TokenFactory when |
+|---|---|
+| **Deploying on the Injective EVM** | Native admin control is necessary over supply and metadata rather than EVM based authority. An EVM deployment is the better fit if the token's logic lives in a contract |
+| **CW20** | Always, for new work. See the deprecation notice below |
 
-## Further reading
+Tokens bridged into Injective via Wormhole are also TokenFactory denoms.
 
-- [Token launch guide](../../developers-defi/token-launch/) - step-by-step guide to creating your token on Injective
-- [Token Factory module reference](../../developers-native/injective/tokenfactory/) - detailed module specification
+## Irreversible Choices
+
+Three settings cannot be changed after the fact: `decimals` once nonzero, `allow_admin_burn` once
+false or disabled, and metadata authority once the admin is renounced. The
+[Launch a Token](/developers-defi/token-launch#2-decisions-you-cannot-reverse) guide covers each.
+
+## CW20 Adapter
+
+<Warning>
+**CW20 is not recommended for new integrations and is planned for deprecation.** Use TokenFactory for
+new tokens, and the [MultiVM Token Standard](/developers-evm/multivm-token-standard) where an ERC20
+interface is needed. The CW20 adapter remains available for existing assets.
+</Warning>
+
+The `CW20AdapterContract` represents an existing CW20 asset as a TokenFactory denom of the form
+`factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`. The adapter holds the CW20 tokens and mints
+the factory denom; redeeming burns the denom and releases the CW20 back to the owner.
+
+For conversion and redemption examples, see [CW20 Adapter](/developers-cosmwasm/cw20-adapter).
+
+## Reference
+
+<CardGroup cols={2}>
+  <Card title="Launch a Token" icon="rocket" href="/developers-defi/token-launch">
+    End-to-end launch guide, from creation through market.
+  </Card>
+  <Card title="Module Specification" icon="file-code" href="/developers-native/injective/tokenfactory">
+    Messages, state, params and errors.
+  </Card>
+  <Card title="SDK Examples" icon="code" href="/developers-native/examples/token-factory">
+    TypeScript examples for every TokenFactory message.
+  </Card>
+  <Card title="Token Metadata" icon="tag" href="/developers/assets/token-metadata">
+    Metadata fields and how wallets read them.
+  </Card>
+</CardGroup>

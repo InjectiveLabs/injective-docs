@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-updatedAt: "2025-12-05"
+updatedAt: "2026-10-12"
 ---
 
 # Messages
@@ -14,8 +14,8 @@ If ERC20 address is empty, new ERC20 smart contract will be instantiated. Not al
 
 Validation rules:
 
-- for tokenfactory denoms, only denom admin can create token pair
-- for peggy and IBC denoms, anyone can create token pair (only with erc20 address being empty)
+- for tokenfactory denoms, only the denom admin or the governance authority can create a token pair
+- for peggy and IBC denoms, anyone can create a token pair, and the ERC20 address must be empty
 
 ```go
 type MsgCreateTokenPair struct {
@@ -32,18 +32,27 @@ type TokenPair struct {
 **State Modifications:**
 
 - Validation checks:
-	- Sender has permissions to create token pair for this denom (for tokenfactory denom it must be a denom admin)
-	- Provided bank denom exists and has non-zero supply
-	- If ERC20 address is provided:
-		- check that contract exists and is, in fact, an ERC-2o smart contract (by invoking `symbol()` method on it)
-		- check that existing contract does not have associated bank denom already with circulating supply
+	- No token pair already exists for the bank denom or for the ERC20 address
+	- Provided bank denom exists and has nonzero supply, otherwise `ErrUnknownBankDenom`
+	- Sender has permission to create a token pair for this denom (for a tokenfactory denom, the denom admin or the governance authority)
+	- If an ERC20 address is provided:
+		- check that the account exists and holds contract code
+		- check that the derived `erc20:0x...` denom has neither circulating supply nor bank metadata, otherwise `ErrExistingERC20DenomSupply`
+		- check that the contract is an ERC20 by invoking its `symbol()` method under a 300,000 gas cap
 - Create the association depending on the bank denom type:
 	- tokenfactory denom:
-		- if no ERC-20 address is provided, instantiate new `MintBurnBankERC20` smart contract, otherwise use provided address
+		- read the permissions namespace, if one exists, and check whether the MINT, BURN or SUPER_BURN policy is disabled
+		- if any of the three is disabled, instantiate a new `FixedSupplyBankERC20` and reject any provided ERC20 address
+		- otherwise, if no ERC20 address is provided, instantiate a new `MintBurnBankERC20` owned by the message sender, or use the provided address
 		- store the association
 	- IBC and peggy denoms:
 		- instantiate new `FixedSupplyBankERC20` smart contract
 		- store the association
+
+<Note>
+The `ErrExistingERC20DenomSupply` check covers **supply or metadata**, despite what the error name suggests. A custom contract whose constructor called `setMetadata` has already written `erc20:0x...` metadata and will be rejected even with zero supply. See
+[ERC20 Module](/developers-evm/erc20-module) for the full set of requirements on custom contracts.
+</Note>
 
 ### Delete Token Pair: `MsgDeleteTokenPair`
 

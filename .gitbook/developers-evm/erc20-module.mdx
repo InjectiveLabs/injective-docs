@@ -1,22 +1,241 @@
 ---
 title: ERC20 Module
-updatedAt: "2025-10-30"
+description: How bank denoms are paired to ERC20 contracts, which template is deployed, what pair creation validates, and how mint and burn authority works.
+updatedAt: "2026-10-12"
 ---
 
 ### ERC20 Module
 
-The ERC20 module enables **existing** bank denoms (e.g., IBC-bridged tokens, USDC, tokenfactory, and Peggy) to integrate with the Injective EVM. It maintains a mapping between token pairs within its storage, creating an association between ERC20 tokens and their corresponding bank denoms. When a new token pair is generated for an existing bank denom, the module deploys an ERC20 contract that interacts with the Bank precompile, which then references the storage mapping to align the ERC20 address with the respective bank denom. This module serves several essential purposes:
+The ERC20 module lets **existing** bank denoms (IBC bridged tokens, USDC, TokenFactory and Peggy denoms) be used from the Injective EVM. It maintains a mapping between token pairs in its storage, associating an ERC20 contract address with its bank denom. The [Bank precompile](/developers-evm/bank-precompile) reads that mapping to resolve which denom an ERC20 call operates on. The module serves two purposes:
 
-1. **Storage**: Maps between bank denom ↔ ERC20 address
-2. **New Message Type**: Enables users to establish new token pair mappings by issuing a chain message
+1. **Storage**: maps bank denom ↔ ERC20 address
+2. **Message type**: lets users establish new token pair mappings by issuing a chain message
 
-#### Creating a New Token Pair
+<Note>
+Tokens deployed directly on the Injective EVM against the Bank precompile do **not** need a token pair. Their denom is derived from the contract address as `erc20:0x...`. This page covers the pairing path for denoms that already exist on the native side. For the conceptual overview of both, see [MultiVM Token Standard](/developers-evm/multivm-token-standard).
+</Note>
 
-Currently, three types of bank denoms can have associated token pairs, each with specific rules:
+## Creating a Token Pair
 
-* **Tokenfactory (`factory/...`)**\
-  Only the denom admin or governance can create a token pair. The sender can specify an existing ERC20 contract address as a custom implementation. If omitted, a new instance of `MintBurnBankERC20.sol` is deployed, with `msg.sender` as the owner, allowing minting and burning through the contract.
-* **IBC (`ibc/...`)**\
-  IBC denoms can be integrated into the EVM by any user through token pair creation, though without the option for custom ERC20 addresses. These will always deploy a new, ownerless instance of `FixedSupplyBankERC20.sol`.
-* **Peggy (`peggy0x...`)**\
-  Peggy denoms can be integrated into the EVM by any user through token pair creation, though without the option for custom ERC20 addresses. These will always deploy a new, ownerless instance of `FixedSupplyBankERC20.sol`.
+Three types of bank denom can have an associated token pair, each with different rules:
+
+| Denom | Who can create the pair | Custom ERC20 address | Template deployed when address is omitted |
+|---|---|---|---|
+| **TokenFactory** `factory/...` | Denom admin or governance | Allowed, with conditions | `MintBurnBankERC20`, owned by the message sender |
+| **Peggy** `peggy0x...` | Anyone | Rejected | `FixedSupplyBankERC20`, ownerless |
+| **IBC** `ibc/...` | Anyone | Rejected | `FixedSupplyBankERC20`, ownerless |
+
+Peggy and IBC pairing is permissionless, so the template is forced. That combination is deliberate: anyone can make a bridged token usable in the EVM, and nobody can attach their own contract to a denom they do not control.
+
+The pair creator becomes the owner of a deployed `MintBurnBankERC20`. On a governance created pair, that owner is the governance module address.
+
+### Prerequisite: the denom must have supply
+
+Pair creation requires the bank denom to already exist with nonzero supply. Submitting before the first mint fails with `ErrUnknownBankDenom`. For a TokenFactory launch, submit `MsgCreateDenom`, `MsgMint` and `MsgCreateTokenPair` as a single atomic transaction so the three cannot diverge.
+
+### Permissions namespaces force the fixed supply template
+
+If the TokenFactory denom has a [permissions namespace](/developers-native/injective/permissions) whose **policy** disables `MINT`, `BURN` or `SUPER_BURN`, then:
+
+- the chain deploys `FixedSupplyBankERC20` instead of `MintBurnBankERC20`, and
+- any custom ERC20 address in the message is rejected with `ErrInvalidERC20Address`.
+
+This is an OR across all three actions. Disabling only `BURN` still produces `FixedSupplyBankERC20`, which exposes no mint entrypoint at all.
+
+<Note>
+This is driven by the namespace **policy status** for an action, not by role permissions. A namespace created without explicit policy statuses is backfilled with permissive defaults for every action, so defining roles alone does not force the fixed-supply template. Only an explicitly disabled policy does.
+</Note>
+
+## What Pair Creation Validates
+
+When an ERC20 address is supplied, the module checks that:
+
+1. no token pair already exists for either the bank denom or the ERC20 address,
+2. the account at that address exists and holds contract code,
+3. the derived `erc20:0x...` denom has **neither circulating supply nor bank metadata**, otherwise `ErrExistingERC20DenomSupply`,
+4. the contract answers a `symbol()` call under a 300,000 gas cap, otherwise `ErrInvalidERC20Address`.
+
+<Warning>
+**Passing validation does not mean the contract is MTS compatible.** The `symbol()` probe only establishes that something ERC20 shaped lives at the address. A stock OpenZeppelin ERC20 passes every check above while keeping its balances in its own EVM storage, completely detached from the bank module. The result is a pair whose two sides disagree.
+
+Recovering from that requires a governance `MsgDeleteTokenPair` to remove the mapping, followed by a fresh registration against a compatible contract. Deleting the mapping does not reconcile any balances that already diverged. Verify the implementation before you pair, not after.
+</Warning>
+
+Despite its name, `ErrExistingERC20DenomSupply` fires on **supply or metadata**. A contract that wrote metadata in its constructor is rejected even with zero supply.
+
+## Custom Contracts for TokenFactory Denoms
+
+A custom contract must route balance, supply, transfer, mint and burn through the Bank precompile. The practical way to guarantee that is to extend `BankERC20` from [Injective's Solidity contracts](https://github.com/InjectiveLabs/solidity-contracts), which implements exactly that delegation.
+
+### Deploy with empty metadata
+
+`BankERC20`'s constructor calls `bank.setMetadata` whenever name or symbol is not empty, or decimals is nonzero. For an unpaired contract the precompile resolves the denom to `erc20:0x<contract>`, so that call writes metadata for a denom you do not want, and pair creation then fails with `ErrExistingERC20DenomSupply`.
+
+Deploy with an empty name, an empty symbol and zero decimals. This is an enforced requirement for the pairing path, not a style preference.
+
+```solidity
+// SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.20;
+
+import {BankERC20} from "./BankERC20.sol";
+
+/// Pairs with an existing TokenFactory denom.
+/// Empty constructor metadata keeps the BankERC20 constructor from calling
+/// bank.setMetadata, which would create an erc20:0x... denom and block pairing.
+contract FactoryPairedERC20 is BankERC20 {
+    constructor() BankERC20("", "", 0) {}
+}
+```
+
+`BankERC20` is `abstract` and cannot be deployed on its own. After pairing, `name()`, `symbol()` and `decimals()` resolve through the precompile to the **factory denom's** bank metadata, which the denom admin controls with `MsgSetDenomMetadata`.
+
+Do not mint an independent `erc20:0x...` supply before pairing, for the same reason.
+
+<Note>
+This is the opposite of a direct EVM deployment. There, setting metadata in the constructor and minting an `erc20:0x...` supply is the intended path, because the contract's own derived denom **is** the token. See [MultiVM Token Standard](/developers-evm/multivm-token-standard).
+</Note>
+
+## Mint and Burn Authority
+
+ERC20 ownership and native TokenFactory authority are separate checks, and satisfying one does not satisfy the other. This is the most common surprise on this path.
+
+`MintBurnBankERC20.mint()` is `onlyOwner`, so the EVM caller must be the contract owner. The call then reaches the Bank precompile, which submits a native `MsgMint` **with the ERC20 contract address as the sender**, not the EVM caller. The native check therefore applies to the contract address:
+
+| Denom configuration | The ERC20 contract address must |
+|---|---|
+| No permissions namespace | be the TokenFactory denom admin |
+| Permissions namespace | hold the `MINT` permission. Being the admin is not sufficient |
+
+Burns are stricter. An ERC20 `burn()` or `burnFrom()` reaches the chain as `MsgBurn` with the contract as sender and the holder as the burn-from address, which makes it a burn-from rather than a self-burn:
+
+| Denom configuration | Requirements for an ERC20 burn |
+|---|---|
+| No permissions namespace | `allow_admin_burn` on the denom, **and** the contract address is the denom admin |
+| Permissions namespace | `allow_admin_burn` on the denom, **and** the contract address holds `SUPER_BURN` |
+
+<Warning>
+`allow_admin_burn` defaults to **false** on `injectived tx tokenfactory create-denom` and can only be set at creation. It is a one way latch: once false or disabled it can never be re-enabled. A denom created without `--allow-admin-burn` can never burn through its paired ERC20. Decide this before you create the denom.
+</Warning>
+
+Changing the denom admin with `MsgChangeAdmin` does not change the ERC20's `owner()`, and transferring ERC20 ownership does not change the denom admin. If you rotate one, rotate the other.
+
+### Authorizing the contract
+
+To mint through the paired ERC20, the contract's address must be authorized on the native side. Convert the EVM address to its bech32 form first, since the two are the same account in different encodings:
+
+```bash
+npm install @injectivelabs/sdk-ts
+
+TOKEN="0xYOUR_PAIRED_ERC20"
+
+TOKEN_INJ=$(
+  node --input-type=module - "$TOKEN" <<'JS'
+import { getInjectiveAddress } from '@injectivelabs/sdk-ts'
+console.log(getInjectiveAddress(process.argv[2]))
+JS
+)
+```
+
+Then either transfer the denom admin to `TOKEN_INJ` with `MsgChangeAdmin`, or grant it a role carrying `MINT` in the permissions namespace. Transferring the admin gives the contract sole mint authority, so keep the ERC20 owner key safe: it becomes the only way to mint.
+
+## Metadata Authority by Origin
+
+| Origin | Denom | Who can set bank metadata |
+|---|---|---|
+| TokenFactory | `factory/...` | Denom admin, via `MsgSetDenomMetadata`, effective immediately |
+| Peggy | `peggy0x...` | Governance proposal only |
+| IBC | `ibc/...` | Governance proposal only |
+| Injective EVM | `erc20:0x...` | The contract itself, via the precompile's `setMetadata` |
+
+Peggy and IBC denoms arrive with no name, symbol or decimals, and no account on Injective has authority to set them directly. Plan the governance proposal as part of the launch rather than as cleanup after wallets already show a blank token.
+
+<Warning>
+Decimals are effectively write once. Once bank metadata records a nonzero `decimals`, changing it fails with `cannot update denom metadata decimals`. Get the value right on the first write.
+</Warning>
+
+## Worked Example: Pairing a Custom Contract
+
+This pairs a custom contract with an existing TokenFactory denom on testnet.
+
+```bash
+# Endpoints and identifiers
+ENDPOINT="https://testnet.sentry.lcd.injective.network"      # LCD / REST
+NODE="https://testnet.sentry.tm.injective.network:443"       # native RPC
+EVM_RPC="https://testnet.sentry.chain.json-rpc.injective.network"
+CHAIN_ID="injective-888"
+
+# ADMIN_KEY is an injectived keyring name; ADMIN is the bech32 address it holds
+ADMIN_KEY="admin"
+ADMIN=$(injectived keys show "$ADMIN_KEY" -a)
+DENOM="factory/${ADMIN}/acme"
+```
+
+Deploy the contract with empty metadata, then pair it:
+
+```bash
+forge create src/FactoryPairedERC20.sol:FactoryPairedERC20 \
+  --account acme-deployer \
+  --rpc-url "$EVM_RPC" \
+  --broadcast
+
+TOKEN="0xDEPLOYED_ADDRESS"
+
+injectived tx erc20 create-token-pair "$DENOM" \
+  --erc20 "$TOKEN" \
+  --from "$ADMIN_KEY" \
+  --chain-id "$CHAIN_ID" \
+  --node "$NODE" \
+  --gas 3000000 \
+  --gas-prices 160000000inj
+```
+
+Omit `--erc20` to let the chain deploy `MintBurnBankERC20` instead.
+
+Verify that both views agree:
+
+```bash
+# Resolve the pair directly rather than listing every pair
+curl --fail --silent --show-error --get \
+  "$ENDPOINT/injective/erc20/v1beta1/token_pair_by_denom" \
+  --data-urlencode "bank_denom=$DENOM" | jq
+
+# ERC20 view, which should reflect the factory denom's metadata
+cast call "$TOKEN" "name()(string)"     --rpc-url "$EVM_RPC"
+cast call "$TOKEN" "symbol()(string)"   --rpc-url "$EVM_RPC"
+cast call "$TOKEN" "decimals()(uint8)"  --rpc-url "$EVM_RPC"
+
+# Bank view
+curl --fail --silent --show-error --get \
+  "$ENDPOINT/cosmos/bank/v1beta1/denoms_metadata_by_query_string" \
+  --data-urlencode "denom=$DENOM" | jq '.metadata'
+```
+
+An EVM mint before the contract address is authorized on the native side reverts with
+`failed to mint: unauthorized account`. `BankERC20` catches the precompile revert and prefixes it, so the
+underlying cause is the TokenFactory authorization check, not the ERC20 `onlyOwner` modifier.
+Authorize the contract as described above, then retry.
+
+## Gas
+
+`MsgCreateTokenPair` gives template deployment a 2,000,000 EVM gas cap. That is the contract deployment budget, not the transaction total, which also covers ante handling and any other messages in the transaction. Use at least `--gas 3000000` for a standalone pair creation. Below roughly 2.1M the transaction fails with a gas computation error. Simulate with `POST /cosmos/tx/v1beta1/simulate` and apply headroom rather than relying on a fixed number across releases.
+
+## Deleting a Token Pair
+
+`MsgDeleteTokenPair` is restricted to governance. It removes the mapping only. It does not migrate, reconcile or burn balances on either side.
+
+## Reference
+
+<CardGroup cols={2}>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/developers-evm/multivm-token-standard">
+    Concepts, the four token origins, and which path applies to your token.
+  </Card>
+  <Card title="Bank Precompile" icon="plug" href="/developers-evm/bank-precompile">
+    Interface, denom resolution, and the semantics behind each method.
+  </Card>
+  <Card title="ERC20 Module Messages" icon="file-code" href="/developers-native/injective/erc20/03_messages">
+    Native message and state specification.
+  </Card>
+  <Card title="TokenFactory Messages" icon="hammer" href="/developers-native/injective/tokenfactory/03_messages">
+    Denom creation, mint, burn and admin semantics.
+  </Card>
+</CardGroup>

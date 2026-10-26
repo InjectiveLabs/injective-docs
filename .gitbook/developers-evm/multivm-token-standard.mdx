@@ -1,35 +1,40 @@
 ---
 title: MultiVM Token Standard
-description: Understanding token representation in Injective's multi-VM architecture
-updatedAt: "2026-06-18"
+description: One token, one balance across Injective's native layer and EVM.
+updatedAt: "2026-10-12"
 ---
 
 ## What is MultiVM Token Standard (MTS)?
 
-MTS (MultiVM Token Standard) ensures that every token on Injective -
-whether deployed using Cosmos modules or via the Ethereum Virtual Machine (EVM) —
-has one canonical balance and identity.
-This unified approach prevents fragmentation and eliminates the need for bridging or wrapping tokens,
-thereby enabling seamless interoperability and unified liquidity for decentralized finance (DeFi) and dApp interactions.
+MTS (MultiVM Token Standard) ensures that every token on Injective,
+whether created through native modules on the execution layer or deployed on the Ethereum Virtual Machine (EVM),
+can have one canonical balance and identity.
+This prevents fragmentation and removes the need to bridge or wrap a token to move it between
+execution environments, giving DeFi protocols and dApps a single pool of liquidity to work against.
 
-## Why is MTS Important?
+This page is the entry point for MTS on both sides of the stack. It covers the model and the four ways
+a token comes into existence, then points to the native or EVM reference for the details.
 
-- **Seamless Interoperability:** Tokens remain consistent across Cosmos and EVM environments.
+## The Model: One Balance, Two Views
+
+The native **bank module** is the single source of truth for balances and total supply. An MTS ERC20
+contract holds no balances of its own. It is a view that reads and writes bank state through the
+[Bank precompile](/developers-evm/bank-precompile) at
+`0x0000000000000000000000000000000000000064`.
+
+The consequence that matters: a native bank send and an ERC20 `transfer` on the EVM move the same
+balance. There is no reconciliation step and no wrapped representation.
+
+A contract only participates in MTS if it routes balance, supply and transfer operations through the
+precompile. A stock ERC20 that keeps balances in its own EVM storage is a normal EVM token, invisible
+to the bank module and outside MTS.
+
+### Why is MTS Important?
+
+- **Seamless Interoperability:** Tokens remain consistent across native modules and the EVM.
 - **Unified Liquidity:** A single source of truth avoids liquidity fragmentation.
 - **Enhanced Developer Experience:** Standard tools like Hardhat, Foundry, and MetaMask work out of the box.
-- **Security & Efficiency:** All token state is maintained centrally in the bank module, ensuring robust security.
-
-## Architecture
-
-The system comprises two main components:
-
-- [**Bank Precompile**](/developers-evm/bank-precompile/):
-  - Developed in Go, this precompile is embedded directly in the Injective EVM.
-  - It provides a Solidity interface that proxies ERC20 operations—such as mint, burn, and transfer—to the bank module.
-- [**ERC20 Module**](/developers-evm/erc20-module/):
-  - This module is used for representing existing on-chain denoms to EVM. Creating MTS-based ERC20 tokens should be thought the `Bank` precompile.
-  - This module maps native bank denoms (e.g., INJ, IBC tokens, Peggy assets) to an ERC20 contract within the EVM.
-  - It deploys MTS-compliant ERC20 contracts that always reflect the canonical token balance as maintained by the bank module.
+- **Security & Efficiency:** All token state is maintained centrally in the bank module.
 
 <figure>
   <img
@@ -41,85 +46,126 @@ The system comprises two main components:
   </figcaption>
 </figure>
 
-### Creating an MTS-Compliant Token
+## Four Token Origins
 
-#### New ERC20 tokens ("erc20:..." denoms)
+There are four possible origins for an MTS token, each belonging to a different denom family. There are distinct differences with respect to the metadat authority, and whether an explicit ERC20 pairing step is required.
 
-1. [**Using Our Prebuilt Templates**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
-   - Start with the provided Solidity templates, such as `BankERC20.sol`, `MintBurnBankERC20.sol`, or `FixedSupplyBankERC20.sol`.
-2. [**Deploying the Contract**](/developers-evm/smart-contracts/):
-   - Deploy your MTS token contract on the Injective EVM network.
-   - The contract automatically interacts with the Bank Precompile to update the canonical state.
+| Origin | Denom | ERC20 pairing | Metadata authority |
+|---|---|---|---|
+| [**TokenFactory**](/developers-native/injective/tokenfactory) | `factory/...` | Required only for EVM use. Admin or governance only. Custom contract allowed | Denom admin, immediately |
+| [**Peggy**](/developers-native/bridges/ethereum) (Ethereum ERC20) | `peggy0x...` | Required only for EVM use. Permissionless, template forced | Governance proposal only |
+| [**IBC**](/developers-native/examples/ibc) | `ibc/...` | Required only for EVM use. Permissionless, template forced | Governance proposal only |
+| **Injective EVM** | `erc20:0x...` | Not required. The precompile derives the denom from the contract address | The contract, via `setMetadata` |
 
-#### Existing denoms (TokenFactory, IBC, Peggy)
+The first three create a bank denom first and then optionally project it into the EVM. The fourth starts in the EVM and the bank denom follows from the contract address. In all four cases once paired, the balance lives in the bank module.
 
-You have two options:
+<Note>
+`/injective/erc20/v1beta1/all_token_pairs` lists only **explicitly registered** pairs, so TokenFactory,
+Peggy and IBC denoms. Tokens deployed directly on the EVM are not returned, because they have no
+registry entry. Their denom is always `erc20:` followed by the checksummed contract address.
+</Note>
 
-1. Create a token pair inside erc20 module by submitting a `MsgCreateTokenPair` message.
+### Which path applies to you
 
-2. Use custom ERC20 implementation for Smart Contract during pair creation (tokenfactory denoms only):
+- Launching a token that does not exist anywhere yet, and you want native admin control over supply and metadata: **TokenFactory**.
+- Bringing an existing Ethereum ERC20 across: **Peggy**.
+- Bringing a token from another IBC chain: **IBC**.
+- Building EVM-first, with the token's authority living in Solidity: **Injective EVM**.
 
-- Upload your custom ERC20 Smart Contract on chain first.
-- Provide the address of the contract while submitting the `MsgCreateTokenPair` message.
+### Creating an MTS token on the EVM
 
-### Interoperability and Cross-Chain Integration
+1. [**Start from a template**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
+   `BankERC20.sol` (abstract base), `MintBurnBankERC20.sol` (owner can mint and burn), or
+   `FixedSupplyBankERC20.sol` (no owner, fixed supply).
+2. [**Deploy on the Injective EVM**](/developers-evm/smart-contracts/). The contract interacts with the
+   Bank precompile, and its first mint creates the `erc20:0x...` denom.
 
-#### Native Interoperability\*
+### Pairing an existing denom
 
-Injective’s EVM is integrated directly into the Cosmos-based chain.
+Submit `MsgCreateTokenPair` for the bank denom. Leave the ERC20 address empty to have the chain deploy
+a template, or, for TokenFactory denoms only, supply your own contract address.
+
+Custom contracts carry requirements that are easy to miss, including an empty-metadata constructor and
+a separate native authorization for minting and burning. Those are documented in full on the
+[ERC20 Module](/developers-evm/erc20-module) page, which is the reference for everything pairing-related.
+
+## Interoperability and Cross-Chain Integration
+
+### Native Interoperability
+
+Injective's EVM is integrated directly into the chain.
 
 - EVM smart contracts, when using MTS, perform operations that reflect immediately
-  on native modules (such as the exchange, staking, and governance modules).
+  on native modules such as exchange, staking, and governance.
 - [JSON-RPC endpoints](/developers-evm/network-information/)
-  provided within the Injective binary are compatible with Ethereum,
-  ensuring smooth developer integration.
+  provided within the Injective binary are compatible with Ethereum.
 
-#### Cross-Chain Operations
+### Cross-Chain Operations
 
 - **IBC Compatibility:** Existing native tokens
-  (e.g., those created via a
-  [Token Factory](/developers-native/injective/tokenfactory/) or pegged via Peggy)
+  (created via [TokenFactory](/developers-native/injective/tokenfactory/) or pegged via Peggy)
   are accessible from the EVM once an MTS pairing is established.
 - **Bridging Alternatives:** While many blockchains require separate bridge operations (lock, mint, unlock),
   MTS avoids these steps by natively synchronizing states.
 
-#### Allowances & Extended ERC20 Functions
+### Allowances & Extended ERC20 Functions
 
-- MTS contracts maintain standard ERC20 functionalities such as allowances
-  (approve/transferFrom).
-- Note that while the allowance mechanism is maintained within the EVM contract for convenience,
-  the ultimate balance is managed by the bank module, preserving integrity.
+- MTS contracts maintain standard ERC20 functionality such as allowances (approve/transferFrom).
+- The allowance mechanism lives in EVM contract storage for convenience, while the underlying balance is
+  managed by the bank module.
 
-### Performance, Gas, and Security Considerations
+## Performance, Gas, and Security Considerations
 
-#### Gas Costs and Efficiency
+### Gas Costs and Efficiency
 
 - Gas fees are paid in INJ.
-  While MTS operations via the EVM introduce an abstraction layer that may slightly increase gas usage compared to native transactions,
-  the overall cost remains lower than comparable operations on Ethereum.
-- The gas model is designed to reflect a balance between EVM-style opcode costs and native module interactions.
+  MTS operations via the EVM introduce an abstraction layer that may slightly increase gas usage compared
+  to native transactions, but the overall cost remains lower than comparable operations on Ethereum.
 
-#### Security
+### Security
 
 - The [bank module](/developers-native/core/), as the single source of truth,
-  underpins MTS’s security by ensuring that token balances are consistent and verifiable.
-- The use of [precompiles](/developers-evm/precompiles/) prevents common pitfalls
-  like state desynchronization, ensuring that all operations -
-  no matter where initiated—update the same canonical ledger.
-- Advanced security guidelines and best practices for smart contract development
-  are provided in our security section and external resources.
+  underpins MTS's security by ensuring that token balances are consistent and verifiable.
+- The use of [precompiles](/developers-evm/precompiles/) prevents state desynchronization, so every
+  operation updates the same canonical ledger regardless of where it was initiated.
 
+<Warning>
+Pairing a contract does not make it MTS compatible. `MsgCreateTokenPair` checks that the address holds
+contract code and answers `symbol()`, which a stock OpenZeppelin ERC20 also does while keeping its
+balances entirely outside the bank module. Unwinding such a pair requires a governance
+`MsgDeleteTokenPair` and does not reconcile balances that already diverged. See
+[what pair creation validates](/developers-evm/erc20-module#what-pair-creation-validates).
+</Warning>
 
 <Info>
-**Note**:
+**Denom creation fee.** Bringing a new `erc20:0x...` denom into existence costs **1 INJ**, charged on the
+first mint and debited from the contract's own INJ balance. The `BankERC20` constructors are `payable`
+so the deployment transaction can fund the contract up front.
 
-To prevent denom spam, deploying an ERC20 contract via the ERC20 module
-is a **payable operation** and requires a deployment fee of **1 INJ**.
-Make sure your ERC20 contract deployment transaction includes this amount,
-or the operation will be rejected.
-
-If the supply is wiped - specifically total supply goes from non-zero to zero -
-the underlying denom is removed from the blockchain state.
-Should you add supply again - specifically total supply goes from zero to non-zero -
-the underlying denom must be recreated, and thus the deployment fee is charged again.
+If total supply goes from nonzero to zero, the underlying denom is removed from state. Minting again
+recreates the denom and charges the fee again. See
+[Bank Precompile](/developers-evm/bank-precompile#denom-creation-fee).
 </Info>
+
+## Reference
+
+<CardGroup cols={2}>
+  <Card title="ERC20 Module" icon="link" href="/developers-evm/erc20-module">
+    Pairing reference: template selection, validation, custom contracts, mint and burn authority.
+  </Card>
+  <Card title="Bank Precompile" icon="plug" href="/developers-evm/bank-precompile">
+    Interface, denom resolution, and method semantics.
+  </Card>
+  <Card title="Permissioned MTS Tokens" icon="lock" href="/developers-evm/permissioned-multivm-token">
+    Compliance hooks in Solidity via IPermissionsHook.
+  </Card>
+  <Card title="Native ERC20 Module" icon="file-code" href="/developers-native/injective/erc20">
+    Native message, state and event specification.
+  </Card>
+  <Card title="Bridge & Deploy a Token" icon="bridge" href="/developers-defi/bridge-deploy">
+    Task guide: Ethereum ERC20 to Injective via Peggy, end to end.
+  </Card>
+  <Card title="Issue Permissioned Assets" icon="shield-halved" href="/developers-defi/permissioned-assets">
+    Task guide: compliance gated token launch with roles and hooks.
+  </Card>
+</CardGroup>

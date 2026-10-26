@@ -1,13 +1,13 @@
 ---
 title: Bank Precompile
-updatedAt: "2025-11-27"
+updatedAt: "2026-10-12"
 ---
 
 # Bank Precompile
 
 The Bank Precompile is a system smart contract residing at the fixed address `0x0000000000000000000000000000000000000064`.
 
-It offers EVM developers a gas-efficient and native pathway to interact directly with the Injective's **bank module** (`x/bank`). This effectively bringing ERC-20 tokens on-chain. Any ERC-20 contract using the Bank precompile will be represented as `erc20:0x...` denom on-chain. Technically, this means that tokens reside only on-chain, with the EVM providing a view to the chain state rather than maintaining a separate copy. Unlike traditional bridging, where two token versions require user actions to switch, the Bank precompile offers real-time, dual-environment reflection for any transfer using either the on-chain bank denom or the ERC-20 `transfer()` method.
+It offers EVM developers a gas efficient and native pathway to interact directly with the Injective's **bank module** (`x/bank`). This effectively bringing ERC-20 tokens on-chain. Any ERC-20 contract using the Bank precompile will be represented as `erc20:0x...` denom on-chain. Technically, this means that tokens reside only on-chain, with the EVM providing a view to the chain state rather than maintaining a separate copy. Unlike traditional bridging, where two token versions require user actions to switch, the Bank precompile offers realtime, dual environment reflection for any transfer using either the on-chain bank denom or the ERC-20 `transfer()` method.
 
 A range of ERC-20 implementations backed by the Bank precompile, alongside precompile interfaces and abstract contracts, are available at [Injective’s Solidity Contracts Repository](https://github.com/InjectiveLabs/solidity-contracts). Key contracts include:
 
@@ -18,11 +18,21 @@ A range of ERC-20 implementations backed by the Bank precompile, alongside preco
 
 These implementations are based on OpenZeppelin’s ERC20 contracts. Developers can freely create custom ERC20 contracts utilizing the Bank precompile.
 
-## ERC20 Contract Deployment
+## Denom Creation Fee
 
-**ℹ️ Note:**
+To prevent denom spam, bringing a new `erc20:0x...` denom into existence costs **1 INJ**, queryable at
+`/injective/erc20/v1beta1/params`.
 
-To prevent denom spam, deploying an ERC20 contract via the ERC20 module is a **payable operation** and requires a deployment fee of **1 INJ**. Make sure your ERC20 contract deployment transaction includes this amount, or the operation will be rejected.
+The fee is charged on the **first mint**, not on deployment, and it is debited from the **contract's own
+INJ balance** rather than from the caller. The `BankERC20` constructors are `payable` so that the
+deployment transaction can fund the contract up front, which is why this is often described as a
+deployment fee.
+
+<Warning>
+The charge is triggered whenever the denom has zero supply, not only once in its lifetime. If total
+supply returns to zero the denom is removed from state, and the next mint recreates it and charges the
+fee again. Keep the contract funded if minting can resume after a full burn.
+</Warning>
 
 ## Bank Precompile Interface
 
@@ -37,6 +47,34 @@ interface IBankModule {
     function setMetadata(string memory,string memory,uint8) external payable returns (bool);
 }
 ```
+
+### Denom Resolution
+
+Every method resolves the calling contract's address to a bank denom before touching state:
+
+1. if the ERC20 module has a **token pair** registered for the address, the paired bank denom is used
+   (`factory/...`, `peggy0x...` or `ibc/...`),
+2. otherwise the denom is derived as `erc20:0x<ChecksummedAddress>`.
+
+This is why a contract paired to a TokenFactory denom reports that denom's metadata and supply, while an
+unpaired contract owns its own `erc20:` denom. The contract code is identical in both cases. Only the
+registry entry differs.
+
+### Method Semantics
+
+| Method | Behavior worth knowing |
+|---|---|
+| `mint` / `burn` | For an `erc20:` denom, the ERC20 module mints or burns directly. For a paired TokenFactory denom, the precompile submits a native `MsgMint` or `MsgBurn` **with the contract address as sender**, so native authorization applies to the contract, not the EVM caller. Paired Peggy and IBC denoms support neither. |
+| `setMetadata` | Only valid for `erc20:` denoms. Called on a contract paired to a TokenFactory, Peggy or IBC denom, it reverts with `denom ... does not support setting metadata through bank precompile`. Metadata for those denoms is set on the native side. |
+| `metadata` | Reads bank metadata for the resolved denom. |
+| `balanceOf` / `totalSupply` / `transfer` | Read and write bank state for the resolved denom. |
+
+<Warning>
+`BankERC20`'s constructor calls `setMetadata` whenever name or symbol is not empty, or decimals is
+nonzero. On a contract you intend to pair with an existing TokenFactory denom, that writes metadata for
+the wrong denom and blocks pairing. Deploy those with empty name, empty symbol and zero decimals. See
+[ERC20 Module](/developers-evm/erc20-module#custom-contracts-for-tokenfactory-denoms).
+</Warning>
 
 ## Example
 

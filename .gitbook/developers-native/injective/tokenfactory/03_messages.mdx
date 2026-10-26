@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-updatedAt: "2025-12-05"
+updatedAt: "2026-10-12"
 ---
 
 # Messages
@@ -39,8 +39,11 @@ message MsgCreateDenom {
 
 ### Mint
 
-Minting of a specific denom is only allowed for the current admin.
-Note, the current admin is defaulted to the creator of the denom.
+Mint authorization depends on whether the denom has a
+[permissions namespace](/developers-native/injective/permissions).
+
+- **No namespace:** only the current admin can mint. The admin defaults to the creator of the denom.
+- **With a namespace:** the admin check is skipped entirely and the sender must hold the `MINT` permission. Being the denom admin is not sufficient on its own.
 
 ```protobuf
 message MsgMint {
@@ -49,20 +52,33 @@ message MsgMint {
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
   ];
+  string receiver = 3 [ (gogoproto.moretags) = "yaml:\"receiver\"" ];
 }
 ```
+
+If `receiver` is empty, tokens are minted to the sender.
 
 **State Modifications:**
 
 - Safety check the following
-    - Check that the denom minting is created via `tokenfactory` module
-    - Check that the sender of the message is the admin of the denom
-- Mint designated amount of tokens for the denom via `bank` module
+    - Check that bank metadata exists for the denom, otherwise `ErrDenomDoesNotExist`
+    - If the denom has no permissions namespace, check that the sender is the admin of the denom
+    - If the denom has a permissions namespace, check that the sender holds the `MINT` permission
+- Mint designated amount of tokens for the denom via `bank` module and send them to the receiver
+
+<Warning>
+When minting is triggered from the EVM through a paired ERC20, the sender of this message is the
+**ERC20 contract address**, not the EVM caller. The module's admin check therefore runs against the
+contract address, while the contract's own code decides which EVM callers may trigger it. Holding the
+denom admin key does not authorize a mint through the paired contract: the contract address itself must
+be the admin, or hold the `MINT` permission. See
+[ERC20 Module](/developers-evm/erc20-module#mint-and-burn-authority) for the configuration this requires.
+</Warning>
 
 ### Burn
 
-Burning of a specific denom is only allowed for the current admin.
-Note, the current admin is defaulted to the creator of the denom.
+Burn authorization is stricter than mint authorization and depends on two independent things:
+whether the sender is burning from its own balance, and whether the denom has a permissions namespace.
 
 ```protobuf
 message MsgBurn {
@@ -71,19 +87,44 @@ message MsgBurn {
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
   ];
+  string burnFromAddress = 3 [ (gogoproto.moretags) = "yaml:\"burn_from_address\"" ];
 }
 ```
+
+If `burnFromAddress` is empty it defaults to the sender, which makes the message a self-burn.
+
+| Case | No namespace | With namespace |
+|---|---|---|
+| **Self-burn** (`burnFromAddress` is the sender or empty) | Permitted for any holder | Sender must hold `BURN` |
+| **Burn from another address** | Requires `allow_admin_burn` on the denom **and** the sender to be the admin | Requires `allow_admin_burn` on the denom **and** the sender to hold `SUPER_BURN` |
 
 **State Modifications:**
 
 - Safety check the following
-    - Check that the denom minting is created via `tokenfactory` module
-    - Check that the sender of the message is the admin of the denom
-- Burn designated amount of tokens for the denom via `bank` module
+    - Resolve `burnFromAddress`, defaulting to the sender
+    - Apply the authorization matrix above
+- Burn designated amount of tokens from the burn-from address via `bank` module
+
+<Warning>
+`allow_admin_burn` is checked first and unconditionally on every burn-from. It can only be set at
+`CreateDenom` and is a latch: once it is false or has been disabled, it can never be
+re-enabled. Attempting to do so fails with `cannot enable AdminBurnAllowed if it was previously disabled`.
+
+This matters for paired ERC20 tokens. An ERC20 `burn()` reaches this message with the contract as
+sender and the holder as the burn-from address, so it is always a burn-from, never a self-burn. A
+denom created without `--allow-admin-burn` can never burn through its paired ERC20. See
+[ERC20 Module](/developers-evm/erc20-module#mint-and-burn-authority).
+</Warning>
 
 ### ChangeAdmin
 
 Change the admin of a denom. Note, this is only allowed to be called by the current admin of the denom. After the admin address is set to zero address, token holders can still execute `MsgBurn` for tokens they possess.
+
+<Note>
+Changing the denom admin has no effect on a paired ERC20 contract. If the pair deployed a
+`MintBurnBankERC20`, its Solidity `owner()` is unchanged by this message, and transferring ERC20
+ownership does not change the denom admin either. The two authorities are independent.
+</Note>
 
 ```protobuf
 message MsgChangeAdmin {
@@ -95,9 +136,17 @@ message MsgChangeAdmin {
 
 ### SetDenomMetadata
 
-Setting of metadata for a specific denom is only allowed for the admin of the denom.
+Setting of metadata for a specific denom is only allowed for the admin of the denom, or for governance
+once the admin has been set to the empty address.
 It allows the overwriting of the denom metadata in the bank module. The admin can also disable the admin burn
 capability, if enabled.
+
+<Warning>
+**Decimals are effectively immutable once set.** If existing bank metadata already records a non-zero
+`decimals`, any attempt to change it fails with `cannot update denom metadata decimals`. Only a
+denom still sitting at `decimals: 0` can have the value set. Confirm the intended precision before
+the first metadata write, including in governance proposals for `peggy0x...` and `ibc/...` denoms.
+</Warning>
 
 ```protobuf
 message MsgSetDenomMetadata {
@@ -133,7 +182,7 @@ and us setting longest_subdenom to be 44 bytes.
 
 A token factory token's denom is: `factory/{creator address}/{subdenom}`
 
-Splitting up into sub-components, this has:
+Splitting up into components, this has:
 
 - `len(factory) = 7`
 - `2 * len("/") = 2`

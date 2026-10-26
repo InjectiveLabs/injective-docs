@@ -1,6 +1,6 @@
 ---
 title: Token Standards
-updatedAt: "2025-11-20"
+updatedAt: "2026-10-12"
 ---
 
 Injective provides a variety of different token standards one can use when creating a dApp. In this document, we will cover the different types of tokens, as well as recommendations and guidance for using each.
@@ -11,12 +11,42 @@ A denom is how assets are represented within the Bank module of Injective. These
 
 Depending on the origin of the denom and how it was created on Injective, we have different types of denoms:
 
-* **Native denoms** - there is only one denom of this type, the `inj` denom which represented the native coin of Injective,
-* **Peggy denoms** - these denoms represent assets bridged over from Ethereum to Injective using the Peggy bridge. They have the following format `peggy{ERC20_CONTRACT_ADDRESS}`
-* **IBC denoms** - these denoms represent assets bridged over from other IBC compatible chains through IBC. They have the following format `ibc/{hash}`.
-* **Insurance Fund Denoms** - these denoms represent token shares of the insurance funds created on Injective. They have the following format `share{id}`
-* **Factory Denoms** - these `tokenfactory` denoms allows any account to create a new token with the name `factory/{creator address}/{subdenom}`. Because tokens are namespaced by creator address, this allows token minting to be permissionless, due to not needing to resolve name collisions. A special use case for these denoms is representing a CW20 token from Cosmwasm on the Injective native bank module. They have the following format `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` where the `CW20_ADAPTER_CONTRACT` is the adapter contract address that converts CW20 and the native Bank module.
+| Denom type | Format | Origin |
+|---|---|---|
+| **Native** | `inj` | The native coin of Injective. Also the Injective EVM gas token |
+| **Factory** | `factory/{creator}/{subdenom}` | Created permissionlessly via [TokenFactory](/defi/tokens/token-factory) |
+| **Peggy** | `peggy0x{ERC20_CONTRACT_ADDRESS}` | Bridged from Ethereum via the [Peggy bridge](/developers-native/bridges/ethereum) |
+| **IBC** | `ibc/{hash}` | Bridged from another IBC chain |
+| **EVM** | `erc20:0x{CONTRACT_ADDRESS}` | Deployed directly on the Injective EVM against the [Bank precompile](/developers-evm/bank-precompile) |
+| **Insurance fund** | `share{id}` | Token shares of an insurance fund |
 
-We'll share more details about these denom types later on in this document.
+Each of the above has a registered bank denom, which is what the native exchange, auction, insurance and permissions
+modules rely on as the single source of truth. Under the [MultiVM Token Standard](/developers-evm/multivm-token-standard),
+a denom with a registered token pair can also be called from the EVM. The [erc20 module](/developers-evm/erc20-module)
+maps the denom to an ERC20 contract address, and calls to that contract resolve through the
+[Bank precompile](/developers-evm/bank-precompile) to the same bank balance. EVM dApps interact with the paired
+address as a standard ERC20. There is no second balance to bridge or reconcile.
 
-Learn how to get [denom metadata](/developers/assets/token-metadata/).
+<Note>
+CW20 assets are **not** native bank denoms. Their balances live in contract storage. An existing CW20 can be
+represented as a factory denom of the form `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`
+through the [CW20 adapter](/developers-cosmwasm/cw20-adapter), but CW20 is not recommended for new
+integrations and is planned for deprecation.
+</Note>
+
+## Where to Go
+
+<CardGroup cols={2}>
+  <Card title="Launch a Token" icon="rocket" href="/developers-defi/token-launch">
+    Create, set metadata, mint, pair across Injective EVM, list and launch a market.
+  </Card>
+  <Card title="Token Factory" icon="hammer" href="/defi/tokens/token-factory">
+    Native token minting facility on Injective.
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/developers-evm/multivm-token-standard">
+    One balance across the native layer and the EVM.
+  </Card>
+  <Card title="Token Metadata" icon="tag" href="/developers/assets/token-metadata">
+    How wallets and explorers read name, symbol and decimals.
+  </Card>
+</CardGroup>
