@@ -1,7 +1,7 @@
 ---
 title: Issue Permissioned Assets
 description: Issue compliance-gated tokens on Injective with role-based access control, KYC hooks, and consortium governance.
-updatedAt: "2026-09-09"
+updatedAt: "2026-10-12"
 ---
 
 This guide walks through issuing a permissioned token on Injective for institutional use cases - regulated stablecoins, tokenized securities, consortium digital money, or any asset that requires compliance controls over who can mint, burn, send, or receive.
@@ -47,7 +47,8 @@ The permissions module maps directly to institutional roles:
 ### 1. Create a TokenFactory Denom
 
 ```bash
-injectived tx tokenfactory create-denom MYTOKEN \
+injectived tx tokenfactory create-denom MYTOKEN "My Token" MYTOKEN 18 \
+  --allow-admin-burn \
   --from=ADMIN_KEY \
   --chain-id=injective-888 \
   --node=https://testnet.sentry.tm.injective.network:443 \
@@ -55,7 +56,16 @@ injectived tx tokenfactory create-denom MYTOKEN \
   --yes
 ```
 
-This creates `factory/{YOUR_ADDRESS}/MYTOKEN`. You are the admin with full control.
+The positional arguments are `[subdenom] [name] [symbol] [decimals]`. This creates
+`factory/{YOUR_ADDRESS}/MYTOKEN`. Admin has full control.
+
+<Warning>
+`--allow-admin-burn` defaults to false and can only be set here. It is a one way latch that can never
+be re-enabled later. Without it, neither the admin nor a `SUPER_BURN` holder can burn from another
+address, and a paired ERC20 can never burn at all. Regulatory seizure via `SUPER_BURN` depends on it,
+so set it at creation for any asset that may need it. See
+[TokenFactory messages](/developers-native/injective/tokenfactory/03_messages#burn).
+</Warning>
 
 See the [token launch guide](/developers-defi/token-launch) for UI-based and programmatic alternatives.
 
@@ -113,7 +123,21 @@ injectived tx erc20 create-token-pair \
 
 Or omit `--erc20` for the default `MintBurnBankERC20` deployment.
 
-See the [ERC20 module docs](/developers-evm/erc20-module) and [permissioned MTS tokens](/developers-evm/permissioned-multivm-token) for implementing a custom `IPermissionsHook`.
+Three constraints apply to this step specifically, all covered in full on the
+[ERC20 Module](/developers-evm/erc20-module) reference:
+
+- **Disabled policies force the template.** If the namespace from step 3 disables the `MINT`, `BURN` or
+  `SUPER_BURN` **policy**, the chain deploys `FixedSupplyBankERC20` and rejects `--erc20` outright.
+  Defining roles alone does not do this, since unspecified policies default to permissive.
+- **Custom contracts need empty constructor metadata.** Deploy with empty name, empty symbol and zero
+  decimals, or the constructor writes `erc20:0x...` metadata and pairing fails with
+  `ErrExistingERC20DenomSupply`.
+- **ERC20 ownership is not native mint authority.** The precompile submits native mints and burns with
+  the contract address as sender, so that address needs `MINT`, and `SUPER_BURN` for burns, in your
+  namespace. See [mint and burn authority](/developers-evm/erc20-module#mint-and-burn-authority).
+
+For implementing a custom `IPermissionsHook`, see
+[permissioned MTS tokens](/developers-evm/permissioned-multivm-token).
 
 ### 5. Launch a Compliant Market
 

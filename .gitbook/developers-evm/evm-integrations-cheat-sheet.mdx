@@ -1,48 +1,50 @@
 ---
 title: "EVM Integrations Cheat Sheet"
 description: Looking to build a production application on Injective's EVM Mainnet? Handy references to get your integrations up to speed. Suitable for both greenfield deployments and cross-chain deployments.
-updatedAt: "2025-12-18"
+updatedAt: "2026-10-23"
 ---
 
 # Network Config
 
 - Chain ID: `1776`
 
-Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
-
-<Warning>
-Do **not** use inEVM, as that has been **deprecated**.
-</Warning>
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
 
 # Explorers
 
 - [https://blockscout.injective.network/](https://blockscout.injective.network/) → Can only see EVM transactions
 - [https://injscan.com/](https://injscan.com/) → Can see both EVM and Cosmos transactions
 
-Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
 
 # RPC Endpoints
 
-- Recommended for integrations partners
-    - Customizable for needs of applications
-    - Customizable rate limits, and no cut off for historical data queries
-    - Freemium/ paid options
-    - How to connect:
-        - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj) 
-        - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
-- Not recommended for integrations partners
-    - Not customizable for needs of applications
-    - Heavy rate limiting, and cut off for historical data queries
-    - Free option
-    - How to connect:
-        - JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
-        - WS Endpoint: `wss://sentry.evm-ws.injective.network`
-    
-Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+The maintained list of public endpoints for every service, including EVM JSON-RPC, WebSocket, LCD and
+Tendermint RPC, is published on the [Chain Portal](https://chain.injective.network/rpcs). Testnet
+endpoints and faucet details are on the portal's [testnet page](https://chain.injective.network/testnet).
 
-<Warning>
-Do **not** use inEVM, as that has been **deprecated**.
-</Warning>
+**Commercial providers**, recommended for production applications:
+
+- Dedicated capacity, configurable rate limits, and no cutoff for historical data queries
+- Freemium and paid options
+- How to connect:
+    - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj)
+    - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
+    - Alchemy: [Alchemy RPC Setup](/developers-evm/alchemy-rpc-setup)
+
+**Public endpoints**, suitable for local development and light testing:
+
+- JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
+- WS Endpoint: `wss://sentry.evm-ws.injective.network`
+
+Public endpoints are shared and rate limited, and historical data queries are cut off. They are not
+sized for production traffic, and an application that depends on them will see dropped responses under
+load. Integrators planning a token launch or expecting a traffic spike can contact the Injective team
+through their partner channel or the [Injective Discord](https://discord.com/invite/injective):
+launch support with partner infrastructure providers is available, and public endpoints should not be
+part of a launch plan.
+
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
 
 # Contract Addresses
 
@@ -51,12 +53,16 @@ Do **not** use inEVM, as that has been **deprecated**.
 |USDT|MTS USDT|`0x88f7F2b685F9692caf8c478f5BADF09eE9B1Cc13`|
 |wETH|wrapped ETH|`0x83A15000b753AC0EeE06D2Cb41a69e76D0D5c7F7`|
 |wINJ|wrapped INJ|`0x0000000088827d2d103ee2d9A6b781773AE03FfB`|
-|USDC||`0x2a25fbD67b3aE485e461fe55d9DbeF302B7D3989`|
+|USDC|native USDC (CCTP)|`0xa00C59fF5a080D2b954d0c75e46E22a0c371235a`|
 |MultiCall||`0xcA11bde05977b3631167028862bE2a173976CA11`|
+
+<Warning>
+Legacy USDC bridged from Noble over IBC (ticker `USDCnb`, shown as `USDC.n` in some wallets) is a separate token that Circle is sunsetting. Balances do not convert automatically. To migrate, see [Migrating To Native USDC on Injective](https://injective.com/blog/usdc-migration).
+</Warning>
 
 Please use the reference page below as the canonical source.
 
-Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet) 
+Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
 
 # Bridges
 
@@ -65,7 +71,6 @@ Reference: [EVM Network Information | Injective | Docs](/developers-evm/network-
 Guides:
 - [How To Bridge From Ethereum To Injective Using Metamask](https://injective.com/blog/how-to-bridge-from-ethereum-to-injective-using-metamask/)
 - [How To Bridge From Solana To Injective Using Phantom](https://injective.com/blog/how-to-bridge-from-solana-to-injective-using-phantom/)
-- [How to Bridge To Injective Using Wormhole](https://injective.com/blog/how-to-bridge-to-injective-using-wormhole/)
 - [How To Bridge From Cosmos To Injective Using Keplr](https://injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/)
 
 # Data
@@ -77,13 +82,21 @@ Guides:
 
 ## Oracles
 
-- API3: 
+- API3: 
     - Price feeds: [Api3 Market | Injective EVM](https://market.api3.org/injective)
 - Pyth:
     - Documentation: [Pyth EVM Real Time Data Pull Integration](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/evm)
     - Reference documentation: [Pyth EVM Smart Contract Addresses](https://docs.pyth.network/price-feeds/core/contract-addresses/evm)
-- Chainlink: 
+- Chainlink: 
     - Documentation: [Chainlink Data Streams](https://docs.chain.link/data-streams)
+
+# Network Status and Upgrades
+
+- Network status: [status.injective.network](https://status.injective.network)
+- Upgrade schedule and the version the chain currently runs: [chain.injective.network/upgrades](https://chain.injective.network/upgrades)
+
+Chain upgrades change the required `injectived` binary. Nodes that integrations depend on must be
+upgraded in step with the schedule above.
 
 # Wallets
 
@@ -92,17 +105,20 @@ Guides:
 Suitable for programmatic control, e.g. application/ dApp operated accounts.
 
 Installation quickstart:
-  
+
 ```shell
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.17.2-1765930431/linux-amd64.zip # replace with latest version of injective
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/<latest-release>/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv injectived peggo /usr/bin
 sudo mv libwasmvm.x86_64.so /usr/lib
 ```
 
 <Tip>
-In the command above, the URL for the `wget` download should be replaced with one for the latest release.
-You can find the exact commands (including the URL) under the [Mainnet Validator](/infra/validator-mainnet) section.
+The release URL changes with every chain upgrade. The current release is listed at
+[injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases/releases/latest),
+and the exact commands, including the URL, are under the
+[Mainnet Validator](/infra/validator-mainnet) section. The version the chain currently runs is shown on
+the [Chain Portal upgrades page](https://chain.injective.network/upgrades).
 </Tip>
 
 <Tip>
@@ -110,7 +126,7 @@ More options, including installation via Docker, or compiling from source,
 available in the reference page below.
 </Tip>
 
-Reference: [injectived | Injective | Docs](/developers/injectived) 
+Reference: [injectived | Injective | Docs](/developers/injectived) 
 
 ## MetaMask
 

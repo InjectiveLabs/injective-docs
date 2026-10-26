@@ -1,7 +1,7 @@
 ---
 title: Bridge & Deploy a Token
 description: Bring an existing ERC-20 from Ethereum to Injective via Peggy, create an MTS token pair, and launch a spot market.
-updatedAt: "2026-09-09"
+updatedAt: "2026-10-12"
 ---
 
 This guide walks through bringing an existing ERC-20 token from Ethereum to Injective and making it fully operational - visible in MetaMask, tradeable on the native orderbook, and composable with DeFi protocols.
@@ -63,16 +63,22 @@ injectived tx erc20 create-token-pair \
 **Gas requirement:** This transaction requires `--gas=3000000` minimum. The ERC20 module internally deploys an EVM contract with a hardcoded 2M gas limit. Any gas value below ~2.1M will fail with a `gas computation overflow/underflow` error.
 </Warning>
 
-For Peggy denoms, **anyone** can create the token pair - no admin required. The module deploys a `FixedSupplyBankERC20` contract automatically.
+For Peggy denoms, **anyone** can create the token pair - no admin required. The module always deploys an
+ownerless `FixedSupplyBankERC20`, and a custom `--erc20` address is rejected on this path. That pairing
+of properties is deliberate: anyone can make a bridged token usable in the EVM, and nobody can attach
+their own contract to a denom they do not control.
 
-After the transaction succeeds, query the new ERC20 address:
+After the transaction succeeds, resolve the new ERC20 address directly:
 
 ```bash
-curl -s "https://testnet.sentry.lcd.injective.network:443/injective/erc20/v1beta1/all_token_pairs" \
-  | jq '.token_pairs[] | select(.bank_denom | contains("YOUR_TOKEN_ADDRESS"))'
+curl --fail --silent --show-error --get \
+  "https://testnet.sentry.lcd.injective.network/injective/erc20/v1beta1/token_pair_by_denom" \
+  --data-urlencode "bank_denom=peggy0xYOUR_TOKEN_ADDRESS" | jq
 ```
 
-For full details, see the [ERC20 module docs](/developers-evm/erc20-module).
+For template selection, validation rules, and mint and burn authority, see the
+[ERC20 Module](/developers-evm/erc20-module) reference. For the model behind it, see
+[MultiVM Token Standard](/developers-evm/multivm-token-standard).
 
 ### 3. Set Token Metadata
 
@@ -83,6 +89,12 @@ Peggy-bridged tokens do not inherit metadata from Ethereum automatically. The MT
 </Warning>
 
 **For Peggy denoms (`peggy0x...`):** Metadata must be set via a [governance proposal](/developers/testnet-proposals). This is because Peggy denoms have no admin authority - only governance can write to the bank module's metadata store. See the [token metadata guide](/developers/assets/token-metadata) for the full proposal template and how to coordinate with the team for testnet validator votes.
+
+<Warning>
+Decimals are effectively write-once. Once bank metadata records a non-zero `decimals`, a later change
+fails with `cannot update denom metadata decimals`. Confirm the value against the Ethereum token's
+`decimals()` before submitting the proposal, because correcting it afterwards is not possible.
+</Warning>
 
 **For TokenFactory denoms (`factory/...`):** The denom admin can call `MsgSetDenomMetadata` directly. See [TokenFactory examples](/developers-native/examples/token-factory).
 

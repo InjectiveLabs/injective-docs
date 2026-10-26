@@ -1,6 +1,22 @@
 ---
 title: CW20 Standard
-updatedAt: "2025-10-30"
+updatedAt: "2026-10-12"
 ---
 
-The CW20 token standard provides a framework for the permissionless creation and management of fungible tokens that more closely resembles the [ERC20 standard](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/). As stated above, the TokenFactory is encouraged due to its native integration with the Cosmos SDK, but should you wish to use the CW20 standard for any reason, you can convert CW20 tokens to TokenFactory tokens and vice versa using the [CW20 Adapter](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md). For more information regarding the CW20 standard, see its formal specification [here](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md).
+<Warning>
+**CW20 is not recommended for new integrations and is planned for deprecation on Injective.**
+
+For new tokens, use [TokenFactory](/defi/tokens/token-factory). Where an ERC20 interface is needed, use
+the [MultiVM Token Standard](/developers-evm/multivm-token-standard), which gives a token one balance
+shared across the native layer and the EVM. Existing CW20 assets continue to work and can be
+represented as bank denoms through the adapter.
+</Warning>
+
+CW20 is a Wasm token standard that resembles
+[ERC20](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/). Unlike bank denoms, CW20
+balances and supply live in contract storage, so they are not visible to the exchange, auction or
+insurance modules without conversion, and querying supply requires a contract call.
+
+The [CW20 Adapter](/developers-cosmwasm/cw20-adapter) converts a CW20 asset to a TokenFactory denom and
+back. See the [formal CW20 specification](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md)
+for the standard itself.
