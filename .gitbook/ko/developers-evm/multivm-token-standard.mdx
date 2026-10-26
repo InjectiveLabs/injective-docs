@@ -1,87 +1,162 @@
 ---
 title: MultiVM Token Standard
-description: Injective의 multi-VM 아키텍처에서 토큰 표현 이해
-updatedAt: "2026-02-23"
+description: Injective의 네이티브 레이어와 EVM 전반에서 하나의 토큰, 하나의 잔액.
+updatedAt: "2026-10-12"
 ---
 
 ## MultiVM Token Standard(MTS)란?
 
-MTS(MultiVM Token Standard)는 Injective의 모든 토큰이 -
-Cosmos 모듈을 사용하여 배포되었든 Ethereum Virtual Machine(EVM)을 통해 배포되었든 -
-하나의 정식 잔액과 ID를 갖도록 보장합니다.
-이 통합된 접근 방식은 단편화를 방지하고 토큰 브릿징 또는 래핑의 필요성을 제거하여
-탈중앙화 금융(DeFi) 및 dApp 상호작용을 위한 원활한 상호운용성과 통합 유동성을 가능하게 합니다.
+MTS(MultiVM Token Standard)는 Injective의 모든 토큰이,
+실행 레이어의 네이티브 모듈을 통해 생성되었든 Ethereum Virtual Machine(EVM)에 배포되었든,
+하나의 정식 잔액과 ID를 가질 수 있도록 보장합니다.
+이는 단편화를 방지하고 실행 환경 간에 토큰을 이동하기 위해 브릿징하거나 래핑할 필요를 없애,
+DeFi 프로토콜과 dApp이 단일 유동성 풀을 활용할 수 있게 합니다.
 
-## MTS가 중요한 이유
+이 페이지는 스택 양쪽 모두에서 MTS의 진입점입니다. 모델과 토큰이 생성되는 네 가지 방식을 다룬 후,
+세부 사항은 네이티브 또는 EVM 참고 문서로 안내합니다.
 
-* **원활한 상호운용성:** 토큰은 Cosmos 및 EVM 환경에서 일관성을 유지합니다.
+## 모델: 하나의 잔액, 두 개의 뷰
+
+네이티브 **bank 모듈**은 잔액과 총 공급량에 대한 단일 진실 소스입니다. MTS ERC20
+컨트랙트는 자체 잔액을 보유하지 않습니다. 이는
+`0x0000000000000000000000000000000000000064`에 있는
+[Bank precompile](/ko/developers-evm/bank-precompile)을 통해 bank 상태를 읽고 쓰는 뷰입니다.
+
+중요한 결과: 네이티브 bank 전송과 EVM에서의 ERC20 `transfer`는 동일한
+잔액을 이동시킵니다. 조정 단계도, 래핑된 표현도 없습니다.
+
+컨트랙트는 잔액, 공급량 및 전송 작업을 precompile을 통해 라우팅하는 경우에만 MTS에 참여합니다.
+자체 EVM 스토리지에 잔액을 보관하는 일반 ERC20은 일반 EVM 토큰으로, bank 모듈에서
+보이지 않으며 MTS 범위 밖에 있습니다.
+
+### MTS가 중요한 이유
+
+* **원활한 상호운용성:** 토큰은 네이티브 모듈과 EVM 전반에서 일관성을 유지합니다.
 * **통합 유동성:** 단일 진실 소스가 유동성 단편화를 방지합니다.
 * **향상된 개발자 경험:** Hardhat, Foundry, MetaMask와 같은 표준 도구가 즉시 작동합니다.
-* **보안 및 효율성:** 모든 토큰 상태는 bank 모듈에서 중앙 집중적으로 유지되어 강력한 보안을 보장합니다.
-
-## 아키텍처
-
-시스템은 두 가지 주요 구성 요소로 구성됩니다:
-
-* [**Bank Precompile**](/ko/developers-evm/bank-precompile/):
-  * Go로 개발된 이 precompile은 Injective EVM에 직접 내장되어 있습니다.
-  * mint, burn, transfer와 같은 ERC20 작업을 bank 모듈로 프록시하는 Solidity 인터페이스를 제공합니다.
-* [**ERC20 Module**](/ko/developers-evm/erc20-module/):
-  * 이 모듈은 네이티브 bank denom(예: INJ, IBC 토큰, Peggy 자산)을 EVM 내의 ERC20 컨트랙트에 매핑합니다.
-  * bank 모듈이 유지하는 정식 토큰 잔액을 항상 반영하는 MTS 호환 ERC20 컨트랙트를 배포합니다.
+* **보안 및 효율성:** 모든 토큰 상태는 bank 모듈에서 중앙 집중적으로 유지됩니다.
 
 <figure><img src="/img/multivm-token-single-token-representation-architecture.png" alt="" /><figcaption><p>단일 토큰 표현 아키텍처</p></figcaption></figure>
 
-### MTS 호환 토큰 생성
+## 네 가지 토큰 출처
 
-1. [**사전 구축된 템플릿 사용**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
-   * `BankERC20.sol`, `MintBurnBankERC20.sol` 또는 `FixedSupplyBankERC20.sol`과 같은 제공된 Solidity 템플릿으로 시작합니다.
-2. [**컨트랙트 배포**](/ko/developers-evm/smart-contracts/):
-   * Injective EVM 네트워크에 MTS 토큰 컨트랙트를 배포합니다.
-   * 컨트랙트는 Bank Precompile과 자동으로 상호작용하여 정식 상태를 업데이트합니다.
+MTS 토큰에는 네 가지 출처가 있으며, 각각 서로 다른 denom 계열에 속합니다. 메타데이터 권한과 명시적인 ERC20 페어링 단계가 필요한지 여부에 뚜렷한 차이가 있습니다.
 
-### 상호운용성 및 크로스체인 통합
+| 출처 | Denom | ERC20 페어링 | 메타데이터 권한 |
+|---|---|---|---|
+| [**TokenFactory**](/ko/developers-native/injective/tokenfactory) | `factory/...` | EVM에서 사용할 때만 필요. 관리자 또는 거버넌스만 가능. 사용자 정의 컨트랙트 허용 | denom 관리자, 즉시 적용 |
+| [**Peggy**](/ko/developers-native/bridges/ethereum) (Ethereum ERC20) | `peggy0x...` | EVM에서 사용할 때만 필요. 무허가, 템플릿 강제 | 거버넌스 제안만 가능 |
+| [**IBC**](/developers-native/examples/ibc) | `ibc/...` | EVM에서 사용할 때만 필요. 무허가, 템플릿 강제 | 거버넌스 제안만 가능 |
+| **Injective EVM** | `erc20:0x...` | 필요 없음. precompile이 컨트랙트 주소로부터 denom을 파생 | 컨트랙트, `setMetadata`를 통해 |
 
-#### 네이티브 상호운용성*
+처음 세 가지는 먼저 bank denom을 생성한 후 선택적으로 EVM에 투영합니다. 네 번째는 EVM에서 시작하며 bank denom은 컨트랙트 주소로부터 파생됩니다. 네 가지 경우 모두 페어링되면 잔액은 bank 모듈에 존재합니다.
 
-Injective의 EVM은 Cosmos 기반 체인에 직접 통합되어 있습니다.
+<Note>
+`/injective/erc20/v1beta1/all_token_pairs`는 **명시적으로 등록된** 페어, 즉 TokenFactory,
+Peggy 및 IBC denom만 나열합니다. EVM에 직접 배포된 토큰은 레지스트리 항목이 없으므로
+반환되지 않습니다. 해당 denom은 항상 `erc20:` 뒤에 체크섬 처리된 컨트랙트 주소가 붙는 형식입니다.
+</Note>
 
-* MTS를 사용할 때 EVM 스마트 컨트랙트는 네이티브 모듈(예: exchange, staking 및 governance 모듈)에 즉시 반영되는 작업을 수행합니다.
-* Injective 바이너리 내에서 제공되는 [JSON-RPC 엔드포인트](/ko/developers-evm/network-information/)는 Ethereum과 호환되어 원활한 개발자 통합을 보장합니다.
+### 어떤 경로가 적용되는지
 
-#### 크로스체인 작업
+* 아직 어디에도 존재하지 않는 토큰을 출시하며, 공급량과 메타데이터에 대한 네이티브 관리자 제어를 원하는 경우: **TokenFactory**.
+* 기존 Ethereum ERC20을 가져오는 경우: **Peggy**.
+* 다른 IBC 체인의 토큰을 가져오는 경우: **IBC**.
+* 토큰 권한이 Solidity에 있는 EVM 우선 방식으로 구축하는 경우: **Injective EVM**.
+
+### EVM에서 MTS 토큰 생성
+
+1. [**템플릿으로 시작**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
+   `BankERC20.sol`(추상 베이스), `MintBurnBankERC20.sol`(소유자가 민트 및 버닝 가능), 또는
+   `FixedSupplyBankERC20.sol`(소유자 없음, 고정 공급량).
+2. [**Injective EVM에 배포**](/ko/developers-evm/smart-contracts/). 컨트랙트는
+   Bank precompile과 상호작용하며, 첫 민트 시 `erc20:0x...` denom이 생성됩니다.
+
+### 기존 denom 페어링
+
+bank denom에 대해 `MsgCreateTokenPair`를 제출합니다. 체인이 템플릿을 배포하도록 하려면 ERC20 주소를 비워 두거나,
+TokenFactory denom에 한해 자체 컨트랙트 주소를 제공할 수 있습니다.
+
+사용자 정의 컨트랙트에는 빈 메타데이터 생성자, 민트 및 버닝을 위한 별도의 네이티브 권한 부여 등
+놓치기 쉬운 요구 사항이 있습니다. 이러한 내용은 페어링 관련 모든 사항의 참고 문서인
+[ERC20 모듈](/ko/developers-evm/erc20-module) 페이지에 상세히 설명되어 있습니다.
+
+## 상호운용성 및 크로스체인 통합
+
+### 네이티브 상호운용성
+
+Injective의 EVM은 체인에 직접 통합되어 있습니다.
+
+* MTS를 사용할 때 EVM 스마트 컨트랙트는 exchange, staking, governance와 같은 네이티브 모듈에
+  즉시 반영되는 작업을 수행합니다.
+* Injective 바이너리 내에서 제공되는 [JSON-RPC 엔드포인트](/ko/developers-evm/network-information/)는
+  Ethereum과 호환됩니다.
+
+### 크로스체인 작업
 
 * **IBC 호환성:** 기존 네이티브 토큰
-  (예: [Token Factory](/developers-native/injective/tokenfactory/)를 통해 생성되었거나 Peggy를 통해 페깅된 토큰)은
+  ([TokenFactory](/ko/developers-native/injective/tokenfactory/)를 통해 생성되었거나 Peggy를 통해 페깅된 토큰)은
   MTS 페어링이 설정되면 EVM에서 액세스할 수 있습니다.
 * **브릿징 대안:** 많은 블록체인은 별도의 브릿지 작업(잠금, 민트, 잠금 해제)이 필요하지만
   MTS는 상태를 네이티브로 동기화하여 이러한 단계를 피합니다.
 
-#### Allowances 및 확장 ERC20 함수
+### Allowances 및 확장 ERC20 함수
 
 * MTS 컨트랙트는 allowance(approve/transferFrom)와 같은 표준 ERC20 기능을 유지합니다.
-* allowance 메커니즘이 편의를 위해 EVM 컨트랙트 내에서 유지되지만
-  궁극적인 잔액은 bank 모듈에서 관리되어 무결성을 보존합니다.
+* allowance 메커니즘은 편의를 위해 EVM 컨트랙트 스토리지에 존재하며, 기본 잔액은
+  bank 모듈에서 관리됩니다.
 
-### 성능, 가스 및 보안 고려 사항
+## 성능, 가스 및 보안 고려 사항
 
-#### 가스 비용 및 효율성
+### 가스 비용 및 효율성
 
 * 가스 비용은 INJ로 지불됩니다.
-  EVM을 통한 MTS 작업은 네이티브 트랜잭션에 비해 가스 사용량을 약간 증가시킬 수 있는 추상화 레이어를 도입하지만
+  EVM을 통한 MTS 작업은 네이티브 트랜잭션에 비해 가스 사용량을 약간 증가시킬 수 있는 추상화 레이어를 도입하지만,
   전체 비용은 Ethereum의 비교 가능한 작업보다 낮게 유지됩니다.
-* 가스 모델은 EVM 스타일 opcode 비용과 네이티브 모듈 상호작용 간의 균형을 반영하도록 설계되었습니다.
 
-#### 보안
+### 보안
 
-* 단일 진실 소스로서의 [bank 모듈](/developers-native/core/)은 토큰 잔액이 일관되고 검증 가능하도록 보장하여 MTS의 보안을 뒷받침합니다.
-* [precompile](/ko/developers-evm/precompiles/) 사용은 상태 비동기화와 같은 일반적인 함정을 방지하여
-  어디에서 시작되었든 모든 작업이 동일한 정식 원장을 업데이트하도록 보장합니다.
-* 스마트 컨트랙트 개발을 위한 고급 보안 지침 및 모범 사례는 보안 섹션 및 외부 리소스에서 제공됩니다.
+* 단일 진실 소스로서의 [bank 모듈](/ko/developers-native/core/)은 토큰 잔액이 일관되고 검증 가능하도록 보장하여 MTS의 보안을 뒷받침합니다.
+* [precompile](/ko/developers-evm/precompiles/) 사용은 상태 비동기화를 방지하여,
+  어디에서 시작되었든 모든 작업이 동일한 정식 원장을 업데이트하도록 합니다.
 
-**ℹ️ 참고:**
+<Warning>
+컨트랙트를 페어링한다고 해서 MTS 호환이 되는 것은 아닙니다. `MsgCreateTokenPair`는 주소가
+컨트랙트 코드를 보유하고 `symbol()`에 응답하는지 확인하는데, 일반 OpenZeppelin ERC20도 잔액을
+bank 모듈 밖에 완전히 보관하면서 이를 충족합니다. 이러한 페어를 해제하려면 거버넌스
+`MsgDeleteTokenPair`가 필요하며, 이미 어긋난 잔액은 조정되지 않습니다.
+[페어 생성 시 검증 항목](/ko/developers-evm/erc20-module#페어-생성-시-검증-항목)을 참조하세요.
+</Warning>
 
-denom 스팸을 방지하기 위해 ERC20 모듈을 통한 ERC20 컨트랙트 배포는
-**유료 작업**이며 **1 INJ**의 배포 수수료가 필요합니다.
-ERC20 컨트랙트 배포 트랜잭션에 이 금액이 포함되어 있는지 확인하세요.
-그렇지 않으면 작업이 거부됩니다.
+<Info>
+**Denom 생성 수수료.** 새 `erc20:0x...` denom을 생성하는 데는 **1 INJ**가 소요되며, 이는
+첫 민트 시 부과되고 컨트랙트 자체의 INJ 잔액에서 차감됩니다. `BankERC20` 생성자는 `payable`이므로
+배포 트랜잭션에서 컨트랙트에 미리 자금을 넣을 수 있습니다.
+
+총 공급량이 0이 아닌 값에서 0이 되면 기본 denom은 상태에서 제거됩니다. 다시 민트하면
+denom이 재생성되고 수수료가 다시 부과됩니다.
+[Bank Precompile](/ko/developers-evm/bank-precompile#denom-생성-수수료)을 참조하세요.
+</Info>
+
+## 참고 자료
+
+<CardGroup cols={2}>
+  <Card title="ERC20 모듈" icon="link" href="/ko/developers-evm/erc20-module">
+    페어링 참고 문서: 템플릿 선택, 검증, 사용자 정의 컨트랙트, 민트 및 버닝 권한.
+  </Card>
+  <Card title="Bank Precompile" icon="plug" href="/ko/developers-evm/bank-precompile">
+    인터페이스, denom 결정 방식, 메서드 동작 방식.
+  </Card>
+  <Card title="권한형 MTS 토큰" icon="lock" href="/ko/developers-evm/permissioned-multivm-token">
+    IPermissionsHook을 통한 Solidity 기반 컴플라이언스 훅.
+  </Card>
+  <Card title="네이티브 ERC20 모듈" icon="file-code" href="/ko/developers-native/injective/erc20">
+    네이티브 메시지, 상태 및 이벤트 사양.
+  </Card>
+  <Card title="토큰 브릿지 및 배포" icon="bridge" href="/developers-defi/bridge-deploy">
+    작업 가이드: Peggy를 통한 Ethereum ERC20에서 Injective까지, 처음부터 끝까지.
+  </Card>
+  <Card title="권한형 자산 발행" icon="shield-halved" href="/developers-defi/permissioned-assets">
+    작업 가이드: 역할과 훅을 사용한 컴플라이언스 게이트 토큰 출시.
+  </Card>
+</CardGroup>

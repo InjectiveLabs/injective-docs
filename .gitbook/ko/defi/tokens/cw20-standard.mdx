@@ -1,6 +1,21 @@
 ---
 title: CW20 표준
-updatedAt: "2026-02-24"
+updatedAt: "2026-10-12"
 ---
 
-CW20 토큰 표준은 [ERC20 표준](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/)과 더 유사한 대체 가능한 토큰의 무허가 생성 및 관리를 위한 프레임워크를 제공합니다. 위에서 언급한 것처럼 Cosmos SDK와의 기본 통합으로 인해 TokenFactory가 권장되지만, 어떤 이유로든 CW20 표준을 사용하려면 [CW20 어댑터](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md)를 사용하여 CW20 토큰을 TokenFactory 토큰으로 또는 그 반대로 변환할 수 있습니다. CW20 표준에 대한 자세한 내용은 [여기](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md)의 공식 사양을 참조하세요.
+<Warning>
+**CW20은 새로운 통합에 권장되지 않으며 Injective에서 지원 중단이 예정되어 있습니다.**
+
+새 토큰에는 [TokenFactory](/ko/defi/tokens/token-factory)를 사용하세요. ERC20 인터페이스가 필요한 경우
+네이티브 레이어와 EVM 전반에서 토큰이 하나의 잔액을 공유하도록 하는
+[MultiVM Token Standard](/ko/developers-evm/multivm-token-standard)를 사용하세요. 기존 CW20 자산은 계속 작동하며
+어댑터를 통해 bank denom으로 표현할 수 있습니다.
+</Warning>
+
+CW20은 [ERC20](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/)과 유사한 Wasm 토큰 표준입니다.
+bank denom과 달리 CW20 잔액과 공급량은 컨트랙트 스토리지에 존재하므로, 변환 없이는 exchange, auction 또는
+insurance 모듈에서 보이지 않으며 공급량을 쿼리하려면 컨트랙트 호출이 필요합니다.
+
+[CW20 어댑터](/ko/developers-cosmwasm/cw20-adapter)는 CW20 자산을 TokenFactory denom으로 변환하고
+다시 되돌립니다. 표준 자체에 대해서는 [공식 CW20 사양](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md)을
+참조하세요.

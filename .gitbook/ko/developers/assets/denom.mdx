@@ -1,17 +1,25 @@
 ---
 title: Denom
-updatedAt: "2026-03-03"
+updatedAt: "2026-10-12"
 ---
 
 denom은 Injective의 Bank 모듈 내에서 자산이 표현되는 방식입니다. 이러한 자산은 거래, exchange 모듈에서 새 마켓 생성, 경매 참여, 다른 주소로 전송 등에 사용할 수 있습니다.
 
 denom의 출처와 Injective에서 생성된 방식에 따라 다양한 유형의 denom이 있습니다:
 
-* **Native denom** - 이 유형의 denom은 Injective의 네이티브 코인을 나타내는 `inj` denom 하나만 있습니다.
-* **Peggy denom** - 이러한 denom은 Peggy 브릿지를 사용하여 Ethereum에서 Injective로 브릿지된 자산을 나타냅니다. `peggy{ERC20_CONTRACT_ADDRESS}` 형식입니다.
-* **IBC denom** - 이러한 denom은 IBC를 통해 다른 Cosmos 체인에서 브릿지된 자산을 나타냅니다. `ibc/{hash}` 형식입니다.
-* **Insurance Fund Denom** - 이러한 denom은 Injective에서 생성된 insurance fund의 토큰 지분을 나타냅니다. `share{id}` 형식입니다.
-* **Factory Denom** - 이러한 denom은 Injective 네이티브 bank 모듈에서 Cosmwasm의 CW20 토큰을 표현한 것입니다. `factory/{OWNER}/{SUBDENOM}` 형식이며, 여기서 `OWNER`는 factory denom을 생성한 소유자입니다. 한 예로 `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`라는 CW20 토큰 factory denom이 있으며, 여기서 `CW20_ADAPTER_CONTRACT`는 CW20과 네이티브 Bank 모듈 간의 변환을 수행하는 어댑터 컨트랙트 주소입니다.
+* **Native denom** - `inj`, Injective의 네이티브 코인이며 EVM 가스 토큰이기도 합니다.
+* **Factory denom** - `factory/{creator}/{subdenom}`, [TokenFactory](/ko/defi/tokens/token-factory)를 통해 무허가로 생성됩니다.
+* **Peggy denom** - `peggy0x{ERC20_CONTRACT_ADDRESS}`, Peggy 브릿지를 통해 Ethereum에서 브릿지된 자산입니다.
+* **IBC denom** - `ibc/{hash}`, 다른 IBC 체인에서 브릿지된 자산입니다.
+* **EVM denom** - `erc20:0x{CONTRACT_ADDRESS}`, [Bank precompile](/ko/developers-evm/bank-precompile)을 기반으로 Injective EVM에 직접 배포된 자산입니다.
+* **Insurance fund denom** - `share{id}`, insurance fund의 토큰 지분입니다.
+
+CW20 자산은 잔액이 컨트랙트 스토리지에 저장되므로 bank denom이 아닙니다.
+[CW20 adapter](/ko/developers-cosmwasm/cw20-adapter)를 통해 `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`로
+표현할 수 있지만, 새로운 통합에는 권장되지 않습니다.
+
+링크가 포함된 동일한 분류는 [Token Standards](/ko/defi/tokens/index)를, 단일 denom이 네이티브 레이어와 EVM 양쪽에서
+어떻게 접근 가능한지는 [MultiVM Token Standard](/ko/developers-evm/multivm-token-standard)를 참조하세요.
 
 ## 토큰
 

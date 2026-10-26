@@ -1,241 +1,144 @@
 ---
 title: トークンの立ち上げ
-updatedAt: "2025-11-27"
+description: Injectiveにおけるトークンのオリジン、TokenFactory denomの作成、メタデータ、供給量、EVMアクセス、リスティングについて説明します。
+updatedAt: "2026-10-12"
 ---
 
-このドキュメントでは、Injective上でトークンを立ち上げる方法について説明します。
+## トークンのオリジン
 
-Injective上でトークンを立ち上げるには、既存のトークンをbridgeする方法と、新しくトークンを作成する方法の2つの選択肢があります。
+トークンは4つのオリジンのいずれかを通じてInjectiveに到達します。オリジンによって、denomの形式、メタデータを管理するアカウント、そしてトークンをEVMから参照可能にするために必要な手順が決まります。
 
-## Bridging <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+| 出発点 | オリジン | Denom | リファレンス |
+|---|---|---|---|
+| 新しいトークン | **TokenFactory** | `factory/...` | このページ |
+| 既存のEthereum ERC20 | **Peggy** | `peggy0x...` | [Bridge & Deploy](/developers-defi/bridge-deploy) |
+| 他のIBCチェーン上のトークン | **IBC** | `ibc/...` | [IBC転送](/jp/developers-native/examples/ibc) |
+| Injective EVM上にデプロイされたコントラクト | **Injective EVM** | `erc20:0x...` | [MultiVM Token Standard](/jp/developers-evm/multivm-token-standard) |
 
-Injective上でトークンを立ち上げる最も簡単な方法は、Injectiveが相互運用可能なサポート対象ネットワークの1つから、既存のアセットをbridgeすることです。他のネットワークからInjectiveへアセットをbridgeする方法については、[bridge](/jp/defi/bridge/ "mention") セクションのガイドを参照してください。
+いずれのオリジンもbank denomを生成します。exchange、auction、insurance、permissionsの各モジュールはすべてbank denom上で動作するため、オリジンによってトークンの将来の用途が制限されることはありません。基盤となるモデルについては [MultiVM Token Standard](/jp/developers-evm/multivm-token-standard) を参照してください。
 
-bridgingが完了すると、Injective上にトークンが作成され、それを使って [マーケットを立ち上げる](/jp/developers-defi/market-launch/ "mention") ことができます。
+<Note>
+コンプライアンスで制限されたアセットは、以下のTokenFactoryの手順に従い、その上にpermissions namespaceを重ねて構成します。ロール、ポリシー、KYCフックについては [Issue Permissioned Assets](/developers-defi/permissioned-assets) を参照してください。
+</Note>
 
-## 新しいトークンの作成
+## 作成時に固定される設定
 
-`TokenFactory` モジュールを使ってInjective上に新しいトークンを作成することもできます。実現方法は複数あります。
+TokenFactory denomの以下3つのプロパティは、一度設定すると変更できません。
 
-### Injective Hubを使用する <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+**Decimals** は、bankメタデータにゼロ以外の値が記録された後は変更できません。以降の変更は `cannot update denom metadata decimals` で失敗するため、誤った値は永続的に残ります。
 
-[Injective Hub](https://injhub.com/token-factory/) のWebアプリでは、トークンの作成・管理、Injectiveの [ネイティブorderbook](/developers-native/injective/exchange) 上でのマーケット作成などをシームレスに行えます。
+**Admin burn** は `create-denom` の `--allow-admin-burn` で設定され、無効化することしかできません。一度falseになるか無効化されると、再度有効化しようとしても失敗します。falseの間は、どのアカウントも他のアドレスからburnできず、ペアとなるERC20は一切burnできません。ERC20のburnは、常にコントラクトからではなく保有者からのburnとしてチェーンに届くためです。このフラグを設定しただけでは、ペアのコントラクトにburnの権限は付与されません。そのためには、EVMアクセスの項で説明する別途のネイティブ権限が必要です。
 
-### TokenStationを使用する[​](/developers-defi/token-launch) <a href="#id-3-via-tokenstation" id="id-3-via-tokenstation"></a>
+**Admin権限** は、一度放棄すると回復できません。adminをゼロアドレス `inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49` に設定すると供給量が凍結され、多くの場合それが意図された目的です。ただし同時に、`MsgSetDenomMetadata` を送信できる権限を持つ者がガバナンスを含めていなくなり、ペアのERC20が依存するmint権限も失われます。
 
-[TokenStation](https://www.tokenstation.app/) のWebアプリでは、トークンの作成・管理、Injectiveの [ネイティブorderbook](/developers-native/injective/exchange/) 上でのマーケット作成、エアドロップの実施など、多くの機能をシームレスに利用できます。
+## Denomの作成
 
-### DojoSwapを使用する[​](/developers-defi/token-launch/#4-via-dojoswap) <a href="#id-4-via-dojoswap" id="id-4-via-dojoswap"></a>
-
-上記と同様に、[DojoSwap's Market Creation module](https://docs.dojo.trading/introduction/market-creation) を活用することで、トークンの作成・管理・リスト化に加え、その他多数の有用な機能を利用できます。
-
-### プログラム的な方法
-
-#### TypeScriptを使用する
-
-[トークンの立ち上げ](/developers/assets/token-create) について詳しく学びましょう。
-
-#### Injective CLIを使用する
-
-<Callout icon="info" color="#07C1FF" iconType="regular">
-このチュートリアルを進める前に、ローカルに `injectived` がインストールされている必要があります。詳細は [injectived](/developers/injectived/ "mention") ページを参照してください。
-</Callout>
-
-`injectived` をインストールし、鍵を追加したら、CLIを使ってトークンを立ち上げられます:
-
-1. **`TokenFactory` denomの作成**
-
-factory denomの作成手数料は `0.1 INJ` です。
+作成手数料は作成者が支払い、ネットワークによって異なります。執筆時点では、mainnetで0.1 INJ、testnetで1 INJです。現在の値はモジュールのparamsに保持されています:
 
 ```bash
-injectived tx tokenfactory create-denom [subdenom] [name] [symbol] [decimals] --from=YOUR_KEY --chain-id=injective-888 --node=https://testnet.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+curl --fail --silent --show-error \
+  "https://sentry.lcd.injective.network/injective/tokenfactory/v1beta1/params" | jq
 ```
 
-トークンは作成者アドレスによって名前空間が区切られ、パーミッションレスかつ名前の衝突を回避できます。上記の例ではsubdenomは `ak` ですが、denomの命名は `factory/{creator address}/{subdenom}` となります。
+### Webアプリケーション
 
-2. **トークンメタデータの提出**
+[Injective Hub](https://injhub.com/token-factory/) と [DojoSwap](https://docs.dojo.trading/) はいずれもトークンの作成・管理が可能で、そのトークンのマーケットを立ち上げることもできます。[TokenStation](https://www.tokenstation.app/) はエアドロップやローンチ用のツールを提供しています。
 
-Injective dApp上でトークンを表示させるには、そのメタデータを提出する必要があります。
+### injectived
 
 ```bash
-injectived tx tokenfactory set-denom-metadata "My Token Description" 'factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak' AKK AKCoin AK '' '' '[
-{"denom":"factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak","exponent":0,"aliases":[]},
-{"denom":"AKK","exponent":6,"aliases":[]}
-]' 6 --from=YOUR_KEY --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+CHAIN_ID="injective-888"
+NODE="https://testnet.sentry.tm.injective.network:443"
+ADMIN_KEY="admin"
+ADMIN=$(injectived keys show "$ADMIN_KEY" -a)
+TX="--from=$ADMIN_KEY --chain-id=$CHAIN_ID --node=$NODE --gas-prices=500000000inj --gas=1000000"
+
+# create-denom [subdenom] [name] [symbol] [decimals]
+injectived tx tokenfactory create-denom ak "AK Coin" AKK 6 --allow-admin-burn $TX
+
+DENOM="factory/${ADMIN}/ak"
 ```
 
-このコマンドは以下の引数を期待します:
+Denomは作成者アドレスによって名前空間が区切られるため、作成はパーミッションレスで、名前の衝突も発生しません。mainnetでは、対応する値は `--chain-id=injective-1` と `--node=https://sentry.tm.injective.network:443` です。
+
+### SDKとコントラクト
+
+- **TypeScript:** [TokenFactory SDKの例](/jp/developers-native/examples/token-factory)
+- **Wasmコントラクト:** [`injective-cosmwasm`](https://github.com/InjectiveLabs/cw-injective) は `create_new_denom_msg`、`create_set_token_metadata_msg`、`create_mint_tokens_msg`、`create_burn_tokens_msg` を提供しています
+- **メッセージリファレンス:** [TokenFactoryメッセージ](/developers-native/injective/tokenfactory/03_messages)
+
+## メタデータ
+
+ウォレット、エクスプローラー、Solidityの呼び出し元は、name、symbol、decimalsをbankメタデータから読み取ります。メタデータのないdenomは、空白かつdecimalsゼロとして表示されます。
 
 ```bash
-injectived tx tokenfactory set-denom-metadata [description] [base] [display] [name] [symbol] [uri] [uri-hash] [denom-unit (json)] [decimals]
+# set-denom-metadata [description] [base] [display] [name] [symbol] \
+#                    [uri] [uri-hash] [denom-unit (json)] [decimals] [shouldDisableAdminBurn]
+injectived tx tokenfactory set-denom-metadata \
+  "My token description" "$DENOM" AKK "AK Coin" AKK "" "" \
+  "[{\"denom\":\"$DENOM\",\"exponent\":0,\"aliases\":[]},
+    {\"denom\":\"AKK\",\"exponent\":6,\"aliases\":[]}]" \
+  6 false $TX
 ```
 
-3. **トークンのmint**
+このコマンドは10個の位置引数を取ります。最後の引数を `true` にすると、admin burnが永続的に無効化されます。
 
-トークンを作成し、メタデータを提出したら、いよいよmintを行います。
+各フィールドについては [Token metadata](/developers/assets/token-metadata) を参照してください。
+
+## 供給量
 
 ```bash
-injectived tx tokenfactory mint 1000000factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+# mint [amount] [receiver]
+injectived tx tokenfactory mint "1000000$DENOM" "$ADMIN" $TX
+
+# burn [amount] [burn_from]
+injectived tx tokenfactory burn "1000000$DENOM" "$ADMIN" $TX
 ```
 
-このコマンドは、トークンが6 decimalsを持つ場合、1トークンをmintします。
+どちらのコマンドも2つの引数を取ります。decimalsが6の場合、上記の量は1トークンに相当します。
 
-4. **トークンのburn**
+## EVMアクセス
 
-トークンのadminは、トークンをburnすることもできます。
+TokenFactory denomは、ERC20ペアが登録されるまでMetaMaskやSolidityコントラクトからは参照できません。
 
 ```bash
-injectived tx tokenfactory burn 1000000factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
+injectived tx erc20 create-token-pair "$DENOM" --from="$ADMIN_KEY" \
+  --chain-id="$CHAIN_ID" --node="$NODE" --gas=3000000 --gas-prices=160000000inj
 ```
 
-5. **adminの変更**
+ペアの作成にはゼロ以外の供給量が必要なため、初回のmintの後に行います。`--erc20` を省略すると、チェーンはペア作成者が所有する `MintBurnBankERC20` をデプロイします。代わりにコントラクトアドレスを指定する場合は追加の制約があり、[ERC20 Module](/jp/developers-evm/erc20-module) で説明しています。
 
-初期供給量をmintした後は、トークン供給が操作されないようにするため、adminを `null` アドレスへ変更することを推奨します。前述の通り、トークンのadminはいつでも供給量をmint・burnできます。上記で説明したように、`NEW_ADDRESS` はほとんどの場合 `inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe2hm49` に設定すべきです。
+ペアを登録しても、コントラクトが変更されたり、ネイティブ権限が付与されたり、メタデータの管理者が変わったりすることはありません。denomとアドレスの間のマッピングが記録されるだけです。
 
-```bash
-injectived tx tokenfactory change-admin factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/ak NEW_ADDRESS --from=gov --chain-id=injective-888 --node=https://testnet.sentry.tm.injective.network:443 --gas-prices=500000000inj --gas 1000000
-```
+<Warning>
+ERC20の所有権はネイティブのmint権限を付与しません。precompileはネイティブのmintを **コントラクトアドレス** をsenderとして送信するため、ネイティブのチェックはEVMの呼び出し元ではなくそのアドレスに対して適用されます。permissions namespaceがない場合、そのアドレスはdenom adminである必要があります。namespaceがある場合は `MINT` を保持している必要があり、denom adminであるだけでは不十分です。
 
-<Callout icon="info" color="#07C1FF" iconType="regular">
-上記の例はテストネット用です。mainnetで実行する場合は、以下のように変更してください:
+burnはさらに厳格です。denomに `allow_admin_burn` が追加で必要となり、namespaceが存在する場合は `BURN` ではなく `SUPER_BURN` が必要です。[mintとburnの権限](/jp/developers-evm/erc20-module#mintとburnの権限) を参照してください。
+</Warning>
 
-`injective-888` > `injective-1`
+## ディスカバリー
 
-`https://testnet.sentry.tm.injective.network:443` > `http://sentry.tm.injective.network:443`
-</Callout>
+オンチェーンのメタデータだけでは、トークンはdAppのフロントエンドに表示されません。フロントエンドはレジストリから情報を読み取るためです。[injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md) はInjective dApp全体にロゴとラベルを提供しており、[Injective List](/developers/assets/injective-list) で説明しています。
 
-#### CosmWasmを使用する
+シンボルはトークン間で一意ではありません。統合手順においてアセットを一意に識別できるのは、ネットワーク、bank denom、ERC20アドレスの組み合わせのみです。
 
-スマートコントラクトを通じてプログラム的にbankトークンを作成・管理する場合、[`injective-cosmwasm`](https://github.com/InjectiveLabs/cw-injective/blob/6b2d549ff99912b9b16dbf91a06c83db99b5dace/packages/injective-cosmwasm/src/msg.rs#L399-L434) パッケージの以下のメッセージを使用できます:
+## マーケット
 
-\
-`create_new_denom_msg`
+供給量が存在し、メタデータが設定されていれば、ネイティブorderbook上にスポットマーケットを作成できます。[マーケットの立ち上げ](/jp/developers-defi/market-launch) を参照してください。
 
-```rust
-pub fn create_new_denom_msg(sender: String, subdenom: String) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::CreateDenom { sender, subdenom },
-    }
-    .into()
-}
-```
+## リファレンス
 
-目的: tokenfactoryモジュールを使用して新しいトークンのdenomを作成するメッセージを生成します。
-
-パラメーター:
-
-* `sender`: 作成を開始するアカウントのアドレス。
-* `subdenom`: 新しいトークンのサブdenom識別子。
-
-戻り値: Injectiveブロックチェーンへ送信可能な、`InjectiveMsgWrapper` でラップされた `CosmosMsg`。
-
-例:
-
-```rust
-let new_denom_message = create_new_denom_msg(
-    env.contract.address,  // Sender's address
-    "mytoken".to_string(), // Sub-denomination identifier
-);
-```
-
-#### `create_set_token_metadata_msg`
-
-```rust
-pub fn create_set_token_metadata_msg(denom: String, name: String, symbol: String, decimals: u8) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::SetTokenMetadata {
-            denom,
-            name,
-            symbol,
-            decimals,
-        },
-    }
-    .into()
-}
-```
-
-目的: トークンのメタデータを設定または更新するメッセージを生成します。
-
-パラメーター:
-
-* `denom`: トークンのdenom識別子。
-* `name`: トークンの正式名称。
-* `symbol`: トークンのシンボル。
-* `decimals`: トークンが使用する小数点以下の桁数。
-
-戻り値: Injectiveブロックチェーンへ送信可能な、`InjectiveMsgWrapper` でラップされた `CosmosMsg`。
-
-例:
-
-```rust
-let metadata_message = create_set_token_metadata_msg(
-    "mytoken".to_string(),         // Denomination identifier
-    "My Custom Token".to_string(), // Full name
-    "MYT".to_string(),             // Symbol
-    18,                            // Number of decimals
-);
-```
-
-#### `create_mint_tokens_msg`
-
-```rust
-pub fn create_mint_tokens_msg(sender: Addr, amount: Coin, mint_to: String) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::Mint { sender, amount, mint_to },
-    }
-    .into()
-}
-```
-
-目的: 新しいトークンをmintするメッセージを生成します。対象トークンはtokenfactoryトークンである必要があり、senderはトークンのadminである必要があります。
-
-パラメーター:
-
-* `sender`: mint操作を開始するアカウントのアドレス。
-* `amount`: mintするトークンの量。
-* `mint_to`: 新しくmintされたトークンを送るrecipientアドレス。
-
-戻り値: Injectiveブロックチェーンへ送信可能な、`InjectiveMsgWrapper` でラップされた `CosmosMsg`。
-
-例:
-
-```rust
-let mint_message = create_mint_tokens_msg(
-    env.contract.address,                                   // Sender's address
-    Coin::new(1000, "factory/<creator-address>/mytoken"),   // Amount to mint
-    "inj1...".to_string(),                                  // Recipient's address
-);
-```
-
-#### `create_burn_tokens_msg`
-
-```rust
-pub fn create_burn_tokens_msg(sender: Addr, amount: Coin) -> CosmosMsg<InjectiveMsgWrapper> {
-    InjectiveMsgWrapper {
-        route: InjectiveRoute::Tokenfactory,
-        msg_data: InjectiveMsg::Burn { sender, amount },
-    }
-    .into()
-}
-```
-
-目的: トークンをburnするメッセージを生成します。対象トークンはtokenfactoryトークンである必要があり、senderはトークンのadminである必要があります。
-
-パラメーター:
-
-* `sender`: burn操作を開始するアカウントのアドレス。
-* `amount`: burnするトークンの量。
-
-戻り値: Injectiveブロックチェーンへ送信可能な、`InjectiveMsgWrapper` でラップされた `CosmosMsg`。
-
-例:
-
-```rust
-let burn_message = create_burn_tokens_msg(
-    env.contract.address,                                    // Sender's address
-    Coin::new(500, "factory/<creator-address>/mytoken"),     // Amount to burn
-);
-```
+<CardGroup cols={2}>
+  <Card title="Token Factory" icon="hammer" href="/jp/defi/tokens/token-factory">
+    モジュールの機能とadmin制御の範囲。
+  </Card>
+  <Card title="TokenFactoryメッセージ" icon="file-code" href="/developers-native/injective/tokenfactory/03_messages">
+    認可ルールを含むメッセージとステートの仕様。
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/jp/developers-evm/multivm-token-standard">
+    ネイティブレイヤーとEVMで共通の1つの残高。
+  </Card>
+  <Card title="Issue Permissioned Assets" icon="shield-halved" href="/developers-defi/permissioned-assets">
+    ロール、ポリシー、フックを用いたコンプライアンス対応のローンチ。
+  </Card>
+</CardGroup>

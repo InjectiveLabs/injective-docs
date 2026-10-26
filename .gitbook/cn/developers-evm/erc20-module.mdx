@@ -1,22 +1,241 @@
 ---
 title: ERC20 Module
-updatedAt: "2026-01-09"
+description: bank denom 如何与 ERC20 合约配对、部署哪种模板、创建 token 对时会进行哪些校验，以及铸造和销毁权限如何运作。
+updatedAt: "2026-10-12"
 ---
 
 ### ERC20 Module
 
-ERC20 模块使**现有的** bank denom（例如 IBC 桥接的 token、USDC、tokenfactory 和 Peggy）能够与 Injective EVM 集成。它在其存储中维护 token 对之间的映射，创建 ERC20 token 与其对应 bank denom 之间的关联。当为现有 bank denom 生成新的 token 对时，该模块部署一个与 Bank precompile 交互的 ERC20 合约，然后引用存储映射以将 ERC20 地址与相应的 bank denom 对齐。此模块有几个基本用途：
+ERC20 模块使**现有的** bank denom（IBC 桥接的 token、USDC、TokenFactory 和 Peggy denom）能够在 Injective EVM 中使用。它在其存储中维护 token 对之间的映射，将 ERC20 合约地址与其 bank denom 关联起来。[Bank precompile](/cn/developers-evm/bank-precompile) 读取该映射，以确定某个 ERC20 调用作用于哪个 denom。此模块有两个用途：
 
 1. **存储**：在 bank denom ↔ ERC20 地址之间映射
-2. **新消息类型**：使用户能够通过发出链消息来建立新的 token 对映射
+2. **消息类型**：使用户能够通过发出链消息来建立新的 token 对映射
 
-#### 创建新的 Token 对
+<Note>
+直接在 Injective EVM 上基于 Bank precompile 部署的 token **不**需要 token 对。它们的 denom 由合约地址派生，形式为 `erc20:0x...`。本页介绍的是原生侧已存在的 denom 的配对路径。关于两者的概念概述，请参阅 [MultiVM Token Standard](/cn/developers-evm/multivm-token-standard)。
+</Note>
 
-目前，三种类型的 bank denom 可以有关联的 token 对，每种都有特定的规则：
+## 创建 Token 对
 
-* **Tokenfactory (`factory/...`)**\
-  只有 denom 管理员或治理可以创建 token 对。发送者可以指定现有的 ERC20 合约地址作为自定义实现。如果省略，将部署 `MintBurnBankERC20.sol` 的新实例，以 `msg.sender` 作为所有者，允许通过合约铸造和销毁。
-* **IBC (`ibc/...`)**\
-  任何用户都可以通过创建 token 对将 IBC denom 集成到 EVM 中，但没有自定义 ERC20 地址的选项。这些将始终部署一个新的、无所有者的 `FixedSupplyBankERC20.sol` 实例。
-* **Peggy (`peggy0x...`)**\
-  任何用户都可以通过创建 token 对将 Peggy denom 集成到 EVM 中，但没有自定义 ERC20 地址的选项。这些将始终部署一个新的、无所有者的 `FixedSupplyBankERC20.sol` 实例。
+三种类型的 bank denom 可以拥有关联的 token 对，每种都有不同的规则：
+
+| Denom | 谁可以创建 token 对 | 自定义 ERC20 地址 | 省略地址时部署的模板 |
+|---|---|---|---|
+| **TokenFactory** `factory/...` | Denom 管理员或治理 | 允许，但有条件 | `MintBurnBankERC20`，由消息发送者拥有 |
+| **Peggy** `peggy0x...` | 任何人 | 拒绝 | `FixedSupplyBankERC20`，无所有者 |
+| **IBC** `ibc/...` | 任何人 | 拒绝 | `FixedSupplyBankERC20`，无所有者 |
+
+Peggy 和 IBC 的配对是无需许可的，因此模板是强制的。这种组合是有意为之：任何人都可以让桥接 token 在 EVM 中可用，但没有人能将自己的合约附加到不受其控制的 denom 上。
+
+token 对的创建者将成为所部署的 `MintBurnBankERC20` 的所有者。对于由治理创建的 token 对，所有者是治理模块地址。
+
+### 前提条件：denom 必须有供应量
+
+创建 token 对要求 bank denom 已经存在且供应量不为零。在首次铸造之前提交会以 `ErrUnknownBankDenom` 失败。对于 TokenFactory 发行，请将 `MsgCreateDenom`、`MsgMint` 和 `MsgCreateTokenPair` 作为单个原子交易提交，以避免三者出现不一致。
+
+### Permissions 命名空间会强制使用固定供应量模板
+
+如果 TokenFactory denom 拥有一个 [permissions 命名空间](/developers-native/injective/permissions)，且其**策略（policy）**禁用了 `MINT`、`BURN` 或 `SUPER_BURN`，则：
+
+- 链会部署 `FixedSupplyBankERC20` 而不是 `MintBurnBankERC20`，并且
+- 消息中的任何自定义 ERC20 地址都会以 `ErrInvalidERC20Address` 被拒绝。
+
+这是对三个操作的"或"判断。即使只禁用 `BURN`，也会产生 `FixedSupplyBankERC20`，它完全不提供铸造入口。
+
+<Note>
+这取决于某个操作的命名空间**策略状态**，而不是角色权限。未显式设置策略状态而创建的命名空间，会为每个操作回填宽松的默认值，因此仅定义角色并不会强制使用固定供应量模板。只有显式禁用的策略才会。
+</Note>
+
+## 创建 Token 对时的校验
+
+当提供了 ERC20 地址时，模块会检查：
+
+1. bank denom 和 ERC20 地址都尚不存在 token 对，
+2. 该地址上的账户存在且包含合约代码，
+3. 派生的 `erc20:0x...` denom **既没有流通供应量，也没有 bank 元数据**，否则返回 `ErrExistingERC20DenomSupply`，
+4. 合约能在 300,000 gas 上限内响应 `symbol()` 调用，否则返回 `ErrInvalidERC20Address`。
+
+<Warning>
+**通过校验并不意味着合约兼容 MTS。** `symbol()` 探测只能确认该地址上存在形似 ERC20 的合约。一个标准的 OpenZeppelin ERC20 能通过上述所有检查，但它将余额保存在自己的 EVM 存储中，与 bank 模块完全脱节。结果是 token 对的两侧数据不一致。
+
+要从这种情况中恢复，需要通过治理提交 `MsgDeleteTokenPair` 删除映射，然后针对兼容的合约重新注册。删除映射并不会调和已经出现分歧的余额。请在配对之前验证实现，而不是之后。
+</Warning>
+
+尽管名称如此，`ErrExistingERC20DenomSupply` 在存在**供应量或元数据**时都会触发。在构造函数中写入元数据的合约，即使供应量为零也会被拒绝。
+
+## TokenFactory Denom 的自定义合约
+
+自定义合约必须通过 Bank precompile 处理余额、供应量、转账、铸造和销毁。保证这一点的实用方法是继承 [Injective 的 Solidity 合约](https://github.com/InjectiveLabs/solidity-contracts)中的 `BankERC20`，它正是实现了这种委托。
+
+### 以空元数据部署
+
+只要 name 或 symbol 不为空，或 decimals 不为零，`BankERC20` 的构造函数就会调用 `bank.setMetadata`。对于未配对的合约，precompile 会将 denom 解析为 `erc20:0x<contract>`，因此该调用会为一个你并不需要的 denom 写入元数据，随后创建 token 对时会以 `ErrExistingERC20DenomSupply` 失败。
+
+请以空 name、空 symbol 和零 decimals 部署。这是配对路径的强制要求，而不是风格偏好。
+
+```solidity
+// SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.20;
+
+import {BankERC20} from "./BankERC20.sol";
+
+/// Pairs with an existing TokenFactory denom.
+/// Empty constructor metadata keeps the BankERC20 constructor from calling
+/// bank.setMetadata, which would create an erc20:0x... denom and block pairing.
+contract FactoryPairedERC20 is BankERC20 {
+    constructor() BankERC20("", "", 0) {}
+}
+```
+
+`BankERC20` 是 `abstract` 的，无法单独部署。配对后，`name()`、`symbol()` 和 `decimals()` 会通过 precompile 解析为 **factory denom** 的 bank 元数据，该元数据由 denom 管理员通过 `MsgSetDenomMetadata` 控制。
+
+出于同样的原因，不要在配对前铸造独立的 `erc20:0x...` 供应量。
+
+<Note>
+这与直接 EVM 部署正好相反。在直接部署中，在构造函数中设置元数据并铸造 `erc20:0x...` 供应量是预期的路径，因为合约自身派生的 denom **就是**该 token。请参阅 [MultiVM Token Standard](/cn/developers-evm/multivm-token-standard)。
+</Note>
+
+## 铸造和销毁权限
+
+ERC20 所有权和原生 TokenFactory 权限是两个独立的检查，满足其中一个并不能满足另一个。这是该路径上最常见的意外。
+
+`MintBurnBankERC20.mint()` 是 `onlyOwner` 的，因此 EVM 调用者必须是合约所有者。随后调用会到达 Bank precompile，后者提交一个原生 `MsgMint`，**以 ERC20 合约地址作为发送者**，而不是 EVM 调用者。因此原生检查作用于合约地址：
+
+| Denom 配置 | ERC20 合约地址必须 |
+|---|---|
+| 无 permissions 命名空间 | 是 TokenFactory denom 管理员 |
+| 有 permissions 命名空间 | 持有 `MINT` 权限。仅作为管理员是不够的 |
+
+销毁更为严格。ERC20 的 `burn()` 或 `burnFrom()` 会以 `MsgBurn` 的形式到达链上，发送者为合约、销毁来源地址为持有者，这使其成为代他人销毁（burn-from），而不是自我销毁：
+
+| Denom 配置 | ERC20 销毁的要求 |
+|---|---|
+| 无 permissions 命名空间 | denom 上启用 `allow_admin_burn`，**并且**合约地址是 denom 管理员 |
+| 有 permissions 命名空间 | denom 上启用 `allow_admin_burn`，**并且**合约地址持有 `SUPER_BURN` |
+
+<Warning>
+在 `injectived tx tokenfactory create-denom` 中，`allow_admin_burn` 默认为 **false**，且只能在创建时设置。它是一个单向开关：一旦为 false 或被禁用，就永远无法重新启用。未使用 `--allow-admin-burn` 创建的 denom 永远无法通过其配对的 ERC20 进行销毁。请在创建 denom 之前做好决定。
+</Warning>
+
+通过 `MsgChangeAdmin` 更改 denom 管理员不会改变 ERC20 的 `owner()`，转移 ERC20 所有权也不会改变 denom 管理员。如果轮换其中一个，请同时轮换另一个。
+
+### 授权合约
+
+要通过配对的 ERC20 进行铸造，必须在原生侧对合约地址进行授权。首先将 EVM 地址转换为 bech32 格式，因为两者是同一账户的不同编码：
+
+```bash
+npm install @injectivelabs/sdk-ts
+
+TOKEN="0xYOUR_PAIRED_ERC20"
+
+TOKEN_INJ=$(
+  node --input-type=module - "$TOKEN" <<'JS'
+import { getInjectiveAddress } from '@injectivelabs/sdk-ts'
+console.log(getInjectiveAddress(process.argv[2]))
+JS
+)
+```
+
+然后，要么通过 `MsgChangeAdmin` 将 denom 管理员转移给 `TOKEN_INJ`，要么在 permissions 命名空间中授予它一个带有 `MINT` 的角色。转移管理员会使合约拥有唯一的铸造权限，因此请妥善保管 ERC20 所有者密钥：它将成为唯一的铸造途径。
+
+## 按来源划分的元数据权限
+
+| 来源 | Denom | 谁可以设置 bank 元数据 |
+|---|---|---|
+| TokenFactory | `factory/...` | Denom 管理员，通过 `MsgSetDenomMetadata`，立即生效 |
+| Peggy | `peggy0x...` | 仅限治理提案 |
+| IBC | `ibc/...` | 仅限治理提案 |
+| Injective EVM | `erc20:0x...` | 合约本身，通过 precompile 的 `setMetadata` |
+
+Peggy 和 IBC denom 到达时没有 name、symbol 或 decimals，Injective 上也没有任何账户有权直接设置它们。请将治理提案作为发行计划的一部分，而不是等钱包已经显示空白 token 后再补救。
+
+<Warning>
+Decimals 实际上只能写入一次。一旦 bank 元数据记录了非零的 `decimals`，再修改会以 `cannot update denom metadata decimals` 失败。请在第一次写入时就设置正确的值。
+</Warning>
+
+## 示例：配对自定义合约
+
+以下示例在测试网上将自定义合约与现有的 TokenFactory denom 配对。
+
+```bash
+# Endpoints and identifiers
+ENDPOINT="https://testnet.sentry.lcd.injective.network"      # LCD / REST
+NODE="https://testnet.sentry.tm.injective.network:443"       # native RPC
+EVM_RPC="https://testnet.sentry.chain.json-rpc.injective.network"
+CHAIN_ID="injective-888"
+
+# ADMIN_KEY is an injectived keyring name; ADMIN is the bech32 address it holds
+ADMIN_KEY="admin"
+ADMIN=$(injectived keys show "$ADMIN_KEY" -a)
+DENOM="factory/${ADMIN}/acme"
+```
+
+以空元数据部署合约，然后进行配对：
+
+```bash
+forge create src/FactoryPairedERC20.sol:FactoryPairedERC20 \
+  --account acme-deployer \
+  --rpc-url "$EVM_RPC" \
+  --broadcast
+
+TOKEN="0xDEPLOYED_ADDRESS"
+
+injectived tx erc20 create-token-pair "$DENOM" \
+  --erc20 "$TOKEN" \
+  --from "$ADMIN_KEY" \
+  --chain-id "$CHAIN_ID" \
+  --node "$NODE" \
+  --gas 3000000 \
+  --gas-prices 160000000inj
+```
+
+省略 `--erc20` 可让链部署 `MintBurnBankERC20`。
+
+验证两侧视图一致：
+
+```bash
+# Resolve the pair directly rather than listing every pair
+curl --fail --silent --show-error --get \
+  "$ENDPOINT/injective/erc20/v1beta1/token_pair_by_denom" \
+  --data-urlencode "bank_denom=$DENOM" | jq
+
+# ERC20 view, which should reflect the factory denom's metadata
+cast call "$TOKEN" "name()(string)"     --rpc-url "$EVM_RPC"
+cast call "$TOKEN" "symbol()(string)"   --rpc-url "$EVM_RPC"
+cast call "$TOKEN" "decimals()(uint8)"  --rpc-url "$EVM_RPC"
+
+# Bank view
+curl --fail --silent --show-error --get \
+  "$ENDPOINT/cosmos/bank/v1beta1/denoms_metadata_by_query_string" \
+  --data-urlencode "denom=$DENOM" | jq '.metadata'
+```
+
+在原生侧授权合约地址之前进行 EVM 铸造，会以
+`failed to mint: unauthorized account` 回滚。`BankERC20` 会捕获 precompile 的回滚并添加前缀，因此
+根本原因是 TokenFactory 的授权检查，而不是 ERC20 的 `onlyOwner` 修饰符。
+请按上文所述授权合约，然后重试。
+
+## Gas
+
+`MsgCreateTokenPair` 为模板部署设置了 2,000,000 EVM gas 上限。这是合约部署的预算，而不是交易总量，交易总量还包括 ante 处理以及交易中的其他消息。对于单独的 token 对创建，请至少使用 `--gas 3000000`。低于约 2.1M 时，交易会因 gas 计算错误而失败。请通过 `POST /cosmos/tx/v1beta1/simulate` 进行模拟并留出余量，而不是在不同版本间依赖固定数值。
+
+## 删除 Token 对
+
+`MsgDeleteTokenPair` 仅限治理使用。它只删除映射，不会迁移、调和或销毁任何一侧的余额。
+
+## 参考
+
+<CardGroup cols={2}>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/cn/developers-evm/multivm-token-standard">
+    概念、四种 token 来源，以及适用于你的 token 的路径。
+  </Card>
+  <Card title="Bank Precompile" icon="plug" href="/cn/developers-evm/bank-precompile">
+    接口、denom 解析以及每个方法背后的语义。
+  </Card>
+  <Card title="ERC20 模块消息" icon="file-code" href="/developers-native/injective/erc20/03_messages">
+    原生消息和状态规范。
+  </Card>
+  <Card title="TokenFactory 消息" icon="hammer" href="/developers-native/injective/tokenfactory/03_messages">
+    Denom 创建、铸造、销毁和管理员语义。
+  </Card>
+</CardGroup>

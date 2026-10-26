@@ -1,34 +1,39 @@
 ---
 title: MultiVM Token Standard
-description: InjectiveのマルチVM アーキテクチャにおけるトークン表現の理解
+description: Injectiveのネイティブレイヤーと EVM をまたいで、1つのトークンに1つの残高。
+updatedAt: "2026-10-12"
 ---
 
 ## MultiVM Token Standard (MTS) とは？
 
 MTS (MultiVM Token Standard) は、Injective上のすべてのトークンが、
-Cosmosモジュールを使用してデプロイされたものでも、Ethereum Virtual Machine (EVM) を介してデプロイされたものでも、
-1つの正規の残高とアイデンティティを持つことを保証します。
-この統一されたアプローチはフラグメンテーションを防ぎ、トークンのブリッジやラッピングの必要性を排除し、
-分散型金融 (DeFi) およびdAppインタラクションにおけるシームレスな相互運用性と統一された流動性を実現します。
+実行レイヤー上のネイティブモジュールを通じて作成されたものでも、Ethereum Virtual Machine (EVM) 上にデプロイされたものでも、
+1つの正規の残高とアイデンティティを持てることを保証します。
+これによりフラグメンテーションが防止され、実行環境間でトークンを移動するためにブリッジやラッピングを行う必要がなくなり、
+DeFiプロトコルやdAppは単一の流動性プールを利用できるようになります。
 
-## なぜMTSが重要なのか？
+このページは、スタックの両側におけるMTSの入口です。モデルと、トークンが生成される4つの方法を説明し、
+詳細についてはネイティブまたはEVMのリファレンスを案内します。
 
-- **シームレスな相互運用性:** トークンはCosmosとEVM環境間で一貫性を保ちます。
+## モデル：1つの残高、2つのビュー
+
+ネイティブの**bankモジュール**は、残高と総供給量に関する唯一の信頼できるソースです。MTSのERC20
+コントラクトは独自の残高を保持しません。それは、
+`0x0000000000000000000000000000000000000064`にある[Bank precompile](/jp/developers-evm/bank-precompile)
+を通じてbankの状態を読み書きするビューです。
+
+重要な帰結：ネイティブのbank送金とEVM上のERC20 `transfer`は、同じ残高を移動させます。
+調整ステップもラップされた表現も存在しません。
+
+コントラクトがMTSに参加するのは、残高、供給量、送金の操作をprecompile経由でルーティングする場合のみです。
+残高を独自のEVMストレージに保持する標準的なERC20は通常のEVMトークンであり、bankモジュールからは見えず、MTSの対象外です。
+
+### なぜMTSが重要なのか？
+
+- **シームレスな相互運用性:** トークンはネイティブモジュールとEVMの間で一貫性を保ちます。
 - **統一された流動性:** 単一の信頼できるソースにより、流動性のフラグメンテーションを回避します。
 - **開発者体験の向上:** Hardhat、Foundry、MetaMaskなどの標準ツールがそのまま動作します。
-- **セキュリティと効率性:** すべてのトークン状態はbankモジュールで一元管理され、堅牢なセキュリティを確保します。
-
-## アーキテクチャ
-
-システムは2つの主要コンポーネントで構成されています：
-
-- [**Bank Precompile**](/developers-evm/bank-precompile/):
-  - Goで開発されたこのprecompileは、Injective EVMに直接組み込まれています。
-  - mint、burn、transferなどのERC20操作をbankモジュールにプロキシするSolidityインターフェースを提供します。
-- [**ERC20 Module**](/developers-evm/erc20-module/):
-  - このモジュールは、既存のオンチェーンdenomをEVMに表現するために使用されます。MTSベースのERC20トークンの作成は`Bank` precompileを通じて行う必要があります。
-  - このモジュールは、ネイティブのbank denom（例：INJ、IBCトークン、Peggyアセット）をEVM内のERC20コントラクトにマッピングします。
-  - bankモジュールが管理する正規のトークン残高を常に反映するMTS準拠のERC20コントラクトをデプロイします。
+- **セキュリティと効率性:** すべてのトークン状態はbankモジュールで一元管理されます。
 
 <figure>
   <img
@@ -40,60 +45,117 @@ Cosmosモジュールを使用してデプロイされたものでも、Ethereum
   </figcaption>
 </figure>
 
-### MTS準拠トークンの作成
+## 4つのトークン発行元
 
-#### 新しいERC20トークン（"erc20:..." denom）
+MTSトークンには4つの発行元があり得、それぞれ異なるdenomファミリーに属します。メタデータの権限と、明示的なERC20ペアリングのステップが必要かどうかについて、明確な違いがあります。
 
-1. [**事前構築テンプレートの使用**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
-   - `BankERC20.sol`、`MintBurnBankERC20.sol`、`FixedSupplyBankERC20.sol`などの提供されたSolidityテンプレートから始めます。
-2. [**コントラクトのデプロイ**](/developers-evm/smart-contracts/):
-   - Injective EVMネットワークにMTSトークンコントラクトをデプロイします。
-   - コントラクトはBank Precompileと自動的に連携し、正規の状態を更新します。
+| 発行元 | Denom | ERC20ペアリング | メタデータの権限 |
+|---|---|---|---|
+| [**TokenFactory**](/developers-native/injective/tokenfactory) | `factory/...` | EVMで使用する場合のみ必要。管理者またはgovernanceのみ。カスタムコントラクト可 | denomの管理者、即時 |
+| [**Peggy**](/jp/developers-native/bridges/ethereum)（Ethereum ERC20） | `peggy0x...` | EVMで使用する場合のみ必要。パーミッションレス、テンプレート強制 | governanceプロポーザルのみ |
+| [**IBC**](/jp/developers-native/examples/ibc) | `ibc/...` | EVMで使用する場合のみ必要。パーミッションレス、テンプレート強制 | governanceプロポーザルのみ |
+| **Injective EVM** | `erc20:0x...` | 不要。precompileがコントラクトアドレスからdenomを導出 | コントラクト、`setMetadata`経由 |
 
-#### 既存のdenom（TokenFactory、IBC、Peggy）
+最初の3つは、まずbank denomを作成し、その後オプションでEVMに投影します。4つ目はEVMから始まり、bank denomはコントラクトアドレスから導かれます。4つすべてのケースで、ペアリングされると残高はbankモジュールに存在します。
 
-2つのオプションがあります：
+<Note>
+`/injective/erc20/v1beta1/all_token_pairs`は**明示的に登録された**ペア、つまりTokenFactory、
+Peggy、IBCのdenomのみを一覧表示します。EVM上に直接デプロイされたトークンはレジストリのエントリを持たないため、返されません。
+それらのdenomは常に`erc20:`の後にチェックサム付きコントラクトアドレスが続く形式です。
+</Note>
 
-1. `MsgCreateTokenPair`メッセージを送信して、erc20モジュール内にトークンペアを作成します。
+### どの手順が当てはまるか
 
-2. ペア作成時にスマートコントラクト用のカスタムERC20実装を使用します（tokenfactory denomのみ）：
+- まだどこにも存在しないトークンをローンチし、供給量とメタデータをネイティブの管理者権限で管理したい場合：**TokenFactory**。
+- 既存のEthereum ERC20を持ち込む場合：**Peggy**。
+- 別のIBCチェーンからトークンを持ち込む場合：**IBC**。
+- EVMファーストで構築し、トークンの権限をSolidityに置く場合：**Injective EVM**。
 
-- まずカスタムERC20スマートコントラクトをチェーンにアップロードします。
-- `MsgCreateTokenPair`メッセージの送信時にコントラクトのアドレスを指定します。
+### EVM上でのMTSトークンの作成
 
-### 相互運用性とクロスチェーン統合
+1. [**テンプレートから始める**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src):
+   `BankERC20.sol`（抽象基底）、`MintBurnBankERC20.sol`（オーナーがmintとburnを実行可能）、または
+   `FixedSupplyBankERC20.sol`（オーナーなし、固定供給）。
+2. [**Injective EVMにデプロイする**](/jp/developers-evm/smart-contracts/)。コントラクトは
+   Bank precompileとやり取りし、最初のmintで`erc20:0x...` denomが作成されます。
 
-#### ネイティブ相互運用性
+### 既存のdenomのペアリング
 
-InjectiveのEVMはCosmosベースのチェーンに直接統合されています。
+bank denomに対して`MsgCreateTokenPair`を送信します。ERC20アドレスを空のままにするとチェーンがテンプレートをデプロイします。
+TokenFactory denomの場合のみ、独自のコントラクトアドレスを指定することもできます。
 
-- EVMスマートコントラクトは、MTSを使用する場合、ネイティブモジュール（exchange、staking、governanceモジュールなど）に即座に反映される操作を実行します。
-- Injectiveバイナリ内で提供される[JSON-RPCエンドポイント](/developers-evm/network-information/)はEthereumと互換性があり、スムーズな開発者統合を保証します。
+カスタムコントラクトには見落としやすい要件があり、空のメタデータでのコンストラクタや、
+mintとburnのための別個のネイティブ承認などが含まれます。これらは、ペアリングに関するすべてのリファレンスである
+[ERC20 Module](/jp/developers-evm/erc20-module)ページに詳しく記載されています。
 
-#### クロスチェーン操作
+## 相互運用性とクロスチェーン統合
 
-- **IBC互換性:** 既存のネイティブトークン（例：[Token Factory](/developers-native/injective/tokenfactory/)を介して作成されたものやPeggyを介してペグされたもの）は、MTSペアリングが確立されるとEVMからアクセス可能になります。
+### ネイティブ相互運用性
+
+InjectiveのEVMはチェーンに直接統合されています。
+
+- EVMスマートコントラクトは、MTSを使用する場合、exchange、staking、governanceなどのネイティブモジュールに即座に反映される操作を実行します。
+- Injectiveバイナリ内で提供される[JSON-RPCエンドポイント](/jp/developers-evm/network-information/)はEthereumと互換性があります。
+
+### クロスチェーン操作
+
+- **IBC互換性:** 既存のネイティブトークン（[TokenFactory](/developers-native/injective/tokenfactory/)を介して作成されたものやPeggyを介してペグされたもの）は、MTSペアリングが確立されるとEVMからアクセス可能になります。
 - **ブリッジの代替手段:** 多くのブロックチェーンが個別のブリッジ操作（ロック、ミント、アンロック）を必要とするのに対し、MTSはネイティブに状態を同期することでこれらの手順を回避します。
 
-#### Allowanceと拡張ERC20関数
+### Allowanceと拡張ERC20関数
 
 - MTSコントラクトは、allowance（approve/transferFrom）などの標準的なERC20機能を維持します。
-- allowanceメカニズムはEVMコントラクト内で便宜上維持されますが、最終的な残高はbankモジュールによって管理され、整合性が保たれます。
+- allowanceメカニズムは便宜上EVMコントラクトのストレージに存在しますが、基礎となる残高はbankモジュールによって管理されます。
 
-### パフォーマンス、Gas、セキュリティの考慮事項
+## パフォーマンス、Gas、セキュリティの考慮事項
 
-#### Gasコストと効率性
+### Gasコストと効率性
 
-- Gas feeはINJで支払われます。EVM経由のMTS操作は抽象化レイヤーを導入するため、ネイティブトランザクションと比較してgas使用量がわずかに増加する可能性がありますが、全体的なコストはEthereumでの同等の操作よりも低くなります。
-- gasモデルは、EVM方式のopcodeコストとネイティブモジュール連携のバランスを反映するように設計されています。
+- Gas feeはINJで支払われます。
+  EVM経由のMTS操作は抽象化レイヤーを導入するため、ネイティブトランザクションと比較してgas使用量がわずかに増加する可能性がありますが、全体的なコストはEthereumでの同等の操作よりも低くなります。
 
-#### セキュリティ
+### セキュリティ
 
 - [bankモジュール](/developers-native/core/)は単一の信頼できるソースとして、トークン残高が一貫性があり検証可能であることを保証し、MTSのセキュリティを支えています。
-- [precompile](/developers-evm/precompiles/)の使用により、状態の非同期化などの一般的な問題を防ぎ、どこから開始された操作であっても同じ正規の台帳が更新されることを保証します。
-- スマートコントラクト開発のための高度なセキュリティガイドラインとベストプラクティスは、セキュリティセクションおよび外部リソースで提供されています。
+- [precompile](/jp/developers-evm/precompiles/)の使用により状態の非同期化が防止され、どこから開始された操作であっても同じ正規の台帳が更新されます。
 
-**ℹ️ 注意:**
+<Warning>
+コントラクトをペアリングしても、MTS互換になるわけではありません。`MsgCreateTokenPair`は、そのアドレスが
+コントラクトコードを保持し`symbol()`に応答することをチェックしますが、標準的なOpenZeppelin ERC20も、残高を完全に
+bankモジュールの外に保持したままこれらを満たします。そのようなペアを解消するにはgovernanceの
+`MsgDeleteTokenPair`が必要であり、すでに乖離した残高は調整されません。
+[ペア作成時の検証内容](/jp/developers-evm/erc20-module#ペア作成時の検証内容)を参照してください。
+</Warning>
 
-denom spamを防止するため、ERC20モジュールを介したERC20コントラクトのデプロイは**有料操作**であり、デプロイ手数料として**1 INJ**が必要です。
-ERC20コントラクトのデプロイトランザクションにこの金額を含めてください。含めない場合、操作は拒否されます。
+<Info>
+**Denom作成手数料。** 新しい`erc20:0x...` denomを生成するには**1 INJ**の費用がかかり、
+最初のmint時に課金され、コントラクト自身のINJ残高から引き落とされます。`BankERC20`のコンストラクタは`payable`であるため、
+デプロイトランザクションで事前にコントラクトに資金を供給できます。
+
+総供給量がゼロでない値からゼロになると、基礎となるdenomは状態から削除されます。再度mintすると
+denomが再作成され、手数料が再び課金されます。
+[Bank Precompile](/jp/developers-evm/bank-precompile#denom作成手数料)を参照してください。
+</Info>
+
+## リファレンス
+
+<CardGroup cols={2}>
+  <Card title="ERC20 Module" icon="link" href="/jp/developers-evm/erc20-module">
+    ペアリングのリファレンス：テンプレートの選択、検証、カスタムコントラクト、mintとburnの権限。
+  </Card>
+  <Card title="Bank Precompile" icon="plug" href="/jp/developers-evm/bank-precompile">
+    インターフェース、denomの解決、メソッドのセマンティクス。
+  </Card>
+  <Card title="Permissioned MTS Tokens" icon="lock" href="/jp/developers-evm/permissioned-multivm-token">
+    IPermissionsHookによるSolidityでのコンプライアンスフック。
+  </Card>
+  <Card title="Native ERC20 Module" icon="file-code" href="/developers-native/injective/erc20">
+    ネイティブのメッセージ、状態、イベントの仕様。
+  </Card>
+  <Card title="Bridge & Deploy a Token" icon="bridge" href="/developers-defi/bridge-deploy">
+    タスクガイド：Peggyを介したEthereum ERC20からInjectiveへのエンドツーエンドの手順。
+  </Card>
+  <Card title="Issue Permissioned Assets" icon="shield-halved" href="/developers-defi/permissioned-assets">
+    タスクガイド：ロールとフックを使用したコンプライアンス制御付きトークンのローンチ。
+  </Card>
+</CardGroup>

@@ -1,5 +1,6 @@
 ---
 title: トークン規格
+updatedAt: "2026-10-12"
 ---
 
 Injectiveは、dAppを作成する際に使用できるさまざまなトークン規格を提供しています。このドキュメントでは、異なるタイプのトークンと、各トークンの使用に関する推奨事項とガイダンスを説明します。
@@ -10,12 +11,41 @@ denomは、InjectiveのBankモジュール内で資産がどのように表現�
 
 denomの起源とInjectiveでの作成方法に応じて、異なるタイプのdenomがあります：
 
-* **Native denom** - このタイプのdenomは1つだけで、Injectiveのネイティブコインを表す`inj` denomです。
-* **Peggy denom** - これらのdenomは、Peggyブリッジを使用してEthereumからInjectiveにブリッジされた資産を表します。形式：`peggy{ERC20_CONTRACT_ADDRESS}`
-* **IBC denom** - これらのdenomは、IBCを通じて他のIBC互換チェーンからブリッジされた資産を表します。形式：`ibc/{hash}`
-* **Insurance Fund Denom** - これらのdenomは、Injectiveで作成された保険基金のトークンシェアを表します。形式：`share{id}`
-* **Factory Denom** - これらの`tokenfactory` denomにより、任意のアカウントが`factory/{creator address}/{subdenom}`という名前で新しいトークンを作成できます。トークンは作成者アドレスで名前空間化されているため、名前の衝突を解決する必要がなく、パーミッションレスなトークン作成が可能です。これらのdenomの特別なユースケースは、CosmwasmのCW20トークンをInjectiveネイティブのBankモジュールで表現することです。形式：`factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`（`CW20_ADAPTER_CONTRACT`はCW20とネイティブBankモジュールを変換するアダプタコントラクトアドレス）
+| Denomタイプ | 形式 | 起源 |
+|---|---|---|
+| **Native** | `inj` | Injectiveのネイティブコイン。Injective EVMのgasトークンでもあります |
+| **Factory** | `factory/{creator}/{subdenom}` | [TokenFactory](/jp/defi/tokens/token-factory)を介してパーミッションレスに作成 |
+| **Peggy** | `peggy0x{ERC20_CONTRACT_ADDRESS}` | [Peggyブリッジ](/jp/developers-native/bridges/ethereum)を介してEthereumからブリッジ |
+| **IBC** | `ibc/{hash}` | 別のIBCチェーンからブリッジ |
+| **EVM** | `erc20:0x{CONTRACT_ADDRESS}` | [Bank precompile](/jp/developers-evm/bank-precompile)に対してInjective EVM上に直接デプロイ |
+| **Insurance fund** | `share{id}` | 保険基金のトークンシェア |
 
-これらのdenomタイプの詳細については、このドキュメントの後半で説明します。
+上記のそれぞれには登録されたbank denomがあり、ネイティブのexchange、auction、insurance、permissions
+モジュールはこれを唯一の信頼できるソースとして利用します。[MultiVM Token Standard](/jp/developers-evm/multivm-token-standard)のもとでは、
+トークンペアが登録されたdenomはEVMからも呼び出すことができます。[erc20モジュール](/jp/developers-evm/erc20-module)は
+denomをERC20コントラクトアドレスにマッピングし、そのコントラクトへの呼び出しは
+[Bank precompile](/jp/developers-evm/bank-precompile)を通じて同じbank残高に解決されます。EVM dAppは、ペアリングされた
+アドレスを標準的なERC20として扱います。ブリッジや調整が必要な2つ目の残高は存在しません。
 
-[denomメタデータ](/developers/assets/token-metadata/)の取得方法を学びましょう。
+<Note>
+CW20資産はネイティブのbank denomでは**ありません**。その残高はコントラクトストレージに存在します。既存のCW20は、
+[CW20アダプタ](/jp/developers-cosmwasm/cw20-adapter)を通じて`factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`形式の
+factory denomとして表現できますが、CW20は新規の統合には推奨されず、非推奨化が予定されています。
+</Note>
+
+## 次のステップ
+
+<CardGroup cols={2}>
+  <Card title="Launch a Token" icon="rocket" href="/jp/developers-defi/token-launch">
+    作成、メタデータの設定、mint、Injective EVMとのペアリング、上場、マーケットのローンチ。
+  </Card>
+  <Card title="Token Factory" icon="hammer" href="/jp/defi/tokens/token-factory">
+    Injectiveのネイティブなトークン発行機能。
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/jp/developers-evm/multivm-token-standard">
+    ネイティブレイヤーとEVMをまたぐ1つの残高。
+  </Card>
+  <Card title="Token Metadata" icon="tag" href="/developers/assets/token-metadata">
+    ウォレットやエクスプローラーがname、symbol、decimalsをどのように読み取るか。
+  </Card>
+</CardGroup>

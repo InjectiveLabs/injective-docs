@@ -1,40 +1,49 @@
 ---
 title: "EVM 통합 치트 시트"
 description: Injective의 EVM 메인넷에서 프로덕션 애플리케이션을 구축하려고 하시나요? 통합을 빠르게 진행하기 위한 편리한 참조입니다. 그린필드 배포와 크로스체인 배포 모두에 적합합니다.
-updatedAt: "2026-02-23"
+updatedAt: "2026-10-23"
 ---
 
 # 네트워크 구성
 
 - Chain ID: `1776`
 
-참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet) 
+참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet)
 
 # 탐색기
 
 - [https://blockscout.injective.network/](https://blockscout.injective.network/) → EVM 트랜잭션만 볼 수 있음
 - [https://injscan.com/](https://injscan.com/) → EVM 및 Cosmos 트랜잭션 모두 볼 수 있음
 
-참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet) 
+참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet)
 
 # RPC 엔드포인트
 
-- 통합 파트너에게 권장
-    - 애플리케이션 요구에 맞게 사용자 정의 가능
-    - 사용자 정의 가능한 속도 제한 및 과거 데이터 쿼리에 대한 차단 없음
-    - 프리미엄/유료 옵션
-    - 연결 방법:
-        - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj) 
-        - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
-- 통합 파트너에게 권장되지 않음
-    - 애플리케이션 요구에 맞게 사용자 정의 불가
-    - 엄격한 속도 제한 및 과거 데이터 쿼리 차단
-    - 무료 옵션
-    - 연결 방법:
-        - JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
-        - WS Endpoint: `wss://sentry.evm-ws.injective.network`
-    
-참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet) 
+EVM JSON-RPC, WebSocket, LCD 및 Tendermint RPC를 포함한 모든 서비스의 공용 엔드포인트 목록은
+[Chain Portal](https://chain.injective.network/rpcs)에 게시되어 관리됩니다. 테스트넷
+엔드포인트 및 faucet 세부 정보는 포털의 [테스트넷 페이지](https://chain.injective.network/testnet)에 있습니다.
+
+**상용 제공업체**, 프로덕션 애플리케이션에 권장:
+
+- 전용 용량, 구성 가능한 속도 제한, 과거 데이터 쿼리에 대한 차단 없음
+- 프리미엄/유료 옵션
+- 연결 방법:
+    - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj)
+    - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
+    - Alchemy: [Alchemy RPC Setup](/developers-evm/alchemy-rpc-setup)
+
+**공용 엔드포인트**, 로컬 개발 및 가벼운 테스트에 적합:
+
+- JSON-RPC Endpoint: `https://sentry.evm-rpc.injective.network/`
+- WS Endpoint: `wss://sentry.evm-ws.injective.network`
+
+공용 엔드포인트는 공유되며 속도 제한이 있고, 과거 데이터 쿼리가 차단됩니다. 프로덕션 트래픽에 맞게
+설계되지 않았으므로, 이에 의존하는 애플리케이션은 부하 시 응답이 끊어질 수 있습니다. 토큰 출시를 계획하거나
+트래픽 급증이 예상되는 통합 파트너는 파트너 채널 또는 [Injective Discord](https://discord.com/invite/injective)를 통해
+Injective 팀에 문의할 수 있습니다. 파트너 인프라 제공업체와 함께하는 출시 지원이 가능하며, 공용 엔드포인트는
+출시 계획에 포함되어서는 안 됩니다.
+
+참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet)
 
 # 컨트랙트 주소
 
@@ -46,9 +55,13 @@ updatedAt: "2026-02-23"
 |USDC|native USDC (CCTP)|`0xa00C59fF5a080D2b954d0c75e46E22a0c371235a`|
 |MultiCall||`0xcA11bde05977b3631167028862bE2a173976CA11`|
 
+<Warning>
+IBC를 통해 Noble에서 브릿지된 레거시 USDC(티커 `USDCnb`, 일부 지갑에서는 `USDC.n`으로 표시)는 Circle이 지원을 종료하고 있는 별개의 토큰입니다. 잔액은 자동으로 변환되지 않습니다. 마이그레이션하려면 [Migrating To Native USDC on Injective](https://injective.com/blog/usdc-migration)를 참조하세요.
+</Warning>
+
 아래 참조 페이지를 정식 소스로 사용하세요.
 
-참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet) 
+참조: [EVM 네트워크 정보 | Injective | Docs](/ko/developers-evm/network-information#injective-evm-mainnet)
 
 # 브릿지
 
@@ -57,7 +70,6 @@ updatedAt: "2026-02-23"
 가이드:
 - [Metamask를 사용하여 Ethereum에서 Injective로 브릿지하는 방법](https://injective.com/blog/how-to-bridge-from-ethereum-to-injective-using-metamask/)
 - [Phantom을 사용하여 Solana에서 Injective로 브릿지하는 방법](https://injective.com/blog/how-to-bridge-from-solana-to-injective-using-phantom/)
-- [Wormhole을 사용하여 Injective로 브릿지하는 방법](https://injective.com/blog/how-to-bridge-to-injective-using-wormhole/)
 - [Keplr를 사용하여 Cosmos에서 Injective로 브릿지하는 방법](https://injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/)
 
 # 데이터
@@ -77,6 +89,14 @@ updatedAt: "2026-02-23"
 - Chainlink: 
     - 문서: [Chainlink Data Streams](https://docs.chain.link/data-streams)
 
+# 네트워크 상태 및 업그레이드
+
+- 네트워크 상태: [status.injective.network](https://status.injective.network)
+- 업그레이드 일정 및 체인이 현재 실행 중인 버전: [chain.injective.network/upgrades](https://chain.injective.network/upgrades)
+
+체인 업그레이드는 필요한 `injectived` 바이너리를 변경합니다. 통합이 의존하는 노드는
+위 일정에 맞춰 업그레이드되어야 합니다.
+
 # 지갑
 
 ## `injectived`
@@ -84,17 +104,20 @@ updatedAt: "2026-02-23"
 프로그래밍 방식 제어에 적합, 예: 애플리케이션/dApp 운영 계정.
 
 설치 빠른 시작:
-  
+
 ```shell
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.17.2-1765930431/linux-amd64.zip # 최신 버전의 injective로 교체
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/<latest-release>/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv injectived peggo /usr/bin
 sudo mv libwasmvm.x86_64.so /usr/lib
 ```
 
 <Tip>
-위 명령에서 `wget` 다운로드 URL은 최신 릴리스로 교체해야 합니다.
-[Mainnet Validator](/infra/validator-mainnet) 섹션에서 정확한 명령(URL 포함)을 찾을 수 있습니다.
+릴리스 URL은 체인 업그레이드마다 변경됩니다. 현재 릴리스는
+[injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases/releases/latest)에 나열되어 있으며,
+URL을 포함한 정확한 명령은
+[Mainnet Validator](/ko/infra/validator-mainnet) 섹션에서 찾을 수 있습니다. 체인이 현재 실행 중인 버전은
+[Chain Portal 업그레이드 페이지](https://chain.injective.network/upgrades)에 표시됩니다.
 </Tip>
 
 <Tip>

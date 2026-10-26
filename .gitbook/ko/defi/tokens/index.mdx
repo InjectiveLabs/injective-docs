@@ -1,6 +1,6 @@
 ---
 title: 토큰 표준
-updatedAt: "2026-02-24"
+updatedAt: "2026-10-12"
 ---
 
 Injective는 dApp을 만들 때 사용할 수 있는 다양한 토큰 표준을 제공합니다. 이 문서에서는 다양한 유형의 토큰과 각각을 사용하기 위한 권장 사항 및 지침을 다룹니다.
@@ -11,12 +11,41 @@ Denom은 Injective의 Bank 모듈 내에서 자산이 표현되는 방식입니�
 
 Denom의 출처와 Injective에서 생성된 방식에 따라 다양한 유형의 denom이 있습니다:
 
-* **Native denom** - 이 유형의 denom은 하나뿐이며, Injective의 네이티브 코인을 나타내는 `inj` denom입니다.
-* **Peggy denom** - 이 denom은 Peggy 브릿지를 사용하여 Ethereum에서 Injective로 브릿지된 자산을 나타냅니다. 형식은 다음과 같습니다: `peggy{ERC20_CONTRACT_ADDRESS}`
-* **IBC denom** - 이 denom은 IBC를 통해 다른 IBC 호환 체인에서 브릿지된 자산을 나타냅니다. 형식은 다음과 같습니다: `ibc/{hash}`.
-* **Insurance Fund Denom** - 이 denom은 Injective에서 생성된 보험 기금의 토큰 지분을 나타냅니다. 형식은 다음과 같습니다: `share{id}`
-* **Factory Denom** - 이 `tokenfactory` denom을 통해 모든 계정이 `factory/{creator address}/{subdenom}` 이름으로 새 토큰을 만들 수 있습니다. 토큰이 생성자 주소로 네임스페이스되기 때문에 이름 충돌을 해결할 필요가 없어 토큰 발행이 무허가로 가능합니다. 이러한 denom의 특별한 사용 사례는 Cosmwasm의 CW20 토큰을 Injective 네이티브 bank 모듈에서 표현하는 것입니다. 형식은 다음과 같습니다: `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` 여기서 `CW20_ADAPTER_CONTRACT`는 CW20과 네이티브 Bank 모듈을 변환하는 어댑터 컨트랙트 주소입니다.
+| Denom 유형 | 형식 | 출처 |
+|---|---|---|
+| **Native** | `inj` | Injective의 네이티브 코인. Injective EVM의 가스 토큰이기도 함 |
+| **Factory** | `factory/{creator}/{subdenom}` | [TokenFactory](/ko/defi/tokens/token-factory)를 통해 무허가로 생성 |
+| **Peggy** | `peggy0x{ERC20_CONTRACT_ADDRESS}` | [Peggy 브릿지](/ko/developers-native/bridges/ethereum)를 통해 Ethereum에서 브릿지됨 |
+| **IBC** | `ibc/{hash}` | 다른 IBC 체인에서 브릿지됨 |
+| **EVM** | `erc20:0x{CONTRACT_ADDRESS}` | [Bank precompile](/ko/developers-evm/bank-precompile)을 사용하여 Injective EVM에 직접 배포됨 |
+| **Insurance fund** | `share{id}` | 보험 기금의 토큰 지분 |
 
-이 문서의 뒷부분에서 이러한 denom 유형에 대해 자세히 공유하겠습니다.
+위의 각 유형은 등록된 bank denom을 가지며, 이는 네이티브 exchange, auction, insurance 및 permissions
+모듈이 단일 진실 소스로 의존하는 대상입니다. [MultiVM Token Standard](/ko/developers-evm/multivm-token-standard)에 따라
+등록된 토큰 쌍이 있는 denom은 EVM에서도 호출할 수 있습니다. [erc20 모듈](/ko/developers-evm/erc20-module)은
+denom을 ERC20 컨트랙트 주소에 매핑하며, 해당 컨트랙트에 대한 호출은
+[Bank precompile](/ko/developers-evm/bank-precompile)을 통해 동일한 bank 잔액으로 결정됩니다. EVM dApp은 페어링된
+주소를 표준 ERC20으로 사용합니다. 브릿지하거나 조정해야 할 두 번째 잔액은 없습니다.
 
-[denom 메타데이터](/developers/assets/token-metadata/)를 얻는 방법을 알아보세요.
+<Note>
+CW20 자산은 네이티브 bank denom이 **아닙니다**. 잔액은 컨트랙트 스토리지에 존재합니다. 기존 CW20은
+[CW20 어댑터](/ko/developers-cosmwasm/cw20-adapter)를 통해 `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` 형식의
+factory denom으로 표현할 수 있지만, CW20은 새로운 통합에 권장되지 않으며 지원 중단이 예정되어 있습니다.
+</Note>
+
+## 다음 단계
+
+<CardGroup cols={2}>
+  <Card title="토큰 출시" icon="rocket" href="/ko/developers-defi/token-launch">
+    생성, 메타데이터 설정, 민트, Injective EVM 페어링, 리스팅 및 시장 출시.
+  </Card>
+  <Card title="Token Factory" icon="hammer" href="/ko/defi/tokens/token-factory">
+    Injective의 네이티브 토큰 발행 기능.
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/ko/developers-evm/multivm-token-standard">
+    네이티브 레이어와 EVM 전반에서 하나의 잔액.
+  </Card>
+  <Card title="토큰 메타데이터" icon="tag" href="/ko/developers/assets/token-metadata">
+    지갑과 탐색기가 name, symbol, decimals를 읽는 방식.
+  </Card>
+</CardGroup>
