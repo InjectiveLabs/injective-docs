@@ -1,0 +1,619 @@
+---
+title: ウォレットにネットワークを追加
+description: >-
+  ワンクリックで Injective ネットワークをブラウザウォレットに追加できます。Injective EVM（MetaMask と
+  Trust Wallet）および Injective ネイティブ（Keplr）向けのインタラクティブなウォレットオプションを、メインネットとテストネットの両方で提供します。
+icon: wallet
+updatedAt: "2026-07-28"
+---
+
+ワンクリックで Injective をブラウザウォレットに追加するか、以下の手動設定の詳細を使用してください。Injective は相互運用可能な 2 つのインターフェースを提供しています：
+
+- **Injective EVM** は Ethereum 互換の JSON-RPC レイヤーです。MetaMask や Trust Wallet などの EVM ウォレットで使用します。
+- **Injective（ネイティブ）** はネイティブの Cosmos SDK チェーンです。Keplr で使用します。
+
+<Info>
+Injective EVM と Injective ネイティブは同じネットワークに対応しています。異なる chain ID を使用しますが、同じ基盤となるステートを共有しています。完全なリファレンスについては
+[ネットワーク情報](/jp/developers/network-information) と
+[EVM ネットワーク情報](/jp/developers-evm/network-information) を参照してください。
+</Info>
+
+## Injective EVM
+
+Injective EVM は MetaMask や Trust Wallet などの EVM ウォレットで動作します。ネットワークを選び、ウォレットオプションを選択して Injective を追加するか、Injective に切り替えてください。
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective EVM メインネット</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID 1776</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "接続中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = list.find((p) => p && p.isMetaMask) || null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "io.metamask" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("ウォレットが見つかりません", false); alert("MetaMask をインストールしてください。"); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x6f0" }]
+          }).catch((error) => {
+            if (getErrorCode(error) === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x6f0",
+                  chainName: "Injective",
+                  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
+            label.textContent = "接続済み ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = getErrorCode(error) === 4001 ? "リクエストがキャンセルされました" : "再試行";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/metamask.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">MetaMask に追加</span>
+    </button>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "接続中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = typeof window !== "undefined"
+          ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)) || null)
+          : null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "com.trustwallet.app" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("ウォレットが見つかりません", false); alert("Trust Wallet をインストールしてください。"); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x6f0" }]
+          }).catch((error) => {
+            if (getErrorCode(error) === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x6f0",
+                  chainName: "Injective",
+                  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
+            label.textContent = "接続済み ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = getErrorCode(error) === 4001 ? "リクエストがキャンセルされました" : "再試行";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/trust-wallet.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Trust Wallet に追加</span>
+    </button>
+  </div>
+</div>
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective EVM テストネット</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID 1439</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "接続中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = list.find((p) => p && p.isMetaMask) || null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "io.metamask" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("ウォレットが見つかりません", false); alert("MetaMask をインストールしてください。"); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x59f" }]
+          }).catch((error) => {
+            if (getErrorCode(error) === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x59f",
+                  chainName: "Injective Testnet",
+                  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
+            label.textContent = "接続済み ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = getErrorCode(error) === 4001 ? "リクエストがキャンセルされました" : "再試行";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/metamask.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">MetaMask に追加</span>
+    </button>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "接続中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = typeof window !== "undefined"
+          ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)) || null)
+          : null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "com.trustwallet.app" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("ウォレットが見つかりません", false); alert("Trust Wallet をインストールしてください。"); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x59f" }]
+          }).catch((error) => {
+            if (getErrorCode(error) === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x59f",
+                  chainName: "Injective Testnet",
+                  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
+            label.textContent = "接続済み ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = getErrorCode(error) === 4001 ? "リクエストがキャンセルされました" : "再試行";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/trust-wallet.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Trust Wallet に追加</span>
+    </button>
+  </div>
+</div>
+
+<Info>
+MetaMask と Trust Wallet のボタンは標準の `wallet_addEthereumChain` リクエストを使用します。ネットワークがすでに追加されている場合、ウォレットには代わりに切り替えプロンプトが表示されます。インジェクト型ウォレットで何も起こらない場合は、以下の値を使用してネットワークを手動で追加してください。
+</Info>
+
+### 手動設定
+
+<Tabs>
+
+<Tab title="Injective EVM メインネット" icon="server">
+
+| プロパティ | 値 |
+| --- | --- |
+| ネットワーク名 | Injective |
+| Chain ID | `1776` |
+| RPC URL | `https://sentry.evm-rpc.injective.network/` |
+| WS エンドポイント | `wss://sentry.evm-ws.injective.network` |
+| 通貨シンボル | `INJ` |
+| 小数点以下桁数 | `18` |
+| ブロックエクスプローラー | `https://blockscout.injective.network/` |
+
+</Tab>
+
+<Tab title="Injective EVM テストネット" icon="flask-vial">
+
+| プロパティ | 値 |
+| --- | --- |
+| ネットワーク名 | Injective Testnet |
+| Chain ID | `1439` |
+| RPC URL | `https://k8s.testnet.json-rpc.injective.network/` |
+| WS エンドポイント | `wss://k8s.testnet.ws.injective.network/` |
+| 通貨シンボル | `INJ` |
+| 小数点以下桁数 | `18` |
+| ブロックエクスプローラー | `https://testnet.blockscout.injective.network/` |
+| Faucet | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+
+</Tab>
+
+</Tabs>
+
+## Injective（ネイティブ）
+
+ネイティブの Injective チェーンは Keplr で動作します。Injective は Keplr に組み込まれているため、すぐに利用できます。以下のネットワークを選択して Keplr で有効化してください。
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective メインネット</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID injective-1</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "接続中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const p = typeof window !== "undefined" ? window.keplr : null;
+        if (!p) { finish("ウォレットが見つかりません", false); alert("Keplr ウォレットをインストールしてください。"); return; }
+        p.enable("injective-1")
+          .then(() => {
+            label.textContent = "接続済み ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Keplr enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "リクエストがキャンセルされました" : "再試行";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", borderRadius: "5px", backgroundImage: "url('/img/wallets/keplr.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Keplr に追加</span>
+    </button>
+  </div>
+</div>
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective テストネット</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID injective-888</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "接続中...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const p = typeof window !== "undefined" ? window.keplr : null;
+        if (!p) { finish("ウォレットが見つかりません", false); alert("Keplr ウォレットをインストールしてください。"); return; }
+        p.enable("injective-888")
+          .then(() => {
+            label.textContent = "接続済み ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Keplr enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "リクエストがキャンセルされました" : "再試行";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", borderRadius: "5px", backgroundImage: "url('/img/wallets/keplr.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Keplr に追加</span>
+    </button>
+  </div>
+</div>
+
+<Info>
+Keplr にはデフォルトで Injective が含まれているため、ボタンはウォレット内でチェーンを有効化するだけです。ウォレット統合の完全なガイドについては、[ウォレット](/jp/defi/wallet/index) を参照してください。
+</Info>
+
+### 手動設定
+
+<Tabs>
+
+<Tab title="Injective メインネット" icon="server">
+
+| プロパティ | 値 |
+| --- | --- |
+| Chain ID | `injective-1` |
+| RPC / ノード | `https://sentry.tm.injective.network:443` |
+| 通貨シンボル | `INJ` |
+| 小数点以下桁数 | `18` |
+| エクスプローラー | [`injscan.com`](https://injscan.com/) |
+
+<Info>
+Injective はネイティブで chain ID `injective-1` を使用します。EVM インターフェースは数値の chain ID `1776` を使用します。どちらも同じメインネットに対応しています。
+</Info>
+
+</Tab>
+
+<Tab title="Injective テストネット" icon="flask-vial">
+
+| プロパティ | 値 |
+| --- | --- |
+| Chain ID | `injective-888` |
+| RPC / ノード | `https://testnet.sentry.tm.injective.network:443` |
+| 通貨シンボル | `INJ` |
+| 小数点以下桁数 | `18` |
+| エクスプローラー | [`testnet.explorer.injective.network`](https://testnet.explorer.injective.network/) |
+| Faucet | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+
+<Info>
+Injective はテストネットでネイティブに chain ID `injective-888` を使用します。EVM インターフェースは数値の chain ID `1439` を使用します。どちらも同じテストネットに対応しています。
+</Info>
+
+</Tab>
+
+</Tabs>

@@ -1,6 +1,6 @@
 ---
 title: Bank Precompile
-updatedAt: "2026-01-09"
+updatedAt: "2026-10-12"
 ---
 
 # Bank Precompile
@@ -18,11 +18,21 @@ Bank Precompile 是一个位于固定地址 `0x000000000000000000000000000000000
 
 这些实现基于 OpenZeppelin 的 ERC20 合约。开发者可以自由创建使用 Bank precompile 的自定义 ERC20 合约。
 
-## ERC20 合约部署
+## Denom 创建费用
 
-**ℹ️ 注意：**
+为防止 denom 垃圾信息，创建一个新的 `erc20:0x...` denom 需要 **1 INJ**，可在
+`/injective/erc20/v1beta1/params` 查询。
 
-为防止 denom 垃圾信息，通过 ERC20 模块部署 ERC20 合约是**付费操作**，需要 **1 INJ** 的部署费用。确保你的 ERC20 合约部署交易包含此金额，否则操作将被拒绝。
+该费用在**首次铸造**时收取，而不是在部署时，并且从**合约自身的
+INJ 余额**中扣除，而不是从调用者扣除。`BankERC20` 的构造函数是 `payable` 的，因此
+部署交易可以预先为合约注入资金，这也是它常被称为
+部署费用的原因。
+
+<Warning>
+只要 denom 的供应量为零就会触发收费，而不仅仅是在其生命周期中收取一次。如果总
+供应量回到零，该 denom 将从状态中移除，下一次铸造会重新创建它并再次收取
+费用。如果在全部销毁后可能恢复铸造，请保持合约有足够资金。
+</Warning>
 
 ## Bank Precompile 接口
 
@@ -37,6 +47,34 @@ interface IBankModule {
     function setMetadata(string memory,string memory,uint8) external payable returns (bool);
 }
 ```
+
+### Denom 解析
+
+每个方法在操作状态之前，都会将调用合约的地址解析为一个 bank denom：
+
+1. 如果 ERC20 模块为该地址注册了 **token 对**，则使用配对的 bank denom
+   （`factory/...`、`peggy0x...` 或 `ibc/...`），
+2. 否则，denom 派生为 `erc20:0x<ChecksummedAddress>`。
+
+这就是为什么与 TokenFactory denom 配对的合约会报告该 denom 的元数据和供应量，而
+未配对的合约拥有自己的 `erc20:` denom。两种情况下合约代码完全相同，只有
+注册条目不同。
+
+### 方法语义
+
+| 方法 | 值得了解的行为 |
+|---|---|
+| `mint` / `burn` | 对于 `erc20:` denom，ERC20 模块直接铸造或销毁。对于已配对的 TokenFactory denom，precompile 会提交一个原生 `MsgMint` 或 `MsgBurn`，**以合约地址作为发送者**，因此原生授权作用于合约，而不是 EVM 调用者。已配对的 Peggy 和 IBC denom 两者都不支持。 |
+| `setMetadata` | 仅对 `erc20:` denom 有效。在与 TokenFactory、Peggy 或 IBC denom 配对的合约上调用时，会以 `denom ... does not support setting metadata through bank precompile` 回滚。这些 denom 的元数据需在原生侧设置。 |
+| `metadata` | 读取所解析 denom 的 bank 元数据。 |
+| `balanceOf` / `totalSupply` / `transfer` | 读取和写入所解析 denom 的 bank 状态。 |
+
+<Warning>
+只要 name 或 symbol 不为空，或 decimals 不为零，`BankERC20` 的构造函数就会调用 `setMetadata`。
+对于打算与现有 TokenFactory denom 配对的合约，这会为
+错误的 denom 写入元数据并阻止配对。请以空 name、空 symbol 和零 decimals 部署这类合约。请参阅
+[ERC20 Module](/cn/developers-evm/erc20-module#tokenfactory-denom-的自定义合约)。
+</Warning>
 
 ## 示例
 
