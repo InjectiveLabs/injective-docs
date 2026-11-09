@@ -1,0 +1,117 @@
+name: Sync OLP epochs table
+
+# Weekly check that the OLP epochs tables (en, cn, ko, jp) include every epoch
+# defined in the OLP service config (injective-product-helm). Epochs are pure
+# data (number, start, end, reward), so new rows are generated per locale and
+# proposed as a PR. Requires the HELM_CONFIG_TOKEN secret: a fine-grained PAT
+# with contents read access to InjectiveLabs/injective-product-helm.
+
+on:
+  schedule:
+    - cron: "30 9 * * 1" # Every Monday at 09:30 UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch OLP config from injective-product-helm
+        env:
+          GH_TOKEN: ${{ secrets.HELM_CONFIG_TOKEN }}
+        run: |
+          gh api repos/InjectiveLabs/injective-product-helm/contents/charts/olp/config/config_v2_prod.json \
+            --jq '.content' | base64 -d > /tmp/olp_config.json
+          python3 -c "import json; json.load(open('/tmp/olp_config.json'))"
+
+      - name: Add missing epochs to the docs tables
+        id: sync
+        run: |
+          python3 - <<'EOF'
+          import json, os, re, sys
+          from datetime import datetime, timezone
+
+          FILES = {
+              "en": ".gitbook/defi/open-liquidity-program/epochs.mdx",
+              "cn": ".gitbook/cn/defi/open-liquidity-program/epochs.mdx",
+              "ko": ".gitbook/ko/defi/open-liquidity-program/epochs.mdx",
+              "jp": ".gitbook/jp/defi/open-liquidity-program/epochs.mdx",
+          }
+          MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+          def fmt(loc, iso):
+              d = datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone(timezone.utc)
+              if loc == "cn":
+                  return f"{d.year}年{d.month}月{d.day}日 00:00:00"
+              if loc == "ko":
+                  return f"{d.year}년 {d.month}월 {d.day}일 00:00:00"
+              return f"{MONTHS[d.month - 1]} {d.day}, {d.year} 00:00:00"
+
+          def row(loc, ep):
+              start, end = fmt(loc, ep["startDate"]), fmt(loc, ep["endDate"])
+              cells = (f'<td align="center">{ep["number"]}</td>'
+                       f'<td align="right">{start}</td><td align="right">{end}</td>')
+              if loc == "en":
+                  cells += f'<td align="right">{int(ep["rewardINJNum"]):,}</td>'
+              return f"    <tr>{cells}</tr>"
+
+          cfg = json.load(open("/tmp/olp_config.json"))
+          # Public schedule epochs only: the config also carries special campaign
+          # epochs with 5-digit numbers (43100, 53107, ...) that never appear in
+          # the docs table. The public sequence is contiguous and lives below 1000.
+          by_num = {e["number"]: e for e in cfg["epochs"]
+                    if e.get("number") and e["number"] < 1000
+                    and e.get("startDate") and e.get("endDate")
+                    and int(e.get("rewardINJNum") or 0) > 0}
+
+          added = {}
+          for loc, path in FILES.items():
+              text = open(path, encoding="utf-8").read()
+              present = [int(n) for n in re.findall(r'<tr><td align="center">(\d+)</td>', text)]
+              if not present:
+                  print(f"error: no epoch rows found in {path}", file=sys.stderr)
+                  sys.exit(1)
+              missing, nxt = [], max(present) + 1
+              while nxt in by_num:
+                  missing.append(by_num[nxt])
+                  nxt += 1
+              if not missing:
+                  continue
+              rows = "\n".join(row(loc, e) for e in missing)
+              new_text, n = re.subn(r"(\n  </tbody>)", "\n" + rows + r"\1", text, count=1)
+              if n != 1:
+                  print(f"error: could not locate </tbody> in {path}", file=sys.stderr)
+                  sys.exit(1)
+              open(path, "w", encoding="utf-8").write(new_text)
+              added[loc] = [e["number"] for e in missing]
+              print(f"{path}: added epochs {added[loc]}")
+
+          nums = sorted({n for v in added.values() for n in v})
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"has_new={'true' if added else 'false'}\n")
+              f.write(f"epochs={', '.join(map(str, nums))}\n")
+          EOF
+
+      - name: Create pull request
+        if: steps.sync.outputs.has_new == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: docs/sync-olp-epochs
+          commit-message: "docs(olp): add epoch schedule rows from OLP config"
+          title: "docs(olp): add epoch ${{ steps.sync.outputs.epochs }} to the epochs tables"
+          body: |
+            ## New OLP epochs found in the service config
+
+            Epoch(s) ${{ steps.sync.outputs.epochs }} are defined in
+            `injective-product-helm/charts/olp/config/config_v2_prod.json` but were missing from the
+            docs epochs tables. Rows were generated per locale: en includes the reward column, cn, ko
+            and jp carry dates only, matching their existing columns.
+
+            Verify the dates and reward amounts against the config change before merging.
+          labels: documentation
