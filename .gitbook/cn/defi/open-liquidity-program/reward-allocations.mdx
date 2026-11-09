@@ -1,57 +1,26 @@
 ---
-description: "OLP 奖励分配（第 43 周期起）"
 title: "奖励分配"
+description: "OLP 奖励分配"
 updatedAt: "2026-02-05"
 ---
 
-## 市场奖励分配
+## 市场奖励分配 {#market-reward-allocations}
 
-奖励通过三种不同的方法分配给[符合条件的市场](/cn/defi/open-liquidity-program/eligible-markets)：
+奖励通过三种不同的方法分配给[符合条件的市场](https://trading.injective.network/program/liquidity)：
 
 1. 静态分配
 2. 带动态组件的最低分配
 3. 灵活奖励分配
 
-### 静态市场奖励分配（预分配）
+### 静态市场奖励分配（预分配） {#static-market-reward-allocations-preallocations}
 
-13.33% 的 INJ 奖励将预分配给 BTC/USDT PERP 市场、ETH/USDT PERP 市场和 INJ/USDT PERP 市场，5% 将预分配给 INJ/USDT 现货市场。每个周期剩余的 INJ 将分配给每个剩余的符合条件市场，最低分配为 100 INJ。
-
-<table>
-<thead>
-<tr>
-<th align="left">市场</th>
-<th align="right">分配</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>BTC/USDT 永续</td>
-<td align="right">13.33%</td>
-</tr>
-<tr>
-<td>ETH/USDT 永续</td>
-<td align="right">13.33%</td>
-</tr>
-<tr>
-<td>INJ/USDT 永续</td>
-<td align="right">13.33%</td>
-</tr>
-<tr>
-<td>INJ/USDT 现货</td>
-<td align="right">5%</td>
-</tr>
-<tr>
-<td>其他符合条件的市场</td>
-<td align="right">基于公式的分配</td>
-</tr>
-</tbody>
-</table>
+13.33% 的 INJ 奖励将预分配给 BTC/USDC PERP 市场、ETH/USDC PERP 市场和 INJ/USDC PERP 市场，5% 将预分配给 INJ/USDC 现货市场。每个周期剩余的 INJ 将分配给每个剩余的符合条件市场，最低分配为 100 INJ。
 
 <Info>
   随着更多市场被添加到符合条件列表中，静态分配可能会随时间变化
 </Info>
 
-### 动态市场奖励分配
+### 动态市场奖励分配 {#dynamic-market-reward-allocations}
 
 剩余奖励根据以下方案分配给符合条件的市场（不包括 BTC/ETH/INJ 永续）。
 
@@ -87,7 +56,7 @@ $Rewards_{max}$ 仍按本页底部计算。因此，交易量最高的市场将�
 
 对于在周期中途添加到符合条件列表的市场，预分配将按比例计算。例如，如果 ARB/USDT 在周期第 15 天添加，则该市场将获得该周期一半的奖励（因为 28 天中还剩 14 个完整天）。
 
-### 市场分配上限
+### 市场分配上限 {#market-allocation-cap}
 
 对于每个具有动态奖励分配的市场，将根据以下公式应用硬上限，其中 $n$ 是不包括 BTC、ETH 和 INJ 永续的符合条件市场数量：
 
@@ -99,7 +68,7 @@ $$
 
 任何超过上限的奖励分配将根据[动态分配公式](/cn/defi/open-liquidity-program/reward-allocations#dynamic-market-reward-allocations)在其他符合条件的市场之间重新分配。
 
-## 奖励分配
+## 奖励分配 {#reward-allocations}
 
 个人机构流动性提供者的奖励将根据以下等式分配：
 

@@ -20,7 +20,7 @@ x402 是一个开放协议，它借助长期未被使用的 `402 Payment Require
 - 了解 x402 为何天然契合自主 AI 智能体
 - 使用 `@injectivelabs/x402` 库为你自己的 Express API 端点添加支付保护
 
-## 前置条件
+## 前置条件 {#prerequisites}
 
 | 工具 | 最低版本 | 版本检查 | 安装 |
 |---|---|---|---|
@@ -34,7 +34,7 @@ x402 是一个开放协议，它借助长期未被使用的 `402 Payment Require
 - 钱包中持有 INJ 代币用于支付 gas 费
 - 钱包中持有少量 USDC（几美分就足以完成支付）
 
-## 开始使用
+## 开始使用 {#getting-started}
 
 在浏览器中打开 x402 演示页面：[`agents.injective.com/x402`](https://agents.injective.com/x402)。
 
@@ -42,12 +42,12 @@ x402 是一个开放协议，它借助长期未被使用的 `402 Payment Require
 
 在继续下一节之前，请确保你的 EVM 钱包扩展已连接到 Injective 网络。
 
-## 什么是 x402？
+## 什么是 x402？ {#what-is-x402}
 
 x402 将支付嵌入到 HTTP 协议中，
 服务器在返回数据之前，会作为 API 响应流程的一部分要求并收取支付。
 
-### 一次 x402 交互中会发生什么？
+### 一次 x402 交互中会发生什么？ {#what-happens-in-an-x402-interaction}
 
 当客户端调用一个受 x402 保护的 HTTP 端点时，交互过程如下：
 
@@ -60,7 +60,7 @@ x402 将支付嵌入到 HTTP 协议中，
 
 ![x402 interaction steps](/img/x402-demo-interaction-steps.png)
 
-### x402 免去了哪些步骤？
+### x402 免去了哪些步骤？ {#what-does-x402-avoid}
 
 无需预先注册、API key 管理、订阅或信用卡。
 这意味着服务器可以在一次 HTTP 会话中完成报价、验证支付并交付数据。
@@ -74,13 +74,13 @@ facilitator 处理所有区块链交互，让你的 API 服务器保持 web 原�
 | Gas 估算与费用 | Gas 计算逻辑 |
 | 等待链上确认 | 区块轮询：你只收到一个 yes/no |
 
-### x402 只适用于以太坊吗？
+### x402 只适用于以太坊吗？ {#is-x402-only-for-ethereum}
 
 x402 与网络无关：
 该开放标准同时支持 EVM 兼容网络、SVM 兼容网络等。
 本教程演示如何在 *Injective* 上使用 x402。
 
-### 为什么在 Injective 上使用 x402？
+### 为什么在 Injective 上使用 x402？ {#why-use-x402-on-injective}
 
 Injective 具有非常高的吞吐量和极低的延迟：
 出块时间约为 650 毫秒，
@@ -91,7 +91,7 @@ Injective 具有非常高的吞吐量和极低的延迟：
 由于 x402 交易也是完全程序化的，
 它们非常适合 AI 智能体使用。
 
-## 手动 x402 支付
+## 手动 x402 支付 {#manual-x402-payment}
 
 按以下步骤触发手动 x402 支付流程，
 以便观察钱包签名的过程：
@@ -121,7 +121,7 @@ Injective 具有非常高的吞吐量和极低的延迟：
 这表明支付已在 Injective EVM 上完成结算，
 并且服务器已交付受保护的数据。
 
-## x402 如何实现智能体支付？
+## x402 如何实现智能体支付？ {#how-does-x402-enable-agentic-payments}
 
 x402 让 API 变得可被程序化支付。
 当调用方是 AI 智能体而非人类时，
@@ -149,7 +149,7 @@ x402 标准是开源且与网络无关的。
 完整规范请参阅 [x402 协议文档](https://docs.x402.org/introduction)。
 </Info>
 
-## 使用 x402 保护你自己的 API 端点
+## 使用 x402 保护你自己的 API 端点 {#protecting-your-own-api-endpoint-with-x402}
 
 ![npm install](/img/x402-demo-npm-install.png)
 
@@ -198,7 +198,7 @@ app.get('/perps', (_req, res) => res.json({ data: "... your data here ..." }));
 （包括 AI 智能体）都能获得响应。
 你无需在服务器上实现 API key，甚至无需实现用户账号系统。
 
-## 后续步骤
+## 后续步骤 {#next-steps}
 
 恭喜！
 你已使用 x402 协议在 Injective EVM 上完成了一次 API 请求付费，
@@ -216,4 +216,4 @@ app.get('/perps', (_req, res) => res.json({ data: "... your data here ..." }));
 
 - [x402 协议规范](https://x402.org)：本库所实现的开放标准
 - [Injective 上的 AI 开发者](/developers-ai)：在 Injective 上构建 AI 原生应用的工具与技能
-- [Injective EVM 文档](/evm)：Injective 上的 EVM 开发
+- [Injective EVM 文档](/cn/developers-evm/index)：Injective 上的 EVM 开发

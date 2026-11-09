@@ -1,11 +1,37 @@
 ---
 title: 概述
+description: >-
+    如何使用 Solidity 和标准 Ethereum 工具在 Injective 上构建：
+    MetaMask、Hardhat、Foundry、viem、ethers.js 和 Remix 均兼容。
 updatedAt: "2026-01-09"
 ---
 
-欢迎 EVM 开发者！Injective 原生 EVM 支持让你可以部署 Solidity 智能合约。它还开启了与 exchange 模块交互、构建 dApp 等更多可能性。现在你可以使用熟悉的工具、库和工作流程在 Injective 上进行开发！
+本节面向希望使用熟悉的 EVM 工具和工作流程在 Injective 上构建的 EVM 开发者。
+无论你是在部署 Solidity 智能合约、集成 WalletConnect/MetaMask，还是构建全栈 dApp，
+都可以在这里找到使用 Hardhat、Foundry 和其他标准 Ethereum 开发工具的完整指南。
+同时，你还可以使用 Injective 独有的原生模块，例如链上订单簿和质押。
 
-## 开始在 EVM 上构建
+Injective 为 EVM 开发者带来了两全其美的体验：
+与 Ethereum 工具完全兼容，同时可以使用强大的原生 Cosmos 模块。
+与孤立运行的典型 EVM 兼容链不同，
+Injective 的 precompile 充当 Solidity 与 Injective 原生模块之间的桥梁。
+这意味着你的智能合约可以直接与链上订单簿交互、质押代币、参与治理，
+并利用 MultiVM Token Standard 实现统一的流动性，
+而这一切都可以使用 MetaMask、Hardhat、Foundry 或任何标准 Ethereum 工具完成。
+凭借仅为 Ethereum 一小部分的 gas 成本和亚秒级出块时间，
+Injective 在不牺牲 Ethereum 开发者熟悉的工作流程的前提下，提供了更出色的开发者体验。
+
+## 关键概念 {#key-concepts}
+
+| 术语 | 定义 |
+|------|------------|
+| **EVM Equivalence** | Injective 的原生 EVM 与 Ethereum 保持 1:1 兼容，支持最新的 `geth` 版本，同时提供显著更低的 gas 成本。 |
+| **Precompiles** | 嵌入在固定 EVM 地址（例如 Bank 为 `0x64`）上的特殊 Go 合约，将 Solidity 桥接到 Injective 的原生模块（Cosmos SDK），从而可以使用 exchange、staking 和 bank 功能。 |
+| **MultiVM Token Standard (MTS)** | 一种统一的代币模型，代币在 EVM 和 Cosmos 环境之间共享同一个规范余额，无需在 VM 之间进行桥接或包装。 |
+| **Bank Precompile** | 位于 `0x64` 的 EVM 接口，将 ERC20 操作（mint、burn、transfer）代理到原生 bank 模块，从而实现余额统一的 MTS 兼容代币。 |
+| **Bank Module** | 一个原生模块（Cosmos SDK），将原生 bank denom（INJ、IBC、Peggy 资产）映射到 EVM 中符合 MTS 的 ERC20 合约。 |
+
+## 导航 {#navigation}
 
 <Columns cols={2}>
   <Card

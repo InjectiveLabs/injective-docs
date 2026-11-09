@@ -10,7 +10,7 @@ Exchange Precompile 是一个位于固定地址 `0x00000000000000000000000000000
 * 查询子账户余额和持仓。
 * 管理对其他账户或合约的授权。
 
-#### 调用 Precompile：直接访问 vs. 代理访问
+#### 调用 Precompile：直接访问 vs. 代理访问 {#calling-the-precompile-direct-vs-proxy-access}
 
 与 Exchange Precompile 交互可以通过两种主要方式：
 
@@ -61,7 +61,7 @@ exchange.revoke(grantee, msgTypes);
 exchange.allowance(grantee, granter, msgType);  
 ```
 
-#### 示例：直接方法
+#### 示例：直接方法 {#example-direct-method}
 
 下面的 `ExchangeDemo` 合约说明了智能合约如何使用直接访问方法。它执行基本的交易所操作，如存入资金、提取资金、创建衍生品限价订单和查询子账户持仓，所有这些都使用自己的子账户和资金。
 
@@ -156,11 +156,11 @@ contract ExchangeDemo {
 }  
 ```
 
-#### 开始构建
+#### 开始构建 {#start-building}
 
-有关如何构建、部署和与此 `ExchangeDemo` 智能合约交互的详细说明，包括设置子账户和充值，请参阅我们 [solidity-contracts](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange) 仓库中提供的综合演示。
+有关如何构建、部署和与此 `ExchangeDemo` 智能合约交互的详细说明，包括设置子账户和充值，请参阅我们 [solidity-contracts](https://github.com/InjectiveLabs/solidity-contracts/tree/master/demos/exchange-direct) 仓库中提供的综合演示。
 
-#### 结论
+#### 结论 {#conclusion}
 
 Exchange Precompile 是一个强大的工具，使复杂的、协议集成的交易逻辑能够直接嵌入你在 Injective 上的智能合约中。无论你的合约是管理自己的投资组合还是作为其他用户的多功能交易接口（通过带有 `approve` 和 `revoke` 的代理模式），此 precompile 都提供了一种干净、安全且高效的方法来使用 Solidity 与核心 exchange 模块交互。
 

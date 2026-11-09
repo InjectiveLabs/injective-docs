@@ -862,6 +862,7 @@
                 "group": "INJECTIVE",
                 "pages": [
                   "cn/index",
+                  "cn/about",
                   "cn/add-network-to-wallet",
                   {
                     "group": "DeFi",
@@ -949,6 +950,7 @@
                         ]
                       },
                       "cn/infra/run-node",
+                      "cn/infra/hardware",
                       "cn/infra/set-up-keyring",
                       "cn/infra/join-a-network",
                       "cn/infra/cosmovisor",
@@ -1097,12 +1099,6 @@
                       "cn/developers/convert-addresses",
                       "cn/developers/network-information",
                       {
-                        "group": "AI 开发",
-                        "pages": [
-                          "cn/developers/ai/mcp"
-                        ]
-                      },
-                      {
                         "group": "injectived",
                         "pages": [
                           "cn/developers/injectived/index",
@@ -1115,7 +1111,6 @@
                       {
                         "group": "概念",
                         "pages": [
-                          "cn/developers/concepts/index",
                           "cn/developers/concepts/sentry-node",
                           "cn/developers/concepts/indexer-api",
                           "cn/developers/concepts/trading-account",

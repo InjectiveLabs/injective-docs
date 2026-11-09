@@ -5,9 +5,9 @@ updatedAt: "2026-02-13"
 
 `authz` 模块是 Cosmos SDK 模块的实现，根据 ADR 30，允许从一个账户（授权者）向另一个账户（被授权者）授予任意权限。
 
-## 消息
+## 消息 {#messages}
 
-### MsgGrant
+### MsgGrant {#msggrant}
 
 使用 MsgGrant 消息创建授权。如果 (granter, grantee, Authorization) 三元组已存在授权，则新授权将覆盖之前的授权。要更新或延长现有授权，应创建具有相同 (granter, grantee, Authorization) 三元组的新授权。
 
@@ -30,7 +30,7 @@ updatedAt: "2026-02-13"
 "/injective.exchange.v1beta1.MsgWithdraw",
 ```
 
-根据 [cosmos sdk 文档](https://docs.cosmos.network/main/modules/authz)，"授权必须针对特定的 Msg 服务方法逐一授予"，因此以下代码片段必须针对您希望 `grantee` 代表 `granter` 拥有授权的每种消息类型重复执行。
+根据 [cosmos sdk 文档](https://docs.cosmos.network/sdk/latest/modules/authz)，"授权必须针对特定的 Msg 服务方法逐一授予"，因此以下代码片段必须针对您希望 `grantee` 代表 `granter` 拥有授权的每种消息类型重复执行。
 
 ```ts
 import { Network } from "@injectivelabs/networks";
@@ -59,7 +59,7 @@ const txHash = await new MsgBroadcasterWithPk({
 console.log(txHash);
 ```
 
-### MsgExec
+### MsgExec {#msgexec}
 
 当被授权者想要代表授权者执行交易时，必须发送 MsgExec。在此示例中，我们将执行 MsgSend 将资产从授权者的账户地址转移到另一个账户地址。
 
@@ -97,7 +97,7 @@ const txHash = await new MsgBroadcasterWithPk({
 console.log(txHash);
 ```
 
-### MsgRevoke
+### MsgRevoke {#msgrevoke}
 
 可以使用 MsgRevoke 消息撤销授权。
 

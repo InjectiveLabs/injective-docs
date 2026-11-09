@@ -3,7 +3,7 @@ title: 安装 injectived
 updatedAt: "2026-02-13"
 ---
 
-## 平台兼容性指南
+## 平台兼容性指南 {#platform-compatibiltiy-guide}
 
 查看此表以了解哪些平台支持运行 `injectived` CLI：
 
@@ -17,12 +17,13 @@ updatedAt: "2026-02-13"
 | Linux (ARM) | ❌ | ✅ | ✅ |
 
 
-## 使用预构建二进制文件入门
+## 使用预构建二进制文件入门 {#getting-started-with-pre-built-binaries}
 
-目前，唯一支持运行预构建 `injectived` CLI 的平台是 Linux x86_64。预构建二进制文件可在 [Injective GitHub Releases 页面](https://github.com/InjectiveLabs/injective-chain-releases/releases)获取。
+目前，唯一支持运行预构建 `injectived` CLI 的平台是 Linux x86_64。预构建二进制文件可在 [Injective GitHub Releases 页面](https://github.com/InjectiveFoundation/injective-core/releases)获取。
 
 ```bash
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.14.1-1740773301/linux-amd64.zip
+# Replace the URL with the latest release from https://github.com/InjectiveFoundation/injective-core/releases
+wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
 unzip linux-amd64.zip
 ```
 
@@ -50,7 +51,7 @@ Compiled at 20250302-2204 using Go go1.23.1 (amd64)
 
 继续阅读[使用 injectived](/cn/developers/injectived/use/) 了解如何使用 `injectived` CLI 与 Injective 区块链交互。
 
-## 使用 Docker 入门
+## 使用 Docker 入门 {#getting-started-with-docker}
 
 以下命令将启动一个带有 `injectived` CLI 的容器：
 
@@ -66,7 +67,7 @@ Compiled at 20250302-2220 using Go go1.22.11 (amd64)
 继续阅读[使用 injectived](/cn/developers/injectived/use/) 了解如何使用 `injectived` CLI 与 Injective 区块链交互。
 
 
-## 从源码入门
+## 从源码入门 {#getting-started-with-source-code}
 
 以下命令将从源码构建 `injectived` CLI：
 

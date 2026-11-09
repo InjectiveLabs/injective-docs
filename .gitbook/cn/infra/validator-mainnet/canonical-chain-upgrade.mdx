@@ -1,11 +1,11 @@
 ---
-title: 规范链升级
+title: 验证升级版本
 updatedAt: "2026-02-13"
 ---
 
-## 验证发布版本
+## 验证发布版本 {#verify-release-versions}
 
-### Github 上的发布
+### Github 上的发布 {#releases-on-github}
 
 如果你想通过 Docker 验证 `injectived` 或 `peggo` 版本号，
 请按照 [`verify-injective-release`](https://github.com/injective-dev/snippets-inj/tree/main/verify-injective-release) 代码片段中的说明操作。
@@ -24,7 +24,7 @@ Version v1.16.1 (8be67e82d)
 Compiled at 20250802-1913 using Go go1.23.9 (amd64)
 ```
 
-### Docker 上的发布
+### Docker 上的发布 {#releases-on-docker}
 
 这些更直接，因为每个二进制文件只需要一个命令。
 
@@ -56,7 +56,7 @@ Compiled at 20250802-1911 using Go go1.23.9 (arm64)
 
 请注意，你应该将上述命令中的 `v1.16.1` 替换为你预期的 Injective 发布版本号。
 
-### 检查匹配
+### 检查匹配 {#checking-for-matches}
 
 请注意，上述命令的输出除了版本号（例如 `v1.16.1`）外，还包含以下内容：
 
@@ -65,3 +65,15 @@ Compiled at 20250802-1911 using Go go1.23.9 (arm64)
 - 编译器（例如 `Go go1.23.9 (amd64)`）
 
 你可以验证这些值是否与 Github 上 [Injective 链发布](https://github.com/InjectiveLabs/injective-chain-releases/releases) 页面中声明的值**匹配**。
+
+## 已弃用的 flag {#deprecated-flags}
+
+<Warning>
+**已弃用的 `statsd` flag（v1.19.0+）**
+
+从 v1.19.0 起，以下 `injectived start` flag 不再受支持，必须在升级前从你的启动命令或 systemd unit 文件中移除：
+
+`statsdAgent`, `statsdEnabled`, `statsd-prefix`, `statsd-address`, `statsd-stuck-func`, `statsd-tracing-enabled`, `statsd-profiling-enabled`, `trace-recorder-threshold`
+
+如果存在任何这些 flag，升级后 `injectived` 将无法启动。一位外部验证者曾在测试网上非正式地遇到过此问题。请在新版本上运行 `injectived start` **之前**移除这些 flag。
+</Warning>
