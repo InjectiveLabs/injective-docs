@@ -1,0 +1,171 @@
+---
+title: Emergency upgrade to v1.20.4-bl.3
+description: Mainnet binary swap and AppHash recovery instructions for validators, exchanges, custody partners, and infrastructure operators.
+updatedAt: "2026-11-09"
+---
+
+<Warning>
+**All Injective mainnet node operators must upgrade ASAP to prevent an AppHash mismatch.** New consensus rules are enforced **after height 191,016,661** on `injective-1`. This is a binary swap and restart: **there is no upgrade handler**. Cosmovisor will not activate this release from a new upgrade directory.
+</Warning>
+
+## Context
+
+On November 9, Injective carried out a mainnet upgrade as part of its network readiness program. The program tests emergency upgrade procedures and coordination across validators and ecosystem partners through periodic, unannounced exercises. The exercise completed successfully and normal network operations resumed. Operators still running an older binary must upgrade their nodes.
+
+## Required action
+
+| Node status | Action |
+| --- | --- |
+| Older binary, no AppHash mismatch | Stop, back up, swap binaries, verify, and restart ASAP. Keep existing node data. |
+| AppHash mismatch | Stop, preserve signing state, install the patch, and follow the snapshot recovery section below. |
+| Already running `v1.20.4-bl.3` and healthy | Confirm all your other nodes are upgraded and downstream services are receiving current blocks. |
+
+This applies to validators, sentries, RPC and broadcast nodes, and nodes supporting exchanges, custodians, market makers, indexers, explorers, relayers, and other integrations. If you use a third-party node provider, confirm they have upgraded.
+
+## 1. Download and verify
+
+**[Official release](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-bl.3-1794240970)** · **[Release manifest](https://storage.googleapis.com/injective-chain-releases/status.json)**
+
+| Artifact | Link |
+| --- | --- |
+| Linux AMD64 | [injective-v1.20.4-bl.3-linux-amd64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.3/injective-v1.20.4-bl.3-linux-amd64.zip) |
+| macOS Apple Silicon | [injective-v1.20.4-bl.3-darwin-arm64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.3/injective-v1.20.4-bl.3-darwin-arm64.zip) |
+| Archive checksums | [SHA256SUMS.zip.txt](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.3/SHA256SUMS.zip.txt) |
+
+Download into a staging directory and compare the archive's SHA-256 against its entry in the checksum file **before extracting or installing**. Use `sha256sum` on Linux or `shasum -a 256` on macOS.
+
+**Docker:** use `injectivelabs/injective-core:v1.20.4-bl.3`. Verify without mounting node data:
+
+```bash
+docker pull injectivelabs/injective-core:v1.20.4-bl.3
+docker run --rm injectivelabs/injective-core:v1.20.4-bl.3 injectived version
+```
+
+Expected version:
+
+```text
+Version v1.20.4-bl.3 (e0a1168)
+```
+
+## 2. Stop and back up
+
+1. Stop your node service, Cosmovisor, or container deployment. Confirm `injectived` has exited and its supervisor cannot restart it during the swap. A halted chain does not mean the node process has stopped.
+2. Back up the existing binary and node configuration. Preserve existing node data; a normal binary swap does not require a snapshot restore.
+3. **Validators:** after shutdown, back up `<node-home>/data/priv_validator_state.json` outside the data directory. Remote signer operators must preserve their signer's state using their existing procedure.
+
+Before any snapshot recovery, also back up node data and keys. Use your configured node home; `~/.injectived` is only the default.
+
+## 3. Swap the binary
+
+### Managed binary swap without Cosmovisor
+
+For a systemd-managed node, use your actual unit name (the example is `injectived`). Check `ExecStart` to identify the executable, node home, user, and startup flags:
+
+```bash
+sudo systemctl show injectived -p ExecStart -p User -p Environment
+sudo systemctl stop injectived
+```
+
+Confirm the process has exited and complete the backups in step 2 before replacing any files.
+
+1. Replace the `injectived` executable your service actually uses with the verified release binary.
+2. Preserve ownership and executable permissions. On Linux, ensure the installed executable has its execute bit set (`chmod +x <installed-binary-path>`).
+3. Install the bundled `libwasmvm.x86_64.so` where your Linux AMD64 service loads it. The official release uses `/usr/lib` and runs `sudo ldconfig`. Verify that location's library:
+
+```bash
+sha256sum /usr/lib/libwasmvm.x86_64.so
+```
+
+Expected SHA-256:
+
+```text
+eeaec050bd396c6aa4c085fe107341aa25f2ba56ee954e7e463587541dd969e0
+```
+
+If your deployment loads the library from another location, verify that file instead. If it already matches, replacement is unnecessary. Do not start with a mismatched library.
+
+After verifying the installed version and runtime library, restart through the same service manager:
+
+```bash
+sudo systemctl start injectived
+sudo systemctl status injectived --no-pager
+sudo journalctl -u injectived -n 100 --no-pager
+```
+
+Do not launch a second node manually alongside the managed service. Continue with the health checks in step 4.
+
+### Managed binary swap with Cosmovisor
+
+Stop the systemd unit that runs **Cosmovisor**, even if that unit is named `injectived`. Use your actual unit name in place of `cosmovisor` below:
+
+```bash
+sudo systemctl show cosmovisor -p ExecStart -p User -p Environment
+sudo systemctl stop cosmovisor
+```
+
+Read `DAEMON_HOME` from the service configuration, including any environment file. It may not be set in your interactive shell. Complete the backups in step 2 after shutdown.
+
+1. With Cosmovisor and its child process stopped, replace `$DAEMON_HOME/cosmovisor/current/bin/injectived` with the verified binary.
+2. Preserve ownership and executable permissions, and verify the runtime library as above.
+3. **Do not create a new `upgrades/<name>` directory.** There is no upgrade handler to switch binaries automatically.
+
+Verify the exact active binary, then start the same Cosmovisor unit:
+
+```bash
+"$DAEMON_HOME/cosmovisor/current/bin/injectived" version
+sudo systemctl start cosmovisor
+sudo systemctl status cosmovisor --no-pager
+sudo journalctl -u cosmovisor -n 100 --no-pager
+```
+
+Confirm Cosmovisor starts the expected binary and continue with the health checks in step 4.
+
+### Docker or another container deployment
+
+Update your existing deployment to `injectivelabs/injective-core:v1.20.4-bl.3`, preserving its data volumes, configuration, user, and startup arguments. The image includes runtime libraries.
+
+For Docker Compose, change the node service's image, then pull and recreate it using your existing Compose configuration. Set `node_service` to your actual service name:
+
+```bash
+node_service=injectived
+docker compose pull "$node_service"
+docker compose run --rm --no-deps --entrypoint injectived "$node_service" version
+docker compose up -d --no-deps "$node_service"
+```
+
+Only recreate the service once required recovery is complete and validator signing state is intact. Restarting the old container alone does not apply an image change.
+
+## 4. Verify and restart ASAP
+
+Run `version` against the exact installed executable or image and confirm `v1.20.4-bl.3 (e0a1168)`. Cosmovisor operators should run:
+
+```bash
+"$DAEMON_HOME/cosmovisor/current/bin/injectived" version
+```
+
+Restart your service or Cosmovisor ASAP. Confirm:
+
+- The node is on `injective-1`, block height advances, and it catches up to the network.
+- Logs show no AppHash mismatch or missing-library errors.
+- Validators participate normally; partner integrations receive current blocks.
+
+Repeat for all sentries, RPC nodes, and other node infrastructure. Report in your coordination channel:
+
+```text
+[organization] — v1.20.4-bl.3 — [height] — healthy/issues
+```
+
+## 5. AppHash mismatch recovery
+
+1. Stop the node and its supervisor again. Confirm the process has exited.
+2. Preserve the **latest** validator signing state after shutdown, outside the data directory. Keep a backup of node data, keys, and config before restoring.
+3. Obtain the recovery files from the **[pre-upgrade snapshot manifest for 191,016,661](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/upgrade-snapshots/status_191016661.json)**. The JSON is a manifest, not the snapshot archive itself. Confirm database-backend compatibility and verify the snapshot against published checksums.
+4. Restore using the [Chain Portal snapshot instructions](https://chain.injective.network/snapshots) and [validator recovery precautions](/infra/coordinated-upgrades#recovering-from-a-snapshot). Use the patched binary for replay.
+5. Restore your preserved validator signing state before restarting, or follow your remote signer's recovery procedure. **Never reset signing state, replace it with older state, or run two instances with the same validator key.**
+6. Restart and repeat the health checks above.
+
+Do not apply rollback commands from the older `bl.2` incident to this release without explicit chain-team guidance.
+
+## Support
+
+If recovery fails, keep the node stopped and share your version, height, database backend, and relevant logs in your existing Injective coordination channel or contact the team on [Discord](https://discord.gg/injective). Never share private keys or signer credentials.
