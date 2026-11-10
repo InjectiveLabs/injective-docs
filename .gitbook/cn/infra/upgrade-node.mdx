@@ -1,10 +1,10 @@
 ---
 title: 升级你的节点
-updatedAt: "2026-11-09"
+updatedAt: "2026-11-10"
 ---
 
 <Warning>
-**主网二进制替换：v1.20.4-bl.3。** 所有主网节点运营者必须[按照二进制替换与恢复指南尽快升级](/cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.3)，以防止 AppHash 不匹配。此次升级没有 upgrade handler；Cosmovisor 用户也必须手动替换当前生效的二进制文件。
+**加急主网提案：v1.20.4-safeharbor.5。** 请为高度 **191,270,000** 的计划升级做好准备（以提案 714 通过为前提）。请按照[计划升级指南](/cn/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5)操作。
 </Warning>
 
 ### 链升级
@@ -25,30 +25,6 @@ Injective 定期进行软件升级。当链升级治理提案通过时，将指�
 ### 使用 Cosmovisor 升级
 
 要管理链升级，请使用 [Cosmovisor](./cosmovisor/)。
-
-### 无 upgrade handler 的二进制替换 {#binary-swap-without-an-upgrade-handler}
-
-仅当版本通知明确说明**没有 upgrade handler** 时才使用以下步骤。从[官方二进制清单](https://storage.googleapis.com/injective-chain-releases/status.json)下载版本，并先验证其公布的 SHA-256 校验和。
-
-**常规服务**
-
-1. 停止节点服务，并确认 `injectived` 已退出。链停止并不意味着进程已停止。
-2. 备份现有的二进制文件和节点配置。验证者：停止后，将节点主目录中的 `data/priv_validator_state.json` 复制到数据目录之外的安全位置。使用远程签名器的用户必须改为保留其签名器的状态。
-3. 将你的服务使用的 `injectived` 可执行文件替换为经过验证的二进制文件。安装所有必需的随附运行时库，并保留所有权和权限。保留现有节点数据。
-4. 使用 `version` 运行已安装的可执行文件，并确认其与版本通知一致。
-5. 在收到协调通知后重启，并确认节点正在同步并正常参与。
-
-**Cosmovisor**
-
-1. 停止 Cosmovisor 服务，并确认其 `injectived` 子进程已退出。
-2. 按上述方法备份当前的二进制文件、节点配置和验证者签名状态。
-3. 将 `$DAEMON_HOME/cosmovisor/current/bin/injectived` 替换为经过验证的二进制文件，包括所有必需的随附运行时库。保留所有权、权限和现有节点数据。**不要将二进制文件放入新的 `upgrades/<name>` 目录：** 没有 handler 可以激活它。
-4. 运行 `$DAEMON_HOME/cosmovisor/current/bin/injectived version`，并确认版本符合预期。
-5. 在收到协调通知后重启 Cosmovisor，并确认节点正在同步并正常参与。
-
-**如果出现 AppHash 不匹配：** 停止节点，并按照该版本特定的恢复说明操作。在恢复快照之前，于关闭后保留最新的验证者签名状态，并在重启之前恢复该状态；切勿用较旧的备份或快照中的状态替换它。切勿使用同一个验证者密钥运行两个实例。
-
-对于在**高度 191,016,661 之后**强制执行的二进制替换，如需恢复，请使用[升级前恢复快照清单](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/upgrade-snapshots/status_191016661.json)。请参阅[快照恢复指南](https://chain.injective.network/snapshots)和[验证者恢复注意事项](/cn/infra/coordinated-upgrades#recovering-from-a-snapshot)。
 
 ### 节点维护（管理存储）
 
