@@ -1,0 +1,138 @@
+---
+title: Upgrade to v1.20.4-safeharbor.5
+description: Scheduled mainnet upgrade instructions for all node operators under proposal 714, with expedited voting.
+updatedAt: "2026-11-10"
+---
+
+- [Summary](#summary)
+- [Compatibility for Integrators](#compatibility-for-integrators)
+- [Recovery](#recovery)
+- [Upgrade Procedure](#upgrade-procedure)
+- [Notes for Validators](#notes-for-validators)
+
+## Summary
+
+The Injective Chain will undergo a scheduled enhancement upgrade at approximately **Wednesday, November 11th, 2026, 7:30 AM EST / 12:30 UTC**, subject to the expedited [proposal 714](https://injhub.com/proposal/714/) passing. Follow the [block height countdown](https://chain.injective.network/block/191270000) for the latest estimate.
+
+The following is a short summary of the upgrade steps:
+
+1. Vote and wait till the node panics at block height **191270000**.
+2. Back up configs, data, and keys used for running the Injective Chain.
+3. Install the [v1.20.4-safeharbor.5](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-safeharbor.5-1794335565) binaries.
+4. Verify the installed binary version with `injectived version` and confirm it reports **v1.20.4-safeharbor.5**.
+5. Restart the node with the new binary version.
+
+## Compatibility for Integrators
+
+Component versions verified against Injective Mainnet v1.20.4. Always run the official releases below on mainnet. They contain the same changes as the `-beta` versions published during the testnet cycle, so switching from a `-beta` build to the official release requires no code changes. Older releases used the `-rc` suffix for testnet builds.
+
+| Component | Version |
+| --- | --- |
+| `injective-core` (`injectived`) | [v1.20.4-safeharbor.5](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-safeharbor.5-1794335565) |
+| `injective-indexer` | [v1.20.168](https://gallery.ecr.aws/l9h3g6c6/injective-indexer) |
+| `sdk-go` | [v1.63.2](https://github.com/InjectiveLabs/sdk-go/releases/tag/v1.63.2) |
+| `sdk-python` | [v1.16.2](https://github.com/InjectiveLabs/sdk-python/releases/tag/v1.16.2) |
+| `evm-gateway` | [v1.4.4](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name=v1.4.4) |
+
+The indexer tag applies to its exchange, eventprovider, explorer, and chart services.
+
+All validators, sentries, RPC nodes, and nodes supporting exchanges, custody, indexers, relayers, and other integrations must run the upgraded chain binary. Confirm readiness with any third-party node provider.
+
+## Recovery
+
+Prior to exporting chain state, validators are encouraged to take a full data snapshot at the export height before proceeding. Snapshotting depends heavily on infrastructure, but generally this can be done by backing up the `.injectived` directory.
+
+It is critically important to backup the `.injectived/data/priv_validator_state.json` file after stopping your injectived process. This file is updated every block as your validator participates in consensus rounds. It is a critical file needed to prevent double-signing in case the upgrade fails and the previous chain needs to be restarted.
+
+In the event that the upgrade does not succeed, validators and operators must restore the snapshot and downgrade back to Injective Chain release [v1.20.4-bl.3](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-bl.3-1794240970) and continue this earlier chain until the next upgrade announcement.
+
+Official snapshots taken before the upgrade will be provided on the [Chain Snapshots page](https://chain.injective.network/snapshots) so operators can roll back and restore from a snapshot in a worst-case recovery scenario. If an operator makes a mistake during the upgrade or encounters errors, follow the [Validator Troubleshooting Guide](/infra/coordinated-upgrades), including its snapshot recovery and validator signing-state precautions.
+
+## Upgrade Procedure
+
+### Notes for Validators
+
+Wait for the chain to halt at **191,270,000** before replacing the active binary. Stop `injectived` fully before backing up data and validator signing state.
+
+### Steps
+
+1. Verify you are running `v1.20.4-bl.3` before the upgrade:
+
+   ```bash
+   injectived version
+   ```
+
+   Expected version:
+
+   ```text
+   Version v1.20.4-bl.3 (e0a1168)
+   ```
+
+2. Wait for the node to halt at **191,270,000**, then confirm `injectived` has stopped. Make a backup of your `.injectived` directory:
+
+   ```bash
+   cp -r ~/.injectived ./injectived-backup
+   ```
+
+   Preserve `data/priv_validator_state.json` after shutdown. Remote signer operators must preserve their signer's state.
+
+3. Download the `v1.20.4-safeharbor.5` archive and checksums from the [official release](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-safeharbor.5-1794335565). Verify the archive against the published checksum, extract it, and install the release binaries and bundled runtime library:
+
+   ```bash
+   sudo mv injectived peggo /usr/bin
+   sudo mv libwasmvm.x86_64.so /usr/lib
+   sudo ldconfig
+   ```
+
+4. Verify the installed `libwasmvm` library against the checksum published with the release:
+
+   ```bash
+   sha256sum /usr/lib/libwasmvm.x86_64.so
+   ```
+
+   <Warning>
+   An incorrect runtime-library checksum can lead to consensus issues.
+   </Warning>
+
+5. Verify the installed `injectived` reports **v1.20.4-safeharbor.5** and the build commit published in the release notes:
+
+   ```bash
+   injectived version
+   ```
+
+6. Start `injectived`:
+
+   ```bash
+   injectived start
+   ```
+
+7. If you run `peggo`, verify its version against the release notes:
+
+   ```bash
+   peggo version
+   ```
+
+8. Start `peggo` if you operate the bridge orchestrator:
+
+   ```bash
+   peggo orchestrator
+   ```
+
+Confirm the node advances past the upgrade height, catches up to the network, and participates normally. Repeat the upgrade for sentries, RPC nodes, and other node infrastructure.
+
+### With Cosmovisor
+
+Before the halt, stage the verified binary under the exact upgrade plan name:
+
+```text
+$DAEMON_HOME/cosmovisor/upgrades/v1.20.4-safeharbor.5/bin/injectived
+```
+
+Verify the staged version and executable permissions:
+
+```bash
+chmod +x "$DAEMON_HOME/cosmovisor/upgrades/v1.20.4-safeharbor.5/bin/injectived"
+"$DAEMON_HOME/cosmovisor/upgrades/v1.20.4-safeharbor.5/bin/injectived" version
+```
+
+Keep the active binary unchanged until the halt. Ensure a backup is taken after the old process stops and before the upgraded process starts. At the upgrade height, Cosmovisor selects the staged binary for `v1.20.4-safeharbor.5`. Verify the active version and confirm synchronization and validator participation after restart.
