@@ -4,7 +4,7 @@ updatedAt: "2026-11-10"
 ---
 
 <Warning>
-**Expedited mainnet proposal: v1.20.4-safeharbor.5.** Prepare for the scheduled upgrade at height **191,270,000**, subject to proposal 714 passing. Follow the [scheduled upgrade guide](/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5). The previous [v1.20.4-bl.3 binary swap and recovery guide](/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.3) remains available for that release.
+**Expedited mainnet proposal: v1.20.4-safeharbor.5.** Prepare for the scheduled upgrade at height **191,270,000**, subject to proposal 714 passing. Follow the [scheduled upgrade guide](/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5).
 </Warning>
 
 <Columns cols={2}>
@@ -52,30 +52,6 @@ If the upgrade fails or a sentry node becomes corrupted, see the [Snapshots page
 ### Upgrading with Cosmovisor
 
 To manage chain upgrades, use [Cosmovisor](./cosmovisor/).
-
-### Binary swap without an upgrade handler
-
-Use these steps only when the release notice specifies **no upgrade handler**. Download the release from the [official binary manifest](https://storage.googleapis.com/injective-chain-releases/status.json) and verify its published SHA-256 checksum first.
-
-**Regular service**
-
-1. Stop the node service and confirm `injectived` has exited. A halted chain does not mean the process has stopped.
-2. Back up the existing binary and node configuration. Validators: after stopping, copy `data/priv_validator_state.json` from your node home to a safe location outside the data directory. Remote signer users must preserve their signer's state instead.
-3. Replace the `injectived` executable used by your service with the verified binary. Install any required bundled runtime libraries and preserve ownership and permissions. Keep the existing node data.
-4. Run the installed executable with `version` and confirm it matches the release notice.
-5. Restart on the coordinated go-ahead and confirm the node is syncing and participating normally.
-
-**Cosmovisor**
-
-1. Stop the Cosmovisor service and confirm its `injectived` child process has exited.
-2. Back up the current binary, node configuration, and validator signing state as above.
-3. Replace `$DAEMON_HOME/cosmovisor/current/bin/injectived` with the verified binary, including any required bundled runtime libraries. Preserve ownership, permissions, and existing node data. **Do not stage the binary in a new `upgrades/<name>` directory:** there is no handler to activate it.
-4. Run `$DAEMON_HOME/cosmovisor/current/bin/injectived version` and confirm the expected version.
-5. Restart Cosmovisor on the coordinated go-ahead and confirm the node is syncing and participating normally.
-
-**If an AppHash mismatch occurs:** Stop the node and follow the release-specific recovery instructions. Before restoring a snapshot, preserve the latest validator signing state after shutdown and restore that state before restarting; never replace it with an older backup or snapshot state. Never run two instances using the same validator key.
-
-For the binary swap enforced **after height 191,016,661**, use the [pre-upgrade recovery snapshot manifest](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/upgrade-snapshots/status_191016661.json) if recovery is needed. See [snapshot restore guidance](https://chain.injective.network/snapshots) and [validator recovery precautions](/infra/coordinated-upgrades#recovering-from-a-snapshot).
 
 ### Node Maintenance (Managing Storage)
 
