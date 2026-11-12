@@ -220,6 +220,32 @@ The following table lists non-crypto perpetual markets available on Injective, i
 | COPPER/USDC PERP | COPPER tracks the price of copper futures, quoted in US dollars per pound and rolled to the next contract ahead of expiry. Copper is an industrial metal used in electrical wiring, construction, electronics, and power infrastructure, and is widely watched as an indicator of global economic activity. | Copper futures | 24/7 | 10x |
 | NATGAS/USDC PERP | NATGAS tracks the price of Henry Hub natural gas futures, quoted in US dollars per million British thermal units (MMBtu) and rolled to the next contract ahead of expiry. Natural gas is a major fuel for power generation, heating, and industry, and Henry Hub in Louisiana is the main U.S. pricing point. | Henry Hub natural gas futures | 24/7 | 10x |
 
+## Compute
+
+| Instrument | Description | Underlying | Coverage | Max Leverage |
+|------------|-------------|------------|----------|--------------|
+| SICI/USDC PERP | SICI tracks the cost of renting GPU compute through a weighted basket of five GPU models, published by LO:TECH. The index is quoted in points, where 100 equals GPU compute prices at the 22 July 2026 fixing. | [LO:TECH](https://lo.tech) SICI compute index, via SEDA Fast | 24/7, hourly fixings | 10x |
+
+### SICI constituents
+
+SICI is a weighted average of hourly rental prices for the following GPUs. The basket covers current and previous generations of NVIDIA data-center GPUs, plus the consumer-grade RTX 4090.
+
+| GPU | Weight |
+|-----|--------|
+| NVIDIA H100 | 40% |
+| NVIDIA B200 | 25% |
+| NVIDIA H200 | 15% |
+| NVIDIA A100 | 10% |
+| NVIDIA RTX 4090 | 10% |
+
+SICI moves in proportion to the cost of the basket. For example, a SICI level of 113 means renting the basket costs 13% more than at the 22 July 2026 base fixing.
+
+### How SICI updates
+
+- LO:TECH publishes a new SICI fixing once an hour, shortly after the hour. The index level stays the same between fixings, so the SICI mark price moves in hourly steps rather than continuously.
+- The provider oracle relays the latest fixing onchain every few seconds and converts it from USD to USDC using the USDC/USD price.
+- The SICI/USDC perpetual uses market ID `0x6751442adea73a2b65adce484dd7bde25d204c9695fc9d5410933171f3417410`.
+
 ## Forex
 
 | Instrument | Description | Underlying | Coverage | Max Leverage |
