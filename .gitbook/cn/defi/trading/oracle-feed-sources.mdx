@@ -1,72 +1,263 @@
 ---
 title: "预言机价格源"
 description: "Injective 上非加密永续合约市场的预言机价格源和合约规范。"
-updatedAt: "2026-11-04"
+updatedAt: "2026-11-12"
 ---
 
-下表列出了 Injective 上可用的非加密永续合约市场，包括资产说明、最大杠杆倍数，以及为每个市场指数价格提供支撑的底层预言机价格源。
+下表列出了 Injective 上可用的非加密永续合约市场，包括资产说明、最大杠杆倍数、覆盖时段，以及为每个市场指数价格提供支撑的底层预言机价格源。
+
+**延长交易时段**指美国东部时间周一至周五上午 4:00 至晚上 8:00，涵盖盘前、常规和盘后交易时段。
+
+**盘前及常规交易时段**指美国东部时间周一至周五上午 4:00 至下午 4:00，涵盖盘前和常规交易时段，但不含盘后交易时段。
 
 ## 股票
 
-| 交易对 | 说明 | 底层资产 | 最大杠杆 |
-|------------|-------------|------------|--------------|
-| CRCL/USDC PERP | CRCL 跟踪 Circle Internet Group, Inc. 1 股普通股的价值。Circle 是一家全球性数字金融服务公司，也是全球最大的美元支持稳定币之一 USDC 的发行方。 | [CRCL / USD](https://app.pyth.com/explore/Equity.US.CRCL%2FUSD) | 25x |
-| RKLB/USDC PERP | RKLB 跟踪 Rocket Lab USA, Inc. 1 股普通股的价值。Rocket Lab 为商业、民用和国防客户提供火箭发射服务、航天器组件和太空系统。 | [RKLB / USD](https://app.pyth.com/explore/Equity.US.RKLB%2FUSD) | 10x |
-| AMZN/USDC PERP | AMZN 跟踪 Amazon.com, Inc. 1 股普通股的价值。亚马逊经营全球在线零售业务、AWS 云基础设施、数字媒体服务和物流业务。 | [AMZN / USD](https://app.pyth.com/explore/Equity.US.AMZN%2FUSD) | 25x |
-| NVDA/USDC PERP | NVDA 跟踪 NVIDIA Corporation 1 股普通股的价值。NVIDIA 生产用于游戏、数据中心、机器学习和高级计算的 GPU、加速计算系统和 AI 平台。 | [NVDA / USD](https://app.pyth.com/explore/Equity.US.NVDA%2FUSD) | 25x |
-| COIN/USDC PERP | COIN 跟踪 Coinbase Global, Inc. 1 股普通股的价值。Coinbase 运营一家领先的加密货币交易所和数字资产平台，为零售和机构客户提供交易、托管和质押服务。 | [COIN / USD](https://app.pyth.com/explore/Equity.US.COIN%2FUSD) | 25x |
-| ORCL/USDC PERP | ORCL 跟踪 Oracle Corporation 1 股普通股的价值。Oracle 为全球企业和政府提供企业软件、云基础设施和数据库管理系统。 | [ORCL / USD](https://app.pyth.com/explore/Equity.US.ORCL%2FUSD) | 10x |
-| INTC/USDC PERP | INTC 跟踪 Intel Corporation 1 股普通股的价值。Intel 是全球最大的半导体制造商之一，生产用于计算和通信的微处理器、芯片组和集成电路。 | [INTC / USD](https://app.pyth.com/explore/Equity.US.INTC%2FUSD) | 10x |
-| MU/USDC PERP | MU 跟踪 Micron Technology, Inc. 1 股普通股的价值。Micron 设计和制造存储器与存储半导体产品，包括用于计算机、移动设备和数据中心的 DRAM 和 NAND 闪存产品。 | [MU / USD](https://app.pyth.com/explore/Equity.US.MU%2FUSD) | 10x |
-| DELL/USDC PERP | DELL 跟踪 Dell Technologies Inc. 1 股普通股的价值。Dell 为全球企业和消费者提供 IT 基础设施、个人电脑、服务器、存储解决方案和云服务。 | [DELL / USD](https://app.pyth.com/explore/Equity.US.DELL%2FUSD) | 10x |
-| SNDK/USDC PERP | SNDK 跟踪 SanDisk Corporation 1 股普通股的价值。SanDisk 设计和制造闪存产品，包括面向消费和企业应用的固态硬盘和 NAND 存储解决方案。 | [SNDK / USD](https://app.pyth.com/explore/Equity.US.SNDK%2FUSD) | 10x |
-| AAPL/USDC PERP | AAPL 跟踪 Apple Inc. 1 股普通股的价值。Apple 开发和销售消费电子产品、软件与服务，包括 iPhone、Mac、iPad、Apple Watch，以及不断增长的数字服务生态系统。 | [AAPL / USD](https://app.pyth.com/explore/Equity.US.AAPL%2FUSD) | 25x |
-| TSLA/USDC PERP | TSLA 跟踪 Tesla, Inc. 1 股普通股的价值。Tesla 设计和制造电动汽车、电池储能系统和太阳能产品，并开发自动驾驶软件。 | [TSLA / USD](https://app.pyth.com/explore/Equity.US.TSLA%2FUSD) | 25x |
-| MSFT/USDC PERP | MSFT 跟踪 Microsoft Corporation 1 股普通股的价值。Microsoft 提供软件、云计算服务和硬件，包括 Windows、Azure、Microsoft 365 以及 Xbox 游戏平台。 | [MSFT / USD](https://app.pyth.com/explore/Equity.US.MSFT%2FUSD) | 25x |
-| META/USDC PERP | META 跟踪 Meta Platforms, Inc. 1 股普通股的价值。Meta 拥有 Facebook、Instagram 和 WhatsApp 等主流社交与消息平台，并在广告、AI、虚拟现实和元宇宙产品方面进行投入。 | [META / USD](https://app.pyth.com/explore/Equity.US.META%2FUSD) | 25x |
-| GOOGL/USDC PERP | GOOGL 跟踪 Alphabet Inc. 1 股普通股的价值。Alphabet 是 Google 的母公司，经营搜索、广告、云计算和 AI 业务，并在自动驾驶汽车和生命科学等领域进行投入。 | [GOOGL / USD](https://app.pyth.com/explore/Equity.US.GOOGL%2FUSD) | 25x |
-| PLTR/USDC PERP | PLTR 跟踪 Palantir Technologies Inc. 1 股普通股的价值。Palantir 开发数据分析和 AI 软件平台，被政府机构和大型企业用于情报、运营和决策。 | [PLTR / USD](https://app.pyth.com/explore/Equity.US.PLTR%2FUSD) | 25x |
-| HOOD/USDC PERP | HOOD 跟踪 Robinhood Markets, Inc. 1 股普通股的价值。Robinhood 运营一家总部位于美国的零售券商平台，提供股票、期权和加密货币的免佣金交易。 | [HOOD / USD](https://app.pyth.com/explore/Equity.US.HOOD%2FUSD) | 25x |
-| AVGO/USDC PERP | AVGO 跟踪 Broadcom Inc. 1 股普通股的价值。Broadcom 设计和提供广泛的半导体与基础设施软件解决方案，用于数据中心、网络、存储和无线通信。 | [AVGO / USD](https://app.pyth.com/explore/Equity.US.AVGO%2FUSD) | 10x |
+| 交易对 | 说明 | 底层资产 | 覆盖时段 | 最大杠杆 |
+|------------|-------------|------------|----------|--------------|
+| CRCL/USDC PERP | CRCL 跟踪 Circle Internet Group, Inc. 1 股普通股的价值。Circle 是一家全球性数字金融服务公司，也是全球最大的美元支持稳定币之一 USDC 的发行方。 | [CRCL / USD](https://app.pyth.com/explore/Equity.US.CRCL%2FUSD) | 24/5 | 25x |
+| RKLB/USDC PERP | RKLB 跟踪 Rocket Lab USA, Inc. 1 股普通股的价值。Rocket Lab 为商业、民用和国防客户提供火箭发射服务、航天器组件和太空系统。 | [RKLB / USD](https://app.pyth.com/explore/Equity.US.RKLB%2FUSD) | 24/5 | 10x |
+| SPCX/USDC PERP | SPCX 跟踪 Space Exploration Technologies Corp. A 类普通股的价值。SpaceX 制造并发射火箭和航天器，运营 Starlink 宽带网络，并持有 xAI。 | [SPCX / USD](https://app.pyth.com/explore/Equity.US.SPCX%2FUSD) | 24/5 | 5x |
+| AMZN/USDC PERP | AMZN 跟踪 Amazon.com, Inc. 1 股普通股的价值。亚马逊经营全球在线零售业务、AWS 云基础设施、数字媒体服务和物流业务。 | [AMZN / USD](https://app.pyth.com/explore/Equity.US.AMZN%2FUSD) | 24/5 | 25x |
+| NVDA/USDC PERP | NVDA 跟踪 NVIDIA Corporation 1 股普通股的价值。NVIDIA 生产用于游戏、数据中心、机器学习和高级计算的 GPU、加速计算系统和 AI 平台。 | [NVDA / USD](https://app.pyth.com/explore/Equity.US.NVDA%2FUSD) | 24/5 | 25x |
+| COIN/USDC PERP | COIN 跟踪 Coinbase Global, Inc. 1 股普通股的价值。Coinbase 运营一家领先的加密货币交易所和数字资产平台，为零售和机构客户提供交易、托管和质押服务。 | [COIN / USD](https://app.pyth.com/explore/Equity.US.COIN%2FUSD) | 24/5 | 25x |
+| ORCL/USDC PERP | ORCL 跟踪 Oracle Corporation 1 股普通股的价值。Oracle 为全球企业和政府提供企业软件、云基础设施和数据库管理系统。 | [ORCL / USD](https://app.pyth.com/explore/Equity.US.ORCL%2FUSD) | 24/5 | 10x |
+| INTC/USDC PERP | INTC 跟踪 Intel Corporation 1 股普通股的价值。Intel 是全球最大的半导体制造商之一，生产用于计算和通信的微处理器、芯片组和集成电路。 | [INTC / USD](https://app.pyth.com/explore/Equity.US.INTC%2FUSD) | 24/5 | 10x |
+| IBM/USDC PERP | IBM 跟踪 International Business Machines Corporation 1 股普通股的价值。IBM 提供混合云、人工智能、咨询、基础设施以及企业软件产品和服务。 | [IBM / USD](https://app.pyth.com/explore/Equity.US.IBM%2FUSD) | 24/5 | 10x |
+| MU/USDC PERP | MU 跟踪 Micron Technology, Inc. 1 股普通股的价值。Micron 设计和制造存储器与存储半导体产品，包括用于计算机、移动设备和数据中心的 DRAM 和 NAND 闪存产品。 | [MU / USD](https://app.pyth.com/explore/Equity.US.MU%2FUSD) | 24/5 | 10x |
+| DELL/USDC PERP | DELL 跟踪 Dell Technologies Inc. 1 股普通股的价值。Dell 为全球企业和消费者提供 IT 基础设施、个人电脑、服务器、存储解决方案和云服务。 | [DELL / USD](https://app.pyth.com/explore/Equity.US.DELL%2FUSD) | 24/5 | 10x |
+| SNDK/USDC PERP | SNDK 跟踪 SanDisk Corporation 1 股普通股的价值。SanDisk 设计和制造闪存产品，包括面向消费和企业应用的固态硬盘和 NAND 存储解决方案。 | [SNDK / USD](https://app.pyth.com/explore/Equity.US.SNDK%2FUSD) | 24/5 | 10x |
+| AAPL/USDC PERP | AAPL 跟踪 Apple Inc. 1 股普通股的价值。Apple 开发和销售消费电子产品、软件与服务，包括 iPhone、Mac、iPad、Apple Watch，以及不断增长的数字服务生态系统。 | [AAPL / USD](https://app.pyth.com/explore/Equity.US.AAPL%2FUSD) | 24/5 | 25x |
+| TSLA/USDC PERP | TSLA 跟踪 Tesla, Inc. 1 股普通股的价值。Tesla 设计和制造电动汽车、电池储能系统和太阳能产品，并开发自动驾驶软件。 | [TSLA / USD](https://app.pyth.com/explore/Equity.US.TSLA%2FUSD) | 24/5 | 25x |
+| MSFT/USDC PERP | MSFT 跟踪 Microsoft Corporation 1 股普通股的价值。Microsoft 提供软件、云计算服务和硬件，包括 Windows、Azure、Microsoft 365 以及 Xbox 游戏平台。 | [MSFT / USD](https://app.pyth.com/explore/Equity.US.MSFT%2FUSD) | 24/5 | 25x |
+| META/USDC PERP | META 跟踪 Meta Platforms, Inc. 1 股普通股的价值。Meta 拥有 Facebook、Instagram 和 WhatsApp 等主流社交与消息平台，并在广告、AI、虚拟现实和元宇宙产品方面进行投入。 | [META / USD](https://app.pyth.com/explore/Equity.US.META%2FUSD) | 24/5 | 25x |
+| GOOGL/USDC PERP | GOOGL 跟踪 Alphabet Inc. 1 股普通股的价值。Alphabet 是 Google 的母公司，经营搜索、广告、云计算和 AI 业务，并在自动驾驶汽车和生命科学等领域进行投入。 | [GOOGL / USD](https://app.pyth.com/explore/Equity.US.GOOGL%2FUSD) | 24/5 | 25x |
+| PLTR/USDC PERP | PLTR 跟踪 Palantir Technologies Inc. 1 股普通股的价值。Palantir 开发数据分析和 AI 软件平台，被政府机构和大型企业用于情报、运营和决策。 | [PLTR / USD](https://app.pyth.com/explore/Equity.US.PLTR%2FUSD) | 24/5 | 25x |
+| HOOD/USDC PERP | HOOD 跟踪 Robinhood Markets, Inc. 1 股普通股的价值。Robinhood 运营一家总部位于美国的零售券商平台，提供股票、期权和加密货币的免佣金交易。 | [HOOD / USD](https://app.pyth.com/explore/Equity.US.HOOD%2FUSD) | 24/5 | 25x |
+| AVGO/USDC PERP | AVGO 跟踪 Broadcom Inc. 1 股普通股的价值。Broadcom 设计和提供广泛的半导体与基础设施软件解决方案，用于数据中心、网络、存储和无线通信。 | [AVGO / USD](https://app.pyth.com/explore/Equity.US.AVGO%2FUSD) | 24/5 | 10x |
+| MSTR/USDC PERP | MSTR 跟踪 Strategy Inc. 1 股普通股的价值。Strategy 提供企业分析软件，并将比特币作为主要的财库储备资产持有。 | [MSTR / USD](https://app.pyth.com/explore/Equity.US.MSTR%2FUSD) | 24/5 | 50x |
+| STRC/USDC PERP | STRC 跟踪 Strategy Inc. 1 股可变利率 A 系列永续 Stretch 优先股的价值。Strategy 是一家比特币财库公司，同时提供企业分析软件。 | [STRC / USD](https://app.pyth.com/explore/Equity.US.STRC%2FUSD) | 延长交易时段 | 10x |
+| ADBE/USDC PERP | ADBE 跟踪 Adobe Inc. 1 股普通股的价值。Adobe 开发创意、营销和文档管理软件，包括 Photoshop、Illustrator、Acrobat 以及 Adobe Experience Cloud 平台。 | [ADBE / USD](https://app.pyth.com/explore/Equity.US.ADBE%2FUSD) | 24/5 | 10x |
+| AI/USDC PERP | AI 跟踪 C3.ai, Inc. 1 股普通股的价值。C3.ai 为能源、金融服务、制造和政府等行业构建企业级 AI 软件应用。 | [AI / USD](https://app.pyth.com/explore/Equity.US.AI%2FUSD) | 常规交易时段 | 5x |
+| AMD/USDC PERP | AMD 跟踪 Advanced Micro Devices, Inc. 1 股普通股的价值。AMD 设计用于数据中心、游戏和嵌入式系统的 CPU、GPU 和自适应计算解决方案。 | [AMD / USD](https://app.pyth.com/explore/Equity.US.AMD%2FUSD) | 24/5 | 10x |
+| CRM/USDC PERP | CRM 跟踪 Salesforce, Inc. 1 股普通股的价值。Salesforce 提供基于云的客户关系管理软件，以及面向销售、服务、营销和分析的企业应用。 | [CRM / USD](https://app.pyth.com/explore/Equity.US.CRM%2FUSD) | 24/5 | 10x |
+| CRWD/USDC PERP | CRWD 跟踪 CrowdStrike Holdings, Inc. 1 股普通股的价值。CrowdStrike 为全球企业和政府提供云原生终端安全、威胁情报和网络攻击响应服务。 | [CRWD / USD](https://app.pyth.com/explore/Equity.US.CRWD%2FUSD) | 24/5 | 10x |
+| NFLX/USDC PERP | NFLX 跟踪 Netflix, Inc. 1 股普通股的价值。Netflix 运营一项全球订阅流媒体服务，在 190 多个国家提供电影、电视剧和原创内容。 | [NFLX / USD](https://app.pyth.com/explore/Equity.US.NFLX%2FUSD) | 24/5 | 10x |
+| NOW/USDC PERP | NOW 跟踪 ServiceNow, Inc. 1 股普通股的价值。ServiceNow 提供基于云的平台，用于自动化企业 IT 工作流，包括服务管理、运营和业务流程自动化。 | [NOW / USD](https://app.pyth.com/explore/Equity.US.NOW%2FUSD) | 24/5 | 10x |
+| PANW/USDC PERP | PANW 跟踪 Palo Alto Networks, Inc. 1 股普通股的价值。Palo Alto Networks 为企业和政府提供网络安全解决方案，包括下一代防火墙、云安全和 AI 驱动的威胁检测。 | [PANW / USD](https://app.pyth.com/explore/Equity.US.PANW%2FUSD) | 24/5 | 10x |
+| PYPL/USDC PERP | PYPL 跟踪 PayPal Holdings, Inc. 1 股普通股的价值。PayPal 运营一个全球数字支付平台，在 200 多个市场支持在线转账、商户支付和消费者融资。 | [PYPL / USD](https://app.pyth.com/explore/Equity.US.PYPL%2FUSD) | 24/5 | 10x |
+| QCOM/USDC PERP | QCOM 跟踪 Qualcomm Incorporated 1 股普通股的价值。Qualcomm 设计用于移动设备、汽车系统和物联网应用的无线半导体和系统级芯片解决方案。 | [QCOM / USD](https://app.pyth.com/explore/Equity.US.QCOM%2FUSD) | 24/5 | 10x |
+| SNOW/USDC PERP | SNOW 跟踪 Snowflake Inc. 1 股普通股的价值。Snowflake 提供云数据平台，支持数据存储、处理和分析，并原生支持跨组织的数据共享。 | [SNOW / USD](https://app.pyth.com/explore/Equity.US.SNOW%2FUSD) | 延长交易时段 | 10x |
+| ANET/USDC PERP | ANET 跟踪 Arista Networks, Inc. 1 股普通股的价值。Arista Networks 为数据中心和企业网络提供云网络交换机、路由和软件。 | [ANET / USD](https://app.pyth.com/explore/Equity.US.ANET%2FUSD) | 24/5 | 10x |
+| LLY/USDC PERP | LLY 跟踪 Eli Lilly and Company 1 股普通股的价值。Eli Lilly 是一家全球性制药公司，以糖尿病、肥胖症和肿瘤治疗药物闻名，包括 Mounjaro 和 Zepbound。 | [LLY / USD](https://app.pyth.com/explore/Equity.US.LLY%2FUSD) | 24/5 | 10x |
+| MRNA/USDC PERP | MRNA 跟踪 Moderna, Inc. 1 股普通股的价值。Moderna 是一家开创 mRNA 药物的生物技术公司，产品包括 COVID-19 疫苗，并拥有涵盖传染病、肿瘤和罕见病的研发管线。 | [MRNA / USD](https://app.pyth.com/explore/Equity.US.MRNA%2FUSD) | 延长交易时段 | 10x |
+| NEE/USDC PERP | NEE 跟踪 NextEra Energy, Inc. 1 股普通股的价值。NextEra Energy 是全球最大的风能和太阳能生产商，在佛罗里达州运营受监管的公用事业，同时经营大规模的竞争性清洁能源业务。 | [NEE / USD](https://app.pyth.com/explore/Equity.US.NEE%2FUSD) | 常规交易时段 | 10x |
+| NVO/USDC PERP | NVO 跟踪 Novo Nordisk A/S 1 份美国存托凭证的价值。Novo Nordisk 是一家丹麦制药公司，也是糖尿病和肥胖症护理领域的全球领导者，生产胰岛素以及包括 Ozempic 和 Wegovy 在内的 GLP-1 疗法。 | [NVO / USD](https://app.pyth.com/explore/Equity.US.NVO%2FUSD) | 24/5 | 10x |
+| TEM/USDC PERP | TEM 跟踪 Tempus AI, Inc. 1 股普通股的价值。Tempus AI 将人工智能应用于精准医疗、诊断和临床数据产品。 | [TEM / USD](https://app.pyth.com/explore/Equity.US.TEM%2FUSD) | 24/5 | 10x |
+| TSM/USDC PERP | TSM 跟踪 Taiwan Semiconductor Manufacturing Company Limited 1 份美国存托股的价值。TSMC 为全球芯片设计公司制造半导体并提供先进晶圆代工产品。 | [TSM / USD](https://app.pyth.com/explore/Equity.US.TSM%2FUSD) | 24/5 | 10x |
+| VST/USDC PERP | VST 跟踪 Vistra Corp. 1 股普通股的价值。Vistra 是一家综合性零售电力和发电公司，为美国各电力市场的客户提供服务。 | [VST / USD](https://app.pyth.com/explore/Equity.US.VST%2FUSD) | 24/5 | 10x |
+| AFRM/USDC PERP | AFRM 跟踪 Affirm Holdings, Inc. 1 股普通股的价值。Affirm 为商户和购物者提供先买后付和消费信贷产品。 | [AFRM / USD](https://app.pyth.com/explore/Equity.US.AFRM%2FUSD) | 24/5 | 5x |
+| AXP/USDC PERP | AXP 跟踪 American Express Company 1 股普通股的价值。American Express 提供支付卡、商户服务、旅行服务和信贷产品。 | [AXP / USD](https://app.pyth.com/explore/Equity.US.AXP%2FUSD) | 24/5 | 10x |
+| BAC/USDC PERP | BAC 跟踪 Bank of America Corporation 1 股普通股的价值。Bank of America 提供零售银行、商业银行、财富管理和投资银行服务。 | [BAC / USD](https://app.pyth.com/explore/Equity.US.BAC%2FUSD) | 24/5 | 10x |
+| BLK/USDC PERP | BLK 跟踪 BlackRock, Inc. 1 股普通股的价值。BlackRock 是一家全球资产管理公司，提供投资管理、ETF、风险分析和咨询服务。 | [BLK / USD](https://app.pyth.com/explore/Equity.US.BLK%2FUSD) | 24/5 | 10x |
+| BX/USDC PERP | BX 跟踪 Blackstone Inc. 1 股普通股的价值。Blackstone 是一家另类资产管理公司，专注于私募股权、房地产、信贷和基础设施。 | [BX / USD](https://app.pyth.com/explore/Equity.US.BX%2FUSD) | 24/5 | 10x |
+| C/USDC PERP | C 跟踪 Citigroup Inc. 1 股普通股的价值。Citigroup 提供全球银行、市场、交易服务、财富管理和消费金融服务。 | [C / USD](https://app.pyth.com/explore/Equity.US.C%2FUSD) | 常规交易时段 | 10x |
+| CME/USDC PERP | CME 跟踪 CME Group Inc. 1 股普通股的价值。CME Group 运营主要的衍生品交易所，提供涵盖利率、股票、大宗商品和外汇的期货和期权。 | [CME / USD](https://app.pyth.com/explore/Equity.US.CME%2FUSD) | 延长交易时段 | 10x |
+| GME/USDC PERP | GME 跟踪 GameStop Corp. 1 股普通股的价值。GameStop 是一家专业零售商，专注于视频游戏、消费电子产品、收藏品及相关商业业务。 | [GME / USD](https://app.pyth.com/explore/Equity.US.GME%2FUSD) | 24/5 | 5x |
+| GS/USDC PERP | GS 跟踪 The Goldman Sachs Group, Inc. 1 股普通股的价值。Goldman Sachs 提供投资银行、市场、资产管理和财富管理服务。 | [GS / USD](https://app.pyth.com/explore/Equity.US.GS%2FUSD) | 延长交易时段 | 10x |
+| JPM/USDC PERP | JPM 跟踪 JPMorgan Chase & Co. 1 股普通股的价值。JPMorgan Chase 在全球范围内提供银行、支付、市场、资产管理和投资银行服务。 | [JPM / USD](https://app.pyth.com/explore/Equity.US.JPM%2FUSD) | 24/5 | 10x |
+| KKR/USDC PERP | KKR 跟踪 KKR & Co. Inc. 1 股普通股的价值。KKR 是一家全球投资公司，专注于私募股权、信贷、实物资产和资本市场。 | [KKR / USD](https://app.pyth.com/explore/Equity.US.KKR%2FUSD) | 常规交易时段 | 10x |
+| MS/USDC PERP | MS 跟踪 Morgan Stanley 1 股普通股的价值。Morgan Stanley 提供机构证券、财富管理和投资管理服务。 | [MS / USD](https://app.pyth.com/explore/Equity.US.MS%2FUSD) | 常规交易时段 | 10x |
+| SCHW/USDC PERP | SCHW 跟踪 The Charles Schwab Corporation 1 股普通股的价值。Charles Schwab 提供经纪、银行、财富管理和投资咨询服务。 | [SCHW / USD](https://app.pyth.com/explore/Equity.US.SCHW%2FUSD) | 常规交易时段 | 10x |
+| SOFI/USDC PERP | SOFI 跟踪 SoFi Technologies, Inc. 1 股普通股的价值。SoFi 提供数字化消费金融产品，包括贷款、银行、投资和金融服务。 | [SOFI / USD](https://app.pyth.com/explore/Equity.US.SOFI%2FUSD) | 24/5 | 5x |
+| V/USDC PERP | V 跟踪 Visa Inc. 1 股普通股的价值。Visa 运营一个全球电子支付网络，并提供支付处理、授权、清算和结算服务。 | [V / USD](https://app.pyth.com/explore/Equity.US.V%2FUSD) | 24/5 | 10x |
+| WFC/USDC PERP | WFC 跟踪 Wells Fargo & Company 1 股普通股的价值。Wells Fargo 提供零售银行、商业银行、财富管理、抵押贷款和金融服务。 | [WFC / USD](https://app.pyth.com/explore/Equity.US.WFC%2FUSD) | 常规交易时段 | 10x |
+| AMGN/USDC PERP | AMGN 跟踪 Amgen Inc. 1 股普通股的价值。Amgen 是一家生物技术公司，开发肿瘤、炎症、心血管疾病、肾脏病和罕见病领域的疗法。 | [AMGN / USD](https://app.pyth.com/explore/Equity.US.AMGN%2FUSD) | 延长交易时段 | 10x |
+| ARM/USDC PERP | ARM 跟踪 Arm Holdings plc 1 份美国存托股的价值。Arm 设计 CPU 架构和半导体 IP，供芯片制造商用于智能手机、数据中心、汽车系统和联网设备。 | [ARM / USD](https://app.pyth.com/explore/Equity.US.ARM%2FUSD) | 24/5 | 10x |
+| BA/USDC PERP | BA 跟踪 The Boeing Company 1 股普通股的价值。Boeing 设计、制造并维护商用飞机、国防系统、卫星和太空平台。 | [BA / USD](https://app.pyth.com/explore/Equity.US.BA%2FUSD) | 24/5 | 10x |
+| ENPH/USDC PERP | ENPH 跟踪 Enphase Energy, Inc. 1 股普通股的价值。Enphase Energy 为住宅和商业太阳能装置设计微型逆变器、电池、电动汽车充电器和能源管理系统。 | [ENPH / USD](https://app.pyth.com/explore/Equity.US.ENPH%2FUSD) | 常规交易时段 | 10x |
+| FSLR/USDC PERP | FSLR 跟踪 First Solar, Inc. 1 股普通股的价值。First Solar 制造薄膜光伏太阳能组件，并开发公用事业规模的太阳能技术。 | [FSLR / USD](https://app.pyth.com/explore/Equity.US.FSLR%2FUSD) | 延长交易时段 | 10x |
+| GD/USDC PERP | GD 跟踪 General Dynamics Corporation 1 股普通股的价值。General Dynamics 为政府和商业客户提供航空航天、海洋系统、作战车辆、IT 和国防技术。 | [GD / USD](https://app.pyth.com/explore/Equity.US.GD%2FUSD) | 延长交易时段 | 10x |
+| GILD/USDC PERP | GILD 跟踪 Gilead Sciences, Inc. 1 股普通股的价值。Gilead Sciences 开发抗病毒、肿瘤和炎症性疾病疗法，包括 HIV 和肝病治疗药物。 | [GILD / USD](https://app.pyth.com/explore/Equity.US.GILD%2FUSD) | 延长交易时段 | 10x |
+| HIMS/USDC PERP | HIMS 跟踪 Hims & Hers Health, Inc. 1 股普通股的价值。Hims & Hers Health 运营一个面向消费者的远程医疗平台，在各健康品类中提供在线问诊和处方治疗。 | [HIMS / USD](https://app.pyth.com/explore/Equity.US.HIMS%2FUSD) | 24/5 | 5x |
+| ISRG/USDC PERP | ISRG 跟踪 Intuitive Surgical, Inc. 1 股普通股的价值。Intuitive Surgical 开发用于微创手术的机器人辅助手术系统、器械、配件和数字工具。 | [ISRG / USD](https://app.pyth.com/explore/Equity.US.ISRG%2FUSD) | 延长交易时段 | 10x |
+| LMT/USDC PERP | LMT 跟踪 Lockheed Martin Corporation 1 股普通股的价值。Lockheed Martin 为美国及盟国政府客户开发航空航天、国防、导弹、太空和安全系统。 | [LMT / USD](https://app.pyth.com/explore/Equity.US.LMT%2FUSD) | 24/5 | 10x |
+| MRVL/USDC PERP | MRVL 跟踪 Marvell Technology, Inc. 1 股普通股的价值。Marvell 设计数据基础设施半导体，用于云、网络、存储、运营商、汽车和企业系统。 | [MRVL / USD](https://app.pyth.com/explore/Equity.US.MRVL%2FUSD) | 24/5 | 10x |
+| NIO/USDC PERP | NIO 跟踪 NIO Inc. 1 份美国存托股的价值。NIO 在中国及其他市场设计和销售高端电动汽车，并提供相关的充电、换电和出行服务。 | [NIO / USD](https://app.pyth.com/explore/Equity.US.NIO%2FUSD) | 24/5 | 5x |
+| NOC/USDC PERP | NOC 跟踪 Northrop Grumman Corporation 1 股普通股的价值。Northrop Grumman 为政府客户开发航空航天、国防、太空、网络和任务系统。 | [NOC / USD](https://app.pyth.com/explore/Equity.US.NOC%2FUSD) | 延长交易时段 | 10x |
+| OKLO/USDC PERP | OKLO 跟踪 Oklo Inc. 1 股普通股的价值。Oklo 开发先进裂变发电厂和核燃料回收技术，提供清洁基荷能源。 | [OKLO / USD](https://app.pyth.com/explore/Equity.US.OKLO%2FUSD) | 24/5 | 10x |
+| RIVN/USDC PERP | RIVN 跟踪 Rivian Automotive, Inc. 1 股普通股的价值。Rivian 设计和制造电动皮卡、SUV、商用配送货车，并提供相关软件和充电服务。 | [RIVN / USD](https://app.pyth.com/explore/Equity.US.RIVN%2FUSD) | 24/5 | 5x |
+| RTX/USDC PERP | RTX 跟踪 RTX Corporation 1 股普通股的价值。RTX 通过 Collins Aerospace、Pratt & Whitney 和 Raytheon 业务提供航空航天和国防产品。 | [RTX / USD](https://app.pyth.com/explore/Equity.US.RTX%2FUSD) | 24/5 | 10x |
+| SMCI/USDC PERP | SMCI 跟踪 Super Micro Computer, Inc. 1 股普通股的价值。Super Micro Computer 设计和制造用于 AI 和云基础设施的高性能服务器、存储、网络和机架级系统。 | [SMCI / USD](https://app.pyth.com/explore/Equity.US.SMCI%2FUSD) | 24/5 | 10x |
+| VRT/USDC PERP | VRT 跟踪 Vertiv Holdings Co. 1 股普通股的价值。Vertiv 为数据中心和通信网络提供关键数字基础设施系统，包括电源管理、热管理、监控和服务。 | [VRT / USD](https://app.pyth.com/explore/Equity.US.VRT%2FUSD) | 24/5 | 10x |
+| XPEV/USDC PERP | XPEV 跟踪 XPeng Inc. 1 份美国存托股的价值。XPeng 设计和制造智能电动汽车、驾驶辅助系统、充电服务和出行软件。 | [XPEV / USD](https://app.pyth.com/explore/Equity.US.XPEV%2FUSD) | 延长交易时段 | 5x |
+| ABNB/USDC PERP | ABNB 跟踪 Airbnb, Inc. 1 股普通股的价值。Airbnb 运营一个全球短租住宿和体验交易平台，通过其在线平台连接房东与旅行者。 | [ABNB / USD](https://app.pyth.com/explore/Equity.US.ABNB%2FUSD) | 延长交易时段 | 10x |
+| AMC/USDC PERP | AMC 跟踪 AMC Entertainment Holdings, Inc. 1 股普通股的价值。AMC 在美国、欧洲和其他国际市场经营电影院。 | [AMC / USD](https://app.pyth.com/explore/Equity.US.AMC%2FUSD) | 盘前及常规交易时段 | 5x |
+| CMG/USDC PERP | CMG 跟踪 Chipotle Mexican Grill, Inc. 1 股普通股的价值。Chipotle 在美国和国际市场经营快休闲餐厅，主打墨西哥卷饼、碗饭、塔可和沙拉。 | [CMG / USD](https://app.pyth.com/explore/Equity.US.CMG%2FUSD) | 常规交易时段 | 10x |
+| COST/USDC PERP | COST 跟踪 Costco Wholesale Corporation 1 股普通股的价值。Costco 经营会员制仓储店，提供食品杂货、家居用品、燃油、药房服务和一般商品。 | [COST / USD](https://app.pyth.com/explore/Equity.US.COST%2FUSD) | 24/5 | 10x |
+| DIS/USDC PERP | DIS 跟踪 The Walt Disney Company 1 股普通股的价值。Disney 经营媒体网络、电影制片厂、流媒体服务、主题公园、度假村和消费品业务。 | [DIS / USD](https://app.pyth.com/explore/Equity.US.DIS%2FUSD) | 24/5 | 10x |
+| LULU/USDC PERP | LULU 跟踪 lululemon athletica inc. 1 股普通股的价值。lululemon 设计并通过门店、电商和国际渠道销售运动服装、鞋类和配饰。 | [LULU / USD](https://app.pyth.com/explore/Equity.US.LULU%2FUSD) | 延长交易时段 | 10x |
+| NKE/USDC PERP | NKE 跟踪 NIKE, Inc. 1 股普通股的价值。Nike 以 Nike、Jordan 和 Converse 品牌设计、营销和销售运动鞋、服装、装备和配饰。 | [NKE / USD](https://app.pyth.com/explore/Equity.US.NKE%2FUSD) | 延长交易时段 | 10x |
+| PFE/USDC PERP | PFE 跟踪 Pfizer Inc. 1 股普通股的价值。Pfizer 在肿瘤、免疫、心血管、传染病和其他治疗领域开发、生产和销售药物与疫苗。 | [PFE / USD](https://app.pyth.com/explore/Equity.US.PFE%2FUSD) | 常规交易时段 | 10x |
+| RBLX/USDC PERP | RBLX 跟踪 Roblox Corporation 1 股普通股的价值。Roblox 运营一个在线平台，用户可在其中创建、分享和体验沉浸式数字内容。 | [RBLX / USD](https://app.pyth.com/explore/Equity.US.RBLX%2FUSD) | 延长交易时段 | 10x |
+| REGN/USDC PERP | REGN 跟踪 Regeneron Pharmaceuticals, Inc. 1 股普通股的价值。Regeneron 发现、开发和商业化用于眼科疾病、过敏和炎症性疾病、癌症以及罕见病的药物。 | [REGN / USD](https://app.pyth.com/explore/Equity.US.REGN%2FUSD) | 延长交易时段 | 10x |
+| SBUX/USDC PERP | SBUX 跟踪 Starbucks Corporation 1 股普通股的价值。Starbucks 经营咖啡店和烘焙工坊，通过直营店和授权店销售咖啡、茶、食品和品牌产品。 | [SBUX / USD](https://app.pyth.com/explore/Equity.US.SBUX%2FUSD) | 24/5 | 10x |
+| SNAP/USDC PERP | SNAP 跟踪 Snap Inc. 1 股普通股的价值。Snap 运营 Snapchat，并开发相机、增强现实、消息、广告和社交媒体产品。 | [SNAP / USD](https://app.pyth.com/explore/Equity.US.SNAP%2FUSD) | 常规交易时段 | 10x |
+| SPOT/USDC PERP | SPOT 跟踪 Spotify Technology S.A. 1 股普通股的价值。Spotify 运营一个全球音频流媒体平台，提供音乐、播客、有声书和广告支持的内容。 | [SPOT / USD](https://app.pyth.com/explore/Equity.US.SPOT%2FUSD) | 24/5 | 10x |
+| TGT/USDC PERP | TGT 跟踪 Target Corporation 1 股普通股的价值。Target 经营综合商品和食品杂货商店、电商渠道、履约服务以及自有零售品牌。 | [TGT / USD](https://app.pyth.com/explore/Equity.US.TGT%2FUSD) | 常规交易时段 | 10x |
+| UBER/USDC PERP | UBER 跟踪 Uber Technologies, Inc. 1 股普通股的价值。Uber 运营出行、配送和货运平台，连接乘客、司机、消费者、餐厅、商户和承运商。 | [UBER / USD](https://app.pyth.com/explore/Equity.US.UBER%2FUSD) | 24/5 | 10x |
+| WMT/USDC PERP | WMT 跟踪 Walmart Inc. 1 股普通股的价值。Walmart 在全球经营零售商店、仓储会员店、电商平台、食品杂货服务和供应链业务。 | [WMT / USD](https://app.pyth.com/explore/Equity.US.WMT%2FUSD) | 24/5 | 10x |
+| BYND/USDC PERP | BYND 跟踪 Beyond Meat, Inc. 1 股普通股的价值。Beyond Meat 开发植物基肉类产品，通过零售、餐饮服务和餐厅渠道销售。 | [BYND / USD](https://app.pyth.com/explore/Equity.US.BYND%2FUSD) | 常规交易时段 | 5x |
+| CHTR/USDC PERP | CHTR 跟踪 Charter Communications, Inc. 1 股普通股的价值。Charter 通过 Spectrum 品牌提供宽带、有线电视、移动和语音服务。 | [CHTR / USD](https://app.pyth.com/explore/Equity.US.CHTR%2FUSD) | 常规交易时段 | 10x |
+| DKNG/USDC PERP | DKNG 跟踪 DraftKings Inc. 1 股普通股的价值。DraftKings 运营数字体育娱乐和博彩产品，包括体育博彩、iGaming 和每日梦幻体育。 | [DKNG / USD](https://app.pyth.com/explore/Equity.US.DKNG%2FUSD) | 24/5 | 10x |
+| FLUT/USDC PERP | FLUT 跟踪 Flutter Entertainment plc 1 股普通股的价值。Flutter 运营全球体育博彩和 iGaming 品牌，包括 FanDuel、Paddy Power、Betfair 和 Sky Betting & Gaming。 | [FLUT / USD](https://app.pyth.com/explore/Equity.US.FLUT%2FUSD) | 24/5 | 10x |
+| LVS/USDC PERP | LVS 跟踪 Las Vegas Sands Corp. 1 股普通股的价值。Las Vegas Sands 开发和经营综合度假村，涵盖博彩、酒店、会展、零售和娱乐物业。 | [LVS / USD](https://app.pyth.com/explore/Equity.US.LVS%2FUSD) | 常规交易时段 | 10x |
+| LYV/USDC PERP | LYV 跟踪 Live Nation Entertainment, Inc. 1 股普通股的价值。Live Nation 在全球经营演唱会、音乐节、票务、赞助和场馆业务。 | [LYV / USD](https://app.pyth.com/explore/Equity.US.LYV%2FUSD) | 常规交易时段 | 10x |
+| MGM/USDC PERP | MGM 跟踪 MGM Resorts International 1 股普通股的价值。MGM Resorts 经营赌场度假村、酒店、娱乐场所和数字博彩产品。 | [MGM / USD](https://app.pyth.com/explore/Equity.US.MGM%2FUSD) | 常规交易时段 | 10x |
+| ASML/USDC PERP | ASML 跟踪 ASML Holding N.V. 1 股纽约注册股的价值。ASML 为半导体制造商提供用于生产先进芯片的光刻系统及相关设备。 | [ASML / USD](https://app.pyth.com/explore/Equity.US.ASML%2FUSD) | 24/5 | 10x |
+| BABA/USDC PERP | BABA 跟踪 Alibaba Group Holding Limited 1 份美国存托股的价值。Alibaba 在中国和国际市场经营电商、云计算、数字媒体、物流和本地生活服务业务。 | [BABA / USD](https://app.pyth.com/explore/Equity.US.BABA%2FUSD) | 24/5 | 10x |
+| BIDU/USDC PERP | BIDU 跟踪 Baidu, Inc. 1 份美国存托股的价值。Baidu 在中国运营互联网搜索、在线广告、AI 云、自动驾驶和其他科技服务。 | [BIDU / USD](https://app.pyth.com/explore/Equity.US.BIDU%2FUSD) | 24/5 | 10x |
+| GLXY/USDC PERP | GLXY 跟踪 Galaxy Digital Inc. 1 股普通股的价值。Galaxy Digital 提供数字资产投资、交易、资产管理、挖矿和区块链基础设施服务。 | [GLXY / USD](https://app.pyth.com/explore/Equity.US.GLXY%2FUSD) | 延长交易时段 | 5x |
+| GRAB/USDC PERP | GRAB 跟踪 Grab Holdings Limited 1 股 A 类普通股的价值。Grab 运营一款东南亚超级应用，提供出行、配送、数字金融服务和商户解决方案。 | [GRAB / USD](https://app.pyth.com/explore/Equity.US.GRAB%2FUSD) | 24/5 | 5x |
+| JD/USDC PERP | JD 跟踪 JD.com, Inc. 1 份美国存托股的价值。JD.com 在中国经营电商、零售基础设施、物流、交易平台和科技服务。 | [JD / USD](https://app.pyth.com/explore/Equity.US.JD%2FUSD) | 24/5 | 10x |
+| PDD/USDC PERP | PDD 跟踪 PDD Holdings Inc. 1 份美国存托股的价值。PDD Holdings 运营包括 Pinduoduo 和 Temu 在内的电商平台，连接消费者与商户和制造商。 | [PDD / USD](https://app.pyth.com/explore/Equity.US.PDD%2FUSD) | 24/5 | 10x |
+| PM/USDC PERP | PM 跟踪 Philip Morris International Inc. 1 股普通股的价值。Philip Morris International 销售烟草、尼古丁和无烟产品，包括加热烟草和口含尼古丁产品。 | [PM / USD](https://app.pyth.com/explore/Equity.US.PM%2FUSD) | 常规交易时段 | 10x |
+| SKYD/USDC PERP | SKYD 跟踪 Skydance Corporation（原 Paramount Skydance Corporation）1 股普通股的价值。Skydance 经营电影和电视制片厂、流媒体服务、广播电视网络和全球娱乐品牌。 | [SKYD / USD](https://app.pyth.com/explore/Equity.US.SKYD%2FUSD) | 常规交易时段 | 5x |
+| RIO/USDC PERP | RIO 跟踪 Rio Tinto Group 1 份美国存托股的价值。Rio Tinto 是一家全球性矿业公司，生产铁矿石、铝、铜、矿物和其他工业大宗商品。 | [RIO / USD](https://app.pyth.com/explore/Equity.US.RIO%2FUSD) | 常规交易时段 | 10x |
+| SAP/USDC PERP | SAP 跟踪 SAP SE 1 份美国存托股的价值。SAP 开发用于财务、供应链、人力资源、客户体验、分析和云运营的企业应用软件。 | [SAP / USD](https://app.pyth.com/explore/Equity.US.SAP%2FUSD) | 延长交易时段 | 10x |
+| TKO/USDC PERP | TKO 跟踪 TKO Group Holdings, Inc. 1 股普通股的价值。TKO 拥有包括 UFC 和 WWE 在内的体育和娱乐资产，经营媒体版权、现场赛事、赞助和授权业务。 | [TKO / USD](https://app.pyth.com/explore/Equity.US.TKO%2FUSD) | 常规交易时段 | 10x |
+| WYNN/USDC PERP | WYNN 跟踪 Wynn Resorts, Limited 1 股普通股的价值。Wynn Resorts 开发和经营综合赌场度假村、酒店、餐厅、零售和娱乐场所。 | [WYNN / USD](https://app.pyth.com/explore/Equity.US.WYNN%2FUSD) | 常规交易时段 | 10x |
+| CRWV/USDC PERP | CRWV 跟踪 CoreWeave, Inc. 1 股 A 类普通股的价值。CoreWeave 运营一个云平台，为训练和运行 AI 模型提供 GPU 算力基础设施。 | [CRWV / USD](https://app.pyth.com/explore/Equity.US.CRWV%2FUSD) | 24/5 | 10x |
+| NBIS/USDC PERP | NBIS 跟踪 Nebius Group N.V. 1 股 A 类普通股的价值。Nebius 构建全栈 AI 基础设施，包括面向 AI 工作负载的 GPU 云算力、数据中心和开发者工具。 | [NBIS / USD](https://app.pyth.com/explore/Equity.US.NBIS%2FUSD) | 24/5 | 10x |
+| AZN/USDC PERP | AZN 跟踪 AstraZeneca PLC 1 股普通股的价值。AstraZeneca 在肿瘤、心血管、肾脏、代谢、呼吸、免疫和罕见病领域发现、开发和销售药物。 | [AZN / USD](https://app.pyth.com/explore/Equity.US.AZN%2FUSD) | 24/5 | 10x |
+| BE/USDC PERP | BE 跟踪 Bloom Energy Corporation 1 股 A 类普通股的价值。Bloom Energy 生产固体氧化物燃料电池系统，为数据中心、公用事业以及商业和工业客户提供现场发电。 | [BE / USD](https://app.pyth.com/explore/Equity.US.BE%2FUSD) | 24/5 | 10x |
+| CRDO/USDC PERP | CRDO 跟踪 Credo Technology Group Holding Ltd 1 股普通股的价值。Credo 为数据中心和 AI 网络设计高速连接产品，包括有源电缆、SerDes 芯片和光学 DSP。 | [CRDO / USD](https://app.pyth.com/explore/Equity.US.CRDO%2FUSD) | 24/5 | 10x |
+| IREN/USDC PERP | IREN 跟踪 IREN Limited 1 股普通股的价值。IREN 拥有并运营由可再生能源供电的数据中心，提供 AI 云计算服务和比特币挖矿。 | [IREN / USD](https://app.pyth.com/explore/Equity.US.IREN%2FUSD) | 24/5 | 10x |
+| LI/USDC PERP | LI 跟踪 Li Auto Inc. 1 份美国存托股的价值。Li Auto 在中国设计、制造和销售高端智能电动汽车，包括增程式和纯电动 SUV。 | [LI / USD](https://app.pyth.com/explore/Equity.US.LI%2FUSD) | 延长交易时段 | 10x |
+| MA/USDC PERP | MA 跟踪 Mastercard Incorporated 1 股 A 类普通股的价值。Mastercard 运营一个全球支付网络，处理消费者、商户、银行和企业之间的银行卡交易。 | [MA / USD](https://app.pyth.com/explore/Equity.US.MA%2FUSD) | 24/5 | 10x |
+| MO/USDC PERP | MO 跟踪 Altria Group, Inc. 1 股普通股的价值。Altria 在美国生产和销售卷烟、口含烟草和无烟尼古丁产品，旗下品牌包括 Marlboro。 | [MO / USD](https://app.pyth.com/explore/Equity.US.MO%2FUSD) | 常规交易时段 | 10x |
+| ONTO/USDC PERP | ONTO 跟踪 Onto Innovation Inc. 1 股普通股的价值。Onto Innovation 提供用于半导体制造的制程控制、检测、量测和光刻系统及软件。 | [ONTO / USD](https://app.pyth.com/explore/Equity.US.ONTO%2FUSD) | 延长交易时段 | 10x |
+| SHAZ/USDC PERP | SHAZ 跟踪 SharonAI Holdings, Inc. 1 股普通股的价值。SharonAI 提供 GPU 云计算和 AI 基础设施服务。 | [SHAZ / USD](https://app.pyth.com/explore/Equity.US.SHAZ%2FUSD) | 盘前及常规交易时段 | 10x |
+| TTD/USDC PERP | TTD 跟踪 The Trade Desk, Inc. 1 股 A 类普通股的价值。The Trade Desk 运营一个自助式平台，广告买方使用该平台规划、购买和衡量数字广告活动。 | [TTD / USD](https://app.pyth.com/explore/Equity.US.TTD%2FUSD) | 常规交易时段 | 10x |
+| TTWO/USDC PERP | TTWO 跟踪 Take-Two Interactive Software, Inc. 1 股普通股的价值。Take-Two 通过 Rockstar Games、2K 和 Zynga 等品牌开发和发行电子游戏。 | [TTWO / USD](https://app.pyth.com/explore/Equity.US.TTWO%2FUSD) | 延长交易时段 | 10x |
+| AMT/USDC PERP | AMT 跟踪 American Tower Corporation 1 股普通股的价值。American Tower 是一家房地产投资信托基金，在美国和国际市场拥有并租赁通信塔和其他通信站点，同时拥有数据中心。 | [AMT / USD](https://app.pyth.com/explore/Equity.US.AMT%2FUSD) | 常规交易时段 | 10x |
+| APO/USDC PERP | APO 跟踪 Apollo Global Management, Inc. 1 股普通股的价值。Apollo 是一家另类资产管理公司，投资于信贷、私募股权和实物资产，并拥有退休服务保险公司 Athene。 | [APO / USD](https://app.pyth.com/explore/Equity.US.APO%2FUSD) | 常规交易时段 | 10x |
+| BIIB/USDC PERP | BIIB 跟踪 Biogen Inc. 1 股普通股的价值。Biogen 发现、开发和销售针对神经系统疾病和神经退行性疾病的疗法，包括多发性硬化症、脊髓性肌萎缩症和阿尔茨海默病。 | [BIIB / USD](https://app.pyth.com/explore/Equity.US.BIIB%2FUSD) | 常规交易时段 | 10x |
+| COF/USDC PERP | COF 跟踪 Capital One Financial Corporation 1 股普通股的价值。Capital One 是一家美国银行控股公司，提供信用卡、消费者与商业银行业务以及汽车贷款，并拥有 Discover 支付网络。 | [COF / USD](https://app.pyth.com/explore/Equity.US.COF%2FUSD) | 24/5 | 10x |
+| EQIX/USDC PERP | EQIX 跟踪 Equinix, Inc. 1 股普通股的价值。Equinix 是一家房地产投资信托基金，运营供全球云服务商、网络运营商和企业使用的数据中心和互连服务。 | [EQIX / USD](https://app.pyth.com/explore/Equity.US.EQIX%2FUSD) | 常规交易时段 | 10x |
+| FIS/USDC PERP | FIS 跟踪 Fidelity National Information Services, Inc. 1 股普通股的价值。FIS 为银行和资本市场公司提供金融科技，包括核心银行软件、支付处理以及交易和风险系统。 | [FIS / USD](https://app.pyth.com/explore/Equity.US.FIS%2FUSD) | 常规交易时段 | 10x |
+| HPE/USDC PERP | HPE 跟踪 Hewlett Packard Enterprise Company 1 股普通股的价值。HPE 向企业和政府销售服务器、存储、网络设备和混合云服务。 | [HPE / USD](https://app.pyth.com/explore/Equity.US.HPE%2FUSD) | 24/5 | 10x |
+| ICE/USDC PERP | ICE 跟踪 Intercontinental Exchange, Inc. 1 股普通股的价值。ICE 运营纽约证券交易所、全球期货交易所和清算所，以及固定收益数据和抵押贷款技术业务。 | [ICE / USD](https://app.pyth.com/explore/Equity.US.ICE%2FUSD) | 常规交易时段 | 10x |
+| O/USDC PERP | O 跟踪 Realty Income Corporation 1 股普通股的价值。Realty Income 是一家房地产投资信托基金，以长期净租赁方式向零售、工业及其他租户出租其拥有的商业地产，并按月派发股息。 | [O / USD](https://app.pyth.com/explore/Equity.US.O%2FUSD) | 常规交易时段 | 10x |
+| PLD/USDC PERP | PLD 跟踪 Prologis, Inc. 1 股普通股的价值。Prologis 是一家房地产投资信托基金，在全球范围内拥有和开发物流地产，包括仓库和配送中心。 | [PLD / USD](https://app.pyth.com/explore/Equity.US.PLD%2FUSD) | 常规交易时段 | 10x |
+| SPGI/USDC PERP | SPGI 跟踪 S&P Global Inc. 1 股普通股的价值。S&P Global 提供信用评级、市场数据与分析以及大宗商品定价，并拥有 S&P Dow Jones Indices，后者是包括 S&P 500 在内的多项基准指数的发布方。 | [SPGI / USD](https://app.pyth.com/explore/Equity.US.SPGI%2FUSD) | 常规交易时段 | 10x |
+| TMO/USDC PERP | TMO 跟踪 Thermo Fisher Scientific Inc. 1 股普通股的价值。Thermo Fisher 供应实验室仪器、试剂、耗材和软件，并为制药公司提供药物开发和生产服务。 | [TMO / USD](https://app.pyth.com/explore/Equity.US.TMO%2FUSD) | 常规交易时段 | 10x |
+| UPST/USDC PERP | UPST 跟踪 Upstart Holdings, Inc. 1 股普通股的价值。Upstart 运营一个 AI 借贷市场，为消费者对接银行和信用合作社，提供个人贷款、汽车贷款和房屋净值贷款。 | [UPST / USD](https://app.pyth.com/explore/Equity.US.UPST%2FUSD) | 24/5 | 10x |
+| VRTX/USDC PERP | VRTX 跟踪 Vertex Pharmaceuticals Incorporated 1 股普通股的价值。Vertex 开发针对严重疾病的药物，包括囊性纤维化疗法和基因编辑疗法 Casgevy。 | [VRTX / USD](https://app.pyth.com/explore/Equity.US.VRTX%2FUSD) | 延长交易时段 | 10x |
+| BKNG/USDC PERP | BKNG 跟踪 Booking Holdings Inc. 1 股普通股的价值。Booking Holdings 运营在线旅行预订平台，包括 Booking.com、Priceline、Agoda、Kayak 和 OpenTable。 | [BKNG / USD](https://app.pyth.com/explore/Equity.US.BKNG%2FUSD) | 24/5 | 10x |
+| CCI/USDC PERP | CCI 跟踪 Crown Castle Inc. 1 股普通股的价值。Crown Castle 是一家房地产投资信托基金，在美国各地拥有并出租蜂窝通信塔及其他共享无线基础设施。 | [CCI / USD](https://app.pyth.com/explore/Equity.US.CCI%2FUSD) | 常规交易时段 | 10x |
+| DLR/USDC PERP | DLR 跟踪 Digital Realty Trust, Inc. 1 股普通股的价值。Digital Realty 是一家房地产投资信托基金，拥有并运营供全球云、AI 和企业客户使用的数据中心和主机托管设施。 | [DLR / USD](https://app.pyth.com/explore/Equity.US.DLR%2FUSD) | 常规交易时段 | 10x |
+| KO/USDC PERP | KO 跟踪 The Coca-Cola Company 1 股普通股的价值。Coca-Cola 制造和销售饮料，产品行销 200 多个国家，包括 Coca-Cola、Sprite、Fanta 以及一系列水、果汁和咖啡品牌。 | [KO / USD](https://app.pyth.com/explore/Equity.US.KO%2FUSD) | 24/5 | 10x |
+| MCD/USDC PERP | MCD 跟踪 McDonald's Corporation 1 股普通股的价值。McDonald's 是全球最大的快餐连锁企业，其大部分门店由加盟商经营。 | [MCD / USD](https://app.pyth.com/explore/Equity.US.MCD%2FUSD) | 盘前及常规交易时段 | 10x |
+| MELI/USDC PERP | MELI 跟踪 MercadoLibre, Inc. 1 股普通股的价值。MercadoLibre 运营拉丁美洲最大的电子商务市场，以及 Mercado Pago 数字支付和信贷业务。 | [MELI / USD](https://app.pyth.com/explore/Equity.US.MELI%2FUSD) | 延长交易时段 | 10x |
+| MNST/USDC PERP | MNST 跟踪 Monster Beverage Corporation 1 股普通股的价值。Monster Beverage 制造和销售能量饮料，包括 Monster Energy、Reign 和 Bang。 | [MNST / USD](https://app.pyth.com/explore/Equity.US.MNST%2FUSD) | 延长交易时段 | 10x |
+| MRK/USDC PERP | MRK 跟踪 Merck & Co., Inc. 1 股普通股的价值。Merck 是一家全球性制药公司，其产品包括癌症免疫疗法 Keytruda 和 HPV 疫苗 Gardasil。 | [MRK / USD](https://app.pyth.com/explore/Equity.US.MRK%2FUSD) | 24/5 | 10x |
+| PEP/USDC PERP | PEP 跟踪 PepsiCo, Inc. 1 股普通股的价值。PepsiCo 生产饮料和包装零食，包括 Pepsi、Gatorade、Frito-Lay 薯片和 Quaker 食品。 | [PEP / USD](https://app.pyth.com/explore/Equity.US.PEP%2FUSD) | 延长交易时段 | 10x |
+| PSA/USDC PERP | PSA 跟踪 Public Storage 1 股普通股的价值。Public Storage 是一家房地产投资信托基金，也是美国最大的自助仓储设施所有者和运营商。 | [PSA / USD](https://app.pyth.com/explore/Equity.US.PSA%2FUSD) | 常规交易时段 | 10x |
+| SPG/USDC PERP | SPG 跟踪 Simon Property Group, Inc. 1 股普通股的价值。Simon 是一家房地产投资信托基金，在北美、欧洲和亚洲拥有购物中心、高端奥特莱斯和综合用途零售目的地。 | [SPG / USD](https://app.pyth.com/explore/Equity.US.SPG%2FUSD) | 常规交易时段 | 10x |
+| TAP/USDC PERP | TAP 跟踪 Molson Coors Beverage Company 1 股普通股的价值。Molson Coors 酿造和销售啤酒及其他饮料，包括 Coors Light、Miller Lite、Molson Canadian 和 Blue Moon。 | [TAP / USD](https://app.pyth.com/explore/Equity.US.TAP%2FUSD) | 常规交易时段 | 10x |
+| XOM/USDC PERP | XOM 跟踪 Exxon Mobil Corporation 1 股普通股的价值。ExxonMobil 是全球最大的石油和天然气公司之一，业务涵盖勘探与生产、炼油和化工。 | [XOM / USD](https://app.pyth.com/explore/Equity.US.XOM%2FUSD) | 24/5 | 10x |
+| BILI/USDC PERP | BILI 跟踪 Bilibili Inc. 1 份美国存托股的价值。Bilibili 在中国运营一个深受年轻用户欢迎的视频社区和娱乐平台，涵盖视频、直播和手机游戏。 | [BILI / USD](https://app.pyth.com/explore/Equity.US.BILI%2FUSD) | 24/5 | 10x |
+| EDU/USDC PERP | EDU 跟踪 New Oriental Education & Technology Group Inc. 1 份美国存托股的价值。New Oriental 在中国提供民办教育服务，包括考试辅导、语言培训和学习项目。 | [EDU / USD](https://app.pyth.com/explore/Equity.US.EDU%2FUSD) | 延长交易时段 | 10x |
+| NU/USDC PERP | NU 跟踪 Nu Holdings Ltd. 1 股 A 类普通股的价值。Nu Holdings 运营数字银行平台 Nubank，为巴西、墨西哥和哥伦比亚的客户提供信用卡、账户、贷款和投资服务。 | [NU / USD](https://app.pyth.com/explore/Equity.US.NU%2FUSD) | 24/5 | 10x |
+| TME/USDC PERP | TME 跟踪 Tencent Music Entertainment Group 1 份美国存托股的价值。Tencent Music 在中国运营在线音乐和音频娱乐平台，包括 QQ Music、Kugou Music 和 Kuwo Music。 | [TME / USD](https://app.pyth.com/explore/Equity.US.TME%2FUSD) | 延长交易时段 | 10x |
+| VALE/USDC PERP | VALE 跟踪 Vale S.A. 1 份美国存托股的价值。Vale 是一家巴西矿业公司，也是全球最大的铁矿石和镍生产商之一。 | [VALE / USD](https://app.pyth.com/explore/Equity.US.VALE%2FUSD) | 常规交易时段 | 10x |
+| VOD/USDC PERP | VOD 跟踪 Vodafone Group Plc 1 份美国存托股的价值。Vodafone 是一家电信公司，在欧洲和非洲提供移动、固定宽带和企业连接服务。 | [VOD / USD](https://app.pyth.com/explore/Equity.US.VOD%2FUSD) | 延长交易时段 | 10x |
+| ILMN/USDC PERP | ILMN 跟踪 Illumina, Inc. 1 股普通股的价值。Illumina 生产用于基因组学研究和临床检测的 DNA 测序与芯片仪器、耗材及软件。 | [ILMN / USD](https://app.pyth.com/explore/Equity.US.ILMN%2FUSD) | 盘前及常规交易时段 | 10x |
+| NTES/USDC PERP | NTES 跟踪 NetEase, Inc. 1 份美国存托股的价值。NetEase 是一家中国互联网公司，以网络游戏最为知名，另有音乐流媒体和教育业务。 | [NTES / USD](https://app.pyth.com/explore/Equity.US.NTES%2FUSD) | 延长交易时段 | 10x |
+| PBR/USDC PERP | PBR 跟踪 Petróleo Brasileiro S.A.（Petrobras）1 份美国存托股的价值。Petrobras 是巴西国家控股的石油和天然气公司，也是海上深水油田的主要运营商。 | [PBR / USD](https://app.pyth.com/explore/Equity.US.PBR%2FUSD) | 延长交易时段 | 10x |
+| PINS/USDC PERP | PINS 跟踪 Pinterest, Inc. 1 股 A 类普通股的价值。Pinterest 运营一个视觉发现平台，用户可在其中发现并收藏创意，其收入主要来自广告。 | [PINS / USD](https://app.pyth.com/explore/Equity.US.PINS%2FUSD) | 延长交易时段 | 10x |
+| PLUG/USDC PERP | PLUG 跟踪 Plug Power Inc. 1 股普通股的价值。Plug Power 制造氢燃料电池系统，并建设绿色氢气生产和供应基础设施。 | [PLUG / USD](https://app.pyth.com/explore/Equity.US.PLUG%2FUSD) | 常规交易时段 | 5x |
+| SONY/USDC PERP | SONY 跟踪 Sony Group Corporation 1 份美国存托股的价值。Sony 是一家日本综合企业集团，业务涵盖 PlayStation 游戏、音乐、电影、图像传感器和消费电子产品。 | [SONY / USD](https://app.pyth.com/explore/Equity.US.SONY%2FUSD) | 24/5 | 10x |
 
 ## Pre-IPO
 
-| 交易对 | 说明 | 底层资产 | 最大杠杆 |
-|------------|-------------|------------|--------------|
-| SPCX/USDC PERP | SPCX 代表 Space Exploration Technologies Corp. A 类普通股每股隐含价值的 Pre-IPO 市场。SpaceX 制造并发射火箭和航天器，运营 Starlink 宽带网络，并持有 xAI。 | SPCX/USDC | 5x |
+| 交易对 | 说明 | 底层资产 | 覆盖时段 | 最大杠杆 |
+|------------|-------------|------------|----------|--------------|
+| ANT/USDC PERP | ANT 是一个上市前 (pre-IPO) 市场，代表尚未公开上市的 Anthropic PBC 的隐含每股价值。Anthropic 是一家 AI 安全与研究公司，开发 Claude 系列 AI 模型，并为企业和开发者开发工具。 | Anthropic PBC 隐含每股价值 | 24/7 | 10x |
 
 ## 指数
 
-| 交易对 | 说明 | 底层资产 | 最大杠杆 |
-|------------|-------------|------------|--------------|
-| US500/USDC PERP | US500 提供对广泛的美国大盘股票基准的敞口。 | [Pyth Feed](https://app.pyth.com/explore/Equity.US.SPY%2FUSD) | 50x |
-| USTECH/USDC PERP | USTECH 提供对以科技股为主的美国股票基准的敞口。 | [Pyth Feed](https://app.pyth.com/explore/Equity.US.QQQ%2FUSD) | 50x |
+| 交易对 | 说明 | 底层资产 | 覆盖时段 | 最大杠杆 |
+|------------|-------------|------------|----------|--------------|
+| US500/USDC PERP | US500 提供对广泛的美国大盘股票基准的敞口。 | [Pyth Feed](https://app.pyth.com/explore/Equity.US.SPY%2FUSD) | 24/5 | 50x |
+| USTECH/USDC PERP | USTECH 提供对以科技股为主的美国股票基准的敞口。 | [Pyth Feed](https://app.pyth.com/explore/Equity.US.QQQ%2FUSD) | 24/5 | 50x |
 
 ## ETF
 
-| 交易对 | 说明 | 底层资产 | 最大杠杆 |
-|------------|-------------|------------|--------------|
-| GLD/USDC PERP | GLD 跟踪 1 份黄金支持的交易所交易产品的价值。该产品旨在反映实物黄金金条的价格表现，让投资者无需直接持有实物即可获得对黄金的敞口。 | [GLD / USD](https://app.pyth.com/explore/Equity.US.GLD%2FUSD) | 50x |
+| 交易对 | 说明 | 底层资产 | 覆盖时段 | 最大杠杆 |
+|------------|-------------|------------|----------|--------------|
+| GLD/USDC PERP | GLD 跟踪 1 份黄金支持的交易所交易产品的价值。该产品旨在反映实物黄金金条的价格表现，让投资者无需直接持有实物即可获得对黄金的敞口。 | [GLD / USD](https://app.pyth.com/explore/Equity.US.GLD%2FUSD) | 常规交易时段 | 50x |
+| ARKB/USDC PERP | ARKB 跟踪 1 份 ARK 21Shares Bitcoin ETF 的价值。该基金直接持有比特币，旨在反映比特币的价格表现。 | [ARKB / USD](https://app.pyth.com/explore/Equity.US.ARKB%2FUSD) | 延长交易时段 | 10x |
+| ARKK/USDC PERP | ARKK 跟踪 1 份 ARK Innovation ETF 的价值。该基金为主动管理型基金，投资于与颠覆性创新相关的公司，涵盖人工智能、机器人、基因组学和金融科技等领域。 | [ARKK / USD](https://app.pyth.com/explore/Equity.US.ARKK%2FUSD) | 24/5 | 10x |
+| BITB/USDC PERP | BITB 跟踪 1 份 Bitwise Bitcoin ETF 的价值。该基金直接持有比特币，旨在反映比特币的价格表现。 | [BITB / USD](https://app.pyth.com/explore/Equity.US.BITB%2FUSD) | 常规交易时段 | 10x |
+| DIA/USDC PERP | DIA 跟踪 1 份 SPDR Dow Jones Industrial Average ETF Trust 的价值。该基金旨在跟踪道琼斯工业平均指数，这是一个由 30 家美国大型公司组成的价格加权指数。 | [DIA / USD](https://app.pyth.com/explore/Equity.US.DIA%2FUSD) | 24/5 | 25x |
+| GBTC/USDC PERP | GBTC 跟踪 1 份 Grayscale Bitcoin Trust ETF 的价值。该基金直接持有比特币，旨在反映其所持比特币扣除费用和开支后的价值。 | [GBTC / USD](https://app.pyth.com/explore/Equity.US.GBTC%2FUSD) | 常规交易时段 | 10x |
+| IBIT/USDC PERP | IBIT 跟踪 1 份 iShares Bitcoin Trust ETF 的价值。这只 BlackRock 旗下基金直接持有比特币，旨在反映比特币的价格表现。 | [IBIT / USD](https://app.pyth.com/explore/Equity.US.IBIT%2FUSD) | 24/5 | 10x |
+| TLT/USDC PERP | TLT 跟踪 1 份 iShares 20+ Year Treasury Bond ETF 的价值。该基金持有剩余期限超过 20 年的美国国债，因此对长期利率变化较为敏感。 | [TLT / USD](https://app.pyth.com/explore/Equity.US.TLT%2FUSD) | 24/5 | 10x |
+| EEM/USDC PERP | EEM 跟踪 1 份 iShares MSCI Emerging Markets ETF 的价值。该基金旨在跟踪一个涵盖中国、印度、台湾和巴西等新兴市场大中盘股票的指数。 | [EEM / USD](https://app.pyth.com/explore/Equity.US.EEM%2FUSD) | 盘前及常规交易时段 | 25x |
+| MCHI/USDC PERP | MCHI 跟踪 1 份 iShares MSCI China ETF 的价值。该基金旨在跟踪一个由在香港、中国内地和美国上市的中国大中盘公司组成的指数。 | [MCHI / USD](https://app.pyth.com/explore/Equity.US.MCHI%2FUSD) | 常规交易时段 | 10x |
+| XBI/USDC PERP | XBI 跟踪 1 份 SPDR S&P Biotech ETF 的价值。该基金旨在跟踪一个等权重的美国生物科技股票指数。 | [XBI / USD](https://app.pyth.com/explore/Equity.US.XBI%2FUSD) | 24/5 | 10x |
+| XLE/USDC PERP | XLE 跟踪 1 份 Energy Select Sector SPDR Fund 的价值。该基金旨在跟踪 S&P 500 中的能源板块，以 Exxon Mobil 和 Chevron 等大型石油和天然气公司为主。 | [XLE / USD](https://app.pyth.com/explore/Equity.US.XLE%2FUSD) | 24/5 | 10x |
 
 ## 商品
 
-| 交易对 | 说明 | 底层资产 | 最大杠杆 |
-|------------|-------------|------------|--------------|
-| XAU/USDC PERP | XAU 跟踪 1 金衡盎司黄金的价值。黄金是一种在全球范围内交易的贵金属，被用于储备、投资产品、珠宝以及对冲通胀的投资组合。 | [XAU / USD](https://app.pyth.com/explore/Metal.XAU%2FUSD) | 50x |
-| XAG/USDC PERP | XAG 跟踪 1 金衡盎司白银的价值。白银是一种贵金属，在电子产品、太阳能板和医疗器械等领域有广泛的工业应用，同时也是一种投资资产。 | [XAG / USD](https://app.pyth.com/explore/Metal.XAG%2FUSD) | 50x |
+| 交易对 | 说明 | 底层资产 | 覆盖时段 | 最大杠杆 |
+|------------|-------------|------------|----------|--------------|
+| XAU/USDC PERP | XAU 跟踪 1 金衡盎司黄金的价值。黄金是一种在全球范围内交易的贵金属，被用于储备、投资产品、珠宝以及对冲通胀的投资组合。 | [XAU / USD](https://app.pyth.com/explore/Metal.XAU%2FUSD) | 23/5 | 50x |
+| XAG/USDC PERP | XAG 跟踪 1 金衡盎司白银的价值。白银是一种贵金属，在电子产品、太阳能板和医疗器械等领域有广泛的工业应用，同时也是一种投资资产。 | [XAG / USD](https://app.pyth.com/explore/Metal.XAG%2FUSD) | 23/5 | 50x |
+| BRENT/USDC PERP | BRENT 跟踪布伦特原油期货的价格，每月展期至下一份合约。布伦特原油是全球原油基准，用于海运原油供应的定价，尤其是来自北海和大西洋盆地的原油。 | Dated Brent 期货 | 24/7 | 25x |
+| WTI/USDC PERP | WTI 跟踪 Pyth 的 1 个月恒定期限西德克萨斯中质原油期货指数。WTI 是美国轻质低硫原油基准，在北美能源市场中被广泛使用。 | [WTI 1M / USD](https://app.pyth.com/explore/Commodities.Index.WTI1M%2FUSD) | 24/7 | 25x |
+| COPPER/USDC PERP | COPPER 跟踪铜期货的价格，以每磅美元报价，并在到期前展期至下一份合约。铜是一种工业金属，用于电线、建筑、电子产品和电力基础设施，被广泛视为全球经济活动的风向标。 | 铜期货 | 24/7 | 10x |
+| NATGAS/USDC PERP | NATGAS 跟踪 Henry Hub 天然气期货的价格，以每百万英热单位（MMBtu）美元报价，并在到期前展期至下一份合约。天然气是发电、供暖和工业的主要燃料，位于路易斯安那州的 Henry Hub 是美国主要的定价点。 | Henry Hub 天然气期货 | 24/7 | 10x |
+
+## 算力
+
+| 交易对 | 说明 | 底层资产 | 覆盖时段 | 最大杠杆 |
+|------------|-------------|------------|----------|--------------|
+| SICI/USDC PERP | SICI 通过由 LO:TECH 发布的五种 GPU 型号加权篮子，跟踪租用 GPU 算力的成本。该指数以点数报价，100 点相当于 2026 年 7 月 22 日定盘时的 GPU 算力价格。 | [LO:TECH](https://lo.tech) SICI 算力指数，通过 SEDA Fast 提供 | 24/7，每小时定价 | 10x |
+
+### SICI 成分
+
+SICI 是以下 GPU 每小时租赁价格的加权平均值。该篮子涵盖当前及上几代 NVIDIA 数据中心 GPU，以及消费级 RTX 4090。
+
+| GPU | 权重 |
+|-----|--------|
+| NVIDIA H100 | 40% |
+| NVIDIA B200 | 25% |
+| NVIDIA H200 | 15% |
+| NVIDIA A100 | 10% |
+| NVIDIA RTX 4090 | 10% |
+
+SICI 与该篮子的成本成比例变动。例如，SICI 水平为 113 表示租用该篮子的成本比 2026 年 7 月 22 日基准定价时高 13%。
+
+### SICI 如何更新
+
+- LO:TECH 每小时发布一次新的 SICI 定价，通常在整点后不久发布。两次定价之间指数水平保持不变，因此 SICI 标记价格按小时阶梯式变动，而非连续变动。
+- Provider 预言机每隔几秒将最新定价中继到链上，并使用 USDC/USD 价格将其从美元换算为 USDC。
+- SICI/USDC 永续合约的市场 ID 为 `0x6751442adea73a2b65adce484dd7bde25d204c9695fc9d5410933171f3417410`。
 
 ## 外汇
 
-| 交易对 | 说明 | 底层资产 | 最大杠杆 |
-|------------|-------------|------------|--------------|
-| EURUSD/USDC PERP | EURUSD 跟踪 EUR/USD 汇率。欧元（EUR）在整个欧元区使用，是全球外汇交易中流动性最高的货币之一。 | [EUR / USD](https://app.pyth.com/explore/FX.EUR%2FUSD) | 100x |
-| GBPUSD/USDC PERP | GBPUSD 跟踪 GBP/USD 汇率。英镑（GBP）是英国的官方货币，也是世界上历史最悠久、交易最活跃的货币之一。 | [GBP / USD](https://app.pyth.com/explore/FX.GBP%2FUSD) | 100x |
-| AUDUSD/USDC PERP | AUDUSD 跟踪 AUD/USD 汇率。澳大利亚元（AUD）是澳大利亚的官方货币，与铁矿石和煤炭等大宗商品出口密切相关。 | [AUD / USD](https://app.pyth.com/explore/FX.AUD%2FUSD) | 100x |
-| NZDUSD/USDC PERP | NZDUSD 跟踪 NZD/USD 汇率。新西兰元（NZD）是新西兰的官方货币，受农产品出口和全球风险偏好影响。 | [NZD / USD](https://app.pyth.com/explore/FX.NZD%2FUSD) | 100x |
-| USDCHF/USDC PERP | USDCHF 跟踪 USD/CHF 汇率。瑞士法郎（CHF）是瑞士的官方货币，由于瑞士的政治中立和金融稳定，被普遍视为避险货币。 | [USD / CHF](https://app.pyth.com/explore/FX.USD%2FCHF) | 100x |
-| USDCAD/USDC PERP | USDCAD 跟踪 USD/CAD 汇率。加拿大元（CAD）是加拿大的官方货币，鉴于加拿大是重要的原油出口国，其汇率与油价高度相关。 | [USD / CAD](https://app.pyth.com/explore/FX.USD%2FCAD) | 100x |
-| USDJPY/USDC PERP | USDJPY 跟踪 USD/JPY 汇率。日元（JPY）是日本的官方货币，也是全球流动性最好的货币之一，在市场承压期间常被用作避险资产。 | [USD / JPY](https://app.pyth.com/explore/FX.USD%2FJPY) | 100x |
-| USDSEK/USDC PERP | USDSEK 跟踪 USD/SEK 汇率。瑞典克朗（SEK）是瑞典的官方货币，对全球风险偏好和欧洲经济状况较为敏感。 | [USD / SEK](https://app.pyth.com/explore/FX.USD%2FSEK) | 50x |
-| USDNOK/USDC PERP | USDNOK 跟踪 USD/NOK 汇率。挪威克朗（NOK）是挪威的官方货币，与油价高度相关，反映挪威作为主要石油出口国的地位。 | [USD / NOK](https://app.pyth.com/explore/FX.USD%2FNOK) | 50x |
-| USDSGD/USDC PERP | USDSGD 跟踪 USD/SGD 汇率。新加坡元（SGD）是新加坡的官方货币，由新加坡金融管理局按有管理的浮动汇率政策管理。 | [USD / SGD](https://app.pyth.com/explore/FX.USD%2FSGD) | 50x |
-| USDHKD/USDC PERP | USDHKD 跟踪 USD/HKD 汇率。港元（HKD）是香港的官方货币，采用与美元挂钩的联系汇率制度。 | [USD / HKD](https://app.pyth.com/explore/FX.USD%2FHKD) | 50x |
+| 交易对 | 说明 | 底层资产 | 覆盖时段 | 最大杠杆 |
+|------------|-------------|------------|----------|--------------|
+| EURUSD/USDC PERP | EURUSD 跟踪 EUR/USD 汇率。欧元（EUR）在整个欧元区使用，是全球外汇交易中流动性最高的货币之一。 | [EUR / USD](https://app.pyth.com/explore/FX.EUR%2FUSD) | 23/5 | 100x |
+| GBPUSD/USDC PERP | GBPUSD 跟踪 GBP/USD 汇率。英镑（GBP）是英国的官方货币，也是世界上历史最悠久、交易最活跃的货币之一。 | [GBP / USD](https://app.pyth.com/explore/FX.GBP%2FUSD) | 23/5 | 100x |
+| AUDUSD/USDC PERP | AUDUSD 跟踪 AUD/USD 汇率。澳大利亚元（AUD）是澳大利亚的官方货币，与铁矿石和煤炭等大宗商品出口密切相关。 | [AUD / USD](https://app.pyth.com/explore/FX.AUD%2FUSD) | 23/5 | 100x |
+| NZDUSD/USDC PERP | NZDUSD 跟踪 NZD/USD 汇率。新西兰元（NZD）是新西兰的官方货币，受农产品出口和全球风险偏好影响。 | [NZD / USD](https://app.pyth.com/explore/FX.NZD%2FUSD) | 23/5 | 100x |
+| USDCHF/USDC PERP | USDCHF 跟踪 USD/CHF 汇率。瑞士法郎（CHF）是瑞士的官方货币，由于瑞士的政治中立和金融稳定，被普遍视为避险货币。 | [USD / CHF](https://app.pyth.com/explore/FX.USD%2FCHF) | 23/5 | 100x |
+| USDCAD/USDC PERP | USDCAD 跟踪 USD/CAD 汇率。加拿大元（CAD）是加拿大的官方货币，鉴于加拿大是重要的原油出口国，其汇率与油价高度相关。 | [USD / CAD](https://app.pyth.com/explore/FX.USD%2FCAD) | 23/5 | 100x |
+| USDJPY/USDC PERP | USDJPY 跟踪 USD/JPY 汇率。日元（JPY）是日本的官方货币，也是全球流动性最好的货币之一，在市场承压期间常被用作避险资产。 | [USD / JPY](https://app.pyth.com/explore/FX.USD%2FJPY) | 23/5 | 100x |
+| USDSEK/USDC PERP | USDSEK 跟踪 USD/SEK 汇率。瑞典克朗（SEK）是瑞典的官方货币，对全球风险偏好和欧洲经济状况较为敏感。 | [USD / SEK](https://app.pyth.com/explore/FX.USD%2FSEK) | 23/5 | 50x |
+| USDNOK/USDC PERP | USDNOK 跟踪 USD/NOK 汇率。挪威克朗（NOK）是挪威的官方货币，与油价高度相关，反映挪威作为主要石油出口国的地位。 | [USD / NOK](https://app.pyth.com/explore/FX.USD%2FNOK) | 23/5 | 50x |
+| USDSGD/USDC PERP | USDSGD 跟踪 USD/SGD 汇率。新加坡元（SGD）是新加坡的官方货币，由新加坡金融管理局按有管理的浮动汇率政策管理。 | [USD / SGD](https://app.pyth.com/explore/FX.USD%2FSGD) | 23/5 | 50x |
+| USDHKD/USDC PERP | USDHKD 跟踪 USD/HKD 汇率。港元（HKD）是香港的官方货币，采用与美元挂钩的联系汇率制度。 | [USD / HKD](https://app.pyth.com/explore/FX.USD%2FHKD) | 23/5 | 50x |
