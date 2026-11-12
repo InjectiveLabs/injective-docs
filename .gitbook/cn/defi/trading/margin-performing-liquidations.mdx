@@ -14,7 +14,7 @@ updatedAt: "2026-02-05"
 
 根据仓位状态，有两种不同的情况。在两种情况下，都需要清算整个仓位。
 
-#### 1) 仓位具有正权益或零权益
+#### 1) 仓位具有正权益或零权益 {#1-position-has-positive-or-zero-equity}
 
 仓位将使用市价单出售，最差价格等于破产价格。只有当整个仓位无法使用破产价格作为最差价格进行清算时，清算人才需要提交限价单。
 
@@ -40,7 +40,7 @@ updatedAt: "2026-02-05"
 
 如果清算人希望参与清算，可以选择提交自己的订单，但如果订单簿已有足够的流动性，这不是必需的。如果订单簿没有足够的流动性，则要求清算人提交自己的订单（价格必须 ≥ $8）作为清算的一部分。
 
-#### 2) 仓位具有负权益
+#### 2) 仓位具有负权益 {#2-position-has-negative-equity}
 
 仓位将使用市价单出售，最差价格等于预言机价格。只有当整个仓位无法使用预言机价格作为最差价格进行清算时，清算人才需要提交限价单。
 
@@ -75,4 +75,4 @@ updatedAt: "2026-02-05"
     示例可以在 [Go](https://github.com/InjectiveLabs/sdk-go/blob/master/examples/exchange/derivatives/20\_LiquidablePositions/example.go) 和 [Python](https://github.com/InjectiveLabs/sdk-python/blob/master/examples/exchange\_client/derivative\_exchange\_rpc/23\_LiquidablePositions.py) 中找到。
 2. **准备清算交易：** 使用 `MsgLiquidatePosition` 函数构建订单交易，指定 [API 文档](https://api.injective.exchange/?python#derivatives-msgliquidateposition) 中列出的参数。虽然不是强制性的，但强烈建议使用限价交易而非市价交易。
 
-注意，执行清算需要限价单。通过遵循这些步骤并考虑上述因素，做市商可以有效地使用 `MsgLiquidatePosition` 函数参与 Injective 的清算机制并获取潜在的盈利机会。
+注意，执行清算需要限价单。通过遵循这些步骤并考虑上述因素，清算人可以有效地使用 `MsgLiquidatePosition` 函数参与 Injective 的清算机制并获取潜在的盈利机会。

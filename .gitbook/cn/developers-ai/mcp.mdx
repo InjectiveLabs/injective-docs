@@ -1,6 +1,8 @@
 ---
 title: Injective MCP Server
-description: 使用 Model Context Protocol (MCP) 将 AI 助手连接到 Injective
+description: >-
+    通过 MCP 将 AI 智能体和 AI 助手连接到 Injective 的查询和交易，
+    以自然语言在 Injective 网络上执行操作。
 updatedAt: "2026-03-10"
 ---
 
@@ -11,13 +13,13 @@ Injective MCP server 提供完整的 Injective 交易功能。
 此 server 设计用于被 [Injective Trading Skills](/cn/developers-ai/injective-trading-skills) 广泛使用。
 通过 [Injective MCP Servers Skill](/cn/developers-ai/injective-mcp-servers-skill) 教你的 AI 工具如何使用此 MCP server。
 
-## 什么是 MCP？
+## 什么是 MCP？ {#what-is-mcp}
 
 [MCP](https://modelcontextprotocol.io/introduction) 是一个**开放标准**，
 使 AI 助手能够连接外部数据源和工具。
 AI 助手不再仅依赖训练数据，而是可以使用 MCP 直接从文档中访问实时、权威的信息。
 
-## 为什么使用 Injective MCP server？
+## 为什么使用 Injective MCP server？ {#why-use-the-injective-mcp-server}
 
 当你将 AI 工具连接到 Injective MCP server 时，它可以：
 
@@ -27,15 +29,15 @@ AI 助手不再仅依赖训练数据，而是可以使用 MCP 直接从文档中
 这在 Injective 上交易时特别有用，
 因为 AI 可以帮助你用口语表达交易意图。
 
-## MCP server 详情
+## MCP server 详情 {#mcp-server-details}
 
 | 属性 | 值 |
 |----------|-------|
 | Endpoint | localhost |
 | Transport | stdio |
-| 可用工具 | 多个，参见[使用 MCP server](#使用-mcp-server) |
+| 可用工具 | 多个，参见[使用 MCP server](#using-the-mcp-server) |
 
-## 连接到 MCP server
+## 连接到 MCP server {#connecting-to-the-mcp-server}
 
 <Tabs>
   <Tab title="所有 MCP 客户端">
@@ -92,7 +94,7 @@ AI 助手不再仅依赖训练数据，而是可以使用 MCP 直接从文档中
   </Tab>
 </Tabs>
 
-## 使用 MCP server
+## 使用 MCP server {#using-the-mcp-server}
 
 连接后，你可以让 AI 工具在 Injective 上执行查询和交易。
 

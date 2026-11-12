@@ -3,15 +3,31 @@ title: 概述
 updatedAt: "2026-02-13"
 ---
 
-## 什么是 Modules？
+本节面向使用原生 Cosmos SDK 模块和基于 Go 的工具在 Injective 上构建的开发者。
+无论你是在开发自定义模块、查询链状态、构建交易，
+还是与 Injective 的核心金融原语集成，
+都可以在这里找到原生开发路径的完整技术文档。
 
-Modules 是 Injective 区块链架构中的基础组件，每个 module 都提供特定的功能。Module 本质上是一个具有明确定义逻辑和服务的独立单元，使 Injective 能够高效管理网络中的各种操作。
+Injective 通过专为去中心化金融构建的模块扩展了 Cosmos SDK，
+形成了一种模块化架构：每个组件负责特定的职责，同时彼此无缝协作。
+`exchange` 模块是 Injective 的核心，它实现了可与中心化交易所媲美的完全链上订单簿交易，
+而 `tokenfactory` 等模块支持无需许可的资产创建，`peggy` 则实现了无需信任的 Ethereum 跨链桥。
+这种模块化设计使开发者能够利用现有基础设施组合出强大的应用：用于共识的质押、
+用于协议升级的治理，以及在 EVM 和 Cosmos 环境之间统一代币余额的原生 bank 模块。
+对开发者而言，这意味着可以通过简洁的 Go API、gRPC 端点
+和丰富的消息类型使用机构级金融原语，并将它们组合成复杂的交易策略和 DeFi 应用。
 
-<figure><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXemhQaBIt08mqak4lODzMNP73IvSnPLjfRohlMwLMn51Ut9kTGOKrCRqolsy4j1I0ca3zFe8-a6xrOalOkpc2HWJYuDESKFVKJdc6xv6NNCY4IY-n3MuY8t4Dz_qujBI4aQg7KpHetfP3b_XPg0wALZq8Dr?key=SrpUIxF4ydd4ZLyJCcX74Q" alt="" width="563" /><figcaption></figcaption></figure>
+## 关键概念 {#key-concepts}
 
-Modules 就像积木一样，可以组合起来扩展区块链的功能。这种方法减少了实现核心功能的摩擦和技术复杂性，使开发更加简单。每个 module 独立运行，但通过 inter-module messaging 与其他 module 通信，使 Injective 的架构具有模块化和可适应性。这使 Injective 能够持续演进，在不需要重构整个系统的情况下提供针对性的升级和功能。
+| 术语 | 定义 |
+|------|------------|
+| **Cosmos SDK Module** | 独立的区块链逻辑单元（例如 `exchange`、`bank`、`staking`），提供特定功能，并通过 inter-module messaging 相互通信。 |
+| **Exchange Module** | Injective 的核心模块，支持完全去中心化的现货和衍生品交易，包括链上订单簿管理、订单撮合和结算。 |
+| **Keeper** | 模块的核心组件，负责管理状态，并通过定义好的接口暴露业务逻辑，处理读写操作和状态转换。 |
+| **Message (Msg)** | 触发模块状态变更的交易类型，例如用于转账的 `MsgSend` 或用于交易的 `MsgCreateSpotLimitOrder`。 |
+| **Query** | 在不修改链状态的情况下读取链状态的只读操作，通过 gRPC、REST 和 CLI 接口提供。 |
 
-## 探索 Modules
+## 探索 Modules {#explore-modules}
 
 <Columns cols={2}>
   <Card
@@ -21,7 +37,7 @@ Modules 就像积木一样，可以组合起来扩展区块链的功能。这种
     cta="点击这里"
     icon="panel-left-close"
     img="">
-    `injective` module
+    `injective` module。Injective 特有的模块，包括 Exchange（链上订单簿）、TokenFactory（无需许可的代币创建）、Peggy（Ethereum 跨链桥）、Oracle（价格馈送）、Insurance Funds、Auction 和 WASMx（CosmWasm 集成）。
   </Card>
   <Card
     title="Core"
@@ -30,6 +46,18 @@ Modules 就像积木一样，可以组合起来扩展区块链的功能。这种
     cta="点击这里"
     icon="panel-left-close"
     img="">
-    `core` module
+    `core` module。标准 Cosmos SDK 模块，包括 Bank（代币转账）、Staking（验证者委托）、Governance（链上提案）、Auth（账户）、Distribution（奖励）和 IBC（跨链互操作性）。
   </Card>
 </Columns>
+
+## 其他资源 {#additional-resources}
+
+- **[交易示例](/cn/developers-native/examples/)**：
+  涵盖所有模块常见操作的代码示例，包括 bank 转账、exchange 交易、质押、治理
+  和 IBC 转账。
+- **[查询链](/cn/developers-native/query-chain/)**：
+  通过 gRPC 和 RPC 端点直接查询所有模块链状态的参考。
+- **[查询 Indexer](/cn/developers-native/query-indexer/)**：
+  使用 Injective Indexer 高效查询历史数据（包括成交、订单和投资组合数据）的指南。
+- **[交易](/cn/developers-native/transactions/)**：
+  使用各种签名者类型（Ethereum、Cosmos、私钥）构建和广播交易的文档。

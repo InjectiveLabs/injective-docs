@@ -3,7 +3,7 @@ title: Web3 Gateway 交易
 updatedAt: "2026-02-13"
 ---
 
-_前置阅读 #1:_ [交易生命周期](https://docs.cosmos.network/main/basics/tx-lifecycle)
+_前置阅读 #1:_ [交易生命周期](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/learn/beginner/01-tx-lifecycle.md)
 
 _前置阅读 #2:_ Injective 上的交易
 
@@ -11,7 +11,7 @@ Web3Gateway 微服务向最终用户暴露一个 API，其主要目的是为 Inj
 
 除了费用委托支持外，Web3Gateway 还允许开发者将消息转换为 EIP712 类型数据。将消息转换为 EIP712 数据后，可以由任何 Ethereum 原生钱包签名，然后广播到 Injective。
 
-## 费用委托
+## 费用委托 {#fee-delegation}
 
 如前所述，费用委托允许用户与 Injective 交互（提交交易）而无需支付 gas。作为每个 Cosmos-SDK 驱动链的_交易生命周期_的一部分，我们有 `AnteHandler`，它们除其他事项外执行签名验证、gas 计算和费用扣除。
 
@@ -23,7 +23,7 @@ Web3Gateway 微服务向最终用户暴露一个 API，其主要目的是为 Inj
 
 知道这一点，为了实现费用委托，我们必须使用 Web3Gateway 微服务的私钥签名交易，将该 `privateKey` 的地址作为 `feePayer` 包含在内，使用我们想要与 Injective 交互的 privateKey 签名此交易，然后广播该交易。
 
-## Web3Gateway API
+## Web3Gateway API {#web3gateway-api}
 
 每个人都可以运行 Web3Gateway 微服务并为其用户提供费用委托服务。一个示例用法是在 Injective 上构建交易所 dApp 的开发者运行此微服务，为其交易者提供无 gas 交易环境。
 
@@ -32,17 +32,17 @@ Web3Gateway 微服务向最终用户暴露一个 API，其主要目的是为 Inj
 * `PrepareTx`（和 `PrepareCosmosTx`）
 * `BroadcastTx`（和 `BroadcastCosmosTx`）
 
-## PrepareTx
+## PrepareTx {#preparetx}
 
 `PrepareTx` 方法接受一个消息（或多个消息），包括用户想要执行的交易的上下文（`chainId`、`signerAddress`、`timeoutHeight` 等），并返回特定消息的 EIP712 类型数据，包括 EIP712 类型数据中的签名。我们可以使用此 EIP712 类型数据使用任何 Ethereum 原生钱包签名它，并获取想要与 Injective 交互的用户的签名。
 
 EIP712 类型数据是从我们传递给 `PrepareTx` 方法的消息的 proto 定义生成的。
 
-## BroadcastTx
+## BroadcastTx {#broadcasttx}
 
 `BroadcastTx` 方法负责将交易广播到节点。除了 `PrepareTx` API 调用的完整响应外，我们还传入 EIP712 类型数据的签名。然后，`BroadcastTx` 将消息打包到原生 Cosmos 交易中，准备交易（包括其上下文）并将其广播到 Injective。结果是将交易哈希返回给用户。
 
-## Prepare/BroadcastCosmosTx
+## Prepare/BroadcastCosmosTx {#prepare/broadcastcosmostx}
 
 当我们使用 **Ethereum 原生钱包**签名和广播交易时使用上述方法，因为我们签名的是 EIP712 交易表示。
 

@@ -1,22 +1,14 @@
 ---
-title: 主网
+title: 主网验证者
+description: >-
+  在 Injective 主网上设置和运行验证者节点的分步指南。
+  包括硬件要求、密钥管理和佣金配置。
 updatedAt: "2026-02-13"
 ---
 
-节点运营者应部署裸机服务器以实现最佳性能。
-此外，验证者节点必须满足推荐的硬件规格，特别是 CPU 要求，以确保高正常运行时间。
+在设置验证者之前，请确保你的服务器满足[硬件要求](/cn/infra/hardware)。
 
-#### 硬件要求
-
-|           _最低配置_              |        _推荐配置_        |
-| :--------------------------:     | :---------------------------:  |
-|          内存 128GB        |          内存 128GB      |
-|          CPU 12 核            |          CPU 16 核          |
-|          CPU 基础频率 3.7GHz   |          CPU 基础频率 4.2GHz |
-|          存储 2TB NVMe        |          存储 2TB NVMe      |
-|          网络 1Gbps+          |          网络 1Gbps+        |
-
-### 步骤 1：创建验证者账户
+### 步骤 1：创建验证者账户 {#step-1-create-a-validator-account}
 
 首先，使用你想要的验证者密钥名称运行 keygen 命令。
 
@@ -48,11 +40,11 @@ injectived keys add $VALIDATOR_KEY_NAME
 记住以 `inj` 开头的地址，这将是你的 Injective 验证者账户地址。
 </Callout>
 
-### 步骤 2：获取主网 INJ
+### 步骤 2：获取主网 INJ {#step-2-obtain-mainnet-inj}
 
 要继续下一步，你需要在主网以太坊上获取一些真实的 INJ（ERC-20 代币地址 [`0xe28b3b32b6c345a34ff64674606124dd5aceca30`](https://etherscan.io/token/0xe28b3b32b6c345a34ff64674606124dd5aceca30)）。
 
-### 步骤 3：将 INJ "转移"到你在 Injective 上的验证者账户
+### 步骤 3：将 INJ "转移"到你在 Injective 上的验证者账户 {#step-3-“transfer”-inj-to-your-validator-account-on-injective}
 
 使用质押仪表板将你的主网 INJ 代币存入你在 Injective 上的验证者账户。你需要在我们的 [Hub](https://injhub.com/bridge) 上[连接你的钱包](https://medium.com/injective-labs/injective-hub-guide-9a14f09f6a7d)，然后从以太坊主网网络存入 INJ。这将触发一个自动桥接，将代币从以太坊网络映射到 Injective。
 
@@ -62,7 +54,7 @@ injectived keys add $VALIDATOR_KEY_NAME
 injectived q bank balances <my-validator-inj-address>
 ```
 
-### 步骤 4：创建你的验证者账户
+### 步骤 4：创建你的验证者账户 {#step-4-create-your-validator-account}
 
 获取你节点的 Tendermint 验证者 Bech32 编码的 PubKey 共识地址。
 
@@ -129,7 +121,7 @@ injectived q staking validators
 
 如果你在验证者列表中看到你的验证者，那么恭喜你，你已正式成为 Injective 主网验证者！🎉
 
-### 步骤 5：（可选）向你的验证者委托额外的 INJ
+### 步骤 5：（可选）向你的验证者委托额外的 INJ {#step-5-optional-delegate-additional-inj-to-your-validator}
 
 为了更深入地了解你未来委托者将体验的用户体验，你可以通过[质押指南](https://medium.com/injective-labs/injective-hub-guide-9a14f09f6a7d)尝试委托。
 
@@ -141,7 +133,7 @@ injectived q staking validators
 injectived tx staking delegate [validator-addr] [amount] --from $VALIDATOR_KEY_NAME --keyring-backend=file --yes --node=tcp://localhost:26657
 ```
 
-### 步骤 6：（推荐）将你的验证者身份与 Keybase 连接
+### 步骤 6：（推荐）将你的验证者身份与 Keybase 连接 {#step-6-recommended-connecting-your-validator-identity-with-keybase}
 
 通过将你的 Keybase 公钥添加到 Injective 中的验证者身份信息，你可以在 Injective Hub 和 Explorer 等客户端应用程序中自动获取你的 Keybase 公开个人资料信息。以下是如何将你的验证者身份与 Keybase 公钥连接：
 
@@ -151,6 +143,6 @@ injectived tx staking delegate [validator-addr] [amount] --from $VALIDATOR_KEY_N
 
 就是这样！一旦你将验证者身份与 Keybase 连接，Injective Explorer 和 Hub 就可以自动获取你的品牌身份和其他公开个人资料信息。
 
-#### 后续步骤
+#### 后续步骤 {#next-steps}
 
 接下来，继续设置你的[以太坊桥接中继器](/cn/infra/validator-mainnet/peggo/)。这是防止你的验证者被惩罚的必要步骤。你应该在设置验证者后立即执行此操作。

@@ -1,0 +1,171 @@
+---
+title: 紧急升级到 v1.20.4-bl.3
+description: 面向验证者、交易所、托管合作伙伴和基础设施运营者的主网二进制替换与 AppHash 恢复说明。
+updatedAt: "2026-11-09"
+---
+
+<Warning>
+**所有 Injective 主网节点运营者必须尽快升级，以防止 AppHash 不匹配。** 新的共识规则将在 `injective-1` 上**高度 191,016,661 之后**强制执行。这是一次二进制替换并重启：**没有 upgrade handler**。Cosmovisor 不会从新的升级目录激活此版本。
+</Warning>
+
+## 背景 {#context}
+
+11 月 9 日，Injective 作为其网络就绪计划的一部分执行了一次主网升级。该计划通过定期、不预先通知的演练，测试紧急升级流程以及验证者和生态合作伙伴之间的协调。此次演练已成功完成，网络已恢复正常运行。仍在运行旧版二进制文件的运营者必须升级其节点。
+
+## 所需操作 {#required-action}
+
+| 节点状态 | 操作 |
+| --- | --- |
+| 旧版二进制文件，无 AppHash 不匹配 | 尽快停止、备份、替换二进制文件、验证并重启。保留现有节点数据。 |
+| AppHash 不匹配 | 停止节点，保留签名状态，安装补丁，并按照下方的快照恢复部分操作。 |
+| 已在运行 `v1.20.4-bl.3` 且状态健康 | 确认你的所有其他节点均已升级，且下游服务正在接收最新区块。 |
+
+这适用于验证者、哨兵节点、RPC 和广播节点，以及为交易所、托管方、做市商、索引器、浏览器、中继器和其他集成提供支持的节点。如果你使用第三方节点提供商，请确认他们已完成升级。
+
+## 1. 下载并验证 {#1-download-and-verify}
+
+**[官方版本](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-bl.3-1794240970)** · **[版本清单](https://storage.googleapis.com/injective-chain-releases/status.json)**
+
+| 产物 | 链接 |
+| --- | --- |
+| Linux AMD64 | [injective-v1.20.4-bl.3-linux-amd64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.3/injective-v1.20.4-bl.3-linux-amd64.zip) |
+| macOS Apple Silicon | [injective-v1.20.4-bl.3-darwin-arm64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.3/injective-v1.20.4-bl.3-darwin-arm64.zip) |
+| 压缩包校验和 | [SHA256SUMS.zip.txt](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.3/SHA256SUMS.zip.txt) |
+
+将文件下载到暂存目录，并在**解压或安装之前**，将压缩包的 SHA-256 与校验和文件中的对应条目进行比对。在 Linux 上使用 `sha256sum`，在 macOS 上使用 `shasum -a 256`。
+
+**Docker：** 使用 `injectivelabs/injective-core:v1.20.4-bl.3`。在不挂载节点数据的情况下进行验证：
+
+```bash
+docker pull injectivelabs/injective-core:v1.20.4-bl.3
+docker run --rm injectivelabs/injective-core:v1.20.4-bl.3 injectived version
+```
+
+预期版本：
+
+```text
+Version v1.20.4-bl.3 (e0a1168)
+```
+
+## 2. 停止并备份 {#2-stop-and-back-up}
+
+1. 停止你的节点服务、Cosmovisor 或容器部署。确认 `injectived` 已退出，并且其守护进程在替换期间无法重新启动它。链停止并不意味着节点进程已停止。
+2. 备份现有的二进制文件和节点配置。保留现有节点数据；常规的二进制替换不需要恢复快照。
+3. **验证者：** 关闭后，将 `<node-home>/data/priv_validator_state.json` 备份到数据目录之外。使用远程签名器的运营者必须按照其现有流程保留签名器的状态。
+
+在进行任何快照恢复之前，还要备份节点数据和密钥。请使用你配置的节点主目录；`~/.injectived` 只是默认值。
+
+## 3. 替换二进制文件 {#3-swap-the-binary}
+
+### 不使用 Cosmovisor 的托管二进制替换 {#managed-binary-swap-without-cosmovisor}
+
+对于由 systemd 管理的节点，请使用你实际的 unit 名称（示例为 `injectived`）。检查 `ExecStart` 以确定可执行文件、节点主目录、用户和启动参数：
+
+```bash
+sudo systemctl show injectived -p ExecStart -p User -p Environment
+sudo systemctl stop injectived
+```
+
+在替换任何文件之前，确认进程已退出，并完成第 2 步中的备份。
+
+1. 将你的服务实际使用的 `injectived` 可执行文件替换为经过验证的版本二进制文件。
+2. 保留所有权和可执行权限。在 Linux 上，确保已安装的可执行文件设置了执行位（`chmod +x <installed-binary-path>`）。
+3. 将随附的 `libwasmvm.x86_64.so` 安装到你的 Linux AMD64 服务加载它的位置。官方版本使用 `/usr/lib` 并运行 `sudo ldconfig`。验证该位置的库：
+
+```bash
+sha256sum /usr/lib/libwasmvm.x86_64.so
+```
+
+预期 SHA-256：
+
+```text
+eeaec050bd396c6aa4c085fe107341aa25f2ba56ee954e7e463587541dd969e0
+```
+
+如果你的部署从其他位置加载该库，请改为验证那个文件。如果它已经匹配，则无需替换。不要在库不匹配的情况下启动。
+
+验证已安装的版本和运行时库后，通过同一个服务管理器重新启动：
+
+```bash
+sudo systemctl start injectived
+sudo systemctl status injectived --no-pager
+sudo journalctl -u injectived -n 100 --no-pager
+```
+
+不要在托管服务之外再手动启动第二个节点。继续执行第 4 步中的健康检查。
+
+### 使用 Cosmovisor 的托管二进制替换 {#managed-binary-swap-with-cosmovisor}
+
+停止运行 **Cosmovisor** 的 systemd unit，即使该 unit 名为 `injectived`。在下方命令中，用你实际的 unit 名称替换 `cosmovisor`：
+
+```bash
+sudo systemctl show cosmovisor -p ExecStart -p User -p Environment
+sudo systemctl stop cosmovisor
+```
+
+从服务配置（包括任何环境文件）中读取 `DAEMON_HOME`。它可能未在你的交互式 shell 中设置。关闭后完成第 2 步中的备份。
+
+1. 在 Cosmovisor 及其子进程停止的情况下，将 `$DAEMON_HOME/cosmovisor/current/bin/injectived` 替换为经过验证的二进制文件。
+2. 保留所有权和可执行权限，并按上述方法验证运行时库。
+3. **不要创建新的 `upgrades/<name>` 目录。** 没有 upgrade handler 可以自动切换二进制文件。
+
+验证当前实际生效的二进制文件，然后启动同一个 Cosmovisor unit：
+
+```bash
+"$DAEMON_HOME/cosmovisor/current/bin/injectived" version
+sudo systemctl start cosmovisor
+sudo systemctl status cosmovisor --no-pager
+sudo journalctl -u cosmovisor -n 100 --no-pager
+```
+
+确认 Cosmovisor 启动了预期的二进制文件，然后继续执行第 4 步中的健康检查。
+
+### Docker 或其他容器部署 {#docker-or-another-container-deployment}
+
+将你现有的部署更新为 `injectivelabs/injective-core:v1.20.4-bl.3`，并保留其数据卷、配置、用户和启动参数。该镜像包含运行时库。
+
+对于 Docker Compose，修改节点服务的镜像，然后使用现有的 Compose 配置拉取并重新创建它。将 `node_service` 设置为你实际的服务名称：
+
+```bash
+node_service=injectived
+docker compose pull "$node_service"
+docker compose run --rm --no-deps --entrypoint injectived "$node_service" version
+docker compose up -d --no-deps "$node_service"
+```
+
+只有在完成所需的恢复并且验证者签名状态完好之后，才重新创建该服务。仅重启旧容器不会应用镜像变更。
+
+## 4. 验证并尽快重启 {#4-verify-and-restart-asap}
+
+针对实际安装的可执行文件或镜像运行 `version`，并确认版本为 `v1.20.4-bl.3 (e0a1168)`。Cosmovisor 运营者应运行：
+
+```bash
+"$DAEMON_HOME/cosmovisor/current/bin/injectived" version
+```
+
+尽快重启你的服务或 Cosmovisor。确认：
+
+- 节点位于 `injective-1` 上，区块高度在增长，并且已追上网络。
+- 日志中没有 AppHash 不匹配或缺少库的错误。
+- 验证者正常参与共识；合作伙伴集成正在接收最新区块。
+
+对所有哨兵节点、RPC 节点和其他节点基础设施重复以上操作。在你的协调频道中报告：
+
+```text
+[organization] — v1.20.4-bl.3 — [height] — healthy/issues
+```
+
+## 5. AppHash 不匹配恢复 {#5-apphash-mismatch-recovery}
+
+1. 再次停止节点及其守护进程。确认进程已退出。
+2. 关闭后，将**最新的**验证者签名状态保存到数据目录之外。在恢复之前保留节点数据、密钥和配置的备份。
+3. 从 **[高度 191,016,661 的升级前快照清单](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/upgrade-snapshots/status_191016661.json)** 获取恢复文件。该 JSON 是一个清单，而不是快照压缩包本身。确认数据库后端兼容性，并根据已发布的校验和验证快照。
+4. 按照 [Chain Portal 快照说明](https://chain.injective.network/snapshots)和[验证者恢复注意事项](/cn/infra/coordinated-upgrades#recovering-from-a-snapshot)进行恢复。使用已打补丁的二进制文件进行重放。
+5. 在重启之前恢复你保存的验证者签名状态，或按照你的远程签名器的恢复流程操作。**切勿重置签名状态、用旧状态替换它，或使用同一个验证者密钥运行两个实例。**
+6. 重启并重复上述健康检查。
+
+在没有链团队明确指导的情况下，不要将旧的 `bl.2` 事件中的回滚命令应用于此版本。
+
+## 支持 {#support}
+
+如果恢复失败，请保持节点停止，并在你现有的 Injective 协调频道中分享你的版本、高度、数据库后端和相关日志，或通过 [Discord](https://discord.gg/injective) 联系团队。切勿分享私钥或签名器凭证。
