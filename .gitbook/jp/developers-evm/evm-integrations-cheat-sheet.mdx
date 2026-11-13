@@ -1,6 +1,7 @@
 ---
 title: "EVM統合チートシート"
 description: Injective EVM Mainnetで本番アプリケーションを構築しようとしていますか？統合を素早く進めるための便利なリファレンスです。新規デプロイメントとクロスチェーンデプロイメントの両方に適しています。
+updatedAt: "2026-10-23"
 ---
 
 # ネットワーク設定
@@ -18,20 +19,29 @@ description: Injective EVM Mainnetで本番アプリケーションを構築し�
 
 # RPCエンドポイント
 
-- 統合パートナーに推奨
-    - アプリケーションのニーズに合わせてカスタマイズ可能
-    - カスタマイズ可能なレート制限、履歴データクエリのカットオフなし
-    - フリーミアム/有料オプション
-    - 接続方法：
-        - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj)
-        - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
-- 統合パートナーには非推奨
-    - アプリケーションのニーズに合わせたカスタマイズ不可
-    - 厳しいレート制限、履歴データクエリのカットオフあり
-    - 無料オプション
-    - 接続方法：
-        - JSON-RPCエンドポイント: `https://sentry.evm-rpc.injective.network/`
-        - WSエンドポイント: `wss://sentry.evm-ws.injective.network`
+EVM JSON-RPC、WebSocket、LCD、Tendermint RPCを含む、すべてのサービスの公開エンドポイントの最新リストは、
+[Chain Portal](https://chain.injective.network/rpcs)で公開されています。Testnetの
+エンドポイントとfaucetの詳細は、ポータルの[testnetページ](https://chain.injective.network/testnet)にあります。
+
+**商用プロバイダー**（本番アプリケーションに推奨）：
+
+- 専用キャパシティ、設定可能なレート制限、履歴データクエリのカットオフなし
+- フリーミアムおよび有料オプション
+- 接続方法：
+    - QuickNode: [Injective RPC Node Endpoints, APIs & Tools | QuickNode](https://www.quicknode.com/chains/inj)
+    - Thirdweb: [Injective EVM](https://thirdweb.com/injective)
+    - Alchemy: [Alchemy RPC Setup](/developers-evm/alchemy-rpc-setup)
+
+**公開エンドポイント**（ローカル開発や軽いテストに適しています）：
+
+- JSON-RPCエンドポイント: `https://sentry.evm-rpc.injective.network/`
+- WSエンドポイント: `wss://sentry.evm-ws.injective.network`
+
+公開エンドポイントは共有されており、レート制限があり、履歴データクエリはカットオフされます。本番トラフィック向けの
+規模ではなく、これに依存するアプリケーションは負荷時にレスポンスの欠落が発生します。トークンのローンチを計画している、
+またはトラフィックの急増が見込まれるインテグレーターは、パートナーチャネルまたは[Injective Discord](https://discord.com/invite/injective)
+を通じてInjectiveチームに連絡できます。パートナーのインフラプロバイダーによるローンチサポートが利用可能であり、
+公開エンドポイントをローンチ計画に含めるべきではありません。
 
 リファレンス: [EVMネットワーク情報 | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
 
@@ -45,6 +55,10 @@ description: Injective EVM Mainnetで本番アプリケーションを構築し�
 |USDC|native USDC (CCTP)|`0xa00C59fF5a080D2b954d0c75e46E22a0c371235a`|
 |MultiCall||`0xcA11bde05977b3631167028862bE2a173976CA11`|
 
+<Warning>
+NobleからIBC経由でブリッジされたレガシーUSDC（ティッカー`USDCnb`、一部のウォレットでは`USDC.n`と表示）は別のトークンであり、Circleが提供終了を進めています。残高は自動的には変換されません。移行するには、[Migrating To Native USDC on Injective](https://injective.com/blog/usdc-migration)を参照してください。
+</Warning>
+
 正規のソースとして以下のリファレンスページをご使用ください。
 
 リファレンス: [EVMネットワーク情報 | Injective | Docs](/developers-evm/network-information#injective-evm-mainnet)
@@ -56,7 +70,6 @@ description: Injective EVM Mainnetで本番アプリケーションを構築し�
 ガイド：
 - [MetaMaskを使用してEthereumからInjectiveにブリッジする方法](https://injective.com/blog/how-to-bridge-from-ethereum-to-injective-using-metamask/)
 - [Phantomを使用してSolanaからInjectiveにブリッジする方法](https://injective.com/blog/how-to-bridge-from-solana-to-injective-using-phantom/)
-- [Wormholeを使用してInjectiveにブリッジする方法](https://injective.com/blog/how-to-bridge-to-injective-using-wormhole/)
 - [Keplrを使用してCosmosからInjectiveにブリッジする方法](https://injective.com/blog/how-to-bridge-from-cosmos-to-injective-using-keplr/)
 
 # データ
@@ -76,6 +89,14 @@ description: Injective EVM Mainnetで本番アプリケーションを構築し�
 - Chainlink:
     - ドキュメント: [Chainlink Data Streams](https://docs.chain.link/data-streams)
 
+# ネットワークステータスとアップグレード
+
+- ネットワークステータス: [status.injective.network](https://status.injective.network)
+- アップグレードスケジュールとチェーンが現在実行しているバージョン: [chain.injective.network/upgrades](https://chain.injective.network/upgrades)
+
+チェーンのアップグレードにより、必要な`injectived`バイナリが変わります。インテグレーションが依存するノードは、
+上記のスケジュールに合わせてアップグレードする必要があります。
+
 # ウォレット
 
 ## `injectived`
@@ -85,15 +106,17 @@ description: Injective EVM Mainnetで本番アプリケーションを構築し�
 インストールクイックスタート：
 
 ```shell
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.17.2-1765930431/linux-amd64.zip # replace with latest version of injective
+wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/<latest-release>/linux-amd64.zip
 unzip linux-amd64.zip
 sudo mv injectived peggo /usr/bin
 sudo mv libwasmvm.x86_64.so /usr/lib
 ```
 
 <Tip>
-上記コマンドの`wget`ダウンロードURLは、最新リリース版のものに置き換える必要があります。
-正確なコマンド（URLを含む）は[Mainnet Validator](/infra/validator-mainnet)セクションで確認できます。
+リリースURLはチェーンのアップグレードごとに変わります。現在のリリースは
+[injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases/releases/latest)に掲載されており、
+URLを含む正確なコマンドは[Mainnet Validator](/infra/validator-mainnet)セクションにあります。チェーンが現在実行しているバージョンは
+[Chain Portalのアップグレードページ](https://chain.injective.network/upgrades)に表示されています。
 </Tip>
 
 <Tip>

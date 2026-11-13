@@ -1,5 +1,6 @@
 ---
 title: Bank Precompile
+updatedAt: "2026-10-12"
 ---
 
 # Bank Precompile
@@ -17,11 +18,19 @@ Bank precompileに基づくERC-20実装の一連のコントラクト、precompi
 
 これらの実装はOpenZeppelinのERC20コントラクトに基づいています。開発者はBank precompileを利用したカスタムERC20コントラクトを自由に作成できます。
 
-## ERC20コントラクトのデプロイ
+## Denom作成手数料
 
-**ℹ️ 注意:**
+denom spamを防止するため、新しい`erc20:0x...` denomを生成するには**1 INJ**の費用がかかります。この値は
+`/injective/erc20/v1beta1/params`で照会できます。
 
-denom spamを防止するため、ERC20モジュールを介したERC20コントラクトのデプロイは**有料操作**であり、デプロイ手数料として**1 INJ**が必要です。ERC20コントラクトのデプロイトランザクションにこの金額を含めてください。含めない場合、操作は拒否されます。
+手数料はデプロイ時ではなく**最初のmint時**に課金され、呼び出し元ではなく**コントラクト自身のINJ残高**から引き落とされます。
+`BankERC20`のコンストラクタは`payable`であるため、デプロイトランザクションで事前にコントラクトに資金を供給できます。
+これが、この手数料がしばしばデプロイ手数料と呼ばれる理由です。
+
+<Warning>
+この課金は、生涯で一度だけではなく、denomの供給量がゼロである場合には常に発生します。総供給量がゼロに戻るとdenomは状態から削除され、
+次のmintでdenomが再作成されて手数料が再度課金されます。全量burn後にmintを再開する可能性がある場合は、コントラクトに資金を残しておいてください。
+</Warning>
 
 ## Bank Precompileインターフェース
 
@@ -36,6 +45,34 @@ interface IBankModule {
     function setMetadata(string memory,string memory,uint8) external payable returns (bool);
 }
 ```
+
+### Denomの解決
+
+すべてのメソッドは、状態に触れる前に、呼び出し元コントラクトのアドレスをbank denomに解決します：
+
+1. ERC20モジュールにそのアドレスの**トークンペア**が登録されている場合、ペアリングされたbank denomが使用されます
+   （`factory/...`、`peggy0x...`、または`ibc/...`）。
+2. それ以外の場合、denomは`erc20:0x<ChecksummedAddress>`として導出されます。
+
+これが、TokenFactory denomとペアリングされたコントラクトがそのdenomのメタデータと供給量を報告する一方で、
+ペアリングされていないコントラクトが独自の`erc20:` denomを所有する理由です。コントラクトコードはどちらの場合も同一で、
+異なるのはレジストリのエントリのみです。
+
+### メソッドのセマンティクス
+
+| メソッド | 知っておくべき動作 |
+|---|---|
+| `mint` / `burn` | `erc20:` denomの場合、ERC20モジュールが直接mintまたはburnします。ペアリングされたTokenFactory denomの場合、precompileは**コントラクトアドレスを送信者として**ネイティブの`MsgMint`または`MsgBurn`を送信するため、ネイティブの承認はEVMの呼び出し元ではなくコントラクトに適用されます。ペアリングされたPeggyおよびIBC denomはどちらもサポートしません。 |
+| `setMetadata` | `erc20:` denomに対してのみ有効です。TokenFactory、Peggy、またはIBC denomとペアリングされたコントラクトで呼び出すと、`denom ... does not support setting metadata through bank precompile`でリバートします。これらのdenomのメタデータはネイティブ側で設定します。 |
+| `metadata` | 解決されたdenomのbankメタデータを読み取ります。 |
+| `balanceOf` / `totalSupply` / `transfer` | 解決されたdenomのbank状態を読み書きします。 |
+
+<Warning>
+`BankERC20`のコンストラクタは、nameまたはsymbolが空でない場合、またはdecimalsがゼロでない場合に`setMetadata`を呼び出します。
+既存のTokenFactory denomとペアリングする予定のコントラクトでは、これが誤ったdenomにメタデータを書き込み、ペアリングをブロックします。
+そのようなコントラクトは、空のname、空のsymbol、ゼロのdecimalsでデプロイしてください。
+[ERC20 Module](/jp/developers-evm/erc20-module#tokenfactory-denom向けのカスタムコントラクト)を参照してください。
+</Warning>
 
 ## 例
 
