@@ -1,18 +1,50 @@
 ---
 title: "概述"
-description: "本节帮助交易者了解更多关于交易工具的信息，并开始在 Injective 上进行交易"
+description: >-
+    面向开发者和交易者的 Injective 去中心化金融功能概述，
+    包括交易工具、质押、治理和代币标准
 updatedAt: "2026-02-05"
 ---
 
-在这里，你可以找到 Injective **exchange 模块**的全面概述，以及教程、指南、奖励计划、排行榜竞赛，以及面向开发者和 API 交易者的通用资源。
+<Callout icon="info" color="#22C55E" iconType="regular">
+**在 Injective 上使用 DeFi：** 使用 [Injective Hub](https://hub.injective.network) 进行质押、治理和资产跨链。使用 [Injective Explorer](https://explorer.injective.network) 查看链上的交易、区块、验证者和市场。
+</Callout>
 
-- [钱包](/cn/defi/wallet/)
-- [交易](/cn/defi/trading/)
-- [代币标准](/cn/defi/tokens/)
-- [跨链桥](/cn/defi/bridge/)
-- [质押](/cn/defi/staking/)
-- [治理](/cn/defi/governance/)
-- [社区回购](/cn/defi/community-buyback/)
-- [交易](/cn/defi/transactions/)
-- [交易费用](/cn/defi/transaction-fees/)
-- [开放流动性计划 (OLP)](/cn/defi/open-liquidity-program/introduction/)
+本节为在 Injective 去中心化金融生态系统中进行构建和参与的开发者、交易者和
+做市商提供全面的文档。
+无论你是在集成钱包、制定交易策略、发行代币还是提供流动性，
+都可以在这里找到与 Injective 链上 exchange 模块和金融原语交互
+所需的技术规范、指南和资源。
+
+Injective 专为金融而构建，提供全球首个真正的链上订单簿环境，
+为所有 DeFi 应用带来共享流动性。
+与依赖自动做市商（AMM）的传统 DEX 不同，
+Injective 使用完全去中心化的中央限价订单簿（CLOB），
+实现了资本高效的价格发现和即时最终性。
+凭借亚秒级出块时间、maker 零 gas 费，以及通过 IBC 和 Ethereum 跨链桥实现的跨链互操作性，
+Injective 消除了性能与去中心化之间的权衡，
+使以前在 DeFi 中无法实现的复杂交易策略和机构级金融应用成为可能。
+
+## 关键概念 {#key-concepts}
+
+| 术语 | 定义 |
+|------|------------|
+| **Exchange Module** | Injective 的核心链上订单簿模块，支持现货和衍生品市场的完全去中心化交易，并在所有 dApp 之间共享流动性。 |
+| **Denom** | Injective 上资产的唯一标识符（例如 `inj`、`peggy{ERC20}`、`ibc/{hash}`），在 Bank 模块中用于转账、交易和质押。 |
+| **Open Liquidity Program (OLP)** | Injective 的做市商激励计划，以 INJ 奖励提供订单簿流动性的参与者，准入门槛很低。 |
+| **Token Factory** | 一个无需许可的模块，允许任何账户以 `factory/{creator}/{subdenom}` 格式创建新的原生代币，从而实现自定义资产发行。 |
+| **EIP-712** | Injective 使用的 Ethereum 签名标准，使用户可以使用 MetaMask 等 Ethereum 钱包无缝签署交易，同时广播到 Cosmos 链上。 |
+
+## 导航 {#navigation}
+
+- **[钱包](/cn/defi/wallet/)**：
+  了解受支持的钱包类型，包括 Ethereum 原生钱包（MetaMask、Ledger）、Cosmos 原生钱包（Keplr、Leap）
+  和 Injective 原生钱包，以及账户管理和交易签名在 Injective 上的工作方式。
+- **[交易](/cn/defi/trading/)**：探索 Injective 的链上交易能力，包括现货市场、永续期货、
+  到期期货、保证金交易、订单类型以及 maker 和 taker 的费用结构。
+- **[代币标准](/cn/defi/tokens/)**：了解 Injective 上的不同代币类型，包括原生 INJ、
+  来自 Ethereum 的 Peggy 资产、来自 Cosmos 链的 IBC 资产、CW20 代币，
+  以及如何使用 Token Factory 模块创建自定义代币。
+- **[开放流动性计划 (OLP)](/cn/defi/open-liquidity-program/introduction/)**：
+  了解如何通过为 Injective 订单簿提供流动性来赚取 INJ 奖励，包括资格要求、
+  评分方法、周期和奖励发放。

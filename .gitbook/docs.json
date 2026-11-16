@@ -986,6 +986,7 @@
                       },
                       "cn/infra/public-endpoints",
                       "cn/infra/premium-endpoints",
+                      "cn/infra/websocket-server",
                       "cn/infra/archival-setup",
                       "redirects/https_injective_notion_site_indexer_service_setup_guide",
                       "redirects/https_api_injective_network_swagger"
@@ -1003,36 +1004,75 @@
             "tab": "在 Injective 上构建",
             "groups": [
               {
-                "group": "在 Injective 上构建",
+                "group": "概览",
                 "icon": "route",
                 "expanded": true,
                 "pages": [
+                  "cn/developers-defi/integrator-guide"
+                ]
+              },
+              {
+                "group": "桥接并部署代币",
+                "icon": "bridge",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-defi/bridge-deploy"
+                ]
+              },
+              {
+                "group": "发行许可资产",
+                "icon": "shield-halved",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-defi/permissioned-assets"
+                ]
+              },
+              {
+                "group": "稳定币与支付",
+                "icon": "coins",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-defi/usdc-stablecoin",
+                  "cn/developers-defi/usdc-cctp-tutorial"
+                ]
+              },
+              {
+                "group": "DeFi",
+                "icon": "building-columns",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-defi/defi-integration"
+                ]
+              },
+              {
+                "group": "交易所与交易",
+                "icon": "chart-line",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-defi/exchange-overview",
+                  "cn/developers-defi/token-launch",
+                  "cn/developers-defi/market-launch",
+                  "cn/developers-defi/calculate-min-price-tick-size",
+                  "cn/developers-defi/min-quantity-tick-size",
+                  "cn/developers-defi/provider-oracle",
+                  "cn/developers-defi/denom-and-bank",
                   {
-                    "group": "DeFi 开发者",
-                    "icon": "money-bill-transfer",
+                    "group": "Injective Trader",
                     "expanded": false,
                     "pages": [
-                      "cn/developers-defi/index",
-                      "cn/developers-defi/calculate-min-price-tick-size",
-                      "cn/developers-defi/min-quantity-tick-size",
-                      "cn/developers-defi/testnet-faucet-integration",
-                      "cn/developers-defi/token-launch",
-                      "cn/developers-defi/market-launch",
-                      "cn/developers-defi/denom-and-bank",
-                      "cn/developers-defi/provider-oracle",
-                      "cn/developers-defi/usdc-stablecoin",
-                      "cn/developers-defi/usdc-cctp-tutorial",
-                      {
-                        "group": "Injective Trader",
-                        "expanded": false,
-                        "pages": [
-                          "cn/developers-defi/injective-trader/index",
-                          "cn/developers-defi/injective-trader/simple-strategy",
-                          "cn/developers-defi/injective-trader/strategy-development-guide"
-                        ]
-                      }
+                      "cn/developers-defi/injective-trader/index",
+                      "cn/developers-defi/injective-trader/simple-strategy",
+                      "cn/developers-defi/injective-trader/strategy-development-guide"
                     ]
                   }
+                ]
+              },
+              {
+                "group": "资源",
+                "icon": "book",
+                "expanded": false,
+                "pages": [
+                  "cn/developers-defi/testnet-faucet-integration"
                 ]
               }
             ]
@@ -1273,7 +1313,8 @@
                       {
                         "group": "Injective Modules",
                         "pages": [
-                          "cn/developers-native/injective/index"
+                          "cn/developers-native/injective/index",
+                          "cn/developers-native/injective/lanes"
                         ]
                       },
                       {

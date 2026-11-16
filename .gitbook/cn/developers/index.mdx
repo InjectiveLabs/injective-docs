@@ -7,7 +7,29 @@ updatedAt: "2026-02-13"
 
 Injective 是唯一专为跨链交易、衍生品、DeFi 和 Web3 应用设计的区块链。作为 DeFi 生态系统构建者的首选全球目的地，Injective 为开发者提供了众多优势，使他们能够在更短的时间内构建更强大的应用。
 
-## 为什么在 Injective 上构建？
+本节为在 Injective 上构建的开发者提供全面的指南、工具和资源。
+无论你是在使用 Solidity 或 CosmWasm 创建智能合约、开发去中心化交易所、
+与原生模块集成，还是构建全栈 dApp，
+本文档都将帮助你快速上手，并充分利用 Injective 独特的、专注于 DeFi 的基础设施。
+
+Injective 通过提供双智能合约环境，融合了 Ethereum 和 Cosmos 生态系统的优势：
+面向 Solidity 开发者的 EVM 和面向 Rust 开发者的 CosmWasm，同时还提供原生 DeFi 模块，
+无需从零开始重建核心金融基础设施。
+凭借 650ms 的超快出块时间、$0.0003 的交易成本、抗 MEV 的基础设施，
+以及与包括 Ethereum 和 Solana 在内的 23 个以上网络的无缝互操作性，
+开发者可以在不牺牲性能、安全性或用户体验的情况下构建复杂的跨链金融应用。
+
+## 关键概念 {#key-concepts}
+
+| 术语 | 说明 |
+|------|-------------|
+| **injectived** | 连接并与 Injective 区块链交互的命令行界面和节点守护进程。 |
+| **Denom** | Injective 上的原生资产表示格式（例如 `factory/{creator}/{subdenom}` 或 `peggy{ethereumAddress}`）。 |
+| **Trading Account** | 一个隔离的子账户，将资金与 Bank 模块分离以执行交易。一个地址可以拥有无限数量的交易账户。 |
+| **Token Factory** | 一个原生模块，允许用户和合约创建新的原生代币，并在原生代币与 CW20 代币之间进行兑换。 |
+| **Indexer API** | 一个高性能的数据索引服务，提供快速查询、流式更新以及链上历史数据。 |
+
+## 为什么在 Injective 上构建？ {#why-build-on-injective}
 
 <Columns cols={2}>
   <Card
@@ -51,7 +73,7 @@ Injective 是唯一专为跨链交易、衍生品、DeFi 和 Web3 应用设计�
   </Card>
 </Columns>
 
-## 你对什么感兴趣？
+## 开发者路径 {#developer-paths}
 
 <Columns cols={2}>
   <Card
@@ -61,7 +83,7 @@ Injective 是唯一专为跨链交易、衍生品、DeFi 和 Web3 应用设计�
     cta="点击这里"
     icon="panel-left-close"
     img="/img/dev-hero.png">
-    在 Injective 的以太坊虚拟机上构建智能合约和 dApp
+    在 Injective 兼容 EVM 的执行层上，使用熟悉的 Ethereum 工具部署 Solidity 智能合约并构建 dApp。
   </Card>
   <Card
     title="CosmWasm"
@@ -70,7 +92,7 @@ Injective 是唯一专为跨链交易、衍生品、DeFi 和 Web3 应用设计�
     cta="点击这里"
     icon="panel-left-close"
     img="/img/launch-token-hero.png">
-    在 Injective 的 CosmWasm 模块上构建智能合约和 dApp
+    使用 Rust 和 CosmWasm 框架构建安全、高效的智能合约，获得更强的性能和安全保障。
   </Card>
   <Card
     title="DeFi"
@@ -79,7 +101,7 @@ Injective 是唯一专为跨链交易、衍生品、DeFi 和 Web3 应用设计�
     cta="点击这里"
     icon="panel-left-close"
     img="/img/trader-hero.png">
-    构建去中心化金融应用，例如像 Helix 这样的 DEX
+    利用 Injective 的原生金融原语构建 DEX、衍生品平台、借贷协议和其他 DeFi 应用。
   </Card>
   <Card
     title="原生模块"
@@ -88,6 +110,38 @@ Injective 是唯一专为跨链交易、衍生品、DeFi 和 Web3 应用设计�
     cta="点击这里"
     icon="panel-left-close"
     img="/img/trader-hero.png">
-    使用 Injective 的原生模块进行构建（底层）
+    访问底层链功能，包括 exchange、oracle、auction 和 token factory 模块，用于高级用例。
+  </Card>
+</Columns>
+
+## 其他资源 {#additional-resources}
+
+<Columns cols={3}>
+  <Card
+    title="构建 dApp"
+    href="/cn/developers/dapps/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    配置 UI 框架（React、Nuxt、Webpack）以及在 Injective 上构建示例 dApp 的分步指南。
+  </Card>
+  <Card
+    title="技术概念"
+    href="/developers/concepts/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/code-hero.png">
+    深入介绍交易账户、代币标准、gRPC 和 Indexer API 架构等核心概念。
+  </Card>
+  <Card
+    title="injectived CLI"
+    href="/cn/developers/injectived/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    安装、配置和使用 Injective 节点守护进程，进行链交互、验证者操作和高级命令。
   </Card>
 </Columns>

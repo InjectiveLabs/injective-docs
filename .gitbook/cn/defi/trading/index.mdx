@@ -1,19 +1,46 @@
 ---
 title: 交易
+description: >-
+    Injective 链上订单簿交易所的文档，涵盖
+    现货市场、永续期货、到期期货和订单类型。
 updatedAt: "2026-02-05"
 ---
 
-* [订单类型](/cn/defi/trading/order-types/)
-* [交易费用和返佣](/cn/defi/trading/fees/)
-* [24/5 股票价格源](/cn/defi/trading/24-5-equity-feeds/)
-* [保证金交易](/cn/defi/trading/margin/)
-* [保证金清算](/cn/defi/trading/margin-liquidation/)
-* [保证金资金费率](/cn/defi/trading/margin-funding-rates/)
-* [执行清算](/cn/defi/trading/margin-performing-liquidations/)
-* [衍生品](/cn/defi/trading/derivatives/)
-* [永续合约](/cn/defi/trading/derivatives-perpetuals/)
-* [到期期货](/cn/defi/trading/derivatives-expiry-futures/)
-* [选举永续合约](/cn/defi/trading/derivatives-election-perpetual/)
-* [预上线期货](/cn/defi/trading/derivatives-pre-launch-futures/)
-* [指数永续期货](/cn/defi/trading/derivatives-index-perpetual-futures/)
-* [iAssets](/cn/defi/trading/derivatives-iassets/)
+本节为在 Injective 交易基础设施上构建的交易者和开发者提供全面的文档。
+无论你是通过 API 执行交易、将订单簿功能集成到你的 dApp 中，
+还是在了解保证金要求和衍生品，都可以在这里找到
+订单类型、费用结构和交易工具的详细规范。
+
+Injective 将中心化交易所的效率
+与区块链的透明度和安全性相结合，重新定义了去中心化交易。
+通过频繁批量拍卖（FBA），Injective 将订单聚合为离散批次并以单一清算价格执行，
+从而消除了矿工可提取价值（MEV）和抢先交易。
+与依赖恒定乘积公式流动性池的传统 DEX 不同，
+Injective 的链上 CLOB 支持精确的限价单、高级订单类型和机构级执行。
+创新的负 maker 费率模式让流动性提供者获得返佣而不是支付费用，从而为做市商创造了强大的激励，
+带来比典型去中心化交易所更窄的价差和更深的流动性。
+
+## 关键概念 {#key-concepts}
+
+| 术语 | 定义 |
+|------|------------|
+| **Central Limit Orderbook (CLOB)** | 一个完全链上的订单撮合系统，与基于 AMM 的 DEX 不同，它在所有 Injective dApp 之间实现透明的价格发现和共享流动性。 |
+| **Frequent Batch Auctions (FBA)** | Injective 的订单执行机制，在离散的时间间隔内聚合订单并以统一价格清算，从而消除 MEV 和抢先交易。 |
+| **Negative Maker Fees** | 一种费用结构，流动性提供者（maker）获得返佣而不是支付费用（目前符合条件的交易对为 -0.01%），以激励深度的订单簿流动性。 |
+| **Perpetual Futures** | 没有到期日的衍生品合约，跟踪标的资产的价格，通常使用资金费率使合约价格与现货市场保持一致。 |
+| **Initial/Maintenance Margin** | 开立（初始）和维持（维持）杠杆仓位所需的抵押品；低于维持保证金会触发清算以保护协议。 |
+
+## 导航 {#navigation}
+
+- **[订单类型](/cn/defi/trading/order-types/)**：
+  所有受支持订单类型的参考指南，包括市价单、限价单、止损单、止盈单、只做 maker（post-only）单和原子订单，
+  以及执行行为的详细说明。
+- **[交易费用和返佣](/cn/defi/trading/fees/)**：
+  费用结构的详细分解，包括负 maker 费率（-0.01%）、taker 费率、费用接收者返佣（40%）
+  以及面向高交易量交易者的分级折扣。
+- **[保证金交易](/cn/defi/trading/margin/)**：
+  说明 Injective 上杠杆交易的工作方式，涵盖初始保证金要求、维持保证金、
+  清算机制以及永续仓位的资金费率。
+- **[衍生品](/cn/defi/trading/derivatives/)**：
+  Injective 上可用衍生品工具的概述，包括永续合约、到期期货、选举永续合约、
+  预上线期货、指数永续合约和 iAssets。

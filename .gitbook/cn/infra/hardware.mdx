@@ -106,6 +106,6 @@ Injective 链数据每天增长约 10-15 GB。对于剪枝节点，建议每增�
 节点需要一组健康的对等节点才能保持同步。对等连接不足，尤其是在远离大多数验证者所在区域的地区，可能会导致间歇性的同步延迟。
 
 - 至少保持 **15-25 个活跃对等节点**。可使用 `curl -s localhost:26657/net_info | jq '.result.n_peers'` 检查
-- 在 `config.toml` 中配置**持久对等节点（persistent peers）**，确保你的节点始终拥有已知可靠的连接。社区维护的对等节点列表请参阅[对等节点发现](/infra/join-a-network#peer-discovery)
+- 在 `config.toml` 中配置**持久对等节点（persistent peers）**，确保你的节点始终拥有已知可靠的连接。社区维护的对等节点列表请参阅[对等节点发现](/cn/infra/join-a-network#peer-discovery)
 - 位于 Injective 对等节点较少地区（例如亚太地区）的节点，可能需要额外的持久对等节点来保持稳定同步
 - 在云提供商上使用 **Premium Tier 网络**，以获得更低的延迟和更稳定的路由
