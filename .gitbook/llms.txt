@@ -8,6 +8,7 @@
   - [Wallet](defi/wallet/index)
   - [Create a wallet](defi/wallet/create): Learn how to create a wallet on Injective using different approaches.
   - [Accounts](defi/wallet/accounts)
+  - [Cypher OS Testnet Guide](defi/cypheros-testnet): Shield, send privately, and unshield INJ and USDC on the Cypher OS public testnet.
   - [Trading](defi/trading/index): Documentation for Injective's on-chain orderbook exchange, covering spot markets, perpetual futures, expiry futures, and order types.
   - [Order Types](defi/trading/order-types): Read about order types on Injective
   - [Trading Fees and Rebates](defi/trading/fees)
@@ -216,6 +217,7 @@
 - [Min Price Tick Size](developers-defi/calculate-min-price-tick-size)
 - [Min Quantity Tick Size](developers-defi/min-quantity-tick-size)
 - [Testnet Faucet Integration](developers-defi/testnet-faucet-integration)
+- [Private Transfers with Cypher OS](developers-defi/cypheros-private-transfers): How Cypher OS keeps transfer amounts and recipients private on Injective, what stays public, and how to read its testnet deployment.
 - [Launch a Token](developers-defi/token-launch)
 - [Launch a Market](developers-defi/market-launch)
 - [Denom Metadata](developers-defi/denom-and-bank)
