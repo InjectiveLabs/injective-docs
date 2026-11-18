@@ -50,6 +50,8 @@ The exchange EndBlocker runs at the end of every block in our defined order afte
 
 ## Order Matching: Frequent Batch Auction (FBA)
 
+When tracking an order, check the transaction events for order placement or cancellation and the block events for any fills produced by the batch auction. Filter exchange events by subaccount to follow the order across those stages.
+
 The goal of FBA is to prevent any [Front-Running](https://www.investopedia.com/terms/f/frontrunning.asp). This is achieved by calculating a single clearing price for all matched orders in a given block.
 
 1. Market orders are filled first against the resting orderbook at the time of the beginning of the block. While the resting orders are filled at their respective order prices, the market orders are all filled at a uniform clearing price with the same mechanism as limit orders. For an example for the market order matching in FBA fashion, look at the API docs [here](https://api.injective.exchange/#examples-market-order-matching).

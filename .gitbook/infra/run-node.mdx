@@ -1,57 +1,128 @@
 ---
-title: Overview
-updatedAt: "2025-12-05"
+title: Run a Mainnet Node
+description: Install, configure, and sync a full node or validator on Injective Mainnet.
+updatedAt: "2026-11-18"
 ---
 
-It is highly recommended that you set up a local private network before joining a public network. This will help you get familiar with the setup process and provide an environment for testing.
+Set up and sync an Injective Mainnet node on chain ID `injective-1`. This setup applies to full nodes, sentries, and validators. For public RPCs or a different environment, see [Public Endpoints](/infra/public-endpoints), [Run a Testnet Node](/infra/join-a-network), or [Run a Local Native Node](/developers-native/developer-setup/local-network).
 
-### **Private Network**
+## Prepare the server
 
-* Join by setting up a standalone network locally
+Choose hardware for your node’s role using the [Hardware Requirements](/infra/hardware).
 
-### **Public Network**
+## Install the Mainnet release
 
-* Use the network via public endpoints; or
-* Join by running a node
+Check the **current Mainnet version** on the [Chain Portal](https://chain.injective.network), then download the matching binary archive from [Injective Foundation releases](https://github.com/InjectiveFoundation/injective-core/releases).
 
-Anyone can set up their node with endpoints to communicate with the Injective blockchain. For convenience, there are also some public endpoints available to querying the chain. These are recommended for development and testing purposes. For maximum control and reliability, running your node is recommended.
+Install `injectived` and the bundled `libwasmvm` using the [Linux installation steps](/developers/injectived/install). Run `injectived version` to verify the installed version. Validators also run [Peggo](/infra/validator-mainnet/peggo).
 
-## Preparation For Running a Node
+## Initialize and configure the node
 
-If you choose to run a node (either to set up a private network or join the public network), you must set up the keyring. You can also choose to install Cosmovisor, which assists with chain upgrades for minimal downtime.
+Run the setup commands as the account that will run `injectived`. Set the moniker to a name that identifies your node.
 
-## Interacting With The Node
+```bash
+injectived init my-mainnet-node --chain-id injective-1
+```
 
-Once the node is up and running, there are a few ways to interact with a node, namely using the gPRC endpoints, REST endpoints, or `injectived` CLI. You can learn more in the [Interact with nodes](/infra/interact-node/) section.
+### Install the Mainnet genesis
 
-## Guides on Running Your Node
+`injectived init` creates a default `config/genesis.json` for a new chain. The `--chain-id` flag sets its chain ID. It does not download Mainnet's initial state or validator set. To join `injective-1`, download its genesis from the [Polkachu mirror](https://polkachu.com/genesis/injective). The command below verifies the download against the known Mainnet SHA-256 before it replaces the generated file.
 
-<Columns cols={3}>
-  <Card
-    title="Setup Keyring"
-    href="/infra/set-up-keyring/"
-    arrow="true"
-    cta="Click here"
-    icon="panel-left-close"
-    img="/img/user-hero.png">
-    Learn how to setup your keyring
-  </Card>
-  <Card
-    title="Join a Network"
-    href="/infra/join-a-network/"
-    arrow="true"
-    cta="Click here"
-    icon="panel-left-close"
-    img="/img/bridge-hero.png">
-    Learn how to join a network
-  </Card>
-  <Card
-    title="Upgrade your node"
-    href="/infra/upgrade-node/"
-    arrow="true"
-    cta="Click here"
-    icon="panel-left-close"
-    img="/img/validator-hero.png">
-    Learn how to upgrade your node
-  </Card>
-</Columns>
+```bash
+GENESIS_DIR="$HOME/.injectived/config"
+curl -fsSL https://snapshots.polkachu.com/genesis/injective/genesis.json \
+  -o "$GENESIS_DIR/genesis.mainnet.json" &&
+  printf '%s  %s\n' '573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528' \
+    "$GENESIS_DIR/genesis.mainnet.json" | sha256sum -c - &&
+  mv "$GENESIS_DIR/genesis.mainnet.json" "$GENESIS_DIR/genesis.json"
+```
+
+Use `~/.injectived/config/app.toml` for application settings such as pruning, gRPC, and REST. Use `config.toml` for CometBFT settings such as peering, RPC listeners, and state sync. Set `timeout_commit = "300ms"` in the `[consensus]` section.
+
+### Peer discovery
+
+Add seeds or persistent peers under `[p2p]` in `config.toml`. Start with Injective’s Mainnet seed listed on the [Chain Portal](https://chain.injective.network/rpcs).
+
+```toml
+seeds = "d58582c3d49b6cffc465ee12e0d57b3d73f539f7@seed.mainnet.asia.injective.network:26656"
+```
+
+For additional seeds, persistent peers, or address books, see [Polkachu](https://polkachu.com/seeds/injective) and [Decentrio](https://decentrio.ventures/infrastructure/injective).
+
+## Sync options
+
+### Restore a snapshot
+
+A recent snapshot is the recommended starting point. Choose a snapshot that matches your database backend and follow the provider’s extraction instructions before starting the node. The [Chain Portal](https://chain.injective.network/snapshots) lists official and community snapshots. Official pruned snapshots use GoLevelDB.
+
+<Warning>
+If you are restoring an existing validator, stop it and preserve its signing state before replacing any node data. Follow the [validator snapshot recovery procedure](/infra/coordinated-upgrades#recovering-from-a-snapshot) before restarting it.
+</Warning>
+
+### Use CometBFT state sync
+
+State sync uses peer snapshots and two trusted RPC servers. Select compatible endpoints from the [Chain Portal](https://chain.injective.network/rpcs). Choose a recent trust height and verify that both RPC servers return the same block hash at that height. Set the following values in `config.toml`:
+
+```toml
+[statesync]
+enable = true
+rpc_servers = "<rpc_server_1>,<rpc_server_2>"
+trust_height = <recent_height>
+trust_hash = "<block_hash_at_trust_height>"
+trust_period = "168h0m0s"
+```
+
+State sync omits local CosmWasm files. Use a snapshot that includes them or follow the [CometBFT state-sync troubleshooting guide](/infra/coordinated-upgrades#apphash-mismatch-after-cometbft-state-sync) before starting the node.
+
+### Replay blocks from peers
+
+With state sync disabled and an empty node data directory, CometBFT downloads and replays blocks from peers. Mainnet replay from genesis requires substantially more time and access to historical blocks.
+
+## Start and verify the node
+
+Start `injectived` after the node is configured and any snapshot data is in place.
+
+```bash
+injectived start
+```
+
+From another terminal, check the chain ID, block height, and sync status:
+
+```bash
+curl -fsS http://localhost:26657/status | jq '{
+  network: .result.node_info.network,
+  height: .result.sync_info.latest_block_height,
+  catching_up: .result.sync_info.catching_up
+}'
+```
+
+Expect `injective-1`. The height should advance as the node syncs, and `catching_up` should become `false` once the node reaches the chain tip.
+
+### Run as a systemd service
+
+For a persistent Linux service, create `/etc/systemd/system/injectived.service`. This example assumes an operator account named `injective` with its node data in `/home/injective/.injectived`. Use your actual service account, binary location, and node data path.
+
+```ini
+[Unit]
+Description=Injective Mainnet Node
+After=network-online.target
+
+[Service]
+User=injective
+ExecStart=/usr/bin/injectived start --home /home/injective/.injectived
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start the service once the foreground process has stopped.
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now injectived
+sudo journalctl -u injectived -f
+```
+
+For automated binary handoffs, see [Cosmovisor](/infra/cosmovisor). To join the validator set, continue with [Mainnet Validators](/infra/validator-mainnet/index). For upgrades and ongoing operation, see [Upgrade Your Node](/infra/upgrade-node) and [Interact with Nodes](/infra/interact-node/index).

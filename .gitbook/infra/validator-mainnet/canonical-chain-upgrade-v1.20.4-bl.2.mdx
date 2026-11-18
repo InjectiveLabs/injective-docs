@@ -32,20 +32,13 @@ Choose either the binary archive or Docker image. **Docker operators can skip th
 
 ### Option A: binary archive
 
-The [official release manifest](https://storage.googleapis.com/injective-chain-releases/status.json) lists the hosted binaries. Download the archive for your platform:
+Download the matching `v1.20.4-bl.2` archive and published checksums from [Injective Foundation Releases](https://github.com/InjectiveFoundation/injective-core/releases).
 
-| Platform | Download |
-| --- | --- |
-| Linux AMD64 | [injective-v1.20.4-bl.2-linux-amd64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/injective-v1.20.4-bl.2-linux-amd64.zip) |
-| macOS Apple Silicon | [injective-v1.20.4-bl.2-darwin-arm64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/injective-v1.20.4-bl.2-darwin-arm64.zip) |
-| SHA-256 checksums | [SHA256SUMS.zip.txt](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/SHA256SUMS.zip.txt) |
-
-For Linux AMD64, download into a staging directory without replacing your running binary:
+For Linux AMD64, place the downloaded archive in a staging directory and check it before replacing your running binary.
 
 ```bash
 mkdir -p ~/injective-v1.20.4-bl.2
 cd ~/injective-v1.20.4-bl.2
-curl -fLO https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/injective-v1.20.4-bl.2-linux-amd64.zip
 echo '81f49009d1652fe8688bf6662c6d4d42ad65d7039207fd77ec2a161050973df2  injective-v1.20.4-bl.2-linux-amd64.zip' | sha256sum -c -
 ```
 

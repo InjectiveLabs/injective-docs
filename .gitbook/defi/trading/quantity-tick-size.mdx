@@ -1,0 +1,26 @@
+---
+title: Quantity Tick Size
+description: Check allowed order quantity increments for Injective spot and derivative markets.
+updatedAt: "2026-11-18"
+---
+
+A market's minimum quantity tick size is the increment an order quantity must follow. If the quantity tick is `0.001`, quantities such as `0.001` and `0.002` are valid increments. An order for `0.0011` is rejected. Use the market's current `minQuantityTickSize` when preparing an order.
+
+## Convert a quantity tick between display and chain units
+
+For a spot market, multiply the displayed quantity tick by 10 to the power of the **base** token's decimals to get the chain value. Divide the chain tick by the same factor to get the display value. If your API or SDK already returns a tick in display units, use that value directly.
+
+For a spot market with 18 base decimals, a display tick of `0.001` is `1000000000000000` in chain units.
+
+```typescript
+import { toChainFormat, toHumanReadable } from '@injectivelabs/utils'
+
+const baseDecimals = 18
+const displayTick = '0.001'
+const chainTick = toChainFormat(displayTick, baseDecimals).toFixed()
+const convertedDisplayTick = toHumanReadable(chainTick, baseDecimals).toFixed()
+```
+
+For perpetuals and expiry futures, the quantity tick uses the same value in display and chain units.
+
+See [Price Tick Size](/defi/trading/price-tick-size) for order price increments and [Exchange Queries](/developers-native/query-chain/exchange) for market lookups.

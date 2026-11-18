@@ -13,15 +13,10 @@ $ git clone git@github.com:InjectiveLabs/injective-docs.git
 $ cd injective-docs
 ```
 
-2. Update your content in the `.gitbook` folder. _Note: `.gitbook/developers/modules` should not be done as it's automatically pulled from the `injective-core` repo_
+2. Edit the checked-in documentation in `.gitbook`.
+3. Open a pull request against `main`.
 
-3. Regenerate documentation based on the desired branches for `injective-core` and `cosmos-sdk`. _Note: you can change the branches/tags in the `scripts/setup.sh` file_
-
-```bash
-$ yarn generate
-```
-
-4. Push your branch to the docs and make a PR to `master` to reflect the changes on the main page.
+For the CLI or node daemon, install a published binary using the [injectived installation guide](https://docs.injective.network/developers/injectived/install). Module spec generation is an internal maintainer workflow that requires access to the private Injective Core repository.
 
 ## 🔓 License
 

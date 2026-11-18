@@ -9,34 +9,8 @@ updatedAt: "2026-02-13"
 
 <Tabs>
 <Tab title="本地网络">
-要轻松设置本地节点，请从 [injective-core](https://github.com/InjectiveFoundation/injective-core) 仓库下载并运行 `setup.sh` 脚本。请使用与已安装的 `injectived` 版本匹配的脚本版本。
 
-```bash
-# 将版本标签替换为与你的 injectived 二进制文件匹配的版本
-wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.18.3/setup.sh
-chmod +x ./setup.sh # 使脚本可执行
-./setup.sh
-```
-
-例如，使用 v1.17.2 的脚本：
-
-```bash
-wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.17.2/setup.sh
-chmod +x ./setup.sh
-./setup.sh
-```
-
-<Callout icon="warning" color="#FFA500" iconType="regular">
-旧版 [injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases) 仓库中的 `setup.sh` 脚本已过时，仅兼容 `injectived` v1.14.1。请始终使用 [InjectiveFoundation/injective-core](https://github.com/InjectiveFoundation/injective-core) 仓库中与你的链版本对应的脚本。
-</Callout>
-
-通过运行以下命令启动节点：
-
-```bash
-injectived start # 运行此命令后应该开始产生区块
-```
-
-有关脚本执行内容的进一步说明以及对设置过程的更精细控制，请继续阅读下文。
+请先按照 [安装 injectived](/cn/developers/injectived/install) 中的说明下载并安装正式发布的二进制文件。要使用 Docker 快速启动本地节点，请参阅 [inj-examples 中的本地网络示例](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/precompiles)。如需手动设置，请继续阅读下文。
 
 #### 初始化链
 
@@ -168,15 +142,7 @@ injectived start # 运行此命令后应该开始产生区块
 
 #### 安装 `injectived` 和 `peggo`
 
-请参阅 [Injective releases repo](https://github.com/InjectiveLabs/testnet/releases) 获取最新版本。非 validator 节点运营者不需要安装 `peggo`。
-
-```bash
-wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
+在 [Chain Portal](https://chain.injective.network/testnet) 查看测试网正在运行的版本。然后从[发布页面](https://github.com/InjectiveFoundation/injective-core/releases)下载匹配的归档文件，并按照[安装指南](/cn/developers/injectived/install)校验和安装。验证者还需安装归档中的 `peggo`。
 
 #### 初始化新的 Injective 链节点
 
@@ -271,16 +237,7 @@ journalctl -u injectived -f
 
 #### 安装 `injectived` 和 `peggo`
 
-请参阅 [Injective core releases](https://github.com/InjectiveFoundation/injective-core/releases) 获取最新版本。非 validator 节点运营者不需要安装 `peggo`。
-
-```bash
-# 将 URL 替换为 https://github.com/InjectiveFoundation/injective-core/releases 中的最新版本
-wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
+在 [Chain Portal](https://chain.injective.network) 查看主网正在运行的版本。然后从[发布页面](https://github.com/InjectiveFoundation/injective-core/releases)下载匹配的归档文件，并按照[安装指南](/cn/developers/injectived/install)校验和安装。验证者还需安装归档中的 `peggo`。
 
 #### 初始化新的 Injective 节点
 
@@ -297,30 +254,7 @@ injectived init $MONIKER --chain-id injective-1
 
 #### 准备配置以加入 Mainnet
 
-你现在应该使用 Mainnet 的 genesis 文件和应用程序配置文件更新默认配置，并使用种子节点配置你的持久对等节点。
-
-```bash
-git clone https://github.com/InjectiveLabs/mainnet-config
-
-# 将 genesis 文件复制到配置目录
-cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
-
-# 将配置文件复制到配置目录
-cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
-```
-
-你还可以验证 genesis 校验和 - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
-
-```bash
-sha256sum ~/.injectived/config/genesis.json
-```
-
-然后使用 `mainnet-config/10001/seeds.txt` 的内容更新 `~/.injectived/config/config.toml` 中的 `seeds` 字段，并将 `timeout_commit` 更新为 `300ms`。
-
-```bash
-cat mainnet-config/10001/seeds.txt
-nano ~/.injectived/config/config.toml
-```
+请按照[主网节点指南](/infra/run-node#install-the-mainnet-genesis)下载并验证主网 genesis 文件。请在生成的 `app.toml` 中配置应用，并参考[对等节点发现](/infra/run-node#peer-discovery)设置种子节点。
 
 #### 为 `injectived` 配置 `systemd` 服务
 
@@ -382,7 +316,7 @@ _即将添加_
 4. [Bware Labs](https://bwarelabs.com/snapshots)。
 5. [AutoStake](https://autostake.com/networks/injective/#validator)。
 
-如果 Injective `mainnet-config seeds.txt` 列表不起作用（节点无法同步区块），ChainLayer、Polkachu 和 Autostake 维护对等节点列表（可在 `config.toml` 的 `persistent_peers` 字段中使用）或地址簿（用于更快的对等节点发现）。
+请先查看 [Chain Portal](https://chain.injective.network/rpcs) 上的 Injective 主网种子节点。
 
 **支持**
 

@@ -13,28 +13,28 @@ For the `chain-id` argument, `injective-1` should be used for mainnet, and `inje
 
 ### `add-genesis-account`
 
-Adds a genesis account to `genesis.json`. For more information on `genesis.json`, see the Join Testnet or Join Mainnet guide.
+Adds a genesis account to `genesis.json`. See [Run a Local Native Node](/developers-native/developer-setup/local-network) for a complete genesis setup.
 
 **Syntax**
 
 ```bash
-injectived add-genesis-account <address-or-key-name> <amount><coin-denominator>
+injectived genesis add-genesis-account <address-or-key-name> <amount><coin-denominator>
 ```
 
 **Example**
 
 ```bash
-injectived add-genesis-account acc1 100000000000inj
+injectived genesis add-genesis-account acc1 100000000000inj
 ```
 
 ### `collect-gentxs`
 
-Collects genesis transactions and outputs them to `genesis.json`. For more information on `genesis.json`, see the Join Testnet or Join Mainnet guide [here](../../infra/join-a-network/).
+Collects genesis transactions and outputs them to `genesis.json`. See [Add the Validator to Genesis](/developers-native/developer-setup/local-network#add-the-validator-to-genesis).
 
 **Syntax**
 
 ```bash
-injectived collect-gentxs
+injectived genesis collect-gentxs
 ```
 
 ### `debug`
