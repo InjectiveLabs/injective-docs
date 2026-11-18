@@ -173,6 +173,8 @@ cast call 0x0000000000000000000000000000000000000068 \
 
 ## Start building
 
+For a TypeScript walkthrough with viem, follow [How to use the Swap Precompile](/developers-evm/swap-precompile-guide). It covers quotes, simulation, transaction submission, and settlement using an INJ/USDC testnet example.
+
 A complete Foundry example, with a quote-then-swap contract, Makefile targets for quoting and swapping via `cast`, and testnet defaults, is available in the [swap precompile demo](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/swap-precompile). Testnet has run the precompile since v1.20.4-beta; mainnet since the v1.20.4 upgrade.
 
 The same example includes `localnet-demo.sh`, which runs the whole lifecycle on a fresh local chain in one command: market launch, the allowlist update as an exchange admin configured in genesis (no governance proposal needed), orderbook liquidity, and a real swap through the precompile. It is the fastest way to exercise the full flow, allowlisting included, without touching testnet.
