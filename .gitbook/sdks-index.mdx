@@ -26,3 +26,17 @@ updatedAt: "2026-09-01"
     Stream and index Injective blockchain data with Substreams.
   </Card>
 </CardGroup>
+
+## TypeScript network endpoints
+
+Use [`@injectivelabs/networks`](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/networks) to load public endpoint presets for the TypeScript SDK.
+
+```typescript
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.MainnetSentry)
+```
+
+Use `Network.TestnetSentry` for Testnet. The preset contains `grpc` for native chain queries, `indexer` for indexed data, `rest` for LCD queries, and `rpc` for CometBFT. The TypeScript presets use gRPC Web URLs for `grpc` and `indexer`. Use a gRPC Web endpoint or proxy when supplying your own URLs. Use `getNetworkInfo` when you also need chain IDs and the fee denom.
+
+See the [Mainnet public endpoints](/infra/public-endpoints) and [Testnet public endpoints](/testnet/public-endpoints) for service addresses, or [Premium Endpoints](/infra/premium-endpoints) for dedicated infrastructure.

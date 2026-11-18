@@ -8,21 +8,8 @@ title: ネットワークへの参加
 
 <Tabs>
 <Tab title="ローカルネットワーク">
-ローカルノードを簡単にセットアップするには、`setup.sh`スクリプトをダウンロードして実行します。これにより、ローカルInjectiveネットワークが初期化されます。
 
-```bash
-wget https://raw.githubusercontent.com/InjectiveLabs/injective-chain-releases/master/scripts/setup.sh
-chmod +x ./setup.sh # スクリプトを実行可能にする
-./setup.sh
-```
-
-以下のコマンドでノードを起動します：
-
-```bash
-injectived start # このコマンドの実行後、ブロックの生成が開始されます
-```
-
-スクリプトの動作の詳細説明やセットアッププロセスをより細かく制御したい場合は、以下を参照してください。
+まず [injectived のインストール](/jp/developers/injectived/install) の手順に従い、公式リリースのバイナリをインストールしてください。Docker でローカルノードを起動する場合は、[inj-examples のローカルネットワーク例](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/precompiles)を参照してください。手動で設定する場合は、以下の手順に進んでください。
 
 #### チェーンの初期化
 
@@ -154,15 +141,7 @@ injectived start # このコマンドの実行後、ブロックの生成が開�
 
 #### `injectived`と`peggo`のインストール
 
-最新のリリースについては[Injective releases repo](https://github.com/InjectiveLabs/testnet/releases)を参照してください。非バリデーターノードオペレーターは`peggo`をインストールする必要はありません。
-
-```bash
-wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
+[Chain Portal](https://chain.injective.network/testnet) でテストネットの稼働バージョンを確認し、[リリースページ](https://github.com/InjectiveFoundation/injective-core/releases)で対応するアーカイブをダウンロードしてください。[インストールガイド](/jp/developers/injectived/install)に従って検証とインストールを行います。バリデーターはアーカイブ内の `peggo` もインストールしてください。
 
 #### 新しいInjectiveチェーンノードの初期化
 
@@ -257,15 +236,7 @@ journalctl -u injectived -f
 
 #### `injectived`と`peggo`のインストール
 
-最新のリリースについては[Injective chain releases repo](https://github.com/InjectiveLabs/injective-chain-releases/releases/)を参照してください。非バリデーターノードオペレーターは`peggo`をインストールする必要はありません。
-
-```bash
-wget https://github.com/InjectiveLabs/injective-chain-releases/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
+[Chain Portal](https://chain.injective.network) でメインネットの稼働バージョンを確認し、[リリースページ](https://github.com/InjectiveFoundation/injective-core/releases)で対応するアーカイブをダウンロードしてください。[インストールガイド](/jp/developers/injectived/install)に従って検証とインストールを行います。バリデーターはアーカイブ内の `peggo` もインストールしてください。
 
 #### 新しいInjectiveノードの初期化
 
@@ -282,30 +253,7 @@ injectived init $MONIKER --chain-id injective-1
 
 #### メインネットに参加するための設定の準備
 
-メインネットのgenesisファイルとアプリケーション設定ファイルでデフォルト設定を更新し、シードノードでpersistent peersを設定する必要があります。
-
-```bash
-git clone https://github.com/InjectiveLabs/mainnet-config
-
-# genesisファイルを設定ディレクトリにコピー
-cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
-
-# 設定ファイルを設定ディレクトリにコピー
-cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
-```
-
-genesisのチェックサムを検証することもできます - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
-
-```bash
-sha256sum ~/.injectived/config/genesis.json
-```
-
-次に、`~/.injectived/config/config.toml`の`seeds`フィールドを`mainnet-config/10001/seeds.txt`の内容で更新し、`timeout_commit`を`300ms`に更新します。
-
-```bash
-cat mainnet-config/10001/seeds.txt
-nano ~/.injectived/config/config.toml
-```
+[メインネットノードガイド](/infra/run-node#install-the-mainnet-genesis)に従って genesis ファイルをダウンロードし、チェックサムを確認してください。生成された `app.toml` を設定し、[ピアの検出](/infra/run-node#peer-discovery)を参照してシードノードを設定してください。
 
 #### `injectived`用の`systemd`サービスの設定
 
@@ -367,7 +315,7 @@ _近日追加予定_
 4. [Bware Labs](https://bwarelabs.com/snapshots)
 5. [AutoStake](https://autostake.com/networks/injective/#validator)
 
-Injectiveの`mainnet-config seeds.txt`リストが機能しない場合（ノードがブロックの同期に失敗する場合）、ChainLayer、Polkachu、およびAutostakeがピアリスト（`config.toml`の`persistent_peers`フィールドで使用可能）またはアドレスブック（より高速なピア検出用）を管理しています。
+まず [Chain Portal](https://chain.injective.network/rpcs) に掲載されている Injective メインネットのシードノードを確認してください。
 
 **サポート**
 
