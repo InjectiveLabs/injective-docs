@@ -459,7 +459,6 @@
                       "developers-evm/exchange-precompile",
                       "developers-evm/oracle-precompile",
                       "developers-evm/swap-precompile",
-                      "developers-evm/swap-precompile-guide",
                       "developers-evm/erc20-module",
                       "developers-evm/infrastructure-and-tooling",
                       "developers-evm/evm-gateway",
@@ -2457,6 +2456,10 @@
     "eyebrows": "breadcrumbs"
   },
   "redirects": [
+    {
+      "source": "/developers-evm/swap-precompile-guide",
+      "destination": "/developers-evm/swap-precompile"
+    },
     {
       "source": "/quickstart",
       "destination": "/"
