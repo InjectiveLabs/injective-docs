@@ -1,6 +1,21 @@
 ---
 title: CW20 标准
-updatedAt: "2026-02-03"
+updatedAt: "2026-10-12"
 ---
 
-CW20 代币标准提供了一个框架，用于无需许可地创建和管理更接近 [ERC20 标准](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/)的同质化代币。如上所述，由于 TokenFactory 与 Cosmos SDK 的原生集成，我们鼓励使用它，但如果你出于任何原因希望使用 CW20 标准，你可以使用 [CW20 Adapter](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md) 将 CW20 代币转换为 TokenFactory 代币，反之亦然。有关 CW20 标准的更多信息，请参阅其正式规范[这里](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md)。
+<Warning>
+**不建议在新的集成中使用 CW20，并且 Injective 已计划弃用它。**
+
+对于新代币，请使用 [TokenFactory](/cn/defi/tokens/token-factory)。如果需要 ERC20 接口，请使用
+[MultiVM Token Standard](/cn/developers-evm/multivm-token-standard)，它让代币在原生层和 EVM 之间
+共享同一个余额。现有的 CW20 资产将继续正常工作，并可以通过适配器
+表示为 bank denom。
+</Warning>
+
+CW20 是一种类似于
+[ERC20](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/) 的 Wasm 代币标准。与 bank denom 不同，CW20
+的余额和供应量保存在合约存储中，因此未经转换时，exchange、auction 或
+insurance 模块无法看到它们，并且查询供应量需要调用合约。
+
+[CW20 Adapter](/cn/developers-cosmwasm/cw20-adapter) 可将 CW20 资产转换为 TokenFactory denom，
+也可反向转换。有关标准本身，请参阅 [CW20 正式规范](https://github.com/CosmWasm/cw-plus/blob/main/packages/cw20/README.md)。

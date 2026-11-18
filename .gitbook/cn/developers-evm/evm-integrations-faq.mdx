@@ -1,7 +1,7 @@
 ---
 title: "EVM 集成常见问题"
 description: 关于与 Injective EVM 集成的常见问题。
-updatedAt: "2026-01-09"
+updatedAt: "2026-01-30"
 ---
 
 ## Injective EVM 是否支持...？
@@ -56,16 +56,24 @@ ERC20 和任何其扩展，
 访问通用 EVM 中不可用的 Injective 原生功能。
 这意味着如果你使用 Foundry 并连接到：
 
-- Injective EVM Testnet，它将工作
-- `localhost` 模拟 EVM 网络，它将不工作
+- Injective EVM Testnet 或 Mainnet，它将工作
+- Foundry 的内存 EVM 或原版 `anvil` 节点，precompile 调用将失败
 
-为解决后者的问题，我们 fork 了 Foundry 工具以支持
-Injective precompiles（从 `BankERC20.sol` 和 MTS 所需的 Bank precompile 开始），
-如果你使用 Solidity 测试或部署脚本作为 Foundry 项目，
-你将需要这个，以便 `forge`/`cast` 可以进行本地模拟。
+以下两种选项可用于本地开发：
 
-最新版本，包含 x86_64 Linux 和 macOS ARM64 的预构建二进制文件，
-可在 [github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases) 找到。
+- **Fork 版 Foundry 工具。** Injective 维护了一个支持 precompile 的 Foundry fork
+  （从 `BankERC20.sol` 和 MTS 所需的 Bank precompile 开始），使 `forge` 和 `cast`
+  可以针对本地模拟运行 Solidity 测试和部署脚本。每个版本的预构建二进制文件
+  发布在
+  [github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)。
+- **本地 Injective devnet。** [inj-examples](https://github.com/InjectiveLabs/inj-examples)
+  包含一个 Docker 化的本地环境（参见 `templates/foundry` 和 `examples/precompiles`），
+  它运行一个真实的 `injectived` 节点，所有 precompile 均可在 `localhost:8545` 使用，另外还有
+  一个本地 Blockscout 浏览器。这是完整的链环境，而不是模拟。
+
+<Warning>
+要在 fork 版 Foundry 上启用对 Injective precompiles 的支持，你必须在配置文件 `foundry.toml` 中设置 `injective = true`，或使用环境变量 `FOUNDRY_INJECTIVE=true`。此设置仅适用于 fork 版本，不适用于 Docker 化的 devnet。
+</Warning>
 
 ## Injective 上有哪些 EVM 开发基础设施？
 

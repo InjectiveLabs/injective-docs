@@ -1,73 +1,171 @@
 ---
-description: 了解 Injective 多 VM 架构中的 token 表示
+description: 一个 token，在 Injective 原生层和 EVM 之间共享同一个余额。
 title: MultiVM Token Standard
-updatedAt: "2026-01-09"
+updatedAt: "2026-10-12"
 ---
 
 ## 什么是 MultiVM Token Standard (MTS)？
 
-MTS（MultiVM Token Standard）确保 Injective 上的每个 token，无论是使用 Cosmos 模块还是通过 Ethereum Virtual Machine (EVM) 部署的，都有一个规范的余额和身份。这种统一的方法防止了碎片化，消除了桥接或包装 token 的需要，从而实现了去中心化金融（DeFi）和 dApp 交互的无缝互操作性和统一流动性。
+MTS（MultiVM Token Standard）确保 Injective 上的每个 token，
+无论是通过执行层上的原生模块创建，还是部署在 Ethereum Virtual Machine (EVM) 上，
+都可以拥有一个规范的余额和身份。
+这防止了碎片化，消除了为在不同执行环境之间移动 token 而进行桥接或包装的需要，
+为 DeFi 协议和 dApp 提供了单一的流动性池。
 
-## 为什么 MTS 很重要？
+本页是技术栈两侧 MTS 的入口。它介绍了该模型以及 token 产生的四种方式，
+然后指向原生或 EVM 的参考文档以获取详细信息。
 
-* **无缝互操作性：** Token 在 Cosmos 和 EVM 环境中保持一致。
-* **统一流动性：** 单一的真实来源避免了流动性碎片化。
-* **增强的开发者体验：** Hardhat、Foundry 和 MetaMask 等标准工具开箱即用。
-* **安全性和效率：** 所有 token 状态都集中维护在 bank 模块中，确保强大的安全性。
+## 模型：一个余额，两种视图
 
-## 架构
+原生 **bank 模块**是余额和总供应量的唯一真实来源。MTS ERC20
+合约本身不持有任何余额。它是一个视图，通过位于
+`0x0000000000000000000000000000000000000064` 的
+[Bank precompile](/cn/developers-evm/bank-precompile) 读取和写入 bank 状态。
 
-系统由两个主要组件组成：
+关键结果是：原生 bank 转账和 EVM 上的 ERC20 `transfer` 移动的是同一个
+余额。没有对账步骤，也没有包装表示。
 
-* [**Bank Precompile**](/cn/developers-evm/bank-precompile/)：
-  * 用 Go 开发，此 precompile 直接嵌入 Injective EVM 中。
-  * 它提供了一个 Solidity 接口，将 ERC20 操作（如 mint、burn 和 transfer）代理到 bank 模块。
-* [**ERC20 Module**](/cn/developers-evm/erc20-module/)：
-  * 此模块将原生 bank denom（例如 INJ、IBC token、Peggy 资产）映射到 EVM 中的 ERC20 合约。
-  * 它部署符合 MTS 的 ERC20 合约，始终反映 bank 模块维护的规范 token 余额。
+合约只有通过 precompile 处理余额、供应量和转账操作，才会参与 MTS。
+将余额保存在自身 EVM 存储中的标准 ERC20 只是普通的 EVM token，对 bank 模块不可见，
+不属于 MTS。
 
-<figure><img src="/img/multivm-token-single-token-representation-architecture.png" alt="" /><figcaption><p>单一 Token 表示架构</p></figcaption></figure>
+### 为什么 MTS 很重要？
 
-### **创建符合 MTS 的 Token**
+- **无缝互操作性：** Token 在原生模块和 EVM 之间保持一致。
+- **统一流动性：** 单一的真实来源避免了流动性碎片化。
+- **增强的开发者体验：** Hardhat、Foundry 和 MetaMask 等标准工具开箱即用。
+- **安全性和效率：** 所有 token 状态都集中维护在 bank 模块中。
 
-1. [**使用我们的预构建模板**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src)：
-   * 从提供的 Solidity 模板开始，如 `BankERC20.sol`、`MintBurnBankERC20.sol` 或 `FixedSupplyBankERC20.sol`。
-2. [**部署合约**](/cn/developers-evm/smart-contracts/)：
-   * 在 Injective EVM 网络上部署你的 MTS token 合约。
-   * 合约自动与 Bank Precompile 交互以更新规范状态。
+<figure>
+  <img
+    src="/img/multivm-token-single-token-representation-architecture.png"
+    alt=""
+  />
+  <figcaption>
+    <p>单一 Token 表示架构</p>
+  </figcaption>
+</figure>
 
-### **互操作性和跨链集成**
+## 四种 Token 来源
 
-#### **原生互操作性**
+MTS token 有四种可能的来源，每种属于不同的 denom 系列。它们在元数据权限以及是否需要显式 ERC20 配对步骤方面存在明显差异。
 
-Injective 的 EVM 直接集成到基于 Cosmos 的链中。
+| 来源 | Denom | ERC20 配对 | 元数据权限 |
+|---|---|---|---|
+| [**TokenFactory**](/developers-native/injective/tokenfactory) | `factory/...` | 仅在 EVM 使用时需要。仅限管理员或治理。允许自定义合约 | Denom 管理员，立即生效 |
+| [**Peggy**](/cn/developers-native/bridges/ethereum)（Ethereum ERC20） | `peggy0x...` | 仅在 EVM 使用时需要。无需许可，强制使用模板 | 仅限治理提案 |
+| [**IBC**](/cn/developers-native/examples/ibc) | `ibc/...` | 仅在 EVM 使用时需要。无需许可，强制使用模板 | 仅限治理提案 |
+| **Injective EVM** | `erc20:0x...` | 不需要。precompile 从合约地址派生 denom | 合约本身，通过 `setMetadata` |
 
-* 使用 MTS 的 EVM 智能合约执行的操作会立即反映在原生模块（如 exchange、staking 和 governance 模块）上。
-* Injective 二进制文件中提供的 [JSON-RPC endpoints](/cn/developers-evm/network-information/) 与 Ethereum 兼容，确保开发者集成顺畅。
+前三种先创建 bank denom，然后可选地将其投射到 EVM 中。第四种从 EVM 开始，bank denom 由合约地址派生。在所有四种情况下，一旦配对，余额都存在于 bank 模块中。
 
-#### **跨链操作**
+<Note>
+`/injective/erc20/v1beta1/all_token_pairs` 仅列出**显式注册**的 token 对，即 TokenFactory、
+Peggy 和 IBC denom。直接部署在 EVM 上的 token 不会被返回，因为它们没有
+注册条目。它们的 denom 始终是 `erc20:` 后跟校验和格式的合约地址。
+</Note>
 
-* **IBC 兼容性：** 现有的原生 token（例如通过 [Token Factory](/developers-native/injective/tokenfactory/) 创建或通过 Peggy 锚定的）一旦建立 MTS 配对，就可以从 EVM 访问。
-* **桥接替代方案：** 虽然许多区块链需要单独的桥接操作（锁定、铸造、解锁），但 MTS 通过原生同步状态避免了这些步骤。
+### 哪种路径适合你
 
-#### **Allowances 和扩展 ERC20 功能**
+- 发行一个尚未在任何地方存在的 token，并希望对供应量和元数据拥有原生管理员控制：**TokenFactory**。
+- 将现有的 Ethereum ERC20 迁移过来：**Peggy**。
+- 从另一条 IBC 链引入 token：**IBC**。
+- 以 EVM 为先进行构建，token 的权限由 Solidity 管理：**Injective EVM**。
 
-* MTS 合约维护标准 ERC20 功能，如 allowances（approve/transferFrom）。
-* 请注意，虽然 allowance 机制在 EVM 合约中维护以方便使用，但最终余额由 bank 模块管理，保持完整性。
+### 在 EVM 上创建 MTS token
 
-### **性能、Gas 和安全考虑**
+1. [**从模板开始**](https://github.com/InjectiveLabs/solidity-contracts/tree/master/src)：
+   `BankERC20.sol`（抽象基类）、`MintBurnBankERC20.sol`（所有者可以铸造和销毁）或
+   `FixedSupplyBankERC20.sol`（无所有者，固定供应量）。
+2. [**在 Injective EVM 上部署**](/cn/developers-evm/smart-contracts/)。合约与
+   Bank precompile 交互，其首次铸造会创建 `erc20:0x...` denom。
 
-#### **Gas 成本和效率**
+### 配对现有 denom
 
-* Gas 费用以 INJ 支付。虽然通过 EVM 的 MTS 操作引入了一个抽象层，可能会略微增加 gas 使用量，但与 Ethereum 上的类似操作相比，总体成本仍然较低。
-* Gas 模型旨在平衡 EVM 风格的 opcode 成本和原生模块交互。
+为 bank denom 提交 `MsgCreateTokenPair`。将 ERC20 地址留空可让链部署
+模板；或者（仅限 TokenFactory denom）提供你自己的合约地址。
 
-#### **安全性**
+自定义合约有一些容易被忽略的要求，包括使用空元数据的构造函数，以及
+针对铸造和销毁的单独原生授权。这些内容在
+[ERC20 Module](/cn/developers-evm/erc20-module) 页面中有完整说明，该页面是所有配对相关内容的参考。
 
-* [bank 模块](/developers-native/core/)作为单一真实来源，通过确保 token 余额一致且可验证来支撑 MTS 的安全性。
-* 使用 [precompiles](/cn/developers-evm/precompiles/) 可防止状态不同步等常见陷阱，确保所有操作（无论从何处发起）都更新同一个规范账本。
-* 智能合约开发的高级安全指南和最佳实践在我们的安全部分和外部资源中提供。
+## 互操作性和跨链集成
 
-**ℹ️ 注意：**
+### 原生互操作性
 
-为防止 denom 垃圾信息，通过 ERC20 模块部署 ERC20 合约是**付费操作**，需要 **1 INJ** 的部署费用。确保你的 ERC20 合约部署交易包含此金额，否则操作将被拒绝。
+Injective 的 EVM 直接集成到链中。
+
+- 使用 MTS 的 EVM 智能合约执行的操作会立即反映在
+  原生模块（如 exchange、staking 和 governance）上。
+- Injective 二进制文件中提供的 [JSON-RPC endpoints](/cn/developers-evm/network-information/)
+  与 Ethereum 兼容。
+
+### 跨链操作
+
+- **IBC 兼容性：** 现有的原生 token
+  （通过 [TokenFactory](/developers-native/injective/tokenfactory/) 创建或通过 Peggy 锚定的）
+  一旦建立 MTS 配对，就可以从 EVM 访问。
+- **桥接替代方案：** 虽然许多区块链需要单独的桥接操作（锁定、铸造、解锁），
+  但 MTS 通过原生同步状态避免了这些步骤。
+
+### Allowances 和扩展 ERC20 功能
+
+- MTS 合约维护标准 ERC20 功能，如 allowances（approve/transferFrom）。
+- allowance 机制为方便起见保存在 EVM 合约存储中，而底层余额由
+  bank 模块管理。
+
+## 性能、Gas 和安全考虑
+
+### Gas 成本和效率
+
+- Gas 费用以 INJ 支付。
+  通过 EVM 的 MTS 操作引入了一个抽象层，与原生交易相比可能会略微增加 gas 使用量，
+  但总体成本仍低于 Ethereum 上的类似操作。
+
+### 安全性
+
+- [bank 模块](/cn/developers-native/core/)作为单一真实来源，
+  通过确保 token 余额一致且可验证来支撑 MTS 的安全性。
+- 使用 [precompiles](/cn/developers-evm/precompiles/) 可防止状态不同步，使每个
+  操作无论从何处发起，都更新同一个规范账本。
+
+<Warning>
+配对合约并不会使其兼容 MTS。`MsgCreateTokenPair` 只检查该地址是否包含
+合约代码并能响应 `symbol()`，而标准的 OpenZeppelin ERC20 同样满足这些条件，但其
+余额完全在 bank 模块之外。撤销这样的 token 对需要通过治理提交
+`MsgDeleteTokenPair`，并且不会调和已经出现分歧的余额。请参阅
+[创建 token 对时的校验](/cn/developers-evm/erc20-module#创建-token-对时的校验)。
+</Warning>
+
+<Info>
+**Denom 创建费用。** 创建一个新的 `erc20:0x...` denom 需要 **1 INJ**，在
+首次铸造时收取，并从合约自身的 INJ 余额中扣除。`BankERC20` 的构造函数是 `payable` 的，
+因此部署交易可以预先为合约注入资金。
+
+如果总供应量从非零变为零，底层 denom 将从状态中移除。再次铸造会
+重新创建该 denom 并再次收取费用。请参阅
+[Bank Precompile](/cn/developers-evm/bank-precompile#denom-创建费用)。
+</Info>
+
+## 参考
+
+<CardGroup cols={2}>
+  <Card title="ERC20 Module" icon="link" href="/cn/developers-evm/erc20-module">
+    配对参考：模板选择、校验、自定义合约、铸造和销毁权限。
+  </Card>
+  <Card title="Bank Precompile" icon="plug" href="/cn/developers-evm/bank-precompile">
+    接口、denom 解析和方法语义。
+  </Card>
+  <Card title="Permissioned MTS Tokens" icon="lock" href="/cn/developers-evm/permissioned-multivm-token">
+    通过 IPermissionsHook 在 Solidity 中实现合规钩子。
+  </Card>
+  <Card title="原生 ERC20 模块" icon="file-code" href="/developers-native/injective/erc20">
+    原生消息、状态和事件规范。
+  </Card>
+  <Card title="桥接并部署 Token" icon="bridge" href="/developers-defi/bridge-deploy">
+    任务指南：通过 Peggy 将 Ethereum ERC20 端到端迁移到 Injective。
+  </Card>
+  <Card title="发行许可资产" icon="shield-halved" href="/developers-defi/permissioned-assets">
+    任务指南：使用角色和钩子发行受合规限制的 token。
+  </Card>
+</CardGroup>

@@ -1,21 +1,238 @@
 ---
 title: ERC20 Module
+description: bank denomがERC20コントラクトとどのようにペアリングされるか、どのテンプレートがデプロイされるか、ペア作成時に何が検証されるか、そしてmintとburnの権限がどのように機能するかを説明します。
+updatedAt: "2026-10-12"
 ---
 
 ### ERC20 Module
 
-ERC20モジュールは、**既存の**bank denom（例：IBCブリッジされたトークン、USDC、tokenfactory、Peggy）をInjective EVMに統合することを可能にします。このモジュールは、ストレージ内でトークンペア間のマッピングを維持し、ERC20トークンと対応するbank denom間の関連付けを作成します。既存のbank denom用に新しいトークンペアが生成されると、モジュールはBank precompileとインタラクションするERC20コントラクトをデプロイし、ストレージマッピングを参照してERC20アドレスを対応するbank denomに整合させます。このモジュールは以下の重要な目的を果たします：
+ERC20モジュールは、**既存の**bank denom（IBCブリッジされたトークン、USDC、TokenFactoryおよびPeggyのdenom）をInjective EVMから利用できるようにします。このモジュールはストレージ内でトークンペア間のマッピングを維持し、ERC20コントラクトアドレスとそのbank denomを関連付けます。[Bank precompile](/jp/developers-evm/bank-precompile)はこのマッピングを読み取り、ERC20の呼び出しがどのdenomに対して操作するかを解決します。このモジュールは2つの目的を果たします：
 
-1. **ストレージ**: bank denom ↔ ERC20アドレス間のマッピング
-2. **新しいメッセージタイプ**: ユーザーがチェーンメッセージを発行して新しいトークンペアマッピングを確立できるようにする
+1. **ストレージ**: bank denom ↔ ERC20アドレスのマッピング
+2. **メッセージタイプ**: ユーザーがチェーンメッセージを発行して新しいトークンペアマッピングを確立できるようにする
 
-#### 新しいトークンペアの作成
+<Note>
+Bank precompileに対してInjective EVM上に直接デプロイされたトークンは、トークンペアを**必要としません**。そのdenomはコントラクトアドレスから`erc20:0x...`として導出されます。このページでは、ネイティブ側にすでに存在するdenomのペアリング手順を扱います。両方の概念的な概要については、[MultiVM Token Standard](/jp/developers-evm/multivm-token-standard)を参照してください。
+</Note>
 
-現在、3種類のbank denomにトークンペアを関連付けることができ、それぞれに特定のルールがあります：
+## トークンペアの作成
 
-* **Tokenfactory (`factory/...`)**\
-  denomの管理者またはgovernanceのみがトークンペアを作成できます。送信者は、カスタム実装として既存のERC20コントラクトアドレスを指定できます。省略した場合、`MintBurnBankERC20.sol`の新しいインスタンスがデプロイされ、`msg.sender`がオーナーとなり、コントラクトを通じたmintとburnが可能になります。
-* **IBC (`ibc/...`)**\
-  IBC denomは、トークンペア作成を通じて任意のユーザーがEVMに統合できますが、カスタムERC20アドレスのオプションはありません。常にオーナーなしの`FixedSupplyBankERC20.sol`の新しいインスタンスがデプロイされます。
-* **Peggy (`peggy0x...`)**\
-  Peggy denomは、トークンペア作成を通じて任意のユーザーがEVMに統合できますが、カスタムERC20アドレスのオプションはありません。常にオーナーなしの`FixedSupplyBankERC20.sol`の新しいインスタンスがデプロイされます。
+3種類のbank denomにトークンペアを関連付けることができ、それぞれルールが異なります：
+
+| Denom | ペアを作成できる者 | カスタムERC20アドレス | アドレス省略時にデプロイされるテンプレート |
+|---|---|---|---|
+| **TokenFactory** `factory/...` | denomの管理者またはgovernance | 条件付きで許可 | `MintBurnBankERC20`、メッセージ送信者がオーナー |
+| **Peggy** `peggy0x...` | 誰でも | 拒否 | `FixedSupplyBankERC20`、オーナーなし |
+| **IBC** `ibc/...` | 誰でも | 拒否 | `FixedSupplyBankERC20`、オーナーなし |
+
+PeggyとIBCのペアリングはパーミッションレスであるため、テンプレートは強制されます。この組み合わせは意図的なものです：誰でもブリッジされたトークンをEVMで利用可能にできる一方で、自分が管理していないdenomに独自のコントラクトを紐付けることは誰にもできません。
+
+ペアの作成者は、デプロイされた`MintBurnBankERC20`のオーナーになります。governanceによって作成されたペアの場合、オーナーはgovernanceモジュールのアドレスです。
+
+### 前提条件：denomに供給量が必要
+
+ペアの作成には、bank denomがすでに存在し、供給量がゼロでないことが必要です。最初のmint前に送信すると`ErrUnknownBankDenom`で失敗します。TokenFactoryでのローンチでは、`MsgCreateDenom`、`MsgMint`、`MsgCreateTokenPair`を単一のアトミックなトランザクションとして送信し、3つが食い違わないようにしてください。
+
+### permissions namespaceは固定供給テンプレートを強制する
+
+TokenFactory denomに[permissions namespace](/developers-native/injective/permissions)があり、その**ポリシー**が`MINT`、`BURN`、または`SUPER_BURN`を無効にしている場合：
+
+- チェーンは`MintBurnBankERC20`の代わりに`FixedSupplyBankERC20`をデプロイし、
+- メッセージ内のカスタムERC20アドレスは`ErrInvalidERC20Address`で拒否されます。
+
+これは3つのアクションすべてに対するORです。`BURN`のみを無効にした場合でも`FixedSupplyBankERC20`が生成され、mintのエントリポイントはまったく公開されません。
+
+<Note>
+これはロールの権限ではなく、アクションに対するnamespaceの**ポリシーステータス**によって決まります。明示的なポリシーステータスなしで作成されたnamespaceには、すべてのアクションに対して許可的なデフォルト値が補完されるため、ロールを定義するだけでは固定供給テンプレートは強制されません。明示的に無効化されたポリシーのみが強制します。
+</Note>
+
+## ペア作成時の検証内容
+
+ERC20アドレスが指定された場合、モジュールは以下をチェックします：
+
+1. bank denomとERC20アドレスのいずれについても、トークンペアがまだ存在しないこと
+2. そのアドレスのアカウントが存在し、コントラクトコードを保持していること
+3. 導出された`erc20:0x...` denomが**流通供給量もbankメタデータも持たない**こと。そうでない場合は`ErrExistingERC20DenomSupply`
+4. コントラクトが300,000 gasの上限内で`symbol()`呼び出しに応答すること。そうでない場合は`ErrInvalidERC20Address`
+
+<Warning>
+**検証に合格しても、コントラクトがMTS互換であることを意味しません。** `symbol()`のプローブは、そのアドレスにERC20のような形のものが存在することを確認するだけです。標準的なOpenZeppelin ERC20は、残高をbankモジュールから完全に切り離された独自のEVMストレージに保持したまま、上記のすべてのチェックに合格します。その結果、両側の値が一致しないペアが生まれます。
+
+そこから回復するには、governanceの`MsgDeleteTokenPair`でマッピングを削除し、その後互換性のあるコントラクトで新たに登録する必要があります。マッピングを削除しても、すでに乖離した残高は調整されません。ペアリングの後ではなく、前に実装を検証してください。
+</Warning>
+
+その名前にもかかわらず、`ErrExistingERC20DenomSupply`は**供給量またはメタデータ**のいずれかで発生します。コンストラクタでメタデータを書き込んだコントラクトは、供給量がゼロでも拒否されます。
+
+## TokenFactory denom向けのカスタムコントラクト
+
+カスタムコントラクトは、残高、供給量、送金、mint、burnをBank precompile経由でルーティングする必要があります。これを確実にする実践的な方法は、[InjectiveのSolidityコントラクト](https://github.com/InjectiveLabs/solidity-contracts)の`BankERC20`を継承することです。これはまさにその委譲を実装しています。
+
+### 空のメタデータでデプロイする
+
+`BankERC20`のコンストラクタは、nameまたはsymbolが空でない場合、またはdecimalsがゼロでない場合に`bank.setMetadata`を呼び出します。ペアリングされていないコントラクトの場合、precompileはdenomを`erc20:0x<contract>`に解決するため、その呼び出しは望まないdenomにメタデータを書き込み、その後のペア作成は`ErrExistingERC20DenomSupply`で失敗します。
+
+空のname、空のsymbol、ゼロのdecimalsでデプロイしてください。これはスタイル上の好みではなく、ペアリング手順で強制される要件です。
+
+```solidity
+// SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.20;
+
+import {BankERC20} from "./BankERC20.sol";
+
+/// Pairs with an existing TokenFactory denom.
+/// Empty constructor metadata keeps the BankERC20 constructor from calling
+/// bank.setMetadata, which would create an erc20:0x... denom and block pairing.
+contract FactoryPairedERC20 is BankERC20 {
+    constructor() BankERC20("", "", 0) {}
+}
+```
+
+`BankERC20`は`abstract`であり、単独ではデプロイできません。ペアリング後、`name()`、`symbol()`、`decimals()`はprecompileを通じて**factory denomの**bankメタデータに解決されます。これはdenomの管理者が`MsgSetDenomMetadata`で管理します。
+
+同じ理由で、ペアリング前に独立した`erc20:0x...`の供給量をmintしないでください。
+
+<Note>
+これはEVMへの直接デプロイとは逆です。直接デプロイの場合は、コントラクト自身から導出されたdenom**こそが**トークンであるため、コンストラクタでメタデータを設定し`erc20:0x...`の供給量をmintすることが意図された手順です。[MultiVM Token Standard](/jp/developers-evm/multivm-token-standard)を参照してください。
+</Note>
+
+## MintとBurnの権限
+
+ERC20のオーナーシップとネイティブのTokenFactory権限は別々のチェックであり、一方を満たしても他方を満たすことにはなりません。これはこの手順で最もよくある想定外の点です。
+
+`MintBurnBankERC20.mint()`は`onlyOwner`であるため、EVMの呼び出し元はコントラクトのオーナーでなければなりません。その後、呼び出しはBank precompileに到達し、precompileはEVMの呼び出し元ではなく**ERC20コントラクトアドレスを送信者として**ネイティブの`MsgMint`を送信します。したがって、ネイティブのチェックはコントラクトアドレスに適用されます：
+
+| Denomの構成 | ERC20コントラクトアドレスの要件 |
+|---|---|
+| permissions namespaceなし | TokenFactory denomの管理者であること |
+| permissions namespaceあり | `MINT`権限を保持していること。管理者であるだけでは不十分 |
+
+Burnはさらに厳格です。ERC20の`burn()`または`burnFrom()`は、コントラクトを送信者、保有者をburn元アドレスとする`MsgBurn`としてチェーンに到達するため、セルフburnではなくburn-fromになります：
+
+| Denomの構成 | ERC20 burnの要件 |
+|---|---|
+| permissions namespaceなし | denomで`allow_admin_burn`が有効、**かつ**コントラクトアドレスがdenomの管理者であること |
+| permissions namespaceあり | denomで`allow_admin_burn`が有効、**かつ**コントラクトアドレスが`SUPER_BURN`を保持していること |
+
+<Warning>
+`allow_admin_burn`は`injectived tx tokenfactory create-denom`でデフォルトが**false**であり、作成時にのみ設定できます。これは一方向のラッチです：一度falseまたは無効になると、二度と再有効化できません。`--allow-admin-burn`なしで作成されたdenomは、ペアリングされたERC20を通じてburnすることが永久にできません。denomを作成する前にこれを決めておいてください。
+</Warning>
+
+`MsgChangeAdmin`でdenomの管理者を変更してもERC20の`owner()`は変わらず、ERC20のオーナーシップを移転してもdenomの管理者は変わりません。一方をローテーションする場合は、もう一方もローテーションしてください。
+
+### コントラクトの承認
+
+ペアリングされたERC20を通じてmintするには、コントラクトのアドレスがネイティブ側で承認されている必要があります。両者は異なるエンコーディングの同一アカウントであるため、まずEVMアドレスをbech32形式に変換します：
+
+```bash
+npm install @injectivelabs/sdk-ts
+
+TOKEN="0xYOUR_PAIRED_ERC20"
+
+TOKEN_INJ=$(
+  node --input-type=module - "$TOKEN" <<'JS'
+import { getInjectiveAddress } from '@injectivelabs/sdk-ts'
+console.log(getInjectiveAddress(process.argv[2]))
+JS
+)
+```
+
+次に、`MsgChangeAdmin`でdenomの管理者を`TOKEN_INJ`に移転するか、permissions namespaceで`MINT`を持つロールを付与します。管理者を移転するとコントラクトが唯一のmint権限を持つことになるため、ERC20のオーナーキーは安全に保管してください：それがmintする唯一の手段になります。
+
+## 発行元ごとのメタデータ権限
+
+| 発行元 | Denom | bankメタデータを設定できる者 |
+|---|---|---|
+| TokenFactory | `factory/...` | denomの管理者、`MsgSetDenomMetadata`経由、即時反映 |
+| Peggy | `peggy0x...` | governanceプロポーザルのみ |
+| IBC | `ibc/...` | governanceプロポーザルのみ |
+| Injective EVM | `erc20:0x...` | コントラクト自身、precompileの`setMetadata`経由 |
+
+PeggyおよびIBCのdenomはname、symbol、decimalsを持たない状態で到着し、Injective上のどのアカウントもそれらを直接設定する権限を持ちません。ウォレットに空白のトークンが表示されてから後始末するのではなく、ローンチの一部としてgovernanceプロポーザルを計画してください。
+
+<Warning>
+decimalsは事実上一度しか書き込めません。bankメタデータにゼロでない`decimals`が記録されると、その変更は`cannot update denom metadata decimals`で失敗します。最初の書き込みで正しい値を設定してください。
+</Warning>
+
+## 実例：カスタムコントラクトのペアリング
+
+以下は、testnet上でカスタムコントラクトを既存のTokenFactory denomとペアリングする例です。
+
+```bash
+# Endpoints and identifiers
+ENDPOINT="https://testnet.sentry.lcd.injective.network"      # LCD / REST
+NODE="https://testnet.sentry.tm.injective.network:443"       # native RPC
+EVM_RPC="https://testnet.sentry.chain.json-rpc.injective.network"
+CHAIN_ID="injective-888"
+
+# ADMIN_KEY is an injectived keyring name; ADMIN is the bech32 address it holds
+ADMIN_KEY="admin"
+ADMIN=$(injectived keys show "$ADMIN_KEY" -a)
+DENOM="factory/${ADMIN}/acme"
+```
+
+空のメタデータでコントラクトをデプロイし、ペアリングします：
+
+```bash
+forge create src/FactoryPairedERC20.sol:FactoryPairedERC20 \
+  --account acme-deployer \
+  --rpc-url "$EVM_RPC" \
+  --broadcast
+
+TOKEN="0xDEPLOYED_ADDRESS"
+
+injectived tx erc20 create-token-pair "$DENOM" \
+  --erc20 "$TOKEN" \
+  --from "$ADMIN_KEY" \
+  --chain-id "$CHAIN_ID" \
+  --node "$NODE" \
+  --gas 3000000 \
+  --gas-prices 160000000inj
+```
+
+`--erc20`を省略すると、チェーンが代わりに`MintBurnBankERC20`をデプロイします。
+
+両方のビューが一致することを確認します：
+
+```bash
+# Resolve the pair directly rather than listing every pair
+curl --fail --silent --show-error --get \
+  "$ENDPOINT/injective/erc20/v1beta1/token_pair_by_denom" \
+  --data-urlencode "bank_denom=$DENOM" | jq
+
+# ERC20 view, which should reflect the factory denom's metadata
+cast call "$TOKEN" "name()(string)"     --rpc-url "$EVM_RPC"
+cast call "$TOKEN" "symbol()(string)"   --rpc-url "$EVM_RPC"
+cast call "$TOKEN" "decimals()(uint8)"  --rpc-url "$EVM_RPC"
+
+# Bank view
+curl --fail --silent --show-error --get \
+  "$ENDPOINT/cosmos/bank/v1beta1/denoms_metadata_by_query_string" \
+  --data-urlencode "denom=$DENOM" | jq '.metadata'
+```
+
+コントラクトアドレスがネイティブ側で承認される前にEVMでmintすると、`failed to mint: unauthorized account`でリバートします。`BankERC20`はprecompileのリバートを捕捉してプレフィックスを付けるため、根本原因はERC20の`onlyOwner`修飾子ではなく、TokenFactoryの承認チェックです。上記の手順でコントラクトを承認してから再試行してください。
+
+## Gas
+
+`MsgCreateTokenPair`は、テンプレートのデプロイに2,000,000 EVM gasの上限を設けています。これはコントラクトデプロイの予算であり、トランザクション全体の量ではありません。トランザクション全体にはante処理やトランザクション内の他のメッセージも含まれます。単独のペア作成には少なくとも`--gas 3000000`を使用してください。およそ2.1M未満では、トランザクションはgas計算エラーで失敗します。リリース間で固定値に頼るのではなく、`POST /cosmos/tx/v1beta1/simulate`でシミュレーションし、余裕を持たせてください。
+
+## トークンペアの削除
+
+`MsgDeleteTokenPair`はgovernanceに限定されています。マッピングのみを削除し、どちらの側の残高も移行、調整、burnしません。
+
+## リファレンス
+
+<CardGroup cols={2}>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/jp/developers-evm/multivm-token-standard">
+    概念、4つのトークン発行元、そしてあなたのトークンにどの手順が当てはまるか。
+  </Card>
+  <Card title="Bank Precompile" icon="plug" href="/jp/developers-evm/bank-precompile">
+    インターフェース、denomの解決、各メソッドのセマンティクス。
+  </Card>
+  <Card title="ERC20 Module Messages" icon="file-code" href="/developers-native/injective/erc20/03_messages">
+    ネイティブメッセージと状態の仕様。
+  </Card>
+  <Card title="TokenFactory Messages" icon="hammer" href="/developers-native/injective/tokenfactory/03_messages">
+    denomの作成、mint、burn、管理者のセマンティクス。
+  </Card>
+</CardGroup>

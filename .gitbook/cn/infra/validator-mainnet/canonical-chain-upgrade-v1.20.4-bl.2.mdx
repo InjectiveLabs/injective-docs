@@ -1,0 +1,203 @@
+---
+title: 紧急升级到 v1.20.4-bl.2
+description: 面向 Injective 主网验证者、交易所和节点运营者的升级及 AppHash 恢复说明。
+updatedAt: "2026-10-07"
+---
+
+<Warning>
+**为何进行此次紧急升级**
+
+与 Injective 无关的交易所 BitGet 报告其遭到入侵，并请求协助追回资金，其中部分资金可能与 Injective 以及其他主流链发生过交互。此补丁引入了链上黑名单，以阻止攻击者转移 **BitGet 受影响的资金**。这是一次**协助 BitGet 追回资金并支持更广泛生态系统的一次性紧急干预**。最初的分发与协调主要面向验证者，并限制了公开沟通，以免在控制措施到位之前惊动攻击者。
+
+我们认识到，交易所和其他节点运营者没有获得足够的提前通知，也没有收到明确说明他们同样需要升级。对于由此造成的中断，我们深表歉意。此次特殊应对措施不会取代常规的协调升级流程。
+
+10 月 7 日，一笔涉及被拦截地址的交易暴露了已打补丁节点与未打补丁节点之间的差异。未打补丁的节点遇到了 AppHash 不匹配，而网络仍在继续出块。**所有主网节点都必须运行此补丁，包括哨兵节点、RPC 节点和交易所基础设施。**
+</Warning>
+
+## 概览
+
+`v1.20.4-bl.2` 是 **Injective 主网（`injective-1`）** 在 `v1.20.4` 发布线上的紧急补丁。其共识黑名单已在区块高度 **184,950,000** 激活，该高度已经过去。请立即升级；此补丁没有计划的链停机、治理升级处理程序（upgrade handler）或状态迁移。不要等待停机，也不要设置新的 `--halt-height`。
+
+| 节点状态 | 所需操作 |
+| --- | --- |
+| 运行未打补丁的二进制文件，并因 10 月 7 日的 AppHash 不匹配而停止 | 停止节点，备份其状态，**使用现有二进制文件**回滚一个区块，然后安装补丁并重启。 |
+| 运行未打补丁的二进制文件，但未出现不匹配 | 停止节点，备份其状态，安装补丁并重启。跳过回滚。 |
+| 已在运行 `v1.20.4-bl.2` 且同步正常 | 无需回滚或重新安装。请确认你运营的每个哨兵节点、RPC 节点及其他节点也都已打补丁。 |
+
+这适用于验证者、哨兵节点、全节点、公共和私有 RPC/广播节点，以及为交易所、区块浏览器和其他集成提供服务的节点。
+
+## 1. 选择并验证发布版本
+
+选择二进制压缩包或 Docker 镜像之一。**Docker 运营者可以跳过压缩包下载，直接使用镜像。**
+
+### 选项 A：二进制压缩包
+
+[官方发布清单](https://storage.googleapis.com/injective-chain-releases/status.json)列出了托管的二进制文件。下载适用于你所在平台的压缩包：
+
+| 平台 | 下载 |
+| --- | --- |
+| Linux AMD64 | [injective-v1.20.4-bl.2-linux-amd64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/injective-v1.20.4-bl.2-linux-amd64.zip) |
+| macOS Apple Silicon | [injective-v1.20.4-bl.2-darwin-arm64.zip](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/injective-v1.20.4-bl.2-darwin-arm64.zip) |
+| SHA-256 校验和 | [SHA256SUMS.zip.txt](https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/SHA256SUMS.zip.txt) |
+
+对于 Linux AMD64，请下载到一个暂存目录中，不要替换正在运行的二进制文件：
+
+```bash
+mkdir -p ~/injective-v1.20.4-bl.2
+cd ~/injective-v1.20.4-bl.2
+curl -fLO https://storage.googleapis.com/injective-chain-releases/v1.20.4-bl.2/injective-v1.20.4-bl.2-linux-amd64.zip
+echo '81f49009d1652fe8688bf6662c6d4d42ad65d7039207fd77ec2a161050973df2  injective-v1.20.4-bl.2-linux-amd64.zip' | sha256sum -c -
+```
+
+仅当校验和显示 `OK` 时才继续。然后解压压缩包：
+
+```bash
+unzip injective-v1.20.4-bl.2-linux-amd64.zip
+```
+
+对于 macOS，请使用 `shasum -a 256`，并将压缩包与校验和文件中的对应条目进行比对。
+
+### 选项 B：Docker 镜像
+
+初始发布以如下 Docker 镜像分发此补丁：
+
+```text
+injectivelabs/injective-core:v1.20.4-bl.2
+```
+
+拉取镜像并在不挂载节点数据的情况下验证其二进制文件：
+
+```bash
+docker pull injectivelabs/injective-core:v1.20.4-bl.2
+docker run --rm injectivelabs/injective-core:v1.20.4-bl.2 injectived version
+```
+
+初始发布记录的 AMD64 输出如下：
+
+```text
+Version v1.20.4-bl.2 (1ffa252)
+Compiled at 20260928-0409 using Go go1.26.8 (amd64)
+```
+
+使用你现有的容器部署，继续完成下面的停止、备份、恢复和重启步骤。请保留旧镜像：受影响的节点必须先使用该镜像完成回滚，然后才能切换到补丁版本。Docker 镜像已包含运行时库，因此容器运营者无需在主机上安装压缩包中的 `libwasmvm`。
+
+## 2. 停止节点并备份其状态
+
+通过现有的服务管理器或容器部署停止节点。同时停止其守护/监管进程，确保它在恢复期间不会自动重启。确认没有 `injectived` 进程正在访问节点的数据目录。
+
+继续之前，请备份节点配置、密钥和数据。在完成任何必要的回滚之前，请保留现有二进制文件。以下命令假定使用默认主目录 `~/.injectived`；如有不同，请使用你配置的 `--home` 路径。
+
+**Docker Compose 示例：** 在你现有的 Compose 项目中运行命令，并使用与常规部署相同的 Compose 文件和环境。将 `node_service` 设置为你实际的服务名称，将 `container_node_home` 设置为其**在容器内**的现有主目录路径；以下值仅为示例。确认该主目录由你现有的绑定挂载（bind mount）或命名卷（named volume）提供支持，然后停止服务：
+
+```bash
+node_service=injectived
+container_node_home=/root/.injectived
+docker compose stop "$node_service"
+```
+
+停机后备份该已挂载的节点主目录。在执行下面的 Compose 命令时请保持这些变量已设置。如果你使用原生 Docker 或其他编排工具，请通过相应部署停止现有节点容器，并保留其挂载和设置。
+
+<Warning>
+**验证者：** 节点完全停止后，请将 `~/.injectived/data/priv_validator_state.json` 单独备份到数据目录之外。在回滚或快照恢复过程中保留这份确切的签名状态，并在重启前将其恢复。对于远程签名器，请按照现有的签名器流程保留其签名状态。切勿重置签名状态，也切勿使用同一验证者密钥运行两个实例。
+</Warning>
+
+## 3. 恢复受影响的节点（如需要）
+
+仅当你的节点遇到 10 月 7 日的 AppHash 不匹配时才执行此步骤。已报告的一条错误如下：
+
+```text
+panic: Precommit step; +2/3 prevoted for an invalid block: wrong Block.Header.AppHash.
+```
+
+对于归档节点或数据库较大的节点，请在尝试回滚前联系支持团队确认恢复方案；恢复合适的快照可能是更好的选择。
+
+在节点停止的状态下，安装补丁之前，**请使用发生不匹配时正在运行的同一二进制版本**：
+
+```bash
+injectived rollback --hard -n 1 --home ~/.injectived
+```
+
+这种先回滚一个区块、再升级二进制文件的做法已在事件期间经过测试。请使用服务配置中实际使用的可执行文件，而不是 shell `PATH` 中的其他 `injectived`。
+
+- **Cosmovisor：** 使用现有的 `$DAEMON_HOME/cosmovisor/current/bin/injectived` 执行回滚，并让 `--home` 指向该节点的主目录。
+- **容器：** 使用**旧镜像**、相同的数据卷、节点主目录和用户权限，以一次性命令的方式执行回滚。在整个过程中保持常规节点容器处于停止状态。
+
+对于 Docker Compose，在回滚成功之前，请将服务的 `image` 保持为受影响节点所使用的确切旧镜像。完成备份后，运行以下命令**代替**上面的主机回滚命令：
+
+```bash
+docker compose run --rm --no-deps --pull never --entrypoint injectived \
+  "$node_service" rollback --hard -n 1 --home "$container_node_home"
+```
+
+这会复用服务已配置的挂载、环境和用户。该示例假定镜像中可直接使用 `injectived`；如果你的部署使用自定义包装脚本，请保留所需的初始化步骤。
+
+在替换二进制文件之前，请等待回滚成功完成。事件恢复说明估计耗时约 10 秒到 1 分钟；大型数据库或归档数据库可能需要更长时间。如果命令失败或不匹配仍然存在，请勿反复回滚更多区块。保持节点停止，并向支持团队提供其版本、高度和日志。
+
+如果无法回滚或回滚失败，请通过 [Chain Portal](https://chain.injective.network/snapshots) 或你的 Injective 支持联系人获取合适的快照。区块高度 **186,223,485** 之前的快照可以使用已打补丁的二进制文件重放。请保留验证者签名状态，并按照[快照恢复流程](/cn/infra/coordinated-upgrades#从快照恢复)操作。
+
+## 4. 安装补丁
+
+完成任何必要的回滚后：
+
+- **二进制部署：** 用经过验证的压缩包中的可执行文件替换服务所使用的 `injectived`。将附带的 `libwasmvm` 库安装到部署所使用的库路径中，并保留服务的所有者和权限设置。
+- **Cosmovisor：** 替换 `$DAEMON_HOME/cosmovisor/current/bin` 中的 `injectived`，并将附带的库放到服务加载库的位置。此补丁没有升级处理程序，因此将其放入新的 `upgrades` 目录不会自动激活。
+- **容器：** 将现有部署更新为 `injectivelabs/injective-core:v1.20.4-bl.2`，保留其数据卷、配置、用户和启动参数。
+
+对于 Docker Compose，只需将节点服务的 `image` 值（或提供该值的环境变量）更改为 `injectivelabs/injective-core:v1.20.4-bl.2`。在节点保持停止的状态下拉取并验证所配置的镜像：
+
+```bash
+docker compose pull "$node_service"
+docker compose run --rm --no-deps --entrypoint injectived "$node_service" version
+```
+
+启动之前，请针对服务将要使用的确切可执行文件或镜像运行 `version`，并确认输出为：
+
+```text
+Version v1.20.4-bl.2 (1ffa252)
+```
+
+### 可选：本地内存池黑名单
+
+共识黑名单已内置于打过补丁的二进制文件中，无需任何配置。以下 `app.toml` 条目用于添加本地交易准入过滤，属于**可选**项；它不能替代二进制文件升级。
+
+如果启用此项，请将该条目添加到 `~/.injectived/config/app.toml` 的**顶层**，位于 `[api]` 等任何 TOML 节标题之前：
+
+```toml
+mempool-blocked-signers = ["inj134wrp6mctpq4czhw6rghekt3js3ac7c4s8ya3d"]
+```
+
+如果该键已存在，请直接更新，不要重复添加该键，也不要删除任何其他已配置的地址。无效地址会导致节点无法启动。
+
+## 5. 重启并验证
+
+验证者在重启前必须恢复并验证停机后所做的签名状态备份。通过现有的服务管理器或容器部署启动节点。
+
+对于 Docker Compose，使用新镜像重新创建服务，然后在运行中的容器内验证二进制文件并检查其日志：
+
+```bash
+docker compose up -d --no-deps "$node_service"
+docker compose exec "$node_service" injectived version
+docker compose logs --tail 100 "$node_service"
+```
+
+请使用 `up` 来应用镜像变更；仅重启旧容器不会替换其镜像。对于原生 Docker 或其他编排工具，请使用打过补丁的镜像重新创建已停止的节点容器，并沿用其现有的挂载、端口、环境、用户和启动参数。确保只有一个实例在使用该节点的数据和验证者密钥。
+
+检查日志，确认启动成功，且 AppHash 不匹配不再出现。查询节点的本地 RPC 端点（如有需要请调整地址）：
+
+```bash
+curl -fsS http://localhost:26657/status \
+  | jq '.result | {network: .node_info.network, latest_block_height: .sync_info.latest_block_height, catching_up: .sync_info.catching_up}'
+```
+
+确认以下各项：
+
+- 网络为 `injective-1`。
+- 区块高度在连续多次检查中持续增长，并追上网络高度。
+- 同步完成后，`catching_up` 变为 `false`。
+- 验证者恢复签名，交易所/RPC 运营者确认其下游服务能够接收最新区块。
+
+对你运营的每个节点重复执行升级，包括不参与验证的哨兵节点和 RPC 节点。
+
+## 支持
+
+如果恢复失败，请保持节点停止，并将二进制版本、最后处理的高度、数据库后端和相关错误日志提供给你现有的 Injective 协调联系人，或在 [Discord](https://discord.gg/injective) 上联系团队。切勿分享私钥或签名器凭据。

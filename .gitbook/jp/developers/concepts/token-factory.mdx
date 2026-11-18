@@ -1,60 +1,24 @@
 ---
 title: Token Factory
-updatedAt: "2025-12-23"
+updatedAt: "2026-10-12"
 ---
 
-InjectiveのToken Factoryモジュールは、Mint + Burnモデルを使用して、ユーザーとコントラクトが新しいネイティブトークンを作成し、ネイティブトークンとCW20トークンをスワップできるようにします。これは、異なるソースからのアセットをネイティブbank denomとして表現することが、exchange、auction、insurance fundsなど、他のオンチェーンモジュールへのアクセスをユーザーに許可するために不可欠であるため、チェーン上に持つべき重要な機能です。Token Factory denomは次の形式です: `factory/{creator address}/{subdenom}`。
+TokenFactoryモジュールを使うと、ユーザーとコントラクトはコントラクトをデプロイすることなく、
+`factory/{creator address}/{subdenom}` 形式のネイティブbank denomを作成できます。アセットをネイティブ
+bank denomとして表現することで、チェーン上の他の機能にアクセスできるようになります。exchange、auction、
+insurance funds、permissionsはすべてbank denom上で動作します。
 
-createrとして機能する`CW20AdapterContract`と組み合わせることで、CW20アセットをInjective上でToken Factory denomとしてネイティブに表現できます。仕組みとしては、CW20アセットは`CW20AdapterContract`によって保持され、injectiveアドレスに対してfactory denomとしてミントされます。CW20に戻したい場合、bankモジュールからburnされ、`CW20AdapterContract`からオーナーアドレスに解放されます。
-
-## factory denomをCW20に戻す例
-
-```ts
-import {
-  MsgExecuteContractCompat,
-  ExecArgCW20AdapterRedeemAndTransfer,
-} from '@injectivelabs/sdk-ts/core/modules'
-
-const CW20_ADAPTER_CONTRACT = 'inj...'
-const contractCw20Address = 'inj...'
-const injectiveAddress = 'inj...'
-
-const message = MsgExecuteContractCompat.fromJSON({
-  sender: injectiveAddress,
-  contractAddress: CW20_ADAPTER_CONTRACT,
-  funds: {
-    denom: `factory/${CW20_ADAPTER_CONTRACT}/${contractCw20Address}`,
-    amount: actualAmount.toFixed(),
-  },
-  execArgs: ExecArgCW20AdapterRedeemAndTransfer.fromJSON({
-    recipient: injectiveAddress,
-  }),
-})
-
-// その後、メッセージをトランザクションにパックし、署名してチェーンにブロードキャストします
-```
-
-## CW20をfactory denomに変換する例
-
-```ts
-import {
-  ExecArgCW20Send,
-  MsgExecuteContractCompat,
-} from '@injectivelabs/sdk-ts/core/modules'
-
-const CW20_ADAPTER_CONTRACT = 'inj...'
-const contractCw20Address = 'inj...'
-const injectiveAddress = 'inj...'
-const amount = '1000000' // 1 USDT は6桁の小数を持つため、チェーン上では次のように表現されます
-
-const message = MsgExecuteContractCompat.fromJSON({
-  contractAddress: contractCw20Address,
-  sender: injectiveAddress,
-  execArgs: ExecArgCW20Send.fromJSON({
-    amount,
-    contractAddress: CW20_ADAPTER_CONTRACT,
-  }),
-})
-
-// その後、メッセージをトランザクションにパックし、署名してチェーンにブロードキャストします
-```
+<CardGroup cols={2}>
+  <Card title="Token Factory" icon="hammer" href="/jp/defi/tokens/token-factory">
+    モジュールの概要、admin制御で可能になること、その上に構築できる機能。
+  </Card>
+  <Card title="トークンの立ち上げ" icon="rocket" href="/jp/developers-defi/token-launch">
+    CLI、SDK、Webアプリを使ったステップバイステップのローンチガイド。
+  </Card>
+  <Card title="モジュール仕様" icon="file-code" href="/developers-native/injective/tokenfactory">
+    メッセージ、ステート、params、エラー。
+  </Card>
+  <Card title="CW20 Adapter" icon="arrow-right-arrow-left" href="/jp/developers-cosmwasm/cw20-adapter">
+    既存のCW20アセットをfactory denomとして表現します。新規開発には推奨されません。
+  </Card>
+</CardGroup>

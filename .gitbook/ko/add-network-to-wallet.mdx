@@ -1,0 +1,619 @@
+---
+title: 지갑에 네트워크 추가
+description: >-
+  클릭 한 번으로 Injective 네트워크를 브라우저 지갑에 추가하세요. Injective EVM(MetaMask 및
+  Trust Wallet)과 Injective 네이티브(Keplr)를 위한 대화형 지갑 옵션을 메인넷과 테스트넷 모두에 제공합니다.
+icon: wallet
+updatedAt: "2026-07-28"
+---
+
+클릭 한 번으로 Injective를 브라우저 지갑에 추가하거나, 아래의 수동 구성 정보를 사용하세요. Injective는 상호 운용 가능한 두 가지 인터페이스를 제공합니다:
+
+- **Injective EVM**은 이더리움 호환 JSON-RPC 레이어입니다. MetaMask, Trust Wallet 등 EVM 지갑과 함께 사용하세요.
+- **Injective(네이티브)**는 네이티브 Cosmos SDK 체인입니다. Keplr와 함께 사용하세요.
+
+<Info>
+Injective EVM과 Injective 네이티브는 동일한 네트워크에 매핑됩니다. 서로 다른 chain ID를 사용하지만 동일한 기본 상태를 공유합니다. 전체 참조는
+[네트워크 정보](/ko/developers/network-information) 및
+[EVM 네트워크 정보](/ko/developers-evm/network-information)를 참조하세요.
+</Info>
+
+## Injective EVM
+
+Injective EVM은 MetaMask, Trust Wallet 등 EVM 지갑과 함께 작동합니다. 네트워크를 고른 다음 지갑 옵션을 선택하여 Injective를 추가하거나 Injective로 전환하세요.
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective EVM 메인넷</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID 1776</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "연결 중...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = list.find((p) => p && p.isMetaMask) || null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "io.metamask" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("지갑을 찾을 수 없음", false); alert("MetaMask를 설치하세요."); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x6f0" }]
+          }).catch((error) => {
+            if (getErrorCode(error) === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x6f0",
+                  chainName: "Injective",
+                  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
+            label.textContent = "연결됨 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = getErrorCode(error) === 4001 ? "요청 취소됨" : "다시 시도";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/metamask.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">MetaMask에 추가</span>
+    </button>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "연결 중...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = typeof window !== "undefined"
+          ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)) || null)
+          : null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "com.trustwallet.app" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("지갑을 찾을 수 없음", false); alert("Trust Wallet을 설치하세요."); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x6f0" }]
+          }).catch((error) => {
+            if (getErrorCode(error) === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x6f0",
+                  chainName: "Injective",
+                  rpcUrls: ["https://sentry.evm-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
+            label.textContent = "연결됨 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = getErrorCode(error) === 4001 ? "요청 취소됨" : "다시 시도";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/trust-wallet.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Trust Wallet에 추가</span>
+    </button>
+  </div>
+</div>
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective EVM 테스트넷</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID 1439</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "연결 중...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = list.find((p) => p && p.isMetaMask) || null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "io.metamask" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("지갑을 찾을 수 없음", false); alert("MetaMask를 설치하세요."); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x59f" }]
+          }).catch((error) => {
+            if (getErrorCode(error) === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x59f",
+                  chainName: "Injective Testnet",
+                  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
+            label.textContent = "연결됨 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = getErrorCode(error) === 4001 ? "요청 취소됨" : "다시 시도";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/metamask.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">MetaMask에 추가</span>
+    </button>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "연결 중...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const injected = typeof window !== "undefined" ? window.ethereum : null;
+        const list = injected && injected.providers && injected.providers.length ? injected.providers : (injected ? [injected] : []);
+        const legacyProvider = typeof window !== "undefined"
+          ? ((window.trustwallet && (window.trustwallet.ethereum || window.trustwallet)) || list.find((p) => p && (p.isTrust || p.isTrustWallet)) || null)
+          : null;
+        const getErrorCode = (error) => {
+          if (!error) return NaN;
+          if (error.data && error.data.originalError && error.data.originalError.code !== undefined) return Number(error.data.originalError.code);
+          if (error.data && error.data.code !== undefined) return Number(error.data.code);
+          if (error.code !== undefined) return Number(error.code);
+          return NaN;
+        };
+        const providerPromise = typeof window === "undefined"
+          ? Promise.resolve(legacyProvider)
+          : new Promise((resolve) => {
+              let settled = false;
+              let timer = null;
+              const settle = (provider) => {
+                if (settled) return;
+                settled = true;
+                if (timer) window.clearTimeout(timer);
+                window.removeEventListener("eip6963:announceProvider", onAnnounceProvider);
+                resolve(provider || null);
+              };
+              const onAnnounceProvider = (event) => {
+                const detail = event && event.detail;
+                if (detail && detail.info && detail.info.rdns === "com.trustwallet.app" && detail.provider) {
+                  settle(detail.provider);
+                }
+              };
+              window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
+              timer = window.setTimeout(() => settle(legacyProvider), 500);
+              window.dispatchEvent(new Event("eip6963:requestProvider"));
+            });
+        providerPromise.then((provider) => {
+          if (!provider) { finish("지갑을 찾을 수 없음", false); alert("Trust Wallet을 설치하세요."); return false; }
+          return provider.request({ method: "eth_requestAccounts" })
+          .then(() => provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x59f" }]
+          }).catch((error) => {
+            if (getErrorCode(error) === 4902) {
+              return provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x59f",
+                  chainName: "Injective Testnet",
+                  rpcUrls: ["https://k8s.testnet.json-rpc.injective.network/"],
+                  nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
+                  blockExplorerUrls: ["https://testnet.blockscout.injective.network/"]
+                }]
+              });
+            }
+            throw error;
+          }))
+          .then(() => true);
+        })
+          .then((connected) => {
+            if (!connected) return;
+            label.textContent = "연결됨 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Add or switch network failed:", error);
+            label.textContent = getErrorCode(error) === 4001 ? "요청 취소됨" : "다시 시도";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", backgroundImage: "url('/img/wallets/trust-wallet.svg')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Trust Wallet에 추가</span>
+    </button>
+  </div>
+</div>
+
+<Info>
+MetaMask 및 Trust Wallet 버튼은 표준 `wallet_addEthereumChain` 요청을 사용합니다. 네트워크가 이미 추가되어 있으면 지갑에 전환 프롬프트가 대신 표시됩니다. 주입형 지갑에서 아무 반응이 없으면 아래 값을 사용하여 네트워크를 수동으로 추가하세요.
+</Info>
+
+### 수동 구성
+
+<Tabs>
+
+<Tab title="Injective EVM 메인넷" icon="server">
+
+| 속성 | 값 |
+| --- | --- |
+| 네트워크 이름 | Injective |
+| Chain ID | `1776` |
+| RPC URL | `https://sentry.evm-rpc.injective.network/` |
+| WS 엔드포인트 | `wss://sentry.evm-ws.injective.network` |
+| 통화 기호 | `INJ` |
+| 소수 자릿수 | `18` |
+| 블록 탐색기 | `https://blockscout.injective.network/` |
+
+</Tab>
+
+<Tab title="Injective EVM 테스트넷" icon="flask-vial">
+
+| 속성 | 값 |
+| --- | --- |
+| 네트워크 이름 | Injective Testnet |
+| Chain ID | `1439` |
+| RPC URL | `https://k8s.testnet.json-rpc.injective.network/` |
+| WS 엔드포인트 | `wss://k8s.testnet.ws.injective.network/` |
+| 통화 기호 | `INJ` |
+| 소수 자릿수 | `18` |
+| 블록 탐색기 | `https://testnet.blockscout.injective.network/` |
+| Faucet | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+
+</Tab>
+
+</Tabs>
+
+## Injective(네이티브)
+
+네이티브 Injective 체인은 Keplr와 함께 작동합니다. Injective는 Keplr에 기본 내장되어 있어 별도 설정 없이 바로 사용할 수 있습니다. 아래에서 네트워크를 선택하여 Keplr에서 잠금 해제하세요.
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective 메인넷</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID injective-1</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "연결 중...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const p = typeof window !== "undefined" ? window.keplr : null;
+        if (!p) { finish("지갑을 찾을 수 없음", false); alert("Keplr 지갑을 설치하세요."); return; }
+        p.enable("injective-1")
+          .then(() => {
+            label.textContent = "연결됨 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Keplr enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "요청 취소됨" : "다시 시도";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", borderRadius: "5px", backgroundImage: "url('/img/wallets/keplr.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Keplr에 추가</span>
+    </button>
+  </div>
+</div>
+
+<div style={{ border: "1px solid rgba(77,61,255,0.22)", borderRadius: "16px", padding: "16px 18px", background: "rgba(128,128,128,0.06)", marginBottom: "14px" }}>
+  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+    <span style={{ fontWeight: 700, fontSize: "15px" }}>Injective 테스트넷</span>
+    <span style={{ fontSize: "12.5px", opacity: 0.6, fontFamily: "monospace" }}>Chain ID injective-888</span>
+  </div>
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+    <button
+      type="button"
+      onClick={(event) => {
+        const button = event.currentTarget;
+        const label = button.querySelector("[data-wallet-label]");
+        const originalLabel = label.textContent;
+        const originalBorder = button.style.borderColor;
+        const originalBackground = button.style.background;
+        const originalOpacity = button.style.opacity;
+        const finish = (message, success) => {
+          label.textContent = message;
+          button.style.borderColor = success ? "#22c55e" : "#ef4444";
+          button.style.background = success ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.10)";
+          button.style.opacity = "1";
+          window.setTimeout(() => {
+            label.textContent = originalLabel;
+            button.style.borderColor = originalBorder;
+            button.style.background = originalBackground;
+            button.style.opacity = originalOpacity;
+            button.disabled = false;
+          }, 2500);
+        };
+        label.textContent = "연결 중...";
+        button.disabled = true;
+        button.style.opacity = "0.72";
+        const p = typeof window !== "undefined" ? window.keplr : null;
+        if (!p) { finish("지갑을 찾을 수 없음", false); alert("Keplr 지갑을 설치하세요."); return; }
+        p.enable("injective-888")
+          .then(() => {
+            label.textContent = "연결됨 ✓";
+            finish(label.textContent, true);
+          })
+          .catch((error) => {
+            console.error("Keplr enable failed:", error);
+            label.textContent = error && error.code === 4001 ? "요청 취소됨" : "다시 시도";
+            finish(label.textContent, false);
+          });
+      }}
+      style={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "6px 12px", borderRadius: "9px", border: "1px solid rgba(128,128,128,0.28)", background: "transparent", color: "inherit", fontWeight: 600, fontSize: "14px", cursor: "pointer", minWidth: "145px", transition: "all 160ms ease" }}
+    >
+      <span aria-hidden="true" style={{ width: "20px", height: "20px", borderRadius: "5px", backgroundImage: "url('/img/wallets/keplr.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", flexShrink: 0 }} />
+      <span data-wallet-label aria-live="polite">Keplr에 추가</span>
+    </button>
+  </div>
+</div>
+
+<Info>
+Keplr에는 Injective가 기본으로 포함되어 있으므로 버튼은 지갑에서 체인을 잠금 해제하기만 합니다. 전체 지갑 통합 가이드는 [지갑](/ko/defi/wallet/index)을 참조하세요.
+</Info>
+
+### 수동 구성
+
+<Tabs>
+
+<Tab title="Injective 메인넷" icon="server">
+
+| 속성 | 값 |
+| --- | --- |
+| Chain ID | `injective-1` |
+| RPC / 노드 | `https://sentry.tm.injective.network:443` |
+| 통화 기호 | `INJ` |
+| 소수 자릿수 | `18` |
+| 탐색기 | [`injscan.com`](https://injscan.com/) |
+
+<Info>
+Injective는 네이티브로 chain ID `injective-1`을 사용합니다. EVM 인터페이스는 숫자 chain ID `1776`을 사용합니다. 둘 다 동일한 메인넷에 매핑됩니다.
+</Info>
+
+</Tab>
+
+<Tab title="Injective 테스트넷" icon="flask-vial">
+
+| 속성 | 값 |
+| --- | --- |
+| Chain ID | `injective-888` |
+| RPC / 노드 | `https://testnet.sentry.tm.injective.network:443` |
+| 통화 기호 | `INJ` |
+| 소수 자릿수 | `18` |
+| 탐색기 | [`testnet.explorer.injective.network`](https://testnet.explorer.injective.network/) |
+| Faucet | [`testnet.faucet.injective.network`](https://testnet.faucet.injective.network/) |
+
+<Info>
+Injective는 테스트넷에서 네이티브로 chain ID `injective-888`을 사용합니다. EVM 인터페이스는 숫자 chain ID `1439`를 사용합니다. 둘 다 동일한 테스트넷에 매핑됩니다.
+</Info>
+
+</Tab>
+
+</Tabs>

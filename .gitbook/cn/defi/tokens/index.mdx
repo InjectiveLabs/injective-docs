@@ -1,6 +1,6 @@
 ---
 title: 代币标准
-updatedAt: "2026-02-03"
+updatedAt: "2026-10-12"
 ---
 
 Injective 提供多种不同的代币标准，可在创建 dApp 时使用。在本文档中，我们将介绍不同类型的代币，以及使用每种代币的建议和指导。
@@ -11,12 +11,41 @@ Denom 是资产在 Injective 的 Bank 模块中的表示方式。这些资产可
 
 根据 denom 的来源及其在 Injective 上的创建方式，我们有不同类型的 denom：
 
-* **原生 denom** - 这种类型只有一个 denom，即代表 Injective 原生代币的 `inj` denom，
-* **Peggy denom** - 这些 denom 代表通过 Peggy 桥从 Ethereum 桥接到 Injective 的资产。它们的格式为 `peggy{ERC20_CONTRACT_ADDRESS}`
-* **IBC denom** - 这些 denom 代表通过 IBC 从其他 IBC 兼容链桥接过来的资产。它们的格式为 `ibc/{hash}`。
-* **保险基金 Denom** - 这些 denom 代表在 Injective 上创建的保险基金的代币份额。它们的格式为 `share{id}`
-* **Factory Denom** - 这些 `tokenfactory` denom 允许任何账户创建名为 `factory/{creator address}/{subdenom}` 的新代币。由于代币按创建者地址命名空间，这使得代币铸造可以无需许可，因为不需要解决名称冲突。这些 denom 的一个特殊用例是在 Injective 原生 bank 模块上表示来自 Cosmwasm 的 CW20 代币。它们的格式为 `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}`，其中 `CW20_ADAPTER_CONTRACT` 是转换 CW20 和原生 Bank 模块的适配器合约地址。
+| Denom 类型 | 格式 | 来源 |
+|---|---|---|
+| **原生** | `inj` | Injective 的原生代币，同时也是 Injective EVM 的 gas 代币 |
+| **Factory** | `factory/{creator}/{subdenom}` | 通过 [TokenFactory](/cn/defi/tokens/token-factory) 无需许可地创建 |
+| **Peggy** | `peggy0x{ERC20_CONTRACT_ADDRESS}` | 通过 [Peggy 桥](/cn/developers-native/bridges/ethereum)从 Ethereum 桥接而来 |
+| **IBC** | `ibc/{hash}` | 从其他 IBC 链桥接而来 |
+| **EVM** | `erc20:0x{CONTRACT_ADDRESS}` | 基于 [Bank precompile](/cn/developers-evm/bank-precompile) 直接部署在 Injective EVM 上 |
+| **保险基金** | `share{id}` | 保险基金的代币份额 |
 
-我们将在本文档后面分享更多关于这些 denom 类型的详细信息。
+上述每种类型都有一个已注册的 bank denom，原生 exchange、auction、insurance 和 permissions
+模块都以它作为唯一的真实来源。在 [MultiVM Token Standard](/cn/developers-evm/multivm-token-standard) 下，
+已注册 token 对的 denom 也可以从 EVM 调用。[erc20 模块](/cn/developers-evm/erc20-module)
+将 denom 映射到 ERC20 合约地址，对该合约的调用会通过
+[Bank precompile](/cn/developers-evm/bank-precompile) 解析到同一个 bank 余额。EVM dApp 将配对的
+地址作为标准 ERC20 进行交互。不存在需要桥接或对账的第二份余额。
 
-了解如何获取 [denom 元数据](/developers/assets/token-metadata/)。
+<Note>
+CW20 资产**不是**原生 bank denom。它们的余额保存在合约存储中。现有的 CW20 可以通过
+[CW20 适配器](/cn/developers-cosmwasm/cw20-adapter)表示为 `factory/{CW20_ADAPTER_CONTRACT}/{CW20_CONTRACT_ADDRESS}` 形式的
+factory denom，但不建议在新的集成中使用 CW20，并且它已计划被弃用。
+</Note>
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="发行代币" icon="rocket" href="/cn/developers-defi/token-launch">
+    创建代币、设置元数据、铸造、在 Injective EVM 上配对、上架并启动市场。
+  </Card>
+  <Card title="Token Factory" icon="hammer" href="/cn/defi/tokens/token-factory">
+    Injective 上的原生代币铸造工具。
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/cn/developers-evm/multivm-token-standard">
+    在原生层和 EVM 之间共享同一个余额。
+  </Card>
+  <Card title="代币元数据" icon="tag" href="/cn/developers/assets/token-metadata">
+    钱包和浏览器如何读取 name、symbol 和 decimals。
+  </Card>
+</CardGroup>

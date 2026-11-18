@@ -56,19 +56,23 @@ A: Injective의 [EVM precompiles](/ko/developers-evm/precompiles)는
 일반 EVM에서 사용할 수 없는 Injective 네이티브 함수에 액세스합니다.
 이는 예를 들어 Foundry를 사용하고 다음에 연결하면:
 
-- Injective EVM 테스트넷, 작동합니다
-- `localhost` 시뮬레이션된 EVM 네트워크, 작동하지 않습니다
+- Injective EVM 테스트넷 또는 메인넷, 작동합니다
+- Foundry의 인메모리 EVM 또는 일반 `anvil` 노드, precompile 호출이 실패합니다
 
-후자의 문제를 해결하기 위해 Foundry 도구를 포크하여
-Injective precompiles(`BankERC20.sol` 및 MTS에 필요한 Bank precompile부터 시작)를 지원하도록 했습니다.
-Foundry 프로젝트로 Solidity 테스트 또는 배포 스크립트를 사용하는 경우
-`forge`/`cast`가 로컬 시뮬레이션을 수행할 수 있도록 이것이 필요합니다.
+로컬 개발에는 두 가지 옵션이 있습니다:
 
-x86_64 Linux 및 macOS ARM64용 사전 빌드된 바이너리가 포함된 최신 릴리스는
-[github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)에서 찾을 수 있습니다.
+- **포크된 Foundry 도구.** Injective는 precompile 지원(`BankERC20.sol` 및 MTS에 필요한
+  Bank precompile부터 시작)이 포함된 Foundry 포크를 유지 관리하므로, `forge`와 `cast`가
+  로컬 시뮬레이션에서 Solidity 테스트 및 배포 스크립트를 실행할 수 있습니다. 사전 빌드된 바이너리는
+  릴리스별로
+  [github.com/InjectiveLabs/foundry/releases](https://github.com/InjectiveLabs/foundry/releases)에 게시됩니다.
+- **로컬 Injective devnet.** [inj-examples](https://github.com/InjectiveLabs/inj-examples)에는
+  모든 precompile을 `localhost:8545`에서 사용할 수 있는 실제 `injectived` 노드와
+  로컬 Blockscout 탐색기를 실행하는 dockerized 로컬 환경(`templates/foundry` 및 `examples/precompiles` 참조)이
+  포함되어 있습니다. 이는 시뮬레이션이 아닌 완전한 체인 환경입니다.
 
 <Warning>
-이 포크된 버전의 Foundry에서 Injective precompiles에 대한 지원을 활성화하려면 구성 파일 `foundry.toml` 내에서 `injective = true`를 설정하거나 환경 변수 `FOUNDRY_INJECTIVE=true`를 사용해야 합니다.
+포크된 버전의 Foundry에서 Injective precompiles에 대한 지원을 활성화하려면 구성 파일 `foundry.toml` 내에서 `injective = true`를 설정하거나 환경 변수 `FOUNDRY_INJECTIVE=true`를 사용해야 합니다. 이 설정은 포크에만 적용되며 dockerized devnet에는 적용되지 않습니다.
 </Warning>
 
 ## Injective에서 어떤 EVM 개발 인프라를 사용할 수 있나요?
