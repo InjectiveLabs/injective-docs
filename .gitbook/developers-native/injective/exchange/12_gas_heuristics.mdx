@@ -13,6 +13,8 @@ curl -fsS https://sentry.lcd.injective.network/injective/exchange/v2/exchangePar
 
 The suggested transaction gas limit (`gasWanted`) adds an estimated 120,000 gas for transaction checks to the exchange message gas. For multiple messages, budget for the sum of their message costs and the checks for the whole transaction. Simulate the exact transaction and leave headroom when setting the limit.
 
+Binary options markets were removed in v1.21.0. Leave binary options fields empty when submitting `MsgBatchUpdateOrders`.
+
 ## Single messages
 
 | Native exchange message | Fixed message gas | Suggested gas limit |
@@ -49,7 +51,39 @@ For these estimates, allow 120,000 gas for transaction checks plus about 3,000 g
 | `MsgBatchCreateDerivativeLimitOrders` with regular orders | 120,000 + N × 455,000 |
 | `MsgBatchCancelDerivativeOrders` | 120,000 + N × 255,000 |
 
-For `MsgBatchUpdateOrders`, sum the message charges for each explicit create and cancel. Price post only, GTB, and immediate atomic orders individually. For cancel all, count the orders in each targeted market for the specified subaccount and multiply by the market's cancellation charge. Budget about 3,000 gas for transaction checks per explicit order or cancel all market ID.
+### MsgBatchUpdateOrders
+
+The v2 message has the following Go fields. Protobuf tags are omitted for readability.
+
+```go
+type MsgBatchUpdateOrders struct {
+    Sender                            string
+    SubaccountId                      string
+    SpotMarketIdsToCancelAll          []string
+    DerivativeMarketIdsToCancelAll    []string
+    SpotOrdersToCancel                []*OrderData
+    DerivativeOrdersToCancel          []*OrderData
+    SpotOrdersToCreate                []*SpotOrder
+    DerivativeOrdersToCreate          []*DerivativeOrder
+    BinaryOptionsOrdersToCancel       []*OrderData       // Leave empty on v1.21.
+    BinaryOptionsMarketIdsToCancelAll []string           // Leave empty on v1.21.
+    BinaryOptionsOrdersToCreate       []*DerivativeOrder // Leave empty on v1.21.
+    SpotMarketOrdersToCreate          []*SpotOrder
+    DerivativeMarketOrdersToCreate    []*DerivativeOrder
+    BinaryOptionsMarketOrdersToCreate []*DerivativeOrder // Leave empty on v1.21.
+}
+```
+
+Use the single message table to price each operation in the batch.
+
+| Message fields | Gas calculation |
+| --- | --- |
+| `SpotOrdersToCreate`, `DerivativeOrdersToCreate` | Add the limit order charge for each order, including any post only or GTB pricing. |
+| `SpotMarketOrdersToCreate`, `DerivativeMarketOrdersToCreate` | Add the market order charge for each order. Use the immediate atomic rate where applicable. |
+| `SpotOrdersToCancel`, `DerivativeOrdersToCancel` | Add the corresponding cancellation charge per listed order. |
+| `SpotMarketIdsToCancelAll`, `DerivativeMarketIdsToCancelAll` | Set `SubaccountId`. Count the orders in each targeted market for that subaccount and apply the corresponding cancellation charge to each order found. |
+
+Budget about 3,000 gas for transaction checks per explicit order or cancel all market ID.
 
 | Example operations in one batch | Estimated gas |
 | --- | ---: |
