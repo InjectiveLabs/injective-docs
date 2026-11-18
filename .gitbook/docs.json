@@ -1125,6 +1125,7 @@
                       "cn/developers-evm/bank-precompile",
                       "cn/developers-evm/exchange-precompile",
                       "cn/developers-evm/oracle-precompile",
+                      "cn/developers-evm/swap-precompile",
                       "cn/developers-evm/erc20-module",
                       "cn/developers-evm/infrastructure-and-tooling",
                       "cn/developers-evm/evm-gateway",
@@ -2495,6 +2496,10 @@
     "eyebrows": "breadcrumbs"
   },
   "redirects": [
+    {
+      "source": "/developers-evm/swap-precompile-guide",
+      "destination": "/developers-evm/swap-precompile"
+    },
     {
       "source": "/quickstart",
       "destination": "/"
