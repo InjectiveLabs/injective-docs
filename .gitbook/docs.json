@@ -146,10 +146,11 @@
                           "infra/upgrade-node",
                           "infra/coordinated-upgrades/index",
                           "infra/validator-mainnet/canonical-chain-upgrade",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5",
+                          "infra/validator-mainnet/canonical-chain-upgrade-v1.21.0",
                           {
                             "group": "Historical Upgrades",
                             "pages": [
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.3",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.2",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4",
@@ -3321,7 +3322,7 @@
     },
     {
       "source": "/upgrade/latest",
-      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5"
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.21.0"
     }
   ],
   "navbar": {
