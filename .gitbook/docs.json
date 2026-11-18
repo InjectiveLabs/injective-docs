@@ -2457,6 +2457,10 @@
   },
   "redirects": [
     {
+      "source": "/developers-evm/swap-precompile-guide",
+      "destination": "/developers-evm/swap-precompile"
+    },
+    {
       "source": "/quickstart",
       "destination": "/"
     },
