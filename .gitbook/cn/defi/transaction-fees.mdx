@@ -3,51 +3,16 @@ title: Gas 和费用
 updatedAt: "2026-02-03"
 ---
 
-## Gas 和费用 {#gas-and-fees}
+在原生执行层上，gas 衡量一笔交易消耗的工作量，包括签名检查、状态读写和消息执行。交易会声明一个 gas 上限（`gasWanted`），并以 INJ 支付费用。已使用的 gas（`gasUsed`）报告执行消耗了上限中的多少。
 
-<Callout icon="info" color="#07C1FF" iconType="regular">
-了解 Injective 上 `Gas` 和 `Fees` 之间的区别。
+## 原生交易费用 {#native-transaction-fees}
 
-有用的基础阅读：[Gas Metering](https://docs.cosmos.network/sdk/latest/learn/concepts/context-gas-events#gas-metering)、[Auth 模块 Gas 与费用](https://docs.cosmos.network/sdk/latest/modules/auth/auth#gas-&-fees)
-</Callout>
+设置 gas 价格后，将 gas 上限乘以该价格即可计算费用，必要时向上取整到最接近的基础单位。**`inj`** 面额使用 18 位小数。例如，gas 上限为 `104,519`、每单位 gas 价格为 `160,000,000` 个基础单位时，费用为 `0.00001672304 INJ`。
 
-<Callout icon="info" color="#22C55E" iconType="regular">
-**Exchange 模块 gas 启发式：** 有关 exchange 模块中各消息类型（下单、撤单、市场操作）的详细 gas 成本，请参阅 [Gas 启发式参考](/developers-native/injective/exchange/12_gas_heuristics)。
-</Callout>
+交易 gas 计量器根据声明的上限跟踪工作量。区块 gas 计量器跟踪一个区块内所有交易的工作量，并强制执行区块 gas 上限。交易检查在消息执行之前进行。模块也可以在每个区块的开始和结束时执行工作。
 
-Gas 代表在状态机上执行特定操作所需的计算工作量。
+## Exchange 交易 gas {#exchange-transaction-gas}
 
-Injective 利用 gas 概念来跟踪执行期间操作的资源使用情况。Injective 上的操作表示为对链存储的读取或写入。
+下单、撤单和批量操作有不同的 gas 要求。请使用 [Exchange Gas 启发式](/developers-native/injective/exchange/12_gas_heuristics)估算原生 exchange 交易的 gas，包括 post only 订单和带有过期区块的订单。提交之前，请对完整交易进行模拟。
 
-在消息执行期间计算并向用户收取费用。此费用是根据消息执行中消耗的所有 gas 的总和计算的：
-
-```
-fee = gas * gas price
-```
-
-Gas 用于确保操作不需要过多的计算能力来完成，并阻止恶意用户向网络发送垃圾邮件。
-
-<Callout icon="info" color="#07C1FF" iconType="regular">
-**最低 gas 价格：** 验证者设置的最低 gas 价格目前为 `160,000,000inj`。要找到以 `inj` 支付的金额，将 gas 价格乘以 gas 数量并除以 1e18（INJ 有 18 位小数）。
-
-**例如：** 如果 `gasWanted` 是 104,519，那么 `gasFees` = 160,000,000 * 104,519 / 1e18 = 0.000016723`inj`
-</Callout>
-
-### Cosmos SDK `Gas` {#cosmos-sdk-gas}
-
-在 Cosmos SDK 中，gas 在主 `GasMeter` 和 `BlockGasMeter` 中跟踪：
-
-* `GasMeter`：跟踪导致状态转换的执行期间消耗的 gas。它在每次交易执行时重置。
-* `BlockGasMeter`：跟踪区块中消耗的 gas，并强制 gas 不超过预定义的限制。此限制在 Tendermint 共识参数中定义，可以通过治理参数更改提案进行更改。
-
-有关 Cosmos SDK 中 gas 的更多信息，请参阅[这里](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/learn/beginner/04-gas-fees.md)。
-
-在 Cosmos 中，有些操作类型不是由交易触发的，但也可能导致状态转换。具体例子是 `BeginBlock` 和 `EndBlock` 操作以及 `AnteHandler` 检查，它们可能在运行交易的状态转换之前也会读取和写入存储。
-
-#### `BeginBlock` 和 `EndBlock` {#beginblock-and-endblock}
-
-这些操作由 Tendermint Core 的应用区块链接口 (ABCI) 定义，并由每个 Cosmos SDK 模块定义。顾名思义，它们分别在每个区块处理的开始和结束时执行（即交易执行前后）。
-
-#### `AnteHandler` {#antehandler}
-
-Cosmos SDK [`AnteHandler`](https://docs.cosmos.network/sdk/latest/modules/auth) 在交易执行之前执行基本检查。这些检查通常是签名验证、交易字段验证、交易费用等。
+有关交易所交易费用，请参阅[交易费用和返佣](/cn/defi/trading/fees)。

@@ -29,7 +29,7 @@ Injective 提供完全链上的订单簿，撮合引擎能力直接内置于协�
 | **Exchange Module** | Injective 的原生链上模块，完全在链上处理限价订单簿管理、交易执行、订单撮合和结算。 |
 | **Denom** | Injective 上的原生代币表示格式（例如 `factory/{creator}/{subdenom}`、`peggy{ethereumAddress}`）。Bank 模块中的所有资产都使用此格式。 |
 | **Oracle Provider** | 通过治理注册、向链中继价格馈送的外部方，可支持永续合约和二元期权等自定义市场。 |
-| **Token Factory** | 一个原生模块，允许以 `factory/{creator}/{subdenom}` 格式无需许可地创建新代币。 |
+| **[Token Factory](/developers-native/injective/tokenfactory)** | 一个原生模块，允许以 `factory/{creator}/{subdenom}` 格式无需许可地创建新代币。 |
 | **Tick Size** | 交易市场中价格和数量的最小增量，根据资产价值和小数位数计算。 |
 
 ## 在 Injective 上构建订单簿 DEX {#build-an-orderbook-dex-on-injective}
@@ -105,21 +105,21 @@ Injective 激励机制的目标是允许交易所相互竞争，以提供更好�
     将测试网水龙头集成到你的 dApp 中，通过简单的 POST 请求为用户提供测试 INJ 代币。
   </Card>
   <Card
-    title="最小价格 Tick Size"
-    href="/cn/developers-defi/calculate-min-price-tick-size/"
+    title="价格 Tick Size"
+    href="/cn/defi/trading/price-tick-size/"
     arrow="true"
     cta="点击这里"
     icon="panel-left-close"
     img="/img/txs-hero.png">
-    根据基础资产的美元价值和小数精度，计算市场的最小价格 tick size。
+    查看允许的价格增量，并在显示单位和链上单位之间进行转换。
   </Card>
   <Card
-    title="最小数量 Tick Size"
-    href="/cn/developers-defi/min-quantity-tick-size/"
+    title="数量 Tick Size"
+    href="/cn/defi/trading/quantity-tick-size/"
     arrow="true"
     cta="点击这里"
     icon="panel-left-close"
     img="/img/txs-hero.png">
-    根据报价资产的美元价值和期望的最小名义价值，计算市场的最小数量 tick size。
+    查看现货和衍生品市场允许的订单数量增量。
   </Card>
 </Columns>

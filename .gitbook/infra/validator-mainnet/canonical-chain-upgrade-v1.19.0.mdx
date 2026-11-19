@@ -47,12 +47,6 @@ In the event that the upgrade does not succeed, validators and operators must re
 
 ### Notes for Validators
 
-<Callout icon="warning" color="#FFA500" iconType="regular">
-**Source builds require Go v1.26.2**
-
-The v1.19.0 source has already been released and raises the minimum Go version to `go1.26.2`. Validators building `injectived` or `peggo` from source should upgrade their Go environment before the chain halt to avoid build-time surprises. Teams deploying the published binaries or Docker image do not need to make any additional environment changes.
-</Callout>
-
 You must remove the wasm cache before upgrading to the new version:
 
 ```shell

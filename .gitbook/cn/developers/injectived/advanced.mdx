@@ -13,28 +13,28 @@ updatedAt: "2026-02-13"
 
 ### `add-genesis-account`
 
-向 `genesis.json` 添加创世账户。有关 `genesis.json` 的更多信息，请参阅加入测试网或加入主网指南。
+向 `genesis.json` 添加创世账户。完整的 genesis 设置请参阅[运行本地原生节点](/cn/developers-native/developer-setup/local-network)。
 
 **语法**
 
 ```bash
-injectived add-genesis-account <address-or-key-name> <amount><coin-denominator>
+injectived genesis add-genesis-account <address-or-key-name> <amount><coin-denominator>
 ```
 
 **示例**
 
 ```bash
-injectived add-genesis-account acc1 100000000000inj
+injectived genesis add-genesis-account acc1 100000000000inj
 ```
 
 ### `collect-gentxs`
 
-收集创世交易并将其输出到 `genesis.json`。有关 `genesis.json` 的更多信息，请参阅[此处](../../infra/join-a-network/)的加入测试网或加入主网指南。
+收集创世交易并将其输出到 `genesis.json`。请参阅[将验证者添加到 genesis](/cn/developers-native/developer-setup/local-network#add-the-validator-to-genesis)。
 
 **语法**
 
 ```bash
-injectived collect-gentxs
+injectived genesis collect-gentxs
 ```
 
 ### `debug`

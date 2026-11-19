@@ -7,33 +7,35 @@ updatedAt: "2026-02-13"
 
 本节涵盖在 Injective 网络上运营所需的一切：设置节点、管理升级、运行跨链桥 orchestrator 以及配置 indexer 服务。
 
+<a id="architecture" />
+
 <Columns cols={2}>
   <Card
-    title="架构"
-    href="#architecture"
+    title="网络架构"
+    href="/cn/infra/network-architecture"
     arrow="true"
     cta="了解更多"
     icon="sitemap">
-    节点类型、网络拓扑、共识层和进程管理
+    了解验证者、哨兵节点、中继器、轻客户端和 API 服务如何协同工作
   </Card>
   <Card
-    title="节点运营"
+    title="运行主网节点"
     href="/cn/infra/run-node"
     arrow="true"
     cta="开始使用"
     icon="server">
-    设置 keyring、配置验证者、与节点交互以及管理 Cosmovisor
+    安装并配置 injectived，与主网同步，并验证你的节点
   </Card>
 </Columns>
 
 <Columns cols={2}>
   <Card
-    title="加入网络"
+    title="运行测试网节点"
     href="/cn/infra/join-a-network"
     arrow="true"
     cta="同步节点"
     icon="network-wired">
-    安装二进制文件，并通过快照、状态同步或区块同步与主网或测试网同步
+    安装测试网二进制文件、配置节点并与测试网同步
   </Card>
   <Card
     title="升级"
@@ -45,27 +47,3 @@ updatedAt: "2026-02-13"
   </Card>
 </Columns>
 
----
-
-## 架构 {#architecture}
-
-Injective 使用带有拜占庭容错（BFT）机制的 CometBFT（前身为 Tendermint）共识，实现亚秒级最终性。该网络需要具备企业级规格（128GB 内存、高主频 CPU、NVMe 存储）的裸机服务器，以处理高吞吐量的交易活动。
-
-### 节点类型 {#node-types}
-
-| 节点 | 角色 |
-|------|------|
-| **验证者节点** | 通过提议区块和对区块投票参与共识。需要质押 INJ 作为抵押品，并需要高可用性硬件。 |
-| **[哨兵节点](/cn/developers/concepts/sentry-node)** | 一个全节点，通过中继流量使验证者免于直接暴露在公网中，充当验证者与公共网络之间的网关。 |
-
-### 关键组件 {#key-components}
-
-| 组件 | 用途 |
-|-----------|---------|
-| **[Cosmovisor](/cn/infra/cosmovisor)** | 自动化链二进制升级的进程管理器，在治理批准的升级发生时实现零停机切换。设置方法请参阅[节点运营](/cn/infra/run-node)。 |
-| **[Peggo](/cn/infra/validator-mainnet/peggo)** | 在 Ethereum 和 Injective 之间中继消息的跨链桥 orchestrator。验证者必须运行。 |
-| **[WebSocket Server](https://github.com/InjectiveFoundation/injective-core)** | 通过 WebSocket 流式传输实时链事件，封装 gRPC Chain Stream 服务器以支持标准 WebSocket 连接。 |
-
-### 链升级 {#chain-upgrades}
-
-Injective 会定期在预定的区块高度进行协调软件升级。所有节点都必须切换到新的二进制文件以保持共识。有关流程，请参阅[升级](/cn/infra/upgrade-node)；有关故障排除，请参阅[协调升级](/cn/infra/coordinated-upgrades)指南。

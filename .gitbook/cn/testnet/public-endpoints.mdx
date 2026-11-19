@@ -1,0 +1,50 @@
+---
+title: 测试网公共端点
+sidebarTitle: 公共端点
+description: Injective 测试网的公共 REST、RPC、WebSocket、gRPC 和 indexer 端点。
+updatedAt: "2026-11-18"
+---
+
+使用这些端点连接到 Injective 测试网。原生 chain ID 为 `injective-888`，EVM chain ID 为 `1439`（`0x59f`）。
+
+## 原生链 {#native-chain}
+
+| 服务 | 地址 |
+| --- | --- |
+| Chain Swagger | [`https://testnet.sentry.lcd.injective.network/swagger/`](https://testnet.sentry.lcd.injective.network/swagger/) |
+| Chain RPC | `https://testnet.sentry.tm.injective.network:443` |
+| Chain LCD | `https://testnet.sentry.lcd.injective.network:443` |
+| Chain WebSocket | `wss://testnet.sentry.tm.injective.network:443/websocket` |
+| Chain Streamer | `testnet.sentry.chain.stream.injective.network:443` |
+| Chain gRPC | `testnet.sentry.chain.grpc.injective.network:443` |
+| Chain gRPC-Web | `https://testnet.sentry.chain.grpc-web.injective.network:443` |
+
+## EVM {#evm}
+
+| 服务 | 地址 |
+| --- | --- |
+| EVM JSON-RPC | `https://k8s.testnet.json-rpc.injective.network/` |
+| EVM WebSocket | `wss://k8s.testnet.ws.injective.network/` |
+
+有关钱包设置和归档网关，请参阅 [EVM 网络信息](/cn/developers-evm/network-information)。
+
+## Indexer {#indexer}
+
+| 服务 | 地址 |
+| --- | --- |
+| Indexer Swagger | [`https://testnet.sentry.exchange.grpc-web.injective.network/swagger/#/`](https://testnet.sentry.exchange.grpc-web.injective.network/swagger/#/) |
+| Indexer gRPC | `testnet.sentry.exchange.grpc.injective.network:443` |
+| Indexer gRPC-Web | `https://testnet.sentry.exchange.grpc-web.injective.network:443` |
+| Indexer EventProvider | `eventprovider.grpc.testnet.injective.network:443` |
+| Indexer EventProvider gRPC-Web | `https://eventprovider.grpc-web.testnet.injective.network` |
+
+## 测试网工具 {#testnet-tools}
+
+| 服务 | 地址 |
+| --- | --- |
+| Hub | [`https://testnet.hub.injective.network/`](https://testnet.hub.injective.network/) |
+| Explorer | [`https://testnet.explorer.injective.network/`](https://testnet.explorer.injective.network/) |
+| Faucet | [`https://testnet.faucet.injective.network/`](https://testnet.faucet.injective.network/) |
+| Status | [`https://uptime.com/statuspage/testnet.status.injective.network`](https://uptime.com/statuspage/testnet.status.injective.network) |
+
+更多水龙头、浏览器以及当前版本，请参阅 [Testnet Chain Portal](https://chain.injective.network/testnet)。

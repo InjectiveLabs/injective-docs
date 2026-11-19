@@ -89,7 +89,7 @@ curl --fail --silent --show-error --get \
 Decimals 实际上只能写入一次。一旦 bank 元数据记录了非零的 `decimals`，之后的修改会失败并报 `cannot update denom metadata decimals`。在提交提案之前，请根据 Ethereum 代币的 `decimals()` 确认该值，因为之后无法更正。
 </Warning>
 
-**对于 TokenFactory denom（`factory/...`）：** denom 管理员可以直接调用 `MsgSetDenomMetadata`。请参阅 [TokenFactory 示例](/cn/developers-native/examples/token-factory)。
+**对于 [TokenFactory denom](/developers-native/injective/tokenfactory)（`factory/...`）：** denom 管理员可以直接调用 `MsgSetDenomMetadata`。请参阅 [TokenFactory 示例](/cn/developers-native/examples/token-factory)。
 
 **用于在 Injective dApp 中进行前端展示：** 将你的代币提交到 [injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)。这与链上元数据是分开的，不会影响 MetaMask 或 Blockscout。
 

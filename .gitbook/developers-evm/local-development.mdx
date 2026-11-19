@@ -1,0 +1,44 @@
+---
+title: "Local EVM Development"
+description: "Start the bootstrapped Injective EVM localnet from inj-examples and connect your wallet and development tools."
+updatedAt: "2026-11-18"
+---
+
+Use the [bootstrapped localnet in `inj-examples`](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/precompiles/README.md#local-development) to deploy Solidity contracts and test Injective’s native precompiles through Ethereum JSON-RPC. The example starts a real Injective node with pre-funded development accounts and a local Blockscout explorer.
+
+Use Anvil or Hardhat’s in-memory chain for standard EVM unit tests. Use the Injective localnet when your contract calls native precompiles. For custom genesis, Cosmos SDK modules, or native protocol changes, see [Run a Local Native Node](/developers-native/developer-setup/local-network).
+
+## Start the Localnet
+
+Install Docker with Docker Compose, `jq`, and Foundry. Clone the example and initialize the chain once.
+
+```bash
+git clone https://github.com/InjectiveLabs/inj-examples.git
+cd inj-examples/examples/precompiles
+make local-init
+make local-start
+```
+
+| Setting | Value |
+| --- | --- |
+| EVM JSON-RPC | `http://localhost:8545` |
+| EVM chain ID | `1776` |
+| Currency | INJ |
+| Blockscout | `http://localhost:3000` |
+
+Check that your client is connected:
+
+```bash
+cast chain-id --rpc-url http://localhost:8545
+cast block-number --rpc-url http://localhost:8545
+```
+
+The setup prints instructions for accessing the funded accounts. Use those accounts only on the local chain. Import a funded account into your wallet or configure it in Foundry or Hardhat against the local RPC.
+
+## Deploy and Test
+
+Use the [precompiles example](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/precompiles/README.md#quick-start) to deploy a standard contract or a Bank-backed ERC20. If you want to start a new project, the [Foundry template](https://github.com/InjectiveLabs/inj-examples/blob/main/templates/foundry/README.md#local-development) includes the same local environment.
+
+The local chain starts with an empty swap allowlist. For a complete test that creates and allowlists a market, seeds its order book, and executes swaps, use the [swap localnet demo](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/swap-precompile/README.md#full-localnet-demo).
+
+Run `make local-stop` to stop the services. Run `make local-start` to resume with the same state.

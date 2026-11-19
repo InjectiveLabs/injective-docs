@@ -37,7 +37,11 @@ updatedAt: "2026-09-01"
 
 ## 常见问题与解决方案 {#common-problems-and-solutions}
 
-### 节点卡在升级高度 {#node-stuck-at-upgrade-height}
+<AccordionGroup>
+
+<a id="node-stuck-at-upgrade-height" />
+
+<Accordion title="节点卡在升级高度">
 
 **症状：**
 - 节点日志显示链在预期的升级高度处停机
@@ -53,9 +57,11 @@ updatedAt: "2026-09-01"
 4. 验证：`injectived version`
 5. 启动节点
 
----
+</Accordion>
 
-### 升级后区块头哈希不匹配 {#block-header-hash-mismatch-after-upgrade}
+<a id="block-header-hash-mismatch-after-upgrade" />
+
+<Accordion title="升级后区块头哈希不匹配">
 
 **症状：**
 
@@ -83,9 +89,11 @@ err="wrong Block.Header.LastResultsHash. Expected 284C339C..., got 694706724..."
 在拥有大型数据库（数百 GB）的归档节点上执行回滚可能耗时极长或失败。对于这类节点，请改为从快照恢复。
 </Warning>
 
----
+</Accordion>
 
-### 冲突投票警告 {#conflicting-vote-warnings}
+<a id="conflicting-vote-warnings" />
+
+<Accordion title="冲突投票警告">
 
 **症状：**
 
@@ -117,9 +125,11 @@ height=181027006 module=consensus round=40 type=SIGNED_MSG_TYPE_PREVOTE
 如果链上检测到冲突投票，验证者将被墓碑处理（tombstoned，即永久监禁）。对于双重签名，不存在链上解禁（unjail）的途径。
 </Warning>
 
----
+</Accordion>
 
-### 验证者被 tombstoned（双重签名） {#validator-tombstoned-double-signed}
+<a id="validator-tombstoned-double-signed" />
+
+<Accordion title="验证者被 tombstoned（双重签名）">
 
 **症状：**
 
@@ -150,9 +160,11 @@ injectived query slashing signing-info injvalcons1...
 - 始终在停止节点后备份 `priv_validator_state.json`
 - 绝不同时运行两个使用相同签名密钥的节点
 
----
+</Accordion>
 
-### 从快照恢复 {#recovering-from-a-snapshot}
+<a id="recovering-from-a-snapshot" />
+
+<Accordion title="从快照恢复">
 
 **适用场景：** 当回滚失败、耗时过长，或节点状态损坏到无法修复（AppHash 不匹配）时使用。
 
@@ -255,9 +267,11 @@ Block:  100  105  110  115  120  125  126
 grep db_backend ~/.injectived/config/config.toml
 ```
 
----
+</Accordion>
 
-### 回滚挂起或失败 {#rollback-hangs-or-fails}
+<a id="rollback-hangs-or-fails" />
+
+<Accordion title="回滚挂起或失败">
 
 **症状：** `injectived rollback` 一直运行但始终无法完成，或产生错误。
 
@@ -271,9 +285,11 @@ grep db_backend ~/.injectived/config/config.toml
 - 对于大型节点：如果回滚超过 30 分钟仍未完成，请中止并使用快照
 - 考虑切换到 goleveldb。PebbleDB 更节省空间，但在回滚方面测试较少
 
----
+</Accordion>
 
-### 追赶期间的轮次回退错误 {#round-regression-errors-during-catchup}
+<a id="round-regression-errors-during-catchup" />
+
+<Accordion title="追赶期间的轮次回退错误">
 
 **症状：**
 
@@ -300,9 +316,11 @@ INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
 如果在正常运行期间保留此设置，1ms 的 delta 会使轮次推进速度远快于投票在网络中传播的速度。你的验证者会在其他验证者的预提交到达之前进入下一轮，导致其投票错过实际的提交轮次。结果是错过区块的计数器持续攀升，如果错过的区块足够多（通常为最近 10,000 个区块中的 500 个），**验证者将因停机而被监禁（jailed）**。
 </Warning>
 
----
+</Accordion>
 
-### AppHash 不匹配 {#apphash-mismatch}
+<a id="apphash-mismatch" />
+
+<Accordion title="AppHash 不匹配">
 
 **症状：**
 
@@ -318,19 +336,23 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 2. 如果回滚失败或错误仍然存在：从快照恢复
 3. 恢复后始终还原 `priv_validator_state.json`
 
----
+</Accordion>
 
-### CometBFT 状态同步后 AppHash 不匹配 {#apphash-mismatch-after-cometbft-state-sync}
+<a id="apphash-mismatch-after-cometbft-state-sync" />
+
+<Accordion title="CometBFT 状态同步后 AppHash 不匹配">
 
 **症状：** 在 CometBFT 状态同步成功恢复后，在第一个区块上立即出现 AppHash 错误。
 
 **原因：** CometBFT 状态同步（在 `config.toml` 的 `[statesync]` 中配置的 P2P 协议）会恢复 IAVL 状态树，但**不会**恢复包含已编译 CosmWasm 合约字节码的 `wasm/` 目录。缺少这些文件时，本地计算出的 app hash 将与网络的不一致。
 
-**解决方案：** 使用手动快照恢复代替状态同步。Injective 的官方快照包含 `wasm/` 目录。如果必须使用状态同步，请从可信来源获取 `wasm/` 目录，并在启动节点之前将其放置在 `~/.injectived/data/wasm/`。有关状态同步与快照恢复之间的区别，请参阅[加入网络：同步方式](/cn/infra/join-a-network)。
+**解决方案：** 使用手动快照恢复代替状态同步。Injective 的官方快照包含 `wasm/` 目录。如果必须使用状态同步，请从可信来源获取 `wasm/` 目录，并在启动节点之前将其放置在 `~/.injectived/data/wasm/`。有关状态同步和快照恢复的详细信息，请参阅[主网同步方式](/cn/infra/run-node#sync-options)。
 
----
+</Accordion>
 
-### 升级后哨兵节点卡住 {#sentry-nodes-stuck-after-upgrade}
+<a id="sentry-nodes-stuck-after-upgrade" />
+
+<Accordion title="升级后哨兵节点卡住">
 
 **症状：** 验证者节点已升级并正在签名，但哨兵节点仍停留在旧的区块高度。
 
@@ -338,9 +360,11 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 
 **解决方案：** 将哨兵节点升级到与验证者相同的二进制版本。哨兵节点没有 `priv_validator_state.json`（它们不签名），但它们确实需要正确的二进制文件。
 
----
+</Accordion>
 
-### 升级后链停滞（投票权不足） {#chain-stalled-after-upgrade-insufficient-voting-power}
+<a id="chain-stalled-after-upgrade-insufficient-voting-power" />
+
+<Accordion title="升级后链停滞（投票权不足）">
 
 **症状：**
 
@@ -375,9 +399,11 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 这个窗口期持续得越久，轮次编号攀升得越高。较晚上线的验证者需要追赶所有这些轮次，这正是 `--unsafe-consensus-timeout-precommit-delta=1ms` 标志存在的原因，但请记住在[链稳定后移除它](#round-regression-errors-during-catchup)。
 </Note>
 
----
+</Accordion>
 
-### 因停机被监禁（非 tombstoned） {#jailed-for-downtime-not-tombstoned}
+<a id="jailed-for-downtime-not-tombstoned" />
+
+<Accordion title="因停机被监禁（非 tombstoned）">
 
 **症状：**
 - 验证者显示为非活跃或被监禁（jailed）
@@ -402,7 +428,9 @@ panic: Tendermint state.AppHash does not match AppHash after replay
    injectived query staking validator <injvaloper_address>
    ```
 
----
+</Accordion>
+
+</AccordionGroup>
 
 ## 协调升级检查清单 {#coordinated-upgrade-checklist}
 

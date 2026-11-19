@@ -1,0 +1,26 @@
+---
+title: 数量 Tick Size
+description: 查看 Injective 现货和衍生品市场允许的订单数量增量。
+updatedAt: "2026-11-18"
+---
+
+市场的最小数量 tick size 是订单数量必须遵循的增量。如果数量 tick 为 `0.001`，那么 `0.001` 和 `0.002` 等数量都是有效增量，而数量为 `0.0011` 的订单会被拒绝。准备订单时，请使用该市场当前的 `minQuantityTickSize`。
+
+## 在显示单位和链上单位之间转换数量 tick {#convert-a-quantity-tick-between-display-and-chain-units}
+
+对于现货市场，将显示的数量 tick 乘以 10 的 **base** 代币小数位数次方，即可得到链上值。将链上 tick 除以同一系数即可得到显示值。如果你的 API 或 SDK 已经以显示单位返回 tick，请直接使用该值。
+
+对于 base 为 18 位小数的现货市场，显示单位为 `0.001` 的 tick 在链上单位中为 `1000000000000000`。
+
+```typescript
+import { toChainFormat, toHumanReadable } from '@injectivelabs/utils'
+
+const baseDecimals = 18
+const displayTick = '0.001'
+const chainTick = toChainFormat(displayTick, baseDecimals).toFixed()
+const convertedDisplayTick = toHumanReadable(chainTick, baseDecimals).toFixed()
+```
+
+对于永续合约和到期期货，数量 tick 在显示单位和链上单位中使用相同的值。
+
+有关订单价格增量，请参阅[价格 Tick Size](/cn/defi/trading/price-tick-size)；有关市场查询，请参阅 [Exchange 查询](/cn/developers-native/query-chain/exchange)。

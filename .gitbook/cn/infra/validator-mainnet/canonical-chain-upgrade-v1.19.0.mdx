@@ -47,12 +47,6 @@ Injective 链将于 **2026 年 4 月 28 日（周二）美东时间上午 10:00 
 
 ### 验证者须知
 
-<Callout icon="warning" color="#FFA500" iconType="regular">
-**源码构建需要 Go v1.26.2**
-
-v1.19.0 源码已经发布，最低 Go 版本被提高到 `go1.26.2`。从源码构建 `injectived` 或 `peggo` 的验证者应在链停机之前升级其 Go 环境，避免构建时出现意外。使用已发布的二进制文件或 Docker 镜像部署的团队则无需额外调整环境。
-</Callout>
-
 升级到新版本之前，必须清除 wasm 缓存：
 
 ```shell

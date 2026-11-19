@@ -4,7 +4,7 @@ updatedAt: "2026-02-13"
 ---
 
 本节面向使用原生 Cosmos SDK 模块和基于 Go 的工具在 Injective 上构建的开发者。
-无论你是在开发自定义模块、查询链状态、构建交易，
+无论你是在集成原生模块、查询链状态、构建交易，
 还是与 Injective 的核心金融原语集成，
 都可以在这里找到原生开发路径的完整技术文档。
 
@@ -16,6 +16,17 @@ Injective 通过专为去中心化金融构建的模块扩展了 Cosmos SDK，
 用于协议升级的治理，以及在 EVM 和 Cosmos 环境之间统一代币余额的原生 bank 模块。
 对开发者而言，这意味着可以通过简洁的 Go API、gRPC 端点
 和丰富的消息类型使用机构级金融原语，并将它们组合成复杂的交易策略和 DeFi 应用。
+
+## 开发者环境设置 {#developer-setup}
+
+<CardGroup cols={2}>
+  <Card title="Injective 节点与 CLI" href="/cn/developers/injectived" icon="terminal" arrow="true">
+    安装 CLI、查询链，并处理交易和密钥。
+  </Card>
+  <Card title="运行本地节点" href="/cn/developers-native/developer-setup/local-network" icon="server" arrow="true">
+    配置 genesis，启动单验证者 Injective 链，并测试原生交易和查询。
+  </Card>
+</CardGroup>
 
 ## 关键概念 {#key-concepts}
 
