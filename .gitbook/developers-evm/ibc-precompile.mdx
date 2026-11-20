@@ -154,19 +154,36 @@ If `next_key` is present, set `PAGE_KEY` to that value and rerun the same comman
 
 ### Troubleshoot an outbound transfer
 
-Suppose a forwarder mints Circle USDC on Injective through CCTP and sends it over IBC. Start with the source burn hash to look up the attestation in Iris. Then inspect the Injective mint and send receipts. A forwarder can put both calls in one transaction, so they may share a hash. [CCTP transfer lifecycle](/developers-defi/usdc-cctp-tutorial#transfer-lifecycle)
+Suppose a forwarder mints Circle USDC on Injective through CCTP and sends it over IBC. Look up the source burn hash in [Circle Iris](https://developers.circle.com/cctp/references/technical-guide#api-service-hosts), using the [Mainnet attestation endpoint](https://iris-api.circle.com/v2/messages/0?transactionHash=YOUR_BURN_HASH) (or the [Testnet sandbox endpoint](https://iris-api-sandbox.circle.com/v2/messages/0?transactionHash=YOUR_BURN_HASH)). Replace `YOUR_BURN_HASH` with the burn transaction hash and `0` with the CCTP domain of the source chain if it differs from Ethereum or Sepolia. Then inspect the Injective mint and send receipts. Both operations can share a transaction hash if a forwarder runs them in one transaction. [CCTP transfer lifecycle](/developers-defi/usdc-cctp-tutorial#transfer-lifecycle)
 
-- **The send failed before dispatch.** Check the send transaction for a revert and a `send_packet` event. If the deadline expired before dispatch, rebuild the send with a fresh timeout. When a CCTP mint succeeds in a separate transaction, the minted funds remain with the mint recipient. When the enclosing transaction reverts after calling both the mint and the precompile, both operations roll back.
-- **The send dispatched.** Record the source port, source channel, and packet sequence from `send_packet`. Check the destination balance and query the acknowledgement on the **destination channel** using that sequence. Set `DESTINATION_LCD`, `DESTINATION_CHANNEL`, and `SEQUENCE` for the packet and run the query below.
+<AccordionGroup>
 
-  ```bash
-  curl -fsS "$DESTINATION_LCD/ibc/core/channel/v1/channels/$DESTINATION_CHANNEL/ports/transfer/packet_acks/$SEQUENCE" \
-    | jq -r '.acknowledgement | @base64d'
-  ```
+<Accordion title="The send failed before dispatch">
 
-- **The acknowledgement is missing or reports an error.** Check whether the relayer has delivered the packet or processed a timeout. A missing acknowledgement alone is insufficient to tell. Confirm an `acknowledge_packet` or `timeout_packet` event for the same source channel and sequence on Injective. A processed timeout or error acknowledgement refunds the calling contract. A successful destination acknowledgement can be written before the relayer processes it on Injective.
+Check the send transaction for a revert and a `send_packet` event. If the deadline expired before dispatch, rebuild the send with a fresh timeout. When a CCTP mint succeeds in a separate transaction, the minted funds remain with the mint recipient. When the enclosing transaction reverts after calling both the mint and the precompile, both operations roll back.
 
 If your application builds the send before a user signs it, allow time for signing and relaying. For flows that prepare the send before the CCTP attestation is ready, account for that wait as well. A relative timeout set by a route builder must be converted to the precompile’s absolute Unix timestamp in nanoseconds.
+
+</Accordion>
+
+<Accordion title="The send dispatched">
+
+Record the source port, source channel, and packet sequence from `send_packet`. Check the destination balance and query the acknowledgement on the **destination channel** using that sequence. Set `DESTINATION_LCD`, `DESTINATION_CHANNEL`, and `SEQUENCE` for the packet and run the query below.
+
+```bash
+curl -fsS "$DESTINATION_LCD/ibc/core/channel/v1/channels/$DESTINATION_CHANNEL/ports/transfer/packet_acks/$SEQUENCE" \
+  | jq -r '.acknowledgement | @base64d'
+```
+
+</Accordion>
+
+<Accordion title="The acknowledgement is missing or reports an error">
+
+Check whether the relayer has delivered the packet or processed a timeout. A missing acknowledgement alone is insufficient to tell. Confirm an `acknowledge_packet` or `timeout_packet` event for the same source channel and sequence on Injective. A processed timeout or error acknowledgement refunds the calling contract. A successful destination acknowledgement can be written before the relayer processes it on Injective.
+
+</Accordion>
+
+</AccordionGroup>
 
 ## Inbound EVM hooks
 
