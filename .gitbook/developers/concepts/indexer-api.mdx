@@ -1,14 +1,29 @@
 ---
 title: Indexer API
-updatedAt: "2025-12-05"
+description: How the Injective Indexer works and how to run the Docker Compose stack.
+updatedAt: "2026-11-19"
 ---
 
-The Indexer API is a collection of microservices that serve data indexed from the Injective chain. The Injective Chain emits events when a transaction is included and there is an event listener within the Indexer API that listens for these events, processes them, and stores the data in a MongoDB. Querying the chain directly is an expensive (and less performant) API call than querying an API serving data from a MongoDB which is why the Indexer API exists.
+The Injective Indexer turns chain events into data that applications can query and stream, including markets, orders, trades, and account activity. It stores the indexed data in MongoDB so applications can look up historical records and subscribe to updates without replaying blocks themselves.
 
-Another benefit of using the Indexer API is streaming. MongoDB can stream updates in the collections/documents which can be quite beneficial for a nice user experience. This way we don't need to poll for the data, instead, we can subscribe for a stream and update the state of our dApp on updates broadcasted within the stream.
+For endpoint definitions and request and response schemas, see the [Indexer API reference](https://api.injective.exchange/#indexer-api).
 
-Finally, the Indexer API can serve historical data or processed data over a period of time (ex: for drawing charts, etc).
+## How the Indexer works
 
-## Running your own indexer
+The diagram shows the Docker Compose deployment. **Exchange indexer services** groups Exchange Process, its database, and Exchange API. Trading apps consume that API from outside the deployment. Event Provider and optional Explorer use the same process-and-API pattern. The three named databases share one MongoDB replica set in the example deployment.
 
-If you want to run your own Injective Indexer service, see the [Indexer Service Setup Guide](https://injective.notion.site/Injective-Indexer-Service-Setup-Guide-7e59980634d54991862300670583d46a).
+![Injective Indexer deployment showing node and asset-service inputs, Event Provider, Exchange and Explorer services, and client API protocols.](/img/indexer-architecture.svg)
+
+- **Ingest and replay.** Event Provider fetches committed blocks and execution results from the node over CometBFT JSON-RPC and queries staking validator data over Cosmos gRPC. Exchange and Explorer consume the Event Provider API over gRPC and resume from their own saved block heights. A shared Event Provider can replace the local Event Provider pair. Its retained block range must cover every consumer's catch-up window.
+- **Index and serve.** Exchange Process builds records for markets, orders, trades, and accounts. Explorer Process indexes blocks and transactions. Their APIs query those records and use MongoDB change streams for supported subscriptions. Applications use the node's native endpoints for direct chain queries and transaction submission. See [Indexer queries](/developers-native/query-indexer), [Indexer streams](/developers-native/query-indexer-stream), and [public endpoints](/infra/public-endpoints).
+- **External dependencies.** Exchange Process and Exchange API call the **Asset Service** for token denomination metadata. The [mainnet Compose environment](https://github.com/InjectiveLabs/injective-indexer-releases/blob/master/docker/.env.mainnet.example#L36-L38) points to Injective-hosted endpoints and uses gRPC by default, with HTTP available as an option. Exchange Process also uses the node's LCD REST endpoint to reload market state during reconciliation. That migration needs an archival LCD that can serve the last indexed height. See the [market reconciliation steps](https://github.com/InjectiveLabs/injective-indexer-releases/blob/master/docker/CHANGELOG.md#mainnet).
+
+<a id="running-your-own-indexer" />
+
+## Service setup
+
+Run your own stack if your trading app, explorer, or analytics service needs dedicated API capacity or control over data retention and backfills. For development or integrations that can use hosted services, start with the [public endpoints](/infra/public-endpoints).
+
+Get the Docker Compose files for Event Provider, Exchange, and optional Explorer from the [Injective Indexer Releases repository](https://github.com/InjectiveLabs/injective-indexer-releases). Check [Software Compatibility](/infra/software-compatibility) for the Indexer version listed for your chain release.
+
+Follow the [Docker setup and migration guide](https://github.com/InjectiveLabs/injective-indexer-releases/blob/master/docker/README.md) to connect a node and start the services. For an existing deployment, review the [migration steps](https://github.com/InjectiveLabs/injective-indexer-releases/blob/master/docker/README.md#existing-installations) before applying the updated Compose files.

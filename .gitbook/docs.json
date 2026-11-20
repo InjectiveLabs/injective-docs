@@ -150,6 +150,7 @@
                         "group": "Upgrades",
                         "pages": [
                           "infra/upgrade-node",
+                          "infra/software-compatibility",
                           "infra/coordinated-upgrades/index",
                           "infra/validator-mainnet/canonical-chain-upgrade",
                           "infra/validator-mainnet/canonical-chain-upgrade-v1.21.0",
@@ -204,7 +205,6 @@
                         "group": "Indexer & Bridges",
                         "pages": [
                           "developers/concepts/indexer-api",
-                          "redirects/https_injective_notion_site_indexer_service_setup_guide",
                           "redirects/https_api_injective_network_swagger",
                           "infra/validator-mainnet/peggo"
                         ]
@@ -2483,6 +2483,10 @@
     "eyebrows": "breadcrumbs"
   },
   "redirects": [
+    {
+      "source": "/infra/indexer-setup",
+      "destination": "/developers/concepts/indexer-api#service-setup"
+    },
     {
       "source": "/faq",
       "destination": "/resources-index"

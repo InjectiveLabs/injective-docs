@@ -64,7 +64,7 @@ flowchart TB
 
 - **Built-in EVM gRPC** is the `injective.evm.v1.Query` service inside `injectived`. It provides EVM state queries and simulation methods such as `EthCall` and `EstimateGas` to gRPC clients, including EVM Gateway. See the [EVM query definitions](https://github.com/InjectiveLabs/injective-proto/blob/master/all_protos/injective/evm/v1/query.proto).
 - **EVM Gateway** runs separately from `injectived`. It reads CometBFT block data and uses native gRPC queries, builds a local index of EVM blocks, transactions, receipts, and logs, and serves Ethereum JSON-RPC. See the [EVM Gateway explainer](/developers-evm/evm-gateway) and [Gateway source](https://github.com/InjectiveLabs/evm-gateway).
-- **Injective Indexer** processes chain events into queryable records for markets, orders, fills, and account activity. See [Query Indexer](/developers-native/query-indexer), [Indexer API architecture](/developers/concepts/indexer-api), and the [Indexer repository](https://github.com/InjectiveLabs/injective-indexer), which requires repository access.
+- **Injective Indexer** processes chain events into queryable records for markets, orders, fills, and account activity. See the [Indexer API definitions](https://api.injective.exchange/#indexer-api), [Query Indexer](/developers-native/query-indexer), [Indexer API architecture](/developers/concepts/indexer-api), and the [Indexer repository](https://github.com/InjectiveLabs/injective-indexer), which requires repository access.
 
 <Warning>
 Use Injective Core’s optional built-in Ethereum JSON-RPC server for local development and testing only. [EVM Gateway](/developers-evm/evm-gateway) is the recommended Ethereum JSON-RPC server for production.
