@@ -1,0 +1,35 @@
+---
+title: Price Tick Size
+description: Check allowed order price increments for Injective spot and derivative markets.
+updatedAt: "2026-11-18"
+---
+
+A market's minimum price tick size is the increment an order price must follow. If the price tick is `0.001`, prices such as `0.001` and `0.002` are valid increments. An order at `0.0011` is rejected. Use the market's current `minPriceTickSize` when preparing an order.
+
+## Convert a price tick between display and chain units
+
+Apply these conversions to values expressed in native exchange chain format. If your API or SDK already returns the tick in display units, use the returned value directly.
+
+| Market | Display to chain | Chain to display |
+| --- | --- | --- |
+| Spot | Multiply by 10 to the power of quote decimals minus base decimals | Multiply by 10 to the power of base decimals minus quote decimals |
+| Perpetuals and expiry futures | Multiply by 10 to the power of quote decimals | Divide by 10 to the power of quote decimals |
+
+For a spot pair with 18 base decimals and 6 quote decimals, a display tick of `0.001` is `0.000000000000001` in chain units. For a perpetual market with 6 quote decimals, the same display tick is `1000` in chain units.
+
+```typescript
+import { toChainFormat, toHumanReadable } from '@injectivelabs/utils'
+
+const baseDecimals = 18
+const quoteDecimals = 6
+const displayTick = '0.001'
+const spotScale = quoteDecimals - baseDecimals
+
+const spotChainTick = toChainFormat(displayTick, spotScale).toFixed()
+const spotDisplayTick = toHumanReadable(spotChainTick, spotScale).toFixed()
+
+const perpetualChainTick = toChainFormat(displayTick, quoteDecimals).toFixed()
+const perpetualDisplayTick = toHumanReadable(perpetualChainTick, quoteDecimals).toFixed()
+```
+
+See [Quantity Tick Size](/defi/trading/quantity-tick-size) for order size increments and [Exchange Queries](/developers-native/query-chain/exchange) for market lookups.

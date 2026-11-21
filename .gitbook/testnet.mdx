@@ -1,0 +1,59 @@
+---
+title: "Injective Testnet"
+sidebarTitle: "Overview"
+description: "Connect to Injective Testnet and test tokens, bridges, native swaps, and IBC integrations."
+updatedAt: "2026-11-18"
+---
+
+Injective Testnet is a staging network for validating integrations before mainnet. It runs the native chain and EVM, so you can test transactions, contracts, and upcoming releases on the same network.
+
+| Interface | Chain ID |
+| --- | --- |
+| Native | `injective-888` |
+| EVM | `1439` |
+
+The latest Testnet binary is `v1.21.0-beta.2`. Download Testnet `-beta` binaries from [Injective Foundation Releases](https://github.com/InjectiveFoundation/injective-core/releases).
+
+## Connecting to Testnet
+
+<Columns cols={3}>
+  <Card title="Run a Node" icon="server" href="/infra/join-a-network" arrow="true">
+    Install the testnet binary, configure your node, and sync it to the network.
+  </Card>
+  <Card title="Connect a Wallet or App" icon="wallet" href="/developers-evm/network-information" arrow="true">
+    Add Injective Testnet to your EVM wallet or configure your app’s JSON-RPC connection.
+  </Card>
+  <Card title="Governance & Staking" icon="landmark" href="https://testnet.hub.injective.network/" arrow="true">
+    Connect to the Testnet Hub to view proposals, vote, or try staking.
+  </Card>
+</Columns>
+
+For app and SDK configuration, see [Testnet Public Endpoints](/testnet/public-endpoints) for native chain, EVM, and indexer endpoints.
+
+## Resources
+
+<Columns cols={2}>
+  <Card title="Testnet Resources" icon="flask-vial" href="https://chain.injective.network/testnet" arrow="true">
+    Find INJ and USDC faucets, native and EVM explorers, RPC endpoints, and the current release.
+  </Card>
+  <Card title="Proposing on Testnet" icon="file-lines" href="/developers/testnet-proposals" arrow="true">
+    Prepare and submit a governance proposal, coordinate validator votes, and track the outcome.
+  </Card>
+</Columns>
+
+## Testnet Guides
+
+<CardGroup cols={1}>
+  <Card title="MultiVM Token Standard (MTS)" icon="coins" href="https://blog.injective.dev/one-token-one-balance-creating-and-bridging-under-injectives-multivm-token-standard/" arrow="true">
+    Choose a token creation or bridging path and verify that the token shares a balance across the native chain and EVM.
+  </Card>
+  <Card title="Bridge USDC" icon="bridge" href="https://github.com/InjectiveLabs/inj-examples/blob/main/examples/usdc/README.md" arrow="true">
+    Transfer testnet USDC with Circle CCTP. Burn on the source testnet, get an attestation, and mint on Injective Testnet.
+  </Card>
+  <Card title="Swap Precompile" icon="right-left" href="https://github.com/InjectiveLabs/inj-examples/blob/main/examples/swap-precompile/README.md" arrow="true">
+    Quote and simulate exact-input and exact-output swaps. Execute on an allowlisted market with liquidity, or configure your own market on localnet.
+  </Card>
+  <Card title="IBC Precompile" icon="arrow-right-arrow-left" href="https://github.com/InjectiveLabs/inj-examples/blob/main/examples/ibc-precompile/README.md" arrow="true">
+    Send an ICS-20 transfer from the EVM and test an inbound Solidity hook with a confirmed counterparty and relayer.
+  </Card>
+</CardGroup>

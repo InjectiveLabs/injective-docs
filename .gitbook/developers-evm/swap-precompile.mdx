@@ -1,21 +1,29 @@
 ---
 title: Swap Precompile
-updatedAt: "2026-10-01"
+description: Quote and execute native spot swaps with the EVM precompile at 0x68.
+updatedAt: '2026-11-18'
 ---
 
-# Swap Precompile
+<a id="swap-precompile" />
 
-<Warning>
-**Rollout status (October 2026).** The swap precompile is deployed on mainnet, but specific routes and token pairs are still being tested. The working directions today are INJ to USDC, USDT to USDC, and USDCnb to USDC on the three [allowlisted markets](#market-allowlist). Other directions, such as buying INJ with USDC, revert for now during testing.
-</Warning>
+Injective’s Swap Precompile exposes the native spot exchange to EVM applications at `0x0000000000000000000000000000000000000068`. Use it to read an order-book quote, set a minimum output and deadline, and execute a swap in one call.
 
-The Swap Precompile is a system smart contract residing at the fixed address `0x0000000000000000000000000000000000000068`, introduced in the v1.20.4 (Meridian) upgrade.
+<Note>
+V1 exact-input methods and `quoteExactOutputV1` are available from v1.20.4. The V2 methods, exact-output execution, and EVM-native MTS token resolution ship in v1.21, including testnet v1.21.0-beta.
+</Note>
 
-It gives EVM developers native spot swaps against Injective's on-chain orderbook through the **exchange module** (`x/exchange`), using an API that will feel familiar from AMM routers: quote, set a minimum output and a deadline, swap in a single call. Unlike an AMM, execution fills against live orderbook liquidity, and the swap either fills within your constraints or reverts. There is no partially filled remainder to manage.
+<a id="create-the-project" />
 
-Swaps execute on the caller's default subaccount and revert on failure. The caller must hold the input amount of `tokenIn`. Because ERC20 balances under the MultiVM Token Standard are bank balances, no separate approval against the precompile is required.
+## Walkthrough
 
-## How It Works
+Follow the [swap precompile demo](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/swap-precompile/README.md) to check the testnet allowlist, quote and simulate both swap types, submit a transaction, or run the full flow on a fresh local chain.
+
+## How it works
+
+1. Select a network and a supported spot market.
+2. Resolve the input token and express the amount in its native integer units.
+3. Read a quote, then derive a minimum output and a deadline.
+4. Simulate the swap from the funded caller, submit it, and wait for a successful receipt.
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"background": "#FFFFFF", "primaryColor": "#FFFFFF", "lineColor": "#4D3DFF", "textColor": "#14151F"}}}%%
@@ -29,9 +37,9 @@ flowchart LR
         EXCH["x/exchange<br/>orderbook"]
         BANK["x/bank balances<br/>MultiVM Token Standard"]
     end
-    CALLER -->|"1 · quoteExactInputV1<br/>request current amountOut for amountIn"| SWAP
-    SWAP -.->|"2 · quoted amountOut<br/>used to derive minOut"| CALLER
-    CALLER -->|"3 · swapExactInputV1<br/>with minOut and deadline"| SWAP
+    CALLER -->|"1 · quoteExactInputV2<br/>request spent input and output"| SWAP
+    SWAP -.->|"2 · quoted input spent and output<br/>used to derive minOut"| CALLER
+    CALLER -->|"3 · swapExactInputV2<br/>with minOut and deadline"| SWAP
     SWAP -->|"4 · verify market<br/>is allowlisted"| PARAMS
     SWAP -->|"5 · execute on<br/>default subaccount"| EXCH
     EXCH -->|"6 · fill, or revert<br/>below minOut"| SWAP
@@ -48,36 +56,115 @@ flowchart LR
     style NATIVE fill:#FFFFFF,stroke:#8B94A7,stroke-dasharray:4
 ```
 
-The flow has two phases:
+Quotes read the current order book without changing state. Execution places an atomic spot market order on the caller’s default subaccount and credits the output to the recipient. If the minimum output or deadline check fails, the swap’s state changes revert. Transaction gas can still be charged.
 
-**Quote (steps 1 and 2).** `quoteExactInputV1` is a read call that returns the `amountOut` the given `amountIn` would currently receive against the orderbook. Orderbook prices change block to block, so the caller derives `minOut` from the quoted value, typically by applying a slippage tolerance. Setting `minOut` without a current quote risks either reverting on normal price movement when set too tight, or accepting a worse fill than necessary when set too loose.
+For exact input, `amountIn` is an input budget. Thin liquidity or quantity ticks can leave part of it unspent. The remainder stays with the caller and `minOut` sets the minimum output for the fill. For exact output, execution must deliver at least `amountOut` within `maxAmountIn` or revert. Quantity ticks can cause slightly more output to be delivered.
 
-**Swap (steps 3 to 7).** `swapExactInputV1` runs the whole execution in one transaction: the precompile checks the market against the `SwapParams` allowlist, places the order on the caller's default subaccount, and either credits at least `minOut` to the recipient before the `deadline` or reverts the entire call. Nothing is left partially done. The output lands as a bank balance, which the MultiVM Token Standard makes immediately readable as an ERC20 balance.
+Orders can change between quoting and execution. Quotes use the undiscounted taker fee, and execution applies the caller’s fee discount and skips paused or frozen makers. Use a fresh quote to set your limits. Execution enforces `minOut` for exact input or `maxAmountIn` for exact output, along with any deadline you set.
 
-## Market Allowlist
+## Swap Precompile Interface
+
+```solidity
+interface ISwapModule {
+    /// Quote the input consumed and output received for an input budget.
+    function quoteExactInputV2(
+        address tokenIn,
+        string calldata marketId,
+        uint256 amountIn
+    ) external view returns (uint256 amountInSpent, uint256 amountOut);
+
+    /// Execute within minOut and deadline; return spent input and output.
+    function swapExactInputV2(
+        address tokenIn,
+        string calldata marketId,
+        uint256 amountIn,
+        uint256 minOut,
+        address recipient,
+        uint256 deadline
+    ) external returns (uint256 amountInSpent, uint256 amountOut);
+
+    /// Legacy exact-input quote; returns only output.
+    function quoteExactInputV1(
+        address tokenIn,
+        string calldata marketId,
+        uint256 amountIn
+    ) external view returns (uint256 amountOut);
+
+    /// Legacy exact-input swap; returns only output.
+    function swapExactInputV1(
+        address tokenIn,
+        string calldata marketId,
+        uint256 amountIn,
+        uint256 minOut,
+        address recipient,
+        uint256 deadline
+    ) external returns (uint256 amountOut);
+
+    /// Quote the input required to receive the target output.
+    function quoteExactOutputV1(
+        address tokenOut,
+        string calldata marketId,
+        uint256 amountOut
+    ) external view returns (uint256 amountIn);
+
+    /// Receive at least amountOut while spending at most maxAmountIn.
+    function swapExactOutputV1(
+        address tokenOut,
+        string calldata marketId,
+        uint256 amountOut,
+        uint256 maxAmountIn,
+        address recipient,
+        uint256 deadline
+    ) external returns (uint256 amountInSpent, uint256 amountOutDelivered);
+}
+```
+
+- `marketId` is a `0x`-prefixed, 32-byte spot market ID passed as an ABI `string`.
+- `tokenIn` selects the input side for exact input. `tokenOut` selects the asset to receive for exact output. Use the zero address for native INJ. Other tokens resolve through a [registered ERC20 pair](/developers-evm/erc20-module) or an EVM-native MTS `erc20:` denom on v1.21.
+- Amounts use the token’s smallest units. For example, 10 USDC is `10000000`. Use output units for `minOut` and input units for `maxAmountIn`.
+- `recipient` defaults to the caller when set to the zero address. The precompile spends the immediate caller’s bank balance, including when a contract calls it. Invoke it with zero transaction value. ERC20 approval is unnecessary.
+- `deadline` is a Unix timestamp in seconds. Set it to zero to disable the time check.
+
+The V1 and V2 suffixes refer to the precompile’s ABI versions. The exchange module versions its protobuf types independently.
+
+When checking a settled swap against the amounts returned by the precompile, allow for a difference of one smallest token unit. Fractional amounts accumulate in the caller’s default subaccount and can affect when a whole unit moves into or out of the bank balance.
+
+## Market allowlist
 
 Swappable markets are governed by `SwapParams`, an enable flag plus a market allowlist inside the exchange module parameters. Calling the precompile on a market that is not allowlisted reverts with:
 
-```
+```text
 market <id> is not allowlisted for swaps: invalid swap route
 ```
 
-Receiving this revert still confirms you have reached the precompile on a live node.
-
 ### Checking the current allowlist
 
-The live allowlist is part of the exchange module's v2 parameters:
+Choose your network to query the exchange module’s v2 swap parameters.
+
+<Tabs>
+<Tab title="Testnet">
 
 ```bash
-curl -s https://sentry.lcd.injective.network/injective/exchange/v2/exchangeParams \
+curl -fsS https://testnet.sentry.lcd.injective.network/injective/exchange/v2/exchangeParams \
   | jq '.params.swap_params'
 ```
 
-The same query's `.params.exchange_admins` field lists the addresses authorized to update it.
+</Tab>
+<Tab title="Mainnet">
+
+```bash
+curl -fsS https://sentry.lcd.injective.network/injective/exchange/v2/exchangeParams \
+  | jq '.params.swap_params'
+```
+
+</Tab>
+</Tabs>
+
+Use `jq '.params.exchange_admins'` to list the exchange admins on the selected network.
 
 ### Requesting a market
 
-If you are building on the swap precompile and need a market allowlisted, reach out in the `#developers` channel of the [Injective Discord](https://discord.gg/injective) with the spot market id, or raise it with your Injective partner contact. Market ids for active spot markets are listed at `/injective/exchange/v1beta1/spot/markets?status=Active`.
+If you are building on the swap precompile and need a market allowlisted, reach out in the `#developers` channel of the [Injective Discord](https://discord.gg/injective) with the spot market id, or raise it with your Injective partner contact. Market ids for active spot markets are listed at `/injective/exchange/v2/spot/markets?status=Active`.
 
 ### Updating the allowlist (exchange admins)
 
@@ -94,10 +181,7 @@ The message **fully replaces** the swap parameter group. Always include every ma
         "sender": "<admin inj1... address>",
         "swap_params": {
           "enabled": true,
-          "allowed_markets": [
-            "0x<existing market id>",
-            "0x<new market id>"
-          ]
+          "allowed_markets": ["0x<existing market id>", "0x<new market id>"]
         }
       }
     ]
@@ -112,67 +196,3 @@ The message **fully replaces** the swap parameter group. Always include every ma
 ```
 
 Sign and broadcast the transaction document with `injectived tx sign` and `injectived tx broadcast` from the admin key.
-
-## Swap Precompile Interface
-
-```solidity
-interface ISwapModule {
-    /// Quote the output for an exact input amount. Read-only.
-    function quoteExactInputV1(
-        address tokenIn,
-        string calldata marketId,
-        uint256 amountIn
-    ) external view returns (uint256 amountOut);
-
-    /// Quote the input required for an exact output amount. Read-only.
-    function quoteExactOutputV1(
-        address tokenOut,
-        string calldata marketId,
-        uint256 amountOut
-    ) external view returns (uint256 amountIn);
-
-    /// Swap an exact input amount. Reverts if the output would fall below
-    /// minOut or the deadline (unix seconds) has passed.
-    function swapExactInputV1(
-        address tokenIn,
-        string calldata marketId,
-        uint256 amountIn,
-        uint256 minOut,
-        address recipient,
-        uint256 deadline
-    ) external returns (uint256 amountOut);
-}
-```
-
-Parameter notes:
-
-* `tokenIn` / `tokenOut` are ERC20 addresses of tokens backed by the bank module under the MultiVM Token Standard. Map bank denoms to ERC20 addresses with the ERC20 module query `/injective/erc20/v1beta1/all_token_pairs`.
-* `marketId` is the spot market id string, prefixed with `0x`. List active markets with `/injective/exchange/v1beta1/spot/markets?status=Active`.
-* Amounts use the token's ERC20 decimals.
-
-## Quote and Swap Pattern
-
-```solidity
-uint256 quoted = SWAP.quoteExactInputV1(tokenIn, marketId, amountIn);
-uint256 minOut = (quoted * (10_000 - slippageBps)) / 10_000;
-uint256 amountOut = SWAP.swapExactInputV1(
-    tokenIn, marketId, amountIn, minOut, recipient, block.timestamp + 120
-);
-```
-
-## Calling From the Command Line
-
-Precompiles exist only on real Injective nodes. Foundry's local simulation has no `0x68`, so `forge script` and `forge test` revert with `call to non-contract address` on any code path touching it. This applies to all Injective precompiles. Use `cast` against a live RPC, deploy a contract and drive it with transactions, or run the [local development setup in inj-examples](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/precompiles/local-dev), which starts a real Injective node in Docker with all precompiles available at `localhost:8545`:
-
-```bash
-cast call 0x0000000000000000000000000000000000000068 \
-  "quoteExactInputV1(address,string,uint256)(uint256)" \
-  <TOKEN_IN> "<MARKET_ID>" <AMOUNT_IN> \
-  --rpc-url https://sentry.evm-rpc.injective.network/
-```
-
-## Start building
-
-A complete Foundry example, with a quote-then-swap contract, Makefile targets for quoting and swapping via `cast`, and testnet defaults, is available in the [swap precompile demo](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/swap-precompile). Testnet has run the precompile since v1.20.4-beta; mainnet since the v1.20.4 upgrade.
-
-The same example includes `localnet-demo.sh`, which runs the whole lifecycle on a fresh local chain in one command: market launch, the allowlist update as an exchange admin configured in genesis (no governance proposal needed), orderbook liquidity, and a real swap through the precompile. It is the fastest way to exercise the full flow, allowlisting included, without touching testnet.

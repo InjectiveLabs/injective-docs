@@ -1,10 +1,14 @@
 ---
 title: Overview
-updatedAt: "2026-11-10"
+updatedAt: "2026-11-18"
 ---
 
+<a id="chain-upgrades" />
+
+Injective coordinates software upgrades at the block height set by an approved governance proposal. Nodes halt at the activation height. Operators restart with the release specified for that upgrade so their nodes can continue validating and following the chain. Check the [operator portal](https://chain.injective.network/upgrades) for the upgrade schedule and the [Validator Troubleshooting Guide](/infra/coordinated-upgrades) for recovery procedures.
+
 <Warning>
-**Expedited mainnet proposal: v1.20.4-safeharbor.5.** Prepare for the scheduled upgrade at height **191,270,000**, subject to proposal 714 passing. Follow the [scheduled upgrade guide](/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5).
+**Mainnet upgrade preparation for v1.21.0.** The [latest release upgrade guide](/infra/validator-mainnet/canonical-chain-upgrade-v1.21.0) contains the published Mainnet binary and verification details. Confirm the enacted proposal, halt height, and coordination announcement on the [operator portal](https://chain.injective.network/upgrades) before upgrading.
 </Warning>
 
 <Columns cols={2}>
@@ -31,10 +35,6 @@ updatedAt: "2026-11-10"
 
 If you are not already a member of the verified validator channels, reach out to the Injective team via [Discord](https://discord.gg/injective) to get added. Upgrade coordination, emergency snapshots, and incident communication happen in these channels.
 </Callout>
-
-### Chain Upgrades
-
-Injective periodically undergoes software upgrades. When a chain upgrade governance proposal is passed, a block height will be specified at which all nodes will automatically panic and stop running. At this point, the upgraded `injectived` binaries can be installed, and the node can be restarted.
 
 ### Node Upgrade Directions
 

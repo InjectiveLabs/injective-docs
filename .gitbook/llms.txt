@@ -4,6 +4,8 @@
 
 ## DeFi
 
+- [Add Network to Your Wallet](add-network-to-wallet)
+  - [Convert addresses](developers/convert-addresses)
 - [Overview](defi/index): Overview of decentralized finance features on Injective for developers and traders, including trading instruments, staking, governance, and token standards
   - [Wallet](defi/wallet/index)
   - [Create a wallet](defi/wallet/create): Learn how to create a wallet on Injective using different approaches.
@@ -11,6 +13,8 @@
   - [Cypher OS Testnet Guide](defi/cypheros-testnet): Shield, send privately, and unshield INJ and USDC on the Cypher OS public testnet.
   - [Trading](defi/trading/index): Documentation for Injective's on-chain orderbook exchange, covering spot markets, perpetual futures, expiry futures, and order types.
   - [Order Types](defi/trading/order-types): Read about order types on Injective
+  - [Price Tick Size](defi/trading/price-tick-size)
+  - [Quantity Tick Size](defi/trading/quantity-tick-size)
   - [Trading Fees and Rebates](defi/trading/fees)
   - [24/5 Equity Feeds](defi/trading/24-5-equity-feeds): How 24/5 pricing for onchain equities works on Injective.
   - [Margin Trading](defi/trading/margin)
@@ -26,7 +30,6 @@
   - [iAssets](defi/trading/derivatives-iassets)
   - [Token Standards](defi/tokens/index)
   - [INJ coin](defi/tokens/inj-coin): The native INJ token: its utility, staking mechanics, and role in Injective's fee and governance model.
-  - [Token Factory](defi/tokens/token-factory): Create and manage custom tokens on Injective without deploying a smart contract, using the native Token Factory module.
   - [CW20 Standard](defi/tokens/cw20-standard)
   - [Bridge](defi/bridge): How to bridge assets to and from Injective via IBC, the Injective Bridge, and supported networks including Ethereum and Solana.
   - [From Ethereum](redirects/https_injective_com_blog_how_to_bridge_from_ethereum_to_injective_using_metamask)
@@ -54,24 +57,13 @@
 
 ## Developers
 
-- [Developers](developers/index): The goal of this section is to help developers build their projects on Injective
-- [Convert addresses](developers/convert-addresses)
-- [Network Information](developers/network-information): Essential information about the Injective network
-  - [injectived](developers/injectived/index)
-  - [Install injectived](developers/injectived/install)
-  - [Using injectived](developers/injectived/use)
-  - [Commands](developers/injectived/advanced)
+- [Developer Setup](developers/setup): Choose an EVM or native Injective development environment.
+- [SDKs](sdks-index): Official client libraries and TypeScript network endpoints.
   - [Testnet Proposals](developers/testnet-proposals)
   - [Technical Concepts](developers/concepts/index)
-  - [Sentry Node](developers/concepts/sentry-node)
   - [Indexer API](developers/concepts/indexer-api)
   - [Trading Account](developers/concepts/trading-account)
-  - [gRPC & Protobuf](developers/concepts/grpc-protobuf)
-  - [Token Factory](developers/concepts/token-factory)
-  - [Market min price tick size calculation](developers/concepts/calculation-min-price-tick-size)
-  - [Market min quantity tick size calculation](developers/concepts/calculation-min-quantity-tick-size)
   - [CosmJs Support](developers/concepts/cosmjs-support)
-  - [Networks](developers/concepts/networks)
   - [Assets](developers/assets/index)
   - [Denom](developers/assets/denom)
   - [Token Metadata](developers/assets/token-metadata)
@@ -106,6 +98,7 @@
 
 ## Infrastructure
 
+- [Network Architecture](infra/network-architecture): Validators, sentries, relayers, light clients, and API services.
 - [Overview](infra/index): This section helps Injective node operators and validators to run, upgrade, and maintain their validator nodes and sentry nodes.
   - [Interact with nodes](infra/interact-node/index)
   - [Interact with a node using the CLI](infra/interact-node/command-line)
@@ -214,9 +207,8 @@
 ## DeFi Developers
 
 - [Overview](developers-defi/index)
-- [Min Price Tick Size](developers-defi/calculate-min-price-tick-size)
-- [Min Quantity Tick Size](developers-defi/min-quantity-tick-size)
 - [Testnet Faucet Integration](developers-defi/testnet-faucet-integration)
+- [Token Factory](defi/tokens/token-factory): Create and manage custom tokens on Injective without deploying a smart contract, using the native Token Factory module.
 - [Private Transfers with Cypher OS](developers-defi/cypheros-private-transfers): How Cypher OS keeps transfer amounts and recipients private on Injective, what stays public, and how to read its testnet deployment.
 - [Launch a Token](developers-defi/token-launch)
 - [Launch a Market](developers-defi/market-launch)
@@ -229,6 +221,10 @@
 ## Native Developers
 
 - [Overview](developers-native/index)
+  - [Injective Node and CLI Overview](developers/injectived/index)
+  - [Install](developers/injectived/install)
+  - [Usage](developers/injectived/use)
+  - [Commands](developers/injectived/advanced)
   - [Wallets](developers-native/wallets/index)
   - [Accounts](developers-native/wallets/accounts)
   - [Wallet Connections](developers-native/wallets/connections)
@@ -382,7 +378,7 @@
     - [State Transitions](developers-native/injective/permissions/03_state_transitions)
     - [How to Launch Permissioned Assets](developers-native/injective/permissions/04_launch_permissioned_asset)
     - [Error Codes](developers-native/injective/permissions/99_errors)
-    - [Tokenfactory](developers-native/injective/tokenfactory/index)
+    - [TokenFactory](developers-native/injective/tokenfactory/index)
     - [Concepts](developers-native/injective/tokenfactory/01_concepts)
     - [State](developers-native/injective/tokenfactory/02_state)
     - [03_messages](developers-native/injective/tokenfactory/03_messages)
@@ -418,8 +414,9 @@
   - [circuit](developers-native/core/circuit)
   - [genutil](developers-native/core/genutil)
 
-- [Injective FAQ](faq)
-- [Glossary](glossary): Pocket-sized cheat sheet for Injective. Use this glossary to learn about terms specific to Injective.
+## Resources
+
+- [Glossary](glossary): Definitions of Injective terms.
 - [References](references): Important references and links for the Injective Ecosystem
 - [About These Docs](contributing): The Injective developer documentation is written and maintained by Injective Labs' Developer Relations team.
 

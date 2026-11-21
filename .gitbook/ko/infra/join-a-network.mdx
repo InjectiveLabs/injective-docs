@@ -9,34 +9,8 @@ updatedAt: "2026-02-26"
 
 <Tabs>
 <Tab title="로컬 네트워크">
-로컬 노드를 쉽게 설정하려면 [injective-core](https://github.com/InjectiveFoundation/injective-core) 저장소에서 `setup.sh` 스크립트를 다운로드하고 실행하세요. 설치된 `injectived` 버전에 맞는 스크립트 버전을 사용하세요.
 
-```bash
-# 버전 태그를 설치된 injectived 바이너리 버전으로 교체하세요
-wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.18.3/setup.sh
-chmod +x ./setup.sh # 스크립트를 실행 가능하게 만들기
-./setup.sh
-```
-
-예를 들어, v1.17.2용 스크립트를 사용하려면:
-
-```bash
-wget https://raw.githubusercontent.com/InjectiveFoundation/injective-core/v1.17.2/setup.sh
-chmod +x ./setup.sh
-./setup.sh
-```
-
-<Callout icon="warning" color="#FFA500" iconType="regular">
-레거시 [injective-chain-releases](https://github.com/InjectiveLabs/injective-chain-releases) 저장소의 `setup.sh` 스크립트는 더 이상 사용되지 않으며 `injectived` v1.14.1에서만 호환됩니다. 항상 체인 버전에 맞는 [InjectiveFoundation/injective-core](https://github.com/InjectiveFoundation/injective-core) 저장소의 스크립트를 사용하세요.
-</Callout>
-
-다음을 실행하여 노드를 시작합니다:
-
-```bash
-injectived start # 이 명령을 실행하면 블록이 들어오기 시작합니다
-```
-
-스크립트가 수행하는 작업에 대한 자세한 설명과 설정 프로세스에 대한 더 세밀한 제어를 원하면 아래를 계속 읽으세요.
+먼저 [injectived 설치](/ko/developers/injectived/install) 안내에 따라 공식 릴리스 바이너리를 설치하세요. Docker로 로컬 노드를 시작하려면 [inj-examples의 로컬 네트워크 예제](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/precompiles)를 참고하세요. 수동 설정은 아래 절차를 따르세요.
 
 #### 체인 초기화
 
@@ -168,15 +142,7 @@ injectived start # 이 명령을 실행하면 블록이 들어오기 시작합�
 
 #### `injectived` 및 `peggo` 설치
 
-가장 최근 릴리스는 [Injective 릴리스 저장소](https://github.com/InjectiveLabs/testnet/releases)를 참조하세요. 검증자가 아닌 노드 운영자는 `peggo`를 설치할 필요가 없습니다.
-
-```bash
-wget https://github.com/InjectiveLabs/testnet/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
+[Chain Portal](https://chain.injective.network/testnet)에서 테스트넷의 실행 버전을 확인하세요. [릴리스 페이지](https://github.com/InjectiveFoundation/injective-core/releases)에서 일치하는 아카이브를 다운로드하고 [설치 가이드](/ko/developers/injectived/install)에 따라 검증하고 설치하세요. 검증자는 같은 아카이브의 `peggo`도 설치하세요.
 
 #### 새 Injective 체인 노드 초기화
 
@@ -271,16 +237,7 @@ journalctl -u injectived -f
 
 #### `injectived` 및 `peggo` 설치
 
-가장 최근 릴리스는 [Injective core releases](https://github.com/InjectiveFoundation/injective-core/releases)를 참조하세요. 검증자가 아닌 노드 운영자는 `peggo`를 설치할 필요가 없습니다.
-
-```bash
-# https://github.com/InjectiveFoundation/injective-core/releases 에서 최신 릴리스 URL로 교체하세요
-wget https://github.com/InjectiveFoundation/injective-core/releases/latest/download/linux-amd64.zip
-unzip linux-amd64.zip
-sudo mv peggo /usr/bin
-sudo mv injectived /usr/bin
-sudo mv libwasmvm.x86_64.so /usr/lib 
-```
+[Chain Portal](https://chain.injective.network)에서 메인넷의 실행 버전을 확인하세요. [릴리스 페이지](https://github.com/InjectiveFoundation/injective-core/releases)에서 일치하는 아카이브를 다운로드하고 [설치 가이드](/ko/developers/injectived/install)에 따라 검증하고 설치하세요. 검증자는 같은 아카이브의 `peggo`도 설치하세요.
 
 #### 새 Injective 노드 초기화
 
@@ -297,30 +254,7 @@ injectived init $MONIKER --chain-id injective-1
 
 #### 메인넷 참여를 위한 구성 준비
 
-이제 기본 구성을 메인넷의 제네시스 파일과 애플리케이션 구성 파일로 업데이트하고, 시드 노드로 영구 피어를 구성해야 합니다.
-
-```bash
-git clone https://github.com/InjectiveLabs/mainnet-config
-
-# 제네시스 파일을 config 디렉터리에 복사
-cp mainnet-config/10001/genesis.json ~/.injectived/config/genesis.json
-
-# config 파일을 config 디렉터리에 복사
-cp mainnet-config/10001/app.toml  ~/.injectived/config/app.toml
-```
-
-제네시스 체크섬도 확인할 수 있습니다 - 573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528
-
-```bash
-sha256sum ~/.injectived/config/genesis.json
-```
-
-그런 다음 `~/.injectived/config/config.toml`의 `seeds` 필드를 `mainnet-config/10001/seeds.txt`의 내용으로 업데이트하고 `timeout_commit`을 `300ms`로 업데이트합니다.
-
-```bash
-cat mainnet-config/10001/seeds.txt
-nano ~/.injectived/config/config.toml
-```
+[메인넷 노드 가이드](/infra/run-node#install-the-mainnet-genesis)에 따라 메인넷 제네시스를 다운로드하고 검증하세요. 생성된 `app.toml`을 설정하고 [피어 검색](/infra/run-node#peer-discovery)을 참고해 시드 노드를 추가하세요.
 
 #### `injectived`용 `systemd` 서비스 구성
 
@@ -382,7 +316,7 @@ _곧 추가 예정_
 4. [Bware Labs](https://bwarelabs.com/snapshots).
 5. [AutoStake](https://autostake.com/networks/injective/#validator).
 
-Injective `mainnet-config seeds.txt` 목록이 작동하지 않는 경우(노드가 블록 동기화에 실패), ChainLayer, Polkachu 및 Autostake는 피어 목록(`config.toml`의 `persistent_peers` 필드에 사용 가능) 또는 주소록(더 빠른 피어 검색용)을 유지 관리합니다.
+먼저 [Chain Portal](https://chain.injective.network/rpcs)에서 Injective 메인넷 시드 노드를 확인하세요.
 
 **지원**
 
