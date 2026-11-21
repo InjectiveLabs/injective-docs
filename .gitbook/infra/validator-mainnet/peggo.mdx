@@ -1,6 +1,6 @@
 ---
 title: Peggo Bridge
-updatedAt: "2025-10-30"
+updatedAt: "2026-11-21"
 ---
 
 Peggo is the Peggy bridge orchestrator that runs alongside `injectived` on validator nodes. It handles four responsibilities:
@@ -11,6 +11,62 @@ Peggo is the Peggy bridge orchestrator that runs alongside `injectived` on valid
 - **Relayer** - submits signed validator sets and transaction batches to the Ethereum Peggy contract
 
 Validators who do not run peggo will be **jailed** for missing batch confirmations or validator set confirmations within the required signing windows.
+
+## How ERC-20 transfers work
+
+Peggo connects the Peggy contract on Ethereum to the native Peggy module on Injective’s execution layer. Validators use Peggo to report Ethereum events to Injective, sign outgoing batches, and relay batches to Ethereum. The contract holds and releases Ethereum ERC-20 tokens, while the module accounts for their representation on Injective.
+
+These diagrams follow an ERC-20 token issued on Ethereum on its round trip through Peggy. See the [Peggy module workflow](/developers-native/injective/peggy/02_workflow) for other asset flows and validator set updates.
+
+### Ethereum to Injective
+
+<div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", padding: "12px" }}>
+
+```mermaid
+%%{init: {"theme": "base", "themeCSS": "text.messageText { paint-order: stroke fill; stroke: #fff !important; stroke-width: 5px; stroke-linejoin: round; }", "sequence": {"wrap": true, "wrapPadding": 12, "width": 128, "height": 52, "actorMargin": 58, "diagramMarginX": 22, "diagramMarginY": 62, "messageMargin": 58, "mirrorActors": false, "useMaxWidth": true}, "themeVariables": {"background": "#FFFFFF", "actorBkg": "#EEF0FF", "actorBorder": "#4D3DFF", "actorTextColor": "#14151F", "actorLineColor": "#8B94A7", "signalColor": "#4D3DFF", "signalTextColor": "#14151F", "noteBkgColor": "#EEF0FF", "noteBorderColor": "#4D3DFF", "noteTextColor": "#14151F", "fontSize": "15px"}}}%%
+sequenceDiagram
+    participant S as Ethereum wallet
+    participant E as Peggy contract
+    participant O as Peggo
+    participant I as Peggy module
+
+    S->>E: Call sendToInjective
+    E->>E: Lock ERC-20 tokens
+    E-->>O: Emit deposit event
+    O->>I: Submit deposit claims
+    I->>I: Tally matching claims by voting power
+    I->>I: Mint and credit the recipient once the threshold is met
+```
+
+</div>
+
+The Ethereum sender specifies an Injective recipient in the deposit. The Peggy module tallies matching deposit claims by the voting power of the validators that submitted them through Peggo. Once the claims reach the required threshold, the module mints the bridged tokens and credits the recipient on Injective.
+
+### Injective to Ethereum
+
+<div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", padding: "12px" }}>
+
+```mermaid
+%%{init: {"theme": "base", "themeCSS": "text.messageText { paint-order: stroke fill; stroke: #fff !important; stroke-width: 5px; stroke-linejoin: round; }", "sequence": {"wrap": true, "wrapPadding": 12, "width": 128, "height": 52, "actorMargin": 58, "diagramMarginX": 22, "diagramMarginY": 62, "messageMargin": 58, "mirrorActors": false, "useMaxWidth": true}, "themeVariables": {"background": "#FFFFFF", "actorBkg": "#EEF0FF", "actorBorder": "#4D3DFF", "actorTextColor": "#14151F", "actorLineColor": "#8B94A7", "signalColor": "#4D3DFF", "signalTextColor": "#14151F", "noteBkgColor": "#EEF0FF", "noteBorderColor": "#4D3DFF", "noteTextColor": "#14151F", "fontSize": "15px"}}}%%
+sequenceDiagram
+    participant S as Injective wallet
+    participant I as Peggy module
+    participant O as Peggo
+    participant E as Peggy contract
+
+    S->>I: Send MsgSendToEth
+    I->>I: Burn tokens and queue
+    O->>I: Request a batch
+    O->>I: Submit batch signatures
+    O->>E: Relay the signed batch
+    E->>E: Verify and release tokens
+    E-->>O: Emit batch execution event
+    O->>I: Submit withdrawal claims
+```
+
+</div>
+
+The withdrawal request specifies an Ethereum recipient. The Peggy module groups queued withdrawals for the same token. Once the Ethereum contract verifies the batch signatures, it releases the original ERC-20s to the recipients. Peggo then reports the execution so Injective can close out the batch.
 
 ### Configuration
 

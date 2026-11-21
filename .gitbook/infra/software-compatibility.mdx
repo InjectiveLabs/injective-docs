@@ -1,0 +1,58 @@
+---
+title: Software Compatibility
+description: Indexer, EVM Gateway, and SDK versions by Injective Mainnet upgrade.
+updatedAt: "2026-11-19"
+---
+
+import CompatibilityV1210 from '/snippets/compatibility/v1.21.0.mdx';
+import CompatibilityV1204SafeHarbor5 from '/snippets/compatibility/v1.20.4-safeharbor.5.mdx';
+import CompatibilityV1204 from '/snippets/compatibility/v1.20.4.mdx';
+
+export const VersionPicker = ({ children }) => {
+  const releases = [children].flat()
+  const [version, setVersion] = useState(releases[0].props["data-version"])
+  const selected = releases.find((release) => release.props["data-version"] === version)
+
+  return (
+    <div>
+      <label htmlFor="mainnet-node-version" className="block text-sm font-semibold">
+        Mainnet node version
+      </label>
+      <select
+        id="mainnet-node-version"
+        value={version}
+        onChange={(event) => setVersion(event.target.value)}
+        aria-controls="compatibility-table"
+        className="mt-2 w-full max-w-xs rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+      >
+        {releases.map((release) => (
+          <option key={release.props["data-version"]} value={release.props["data-version"]}>
+            {release.props["data-version"]}
+          </option>
+        ))}
+      </select>
+      <span className="sr-only" role="status">Showing compatibility for {version}</span>
+      <div id="compatibility-table">{selected}</div>
+    </div>
+  )
+}
+
+<VersionPicker>
+  <div data-version="v1.21.0">
+    <CompatibilityV1210 />
+
+    [v1.21.0 upgrade guide and Indexer migration note](/infra/validator-mainnet/canonical-chain-upgrade-v1.21.0#compatibility-for-integrators)
+  </div>
+
+  <div data-version="v1.20.4-safeharbor.5">
+    <CompatibilityV1204SafeHarbor5 />
+
+    [v1.20.4-safeharbor.5 upgrade guide](/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5#compatibility-for-integrators)
+  </div>
+
+  <div data-version="v1.20.4">
+    <CompatibilityV1204 />
+
+    [v1.20.4 upgrade guide](/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4#compatibility-for-integrators)
+  </div>
+</VersionPicker>

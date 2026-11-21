@@ -1,8 +1,10 @@
 ---
 title: Upgrade to v1.21.0
 description: Scheduled mainnet upgrade instructions for all node operators under proposal 717.
-updatedAt: "2026-11-18"
+updatedAt: "2026-11-19"
 ---
+
+import Compatibility from '/snippets/compatibility/v1.21.0.mdx';
 
 <Note>
 Follow the [operator portal](https://chain.injective.network/upgrades) for upgrade announcements.
@@ -13,6 +15,7 @@ Follow the [operator portal](https://chain.injective.network/upgrades) for upgra
 Consult the [Validator Troubleshooting Guide](/infra/coordinated-upgrades) for upgrade and recovery procedures, including validator signing state precautions.
 
 - [Summary](#summary)
+- [Compatibility for Integrators](#compatibility-for-integrators)
 - [Recovery](#recovery)
 - [Upgrade Procedure](#upgrade-procedure)
 - [Notes for Validators](#notes-for-validators)
@@ -42,6 +45,16 @@ The following is a short summary of the upgrade steps:
 4. Install the [v1.21.0](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.21.0-1794954936) binaries and bundled runtime library.
 5. Verify the binary versions, `libwasmvm` checksum and loaded library version **2.2.11-rc.4**.
 6. Restart the node with the new binary version.
+
+## Compatibility for Integrators
+
+<Compatibility />
+
+<Warning>
+**Indexer operators.** If you run `injective-indexer`, your deployment may require an additional migration step for the `v1.21.0` upgrade. Review the [Docker migration instructions for existing installations](https://github.com/InjectiveLabs/injective-indexer-releases/blob/master/docker/README.md#existing-installations) before upgrading. If you run Exchange Process on mainnet, check the [market reconciliation steps](https://github.com/InjectiveLabs/injective-indexer-releases/blob/master/docker/CHANGELOG.md#mainnet) for your selected images.
+</Warning>
+
+See the [software compatibility matrix](/infra/software-compatibility) for previous releases.
 
 ## Recovery
 

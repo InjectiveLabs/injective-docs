@@ -152,6 +152,39 @@ curl -fsSG 'https://sentry.lcd.injective.network/ibc/core/channel/v1/channels' \
 
 If `next_key` is present, set `PAGE_KEY` to that value and rerun the same command to see the next page. Use `channel_id` when sending from Injective and `counterparty.channel_id` when sending back. Confirm both light clients are active and a relayer serves the route.
 
+### Troubleshoot an outbound transfer
+
+Suppose a forwarder mints Circle USDC on Injective through CCTP and sends it over IBC. Look up the source burn hash in [Circle Iris](https://developers.circle.com/cctp/references/technical-guide#api-service-hosts), using the [Mainnet attestation endpoint](https://iris-api.circle.com/v2/messages/0?transactionHash=YOUR_BURN_HASH) (or the [Testnet sandbox endpoint](https://iris-api-sandbox.circle.com/v2/messages/0?transactionHash=YOUR_BURN_HASH)). Replace `YOUR_BURN_HASH` with the burn transaction hash and `0` with the CCTP domain of the source chain if it differs from Ethereum or Sepolia. Then inspect the Injective mint and send receipts. Both operations can share a transaction hash if a forwarder runs them in one transaction. [CCTP transfer lifecycle](/developers-defi/usdc-cctp-tutorial#transfer-lifecycle)
+
+<AccordionGroup>
+
+<Accordion title="The send failed before dispatch">
+
+Check the send transaction for a revert and a `send_packet` event. If the deadline expired before dispatch, rebuild the send with a fresh timeout. When a CCTP mint succeeds in a separate transaction, the minted funds remain with the mint recipient. When the enclosing transaction reverts after calling both the mint and the precompile, both operations roll back.
+
+If your application builds the send before a user signs it, allow time for signing and relaying. For flows that prepare the send before the CCTP attestation is ready, account for that wait as well. A relative timeout set by a route builder must be converted to the precompile’s absolute Unix timestamp in nanoseconds.
+
+</Accordion>
+
+<Accordion title="The send dispatched">
+
+Record the source port, source channel, and packet sequence from `send_packet`. Check the destination balance and query the acknowledgement on the **destination channel** using that sequence. Set `DESTINATION_LCD`, `DESTINATION_CHANNEL`, and `SEQUENCE` for the packet and run the query below.
+
+```bash
+curl -fsS "$DESTINATION_LCD/ibc/core/channel/v1/channels/$DESTINATION_CHANNEL/ports/transfer/packet_acks/$SEQUENCE" \
+  | jq -r '.acknowledgement | @base64d'
+```
+
+</Accordion>
+
+<Accordion title="The acknowledgement is missing or reports an error">
+
+Check whether the relayer has delivered the packet or processed a timeout. A missing acknowledgement alone is insufficient to tell. Confirm an `acknowledge_packet` or `timeout_packet` event for the same source channel and sequence on Injective. A processed timeout or error acknowledgement refunds the calling contract. A successful destination acknowledgement can be written before the relayer processes it on Injective.
+
+</Accordion>
+
+</AccordionGroup>
+
 ## Inbound EVM hooks
 
 An ICS-20 packet arriving on Injective can call a contract after the transfer settles. The sending side puts an `evm` object in the packet memo:
@@ -233,6 +266,8 @@ The cap is the smaller of the txfees `MaxGasWantedPerTx` parameter and the block
 ## Observing hook calls through the EVM gateway
 
 The chain emits `injective.evm.v1.EventIBCHookCall` for every attempted hook call, with the destination port and channel, packet sequence, contract, ABI encoded input, success flag and return data. The [EVM gateway](/developers-evm/evm-gateway) virtualizes this event into a synthetic transaction, receipt and logs, so `eth_getTransactionReceipt` and `eth_getLogs` show hook executions alongside ordinary EVM transactions. The receipt carries the contract's own logs followed by one summary log emitted from the reserved pseudo address `0x0000000000000000000000000000000000000800` with the topic `IBCHookCall(string,string,uint64,address,bool,bytes,string,uint256)`. The pseudo address differs from the hook caller `0x69` so that summary logs are distinguishable from logs emitted by contracts.
+
+A relayer can submit several `MsgRecvPacket` messages in one native transaction. Match each hook receipt to its packet using the destination port, channel, and sequence in the summary log. A single native transaction can produce multiple synthetic receipts.
 
 <Note>
 Your RPC provider must run a gateway release that supports IBC hook event virtualization and enable event virtualization on the gateway. Confirm both before relying on synthetic receipts and logs. The Chain LCD provides packet commitments at `/ibc/core/channel/v1/channels/{channel}/ports/transfer/packet_commitments` and acknowledgements at `/ibc/core/channel/v1/channels/{channel}/ports/transfer/packet_acks/{sequence}` regardless of the gateway configuration.
