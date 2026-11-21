@@ -1,0 +1,59 @@
+---
+title: 在 Injective 上构建
+description: 选择你的用例：桥接现有代币、发行许可资产、基于稳定币构建，或发行交易所。
+updatedAt: "2026-09-09"
+---
+
+Injective 以链级模块（而非智能合约依赖）的形式提供原生金融基础设施（链上订单簿、跨 VM 代币标准、合规原语、稳定币流动性）。**集成面更小，开箱即用的功能更多。**
+
+## **选择你的用例** {#choose-your-use-case}
+
+<a href="/cn/developers-defi/bridge-deploy" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M4 20h16"/><path d="M4 20c0-8 4-12 8-12s8 4 8 12"/><line x1="8" y1="20" x2="8" y2="14"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/></svg>
+  <span><strong>桥接并部署代币</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>将现有 ERC-20 从 Ethereum 带到 Injective。通过 MTS 实现 EVM 可见性，并支持现货市场和 DeFi 可组合性。</span></span>
+</a>
+
+<a href="/cn/developers-defi/permissioned-assets" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <span><strong>发行许可资产</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>面向机构的合规准入代币。RBAC、KYC hook 和联盟治理均为原生链原语。</span></span>
+</a>
+
+<a href="/cn/developers-defi/usdc-stablecoin" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><line x1="12" y1="6" x2="12" y2="18"/><path d="M15 8.5H10.5a2.5 2.5 0 0 0 0 5h3a2.5 2.5 0 0 1 0 5H9"/></svg>
+  <span><strong>稳定币与支付</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>通过 CCTP 提供原生 USDC。涵盖跨链转账、手续费机制以及销毁-证明-铸造流程。</span></span>
+</a>
+
+<a href="/cn/developers-defi/defi-integration" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+  <span><strong>DeFi 协议</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>借贷、金库和收益产品，使用原生 precompile 进行代币管理、预言机馈送和清算。</span></span>
+</a>
+
+<a href="/cn/developers-defi/exchange-overview" style={{display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-primary, #e5e7eb)", marginBottom: "8px", textDecoration: "none", color: "inherit"}}>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0082FA" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="M6 20V14"/><path d="M6 10V4"/><path d="M12 20V10"/><path d="M12 6V4"/><path d="M18 20V16"/><path d="M18 12V4"/><line x1="4" y1="14" x2="8" y2="14"/><line x1="10" y1="10" x2="14" y2="10"/><line x1="16" y1="16" x2="20" y2="16"/></svg>
+  <span><strong>交易所与交易</strong><br/><span style={{fontSize: "13px", color: "var(--text-secondary, #6b7280)"}}>采用 FBA 的链上 CLOB。涵盖市场发行、oracle provider、交易机器人和 40% 手续费分成。</span></span>
+</a>
+
+## 每个集成方都能获得什么 {#what-every-integrator-gets}
+
+| 功能 | 含义 |
+|---|---|
+| **MultiVM Token Standard** | 一个代币，在 EVM 和原生 Injective 之间共享一个余额。无需包装。 |
+| **Native CLOB** | 采用 FBA 的链上订单簿。一笔交易即可发行现货市场。 |
+| **亚秒级最终性** | 约 0.65 秒出块时间，即时最终性。 |
+| **USDC 流动性** | 通过 Circle 的 CCTP 提供原生 USDC，已上线。 |
+| **40% 手续费分成** | 交易所 dApp 从其发起的订单中赚取 40% 的交易手续费。 |
+| **测试网 + 水龙头** | 完整的测试网，提供 INJ 和 USDC 水龙头以及 EVM 和原生浏览器。 |
+
+## 资源 {#resources}
+
+<CardGroup cols={3}>
+  <Card title="Injective 测试网" icon="flask-vial" href="/cn/testnet">
+    连接到测试网、获取测试代币并参考集成指南。
+  </Card>
+  <Card title="SDKs" icon="rectangle-code" href="/cn/sdks-index">
+    TypeScript, Python, Go, Rust.
+  </Card>
+  <Card title="示例项目" icon="github" href="https://github.com/InjectiveLabs/inj-examples">
+    USDC CCTP、precompile、ACME 跨链桥。
+  </Card>
+</CardGroup>

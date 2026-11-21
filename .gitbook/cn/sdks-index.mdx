@@ -26,3 +26,17 @@ updatedAt: "2026-09-14"
     使用 Substreams 流式传输和索引 Injective 区块链数据
   </Card>
 </CardGroup>
+
+## TypeScript 网络端点 {#typescript-network-endpoints}
+
+使用 [`@injectivelabs/networks`](https://github.com/InjectiveLabs/injective-ts/tree/master/packages/networks) 为 TypeScript SDK 加载公共端点预设。
+
+```typescript
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks'
+
+const endpoints = getNetworkEndpoints(Network.MainnetSentry)
+```
+
+测试网请使用 `Network.TestnetSentry`。该预设包含用于原生链查询的 `grpc`、用于索引数据的 `indexer`、用于 LCD 查询的 `rest` 以及用于 CometBFT 的 `rpc`。TypeScript 预设对 `grpc` 和 `indexer` 使用 gRPC Web URL。提供你自己的 URL 时，请使用 gRPC Web 端点或代理。当你还需要 chain ID 和手续费 denom 时，请使用 `getNetworkInfo`。
+
+服务地址请参阅[主网公共端点](/cn/infra/public-endpoints)和[测试网公共端点](/cn/testnet/public-endpoints)，专用基础设施请参阅 [Premium Endpoints](/cn/infra/premium-endpoints)。

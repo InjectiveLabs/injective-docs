@@ -7,12 +7,119 @@ Injective 是专注于交易所的 Layer-1 区块链的前沿，提供去中心�
 
 Injective 使交易者能够创建和交易任意现货和衍生品市场。Injective 还通过 Injective 链的 [Exchange 模块](/developers-native/injective/exchange) 编码的逻辑实现链上限价订单簿管理、链上交易执行、链上订单匹配、链上交易结算和链上交易激励分配。
 
-## 在 Injective 上构建订单簿 DEX
+与依赖自动做市商（AMM）的其他 DeFi 平台不同，
+Injective 提供完全链上的订单簿，撮合引擎能力直接内置于协议层。
+这意味着基于 Injective 构建的交易所共享一个全局统一的流动性池，
+同时保有各自的 UI 和用户关系，并可从其发起的订单中赚取交易手续费。
+凭借对永续合约、期货、现货和二元期权的原生支持，
+以及无需许可的市场创建和亚秒级出块时间，
+开发者无需构建后端基础设施，也无需担心流动性碎片化，即可发行复杂的交易平台。
 
-作为鼓励交易所在 Injective 上构建和获取交易活动的激励机制，将订单发起到 Injective 交易所协议共享订单簿的交易所（[阅读更多](/developers-native/injective/exchange)）将获得其发起订单交易费用的 $β=40%β=40%$ 作为奖励。交易所协议实施了全球最低交易费用，maker 为 $$rm=0.1%rm​=0.1%$$，taker 为 $$rt=0.2%rt​=0.2%$$。
+## 本节内容 {#what-this-section-covers}
+
+本节面向在 Injective 上构建去中心化金融应用、
+交易所和交易基础设施的开发者。
+无论你是在发行新代币和市场、构建算法交易策略、集成价格预言机，
+还是管理代币元数据，这些指南都提供了利用 Injective 原生 DeFi 原语所需的实用知识。
+
+## 关键概念 {#key-concepts}
+
+| 术语 | 说明 |
+|------|-------------|
+| **Exchange Module** | Injective 的原生链上模块，完全在链上处理限价订单簿管理、交易执行、订单撮合和结算。 |
+| **Denom** | Injective 上的原生代币表示格式（例如 `factory/{creator}/{subdenom}`、`peggy{ethereumAddress}`）。Bank 模块中的所有资产都使用此格式。 |
+| **Oracle Provider** | 通过治理注册、向链中继价格馈送的外部方，可支持永续合约和二元期权等自定义市场。 |
+| **[Token Factory](/developers-native/injective/tokenfactory)** | 一个原生模块，允许以 `factory/{creator}/{subdenom}` 格式无需许可地创建新代币。 |
+| **Tick Size** | 交易市场中价格和数量的最小增量，根据资产价值和小数位数计算。 |
+
+## 在 Injective 上构建订单簿 DEX {#build-an-orderbook-dex-on-injective}
+
+作为鼓励交易所在 Injective 上构建和获取交易活动的激励机制，将订单发起到 Injective 交易所协议共享订单簿的交易所（[阅读更多](/developers-native/injective/exchange)）将获得其发起订单交易费用的一定比例作为奖励。交易所协议为 maker 和 taker 设定了全局最低交易费用。
 
 Injective 激励机制的目标是允许交易所相互竞争，以提供更好的用户体验和更好地服务用户，为全球用户扩大 DeFi 的访问范围。
 
 交易所可以轻松设置客户端（如 Web 或移动端的 UI）和 API 提供商。
 
-前往我们的 [DEX 教程](/developers/dapps/example-dex) 只需点击几下即可启动你的 DEX！
+前往我们的 [DEX 教程](/cn/developers/dapps/example-dex) 只需点击几下即可启动你的 DEX！
+
+## 核心 DeFi 指南 {#core-defi-guides}
+
+<Columns cols={2}>
+  <Card
+    title="发行代币"
+    href="/cn/developers-defi/token-launch/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/launch-token-hero.png">
+    了解如何通过桥接、Token Factory，或使用 CLI、TypeScript 或 CosmWasm 以编程方式在 Injective 上发行代币。
+  </Card>
+  <Card
+    title="发行市场"
+    href="/cn/developers-defi/market-launch/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    通过桥接资产并在 Injective Hub 上提交治理提案，在 Injective 上无需许可地创建现货交易对。
+  </Card>
+  <Card
+    title="Denom 元数据"
+    href="/cn/developers-defi/denom-and-bank/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    从 injective-lists 仓库获取并映射代币元数据（小数位数、符号、logo），用于 bank 余额和市场数据。
+  </Card>
+  <Card
+    title="Injective Trader"
+    href="/cn/developers-defi/injective-trader/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/trader-hero.png">
+    一个专业级 Python 框架，用于开发和部署算法交易策略，内置风险管理和分析功能。
+  </Card>
+</Columns>
+
+## 高级主题 {#advanced-topics}
+
+<Columns cols={2}>
+  <Card
+    title="Provider Oracle"
+    href="/cn/developers-defi/provider-oracle/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/code-hero.png">
+    注册为 oracle provider 并中继价格馈送，为 Injective 上的永续市场、到期期货和二元期权提供支持。
+  </Card>
+  <Card
+    title="测试网水龙头集成"
+    href="/cn/developers-defi/testnet-faucet-integration/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/dev-hero.png">
+    将测试网水龙头集成到你的 dApp 中，通过简单的 POST 请求为用户提供测试 INJ 代币。
+  </Card>
+  <Card
+    title="价格 Tick Size"
+    href="/cn/defi/trading/price-tick-size/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    查看允许的价格增量，并在显示单位和链上单位之间进行转换。
+  </Card>
+  <Card
+    title="数量 Tick Size"
+    href="/cn/defi/trading/quantity-tick-size/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="/img/txs-hero.png">
+    查看现货和衍生品市场允许的订单数量增量。
+  </Card>
+</Columns>

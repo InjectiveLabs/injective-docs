@@ -3,7 +3,9 @@ title: Ethereum 跨链桥
 updatedAt: "2026-02-13"
 ---
 
-Injective Ethereum 跨链桥使 Injective Chain 能够支持无需信任的链上双向代币桥接。在这个系统中，Ethereum 上的 ERC-20 代币持有者可以即时将其 ERC-20 代币转换为 Injective Chain 上的 Cosmos 原生代币，反之亦然。
+Injective Ethereum 跨链桥使 Injective Chain 能够支持无需信任的链上双向代币桥接。在这个系统中，Ethereum 上的 ERC-20 代币持有者可以将其 ERC-20 代币转换为 Injective Chain 上的原生代币，反之亦然。
+
+<img src="/img/peggy-bridge-architecture.svg" alt="Peggy 跨链桥架构与流程" />
 
 Injective Peggy 跨链桥由三个主要组件组成：
 
@@ -11,19 +13,19 @@ Injective Peggy 跨链桥由三个主要组件组成：
 2. Peggo Orchestrator
 3. Injective Chain 上的 Peggy 模块
 
-## Peggy 合约
+## Peggy 合约 {#peggy-contract}
 
 Peggy 合约的功能是促进从 Ethereum 到 Injective Chain 的高效双向 ERC-20 代币跨链转移。与其他代币桥接设置不同，Injective Peggy 跨链桥是一个去中心化、非托管的桥接，完全由 Injective 上的验证者运营。该桥接由 Injective Chain 的权益证明安全性保护，因为存款和取款是根据至少三分之二的验证者基于共识质押权重做出的证明来处理的。
 
-## Peggo Orchestrator
+## Peggo Orchestrator {#peggo-orchestrator}
 
 Orchestrator 是每个 Injective Chain 验证者运行的链下中继器，其功能是将 ERC-20 代币转移数据从 Ethereum 传输到 Injective Chain。
 
-## Peggy 模块
+## Peggy 模块 {#peggy-module}
 
 在基本层面上，Peggy 模块在从 Ethereum 存入 ERC-20 时在 Injective Chain 上铸造新代币，并在从 Injective Chain 提取代币回 Ethereum 时销毁代币。Peggy 模块还通过各种机制管理经济激励，以确保验证者诚实高效地行事，包括削减惩罚、原生代币奖励和提款费用。
 
-## 从 Ethereum 到 Injective
+## 从 Ethereum 到 Injective {#from-ethereum-to-injective}
 
 要从 Ethereum 转移到 Injective，你需要进行 Web3 交易并与 Ethereum 上的 Peggy 合约交互。完成转移需要两个步骤：
 
@@ -54,9 +56,9 @@ const contract = new PeggyContract({
 });
 ```
 
-- 下面的代码片段实例化了一个 PeggyContract 实例，可以使用我们提供给合约构造函数的 `web3` 轻松进行 `estimateGas` 和 `sendTransaction`。其实现可以在[这里](https://github.com/InjectiveLabs/injective-ts/blob/master/packages/contracts/src/contracts/Peggy.ts)找到。显然，这只是一个示例，你可以直接使用 web3 包 + 合约的 ABI 来实例化合约，然后使用某个 web3 提供者处理签名和广播交易的逻辑。
+- 下面的代码片段实例化了一个 PeggyContract 实例，可以使用我们提供给合约构造函数的 `web3` 轻松进行 `estimateGas` 和 `sendTransaction`。其实现可以在[这里](https://github.com/InjectiveLabs/injective-ts)找到。显然，这只是一个示例，你可以直接使用 web3 包 + 合约的 ABI 来实例化合约，然后使用某个 web3 提供者处理签名和广播交易的逻辑。
 
-## 从 Injective 到 Ethereum
+## 从 Injective 到 Ethereum {#from-injective-to-ethereum}
 
 现在你已经将 INJ 的 ERC20 版本转移到了 Injective，Injective Chain 上的原生 `inj` denom 被铸造，它是 INJ 代币的规范版本。要从 Injective 提取 `inj` 到 Ethereum，我们需要准备、签名然后广播一个 Injective Chain 上的原生 Cosmos 交易。
 

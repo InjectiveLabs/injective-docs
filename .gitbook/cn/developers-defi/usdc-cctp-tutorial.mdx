@@ -27,7 +27,7 @@ CCTP 在受支持的网络之间以 1:1 的比例转账 USDC，
 
 无需包装或跨链桥接。
 
-## 前置条件
+## 前置条件 {#prerequisites}
 
 在开始本教程之前，请确保已安装以下工具：
 
@@ -46,10 +46,10 @@ CCTP 在受支持的网络之间以 1:1 的比例转账 USDC，
 - 通过某个 [Sepolia 水龙头](https://sepoliafaucet.com/) 获取的测试网 Sepolia ETH
 - 通过 [Circle Faucet](https://faucet.circle.com/) 获取的测试网 USDC
 
-## 开始使用
+## 开始使用 {#get-started}
 
 本教程配套代码位于
-[USDC CCTP demo](https://github.com/injective-dev/usdc-cctp-injective-demo) 仓库。
+[USDC CCTP demo](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/usdc) 仓库。
 
 克隆仓库并安装依赖：
 
@@ -67,7 +67,7 @@ npm run dev
 
 在浏览器中打开 `http://localhost:5173` 查看该 dApp。
 
-## CCTP 是如何工作的？
+## CCTP 是如何工作的？ {#how-does-cctp-work}
 
 CCTP 通过在源链上销毁 USDC、
 从 Circle 的 API 获取一份已签名的 attestation，
@@ -108,7 +108,7 @@ writeMint({ functionName: 'receiveMessage', args: [messages[0].message, messages
 Injective 上使用的合约地址请参见 [Injective 上的 USDC](/developers-defi/usdc-stablecoin)。
 </Info>
 
-## 在源链上销毁 USDC
+## 在源链上销毁 USDC {#burning-usdc-on-the-source-chain}
 
 在浏览器中打开 dApp（`http://localhost:5173`）后：
 
@@ -164,7 +164,7 @@ writeBurn({
 作为权威参考。
 </Accordion>
 
-## Circle attestation 是什么？
+## Circle attestation 是什么？ {#what-is-a-circle-attestation}
 
 Circle attestation 是 Circle 的 Iris API 提供的一份加密签名，
 用于证明 USDC 已在源链上完成销毁。
@@ -186,7 +186,7 @@ Attestation 所需时间因源链而异：
 若费用过低，转账会回退为标准模式。
 </Info>
 
-## 等待 attestation
+## 等待 attestation {#waiting-for-attestation}
 
 本 dApp 会自动轮询 Iris API，
 你不需要离开页面。
@@ -208,7 +208,7 @@ if (messages[0]?.status === 'complete') {
 ```
 </Info>
 
-## 在目标链上铸造 USDC
+## 在目标链上铸造 USDC {#minting-usdc-on-the-destination-chain}
 
 一旦 dApp 显示 "Attestation received"：
 
@@ -234,7 +234,7 @@ writeMint({
 ```
 </Info>
 
-## 后续步骤
+## 后续步骤 {#next-steps}
 
 恭喜你使用 Injective 上的 CCTP 完成了第一次跨链 USDC 转账！
 

@@ -4,7 +4,7 @@ description: 运行 Injective 的独立 EVM JSON-RPC 网关，通过以太坊兼
 updatedAt: "2026-06-09"
 ---
 
-## 关于
+## 关于 {#about}
 
 `evm-gateway` 是一个独立的 Injective EVM JSON-RPC 服务器。
 
@@ -19,9 +19,7 @@ updatedAt: "2026-06-09"
 - 不提供由 keyring 支持的 `personal_*` API
 - 支持 HTTP 与 WebSocket JSON-RPC
 
-## 安装
-
-源码与版本发布：[github.com/InjectiveLabs/evm-gateway/releases](https://github.com/InjectiveLabs/evm-gateway/releases)
+## 安装 {#installing}
 
 运行 `evm-gateway` 的要求：
 
@@ -31,7 +29,7 @@ updatedAt: "2026-06-09"
   - gRPC 端点
   - 用于历史回填的归档节点访问权限
 
-### 使用仓库
+### 使用仓库 {#using-the-repository}
 
 ```bash
 git clone https://github.com/InjectiveLabs/evm-gateway.git
@@ -39,13 +37,13 @@ cd evm-gateway
 make install
 ```
 
-### 预构建的 Docker 镜像
+### 预构建的 Docker 镜像 {#pre-built-docker-image}
 
 ```bash
 docker run -it --rm injectivelabs/evm-gateway:latest --help
 ```
 
-## 配置
+## 配置 {#configuration}
 
 配置由环境变量驱动，前缀为 `WEB3INJ_`。仓库中的 `.env.example` 是参考。
 
@@ -71,7 +69,7 @@ export WEB3INJ_JSONRPC_WS_ADDRESS=0.0.0.0:8646
 首次运行时，服务会从 `WEB3INJ_EARLIEST_BLOCK` 同步历史数据到当前链头。首次回填请使用归档节点，并据此配置速率限制。
 </Info>
 
-## 虚拟化的 Cosmos Bank 转账
+## 虚拟化的 Cosmos Bank 转账 {#virtualized-cosmos-bank-transfers}
 
 默认情况下，`evm-gateway` 暴露的是 Injective 区块的 EVM 视图。原生的 Cosmos `x/bank` 转账并不是 EVM 交易，因此仅索引 EVM 的 JSON-RPC 无法涵盖原生 bank 活动，例如标准 Cosmos 转账、铸造、销毁以及模块级余额变动。
 
@@ -111,7 +109,7 @@ interface IInjectiveNativeBankTransfers {
 
 类似地址的 Cosmos 字段以右对齐的 `bytes32` 值编码。这样，20 字节的 EVM 地址和更长的 Cosmos 地址都可以使用同一份 ABI。
 
-### 虚拟交易的行为
+### 虚拟交易的行为 {#virtual-transaction-behavior}
 
 虚拟化的 Cosmos 事件以合成的以太坊风格交易形式呈现：
 
@@ -130,7 +128,7 @@ interface IInjectiveNativeBankTransfers {
 
 如果某个 Cosmos bank 事件是 EVM 交易的副作用发出，则虚拟日志会追加在该交易真实 EVM 日志之后。
 
-### 查询虚拟化转账
+### 查询虚拟化转账 {#querying-virtualized-transfers}
 
 你可以对该保留伪合约地址使用 `eth_getLogs` 查询：
 
@@ -146,7 +144,7 @@ curl -s localhost:8645 \
 如果需要完整的索引历史，请在首次同步前启用 `WEB3INJ_VIRTUALIZE_COSMOS_EVENTS=true`。如果你已在关闭虚拟化的情况下同步过既有数据目录，请在依赖历史的虚拟化 bank 日志之前重建或重新索引该数据目录。
 </Info>
 
-## 使用 curl 快速检查功能
+## 使用 curl 快速检查功能 {#quick-checking-functionality-with-curl}
 
 版本：
 
@@ -184,7 +182,7 @@ curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0",
 curl -s localhost:8645 -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"debug_traceTransaction","params":["0x<txhash>",{"tracer":"callTracer"}]}'
 ```
 
-## 配置状态持久化
+## 配置状态持久化 {#configuring-state-persistence}
 
 状态持久化主要由以下变量控制：
 
@@ -198,7 +196,7 @@ export WEB3INJ_DATA_DIR=/var/lib/evm-gateway
 export WEB3INJ_DB_BACKEND=goleveldb
 ```
 
-## 已实现方法的命名空间概览
+## 已实现方法的命名空间概览 {#glossary-of-implemented-methods-by-namespace}
 
 默认命名空间：
 
@@ -217,7 +215,7 @@ export WEB3INJ_DB_BACKEND=goleveldb
 - `txpool`
 - `miner`
 
-### `eth`
+### `eth` {#eth}
 
 `eth_blockNumber`、`eth_getBlockByNumber`、`eth_getBlockByHash`、`eth_getBlockTransactionCountByHash`、`eth_getBlockTransactionCountByNumber`、`eth_getTransactionByHash`、`eth_getTransactionCount`、`eth_getTransactionReceipt`、`eth_getTransactionByBlockHashAndIndex`、`eth_getTransactionByBlockNumberAndIndex`、`eth_sendRawTransaction`、`eth_getBalance`、`eth_getStorageAt`、`eth_getCode`、`eth_getProof`、`eth_call`、`eth_protocolVersion`、`eth_gasPrice`、`eth_estimateGas`、`eth_feeHistory`、`eth_maxPriorityFeePerGas`、`eth_chainId`、`eth_getUncleByBlockHashAndIndex`、`eth_getUncleByBlockNumberAndIndex`、`eth_getUncleCountByBlockHash`、`eth_getUncleCountByBlockNumber`、`eth_hashrate`、`eth_mining`、`eth_syncing`、`eth_coinbase`、`eth_getTransactionLogs`、`eth_fillTransaction`、`eth_getPendingTransactions`
 
@@ -225,15 +223,15 @@ export WEB3INJ_DB_BACKEND=goleveldb
 
 `eth_newPendingTransactionFilter`、`eth_newBlockFilter`、`eth_newFilter`、`eth_getFilterChanges`、`eth_getFilterLogs`、`eth_getLogs`、`eth_uninstallFilter`
 
-### `net`
+### `net` {#net}
 
 `net_version`、`net_listening`、`net_peerCount`
 
-### `web3`
+### `web3` {#web3}
 
 `web3_clientVersion`、`web3_sha3`
 
-### `debug`
+### `debug` {#debug}
 
 追踪与区块检查：
 
@@ -243,6 +241,6 @@ export WEB3INJ_DB_BACKEND=goleveldb
 
 `debug_blockProfile`、`debug_cPUProfile`、`debug_gcStats`、`debug_goTrace`、`debug_memStats`、`debug_setBlockProfileRate`、`debug_stacks`、`debug_startCPUProfile`、`debug_stopCPUProfile`、`debug_writeBlockProfile`、`debug_writeMemProfile`、`debug_mutexProfile`、`debug_setMutexProfileFraction`、`debug_writeMutexProfile`、`debug_freeOSMemory`、`debug_setGCPercent`、`debug_startGoTrace`、`debug_stopGoTrace`
 
-### `inj`
+### `inj` {#inj}
 
 `inj_getTxHashByEthHash`

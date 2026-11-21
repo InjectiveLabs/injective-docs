@@ -1,0 +1,123 @@
+---
+title: 桥接并部署代币
+description: 通过 Peggy 将现有 ERC-20 从 Ethereum 带到 Injective，创建 MTS 代币对，并发行现货市场。
+updatedAt: "2026-10-12"
+---
+
+本指南介绍如何将现有的 ERC-20 代币从 Ethereum 带到 Injective，并使其完全可用：在 MetaMask 中可见、可在原生订单簿上交易，并可与 DeFi 协议组合。
+
+## 开箱即用的功能 {#what-you-get-out-of-the-box}
+
+<CardGroup cols={2}>
+  <Card title="Peggy 跨链桥" icon="bridge" href="/cn/developers-native/bridges/ethereum">
+    由验证者运营的 Ethereum 与 Injective 之间的去中心化跨链桥。你的 ERC-20 会成为 Injective 原生 denom。
+  </Card>
+  <Card title="MultiVM Token Standard" icon="arrows-repeat" href="/cn/developers-evm/multivm-token-standard">
+    一个代币，在 EVM 和原生 Injective 之间共享一个余额。MetaMask、Solidity 合约和原生模块看到的都是同一资产。
+  </Card>
+  <Card title="原生 CLOB" icon="chart-line" href="/developers-native/injective/exchange">
+    一笔交易即可为你的代币发行现货市场。链上订单簿提供 maker 返佣和 FBA 保护。
+  </Card>
+  <Card title="USDC 流动性" icon="dollar-sign" href="/cn/developers-defi/usdc-stablecoin">
+    原生 USDC 已通过 CCTP 在 Injective 上线。将你的代币与 USDC 配对即可立即获得流动性。
+  </Card>
+</CardGroup>
+
+## 分步操作 {#step-by-step}
+
+<img src="/img/bridge-deploy-flow.svg" alt="桥接与部署流程：从 Ethereum 到 Injective" />
+
+### 1. 通过 Peggy 桥接 {#1-bridge-via-peggy}
+
+使用 Peggy 跨链桥合约将你的 ERC-20 代币从 Ethereum 发送到 Injective。
+
+在 Ethereum 上需要两笔交易：
+1. **Approve**：授权 Peggy 合约花费你的代币
+2. 在 Peggy 合约上调用 **sendToInjective**，传入代币地址、你的 Injective 地址和数量
+
+某个 ERC-20 的第一笔桥接交易会自动在 Injective 上创建 denom，格式为 `peggy0x{CONTRACT_ADDRESS}`。
+
+<Info>
+Peggo 中继器通常会在 2 分钟内处理存款。你可以通过 [Injective 测试网浏览器](https://testnet.explorer.injective.network)或 REST API 验证你的余额。
+</Info>
+
+完整详情请参阅 [Peggy 跨链桥指南](/cn/developers-native/bridges/ethereum)。
+
+### 2. 创建 MTS 代币对 {#2-create-mts-token-pair}
+
+创建代币对，使你的 Peggy denom 可以从 EVM 端（MetaMask、Solidity 合约、Blockscout）访问。
+
+```bash
+injectived tx erc20 create-token-pair \
+  "peggy0xYOUR_TOKEN_ADDRESS" \
+  --from=YOUR_KEY \
+  --keyring-backend=file \
+  --chain-id=injective-888 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --gas=3000000 \
+  --gas-prices=160000000inj \
+  --yes
+```
+
+<Warning>
+**Gas 要求：** 此交易至少需要 `--gas=3000000`。ERC20 模块会在内部以硬编码的 2M gas 上限部署一个 EVM 合约。任何低于约 2.1M 的 gas 值都会失败，并报 `gas computation overflow/underflow` 错误。
+</Warning>
+
+对于 Peggy denom，**任何人**都可以创建代币对，无需管理员。该模块始终部署一个无所有者的 `FixedSupplyBankERC20`，并且在此路径上会拒绝自定义的 `--erc20` 地址。这两种特性的组合是有意为之：任何人都可以让桥接代币在 EVM 中可用，而任何人都无法将自己的合约附加到不受其控制的 denom 上。
+
+交易成功后，直接解析新的 ERC20 地址：
+
+```bash
+curl --fail --silent --show-error --get \
+  "https://testnet.sentry.lcd.injective.network/injective/erc20/v1beta1/token_pair_by_denom" \
+  --data-urlencode "bank_denom=peggy0xYOUR_TOKEN_ADDRESS" | jq
+```
+
+有关模板选择、验证规则以及 mint 和 burn 权限，请参阅 [ERC20 Module](/cn/developers-evm/erc20-module) 参考。有关其背后的模型，请参阅 [MultiVM Token Standard](/cn/developers-evm/multivm-token-standard)。
+
+### 3. 设置代币元数据 {#3-set-token-metadata}
+
+代币元数据（name、symbol、decimals）决定了你的代币在 MetaMask、Blockscout 以及任何在合约上调用 `symbol()`、`name()` 或 `decimals()` 的 EVM 工具中的显示方式。
+
+<Warning>
+通过 Peggy 桥接的代币不会自动继承 Ethereum 上的元数据。MTS ERC20 合约从 Injective 的 bank 模块读取元数据。如果未设置 bank 元数据，代币将显示为空名称、空符号和 0 位小数。
+</Warning>
+
+**对于 Peggy denom（`peggy0x...`）：** 元数据必须通过[治理提案](/cn/developers/testnet-proposals)设置。这是因为 Peggy denom 没有管理员权限，只有治理才能写入 bank 模块的元数据存储。有关完整的提案模板以及如何与团队协调测试网验证者投票，请参阅[代币元数据指南](/cn/developers/assets/token-metadata)。
+
+<Warning>
+Decimals 实际上只能写入一次。一旦 bank 元数据记录了非零的 `decimals`，之后的修改会失败并报 `cannot update denom metadata decimals`。在提交提案之前，请根据 Ethereum 代币的 `decimals()` 确认该值，因为之后无法更正。
+</Warning>
+
+**对于 [TokenFactory denom](/developers-native/injective/tokenfactory)（`factory/...`）：** denom 管理员可以直接调用 `MsgSetDenomMetadata`。请参阅 [TokenFactory 示例](/cn/developers-native/examples/token-factory)。
+
+**用于在 Injective dApp 中进行前端展示：** 将你的代币提交到 [injective-lists](https://github.com/InjectiveLabs/injective-lists/blob/master/CONTRIBUTING.md)。这与链上元数据是分开的，不会影响 MetaMask 或 Blockscout。
+
+## 后续可以做什么 {#what-you-can-do-next}
+
+当你的代币通过 MTS 在 Injective 上线后（完成第 3 步后），以下选项都可以独立进行：
+
+<CardGroup cols={2}>
+  <Card title="发行现货市场" icon="chart-line" href="/cn/developers-defi/market-launch">
+    在原生 CLOB 上为你的代币创建订单簿。一笔交易即可完成，享有 maker 返佣和 40% 手续费分成。
+  </Card>
+  <Card title="DeFi 集成" icon="building-columns" href="/cn/developers-defi/defi-integration">
+    使用 Injective 的原生模块和 precompile，基于你的代币构建借贷协议、抵押借款或收益产品。
+  </Card>
+  <Card title="设置预言机馈送" icon="satellite-dish" href="/cn/developers-defi/provider-oracle">
+    注册自定义 oracle provider，将链下估值发布到链上，用于定价或抵押品。
+  </Card>
+  <Card title="添加权限" icon="shield-halved" href="/developers-native/injective/permissions">
+    面向机构用途的基于角色的合规控制。通过用于 KYC/AML 的合约 hook，将联盟角色映射到链上权限。
+  </Card>
+  <Card title="金库策略" icon="vault" href="/cn/developers-defi/defi-integration#vaults">
+    在 <a href="https://mito.fi" target="_blank">Mito</a> 或自定义金库合约上运行的自动化收益策略。
+  </Card>
+  <Card title="跨链流程" icon="arrows-left-right" href="/cn/developers-defi/usdc-stablecoin">
+    通过 CCTP 使用原生 USDC 进行跨链转账。将收益桥接到 Ethereum 或其他受支持的网络。
+  </Card>
+</CardGroup>
+
+## 可运行示例 {#working-example}
+
+[ACME 跨链桥示例](https://github.com/InjectiveLabs/inj-examples/tree/main/examples/acme-bridge)提供了一个完整可运行的代码库，涵盖上述每个步骤：从在 Sepolia 上部署 ERC-20，到创建 MTS 代币对和设置元数据。

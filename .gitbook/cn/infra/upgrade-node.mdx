@@ -1,13 +1,17 @@
 ---
 title: 升级你的节点
-updatedAt: "2026-02-13"
+updatedAt: "2026-11-18"
 ---
 
-### 链升级
+<a id="chain-upgrades" />
 
-Injective 定期进行软件升级。当链升级治理提案通过时，将指定一个区块高度，届时所有节点将自动 panic 并停止运行。此时，可以安装升级后的 `injectived` 二进制文件，并重新启动节点。
+Injective 会在已通过的治理提案所设定的区块高度协调软件升级。节点会在激活高度停止运行。运营者使用该升级指定的版本重新启动，以便节点能够继续验证并跟随链。请在 [Operator Portal](https://chain.injective.network/upgrades) 查看升级时间表，并参阅[验证者故障排除指南](/cn/infra/coordinated-upgrades)了解恢复流程。
 
 请参阅 [Injective Foundation Releases](https://github.com/InjectiveFoundation/injective-core/releases) 获取最新和之前的链版本。
+
+<Warning>
+**主网 v1.21.0 升级准备。** [最新版本升级指南](/cn/infra/validator-mainnet/canonical-chain-upgrade-v1.21.0)包含已发布的主网二进制文件和验证详情。升级前，请在 [Operator Portal](https://chain.injective.network/upgrades) 上确认已生效的提案、停止高度和协调公告。
+</Warning>
 
 ### 节点升级步骤
 

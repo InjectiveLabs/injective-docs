@@ -1,57 +1,128 @@
 ---
-title: 运行节点
-updatedAt: "2026-02-13"
+title: 运行主网节点
+description: 在 Injective 主网上安装、配置并同步全节点或验证者节点。
+updatedAt: "2026-11-18"
 ---
 
-强烈建议在加入公共网络之前先设置本地私有网络。这将帮助你熟悉设置过程，并提供测试环境。
+在 chain ID 为 `injective-1` 的 Injective 主网上设置并同步节点。此设置适用于全节点、哨兵节点和验证者。如需公共 RPC 或其他环境，请参阅[公共端点](/cn/infra/public-endpoints)、[运行测试网节点](/cn/infra/join-a-network)或[运行本地原生节点](/cn/developers-native/developer-setup/local-network)。
 
-### **私有网络**
+## 准备服务器 {#prepare-the-server}
 
-* 通过在本地设置独立网络来加入
+请根据节点角色，参考[硬件要求](/cn/infra/hardware)选择硬件。
 
-### **公共网络**
+## 安装主网版本 {#install-the-mainnet-release}
 
-* 通过公共端点使用网络；或
-* 通过运行节点加入
+在 [Chain Portal](https://chain.injective.network) 上查看**当前主网版本**，然后从 [Injective Foundation releases](https://github.com/InjectiveFoundation/injective-core/releases) 下载匹配的二进制压缩包。
 
-任何人都可以设置自己的节点，通过端点与 Injective 区块链通信。为方便起见，还有一些公共端点可用于查询链。这些端点推荐用于开发和测试目的。为了获得最大的控制和可靠性，建议运行自己的节点。
+按照 [Linux 安装步骤](/cn/developers/injectived/install)安装 `injectived` 和随附的 `libwasmvm`。运行 `injectived version` 验证已安装的版本。验证者还需运行 [Peggo](/cn/infra/validator-mainnet/peggo)。
 
-## 运行节点的准备工作
+## 初始化并配置节点 {#initialize-and-configure-the-node}
 
-如果你选择运行节点（无论是设置私有网络还是加入公共网络），你必须设置 keyring。你还可以选择安装 Cosmovisor，它可以帮助进行链升级以最大限度地减少停机时间。
+使用将要运行 `injectived` 的账户执行设置命令。将 moniker 设置为能够识别你节点的名称。
 
-## 与节点交互
+```bash
+injectived init my-mainnet-node --chain-id injective-1
+```
 
-节点启动并运行后，有几种方式可以与节点交互，即使用 gRPC 端点、REST 端点或 `injectived` CLI。你可以在[与节点交互](/cn/infra/interact-node/)部分了解更多信息。
+### 安装主网 genesis {#install-the-mainnet-genesis}
 
-## 运行节点指南
+`injectived init` 会为新链创建默认的 `config/genesis.json`。`--chain-id` 标志设置其 chain ID。它不会下载主网的初始状态或验证者集。要加入 `injective-1`，请从 [Polkachu 镜像](https://polkachu.com/genesis/injective)下载其 genesis。以下命令会先根据已知的主网 SHA-256 验证下载的文件，然后再替换生成的文件。
 
-<Columns cols={3}>
-  <Card
-    title="设置 Keyring"
-    href="/infra/set-up-keyring/"
-    arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/user-hero.png">
-    了解如何设置你的 keyring
-  </Card>
-  <Card
-    title="加入网络"
-    href="/infra/join-a-network/"
-    arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/bridge-hero.png">
-    了解如何加入网络
-  </Card>
-  <Card
-    title="升级你的节点"
-    href="/infra/upgrade-node/"
-    arrow="true"
-    cta="点击这里"
-    icon="panel-left-close"
-    img="/img/validator-hero.png">
-    了解如何升级你的节点
-  </Card>
-</Columns>
+```bash
+GENESIS_DIR="$HOME/.injectived/config"
+curl -fsSL https://snapshots.polkachu.com/genesis/injective/genesis.json \
+  -o "$GENESIS_DIR/genesis.mainnet.json" &&
+  printf '%s  %s\n' '573b89727e42b41d43156cd6605c0c8ad4a1ce16d9aad1e1604b02864015d528' \
+    "$GENESIS_DIR/genesis.mainnet.json" | sha256sum -c - &&
+  mv "$GENESIS_DIR/genesis.mainnet.json" "$GENESIS_DIR/genesis.json"
+```
+
+使用 `~/.injectived/config/app.toml` 配置应用设置，例如剪枝、gRPC 和 REST。使用 `config.toml` 配置 CometBFT 设置，例如对等连接、RPC 监听器和状态同步。在 `[consensus]` 部分中设置 `timeout_commit = "300ms"`。
+
+### 对等节点发现 {#peer-discovery}
+
+在 `config.toml` 的 `[p2p]` 下添加种子节点或持久对等节点。首先使用 [Chain Portal](https://chain.injective.network/rpcs) 上列出的 Injective 主网种子节点。
+
+```toml
+seeds = "d58582c3d49b6cffc465ee12e0d57b3d73f539f7@seed.mainnet.asia.injective.network:26656"
+```
+
+如需更多种子节点、持久对等节点或地址簿，请参阅 [Polkachu](https://polkachu.com/seeds/injective) 和 [Decentrio](https://decentrio.ventures/infrastructure/injective)。
+
+## 同步方式 {#sync-options}
+
+### 恢复快照 {#restore-a-snapshot}
+
+推荐从较新的快照开始。选择与你的数据库后端匹配的快照，并在启动节点之前按照提供商的解压说明操作。[Chain Portal](https://chain.injective.network/snapshots) 列出了官方和社区快照。官方剪枝快照使用 GoLevelDB。
+
+<Warning>
+如果你正在恢复现有的验证者，请在替换任何节点数据之前停止它并保留其签名状态。重启之前，请按照[验证者快照恢复流程](/cn/infra/coordinated-upgrades#recovering-from-a-snapshot)操作。
+</Warning>
+
+### 使用 CometBFT 状态同步 {#use-cometbft-state-sync}
+
+状态同步使用对等节点快照和两个可信 RPC 服务器。请从 [Chain Portal](https://chain.injective.network/rpcs) 选择兼容的端点。选择一个较新的 trust height，并确认两个 RPC 服务器在该高度返回相同的区块哈希。在 `config.toml` 中设置以下值：
+
+```toml
+[statesync]
+enable = true
+rpc_servers = "<rpc_server_1>,<rpc_server_2>"
+trust_height = <recent_height>
+trust_hash = "<block_hash_at_trust_height>"
+trust_period = "168h0m0s"
+```
+
+状态同步不包含本地 CosmWasm 文件。在启动节点之前，请使用包含这些文件的快照，或按照 [CometBFT 状态同步故障排除指南](/cn/infra/coordinated-upgrades#apphash-mismatch-after-cometbft-state-sync)操作。
+
+### 从对等节点重放区块 {#replay-blocks-from-peers}
+
+在禁用状态同步且节点数据目录为空的情况下，CometBFT 会从对等节点下载并重放区块。从创世开始重放主网需要多得多的时间，并且需要访问历史区块。
+
+## 启动并验证节点 {#start-and-verify-the-node}
+
+在节点配置完成且所有快照数据就位后启动 `injectived`。
+
+```bash
+injectived start
+```
+
+在另一个终端中检查 chain ID、区块高度和同步状态：
+
+```bash
+curl -fsS http://localhost:26657/status | jq '{
+  network: .result.node_info.network,
+  height: .result.sync_info.latest_block_height,
+  catching_up: .result.sync_info.catching_up
+}'
+```
+
+预期结果为 `injective-1`。随着节点同步，高度应不断增长；当节点到达链头后，`catching_up` 应变为 `false`。
+
+### 作为 systemd 服务运行 {#run-as-a-systemd-service}
+
+如需持久化的 Linux 服务，请创建 `/etc/systemd/system/injectived.service`。此示例假设运营者账户名为 `injective`，其节点数据位于 `/home/injective/.injectived`。请使用你实际的服务账户、二进制文件位置和节点数据路径。
+
+```ini
+[Unit]
+Description=Injective Mainnet Node
+After=network-online.target
+
+[Service]
+User=injective
+ExecStart=/usr/bin/injectived start --home /home/injective/.injectived
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+前台进程停止后启动该服务。
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now injectived
+sudo journalctl -u injectived -f
+```
+
+如需自动切换二进制文件，请参阅 [Cosmovisor](/cn/infra/cosmovisor)。如需加入验证者集，请继续阅读[主网验证者](/cn/infra/validator-mainnet/index)。有关升级和日常运维，请参阅[升级你的节点](/cn/infra/upgrade-node)和[与节点交互](/cn/infra/interact-node/index)。

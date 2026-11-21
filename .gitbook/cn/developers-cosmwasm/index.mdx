@@ -3,6 +3,79 @@ title: 概述
 updatedAt: "2026-02-13"
 ---
 
-CosmWasm 是为 Cosmos 生态系统构建的新型智能合约平台。你可以从 [CosmWasm 文档](https://cosmwasm.cosmos.network/) 了解更多关于 CosmWasm 的信息，或查看 [CosmWasm Book](https://book.cosmwasm.com/index.html) 获取创建 CosmWasm 智能合约的指南。
+本节面向使用 CosmWasm 在 Injective 上构建的开发者。
+CosmWasm 是为 Cosmos 生态系统打造的、基于 WebAssembly 的智能合约平台。
+无论你是在编写 Rust 合约、与 Injective 的原生模块集成，还是通过治理部署到主网，
+都可以在这里找到覆盖整个 CosmWasm 开发生命周期（从本地开发到生产部署）的完整指南。
 
-**在 Injective 上使用 CosmWasm 开始你的构建之旅**：[你的第一个 CosmWasm 智能合约](/cn/developers-cosmwasm/smart-contracts/your-first-smart-contract)
+Injective 弥合了 WebAssembly 合约与高性能金融基础设施之间的鸿沟，
+从而提升了 CosmWasm 开发体验。
+与合约孤立运行的标准 CosmWasm 链不同，
+Injective 的 `Any` 消息系统支持 Rust 合约与原生模块直接通信，使合约
+能够在链上订单簿下单、查询预言机价格馈送、创建 TokenFactory 资产以及参与拍卖。
+CW20 Adapter 通过将 CW20 代币转换为原生 denom，进一步扩展了互操作性，
+使 CW20 代币可以在 Injective 的交易所上无缝交易。
+借助 `injective-test-tube`，开发者可以针对真实的链逻辑（而不是模拟）对合约进行集成测试，
+确保其在真实环境中的正确性。结合 Injective 的亚秒级出块时间和无需许可的测试网，
+CosmWasm 开发者可以获得一个生产级环境，用于构建充分利用
+Injective 金融原语深度的复杂 DeFi 应用。
+
+## 关键概念 {#key-concepts}
+
+| 术语 | 定义 |
+|------|------------|
+| **CosmWasm** | 为 Cosmos 构建的基于 WebAssembly 的智能合约平台，支持使用 Rust 编写安全、可移植且具有确定性执行的合约。 |
+| **CW20 Adapter** | 一个将 CW20 代币转换为原生 TokenFactory denom 的桥接合约，使 CW20 代币能够与 Injective 的交易所和其他原生模块交互。 |
+| **Any Messages** | Protobuf 编码的消息（CosmWasm 2.0+），允许 CosmWasm 合约与 Injective 的 exchange、oracle 和 tokenfactory 等原生模块交互。 |
+| **injective-test-tube** | 一个集成测试库，在内存中运行真实的 Injective 链逻辑，用于针对真实的模块行为（而非模拟）测试 CosmWasm 合约。 |
+| **WASMx** | Injective 管理 CosmWasm 合约部署的模块，包括主网代码上传的治理提案和权限管理。 |
+
+## 开始构建 {#start-building}
+
+<Columns cols={2}>
+  <Card
+    title="你的第一个 CosmWasm 智能合约"
+    href="/cn/developers-cosmwasm/smart-contracts/your-first-smart-contract"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="">
+    面向初学者的完整指南，介绍如何在 Injective 上编写、编译、测试、部署你的第一个基于 Rust 的 CosmWasm 合约并与之交互。
+  </Card>
+  <Card
+    title="本地开发指南"
+    href="/cn/developers-cosmwasm/local-development-guide/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="">
+    搭建本地 Injective 节点，使用 rust-optimizer 编译 CW20 合约，并部署到本地网络以进行快速迭代和测试。
+  </Card>
+  <Card
+    title="主网部署指南"
+    href="/cn/developers-cosmwasm/mainnet-deployment-guide/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="">
+    了解将合约上传到 Injective 主网的治理流程，包括提案提交、实例化权限和合约迁移。
+  </Card>
+  <Card
+    title="使用 Injective 模块"
+    href="/cn/developers-cosmwasm/cosmwasm-any/"
+    arrow="true"
+    cta="点击这里"
+    icon="panel-left-close"
+    img="">
+    了解如何在 CosmWasm 合约中使用 Any 消息和查询，与 Injective 的原生模块（exchange、oracle、tokenfactory）交互。
+  </Card>
+</Columns>
+
+## 其他资源 {#additional-resources}
+
+- **[CW20 Adapter](/cn/developers-cosmwasm/cw20-adapter/)**：
+  适配器合约的技术文档，该合约将 CW20 代币桥接到 Injective 的原生 bank 模块和交易所。
+- **[Injective Test Tube](/cn/developers-cosmwasm/injective-test-tube/)**：
+  集成测试框架，用于在内存中针对真实的 Injective 链逻辑运行 CosmWasm 测试。
+- **[智能合约示例](/cn/developers-cosmwasm/smart-contracts/)**：
+  参考实现，包括 Injective Name Service、Neptune Service 以及 CW20 转市价单的工作流程。

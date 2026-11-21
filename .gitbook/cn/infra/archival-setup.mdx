@@ -10,10 +10,10 @@ Injective 归档节点的设置、配置与恢复指南。涵盖如何在网关�
 </Callout>
 
 <Callout icon="warning" color="#FF8C00" iconType="regular">
-**正在进行升级或停机后的恢复？** 请直接跳转到[升级或停机后恢复归档节点](#升级或停机后恢复归档节点)查看恢复流程。
+**正在进行升级或停机后的恢复？** 请直接跳转到[升级或停机后恢复归档节点](#restoring-archival-nodes-after-an-upgrade-or-halt)查看恢复流程。
 </Callout>
 
-## 归档设置
+## 归档设置 {#archival-setup}
 
 为了使归档数据的服务更加便捷，我们将数据分成较小的段。这些段存储在 `s3://injective-snapshots/mainnet/subnode`
 
@@ -28,11 +28,11 @@ curl -s "https://injective-snapshots.s3.amazonaws.com/?prefix=mainnet/subnode/&d
   | tr '<' '\n' | sed -n 's/^Prefix>mainnet\/subnode\/\([^/]*\)\/.*/\1/p' | sort -n
 ```
 
-#### 命名约定
+#### 命名约定 {#naming-convention}
 
 目录名称以百万为单位编码区块高度范围。例如，`138150` 包含从 138M 到 150M 的区块。当段之间存在重叠时（例如 `8896` 与 `8898`，或 `119127` 与 `119141` 与 `119143`），较新或范围更宽的段通常包含修正或扩展了覆盖范围。请选择在没有不必要重叠的情况下最能覆盖你目标范围的段。
 
-#### 可用段
+#### 可用段 {#available-segments}
 
 <Note>
 此表可能未包含最新的段。请运行上面的 `aws s3 ls` 命令检查是否有新发布的段。
@@ -55,13 +55,13 @@ curl -s "https://injective-snapshots.s3.amazonaws.com/?prefix=mainnet/subnode/&d
 | `119141`     | 119M – 141M  | 待定               | 待定                   |
 | `119143`     | 119M – 143M  | v1.17.0           | 16 TiB                |
 | `138150`     | 138M – 150M  | v1.17.2           | 5.8 TiB               |
-| `150181`     | 150M – 181M  | 即将推出           | 即将推出               |
+| `150181`     | 150M – 181M  | v1.20.3-safeharbor.1 | 13.2 TiB              |
 
 <Warning>
 标记为 **待定** 或 **即将推出** 的行表示这些段已存在于 S3 中，但尚未验证其版本和磁盘大小。在使用这些段之前，请联系基础设施团队或检查段元数据。
 </Warning>
 
-#### 选择段以实现完整覆盖
+#### 选择段以实现完整覆盖 {#choosing-segments-for-full-coverage}
 
 多个段在高度范围上存在重叠。你不需要全部下载。以下是从创世区块到当前链顶端实现完整归档覆盖的推荐最小集合：
 
@@ -78,13 +78,13 @@ curl -s "https://injective-snapshots.s3.amazonaws.com/?prefix=mainnet/subnode/&d
 | 9    | `150181`| 150M – 181M  | 最新的段，覆盖到最近的链高度 |
 | 顶端  | 剪枝节点  | 最新区块 | 剪枝节点覆盖最新段与实时链顶端之间的空缺 |
 
-**剪枝顶端节点**至关重要。归档段是静态快照，不会与实时链同步。网关将对最近区块的查询路由到剪枝节点，该节点通过 p2p 保持同步。有关如何使用 `blocks: [1000]` 配置顶端节点，请参阅下面的[网关配置](#网关配置)。
+**剪枝顶端节点**至关重要。归档段是静态快照，不会与实时链同步。网关将对最近区块的查询路由到剪枝节点，该节点通过 p2p 保持同步。有关如何使用 `blocks: [1000]` 配置顶端节点，请参阅下面的[网关配置](#gateway-configuration)。
 
 这些段通过网关连接在一起，网关是一个聚合代理，根据区块范围将查询路由到适当的节点
 
 ![归档架构](./assets/archival_architecture.jpg)
 
-## 系统要求
+## 系统要求 {#system-requirements}
 
 托管归档数据切片的每个节点应具有以下最低要求
 
@@ -94,21 +94,21 @@ curl -s "https://injective-snapshots.s3.amazonaws.com/?prefix=mainnet/subnode/&d
 | **内存**  | 128 GB DDR5 ECC       | DDR5-5200 MHz 或更高，ECC 用于数据完整性            |
 | **存储** | 7 – 40 TB NVMe Gen 4  | PCIe 4.0 驱动器，可以是单个驱动器或 RAID-0 阵列 |
 
-## 设置步骤
-### 在托管归档段的每个节点上：
-#### 1. 使用以下命令下载你的设置所需历史记录的归档段 
+## 设置步骤 {#setup-steps}
+### 在托管归档段的每个节点上： {#on-each-node-hosting-an-archival-segment}
+#### 1. 使用以下命令下载你的设置所需历史记录的归档段 {#1-download-the-archival-segments-with-the-history-your-setup-requires-using}
 ```bash
 # SNAPSHOT_DIR matches the "Snapshot Dir" column in the table above (0073, 138150)
 aws s3 cp --no-sign-request --recursive s3://injective-snapshots/mainnet/subnode/$SNAPSHOT_DIR $INJ_HOME
 ```
 
-#### 2. 根据上表下载或设置适当的 injective 二进制文件或镜像标签
+#### 2. 根据上表下载或设置适当的 injective 二进制文件或镜像标签 {#2-download-or-set-the-appropriate-injective-binary-or-image-tag-based-on-the-table-above}
 
-#### 3. 生成你的配置文件夹 
+#### 3. 生成你的配置文件夹 {#3-generate-your-config-folder}
 ```bash
 injectived init $MONIKER --chain-id injective-1 --home $INJ_HOME --overwrite
 ```
-#### 4. 在你的 app.toml 文件中禁用剪枝，并在 config.toml 文件中阻止 p2p 并将日志级别设置为 error。
+#### 4. 在你的 app.toml 文件中禁用剪枝，并在 config.toml 文件中阻止 p2p 并将日志级别设置为 error。 {#4-disable-pruning-in-your-app-toml-file-and-block-p2p-and-set-the-log-level-to-error-in-your-config-toml-files}
 
 这确保数据不会被剪枝，节点保持在停止状态。将日志级别设置为 error 可减少磁盘操作并提高性能。
 
@@ -139,12 +139,12 @@ awk '
 sed -i 's/^log_level *= *.*/log_level = "error"/' $INJ_HOME/config/app.toml
 ```
 
-#### 5. 运行你的节点 
+#### 5. 运行你的节点 {#5-run-your-node}
 ```bash
 injectived start --home $INJ_HOME
 ```
 
-### 网关配置
+### 网关配置 {#gateway-configuration}
 
 网关是一个反向代理，根据请求的区块高度将 RPC、gRPC 和 API 查询路由到正确的归档节点。下面的参考实现来自生态系统贡献者 [Decentrio](https://github.com/decentrio/gateway)。
 
@@ -152,15 +152,15 @@ injectived start --home $INJ_HOME
 网关会检查传入请求，确定区块高度，并转发到持有该范围的上游节点。任何具备高度感知能力的反向代理（nginx、Caddy、带自定义路由的 HAProxy）都可以实现同样的功能。
 </Note>
 
-#### 1. 克隆网关仓库
+#### 1. 克隆网关仓库 {#1-clone-the-gateway-repository}
 ```bash
 git clone https://github.com/decentrio/gateway
 ```
-#### 2. 构建网关 
+#### 2. 构建网关 {#2-build-gateway}
 ```bash
 make build
 ```
-#### 3. 创建你的配置文件
+#### 3. 创建你的配置文件 {#3-create-your-config-file}
 ```yaml
 upstream:
   # example node 1 holds blocks 0-80M while node 2 holds blocks 80-88M
@@ -191,18 +191,18 @@ ports:
   jsonrpc_ws: 0
 
 ```
-#### 4. 运行网关
+#### 4. 运行网关 {#4-run-gateway}
 ```bash
 gateway start --config $CONFIG_FILE
 ```
 
 ---
 
-## 升级或停机后恢复归档节点
+## 升级或停机后恢复归档节点 {#restoring-archival-nodes-after-an-upgrade-or-halt}
 
 归档段节点是静态的，因此它们不参与共识，也不通过 p2p 同步。但是，它们仍然可能受到协调升级或计划外链停机的影响，尤其是**剪枝顶端节点**以及覆盖最近区块高度的任何段节点。
 
-### 剪枝顶端节点
+### 剪枝顶端节点 {#pruned-tip-node}
 
 剪枝顶端节点是归档集群中唯一与实时链主动同步的节点。在协调升级或计划外停机期间，请像对待其他全节点一样对待它：
 
@@ -213,7 +213,7 @@ gateway start --config $CONFIG_FILE
 
 顶端节点没有 `priv_validator_state.json`（它不是验证者），因此不存在双重签名风险。如果顶端节点的状态损坏（AppHash 不匹配），请从剪枝快照恢复。请参阅[验证者故障排查与快照资源](/cn/infra/coordinated-upgrades#快照资源)。
 
-### 覆盖最近高度的段节点
+### 覆盖最近高度的段节点 {#segment-nodes-covering-recent-heights}
 
 如果某次升级改变了历史区块的处理或存储方式（影响查询结果的状态迁移），覆盖升级边界附近高度的段节点可能会返回不一致的数据。在这种情况下：
 
@@ -225,11 +225,11 @@ gateway start --config $CONFIG_FILE
 3. 将二进制文件更新到该段指定的版本
 4. 重启节点
 
-### 较旧的段节点
+### 较旧的段节点 {#older-segment-nodes}
 
 覆盖历史区块范围的段节点（`0073`、`8088`）通常不受链升级的影响。它们使用生成数据时的二进制版本来提供既有数据。除非升级明确改变了历史查询的处理方式，否则无需任何操作。
 
-### 网关
+### 网关 {#gateway}
 
 网关本身是无状态的，在链升级期间不需要升级。但是，如果你添加或替换了段节点，请更新网关配置以反映新的上游端点并重启网关。
 
