@@ -1,0 +1,171 @@
+---
+title: Private Transfers with Cypher OS
+description: How Cypher OS keeps transfer amounts and recipients private on Injective, what stays public, and how to read its testnet deployment.
+updatedAt: "2026-11-21"
+---
+
+Cypher OS adds private transfers to tokens on Injective.
+You shield ERC-20 tokens into a pool, send them privately inside the pool, and unshield them to any address.
+This guide explains what Cypher OS keeps private, what stays public, and how to use the testnet deployment.
+
+<Info>
+  Cypher OS is live on Injective testnet only, at [`testnet.cypheros.injective.tech`](https://testnet.cypheros.injective.tech/).
+  It isn't available on mainnet.
+  To try it as a user, see the [Cypher OS Testnet Guide](/defi/cypheros-testnet).
+</Info>
+
+## How it works
+
+Cypher OS is built on [Zeto](https://github.com/LFDT-Paladin/zeto), a toolkit for building private token transfers on EVM networks.
+Zeto implements the unspent transaction output (UTXO) model.
+Each transfer consumes existing notes and creates new ones, and the pool contract verifies a zero-knowledge (ZK) proof before accepting the transfer.
+Each supported token has its own pool contract on Injective's Ethereum Virtual Machine (EVM).
+
+When you shield tokens, the ERC-20 tokens move from your wallet to the pool contract.
+The pool holds the tokens and records a note commitment, a hash that binds the note's amount, a random salt, and your Private Transfer Address.
+The shield transaction also publishes an encrypted copy of the note that your wallet can recover with your private transfer key.
+
+To calculate your shielded balance, your wallet decrypts the notes it can access and checks that their details reproduce the commitments recorded by the pool.
+It then checks which notes have already been spent and sums the amounts in the remaining notes.
+When you spend a note, your wallet proves that it controls the note without revealing which commitment it is spending.
+
+- **A note** is a value owned by a key.
+  On chain, the pool stores only its commitment, a hash of the value, a random salt, and the owner's public key: `Poseidon(value, salt, ownerPublicKey)`.
+  `Poseidon` is the hash function used to compute both the note commitment and the nullifier.
+  The commitment uses the note's amount, salt, and owner's public key, while the nullifier uses the note's amount, salt, and owner's private key.
+- **Spending a note** publishes its nullifier, `Poseidon(value, salt, ownerPrivateKey)`.
+  Only the owner can compute it.
+  When your wallet spends a note, it computes the note's nullifier and includes it as a public input to the proof.
+  The pool checks that the nullifier is unused and verifies the proof.
+  If the transaction succeeds, the contract marks the nullifier as used and records any new output commitments.
+  A later transaction using the same nullifier is rejected.
+  The nullifier is public, while the proof keeps the link to the original commitment private.
+  The indexer exposes the nullifier as `cmm` in `/spends` for these pools.
+- **Every shield, private send, and unshield carries a Groth16 ZK proof**, which the pool verifies on chain.
+  For a private send, the proof demonstrates that the sender controls the input notes, that their commitments are recorded in the pool's Merkle tree, and that the total value of the input notes equals the total value of the output notes.
+  The proof keeps the note amounts and owners private.
+  A shield publishes the deposit amount and the depositing wallet address.
+  An unshield publishes the withdrawal amount and payout address.
+- **You learn about new notes from the chain itself.**
+  A transfer encrypts each new note's value and salt to its recipient's key and publishes the ciphertext in the transfer's event.
+  Your wallet tries to decrypt every new note with your key, and keeps the ones that decrypt and match their commitment.
+
+A private transfer in the current testnet app can spend up to two input notes.
+The transfer consumes each selected note in full and creates a note for the recipient and a change note for you, which is worth zero when nothing is left over.
+For example, sending 5 USDC from a 7 USDC note spends the 7 USDC note and creates a 5 USDC note for the recipient and a 2 USDC change note.
+
+Cypher OS generates proofs in your browser using your private transfer key and note details.
+The app sends the proof and the data needed to submit the transaction to the relayer.
+The relayer and indexer can see the IP address of requests they receive.
+An observer may also be able to link activity using timing and distinctive public shield and unshield amounts.
+Local proof generation keeps the private inputs on your device during normal operation.
+A compromised browser or app can expose those inputs.
+
+### Keys and addresses
+
+You don't manage a separate secret.
+Cypher OS derives a [Baby Jubjub](https://eips.ethereum.org/EIPS/eip-2494) key pair from a deterministic signature that your EVM wallet produces over a fixed message, `This is onboarding to zeto. Don't sign this message on untrusted sites`.
+The same wallet produces the same key on any device.
+Your Private Transfer Address is the compressed public key, represented by 64 hexadecimal characters.
+Share it to receive private transfers.
+
+The app caches the private transfer key in browser storage and never sends it to a server.
+A compromised browser or script with access to the site's storage could expose the key.
+Disconnecting your wallet leaves the cached key in place.
+Clearing site data removes the local copy.
+To recover access, reconnect the same wallet and repeat onboarding, which produces the same signature and derives the same key.
+
+Treat the onboarding signature as a secret: anyone who obtains it can derive your private transfer key and spend your shielded balance.
+Wallets whose signatures aren't deterministic, such as smart-contract wallets and some multi-party wallets, would derive a different key each time, so the app refuses them.
+
+### The relayer
+
+For a private send or unshield, the app sends the proof and the transaction inputs to the relayer.
+The relayer submits the transaction to the pool contract and pays for gas.
+The relayer's address appears in the transaction's `from` field, which keeps your EVM address out of the transaction.
+
+The relayer can't redirect funds.
+An unshield's recipient address and every output commitment of a private send are public inputs bound to the proof.
+If the relayer changes any of them, the proof fails verification.
+The relayer can still delay or decline submission.
+
+## What stays private and what is public
+
+| Data | Shield | Private send | Unshield |
+|---|---|---|---|
+| Amount | Public | **Private** | Public |
+| Sender | Public (your EVM address) | **Private** | **Private** (submitted by the relayer) |
+| Recipient | Public (the pool) | **Private** | Public |
+| Which notes were spent | Not applicable | **Private** (only nullifiers are published) | **Private** |
+| That a transaction happened, and when | Public | Public | Public |
+
+Some limits apply even to private sends:
+
+- **The anonymity set is small on testnet.** Privacy depends on how many other people use the same pool around the same time.
+- **Timing and amounts can link shields to unshields.** If you shield an unusual amount and unshield the same amount soon after, observers can guess the two are connected.
+- **Off-chain services see network metadata.** The indexer and the relayer see the IP address of each request. The relayer also sees the nullifiers and new commitments it submits, which are public on chain anyway.
+- **Pool totals are public.** Anyone can read how much of the backing token each pool holds.
+
+## Testnet deployment
+
+The testnet uses Zeto's `Zeto_AnonEncNullifier` contracts: permissionless pools that anyone can shield into, with encrypted notes and nullifiers.
+
+| Pool | Pool contract | Backing ERC-20 |
+|---|---|---|
+| INJ | [`0xf20176d743eA59b550219C4221A23820D3508297`](https://testnet.blockscout.injective.network/address/0xf20176d743eA59b550219C4221A23820D3508297) | Wrapped INJ (wINJ), [`0x0000000088827d2d103ee2d9A6b781773AE03FfB`](/developers-evm/wrapped-inj) |
+| USDC | [`0x27DF839b6758cb657AedC6553f08c4F181040093`](https://testnet.blockscout.injective.network/address/0x27DF839b6758cb657AedC6553f08c4F181040093) | USD Coin (USDC), [`0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d`](/developers-defi/usdc-stablecoin) |
+
+Each pool is an upgradeable proxy, and its owner, the Cypher OS team, can upgrade the pool's contract.
+Treat testnet balances as having no value, and expect the pools to be redeployed before mainnet.
+
+### Indexer API
+
+Finding your notes means reading every commitment in a pool.
+The Cypher OS indexer does this scan once and serves the results as public, unauthenticated feeds, at `https://testnet.cypheros.injective.tech/v1`.
+The feeds aren't filtered by user: nobody, the indexer included, can tell who owns a note.
+
+| Endpoint | Returns |
+|---|---|
+| `GET /pools?only_served=true` | The pools the testnet app serves, with each pool's backing ERC-20 (`ta`) and owner (`ow`) |
+| `GET /commitments?contract=<pool>` | Every note commitment in a pool, in chain order, with its ciphertext |
+| `GET /spends?contract=<pool>` | Every spent input in a pool, in chain order. On these pools, each `cmm` is a nullifier |
+| `GET /relayer` | The relayer's address, its balance, and whether it can pay gas |
+
+`/commitments` and `/spends` are paginated.
+Request the first page with `contract` and `limit` (up to `1000`).
+Each response also returns `lib`, the last block the indexer has scanned.
+
+```bash
+curl "https://testnet.cypheros.injective.tech/v1/commitments?contract=0xf20176d743eA59b550219C4221A23820D3508297&limit=2"
+```
+
+To fetch the next page, use the final record's position as the cursor and keep the same pool address.
+Pass the record's block number and log index as `after_block` and `after_log`.
+For commitments, also pass its output index as `after_output`.
+For spends, pass its input index as `after_input`.
+
+For example, if the last commitment has `bn=12000`, `li=7`, and `oi=1`, request the next page with `GET /commitments?contract=<pool>&limit=2&after_block=12000&after_log=7&after_output=1`.
+For a spend at the same block and log with input index 0, use `GET /spends?contract=<pool>&limit=2&after_block=12000&after_log=7&after_input=0`.
+Keep paging until the endpoint returns no records, and save the last processed cursor to resume later.
+
+Each commitment record includes:
+
+| Field | Meaning |
+|---|---|
+| `cmm` | The note commitment, as a decimal string |
+| `bn`, `li`, `oi` | Block number, log index, and output index, which together form the paging cursor |
+| `tx` | The transaction that created the note |
+| `e` | The event that created it: `UTXOMint` for a shield, `UTXOTransferWithEncryptedValues` for a private send |
+| `sub` | The address that submitted the transaction: your wallet for a shield, the relayer for a private send |
+| `enc` | Whether the record carries a ciphertext for the recipient |
+| `epk`, `non`, `ev` | The ephemeral public key, nonce, and ciphertext that the recipient decrypts, present when `enc` is `true` |
+| `d` | The event's free-form `data` field. A shield puts a copy of its notes here, encrypted to the depositor's own key, so the depositor can recover them |
+
+To compute a balance, a wallet reads both feeds.
+It decrypts the commitments it can, checks that each decrypted value and salt rebuild the published commitment, and then removes the notes whose nullifiers appear in `/spends`.
+
+## Further reading
+
+- [Cypher OS Testnet Guide](/defi/cypheros-testnet): the user walkthrough.
+- [Zeto](https://github.com/LFDT-Paladin/zeto): the circuits and contracts Cypher OS is built on.
+- [Wrapped INJ (wINJ)](/developers-evm/wrapped-inj): how INJ backs the INJ pool.

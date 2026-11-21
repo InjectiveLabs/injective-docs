@@ -1,0 +1,155 @@
+---
+title: Cypher OS Testnet Guide
+description: Shield, send privately, and unshield INJ and USDC on the Cypher OS public testnet.
+updatedAt: "2026-11-16"
+---
+
+Cypher OS is a private-transfer wallet for assets on Injective.
+You move tokens from your regular wallet into a shielded balance, send them to other people without revealing the amount or who received them, and move them back out whenever you want.
+
+This guide walks through the public testnet at [`testnet.cypheros.injective.tech`](https://testnet.cypheros.injective.tech/).
+
+<Warning>
+  Cypher OS runs on Injective testnet only.
+  Testnet tokens have no value, and the testnet may be reset or redeployed, which can clear your shielded balance.
+  Don't send real funds to any address you see in the app.
+</Warning>
+
+## How it works
+
+Using Cypher OS has three steps:
+
+1. **Shield**: move tokens from your regular wallet into your shielded balance. This transaction is public.
+2. **Send privately**: send shielded tokens to another person's Private Transfer Address. The amount and the recipient stay private.
+3. **Unshield**: move tokens from your shielded balance back to a regular wallet address. This transaction is public.
+
+The testnet supports two assets:
+
+| Asset | What backs it on testnet |
+|---|---|
+| INJ | [Wrapped INJ (wINJ)](/developers-evm/wrapped-inj), converted from your INJ automatically when you shield |
+| USDC | [Testnet USD Coin (USDC)](/developers-defi/usdc-stablecoin) |
+
+## Before you start
+
+You need:
+
+- **A browser wallet for Ethereum Virtual Machine (EVM) networks**, such as MetaMask.
+  Use a regular account.
+  Smart-contract wallets and some hardware or multi-party wallets aren't supported, because Cypher OS needs your wallet to produce the same signature every time (see [Your Private Transfer Address](#your-private-transfer-address)).
+- **Testnet INJ** from the [Injective testnet faucet](https://testnet.faucet.injective.network/).
+  You need some INJ for gas even if you only plan to use USDC.
+- **Testnet USDC** (optional) from the [Circle faucet](https://faucet.circle.com/), on Injective testnet.
+
+You don't need to add the network yourself.
+When you connect, Cypher OS asks your wallet to add or switch to Injective testnet (EVM chain ID `1439`).
+
+## Step-by-step
+
+<Steps>
+  <Step title="Connect your wallet">
+    Open [`testnet.cypheros.injective.tech`](https://testnet.cypheros.injective.tech/) and select **Connect wallet**.
+    Approve the network switch if your wallet asks.
+
+    While the page loads, Cypher OS downloads the proof files it needs to generate proofs in your browser.
+    Shield and Send Privately become available when the download finishes.
+
+    The first time you connect, your wallet asks you to sign a message that starts with "This is onboarding to zeto".
+    It asks twice: Cypher OS checks that both signatures match before it creates your Private Transfer Address.
+    Signing is free and doesn't send a transaction.
+  </Step>
+  <Step title="Shield tokens">
+    Select **Shield**, choose INJ or USDC, and enter an amount.
+    Your wallet asks you to confirm up to three transactions:
+
+    1. **Convert INJ to wINJ**, only when you shield INJ and your wINJ balance doesn't cover the amount.
+    2. **Approve the token**, once per asset, when the current approval doesn't cover the amount.
+    3. **Shield**, which moves the tokens into your shielded balance.
+
+    Before the shield transaction, the app generates a zero-knowledge (ZK) proof in your browser.
+
+    When you shield INJ, **Max** keeps 0.01 INJ in your wallet for gas.
+  </Step>
+  <Step title="Get a Private Transfer Address">
+    To receive private transfers, share your Private Transfer Address.
+    Open your account menu, select **Private Transfer Address**, then reveal and copy it.
+
+    A Private Transfer Address is not a wallet address.
+    It's a 64-character code that only Cypher OS uses, and it's safe to share.
+  </Step>
+  <Step title="Send privately">
+    Select **Send Privately**, choose the asset, and enter the amount and the recipient's Private Transfer Address.
+
+    You don't sign anything in your wallet and you don't pay gas.
+    The app proves the transfer in your browser, then a relayer submits it to Injective and pays the gas.
+    The recipient's shielded balance updates once the transfer is confirmed.
+
+    Your shielded balance is made of separate notes, one for each shield or incoming transfer.
+    One transfer can spend at most two of them.
+    If you shielded in many small amounts, the app may tell you the most you can send in a single transfer.
+    Send that amount or less.
+  </Step>
+  <Step title="Unshield">
+    Open an asset and select **Unshield**.
+    Enter an amount and choose the recipient:
+
+    - **This wallet** sends the tokens to the wallet you connected.
+    - **Another wallet** sends them to any EVM address you enter. Check the address carefully, because you can't reverse an unshield.
+
+    Like a private send, an unshield goes through the relayer, so you don't sign or pay gas.
+    A large amount may be sent in several transactions.
+
+    Unshielding INJ pays out wINJ, which the app counts toward your INJ balance.
+    To use it as INJ in other apps, unwrap it as described in [Wrapped INJ (wINJ)](/developers-evm/wrapped-inj).
+  </Step>
+</Steps>
+
+## What other people can see
+
+| Action | Visible to everyone on Injective | Private |
+|---|---|---|
+| Shield | Your wallet address, the asset, and the amount | Your Private Transfer Address |
+| Send privately | That a private transfer happened, and when | The sender, the recipient, and the amount |
+| Unshield | The recipient address, the asset, and the amount | Which shielded balance the tokens came from |
+
+Shielding and unshielding are the public edges of Cypher OS.
+If you shield an unusual amount and unshield the same amount soon after, an observer can guess that the two are connected.
+Private transfers hide more when you wait between steps and avoid round or unique amounts.
+
+## Your Private Transfer Address
+
+Cypher OS derives your private key from the signature you gave when you first connected.
+It doesn't store your key on a server, and nobody else, including Injective Labs, can see it.
+
+- **On another device or browser**, connect the same wallet and sign the same message again.
+  You get the same Private Transfer Address and the same shielded balance.
+- **Only sign the "This is onboarding to zeto" message on Cypher OS.**
+  Anyone who gets that signature can spend your shielded balance.
+- **Your browser caches your key** so that you don't sign every visit.
+  Disconnecting doesn't clear it.
+  Clear the site data in your browser to remove it.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The app says my proof files are preparing">
+    Cypher OS downloads its proof files when the page loads.
+    Keep the tab open until the download finishes, and select **View progress** to follow it.
+  </Accordion>
+  <Accordion title="My balance didn't update after a transfer">
+    A transfer reaches Injective before it's confirmed, and your balance updates on its own a few seconds later.
+    If it still hasn't changed after a minute, reload the page.
+  </Accordion>
+  <Accordion title="My wallet was refused during setup">
+    Cypher OS refuses wallets whose two setup signatures don't match, because the Private Transfer Address would change between sessions and you could lose access to your shielded balance.
+    Use a regular wallet account instead of a smart-contract or multi-party wallet.
+  </Accordion>
+  <Accordion title="I unshielded INJ but see wINJ in my wallet">
+    Unshielding pays out wrapped INJ (wINJ).
+    See [Wrapped INJ (wINJ)](/developers-evm/wrapped-inj) to convert it back to INJ.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+- Builders: read [Private Transfers with Cypher OS](/developers-defi/cypheros-private-transfers) for how the privacy model works and how to read the testnet indexer.
