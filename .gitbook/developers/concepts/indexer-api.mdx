@@ -1,12 +1,12 @@
 ---
 title: Indexer API
 description: How the Injective Indexer works and how to run the Docker Compose stack.
-updatedAt: "2026-11-19"
+updatedAt: "2026-11-21"
 ---
 
 The Injective Indexer turns chain events into data that applications can query and stream, including markets, orders, trades, and account activity. It stores the indexed data in MongoDB so applications can look up historical records and subscribe to updates without replaying blocks themselves.
 
-For endpoint definitions and request and response schemas, see the [Indexer API reference](https://api.injective.exchange/#indexer-api).
+For endpoint definitions and request and response schemas, see the [Indexer API reference](https://api.injective.exchange/#indexer-api) and [Indexer Swagger UI](https://sentry.exchange.grpc-web.injective.network/swagger/#/).
 
 ## How the Indexer works
 
@@ -23,6 +23,8 @@ The diagram shows the Docker Compose deployment. **Exchange indexer services** g
 ## Service setup
 
 Run your own stack if your trading app, explorer, or analytics service needs dedicated API capacity or control over data retention and backfills. For development or integrations that can use hosted services, start with the [public endpoints](/infra/public-endpoints).
+
+The original [Indexer Service Setup Guide](https://app.notion.com/p/7e59980634d54991862300670583d46a) is available in Notion.
 
 Get the Docker Compose files for Event Provider, Exchange, and optional Explorer from the [Injective Indexer Releases repository](https://github.com/InjectiveLabs/injective-indexer-releases). Check [Software Compatibility](/infra/software-compatibility) for the Indexer version listed for your chain release.
 

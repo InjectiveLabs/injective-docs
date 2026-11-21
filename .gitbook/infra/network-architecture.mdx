@@ -1,7 +1,7 @@
 ---
 title: Network Architecture
 description: How Injective validators, sentries, relayers, light clients, and API services work together.
-updatedAt: "2026-11-18"
+updatedAt: "2026-11-21"
 ---
 
 Injective nodes run `injectived`, the Injective Core executable. As a node daemon, it runs Injective’s native execution modules and the EVM, and uses CometBFT for peer networking and consensus. The same executable provides command line tools for querying chain state and submitting transactions. See [Install the Mainnet release](/infra/run-node#install-the-mainnet-release) for node binaries.
@@ -41,7 +41,7 @@ flowchart TB
 ### IBC relayers and Peggo
 
 - **IBC relayers** watch both chains, pay gas, and submit client updates, packet proofs, acknowledgements, and timeouts. Each receiving chain uses its onchain IBC light client of the counterparty to verify the proofs. See [Hermes](https://github.com/informalsystems/hermes), [IBC Go](https://github.com/cosmos/ibc-go), and the [IBC precompile reference](/developers-evm/ibc-precompile).
-- **Peggo** is the separate orchestrator for the Peggy bridge between Injective and Ethereum. It observes Ethereum bridge events, submits claims and confirmations to Injective, and relays validator set updates and withdrawal batches to the Ethereum contract. See [Peggo setup](/infra/validator-mainnet/peggo), the [Peggy module](/developers-native/injective/peggy), and [Peggo releases](https://github.com/InjectiveFoundation/injective-core/releases).
+- **Peggo** is the separate orchestrator for the Peggy bridge between Injective and Ethereum. It observes Ethereum bridge events, submits claims and confirmations to Injective, and relays validator set updates and withdrawal batches to the Ethereum contract. See the [ERC-20 transfer diagrams](/infra/validator-mainnet/peggo#how-erc-20-transfers-work), [Peggo setup](/infra/validator-mainnet/peggo), the [Peggy module](/developers-native/injective/peggy), and [Peggo releases](https://github.com/InjectiveFoundation/injective-core/releases).
 
 ## How applications read the chain
 
@@ -62,12 +62,26 @@ flowchart TB
     class Indexer,Gateway service
 ```
 
-- **Built-in EVM gRPC** is the `injective.evm.v1.Query` service inside `injectived`. It provides EVM state queries and simulation methods such as `EthCall` and `EstimateGas` to gRPC clients, including EVM Gateway. See the [EVM query definitions](https://github.com/InjectiveLabs/injective-proto/blob/master/all_protos/injective/evm/v1/query.proto).
-- **EVM Gateway** runs separately from `injectived`. It reads CometBFT block data and uses native gRPC queries, builds a local index of EVM blocks, transactions, receipts, and logs, and serves Ethereum JSON-RPC. See the [EVM Gateway explainer](/developers-evm/evm-gateway) and [Gateway source](https://github.com/InjectiveLabs/evm-gateway).
-- **Injective Indexer** processes chain events into queryable records for markets, orders, fills, and account activity. See the [Indexer API definitions](https://api.injective.exchange/#indexer-api), [Query Indexer](/developers-native/query-indexer), [Indexer API architecture](/developers/concepts/indexer-api), and the [Indexer repository](https://github.com/InjectiveLabs/injective-indexer), which requires repository access.
+### EVM Gateway
+
+Wallets, explorers, and EVM applications connect to the gateway over Ethereum JSON-RPC. The gateway runs as a separate service alongside an `injectived` full node. It reads committed blocks from CometBFT RPC and builds its own index of EVM transactions, receipts, and logs. For operations such as `eth_call` and `eth_estimateGas`, it uses the upstream node's EVM gRPC service. The node executes transactions and follows chain consensus.
+
+<Columns cols={2}>
+  <Card title="EVM Gateway reference" href="/developers-evm/evm-gateway" icon="server">
+    Set up the gateway and review its configuration, indexed data, and supported JSON-RPC methods.
+  </Card>
+  <Card title="EVM Gateway Explorer" href="https://evm-gateway-explorer.netlify.app/" icon="magnifying-glass">
+    Compare recorded Testnet responses from CometBFT, the node's built-in JSON-RPC server, and EVM Gateway.
+  </Card>
+</Columns>
 
 <Warning>
-Use Injective Core’s optional built-in Ethereum JSON-RPC server for local development and testing only. [EVM Gateway](/developers-evm/evm-gateway) is the recommended Ethereum JSON-RPC server for production.
+Use Injective Core’s optional built-in Ethereum JSON-RPC server for local development and testing only. EVM Gateway is the recommended Ethereum JSON-RPC server for production.
 </Warning>
+
+### Native queries and indexed application data
+
+- **Built-in EVM gRPC** is the `injective.evm.v1.Query` service inside `injectived`. It provides EVM state queries and simulation methods such as `EthCall` and `EstimateGas` to gRPC clients, including EVM Gateway. See the [EVM query definitions](https://github.com/InjectiveLabs/injective-proto/blob/master/all_protos/injective/evm/v1/query.proto).
+- **Injective Indexer** processes chain events into queryable records for markets, orders, fills, and account activity. See the [Indexer API definitions](https://api.injective.exchange/#indexer-api), [Query Indexer](/developers-native/query-indexer), [Indexer API architecture](/developers/concepts/indexer-api), and the [Indexer repository](https://github.com/InjectiveLabs/injective-indexer), which requires repository access.
 
 For service addresses, see [Mainnet Public Endpoints](/infra/public-endpoints) and [Testnet Public Endpoints](/testnet/public-endpoints).

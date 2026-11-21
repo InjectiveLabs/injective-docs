@@ -205,7 +205,7 @@
                         "group": "Indexer & Bridges",
                         "pages": [
                           "developers/concepts/indexer-api",
-                          "redirects/https_api_injective_network_swagger",
+                          "redirects/https_injective_notion_site_indexer_service_setup_guide",
                           "infra/validator-mainnet/peggo"
                         ]
                       },

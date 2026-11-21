@@ -1,16 +1,16 @@
 ---
 title: EVM Gateway
 description: Run Injective's standalone EVM JSON-RPC gateway for Ethereum-compatible RPC access to Injective EVM data.
-updatedAt: "2026-06-09"
+updatedAt: "2026-11-21"
 ---
 
 ## About
 
-`evm-gateway` is a standalone Injective EVM JSON-RPC server.
+`evm-gateway` is the standalone Ethereum JSON-RPC server recommended for production access to Injective EVM. Wallets, explorers, and EVM applications connect to it over HTTP or WebSocket.
 
 It reads block data from CometBFT RPC, uses Injective gRPC for module queries, indexes EVM-relevant data into a local KV store, and serves Ethereum-style RPC from that local indexed state where possible.
 
-Operationally, it is meant to be run beside an Injective node, not inside it. It replaces the internal JSON-RPC server that was not intended to be run in production environments.
+The gateway runs alongside an Injective full node. See [Network Architecture](/infra/network-architecture#evm-gateway) for how it connects to `injectived` and how its role relates to the Injective Indexer.
 
 **Properties:**
 
@@ -18,6 +18,16 @@ Operationally, it is meant to be run beside an Injective node, not inside it. It
 - historical gap fill and forward sync
 - no keyring-backed `personal_*` API
 - HTTP and WebSocket JSON-RPC
+
+### Operator resources
+
+- Plan deployment, storage, and backfill with the [EVM Gateway Operation Guide](https://evm-gateway-explorer.netlify.app/evm-gateway-operation-guide).
+- Check the version for the target Mainnet release in the [Software Compatibility Matrix](/infra/software-compatibility) and find release notes and downloads in [EVM Gateway releases](https://github.com/InjectiveLabs/evm-gateway/releases).
+- Find the public Mainnet and Testnet EVM Gateway JSON-RPC URLs in [EVM Network Information](/developers-evm/network-information).
+
+<Card title="EVM Gateway Explorer" href="https://evm-gateway-explorer.netlify.app/" icon="magnifying-glass">
+  Inspect recorded Testnet scenarios for INJ and USDC deposits and withdrawals. Compare native events, Ethereum receipts and logs, and account balance changes across CometBFT, the node's built-in JSON-RPC server, and EVM Gateway. The explorer uses saved responses from these scenarios.
+</Card>
 
 ## Installing
 
