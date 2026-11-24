@@ -39,6 +39,6 @@ The setup prints instructions for accessing the funded accounts. Use those accou
 
 Use the [precompiles example](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/precompiles/README.md#quick-start) to deploy a standard contract or a Bank-backed ERC20. If you want to start a new project, the [Foundry template](https://github.com/InjectiveLabs/inj-examples/blob/main/templates/foundry/README.md#local-development) includes the same local environment.
 
-The local chain starts with an empty swap allowlist. For a complete test that creates and allowlists a market, seeds its order book, and executes swaps, use the [swap localnet demo](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/swap-precompile/README.md#full-localnet-demo).
+The local chain starts with an empty swap allowlist. The [Solidity Contracts swap demo](https://github.com/InjectiveLabs/solidity-contracts/tree/ea9c54a6af1f922d2d76879c06c6cafc1362a084/demos/swap) creates and allowlists a market, seeds its order book, and exercises partial fills and input caps from a funded contract. The [`inj-examples` localnet walkthrough](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/swap-precompile/README.md#full-localnet-demo) covers swaps using a TokenFactory token and its ERC20 pair.
 
 Run `make local-stop` to stop the services. Run `make local-start` to resume with the same state.
