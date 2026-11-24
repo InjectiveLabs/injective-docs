@@ -82,7 +82,9 @@ You may find a more detailed example of this on Github:
 
 ## Registering Hook
 
-The `evm_hook` in this example applies restrictions before a transfer. To run logic after an eligible transfer has updated balances, configure `evm_post_hook` on the namespace. See [Permissions State Transitions](/developers-native/injective/permissions/03_state_transitions) for execution order, rollback, gas, and log limits.
+The `evm_hook` in this example checks whether a transfer can proceed before balances change. A tokenized fund could use this hook to verify that the recipient is an approved investor.
+
+If the fund also tracks investor holdings in its EVM contract, it can configure an optional `evm_post_hook` on the same namespace. When an investor sends fund shares through the Cosmos bank module, the bank balances update first. The post-hook can then update the fund contract's ownership records to reflect the transfer. If the post-hook fails, the transfer and its associated record updates roll back together. See [Permissions State Transitions](/developers-native/injective/permissions/03_state_transitions) for execution order, rollback, gas, and log limits.
 
 To register the hook for the permissions,
 you will need the following:

@@ -3,19 +3,39 @@ title: Liquidation
 updatedAt: "2025-10-30"
 ---
 
-Liquidation reduces or closes derivative exposure when its supporting equity falls below the maintenance requirement. Initial margin determines how much collateral is required to open exposure. Maintenance margin determines when existing exposure becomes liquidatable.
+Liquidation reduces or closes derivative exposure when a position or pool reaches its liquidation threshold. Initial margin determines how much collateral is required to open exposure. Maintenance margin determines when existing exposure becomes eligible for liquidation.
 
 ## Isolated liquidation
 
-An isolated position becomes eligible for liquidation when its equity falls below the maintenance requirement. Ignoring funding and fees, let `Q` be the positive position quantity, `P` the entry price, `M` the mark price, `m` the assigned margin, and `r` the maintenance margin ratio. The margin needed to stay at or above maintenance is:
+An isolated long becomes eligible for liquidation when the mark price falls to or below its liquidation price. An isolated short becomes eligible when the mark price rises to or above its liquidation price.
+
+Ignoring funding and fees, let `Q` be the positive position quantity, `P` the entry price, `M` the mark price, `m` the assigned margin, and `r` the maintenance margin ratio. The liquidation price is the mark price at which position equity equals the maintenance requirement.
 
 ```text
 maintenance requirement = Q × M × r
-long:  m ≥ maintenance requirement − Q × (M − P)
-short: m ≥ maintenance requirement − Q × (P − M)
+long equity             = m + Q × (M − P)
+short equity            = m + Q × (P − M)
 ```
 
-For a long of 1 BTC entered at 100,000 USDC with 10,000 USDC of assigned margin and a 5% maintenance ratio, the maintenance requirement starts at 5,000 USDC. When the mark price falls to 94,000, the 6,000 USDC unrealized loss leaves 4,000 USDC of equity. Required maintenance falls to 4,700 USDC, so the position becomes eligible for liquidation. Include funding and fees when calculating actual equity.
+Set equity equal to the maintenance requirement and solve for `M` to get each threshold.
+
+| Position | Liquidation price | Eligible when |
+| --- | --- | --- |
+| Long | `(P − m / Q) / (1 − r)` | Mark price ≤ liquidation price |
+| Short | `(P + m / Q) / (1 + r)` | Mark price ≥ liquidation price |
+
+### Worked example
+
+Consider a 1 BTC position opened at 100,000 USDC with 10,000 USDC of assigned margin and a 5% maintenance margin ratio. At entry, equity is 10,000 USDC and the maintenance requirement is 5,000 USDC.
+
+| Position | Liquidation price (USDC) | Example mark price (USDC) | Position equity (USDC) | Maintenance requirement (USDC) |
+| --- | --- | ---: | ---: | ---: |
+| Long | `(100,000 − 10,000) / 0.95` ≈ 94,736.84 | 94,000 | 4,000 | 4,700 |
+| Short | `(100,000 + 10,000) / 1.05` ≈ 104,761.90 | 106,000 | 4,000 | 5,300 |
+
+Each position has a 6,000 USDC unrealized loss at its example mark price. Both are eligible for liquidation because their equity is below maintenance. Either position would also be eligible at its exact liquidation price. The table rounds those prices to two decimal places.
+
+For perpetuals, the exchange adjusts assigned margin for accrued funding before calculating the liquidation price. The execution price and applicable fees affect the final payout.
 
 ### How isolated liquidation works
 
