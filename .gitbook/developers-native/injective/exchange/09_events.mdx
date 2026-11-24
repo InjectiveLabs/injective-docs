@@ -6,6 +6,17 @@ updatedAt: "2025-12-05"
 
 # Events
 
+## Post-only mode events
+
+| Event | When it is emitted |
+| --- | --- |
+| `EventPostOnlyModeActivated` | An authorized activation takes effect. The event includes the height threshold in effect after the message. |
+| `EventPostOnlyModeActivatedAfterDowntime` | BeginBlock activates post-only mode after qualifying downtime. The event includes the duration and new threshold. |
+| `EventPostOnlyModeCancellationRequested` | An authorized cancellation is requested. The request does not change the mode during the current block. |
+| `EventPostOnlyModeCancelled` | BeginBlock applies a pending cancellation. |
+
+To decide whether to route ordinary orders, [check the threshold against the current height](/developers-native/query-chain/exchange#check-exchange-post-only-mode). The threshold can expire by height, and the first block after a halt can activate the mode again.
+
 The exchange module emits the following events:
 
 ```proto
@@ -52,12 +63,6 @@ message EventDerivativeMarketPaused {
   string settle_price = 2;
   string total_missing_funds = 3;
   string missing_funds_rate = 4;
-}
-
-message EventBinaryOptionsMarketUpdate {
-  BinaryOptionsMarket market = 1 [
-    (gogoproto.nullable) = false
-  ];
 }
 
 message EventNewSpotOrders {
@@ -157,15 +162,6 @@ message EventCancelDerivativeOrder {
 
 message EventFeeDiscountSchedule {
   FeeDiscountSchedule schedule = 1;
-}
-
-message EventTradingRewardCampaignUpdate {
-  TradingRewardCampaignInfo campaign_info = 1;
-  repeated CampaignRewardPool campaign_reward_pools = 2;
-}
-
-message EventTradingRewardDistribution {
-  repeated AccountRewards account_rewards = 1;
 }
 
 message EventMarketBeyondBankruptcy {

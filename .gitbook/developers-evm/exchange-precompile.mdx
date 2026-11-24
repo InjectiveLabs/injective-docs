@@ -10,6 +10,19 @@ The Exchange Precompile is a system smart contract residing at the fixed address
 * Querying subaccount balances and open positions.
 * Managing authorization grants for other accounts or contracts.
 
+### Position funding and query gas
+
+Since v1.21.0, `subaccountPositions` returns `cumulativeFundingEntry` as a signed `int256`. The value has 18 decimal places. Update that field in your ABI bindings. The function selector is unchanged.
+
+Both queries charge base gas plus gas for rows scanned:
+
+| Query | Additional EVM gas |
+| --- | ---: |
+| `subaccountDeposits` | 2,500 per deposit record scanned for the subaccount |
+| `subaccountPositions` | 4,000 per active derivative market scanned |
+
+`subaccountPositions` scans active markets even for a subaccount with no positions. An empty response can still be expensive. Estimate gas on the target network, allow for changes in market or deposit counts, and budget each call separately if your contract calls either query more than once. Exchange precompile methods use their fixed gas schedule independently of the native `fixed_gas_enabled` parameter.
+
 #### Calling the Precompile: Direct vs. Proxy Access
 
 Interacting with the Exchange Precompile can be approached in two primary ways:

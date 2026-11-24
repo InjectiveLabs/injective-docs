@@ -263,7 +263,6 @@
     * [Exchange](developers-native/injective/exchange/README.md)
       * [Derivative Markets Concepts](developers-native/injective/exchange/00_derivative_market_concepts.md)
       * [Spot Markets Concepts](developers-native/injective/exchange/01_spot_market_concepts.md)
-      * [Binary Option Markets Concepts](developers-native/injective/exchange/02_binary_options_markets.md)
       * [Other Concepts](developers-native/injective/exchange/02_other_concepts.md)
       * [State](developers-native/injective/exchange/03_state.md)
       * [State Transitions](developers-native/injective/exchange/04_state_transitions.md)

@@ -42,10 +42,9 @@ The exchange EndBlocker runs at the end of every block in our defined order afte
       - `EventCancelDerivativeOrder`
 
 - Stage 5: Persist perpetual market funding info
-- Stage 6: Persist trading rewards total and account points.
-- Stage 7: Persist new fee discount data, i.e., new fees paid additions and new account tiers.
-- Stage 8: Process Spot Market Param Updates if any
-- Stage 9: Process Derivative Market Param Updates if any
+- Stage 6: Persist new fee discount data, i.e., new fees paid additions and new account tiers.
+- Stage 7: Process Spot Market Param Updates if any
+- Stage 8: Process Derivative Market Param Updates if any
 - Stage 10: Emit Deposit and Position Update Events
 
 ## Order Matching: Frequent Batch Auction (FBA)
@@ -68,10 +67,6 @@ For an example for the limit order matching in FBA fashion, look at the API docs
 - For a qualifying market compute the fee discounts:
   - Fee discounts are applied as refunds and the fee paid contribution is recorded.
   - Relayer fees are applied AFTER the fee discount is taken.
-- For a qualifying market compute the trade reward point contribution:
-  - Obtain the FeePaidMultiplier for maker and taker.
-  - Compute the trade reward point contribution.
-  - Trade reward points are based on the discounted trading fee.
 - Calculate fee refunds (or charges). There are several reasons why an order might get a fee refund after matching:
   1. It's a limit order which is not matched or only partially matched which means it will become a resting limit order and switch from a taker to maker fee. The refund is `UnmatchedQuantity * (TakerFeeRate - MakerFeeRate)`. Note that for negative maker fees, we refund the `UnmatchedQuantity * TakerFeeRate` instead.
   2. Fee discounts are applied. We refund the difference between the original fee paid and the fee paid after the discount.

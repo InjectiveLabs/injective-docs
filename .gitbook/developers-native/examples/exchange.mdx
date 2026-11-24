@@ -579,30 +579,6 @@ const txHash = await new MsgBroadcasterWithPk({
 console.log(txHash);
 ```
 
-### MsgRewardsOptOut
-
-This Message is used to opt out of the Trade & Earn program.
-
-```ts
-import { Network } from "@injectivelabs/networks";
-import { MsgRewardsOptOut } from "@injectivelabs/sdk-ts/core/modules";
-import { MsgBroadcasterWithPk } from "@injectivelabs/sdk-ts/core/tx";
-
-const privateKey = "0x...";
-const injectiveAddress = "inj...";
-
-const msg = MsgRewardsOptOut.fromJSON({ sender: injectiveAddress });
-
-const txHash = await new MsgBroadcasterWithPk({
-  privateKey,
-  network: Network.Testnet,
-}).broadcast({
-  msgs: msg,
-});
-
-console.log(txHash);
-```
-
 ### MsgExternalTransfer
 
 This message is used to transfer balance from one subaccount to another subaccount.

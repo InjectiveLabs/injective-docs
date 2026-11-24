@@ -70,6 +70,8 @@ The withdrawal request specifies an Ethereum recipient. The Peggy module groups 
 
 ### Configuration
 
+Peggo queries Ethereum bridge events in batches of up to 100 blocks by default. Set a positive `PEGGO_ORACLE_QUERY_RANGE` value or pass `--oracle_query_range` to `peggo orchestrator` to change that maximum. Use a smaller range if your Ethereum RPC provider rejects the size of its `eth_getLogs` requests.
+
 Example of `.env` for peggo:
 
 ```bash

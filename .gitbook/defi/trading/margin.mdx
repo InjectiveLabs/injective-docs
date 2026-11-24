@@ -21,9 +21,15 @@ The amount of margin required for a futures contract varies depending on several
 * **Contract terms:** Different futures contracts on the same asset may have different margin requirements.
 * **Exchange or clearinghouse:** Each exchange or clearinghouse may set its own margin requirements.
 
+## Isolated and cross margin
+
+Isolated margin assigns collateral to one position. Where cross margin is enabled, eligible positions in the same subaccount can share collateral when they use the same quote denomination. For example, eligible BTC/USDC and ETH/USDC positions can share one USDC pool. An override for a specific market can keep a position isolated within that subaccount.
+
+Check the effective margin mode before interpreting a position's margin or liquidation threshold. See [Liquidation](/defi/trading/margin-liquidation) for how the thresholds apply and [Chain Exchange Queries](/developers-native/query-chain/exchange#check-cross-margin-mode-and-pool-health) for how to look up the mode and pool health.
+
 It's important to remember that margin trading is not for everyone. It's a high-risk strategy that requires a deep understanding of the markets and risk management techniques. If you're not comfortable with the potential for significant losses, it's best to stick to traditional trading methods.
 
-**Here are some additional things to keep in mind when considering margin trading on Helix:**
+**Margin, liquidation, and funding:**
 
 * **Liquidation:** If the price of the underlying asset moves against you and your margin falls below a certain threshold (maintenance margin), your position will be liquidated to cover your losses. This means you could lose your entire initial margin deposit.
 * **Funding Rates:** In some cases, you may also be charged funding rates, which are fees paid to maintain your leveraged position. These fees can vary depending on market conditions and can eat into your profits.

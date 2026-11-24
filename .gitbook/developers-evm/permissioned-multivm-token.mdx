@@ -82,6 +82,8 @@ You may find a more detailed example of this on Github:
 
 ## Registering Hook
 
+The `evm_hook` in this example applies restrictions before a transfer. To run logic after an eligible transfer has updated balances, configure `evm_post_hook` on the namespace. See [Permissions State Transitions](/developers-native/injective/permissions/03_state_transitions) for execution order, rollback, gas, and log limits.
+
 To register the hook for the permissions,
 you will need the following:
 

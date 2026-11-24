@@ -13,8 +13,6 @@ curl -fsS https://sentry.lcd.injective.network/injective/exchange/v2/exchangePar
 
 The suggested transaction gas limit (`gasWanted`) adds an estimated 120,000 gas for transaction checks to the exchange message gas. For multiple messages, budget for the sum of their message costs and the checks for the whole transaction. Simulate the exact transaction and leave headroom when setting the limit.
 
-Binary options markets were removed in v1.21.0. Leave binary options fields empty when submitting `MsgBatchUpdateOrders`.
-
 ## Single messages
 
 | Native exchange message | Fixed message gas | Suggested gas limit |
@@ -65,12 +63,8 @@ type MsgBatchUpdateOrders struct {
     DerivativeOrdersToCancel          []*OrderData
     SpotOrdersToCreate                []*SpotOrder
     DerivativeOrdersToCreate          []*DerivativeOrder
-    BinaryOptionsOrdersToCancel       []*OrderData       // Leave empty on v1.21.
-    BinaryOptionsMarketIdsToCancelAll []string           // Leave empty on v1.21.
-    BinaryOptionsOrdersToCreate       []*DerivativeOrder // Leave empty on v1.21.
     SpotMarketOrdersToCreate          []*SpotOrder
     DerivativeMarketOrdersToCreate    []*DerivativeOrder
-    BinaryOptionsMarketOrdersToCreate []*DerivativeOrder // Leave empty on v1.21.
 }
 ```
 
@@ -96,6 +90,6 @@ Budget about 3,000 gas for transaction checks per explicit order or cancel all m
 
 ## Additional gas
 
-- A permissionless token's pre-send contract hook can charge additional gas to the transaction. Account for the hook separately because transaction simulation omits that charge in v1.21.0.
+- A permissionless token's contract hook can charge additional gas before a transfer. Account for the hook separately because transaction simulation omits that charge in v1.21.0. The charge does not apply to hook contracts that governance lists for enforced restrictions, such as the native USDC hook. The exemption applies to the listed contract address.
 - Legacy `injective.exchange.v1beta1` order, batch, and margin messages can incur extra market reads during conversion to v2. The release estimates about 1,700 gas per spot market read and 2,300 gas per derivative market read.
 - For calls from Solidity, estimate the full EVM transaction. The [Exchange precompile](/developers-evm/exchange-precompile) uses exchange constants as part of its own gas accounting and can also charge for owner blacklist queries.

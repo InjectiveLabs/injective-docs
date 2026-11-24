@@ -9,3 +9,11 @@ This section covers different methods for interacting with Injective nodes.
 - [gRPC](/infra/interact-node/grpc)
 - [Go](/infra/interact-node/go)
 - [REST](/infra/interact-node/rest)
+
+## EVM JSON-RPC in injectived
+
+These limits apply to the optional JSON-RPC server built into `injectived`. See [Network Architecture](/infra/network-architecture) for where the standalone EVM Gateway fits.
+
+- `[json-rpc].logs-cap` in `app.toml` limits the logs returned by `eth_getLogs`, including requests with a `blockHash` filter. It also limits the number of logs across an `eth_getBlockReceipts` response. For a range query that exceeds the cap, request a smaller range. For a single block that exceeds it, use narrower log filters or fetch receipts by transaction hash as appropriate.
+- `eth_getProof` accepts up to 1,024 storage keys per request. Split larger sets into requests pinned to the same block.
+- Named tracers such as `callTracer` work with custom JavaScript disabled. To allow custom JavaScript tracers on a trusted node, set `[evm].enable-custom-js-tracers` in `app.toml`. Keep it disabled on nodes serving untrusted trace requests.

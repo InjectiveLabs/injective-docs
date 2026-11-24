@@ -5,6 +5,26 @@ updatedAt: "2025-12-23"
 
 The `authz` module is an implementation of a Cosmos SDK module, per ADR 30, that allows granting arbitrary privileges from one account (the granter) to another account (the grantee).
 
+## Exchange grants and Ethereum transactions
+
+For an exchange v2 `GenericExchangeAuthorization`, an empty `SpendLimit` permits cancellations only. Spending actions require dispatch through the Exchange Precompile and a grant with enough spend limit to cover the hold. The required hold is rounded up to whole base units of the relevant denom. Native `MsgExec` with this grant supports only actions that spend no funds, such as cancellation.
+
+This unsigned Amino authorization grants permission only to cancel spot orders.
+
+```json
+{
+  "type": "exchange/v2/GenericExchangeAuthorization",
+  "value": {
+    "msg": "/injective.exchange.v2.MsgCancelSpotOrder",
+    "spend_limit": []
+  }
+}
+```
+
+Use the corresponding v2 Amino name for the exchange message itself, such as `exchange/v2/MsgCancelSpotOrder`.
+
+Submit `MsgEthereumTx` through the normal Ethereum transaction path. It cannot be executed inside an Authz `MsgExec`. For wallet payload examples, see [Ethereum Transactions](/developers-native/transactions/ethereum).
+
 ## Messages
 
 ### MsgGrant

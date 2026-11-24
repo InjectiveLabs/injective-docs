@@ -21,3 +21,13 @@ Additional notes:
 
 * **Immediate-Or-Cancel (IOC):** IOC orders are not yet supported. The closest order type is a market order (**BUY**).
 * The worst price for a market order is the "price" parameter.
+
+## Order limits and expiry
+
+An address can hold up to 5,000 orders on the book across its subaccounts, markets, and sides. Pending and resting orders count, including conditional orders. Immediate atomic market orders and RFQ quotes do not consume a slot. A cancellation or full fill frees a slot.
+
+A Good Till Block (GTB) limit order expires at its specified block height. Each expiry height accepts up to 1,000 new orders across spot and derivative markets, addresses, and sides. Existing orders keep their expiry even when the height is over capacity. If a height is full, choose another valid future height or omit the expiry if your strategy allows. See [Order admission examples](/developers-native/injective/exchange/05_messages#order-admission-examples).
+
+## Exchange post-only mode
+
+When the exchange is in post-only mode, it accepts limit orders that can rest on the book and refuses market orders and limit orders that would cross the book. The mode can turn on after qualifying chain downtime. Check the [effective post-only status](/developers-native/query-chain/exchange#check-exchange-post-only-mode) before resuming normal order routing.

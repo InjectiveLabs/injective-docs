@@ -33,8 +33,6 @@ This document describes the state transition operations pertaining to:
 - Perpetual market launch proposal
 - Expiry futures market launch proposal
 - Derivative market param update proposal
-- Trading rewards launch proposal
-- Trading rewards update proposal
 - Begin-blocker
 - End-blocker
 - Fee discount schedule proposal
@@ -409,34 +407,6 @@ Derivative market param update is handled by `DerivativeMarketParamUpdateProposa
 - Validate `MakerFeeRate` is bigger than `TakerFeeRate`.
 - Validate `InitialMarginRatio` is bigger than `MaintenanceMarginRatio`.
 - Schedule Derivative market param update and update finalization on Endblocker - **Note:** this is due to the orders update for derivative market param update - should make sure nothing panics here.
-
-## Trading Rewards Campaign Launch Proposal
-
-**Steps**
-
-- `ValidateBasic` for proposal
-- No existing campaign may exist.
-- Campaign start timestamps must be in the future.
-- Campaign quote denoms must exist.
-- All start timestamps must match the duration.
-- Set Campaign Data (Reward Pools, Info, Market Qualifications and Market Point Multipliers)
-- Emit `EventTradingRewardCampaignUpdate`
-
-## Trading Rewards Campaign Update Proposal
-
-**Steps**
-
-- `ValidateBasic` for proposal
-- All `StartTimestamp` inside `CampaignRewardPoolsUpdates` must equal an existing campaign.
-- `CampaignDurationSeconds` cannot be modified, but must match the current campaign.
-- `CampaignRewardPoolsUpdates` cannot modify the current campaign and may contain nil values to delete a reward pool.
-- Campaign start timestamps from `CampaignRewardPoolsAdditions` must be in the future.
-- Any campaign quote denoms must exist.
-- Delete Current Campaign Data (Info, Market Qualifications and Market Point Multipliers)
-- Set Campaign Data (Info, Market Qualifications and Market Point Multipliers)
-- Set Reward Pool Updates
-- Set Reward Pool Additions
-- Emit `EventTradingRewardCampaignUpdate`
 
 ## Fee Discount Schedule Proposal
 

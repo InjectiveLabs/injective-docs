@@ -49,16 +49,6 @@ message SetChainlinkPriceEvent {
 }
 ```
 
-## Coinbase
-
-```protobuf
-message SetCoinbasePriceEvent {
-  string symbol = 1;
-  string price = 2 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
-  uint64 timestamp = 3;
-}
-```
-
 ## Provider
 ```protobuf
 message SetProviderPriceEvent {
@@ -69,29 +59,9 @@ message SetProviderPriceEvent {
 }
 ```
 
-## Pricefeed
-```protobuf
-message SetPriceFeedPriceEvent {
-  string relayer = 1;
-
-  string base = 2;
-  string quote = 3;
-
-  // price defines the price of the oracle base and quote
-  string price = 4 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
-}
-```
-
 ## Pyth
 ```protobuf
 message EventSetPythPrices {
   repeated PythPriceState prices = 1;
-}
-```
-
-## Stork
-```protobuf
-message EventSetStorkPrices {
-  repeated StorkPriceState prices = 1;
 }
 ```

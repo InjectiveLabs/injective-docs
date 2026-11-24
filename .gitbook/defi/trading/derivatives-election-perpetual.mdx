@@ -4,6 +4,10 @@ title: Election Perpetual
 updatedAt: "2025-10-30"
 ---
 
+<Note>
+This is a historical market example. Injective removed the Stork oracle type in v1.21.0. Check the market configuration for the oracle used by any current market.
+</Note>
+
 An election perpetual futures contract - or an election perp - is a type of derivative financial instrument on Injective that allows users to gain leveraged exposure to an elections market. An election perp is a perpetual futures contract that tracks the price of a market on Polymarket, rather than a traditional crypto asset.
 
 Unlike traditional futures, these contracts don't have an expiry date. They can be held indefinitely. Trades are settled in USDT. LIke other perps, election perps use a funding rate mechanism to keep the contract price close to the underlying index price.
@@ -18,7 +22,7 @@ Expiry futures require mark prices to track liquidation and settlement prices. B
 
 ### Mark Price Mechanism
 
-The mark price for election perps on Injective is based on a proprietary oracle feed provided by Stork. In the example of the 2024ELECTION PERP, Stork queries the midpoint of the 2024 Presidential Election market on Polymarket. They then apply a six-hour time weighted average price (TWAP) to prevent drastic swings in the mark price. That price is then scaled down to a more human readable format (i.e. a price between $0 and $1), and used as the mark price.
+For 2024ELECTION PERP, Stork queried the midpoint of the 2024 presidential election market on Polymarket. It averaged that price over six hours using a TWAP, then scaled the result to a value between $0 and $1 for the mark price.
 
 ### Market Settlement
 

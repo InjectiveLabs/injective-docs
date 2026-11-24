@@ -10,6 +10,17 @@ In this section we describe the processing of the exchange messages and the corr
 created/modified state objects specified by each message are defined within the [State Transitions](./04_state_transitions)
 section.
 
+## Order admission examples
+
+- **Address capacity.** If an address has 3,000 spot orders and 2,000 derivative orders across its subaccounts, placing another order on the book returns `ErrTooManyOrdersPerAddress`. Cancel an existing order or wait for one to fill completely before retrying. Delegating order placement does not change which address owns the order.
+- **Good Till Block expiry.** If 1,000 orders already use the chosen `expiration_block`, another GTB limit order for that height fails with an invalid expiration block error even if the sender has no open orders. Choose a different valid future height, or omit `expiration_block` to leave the order without an expiry. At its expiry height, BeginBlock cancels any remaining quantity.
+
+## Post-only mode messages
+
+The governance authority or an exchange admin can submit `MsgActivatePostOnlyMode` with a positive `blocks_amount`. At height 100 with `blocks_amount` set to 20, the mode takes effect immediately and stays active while the height is below 120. If the previous threshold is higher, it stays in effect.
+
+`MsgCancelPostOnlyMode` requests cancellation at the next BeginBlock. It emits a request event when the message executes, followed by the cancellation event when the change applies. See [Post-only mode events](/developers-native/injective/exchange/09_events#post-only-mode-events).
+
 ## Msg/Deposit
 
 `MsgDeposit` defines a SDK message for transferring coins from the sender's bank balance into the subaccount's exchange deposits.

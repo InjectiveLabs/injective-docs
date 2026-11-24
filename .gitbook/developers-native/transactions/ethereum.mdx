@@ -72,6 +72,31 @@ const eip712TypedData = getEip712TypedDataV2({
 });
 ```
 
+### EIP-712 V3 and Phantom
+
+Injective v1.21.0 supports an EIP-712 V3 domain for wallets such as Phantom that expect a `bytes32` salt. V3 preserves the transaction message and the other domain fields from the V2 typed data. Set the domain version to `3.0.0` and encode the salt as 32 zero bytes:
+
+```ts
+const v3TypedData = {
+  ...eip712TypedData,
+  domain: {
+    ...eip712TypedData.domain,
+    version: "3.0.0",
+    salt: "0x" + "00".repeat(32),
+  },
+  types: {
+    ...eip712TypedData.types,
+    EIP712Domain: eip712TypedData.types.EIP712Domain.map((field) =>
+      field.name === "salt" ? { ...field, type: "bytes32" } : field,
+    ),
+  },
+};
+```
+
+Pass this payload to the Phantom Ethereum provider with `eth_signTypedData_v4` and use the same V3 payload when recovering the signer. Set the broadcast transaction's signer mode to `SIGN_MODE_EIP712_V3` in `AuthInfo`. For fee delegation, the sponsor also signs using V3. Keep the chain ID in the typed data consistent with the Web3 extension and the Cosmos chain ID consistent with the transaction. In `injectived`, select this payload format with `--sign-mode eip-712-v3`.
+
+For exchange authorization grants and their Amino type names, see [AuthZ](/developers-native/examples/authz#exchange-grants-and-ethereum-transactions).
+
 ## Signing a transaction
 
 Once we have prepared the EIP712 typed data, we proceed to signing.

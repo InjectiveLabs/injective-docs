@@ -247,8 +247,43 @@ You can subscribe to any combination of the following event types. At least one 
 | `derivative_orderbooks_filter` | Derivative orderbook updates | `market_ids` |
 | `positions_filter` | Position updates | `subaccount_ids`, `market_ids` |
 | `oracle_price_filter` | Oracle price updates | `symbol` |
+| `market_funding_filter` | Perpetual market funding updates | `market_ids` |
 | `order_failures_filter` | Order failure notifications | `accounts` |
 | `conditional_order_trigger_failures_filter` | Conditional order trigger failures | `subaccount_ids`, `market_ids` |
+
+### Oracle feed identifiers
+
+The oracle `symbol` filter matches the feed ID in `EventOraclePriceUpdate`. The format depends on the oracle:
+
+| Oracle | Filter value |
+| --- | --- |
+| Pyth | Hexadecimal price feed ID |
+| Pyth Pro | Decimal feed ID as a string |
+| Chainlink Data Streams | Hexadecimal feed ID |
+| Provider | `provider/symbol` |
+| SEDA Fast | Hexadecimal feed ID derived from the execution program ID and inputs |
+
+Use `symbol: ["*"]` for all oracle feeds. These values apply to Chain Stream subscriptions. See [Indexer Oracle Streaming](/developers-native/query-indexer-stream/oracle) for the Indexer API.
+
+### Perpetual funding subscription
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "subscribe",
+  "params": {
+    "req": {
+      "subscription_id": "perpetual-funding",
+      "filter": {
+        "market_funding_filter": { "market_ids": ["*"] }
+      }
+    }
+  }
+}
+```
+
+Replace `"*"` with specific perpetual market IDs to limit the subscription. Updates appear in `market_funding_updates` in the block response.
 
 ## Response format
 
