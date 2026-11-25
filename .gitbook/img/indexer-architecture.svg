@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 927" role="img" aria-labelledby="title description">
+  <title id="title">Injective Indexer architecture</title>
+  <desc id="description">An Injective node supplies blocks and staking data to Event Provider, which stores events in MongoDB and serves them over gRPC to Exchange and Explorer. Both indexers maintain their own databases and serve client APIs. Exchange also calls an external Asset Service and can reload market state through the node's LCD REST endpoint. Explorer uses the node for selected live lookups.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 8 4 0 8Z" fill="#0082FA"/>
+    </marker>
+    <g id="database">
+      <path d="M-81-19v35c0 18 162 18 162 0v-35Z" fill="#FFF" stroke="#0082FA"/>
+      <ellipse cy="-19" rx="81" ry="10" fill="#FFF" stroke="#0082FA"/>
+    </g>
+  </defs>
+  <style>
+    text { fill:#082B4A; font-family:Inter,system-ui,sans-serif; font-size:14px; }
+    .label { text-anchor:middle; }
+    .deployment { font-size:22px; font-weight:650; }
+    .section { font-size:16px; font-weight:600; }
+    .detail { font-size:13px; }
+    .boundary { fill:#FFF; stroke:#8EC7FF; }
+    .service { fill:#E6F2FF; stroke:#0082FA; }
+    .edge { fill:none; stroke:#0082FA; stroke-width:1.5; stroke-linejoin:round; marker-end:url(#arrow); }
+    .secondary { stroke-dasharray:5 4; }
+  </style>
+
+  <rect width="760" height="927" rx="12" fill="#FFF"/>
+  <rect x="22" y="113" width="716" height="711" rx="10" fill="#E6F2FF" stroke="#8EC7FF"/>
+  <rect class="boundary" x="229" y="185" width="302" height="247" rx="8"/>
+  <rect class="boundary" x="59" y="509" width="289" height="286" rx="8"/>
+  <rect class="boundary" x="411" y="509" width="289" height="286" rx="8"/>
+
+  <!-- External connections enter the service groups outside their title rows. -->
+  <g>
+    <path class="edge" d="M380 62V185"/>
+    <path class="edge secondary" d="M266 41H39V489H80V509"/>
+    <path class="edge secondary" d="M494 41H547V479H650V509"/>
+    <path class="edge secondary" d="M644 62V85H720V487H680V509"/>
+    <path class="edge" d="M350 418V453H195V509"/>
+    <path class="edge" d="M410 418V453H557V509"/>
+    <path class="edge" d="M204 770V871"/>
+    <path class="edge" d="M556 770V871"/>
+  </g>
+
+  <text class="deployment" x="58" y="151">Injective Indexer deployment</text>
+
+  <rect class="boundary" x="266" y="20" width="228" height="42" rx="6"/>
+  <text class="label" x="380" y="46">Injective node</text>
+  <rect class="boundary" x="553" y="20" width="182" height="42" rx="6"/>
+  <text class="label" x="644" y="39">Asset Service</text>
+  <text class="label detail" x="644" y="54">(external API)</text>
+
+  <text class="detail" x="392" y="83">CometBFT RPC</text>
+  <text class="detail" x="392" y="100">Cosmos gRPC</text>
+  <text class="detail" x="53" y="282">CometBFT RPC</text>
+  <text class="detail" x="53" y="300">Live Explorer lookups</text>
+  <text class="detail" x="561" y="282">LCD REST</text>
+  <text class="detail" x="561" y="300">Market reload</text>
+  <text class="detail" x="608" y="403">gRPC or HTTP</text>
+  <text class="detail" x="608" y="421">Token metadata</text>
+
+  <g class="label">
+    <text class="section" x="380" y="217">Event Provider services</text>
+    <rect class="service" x="290" y="237" width="180" height="40" rx="6"/>
+    <text x="380" y="262">Event Provider Process</text>
+    <path class="edge" d="M380 277V300"/>
+    <text class="detail" x="392" y="293" text-anchor="start">Writes events</text>
+    <use href="#database" x="380" y="329"/>
+    <text x="380" y="337">eventProviderV2</text>
+    <path class="edge" d="M380 359V378"/>
+    <text class="detail" x="392" y="373" text-anchor="start">Reads and watches</text>
+    <rect class="service" x="290" y="378" width="180" height="40" rx="6"/>
+    <text x="380" y="403">Event Provider API</text>
+
+    <text class="detail" x="205" y="482" text-anchor="start">gRPC · Events by height</text>
+    <text class="detail" x="537" y="482" text-anchor="end">gRPC · Events by height</text>
+
+    <text class="section" x="204" y="543">Explorer indexer (optional)</text>
+    <rect class="service" x="114" y="568" width="180" height="40" rx="6"/>
+    <text x="204" y="593">Explorer Process</text>
+    <path class="edge" d="M204 608V648"/>
+    <text class="detail" x="215" y="632" text-anchor="start">Writes chain history</text>
+    <use href="#database" x="204" y="677"/>
+    <text x="204" y="685">explorerV2</text>
+    <path class="edge" d="M204 707V730"/>
+    <text class="detail" x="215" y="722" text-anchor="start">Reads and watches</text>
+    <rect class="service" x="114" y="730" width="180" height="40" rx="6"/>
+    <text x="204" y="755">Explorer API</text>
+
+    <text class="section" x="556" y="543">Exchange indexer services</text>
+    <rect class="service" x="466" y="568" width="180" height="40" rx="6"/>
+    <text x="556" y="593">Exchange Process</text>
+    <path class="edge" d="M556 608V648"/>
+    <text class="detail" x="567" y="632" text-anchor="start">Writes market data</text>
+    <use href="#database" x="556" y="677"/>
+    <text x="556" y="685">exchangeV2</text>
+    <path class="edge" d="M556 707V730"/>
+    <text class="detail" x="567" y="722" text-anchor="start">Reads and watches</text>
+    <rect class="service" x="466" y="730" width="180" height="40" rx="6"/>
+    <text x="556" y="755">Exchange API</text>
+
+    <text class="detail" x="215" y="851" text-anchor="start">gRPC, gRPC-Web, REST</text>
+    <text class="detail" x="567" y="851" text-anchor="start">gRPC, gRPC-Web, REST</text>
+    <rect class="boundary" x="96" y="871" width="216" height="40" rx="6"/>
+    <text x="204" y="896">Block explorers</text>
+    <rect class="boundary" x="448" y="871" width="216" height="40" rx="6"/>
+    <text x="556" y="896">Trading apps and analytics</text>
+  </g>
+</svg>

@@ -38,7 +38,7 @@ or managing token metadata, these guides provide the practical knowledge needed 
 | **Exchange Module** | Injective's native on-chain module that handles limit orderbook management, trade execution, order matching, and settlement entirely on-chain. |
 | **Denom** | The native token representation format on Injective (e.g., `factory/{creator}/{subdenom}`, `peggy{ethereumAddress}`). All assets in the Bank module use this format. |
 | **Oracle Provider** | An external party registered through governance that relays price feeds to the chain, enabling custom markets like perpetuals and binary options. |
-| **Token Factory** | A native module allowing permissionless creation of new tokens with the `factory/{creator}/{subdenom}` format. |
+| **[Token Factory](/developers-native/injective/tokenfactory)** | A native module allowing permissionless creation of new tokens with the `factory/{creator}/{subdenom}` format. |
 | **Tick Size** | The minimum increment for price and quantity in trading markets, calculated based on asset value and decimals. |
 
 ## Build an Orderbook DEX on Injective
@@ -120,20 +120,20 @@ Head to our [DEX tutorial](/developers/dapps/example-dex) to bootstrap your DEX 
   </Card>
   <Card
     title="Min Price Tick Size"
-    href="/developers-defi/calculate-min-price-tick-size/"
+    href="/defi/trading/price-tick-size/"
     arrow="true"
     cta="Click here"
     icon="panel-left-close"
     img="/img/txs-hero.png">
-    Calculate the minimum price tick size for markets based on the base asset's USD value and decimal precision.
+    Check permitted price increments and convert them between display and chain units.
   </Card>
   <Card
     title="Min Quantity Tick Size"
-    href="/developers-defi/min-quantity-tick-size/"
+    href="/defi/trading/quantity-tick-size/"
     arrow="true"
     cta="Click here"
     icon="panel-left-close"
     img="/img/txs-hero.png">
-    Calculate the minimum quantity tick size for markets based on the quote asset's USD value and desired minimum notional value.
+    Check permitted order quantity increments for spot and derivative markets.
   </Card>
 </Columns>

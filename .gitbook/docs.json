@@ -103,14 +103,21 @@
                 "pages": [
                   "index",
                   "about",
-                  "add-network-to-wallet",
+                  {
+                    "group": "Add Network to Your Wallet",
+                    "icon": "wallet",
+                    "pages": [
+                      "add-network-to-wallet",
+                      "developers/convert-addresses"
+                    ]
+                  },
                   {
                     "group": "Network Infrastructure",
                     "icon": "network-wired",
                     "expanded": false,
                     "pages": [
                       "infra/index",
-                      "developers/concepts/sentry-node",
+                      "infra/network-architecture",
                       {
                         "group": "Node Operation",
                         "pages": [
@@ -139,17 +146,18 @@
                           "infra/cosmovisor"
                         ]
                       },
-                      "infra/join-a-network",
                       {
                         "group": "Upgrades",
                         "pages": [
                           "infra/upgrade-node",
+                          "infra/software-compatibility",
                           "infra/coordinated-upgrades/index",
                           "infra/validator-mainnet/canonical-chain-upgrade",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5",
+                          "infra/validator-mainnet/canonical-chain-upgrade-v1.21.0",
                           {
                             "group": "Historical Upgrades",
                             "pages": [
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.3",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.2",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4",
@@ -198,7 +206,6 @@
                         "pages": [
                           "developers/concepts/indexer-api",
                           "redirects/https_injective_notion_site_indexer_service_setup_guide",
-                          "redirects/https_api_injective_network_swagger",
                           "infra/validator-mainnet/peggo"
                         ]
                       },
@@ -228,6 +235,8 @@
                           "defi/trading/index",
                           "developers/concepts/trading-account",
                           "defi/trading/order-types",
+                          "defi/trading/price-tick-size",
+                          "defi/trading/quantity-tick-size",
                           "defi/trading/fees",
                           "defi/trading/24-5-equity-feeds",
                           "defi/trading/margin",
@@ -245,17 +254,11 @@
                         ]
                       },
                       {
-                        "group": "Token Factory",
+                        "group": "Token Standards",
                         "pages": [
-                          "defi/tokens/token-factory",
-                          {
-                            "group": "Token Standards",
-                            "pages": [
-                              "defi/tokens/index",
-                              "defi/tokens/inj-coin",
-                              "defi/tokens/cw20-standard"
-                            ]
-                          }
+                          "defi/tokens/index",
+                          "defi/tokens/inj-coin",
+                          "defi/tokens/cw20-standard"
                         ]
                       },
                       {
@@ -301,33 +304,6 @@
                       }
                     ]
                   },
-                  {
-                    "group": "Tools",
-                    "icon": "laptop-code",
-                    "expanded": false,
-                    "pages": [
-                      "developers/index",
-                      "developers/network-information",
-                      "developers/convert-addresses",
-                      "developers/concepts/grpc-protobuf",
-                      "developers/concepts/networks",
-                      "developers/concepts/token-factory",
-                      "developers/concepts/calculation-min-price-tick-size",
-                      "developers/concepts/calculation-min-quantity-tick-size",
-                      {
-                        "group": "injectived",
-                        "pages": [
-                          "developers/injectived/index",
-                          "developers/injectived/install",
-                          "developers/injectived/use",
-                          "developers/injectived/advanced",
-                          "developers/testnet-proposals"
-                        ]
-                      }
-                    ]
-                  },
-                  "faq",
-                  "glossary",
                   "references",
                   "contributing"
                 ]
@@ -350,7 +326,8 @@
                 "icon": "bridge",
                 "expanded": false,
                 "pages": [
-                  "developers-defi/bridge-deploy"
+                  "developers-defi/bridge-deploy",
+                  "defi/tokens/token-factory"
                 ]
               },
               {
@@ -386,8 +363,6 @@
                   "developers-defi/exchange-overview",
                   "developers-defi/token-launch",
                   "developers-defi/market-launch",
-                  "developers-defi/calculate-min-price-tick-size",
-                  "developers-defi/min-quantity-tick-size",
                   "developers-defi/provider-oracle",
                   "developers-defi/denom-and-bank",
                   {
@@ -419,12 +394,20 @@
                 "pages": [
                   "build-index",
                   {
+                    "group": "Developer Setup",
+                    "icon": "screwdriver-wrench",
+                    "pages": [
+                      "developers/setup"
+                    ]
+                  },
+                  {
                     "group": "EVM Developers",
                     "icon": "rectangle-code",
                     "expanded": false,
                     "pages": [
                       "developers-evm/index",
                       "developers-evm/network-information",
+                      "developers-evm/local-development",
                       {
                         "group": "Your First EVM Smart Contract",
                         "pages": [
@@ -458,6 +441,7 @@
                       "developers-evm/exchange-precompile",
                       "developers-evm/oracle-precompile",
                       "developers-evm/swap-precompile",
+                      "developers-evm/ibc-precompile",
                       "developers-evm/erc20-module",
                       "developers-evm/infrastructure-and-tooling",
                       "developers-evm/evm-gateway",
@@ -489,6 +473,21 @@
                     "expanded": false,
                     "pages": [
                       "developers-native/index",
+                      {
+                        "group": "Developer Setup",
+                        "pages": [
+                          {
+                            "group": "Injective Node and CLI",
+                            "pages": [
+                              "developers/injectived/index",
+                              "developers/injectived/install",
+                              "developers/injectived/use",
+                              "developers/injectived/advanced"
+                            ]
+                          },
+                          "developers-native/developer-setup/local-network"
+                        ]
+                      },
                       {
                         "group": "Wallets",
                         "pages": [
@@ -842,12 +841,41 @@
             ]
           },
           {
+            "tab": "Testnet",
+            "groups": [
+              {
+                "group": "Testnet Guides",
+                "icon": "flask-vial",
+                "expanded": true,
+                "pages": [
+                  "testnet"
+                ]
+              },
+              {
+                "group": "Connecting to Testnet",
+                "icon": "plug",
+                "pages": [
+                  "infra/join-a-network",
+                  "testnet/public-endpoints"
+                ]
+              },
+              {
+                "group": "Resources",
+                "icon": "book",
+                "pages": [
+                  "developers/testnet-proposals"
+                ]
+              }
+            ]
+          },
+          {
             "tab": "Resources",
             "groups": [
               {
                 "group": "Network Resources",
                 "pages": [
-                  "resources-index"
+                  "resources-index",
+                  "glossary"
                 ]
               }
             ]
@@ -2456,6 +2484,62 @@
   },
   "redirects": [
     {
+      "source": "/infra/indexer-setup",
+      "destination": "/developers/concepts/indexer-api#service-setup"
+    },
+    {
+      "source": "/faq",
+      "destination": "/resources-index"
+    },
+    {
+      "source": "/developers/concepts/sentry-node",
+      "destination": "/infra/network-architecture"
+    },
+    {
+      "source": "/developers/network-information",
+      "destination": "/"
+    },
+    {
+      "source": "/developers/index",
+      "destination": "/build-index"
+    },
+    {
+      "source": "/developers",
+      "destination": "/build-index"
+    },
+    {
+      "source": "/developers/concepts/networks",
+      "destination": "/sdks-index"
+    },
+    {
+      "source": "/developers/concepts/grpc-protobuf",
+      "destination": "/developers-native/query-chain/index"
+    },
+    {
+      "source": "/developers/concepts/token-factory",
+      "destination": "/developers-native/injective/tokenfactory/index"
+    },
+    {
+      "source": "/developers/concepts/calculation-min-price-tick-size",
+      "destination": "/defi/trading/price-tick-size"
+    },
+    {
+      "source": "/developers/concepts/calculation-min-quantity-tick-size",
+      "destination": "/defi/trading/quantity-tick-size"
+    },
+    {
+      "source": "/developers-defi/calculate-min-price-tick-size",
+      "destination": "/defi/trading/price-tick-size"
+    },
+    {
+      "source": "/developers-defi/min-quantity-tick-size",
+      "destination": "/defi/trading/quantity-tick-size"
+    },
+    {
+      "source": "/developers-evm/swap-precompile-guide",
+      "destination": "/developers-evm/swap-precompile"
+    },
+    {
       "source": "/quickstart",
       "destination": "/"
     },
@@ -2497,15 +2581,15 @@
     },
     {
       "source": "/guides",
-      "destination": "/developers/index"
+      "destination": "/build-index"
     },
     {
       "source": "/develop/cheat-sheet",
-      "destination": "/developers/index"
+      "destination": "/build-index"
     },
     {
       "source": "/develop/tech-concepts",
-      "destination": "/developers/index"
+      "destination": "/build-index"
     },
     {
       "source": "/nodes/RunNode/testnet",
@@ -2517,7 +2601,7 @@
     },
     {
       "source": "/develop/guides",
-      "destination": "/developers/index"
+      "destination": "/build-index"
     },
     {
       "source": "/develop/modules",
@@ -3145,15 +3229,15 @@
     },
     {
       "source": "/developers/getting-started/guides/calculations",
-      "destination": "/developers-defi/calculate-min-price-tick-size"
+      "destination": "/defi/trading/price-tick-size"
     },
     {
       "source": "/developers/getting-started/guides/calculations/min-price-tick-size",
-      "destination": "/developers-defi/calculate-min-price-tick-size"
+      "destination": "/defi/trading/price-tick-size"
     },
     {
       "source": "/developers/getting-started/guides/calculations/min-quantity-tick-size",
-      "destination": "/developers-defi/min-quantity-tick-size"
+      "destination": "/defi/trading/quantity-tick-size"
     },
     {
       "source": "/developers/getting-started/guides/testnet-faucet-integration",
@@ -3285,7 +3369,7 @@
     },
     {
       "source": "/developers/getting-started",
-      "destination": "/developers/index"
+      "destination": "/build-index"
     },
     {
       "source": "/developers/getting-started/guides",
@@ -3321,7 +3405,7 @@
     },
     {
       "source": "/upgrade/latest",
-      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5"
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.21.0"
     }
   ],
   "navbar": {

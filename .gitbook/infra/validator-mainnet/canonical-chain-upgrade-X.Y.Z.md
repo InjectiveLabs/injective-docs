@@ -22,7 +22,7 @@ The following is a short summary of the upgrade steps:
 
 1. Vote and wait till the node panics at block height **{/* $BLOCK_NUM */}**.
 2. Backing up configs, data, and keys used for running the Injective Chain.
-3. Install the [{/* $VERSION */}](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/{/* $VERSION */}-{/* $VERSION_ID */}) binaries.
+3. Install the [{/* $VERSION */}](https://github.com/InjectiveFoundation/injective-core/releases/tag/{/* $VERSION */}-{/* $VERSION_ID */}) binaries.
 4. Start your node with the new injectived binary to fulfill the upgrade.
 
 Upgrade coordination and support for validators will be available on the `#validators` private channel of the [Injective Discord](https://discord.gg/injective).
@@ -44,10 +44,10 @@ Component versions verified against Injective Mainnet {/* $VERSION */}. Always r
 | Component                     | Compatible Version                                                                                                |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `injective-core` (injectived) | [{/* $VERSION */}](https://github.com/InjectiveFoundation/injective-core/releases/tag/{/* $VERSION */}-{/* $VERSION_ID */}) |
+| `evm-gateway`                 | [{/* $EVM_GATEWAY_VERSION */}](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name={/* $EVM_GATEWAY_VERSION */}) (Docker) |
 | `injective-indexer`           | [{/* $INDEXER_VERSION */}](https://gallery.ecr.aws/l9h3g6c6/injective-indexer) (Docker)                             |
 | `sdk-go`                      | [{/* $SDK_GO_VERSION */}](https://github.com/InjectiveLabs/sdk-go/releases/tag/{/* $SDK_GO_VERSION */})             |
 | `sdk-python`                  | [{/* $SDK_PYTHON_VERSION */}](https://github.com/InjectiveLabs/sdk-python/releases/tag/{/* $SDK_PYTHON_VERSION */}) |
-| `evm-gateway`                 | [{/* $EVM_GATEWAY_VERSION */}](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name={/* $EVM_GATEWAY_VERSION */}) (Docker) |
 
 The `injective-indexer` version applies to all indexer services alike (exchange, eventprovider, explorer, and chart process/API): they are entrypoints of the same image, so every `*_VERSION` variable in the [indexer setup guide](https://injective.notion.site/Injective-Indexer-Service-Setup-Guide-7e59980634d54991862300670583d46a)'s docker environment uses this tag.
 
@@ -57,7 +57,7 @@ Prior to exporting chain state, validators are encouraged to take a full data sn
 
 It is critically important to backup the `.injectived/data/priv_validator_state.json` file after stopping your injectived process. This file is updated every block as your validator participates in a consensus rounds. It is a critical file needed to prevent double-signing, in case the upgrade fails and the previous chain needs to be restarted.
 
-In the event that the upgrade does not succeed, validators and operators must restore the snapshot and downgrade back to Injective Chain release [{/* $VERSION_PREV */}](https://github.com/InjectiveLabs/injective-chain-releases/releases/tag/{/* $VERSION_PREV */}-{/* $VERSION_ID_PREV */}) and continue this earlier chain until next upgrade announcement.
+In the event that the upgrade does not succeed, validators and operators must restore the snapshot and downgrade back to Injective Chain release [{/* $VERSION_PREV */}](https://github.com/InjectiveFoundation/injective-core/releases/tag/{/* $VERSION_PREV */}-{/* $VERSION_ID_PREV */}) and continue this earlier chain until next upgrade announcement.
 
 ## Upgrade Procedure
 
@@ -91,7 +91,7 @@ rm -rf .injectived/wasm/wasm/cache/
 3. Download and install the `injective-chain` release for `{/* $VERSION */}`:
 
     ```bash
-    wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/{/* $VERSION */}-{/* $VERSION_ID */}/linux-amd64.zip
+    wget https://github.com/InjectiveFoundation/injective-core/releases/download/{/* $VERSION */}-{/* $VERSION_ID */}/linux-amd64.zip
     unzip linux-amd64.zip
     sudo mv injectived peggo /usr/bin
     sudo mv libwasmvm.x86_64.so /usr/lib

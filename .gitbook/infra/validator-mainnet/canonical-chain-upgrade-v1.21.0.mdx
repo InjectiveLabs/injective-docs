@@ -1,0 +1,209 @@
+---
+title: Upgrade to v1.21.0
+description: Scheduled mainnet upgrade instructions for all node operators under proposal 717.
+updatedAt: "2026-11-19"
+---
+
+import Compatibility from '/snippets/compatibility/v1.21.0.mdx';
+
+<Note>
+Follow the [operator portal](https://chain.injective.network/upgrades) for upgrade announcements.
+</Note>
+
+### For Validators
+
+Consult the [Validator Troubleshooting Guide](/infra/coordinated-upgrades) for upgrade and recovery procedures, including validator signing state precautions.
+
+- [Summary](#summary)
+- [Compatibility for Integrators](#compatibility-for-integrators)
+- [Recovery](#recovery)
+- [Upgrade Procedure](#upgrade-procedure)
+- [Notes for Validators](#notes-for-validators)
+
+## Summary
+
+The Injective Chain upgrade to `v1.21.0` is targeted for **November 24, 2026**, at block **193,145,000**, as described in [proposal 717](https://injhub.com/proposal/717/). Follow the [block height countdown](https://chain.injective.network/block/193145000) for the latest estimate.
+
+<table>
+  <tbody>
+    <tr><td>Network</td><td>Mainnet, <code>injective-1</code></td></tr>
+    <tr><td>Upgrade plan</td><td><code>v1.21.0</code></td></tr>
+    <tr><td>Target halt height</td><td><a href="https://chain.injective.network/block/193145000">193,145,000</a></td></tr>
+    <tr><td>Target date</td><td>November 24, 2026. <a href="https://chain.injective.network/block/193145000">Block countdown</a></td></tr>
+    <tr><td>Mainnet release</td><td><a href="https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.21.0-1794954936">v1.21.0-1794954936</a></td></tr>
+    <tr><td>Binary source commit</td><td><code>a13b8b7</code></td></tr>
+  </tbody>
+</table>
+
+The published binaries were built with **Go 1.27.4**.
+
+The following is a short summary of the upgrade steps:
+
+1. Wait for the node to halt at block height **193,145,000**.
+2. Stop the process and back up configs, data and validator signing state.
+3. Remove the Wasm cache after the backup.
+4. Install the [v1.21.0](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.21.0-1794954936) binaries and bundled runtime library.
+5. Verify the binary versions, `libwasmvm` checksum and loaded library version **2.2.11-rc.4**.
+6. Restart the node with the new binary version.
+
+## Compatibility for Integrators
+
+<Compatibility />
+
+<Warning>
+**Indexer operators.** If you run `injective-indexer`, your deployment may require an additional migration step for the `v1.21.0` upgrade. Review the [Docker migration instructions for existing installations](https://github.com/InjectiveLabs/injective-indexer-releases/blob/master/docker/README.md#existing-installations) before upgrading. If you run Exchange Process on mainnet, check the [market reconciliation steps](https://github.com/InjectiveLabs/injective-indexer-releases/blob/master/docker/CHANGELOG.md#mainnet) for your selected images.
+</Warning>
+
+See the [software compatibility matrix](/infra/software-compatibility) for previous releases.
+
+## Recovery
+
+Prior to exporting chain state, validators are encouraged to take a full data snapshot at the export height before proceeding. Snapshotting depends heavily on infrastructure, but generally this can be done by backing up the `.injectived` directory.
+
+It is critically important to backup the `.injectived/data/priv_validator_state.json` file after stopping your injectived process. This file is updated every block as your validator participates in consensus rounds. It is a critical file needed to prevent double-signing in case the upgrade fails and the previous chain needs to be restarted.
+
+In the event that the upgrade does not succeed, validators and operators must restore the snapshot and downgrade back to Injective Chain release [v1.20.4-safeharbor.5](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-safeharbor.5-1794335565) and continue this earlier chain until the next upgrade announcement.
+
+Official snapshots taken before the upgrade will be provided on the [Chain Snapshots page](https://chain.injective.network/snapshots) so operators can roll back and restore from a snapshot in a worst-case recovery scenario. If an operator makes a mistake during the upgrade or encounters errors, follow the [Validator Troubleshooting Guide](/infra/coordinated-upgrades), including its snapshot recovery and validator signing-state precautions.
+
+## Upgrade Procedure
+
+### Notes for Validators
+
+Wait for the chain to halt at **193,145,000** before replacing the active binary. Stop `injectived` fully before backing up data and validator signing state.
+
+After the backup and before starting the new binary, remove the Wasm cache from the actual node home. For the default home:
+
+```bash
+rm -rf ~/.injectived/wasm/wasm/cache/
+```
+
+### Steps
+
+1. Verify you are running `v1.20.4-safeharbor.5` before the upgrade:
+
+   ```bash
+   injectived version
+   ```
+
+   Expected version:
+
+   ```text
+   Version v1.20.4-safeharbor.5 (d37e7f0)
+   ```
+
+2. Wait for the node to halt at **193,145,000**, then confirm `injectived` has stopped. Make a backup of your `.injectived` directory:
+
+   ```bash
+   cp -r ~/.injectived ./injectived-backup
+   ```
+
+   Preserve `data/priv_validator_state.json` after shutdown. Remote signer operators must preserve their signer's state.
+
+3. Download the Linux amd64 archive from the [official release](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.21.0-1794954936), verify the published archive checksum, extract it, and install the release binaries and bundled runtime library:
+
+   ```bash
+   wget https://github.com/InjectiveFoundation/injective-core/releases/download/v1.21.0-1794954936/linux-amd64.zip
+   echo '7237666d823cdf53800d5e553c8a901878b34d7ee71fe3c8e6fe27e74c7eef66  linux-amd64.zip' | sha256sum --check
+   unzip linux-amd64.zip
+   sudo mv injectived peggo /usr/bin
+   sudo mv libwasmvm.x86_64.so /usr/lib
+   sudo ldconfig
+   ```
+
+4. Validate the installed `libwasmvm` library:
+
+   ```bash
+   sha256sum /usr/lib/libwasmvm.x86_64.so
+   ```
+
+   Expected output:
+
+   ```text
+   094178f63d44aae2f600339a3632661d921c20e1f4992e7e248b5c1c6e4067c9  /usr/lib/libwasmvm.x86_64.so
+   ```
+
+   <Warning>
+   An incorrect runtime library checksum can lead to consensus issues. Resolve any mismatch before restarting.
+   </Warning>
+
+   Validate that the installed binary loads the correct library version:
+
+   ```bash
+   injectived query wasm libwasmvm-version
+   ```
+
+   Expected output:
+
+   ```text
+   2.2.11-rc.4
+   ```
+
+   For the Docker image, check the bundled library version with:
+
+   ```bash
+   docker run -it --rm injectivelabs/injective-core:v1.21.0 injectived query wasm libwasmvm-version
+   ```
+
+   Expected output:
+
+   ```text
+   2.2.11-rc.4
+   ```
+
+5. Verify the installed `injectived` reports **v1.21.0** and the build commit published in the release notes:
+
+   ```bash
+   injectived version
+   ```
+
+   Expected output:
+
+   ```text
+   Version v1.21.0 (a13b8b7)
+   Compiled at 20261117-2240 using Go go1.27.4 (amd64)
+   ```
+
+6. Start `injectived`:
+
+   ```bash
+   injectived start
+   ```
+
+7. If you run `peggo`, verify its version against the release notes:
+
+   ```bash
+   peggo version
+   ```
+
+   Expected output:
+
+   ```text
+   Version v1.21.0 (a13b8b7)
+   Compiled at 20261117-2246 using Go go1.27.4 (amd64)
+   ```
+
+8. Start `peggo` if you operate the bridge orchestrator:
+
+   ```bash
+   peggo orchestrator
+   ```
+
+Confirm the node advances past the upgrade height, catches up to the network, and participates normally. Repeat the upgrade for sentries, RPC nodes, and other node infrastructure.
+
+### With Cosmovisor
+
+Before the halt, stage the verified binary under the exact upgrade plan name:
+
+```text
+$DAEMON_HOME/cosmovisor/upgrades/v1.21.0/bin/injectived
+```
+
+Verify the staged version and executable permissions:
+
+```bash
+chmod +x "$DAEMON_HOME/cosmovisor/upgrades/v1.21.0/bin/injectived"
+"$DAEMON_HOME/cosmovisor/upgrades/v1.21.0/bin/injectived" version
+```
+
+Keep the active binary unchanged until the halt. Ensure a backup is taken after the old process stops and before the upgraded process starts. At the upgrade height, Cosmovisor selects the staged binary for `v1.21.0`. Verify the active version and confirm synchronization and validator participation after restart.

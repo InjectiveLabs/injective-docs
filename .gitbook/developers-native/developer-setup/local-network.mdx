@@ -1,0 +1,78 @@
+---
+title: "Run a Local Node"
+description: "Configure genesis and start a single-validator Injective chain for native development."
+updatedAt: "2026-11-18"
+---
+
+Run a local Injective chain to configure genesis, test native execution module behavior, or query native state over the CLI, gRPC, or REST. Use the published `injectived` release binary for the version you want to test. For Solidity and EVM precompiles, use the [bootstrapped EVM localnet](/developers-evm/local-development).
+
+## Initialize the Chain
+
+[Install `injectived`](/developers/injectived/install) and install `jq`. Use a fresh directory for the local chain. The following commands use Bash or Zsh.
+
+```bash
+LOCAL_CHAIN_ID=injective-1000
+LOCAL_CHAIN_HOME="$HOME/.injectived-local"
+
+injectived init local-validator --chain-id "$LOCAL_CHAIN_ID" --home "$LOCAL_CHAIN_HOME"
+```
+
+`init` creates the node’s keys and configuration under `$LOCAL_CHAIN_HOME/config`. Pass the same `--home` to each command that reads or changes the local node’s files.
+
+## Configure Genesis
+
+Use `inj` for staking, governance deposits, the crisis fee, and minting.
+
+```bash
+GENESIS="$LOCAL_CHAIN_HOME/config/genesis.json"
+
+jq '
+  .app_state.staking.params.bond_denom = "inj"
+  | .app_state.crisis.constant_fee.denom = "inj"
+  | .app_state.gov.params.min_deposit[0].denom = "inj"
+  | .app_state.gov.params.expedited_min_deposit[0].denom = "inj"
+  | .app_state.mint.params.mint_denom = "inj"
+' "$GENESIS" > "$GENESIS.tmp" && mv "$GENESIS.tmp" "$GENESIS"
+```
+
+## Fund the Validator Account
+
+Create a validator operator account in the local test keyring. An INJ amount in a native CLI command is an integer in the smallest unit, followed by `inj`. One INJ is `1000000000000000000inj`.
+
+```bash
+injectived keys add local-validator --keyring-backend test --home "$LOCAL_CHAIN_HOME"
+VALIDATOR_ADDRESS=$(injectived keys show local-validator -a \
+  --keyring-backend test --home "$LOCAL_CHAIN_HOME")
+
+injectived genesis add-genesis-account "$VALIDATOR_ADDRESS" 100000000000000000000000inj \
+  --chain-id "$LOCAL_CHAIN_ID" --home "$LOCAL_CHAIN_HOME"
+```
+
+## Add the Validator to Genesis
+
+Create and collect a genesis transaction (`gentx`). It registers the operator, self-delegates the specified stake, and registers the local consensus public key.
+
+```bash
+injectived genesis gentx local-validator 1000000000000000000000inj \
+  --chain-id "$LOCAL_CHAIN_ID" --keyring-backend test --home "$LOCAL_CHAIN_HOME"
+
+injectived genesis collect-gentxs --home "$LOCAL_CHAIN_HOME"
+injectived genesis validate --home "$LOCAL_CHAIN_HOME"
+```
+
+## Start and Query the Node
+
+Set `minimum-gas-prices` in `$LOCAL_CHAIN_HOME/config/app.toml`. For local development, you can use `minimum-gas-prices = "0inj"`. The same file configures the application’s gRPC and REST services. Use `config.toml` for CometBFT settings such as the RPC listener and consensus timeouts.
+
+```bash
+injectived start --home "$LOCAL_CHAIN_HOME"
+```
+
+From another terminal, check the chain ID and verify that the block height increases:
+
+```bash
+curl -fsS http://localhost:26657/status \
+  | jq '{network: .result.node_info.network, height: .result.sync_info.latest_block_height}'
+```
+
+Expect `injective-1000`. To query bank balances or other module state, use `injectived query` with `--node tcp://localhost:26657`. See [Interact with Nodes](/infra/interact-node/index) for CLI, gRPC, Go, and REST examples.

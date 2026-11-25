@@ -37,7 +37,9 @@ Troubleshooting reference and operational guide for Injective validators and nod
 
 ## Common Problems and Solutions
 
-### Node stuck at upgrade height
+<AccordionGroup>
+
+<Accordion title="Node stuck at upgrade height">
 
 **Symptoms:**
 - Node logs show the chain halted at the expected upgrade height
@@ -53,9 +55,9 @@ Troubleshooting reference and operational guide for Injective validators and nod
 4. Verify: `injectived version`
 5. Start the node
 
----
+</Accordion>
 
-### Block header hash mismatch after upgrade
+<Accordion title="Block header hash mismatch after upgrade">
 
 **Symptoms:**
 
@@ -83,9 +85,9 @@ The node continuously prevotes nil and cannot finalize the next block.
 Rollback on archival nodes with large databases (hundreds of GB) can take a very long time or fail. For these nodes, recover from a snapshot instead.
 </Warning>
 
----
+</Accordion>
 
-### Conflicting vote warnings
+<Accordion title="Conflicting vote warnings">
 
 **Symptoms:**
 
@@ -117,9 +119,9 @@ This message repeats continuously.
 If conflicting votes are detected on-chain, the validator will be tombstoned (permanently jailed). There is no on-chain unjail for double-signing.
 </Warning>
 
----
+</Accordion>
 
-### Validator tombstoned (double-signed)
+<Accordion title="Validator tombstoned (double-signed)">
 
 **Symptoms:**
 
@@ -150,9 +152,11 @@ There is no standard on-chain unjail for tombstoned validators. Resolution paths
 - Always back up `priv_validator_state.json` after stopping the node
 - Never run two nodes with the same signing key simultaneously
 
----
+</Accordion>
 
-### Recovering from a snapshot
+<a id="recovering-from-a-snapshot" />
+
+<Accordion title="Recovering from a snapshot">
 
 **When to use:** When rollback fails, takes too long, or the node state is corrupted beyond repair (apphash mismatch).
 
@@ -255,9 +259,9 @@ Now when the node starts:
 grep db_backend ~/.injectived/config/config.toml
 ```
 
----
+</Accordion>
 
-### Rollback hangs or fails
+<Accordion title="Rollback hangs or fails">
 
 **Symptoms:** `injectived rollback` runs but never completes, or produces errors.
 
@@ -271,9 +275,11 @@ grep db_backend ~/.injectived/config/config.toml
 - For large nodes: if rollback hasn't completed in 30+ minutes, abort and use a snapshot
 - Consider switching to goleveldb. PebbleDB is more space efficient but less tested for rollback
 
----
+</Accordion>
 
-### Round regression errors during catchup
+<a id="round-regression-errors-during-catchup" />
+
+<Accordion title="Round regression errors during catchup">
 
 **Symptoms:**
 
@@ -300,9 +306,9 @@ INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
 If left on during normal operation, the 1ms delta causes rounds to advance far faster than votes can propagate across the network. Your validator moves to the next round before other validators' precommits arrive, so its votes miss the actual commit round. The result is a steadily climbing missed-block counter, and if enough blocks are missed (typically 500 of the last 10,000), **the validator will be jailed for downtime**.
 </Warning>
 
----
+</Accordion>
 
-### AppHash mismatch
+<Accordion title="AppHash mismatch">
 
 **Symptoms:**
 
@@ -318,19 +324,19 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 2. If rollback fails or the error persists: recover from a snapshot
 3. Always restore `priv_validator_state.json` after recovery
 
----
+</Accordion>
 
-### AppHash mismatch after CometBFT state sync
+<Accordion title="AppHash mismatch after CometBFT state sync">
 
 **Symptoms:** AppHash error immediately after a successful CometBFT state sync restore, at the very first block.
 
 **Cause:** CometBFT state sync (the P2P protocol configured in `[statesync]` in `config.toml`) restores the IAVL state tree but does **not** restore the `wasm/` directory containing compiled CosmWasm contract bytecode. Without these files, the locally computed app hash will not match the network's.
 
-**Solution:** Use a manual snapshot restore instead of state sync. Injective's official snapshots include the `wasm/` directory. If you must use state sync, obtain the `wasm/` directory from a trusted source and place it at `~/.injectived/data/wasm/` before starting the node. See [Joining a Network — Sync Methods](/infra/join-a-network) for details on the difference between state sync and snapshot restore.
+**Solution:** Use a manual snapshot restore instead of state sync. Injective's official snapshots include the `wasm/` directory. If you must use state sync, obtain the `wasm/` directory from a trusted source and place it at `~/.injectived/data/wasm/` before starting the node. See [Mainnet sync options](/infra/run-node#sync-options) for details on state sync and snapshot restore.
 
----
+</Accordion>
 
-### Sentry nodes stuck after upgrade
+<Accordion title="Sentry nodes stuck after upgrade">
 
 **Symptoms:** The validator node is upgraded and signing, but sentry nodes remain stuck at the old block height.
 
@@ -338,9 +344,9 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 
 **Solution:** Upgrade sentry nodes to the same binary version as the validator. Sentries do not have `priv_validator_state.json` (they don't sign), but they do require the correct binary.
 
----
+</Accordion>
 
-### Chain stalled after upgrade (insufficient voting power)
+<Accordion title="Chain stalled after upgrade (insufficient voting power)">
 
 **Symptoms:**
 
@@ -375,9 +381,9 @@ What happens during this window:
 The longer this window lasts, the higher the round numbers climb. Validators that come online later will need to catch up through all those rounds, which is why the `--unsafe-consensus-timeout-precommit-delta=1ms` flag exists but remember to [remove it after the chain stabilizes](#round-regression-errors-during-catchup).
 </Note>
 
----
+</Accordion>
 
-### Jailed for downtime (not tombstoned)
+<Accordion title="Jailed for downtime (not tombstoned)">
 
 **Symptoms:**
 - Validator shows as inactive or jailed
@@ -402,7 +408,9 @@ The longer this window lasts, the higher the round numbers climb. Validators tha
    injectived query staking validator <injvaloper_address>
    ```
 
----
+</Accordion>
+
+</AccordionGroup>
 
 ## Coordinated Upgrade Checklist
 

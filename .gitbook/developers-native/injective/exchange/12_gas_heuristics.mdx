@@ -1,107 +1,101 @@
 ---
 sidebar_position: 13
 title: Gas Heuristics
-updatedAt: "2026-10-13"
+updatedAt: "2026-11-18"
 ---
 
-<Callout icon="info" color="#22C55E" iconType="regular">
-**Live on Mainnet
-</Callout>
+These gas estimates apply to native exchange transactions on Injective Core v1.21.0 when the exchange parameter `fixed_gas_enabled` is `true`. Check the parameter on the network where you submit the transaction. On Mainnet:
 
-This doc contains suggested `gasWanted` values for specific Exchange messages. Values were obtained heuristically
-by observing gas consumption during MsgServer execution for a transaction containing a single Msg type. Conceptually,
-for any transaction the following formula applies:
-
-```
-    tx_gas = ante_gas + msg_gas (+ msg2_gas ...)
+```bash
+curl -fsS https://sentry.lcd.injective.network/injective/exchange/v2/exchangeParams \
+  | jq '.params.fixed_gas_enabled'
 ```
 
-where `ante_gas` is the gas consumed during `AnteHandler` and the subsequent sum of `msg_gas` is gas consumed
-by MsgServer of each particular msg (highest observed `ante_gas` is 120_000).
+The suggested transaction gas limit (`gasWanted`) adds an estimated 120,000 gas for transaction checks to the exchange message gas. For multiple messages, budget for the sum of their message costs and the checks for the whole transaction. Simulate the exact transaction and leave headroom when setting the limit.
 
-With `fixed_gas_enabled` set to `true` in Exchange params, the following values can be used as `gasWanted` in order to
-ensure a transaction does not run out of gas:
+Binary options markets were removed in v1.21.0. Leave binary options fields empty when submitting `MsgBatchUpdateOrders`.
 
-> **Note**: Values assume a transaction containing a single message. Suggested `gasWanted` is the fixed message gas plus the 120,000 ante allowance.
+## Single messages
 
-| Message Type                                 | Fixed Msg Gas | Suggested gasWanted |
-|----------------------------------------------|--------------:|--------------------:|
-| MsgCreateDerivativeLimitOrder                |       210,000 |             330,000 |
-| MsgCreateDerivativeLimitOrder (post-only)    |       250,000 |             370,000 |
-| MsgCreateDerivativeMarketOrder               |       190,000 |             310,000 |
-| MsgCancelDerivativeOrder                     |        80,000 |             200,000 |
-| MsgCreateSpotLimitOrder                      |       180,000 |             300,000 |
-| MsgCreateSpotLimitOrder (post-only)          |       210,000 |             330,000 |
-| MsgCreateSpotMarketOrder                     |       180,000 |             300,000 |
-| MsgCancelSpotOrder                           |        65,000 |             185,000 |
-| MsgCreateBinaryOptionsLimitOrder             |       210,000 |             330,000 |
-| MsgCreateBinaryOptionsLimitOrder (post-only) |       250,000 |             370,000 |
-| MsgCreateBinaryOptionsMarketOrder            |       190,000 |             310,000 |
-| MsgCancelBinaryOptionsOrder                  |        80,000 |             200,000 |
-| MsgDeposit                                   |       210,000 |             330,000 |
-| MsgWithdraw                                  |       200,000 |             320,000 |
-| MsgSubaccountTransfer                        |       100,000 |             220,000 |
-| MsgExternalTransfer                          |       180,000 |             300,000 |
-| MsgIncreasePositionMargin                    |        65,000 |             185,000 |
-| MsgDecreasePositionMargin                    |        80,000 |             200,000 |
+| Native exchange message | Fixed message gas | Suggested gas limit |
+| --- | ---: | ---: |
+| `MsgCreateSpotLimitOrder` | 432,000 | 552,000 |
+| `MsgCreateSpotLimitOrder` (post only) | 482,000 | 602,000 |
+| `MsgCreateSpotMarketOrder` | 432,000 | 552,000 |
+| `MsgCreateSpotMarketOrder` (immediate atomic) | 420,000 | 540,000 |
+| `MsgCancelSpotOrder` | 242,000 | 362,000 |
+| `MsgCreateDerivativeLimitOrder` | 452,000 | 572,000 |
+| `MsgCreateDerivativeLimitOrder` (post only) | 512,000 | 632,000 |
+| `MsgCreateDerivativeMarketOrder` | 442,000 | 562,000 |
+| `MsgCreateDerivativeMarketOrder` (immediate atomic) | 430,000 | 550,000 |
+| `MsgCancelDerivativeOrder` | 252,000 | 372,000 |
+| `MsgDeposit` | 210,000 | 330,000 |
+| `MsgWithdraw` | 200,000 | 320,000 |
+| `MsgSubaccountTransfer` | 100,000 | 220,000 |
+| `MsgExternalTransfer` | 180,000 | 300,000 |
+| `MsgIncreasePositionMargin` | 230,000 | 350,000 |
+| `MsgDecreasePositionMargin` | 240,000 | 360,000 |
 
-For a GTB (Good Till Block) limit order, multiply the fixed message gas by `1.1` (`GTBOrdersGasMultiplier`), then add
-the ante allowance. The multiplier applies to the fixed message gas only, including the post-only variant. It does not
-apply to market orders or cancellations.
+Order creation values include the 12,000 gas charge for address order admission where applicable. Immediate atomic market orders use the base charge.
 
-**Batch Msg types**
+For a Good Till Block (GTB) limit order, apply the `1.1` multiplier to the base creation charge before adding the 12,000 admission charge. Use the post only base if applicable. For example, a regular spot GTB order uses `420,000 × 1.1 + 12,000 = 474,000` message gas. With the ante allowance, the suggested gas limit is `594,000`.
 
-Gas for batch message types varies depending on the message content. Additionally, `ante_gas` scales with the number of orders (it's estimated that 3000 gas provides for sufficient ante handler headroom).
+## Batch messages
 
-`N` is the number of orders.
+For these estimates, allow 120,000 gas for transaction checks plus about 3,000 gas per listed order. Add the fixed message charge for each order.
 
-- `MsgBatchCreateSpotLimitOrders`:        `tx_gas = 120_000 + N x 183_000` (for 3 orders this results in `669_000`)
-- `MsgBatchCancelSpotOrders`:             `tx_gas = 120_000 + N x  68_000`
-- `MsgBatchCreateDerivativeLimitOrders`:  `tx_gas = 120_000 + N x 213_000`
-- `MsgBatchCancelDerivativeOrders`:       `tx_gas = 120_000 + N x  83_000`
-- `MsgBatchCancelBinaryOptionsOrders`:    `tx_gas = 120_000 + N x  83_000`
+| Message | Estimated gas limit for N orders |
+| --- | ---: |
+| `MsgBatchCreateSpotLimitOrders` with regular orders | 120,000 + N × 435,000 |
+| `MsgBatchCancelSpotOrders` | 120,000 + N × 245,000 |
+| `MsgBatchCreateDerivativeLimitOrders` with regular orders | 120,000 + N × 455,000 |
+| `MsgBatchCancelDerivativeOrders` | 120,000 + N × 255,000 |
 
-***MsgBatchUpdateOrders***
+### MsgBatchUpdateOrders
+
+The v2 message has the following Go fields. Protobuf tags are omitted for readability.
 
 ```go
 type MsgBatchUpdateOrders struct {
-    Sender string
-
-    SubaccountId                      string             // used only with cancel all, see the note below
-    SpotMarketIdsToCancelAll          []string           // total orders across the listed markets x 65_000 + 3000 per market ID
-    DerivativeMarketIdsToCancelAll    []string           // total orders across the listed markets x 80_000 + 3000 per market ID
-    BinaryOptionsMarketIdsToCancelAll []string           // total orders across the listed markets x 80_000 + 3000 per market ID
-
-    SpotOrdersToCancel                []*OrderData       // N x  65_000 + N x 3000
-    DerivativeOrdersToCancel          []*OrderData       // N x  80_000 + N x 3000
-    BinaryOptionsOrdersToCancel       []*OrderData       // N x  80_000 + N x 3000
-    SpotOrdersToCreate                []*SpotOrder       // N x 180_000 (210_000 if post-only) + N x 3000
-    DerivativeOrdersToCreate          []*DerivativeOrder // N x 210_000 (250_000 if post-only) + N x 3000
-    BinaryOptionsOrdersToCreate       []*DerivativeOrder // N x 210_000 (250_000 if post-only) + N x 3000
-
-    SpotMarketOrdersToCreate          []*SpotOrder       // N x 180_000 + N x 3000
-    DerivativeMarketOrdersToCreate    []*DerivativeOrder // N x 190_000 + N x 3000
-    BinaryOptionsMarketOrdersToCreate []*DerivativeOrder // N x 190_000 + N x 3000
+    Sender                            string
+    SubaccountId                      string
+    SpotMarketIdsToCancelAll          []string
+    DerivativeMarketIdsToCancelAll    []string
+    SpotOrdersToCancel                []*OrderData
+    DerivativeOrdersToCancel          []*OrderData
+    SpotOrdersToCreate                []*SpotOrder
+    DerivativeOrdersToCreate          []*DerivativeOrder
+    BinaryOptionsOrdersToCancel       []*OrderData       // Leave empty on v1.21.
+    BinaryOptionsMarketIdsToCancelAll []string           // Leave empty on v1.21.
+    BinaryOptionsOrdersToCreate       []*DerivativeOrder // Leave empty on v1.21.
+    SpotMarketOrdersToCreate          []*SpotOrder
+    DerivativeMarketOrdersToCreate    []*DerivativeOrder
+    BinaryOptionsMarketOrdersToCreate []*DerivativeOrder // Leave empty on v1.21.
 }
 ```
-For cancel all, gas is charged per order found in each listed market. Sum the order counts across markets rather than multiplying by an average. Additionally, the batch-create formulas above are for normal orders, as post-only and GTB orders are priced individually.
 
-For example, let's suppose you want to:
+Use the single message table to price each operation in the batch.
 
-- cancel 3 spot orders in market A
-- create 2 derivative orders in market B
-- create 1 binary options post-only order in market C
-- cancel all orders in spot markets X and Y (2 orders in X and 2 orders in Y)
+| Message fields | Gas calculation |
+| --- | --- |
+| `SpotOrdersToCreate`, `DerivativeOrdersToCreate` | Add the limit order charge for each order, including any post only or GTB pricing. |
+| `SpotMarketOrdersToCreate`, `DerivativeMarketOrdersToCreate` | Add the market order charge for each order. Use the immediate atomic rate where applicable. |
+| `SpotOrdersToCancel`, `DerivativeOrdersToCancel` | Add the corresponding cancellation charge per listed order. |
+| `SpotMarketIdsToCancelAll`, `DerivativeMarketIdsToCancelAll` | Set `SubaccountId`. Count the orders in each targeted market for that subaccount and apply the corresponding cancellation charge to each order found. |
 
-The resulting gas would be computed as such:
+Budget about 3,000 gas for transaction checks per explicit order or cancel all market ID.
 
-```
-    total_gas = 120_000                   // ante_gas base
-                + 3 x  65_000 + 3 x 3000  // cancel 3x spot
-                + 2 x 210_000 + 2 x 3000  // create 2x derivative
-                + 250_000 + 3000          // create 1x post-only binary options
-                + 4 x  65_000             // cancel all 4x spot orders
-                + 2 x   3000              // two cancel all market IDs
-```
+| Example operations in one batch | Estimated gas |
+| --- | ---: |
+| Base transaction checks | 120,000 |
+| Cancel three spot orders | 735,000 |
+| Create two regular derivative limit orders | 910,000 |
+| Create one post only spot limit order | 485,000 |
+| Cancel all four spot orders across two markets | 974,000 |
+| **Suggested gas limit** | **3,224,000** |
 
-which ends up resulting in a total of `1_269_000` gas.
+## Additional gas
+
+- A permissionless token's pre-send contract hook can charge additional gas to the transaction. Account for the hook separately because transaction simulation omits that charge in v1.21.0.
+- Legacy `injective.exchange.v1beta1` order, batch, and margin messages can incur extra market reads during conversion to v2. The release estimates about 1,700 gas per spot market read and 2,300 gas per derivative market read.
+- For calls from Solidity, estimate the full EVM transaction. The [Exchange precompile](/developers-evm/exchange-precompile) uses exchange constants as part of its own gas accounting and can also charge for owner blacklist queries.
