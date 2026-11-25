@@ -16,14 +16,14 @@ V1 exact-input methods and `quoteExactOutputV1` are available from v1.20.4. The 
 
 ## Walkthrough
 
-Follow the [swap precompile demo](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/swap-precompile/README.md) to check the testnet allowlist, quote and simulate both swap types, submit a transaction, or run the full flow on a fresh local chain.
+Use the [testnet walkthrough](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/swap-precompile/README.md) to check the allowlist and try quotes and swaps with Viem or Foundry. The [Solidity Contracts localnet demo](https://github.com/InjectiveLabs/solidity-contracts/tree/ea9c54a6af1f922d2d76879c06c6cafc1362a084/demos/swap) seeds a fixed order book so you can reproduce partial fills, quantity rounding, and an exact output swap that reverts at its input cap.
 
 ## How it works
 
 1. Select a network and a supported spot market.
 2. Resolve the input token and express the amount in its native integer units.
-3. Read a quote, then derive a minimum output and a deadline.
-4. Simulate the swap from the funded caller, submit it, and wait for a successful receipt.
+3. Set a minimum output and deadline for exact input, or an input cap and deadline for exact output. Read a fresh quote to check whether the trade meets those limits. If spending a minimum amount matters for an exact input swap, check the quoted V2 spend against that requirement.
+4. Simulate the swap from the funded caller. For an exact input swap with a minimum spend requirement, enforce it on the execution result in the calling contract. Submit the transaction and check its receipt.
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"background": "#FFFFFF", "primaryColor": "#FFFFFF", "lineColor": "#4D3DFF", "textColor": "#14151F"}}}%%
@@ -38,12 +38,13 @@ flowchart LR
         BANK["x/bank balances<br/>MultiVM Token Standard"]
     end
     CALLER -->|"1 · quoteExactInputV2<br/>request spent input and output"| SWAP
-    SWAP -.->|"2 · quoted input spent and output<br/>used to derive minOut"| CALLER
+    SWAP -.->|"2 · estimated spend and output<br/>caller checks its limits"| CALLER
     CALLER -->|"3 · swapExactInputV2<br/>with minOut and deadline"| SWAP
     SWAP -->|"4 · verify market<br/>is allowlisted"| PARAMS
     SWAP -->|"5 · execute on<br/>default subaccount"| EXCH
     EXCH -->|"6 · fill, or revert<br/>below minOut"| SWAP
     SWAP -->|"7 · credit amountOut<br/>to recipient"| BANK
+    SWAP -.->|"8 · return actual spend and output<br/>contract can enforce minimum spend"| CALLER
     BANK -.->|"same balance readable as ERC20"| CALLER
 
     classDef caller fill:#EEF0FF,stroke:#4D3DFF,color:#14151F
@@ -60,9 +61,16 @@ Quotes read the current order book without changing state. Execution places an a
 
 For exact input, `amountIn` is an input budget. Thin liquidity or quantity ticks can leave part of it unspent. The remainder stays with the caller and `minOut` sets the minimum output for the fill. For exact output, execution must deliver at least `amountOut` within `maxAmountIn` or revert. Quantity ticks can cause slightly more output to be delivered.
 
-Orders can change between quoting and execution. Quotes use the undiscounted taker fee, and execution applies the caller’s fee discount and skips paused or frozen makers. Use a fresh quote to set your limits. Execution enforces `minOut` for exact input or `maxAmountIn` for exact output, along with any deadline you set.
+Orders can change between quoting and execution. Quotes use the undiscounted taker fee, and execution applies the caller’s fee discount and skips paused or frozen makers. A quote-based `minOut` limits deterioration from that quote and may accept a fill the quote already showed as partial. Set an independent minimum output from the worst fee-inclusive price the application accepts when it needs a price bound.
 
 ## Swap Precompile Interface
+
+The [Solidity interface](https://github.com/InjectiveLabs/solidity-contracts/blob/ea9c54a6af1f922d2d76879c06c6cafc1362a084/src/Swap.sol) is available at the linked source commit. The node version determines which methods can run.
+
+| Available from | Methods |
+| --- | --- |
+| v1.20.4 | `quoteExactInputV1`, `swapExactInputV1`, `quoteExactOutputV1` |
+| v1.21.0 | `quoteExactInputV2`, `swapExactInputV2`, `swapExactOutputV1` |
 
 ```solidity
 interface ISwapModule {
@@ -128,6 +136,14 @@ interface ISwapModule {
 The V1 and V2 suffixes refer to the precompile’s ABI versions. The exchange module versions its protobuf types independently.
 
 When checking a settled swap against the amounts returned by the precompile, allow for a difference of one smallest token unit. Fractional amounts accumulate in the caller’s default subaccount and can affect when a whole unit moves into or out of the bank balance.
+
+## Partial fills and rounding
+
+For a 50 USDC input budget, a thin book might quote 10 USDC spent and then execute at 10 USDC. Both results leave 40 USDC unspent. V1 exact input methods return only output. With V2, compare `amountIn - amountInSpent` against an application-defined `maxUnspent`, in the input token’s smallest units. Check the quote to catch an insufficient fill early, then check the returned spend after execution. Reverting in the calling contract also rolls back the swap.
+
+A fill rounded to the market’s quantity tick can leave input unspent. For a sell, the tick is already in base token units. For a buy, one tick’s cost is the base quantity tick multiplied by the price of the first ask level the swap did not fully use, including the net fee. Express that cost in quote token units before comparing it with the remainder. For example, a 0.001 INJ tick at 10 USDC per INJ and a 0.15% net fee costs 0.010015 USDC. A higher price bound allows a larger remainder and can accept a partial fill. Use an explicit minimum spend if the application needs a strict fill policy.
+
+For a fixed output target, use `swapExactOutputV1` with a `maxAmountIn` the application is willing to spend. The precompile checks the rounded-up exact output quote against this cap. If the quote is 20.030001 USDC and the swap would spend 20.030000 USDC, a cap of 20.030000 USDC still reverts.
 
 ## Market allowlist
 
