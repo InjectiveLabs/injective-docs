@@ -84,7 +84,7 @@ interface IIBCModule {
 |---|---|
 | `sourceChannel` | ICS-20 channel on Injective, such as `channel-N`. The port is always `transfer`. |
 | `receiver` | The address as the counterparty chain understands it. It is not restricted to an Injective or EVM format. Up to 2,048 bytes. |
-| `token` | `address(0)` for INJ. Otherwise the ERC20 address of a token with a MultiVM token pair, or an EVM native token whose  `erc20:0x...` denom has supply or metadata. |
+| `token` | `address(0)` for INJ. Otherwise the ERC20 address of a token with a MultiVM token pair, or an EVM native token whose `erc20:0x...` denom has supply or metadata. |
 | `amount` | Smallest denomination of the token. Must be positive. `2^256 - 1` is rejected because ibc-go treats it as "the whole balance". |
 | `timeoutHeight` | Counterparty client height. `{0, 0}` disables the height timeout. |
 | `timeoutTimestamp` | Absolute Unix time in nanoseconds. `0` disables the timestamp timeout. At least one timeout must be set, as required by the underlying IBC implementation. |
