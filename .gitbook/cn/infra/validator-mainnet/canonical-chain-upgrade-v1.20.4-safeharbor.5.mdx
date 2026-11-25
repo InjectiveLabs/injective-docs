@@ -1,0 +1,138 @@
+---
+title: 升级到 v1.20.4-safeharbor.5
+description: 面向所有节点运营者的提案 714 计划主网升级说明（加急投票）。
+updatedAt: "2026-11-10"
+---
+
+- [摘要](#summary)
+- [集成方兼容性](#compatibility-for-integrators)
+- [恢复](#recovery)
+- [升级流程](#upgrade-procedure)
+- [验证者须知](#notes-for-validators)
+
+## 摘要 {#summary}
+
+Injective Chain 将于大约 **2026 年 11 月 11 日（星期三）美东时间上午 7:30 / UTC 12:30** 进行一次计划中的增强升级，前提是加急的[提案 714](https://injhub.com/proposal/714/) 获得通过。请关注[区块高度倒计时](https://chain.injective.network/block/191270000)以获取最新的预计时间。
+
+以下是升级步骤的简要摘要：
+
+1. 投票，并等待节点在区块高度 **191270000** 处 panic。
+2. 备份用于运行 Injective Chain 的配置、数据和密钥。
+3. 安装 [v1.20.4-safeharbor.5](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-safeharbor.5-1794335565) 二进制文件。
+4. 使用 `injectived version` 验证已安装的二进制版本，并确认其显示为 **v1.20.4-safeharbor.5**。
+5. 使用新版本的二进制文件重启节点。
+
+## 集成方兼容性 {#compatibility-for-integrators}
+
+以下组件版本已针对 Injective 主网 v1.20.4 进行验证。在主网上请始终运行以下官方版本。它们包含与测试网周期中发布的 `-beta` 版本相同的更改，因此从 `-beta` 构建切换到官方版本无需修改代码。较早的版本使用 `-rc` 后缀表示测试网构建。
+
+| 组件 | 版本 |
+| --- | --- |
+| `injective-core` (`injectived`) | [v1.20.4-safeharbor.5](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-safeharbor.5-1794335565) |
+| `injective-indexer` | [v1.20.168](https://gallery.ecr.aws/l9h3g6c6/injective-indexer) |
+| `sdk-go` | [v1.63.2](https://github.com/InjectiveLabs/sdk-go/releases/tag/v1.63.2) |
+| `sdk-python` | [v1.16.2](https://github.com/InjectiveLabs/sdk-python/releases/tag/v1.16.2) |
+| `evm-gateway` | [v1.4.4](https://hub.docker.com/r/injectivelabs/evm-gateway/tags?name=v1.4.4) |
+
+该 indexer 标签适用于其 exchange、eventprovider、explorer 和 chart 服务。
+
+所有验证者、哨兵节点、RPC 节点，以及为交易所、托管、索引器、中继器和其他集成提供支持的节点，都必须运行升级后的链二进制文件。请与任何第三方节点提供商确认其已准备就绪。
+
+## 恢复 {#recovery}
+
+在导出链状态之前，建议验证者在导出高度先进行一次完整的数据快照，然后再继续。快照方式在很大程度上取决于基础设施，但通常可以通过备份 `.injectived` 目录来完成。
+
+在停止 injectived 进程后备份 `.injectived/data/priv_validator_state.json` 文件至关重要。随着你的验证者参与共识轮次，该文件每个区块都会更新。如果升级失败且需要重启之前的链，这个文件对于防止双重签名至关重要。
+
+如果升级未能成功，验证者和运营者必须恢复快照，降级回 Injective Chain 版本 [v1.20.4-bl.3](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-bl.3-1794240970)，并继续运行这条较早的链，直到下一次升级公告。
+
+升级前拍摄的官方快照将在[链快照页面](https://chain.injective.network/snapshots)上提供，以便运营者在最坏的恢复场景中回滚并从快照恢复。如果运营者在升级过程中出错或遇到错误，请按照[验证者故障排除指南](/cn/infra/coordinated-upgrades)操作，包括其中的快照恢复和验证者签名状态注意事项。
+
+## 升级流程 {#upgrade-procedure}
+
+### 验证者须知 {#notes-for-validators}
+
+在替换当前生效的二进制文件之前，请等待链在 **191,270,000** 处停止。在备份数据和验证者签名状态之前，请完全停止 `injectived`。
+
+### 步骤 {#steps}
+
+1. 在升级前验证你正在运行 `v1.20.4-bl.3`：
+
+   ```bash
+   injectived version
+   ```
+
+   预期版本：
+
+   ```text
+   Version v1.20.4-bl.3 (e0a1168)
+   ```
+
+2. 等待节点在 **191,270,000** 处停止，然后确认 `injectived` 已停止。备份你的 `.injectived` 目录：
+
+   ```bash
+   cp -r ~/.injectived ./injectived-backup
+   ```
+
+   关闭后保留 `data/priv_validator_state.json`。使用远程签名器的运营者必须保留其签名器的状态。
+
+3. 从[官方版本](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-safeharbor.5-1794335565)下载 `v1.20.4-safeharbor.5` 压缩包和校验和。根据公布的校验和验证压缩包，解压后安装版本二进制文件和随附的运行时库：
+
+   ```bash
+   sudo mv injectived peggo /usr/bin
+   sudo mv libwasmvm.x86_64.so /usr/lib
+   sudo ldconfig
+   ```
+
+4. 根据随版本发布的校验和验证已安装的 `libwasmvm` 库：
+
+   ```bash
+   sha256sum /usr/lib/libwasmvm.x86_64.so
+   ```
+
+   <Warning>
+   运行时库校验和不正确可能导致共识问题。
+   </Warning>
+
+5. 验证已安装的 `injectived` 显示为 **v1.20.4-safeharbor.5**，并且构建提交与版本说明中公布的一致：
+
+   ```bash
+   injectived version
+   ```
+
+6. 启动 `injectived`：
+
+   ```bash
+   injectived start
+   ```
+
+7. 如果你运行 `peggo`，请根据版本说明验证其版本：
+
+   ```bash
+   peggo version
+   ```
+
+8. 如果你运营跨链桥 orchestrator，请启动 `peggo`：
+
+   ```bash
+   peggo orchestrator
+   ```
+
+确认节点越过升级高度、追上网络并正常参与共识。对哨兵节点、RPC 节点和其他节点基础设施重复此升级。
+
+### 使用 Cosmovisor {#with-cosmovisor}
+
+在链停止之前，将经过验证的二进制文件放置到与升级计划名称完全一致的目录下：
+
+```text
+$DAEMON_HOME/cosmovisor/upgrades/v1.20.4-safeharbor.5/bin/injectived
+```
+
+验证放置的二进制版本和可执行权限：
+
+```bash
+chmod +x "$DAEMON_HOME/cosmovisor/upgrades/v1.20.4-safeharbor.5/bin/injectived"
+"$DAEMON_HOME/cosmovisor/upgrades/v1.20.4-safeharbor.5/bin/injectived" version
+```
+
+在链停止之前保持当前生效的二进制文件不变。确保在旧进程停止之后、升级后的进程启动之前完成备份。在升级高度，Cosmovisor 会为 `v1.20.4-safeharbor.5` 选择已放置的二进制文件。重启后，验证当前生效的版本，并确认节点同步和验证者参与情况正常。

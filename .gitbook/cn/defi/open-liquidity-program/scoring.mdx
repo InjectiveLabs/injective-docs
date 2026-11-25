@@ -13,7 +13,7 @@ updatedAt: "2026-02-05"
 - **交易量**（做市商和吃单者）
 - **参与多个市场**
 
-## 总分
+## 总分 {#total-score}
 
 对于任何给定市场，流动性提供者在一个周期内的 $TS$（总分）计算如下：
 
@@ -27,7 +27,7 @@ $$
   $a$、$b$ 和 $c$ 是加权公式不同组成部分的指数[参数](/cn/defi/open-liquidity-program/formula-parameters)。
 </Info>
 
-## 流动性分数
+## 流动性分数 {#liquidity-score}
 
 $$
 LS_{Epoch} =  \sum \limits_{N=1}^{40,320}  \min(LS_{N_{Bid}}, LS_{N_{Ask}})
@@ -38,12 +38,13 @@ $$
 订单簿快照每 10-100 个区块随机获取一次。这大约平均每分钟一次，意味着一个周期内大约有 40,320 个快照 $(60 \cdot 24 \cdot 28 = 40,320)$。实际上，求和的上限将根据周期内的实际快照数量而变化。为本指南的目的，我们假设周期内恰好有 40,320 个快照。
 
 $$
-LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots
- \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \\
+\forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 $$
-LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \\
+\forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 $LS_{N_{Bid}}$ 是流动性提供者在快照 $N$ 中所有超过 $MinDepth$ 大小且在 $MaxSpread$ 范围内的限价单的买单深度除以订单价差的总和，乘以该快照的波动性参数。
@@ -67,10 +68,10 @@ $Spread$ 从中间价计算（与中间价的距离除以中间价）。
   有关 $MinDepth$ 和 $MaxSpread$ 的当前值，请参阅[公式参数页面](/cn/defi/open-liquidity-program/formula-parameters)。
 </Info>
 
-## 在线时间分数
+## 在线时间分数 {#uptime-score}
 
 $$
-Uptime_{Epoch} = \sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases}
+Uptime_{Epoch} = \sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise}\end{cases}
 $$
 
 $Uptime_{Epoch}$ 是整个周期内流动性提供者在相关市场中具有[**_正买单流动性分数和正卖单流动性分数_**](/cn/defi/open-liquidity-program/scoring#liquidity-score)的订单簿快照数量。这意味着流动性提供者在快照中在订单簿两侧报价，订单大小大于或等于 $MinDepth$，价差小于或等于 $MaxSpread$。
@@ -83,31 +84,30 @@ $Uptime_{Epoch}$ 是整个周期内流动性提供者在相关市场中具有[**
   对于在周期中途获得资格但过去曾获得资格的地址（该地址在某个时候失去了资格），$Uptime_{Epoch}$ 将不会被缩放。这是为了抑制地址在周期之间失去资格。
 </Info>
 
-## 交易量
+## 交易量 {#volume}
 
 $Volume$ 是流动性提供者在周期内该市场的累计符合条件的做市商和吃单者交易量。
 
-## 完全展开的公式
+## 完全展开的公式 {#fully-expanded-formula}
 
 完全展开的公式是：
 
 $TS_{Market} =$
 
 $$
-\left(\sum \limits_{N=1}^{40,320}  \min(LS_{N_{Bid}}, LS_{N_{Ask}})\right)^a \cdot \left(\sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise} \\\end{cases} \right)^b \cdot Volume^c
+\left(\sum \limits_{N=1}^{40,320}  \min(LS_{N_{Bid}}, LS_{N_{Ask}})\right)^a \cdot \left(\sum \limits_{N=1}^{40,320} \begin{cases}1&\text{if } \min(LS_{N_{Bid}}, LS_{N_{Ask}}) > 0\\ 0&\text{otherwise}\end{cases} \right)^b \cdot Volume^c
+$$
+
+其中
+
+$$
+LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \\
+\forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 $$
-\text {其中}
-$$
-
-$$
-LS_{N_{Bid}} = \frac{BidDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{BidDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots
- \newline  \forall \ BidDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
-$$
-
-$$
-LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \newline  \forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
+LS_{N_{Ask}} = \frac{AskDepth_1}{Spread_1} \cdot \Theta_{vol} + \frac{AskDepth_2}{Spread_2} \cdot \Theta_{vol} + \ldots \\
+\forall \ AskDepth_i \geq MinDepth \text{ and } Spread_i \leq MaxSpread
 $$
 
 <Info>

@@ -6,7 +6,7 @@ updatedAt: "2026-09-01"
 面向 Injective 验证者和节点运营者的故障排查参考与运维指南。涵盖常见故障模式、恢复流程、升级检查清单以及关键安全实践。
 
 ---
-## 开始之前：关键安全规则
+## 开始之前：关键安全规则 {#before-you-begin-critical-safety-rules}
 
 <Callout icon="warning" color="#FF8C00" iconType="regular">
 
@@ -30,14 +30,18 @@ updatedAt: "2026-09-01"
 </Callout>
 
 <Callout icon="info" color="#22C55E" iconType="regular">
-**需要快照来恢复？** 请参阅本页底部的[快照资源](#快照资源)，获取剪枝快照和社区提供商信息。有关归档段快照，请参阅[归档设置](/cn/infra/archival-setup)页面。
+**需要快照来恢复？** 请参阅本页底部的[快照资源](#snapshot-resources)，获取剪枝快照和社区提供商信息。有关归档段快照，请参阅[归档设置](/cn/infra/archival-setup)页面。
 </Callout>
 
 ---
 
-## 常见问题与解决方案
+## 常见问题与解决方案 {#common-problems-and-solutions}
 
-### 节点卡在升级高度
+<AccordionGroup>
+
+<a id="node-stuck-at-upgrade-height" />
+
+<Accordion title="节点卡在升级高度">
 
 **症状：**
 - 节点日志显示链在预期的升级高度处停机
@@ -53,9 +57,11 @@ updatedAt: "2026-09-01"
 4. 验证：`injectived version`
 5. 启动节点
 
----
+</Accordion>
 
-### 升级后区块头哈希不匹配
+<a id="block-header-hash-mismatch-after-upgrade" />
+
+<Accordion title="升级后区块头哈希不匹配">
 
 **症状：**
 
@@ -83,9 +89,11 @@ err="wrong Block.Header.LastResultsHash. Expected 284C339C..., got 694706724..."
 在拥有大型数据库（数百 GB）的归档节点上执行回滚可能耗时极长或失败。对于这类节点，请改为从快照恢复。
 </Warning>
 
----
+</Accordion>
 
-### 冲突投票警告
+<a id="conflicting-vote-warnings" />
+
+<Accordion title="冲突投票警告">
 
 **症状：**
 
@@ -117,9 +125,11 @@ height=181027006 module=consensus round=40 type=SIGNED_MSG_TYPE_PREVOTE
 如果链上检测到冲突投票，验证者将被墓碑处理（tombstoned，即永久监禁）。对于双重签名，不存在链上解禁（unjail）的途径。
 </Warning>
 
----
+</Accordion>
 
-### 验证者被 tombstoned（双重签名）
+<a id="validator-tombstoned-double-signed" />
+
+<Accordion title="验证者被 tombstoned（双重签名）">
 
 **症状：**
 
@@ -150,9 +160,11 @@ injectived query slashing signing-info injvalcons1...
 - 始终在停止节点后备份 `priv_validator_state.json`
 - 绝不同时运行两个使用相同签名密钥的节点
 
----
+</Accordion>
 
-### 从快照恢复
+<a id="recovering-from-a-snapshot" />
+
+<Accordion title="从快照恢复">
 
 **适用场景：** 当回滚失败、耗时过长，或节点状态损坏到无法修复（AppHash 不匹配）时使用。
 
@@ -174,7 +186,7 @@ injectived query slashing signing-info injvalcons1...
 8. 验证 `priv_validator_state.json` 存在且正确
 9. 启动节点
 
-#### 为什么必须保留你自己的 `priv_validator_state.json`
+#### 为什么必须保留你自己的 `priv_validator_state.json` {#why-you-must-keep-your-own-priv_validator_state-json}
 
 快照包含区块链数据（区块、应用状态），但绝不会包含你的验证者的签名状态。签名状态记录了你的验证者最后一次签名的高度、轮次和步骤。如果你丢失了它或用空白的替换了它，你的节点将不知道自己已经签名过什么，可能会签署冲突的区块 —— 导致双重签名和永久性的 tombstoned。
 
@@ -255,9 +267,11 @@ Block:  100  105  110  115  120  125  126
 grep db_backend ~/.injectived/config/config.toml
 ```
 
----
+</Accordion>
 
-### 回滚挂起或失败
+<a id="rollback-hangs-or-fails" />
+
+<Accordion title="回滚挂起或失败">
 
 **症状：** `injectived rollback` 一直运行但始终无法完成，或产生错误。
 
@@ -271,9 +285,11 @@ grep db_backend ~/.injectived/config/config.toml
 - 对于大型节点：如果回滚超过 30 分钟仍未完成，请中止并使用快照
 - 考虑切换到 goleveldb。PebbleDB 更节省空间，但在回滚方面测试较少
 
----
+</Accordion>
 
-### 追赶期间的轮次回退错误
+<a id="round-regression-errors-during-catchup" />
+
+<Accordion title="追赶期间的轮次回退错误">
 
 **症状：**
 
@@ -300,9 +316,11 @@ INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
 如果在正常运行期间保留此设置，1ms 的 delta 会使轮次推进速度远快于投票在网络中传播的速度。你的验证者会在其他验证者的预提交到达之前进入下一轮，导致其投票错过实际的提交轮次。结果是错过区块的计数器持续攀升，如果错过的区块足够多（通常为最近 10,000 个区块中的 500 个），**验证者将因停机而被监禁（jailed）**。
 </Warning>
 
----
+</Accordion>
 
-### AppHash 不匹配
+<a id="apphash-mismatch" />
+
+<Accordion title="AppHash 不匹配">
 
 **症状：**
 
@@ -310,7 +328,7 @@ INJECTIVED_UNSAFE_CONSENSUS_TIMEOUT_PRECOMMIT_DELTA=1ms
 panic: Tendermint state.AppHash does not match AppHash after replay
 ```
 
-**原因：** 应用状态与共识状态发生了偏离。可能由不完整的升级、区块执行期间的崩溃或数据库损坏引起。
+**原因：** 应用状态与共识状态发生了偏离。可能由不完整的升级、区块执行期间的崩溃、数据库损坏，或状态同步后缺少 `wasm/` 目录（见下文）引起。
 
 **解决方案：**
 
@@ -318,9 +336,23 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 2. 如果回滚失败或错误仍然存在：从快照恢复
 3. 恢复后始终还原 `priv_validator_state.json`
 
----
+</Accordion>
 
-### 升级后哨兵节点卡住
+<a id="apphash-mismatch-after-cometbft-state-sync" />
+
+<Accordion title="CometBFT 状态同步后 AppHash 不匹配">
+
+**症状：** 在 CometBFT 状态同步成功恢复后，在第一个区块上立即出现 AppHash 错误。
+
+**原因：** CometBFT 状态同步（在 `config.toml` 的 `[statesync]` 中配置的 P2P 协议）会恢复 IAVL 状态树，但**不会**恢复包含已编译 CosmWasm 合约字节码的 `wasm/` 目录。缺少这些文件时，本地计算出的 app hash 将与网络的不一致。
+
+**解决方案：** 使用手动快照恢复代替状态同步。Injective 的官方快照包含 `wasm/` 目录。如果必须使用状态同步，请从可信来源获取 `wasm/` 目录，并在启动节点之前将其放置在 `~/.injectived/data/wasm/`。有关状态同步和快照恢复的详细信息，请参阅[主网同步方式](/cn/infra/run-node#sync-options)。
+
+</Accordion>
+
+<a id="sentry-nodes-stuck-after-upgrade" />
+
+<Accordion title="升级后哨兵节点卡住">
 
 **症状：** 验证者节点已升级并正在签名，但哨兵节点仍停留在旧的区块高度。
 
@@ -328,9 +360,11 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 
 **解决方案：** 将哨兵节点升级到与验证者相同的二进制版本。哨兵节点没有 `priv_validator_state.json`（它们不签名），但它们确实需要正确的二进制文件。
 
----
+</Accordion>
 
-### 升级后链停滞（投票权不足）
+<a id="chain-stalled-after-upgrade-insufficient-voting-power" />
+
+<Accordion title="升级后链停滞（投票权不足）">
 
 **症状：**
 
@@ -353,7 +387,7 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 
 **应该怎么做：**
 
-- **如果你已经完成升级：** 无需任何操作。你的节点正在参与共识，一旦达到法定人数，就会自动完成下一个区块的最终确认。你会在日志中看到轮次回退错误，因为你的节点正在追赶各轮次。这是预期现象（参见[追赶期间的轮次回退错误](#追赶期间的轮次回退错误)）。
+- **如果你已经完成升级：** 无需任何操作。你的节点正在参与共识，一旦达到法定人数，就会自动完成下一个区块的最终确认。你会在日志中看到轮次回退错误，因为你的节点正在追赶各轮次。这是预期现象（参见[追赶期间的轮次回退错误](#round-regression-errors-during-catchup)）。
 - **如果你尚未升级：** 你正是缺失投票权的一部分。请尽快完成升级，以帮助链恢复运行。
 - **监控进度：** 检查有多少验证者在线并参与：
   ```bash
@@ -362,12 +396,14 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 - **在验证者频道中协调：** 在重大升级期间，验证者通常会在经过验证的验证者频道中协调，跟踪升级进度和投票权百分比。
 
 <Note>
-这个窗口期持续得越久，轮次编号攀升得越高。较晚上线的验证者需要追赶所有这些轮次，这正是 `--unsafe-consensus-timeout-precommit-delta=1ms` 标志存在的原因，但请记住在[链稳定后移除它](#追赶期间的轮次回退错误)。
+这个窗口期持续得越久，轮次编号攀升得越高。较晚上线的验证者需要追赶所有这些轮次，这正是 `--unsafe-consensus-timeout-precommit-delta=1ms` 标志存在的原因，但请记住在[链稳定后移除它](#round-regression-errors-during-catchup)。
 </Note>
 
----
+</Accordion>
 
-### 因停机被监禁（非 tombstoned）
+<a id="jailed-for-downtime-not-tombstoned" />
+
+<Accordion title="因停机被监禁（非 tombstoned）">
 
 **症状：**
 - 验证者显示为非活跃或被监禁（jailed）
@@ -392,21 +428,24 @@ panic: Tendermint state.AppHash does not match AppHash after replay
    injectived query staking validator <injvaloper_address>
    ```
 
----
+</Accordion>
 
-## 协调升级检查清单
+</AccordionGroup>
 
-### 升级高度之前
+## 协调升级检查清单 {#coordinated-upgrade-checklist}
+
+### 升级高度之前 {#before-the-upgrade-height}
 
 - [ ] 从治理提案或链团队处确认目标 halt-height
 - [ ] 下载并验证新的二进制文件（检查 sha256 校验和）
 - [ ] 在节点配置或 CLI 标志中设置 `--halt-height=<target_height>`
 - [ ] 如果使用 Cosmovisor：将新二进制文件放入正确的升级目录
 - [ ] 备份 `priv_validator_state.json`
-- [ ] 确定快照提供商，以备需要回滚时使用
+- [ ] 确定快照提供商，以备需要回滚时使用（请参阅 [Snapshots - Chain Portal](https://chain.injective.network/snapshots)）
+- [ ] 如果计划使用 CometBFT 状态同步进行恢复：确保你有一份 `~/.injectived/data/wasm/` 的副本。状态同步不会恢复此目录，缺少它会导致 AppHash 不匹配
 - [ ] 监控链向停机高度的推进
 
-### 在升级高度时
+### 在升级高度时 {#at-the-upgrade-height}
 
 - [ ] 确认节点已在预期高度停机
 - [ ] 完全停止节点（验证进程已终止）
@@ -420,7 +459,7 @@ panic: Tendermint state.AppHash does not match AppHash after replay
   injectived version
   ```
 
-### 升级之后
+### 升级之后 {#after-the-upgrade}
 
 - [ ] 使用新的二进制文件启动节点
 - [ ] 监控日志中的共识参与情况
@@ -435,9 +474,9 @@ panic: Tendermint state.AppHash does not match AppHash after replay
 
 ---
 
-## 监控参考
+## 监控参考 {#monitoring-reference}
 
-### 共识与同步状态
+### 共识与同步状态 {#consensus-and-sync-status}
 
 ```bash
 # Current consensus state (height, round, step)
@@ -451,7 +490,7 @@ curl -s localhost:26657/status | jq '.result.sync_info.latest_block_height'
 curl -s localhost:26657/status | jq '.result.sync_info.catching_up'
 ```
 
-### 验证者健康状况
+### 验证者健康状况 {#validator-health}
 
 ```bash
 # Signing info (missed blocks, jail status, tombstone status)
@@ -461,7 +500,7 @@ injectived query slashing signing-info $(injectived tendermint show-validator)
 injectived query staking validator <injvaloper_address> --output json | jq '.status, .jailed'
 ```
 
-### 节点配置
+### 节点配置 {#node-configuration}
 
 ```bash
 # Current binary version
@@ -476,7 +515,7 @@ grep db_backend ~/.injectived/config/config.toml
 
 ---
 
-## 剪枝节点与归档节点对比
+## 剪枝节点与归档节点对比 {#pruned-vs-archival-nodes}
 
 | | 剪枝节点 | 归档节点 |
 |---|---|---|
@@ -487,7 +526,7 @@ grep db_backend ~/.injectived/config/config.toml
 
 ---
 
-## 其他资源
+## 其他资源 {#additional-resources}
 
 - [运行 Injective 节点](/cn/infra/run-node)
 - [Cosmovisor 设置](/cn/infra/cosmovisor)
@@ -497,44 +536,24 @@ grep db_backend ~/.injectived/config/config.toml
 
 ---
 
-## 快照资源
+## 快照资源 {#snapshot-resources}
 
-### Injective 官方提供的快照
+<Callout icon="info" color="#22C55E" iconType="regular">
+**[Snapshots - Chain Portal](https://chain.injective.network/snapshots)**
 
-Injective 在两个区域维护剪枝主网快照。请检查状态端点以获取最新的可用高度和下载 URL：
+Injective 提供的剪枝快照（欧洲和亚洲区域）、社区快照提供商、归档段数据以及使用说明的下载链接。Chain Portal 是所有快照资源的规范且最新的来源。
+</Callout>
 
-| 区域 | 状态 | 下载 |
-|---|---|---|
-| **欧洲（OVH）** | [status.json](http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/status.json) | `http://injective-mainnet-snapshots.s3-website.gra.io.cloud.ovh.net/` |
-| **亚洲（GCS）** | [status.json](https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json) | `https://storage.googleapis.com/injective-mainnet-snapshots-asia/` |
+有关归档段快照和分段节点集群设置，请参阅[归档设置](/cn/infra/archival-setup)页面。
 
-要下载最新的快照，请检查状态端点以获取当前的文件名：
-
-```bash
-# Check latest available snapshot (Asia example)
-curl -s https://storage.googleapis.com/injective-mainnet-snapshots-asia/status.json | jq
-
-# Download the snapshot
-wget <url from status.json>
-
-# Extract
-lz4 -d <snapshot_file>.tar.lz4 | tar xf - -C ~/.injectived/data/
-```
-
-在协调安全升级期间，Injective 团队也可能在经过验证的验证者频道中分享应急快照。有关归档段快照，请参阅[归档设置](/cn/infra/archival-setup)页面。
-
-### 社区快照提供商
-
-- [Polkachu Injective 快照](https://polkachu.com/tendermint_snapshots/injective)（通常为 goleveldb，剪枝版）
-- [HighStakes Injective 快照](https://tools.highstakes.ch/snapshots/injective)
-- 社区验证者可能会在事故期间在验证者频道中分享应急快照
+在协调安全升级期间，Injective 团队也可能在经过验证的验证者频道中分享应急快照。
 
 <Warning>
-**数据库后端兼容性：** 快照与后端相关。goleveldb 快照无法在配置为 pebbledb 的节点上使用，反之亦然。下载前请检查你的配置：
+**数据库后端兼容性：** 快照与后端相关。goleveldb 快照无法在配置为 pebbledb 的节点上使用，反之亦然。Injective 的官方快照使用 goleveldb。PebbleDB 快照不再维护。下载前请检查你的配置：
 
 ```bash
 grep db_backend ~/.injectived/config/config.toml
 ```
 
-**在快照恢复后启动节点之前，你必须将备份的 `priv_validator_state.json` 还原**到数据目录中。完整流程请参阅上面的[从快照恢复](#从快照恢复)。
+**在快照恢复后启动节点之前，你必须将备份的 `priv_validator_state.json` 还原**到数据目录中。完整流程请参阅上面的[从快照恢复](#recovering-from-a-snapshot)。
 </Warning>

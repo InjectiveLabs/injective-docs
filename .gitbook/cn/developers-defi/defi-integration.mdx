@@ -1,0 +1,56 @@
+---
+title: DeFi 集成
+description: 使用原生模块和 EVM precompile，在 Injective 上构建借贷协议、抵押借款、金库策略和收益产品。
+updatedAt: "2026-09-09"
+---
+
+Injective 以原生链模块的形式提供 DeFi 应用的构建模块。你无需部署和审计独立的协议合约，而是可以基于链层已有的基础设施进行构建。
+
+## 可用功能 {#what’s-available}
+
+| 功能 | 访问方式 | 实现的用途 |
+|---|---|---|
+| **Exchange module** | 从 Solidity 调用 [Exchange precompile](/cn/developers-evm/precompiles)（`0x68`），或使用原生 SDK | 下单、查询订单簿、针对原生 CLOB 执行兑换 |
+| **Bank module** | 从 Solidity 调用 [Bank precompile](/cn/developers-evm/bank-precompile)（`0x64`） | 在 EVM 和原生环境之间转账代币、查询余额、管理授权额度 |
+| **Oracle module** | [自定义 oracle provider](/cn/developers-defi/provider-oracle) | 在链上发布链下价格馈送或资产估值 |
+| **Subaccounts** | [交易账户](/cn/developers/concepts/trading-account) | 隔离保证金和仓位管理，与主钱包余额分离 |
+| **Insurance fund** | [Insurance 模块](/developers-native/injective/insurance) | 为衍生品市场提供承保，吸收清算缺口 |
+| **Permissions** | [Permissions 模块](/developers-native/injective/permissions) | 用于合规准入 DeFi 的基于角色的访问控制 |
+
+## 借贷与抵押借款 {#lending-and-collateralized-borrowing}
+
+Injective 上的借贷协议可以使用：
+
+1. **Bank precompile** 持有和转移抵押代币
+2. **Oracle 馈送** 进行实时抵押品估值（链上价格数据，或通过 oracle provider 提供的自定义链下馈送）
+3. **Exchange precompile** 进行清算（当抵押率下降时，针对 CLOB 下 reduce-only 订单）
+4. **Permissions 模块** 限制参与者范围（适用于受监管的借贷产品）
+
+你的 Solidity 借贷合约通过 precompile 与这些模块交互，这意味着你可以从标准 EVM 合约获得原生模块功能。无需构建单独的预言机网络、清算机器人基础设施或订单簿。
+
+有关 precompile 接口和部署指南，请参阅 [EVM Precompiles](/cn/developers-evm/precompiles)。
+
+## 金库 {#vaults}
+
+金库策略通过将资金部署到 Injective 的 DeFi 基础设施中来自动产生收益：
+
+- **[Mito](https://mito.fi) 金库**：在原生 CLOB 上运行的托管策略
+- **自定义金库合约**：使用 exchange precompile 执行交易、管理仓位和再平衡的 Solidity 合约
+- **LP 策略**：使用 subaccount 进行隔离的仓位管理
+
+## 开始使用 {#getting-started}
+
+<CardGroup cols={2}>
+  <Card title="EVM Precompiles" icon="microchip" href="/cn/developers-evm/precompiles">
+    供 Solidity 合约使用的 Bank、Exchange、Oracle 和 Staking precompile 接口。
+  </Card>
+  <Card title="部署智能合约" icon="rocket" href="/cn/developers-evm/smart-contracts">
+    使用 Hardhat 或 Foundry 在 Injective EVM 上部署你的 DeFi 合约。
+  </Card>
+  <Card title="Oracle Provider" icon="satellite-dish" href="/cn/developers-defi/provider-oracle">
+    注册自定义价格馈送 provider，用于抵押品估值或市场定价。
+  </Card>
+  <Card title="Precompiles 示例" icon="github" href="https://github.com/InjectiveLabs/inj-examples/tree/main/examples/precompiles">
+    一个可运行的 Foundry 项目，演示 Bank、Exchange、Oracle 和 Staking precompile 的用法。
+  </Card>
+</CardGroup>

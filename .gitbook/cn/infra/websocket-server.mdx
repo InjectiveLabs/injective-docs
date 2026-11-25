@@ -1,0 +1,344 @@
+---
+title: WebSocket 服务器
+description: 使用 Chain Stream WebSocket 服务器通过 WebSocket 流式传输实时 Injective 链事件
+updatedAt: "2026-03-16"
+---
+
+WebSocket 服务器为 Injective 链事件提供实时流式接口。它封装了 gRPC Chain Stream 服务器，使你可以使用标准 WebSocket 连接（而非 gRPC 流）订阅区块链更新。
+
+## 前置条件 {#prerequisites}
+
+- 一个已启用 Chain Stream gRPC 服务器的运行中的 Injective 节点
+- 在节点的 `app.toml` 中配置了 `[injective-websocket]` 部分
+
+## 配置 {#configuration}
+
+在节点 `app.toml` 的 `[injective-websocket]` 部分下配置 WebSocket 服务器。
+
+| 选项 | 类型 | 默认值 | 说明 |
+| ------ | ---- | ------- | ----------- |
+| `address` | string | `""`（禁用） | WebSocket 服务器绑定的地址和端口（例如 `"0.0.0.0:9998"`）。留空则禁用。 |
+| `max-open-connections` | int | `0`（无限制） | 最大同时 WebSocket 连接数。在生产环境中请设置合理的上限。 |
+| `read-timeout` | duration | `10s` | 读取完整客户端请求的最长等待时间。 |
+| `write-timeout` | duration | `10s` | 向客户端写入响应的最长等待时间。 |
+| `max-body-bytes` | int64 | `1000000` (1MB) | HTTP 请求体的最大字节数。 |
+| `max-header-bytes` | int | `1048576` (1MB) | HTTP 请求头的最大字节数。 |
+| `max-request-batch-size` | int | `10` | 单个批量请求中允许的最大 RPC 调用数。 |
+
+### 示例配置 {#example-configuration}
+
+```toml app.toml
+###############################################################################
+###                  Injective Websocket Configuration                      ###
+###############################################################################
+
+[injective-websocket]
+
+# Address defines the websocket server address to bind to.
+# Leave empty to disable the websocket server.
+address = "0.0.0.0:9998"
+
+# MaxOpenConnections sets the maximum number of simultaneous connections.
+# Set to 0 for unlimited (not recommended for production).
+max-open-connections = 100
+
+# ReadTimeout defines the HTTP read timeout.
+read-timeout = "10s"
+
+# WriteTimeout defines the HTTP write timeout.
+write-timeout = "10s"
+
+# MaxBodyBytes defines the maximum allowed HTTP body size (in bytes).
+max-body-bytes = 1000000
+
+# MaxHeaderBytes defines the maximum allowed HTTP header size (in bytes).
+max-header-bytes = 1048576
+
+# MaxRequestBatchSize defines the maximum number of RPC calls per batch request.
+max-request-batch-size = 10
+```
+
+<Note>
+  WebSocket 服务器需要启用 Chain Stream 服务器。请确保在你的 `app.toml` 中也进行了以下配置：
+
+  ```toml
+  chainstream-server = "0.0.0.0:9999"
+  chainstream-server-buffer-capacity = 100
+  chainstream-publisher-buffer-capacity = 100
+  ```
+</Note>
+
+## 连接到服务器 {#connecting-to-the-server}
+
+连接到以下 WebSocket 端点：
+
+```
+ws://<node-address>:<port>/injstream-ws
+```
+
+```javascript example.js
+const ws = new WebSocket('ws://localhost:9998/injstream-ws');
+
+ws.onopen = () => {
+  console.log('Connected to Injective WebSocket');
+};
+
+ws.onmessage = (event) => {
+  const response = JSON.parse(event.data);
+  console.log('Received:', response);
+};
+
+ws.onerror = (error) => {
+  console.error('WebSocket error:', error);
+};
+
+ws.onclose = () => {
+  console.log('Disconnected from WebSocket');
+};
+```
+
+## 订阅事件 {#subscribing-to-events}
+
+发送使用 `subscribe` 方法的 JSON-RPC 2.0 请求。每个请求必须包含：
+
+- `jsonrpc`：始终为 `"2.0"`
+- `id`：用于识别此订阅响应的正整数
+- `method`：`"subscribe"`
+- `params.req.subscription_id`：客户端提供的此订阅的唯一标识符
+- `params.req.filter`：包含订阅过滤器的对象
+
+<Tabs>
+  <Tab title="预言机价格">
+    ```javascript
+    const subscribeRequest = {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'subscribe',
+      params: {
+        req: {
+          subscription_id: 'my-oracle-prices',
+          filter: {
+            oracle_price_filter: {
+              symbol: ['*']  // Use '*' to subscribe to all symbols
+            }
+          }
+        }
+      }
+    };
+
+    ws.send(JSON.stringify(subscribeRequest));
+    ```
+  </Tab>
+  <Tab title="现货订单">
+    ```javascript
+    const subscribeRequest = {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'subscribe',
+      params: {
+        req: {
+          subscription_id: 'spot-orders-market-1',
+          filter: {
+            spot_orders_filter: {
+              market_ids: ['0x0611780ba69656949525013d947713300f56c37b6175e02f26bffa495c3208fe'],
+              subaccount_ids: ['*']
+            }
+          }
+        }
+      }
+    };
+
+    ws.send(JSON.stringify(subscribeRequest));
+    ```
+  </Tab>
+  <Tab title="多种事件类型">
+    ```javascript
+    const subscribeRequest = {
+      jsonrpc: '2.0',
+      id: 3,
+      method: 'subscribe',
+      params: {
+        req: {
+          subscription_id: 'my-trading-stream',
+          filter: {
+            spot_orders_filter: {
+              market_ids: ['*'],
+              subaccount_ids: ['0xeb8cf88b739fe12e303e31fb88fc37751e17cf3d000000000000000000000000']
+            },
+            derivative_orders_filter: {
+              market_ids: ['*'],
+              subaccount_ids: ['0xeb8cf88b739fe12e303e31fb88fc37751e17cf3d000000000000000000000000']
+            },
+            oracle_price_filter: {
+              symbol: ['BTCUSD', 'ETHUSD']
+            },
+            positions_filter: {
+              subaccount_ids: ['0xeb8cf88b739fe12e303e31fb88fc37751e17cf3d000000000000000000000000'],
+              market_ids: ['*']
+            }
+          }
+        }
+      }
+    };
+
+    ws.send(JSON.stringify(subscribeRequest));
+    ```
+  </Tab>
+</Tabs>
+
+订阅成功后会返回：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "success"
+}
+```
+
+订阅之后，你将收到具有相同 `id` 的流式更新。
+
+## 取消订阅事件 {#unsubscribing-from-events}
+
+发送使用 `unsubscribe` 方法的请求，并附上订阅时使用的 `subscription_id`：
+
+```javascript
+const unsubscribeRequest = {
+  jsonrpc: '2.0',
+  id: 100,
+  method: 'unsubscribe',
+  params: {
+    req: {
+      subscription_id: 'my-oracle-prices'
+    }
+  }
+};
+
+ws.send(JSON.stringify(unsubscribeRequest));
+```
+
+取消订阅成功后会返回：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 100,
+  "result": "success"
+}
+```
+
+<Info>
+  `subscription_id` 必须与你创建订阅时提供的 ID 完全一致。
+</Info>
+
+## 可用过滤器 {#available-filters}
+
+你可以订阅以下事件类型的任意组合。至少必须指定一个过滤器。使用 `"*"` 作为通配符，可匹配某个参数的所有值。
+
+| 过滤器 | 说明 | 参数 |
+| ------ | ----------- | ---------- |
+| `bank_balances_filter` | Bank 余额变动 | `accounts` |
+| `subaccount_deposits_filter` | 子账户存款变动 | `subaccount_ids` |
+| `spot_trades_filter` | 现货市场成交 | `market_ids`, `subaccount_ids` |
+| `derivative_trades_filter` | 衍生品市场成交 | `market_ids`, `subaccount_ids` |
+| `spot_orders_filter` | 现货订单更新 | `market_ids`, `subaccount_ids` |
+| `derivative_orders_filter` | 衍生品订单更新 | `market_ids`, `subaccount_ids` |
+| `spot_orderbooks_filter` | 现货订单簿更新 | `market_ids` |
+| `derivative_orderbooks_filter` | 衍生品订单簿更新 | `market_ids` |
+| `positions_filter` | 仓位更新 | `subaccount_ids`, `market_ids` |
+| `oracle_price_filter` | 预言机价格更新 | `symbol` |
+| `order_failures_filter` | 订单失败通知 | `accounts` |
+| `conditional_order_trigger_failures_filter` | 条件单触发失败 | `subaccount_ids`, `market_ids` |
+
+## 响应格式 {#response-format}
+
+流式响应遵循 JSON-RPC 2.0 格式。每个响应包含单个区块的更新。只有与你的订阅过滤器匹配的字段才包含数据。
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "block_height": "12345678",
+    "block_time": "1702123456789",
+    "bank_balances": [],
+    "subaccount_deposits": [],
+    "spot_trades": [],
+    "derivative_trades": [],
+    "spot_orders": [],
+    "derivative_orders": [],
+    "spot_orderbook_updates": [],
+    "derivative_orderbook_updates": [],
+    "positions": [],
+    "oracle_prices": [],
+    "gas_price": "160000000",
+    "order_failures": [],
+    "conditional_order_trigger_failures": []
+  }
+}
+```
+
+## 安全注意事项 {#security-considerations}
+
+在部署到生产环境时，需要注意 WebSocket 服务器存在的一些安全限制。
+
+<AccordionGroup>
+  <Accordion title="无来源（Origin）验证">
+    服务器接受来自任何来源的连接。请部署在会验证 `Origin` 请求头的反向代理之后，以缓解跨站 WebSocket 劫持（Cross-Site WebSocket Hijacking）。
+
+    ```nginx
+    location /injstream-ws {
+        if ($http_origin !~* "^https://(app\.injective\.network|your-domain\.com)$") {
+            return 403;
+        }
+
+        proxy_pass http://127.0.0.1:9998;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+    ```
+  </Accordion>
+  <Accordion title="不支持 TLS/SSL">
+    服务器仅支持未加密的 `ws://` 连接。请使用终止 TLS 的反向代理来提供 `wss://` 连接。
+
+    ```nginx
+    server {
+        listen 443 ssl;
+        server_name your-domain.com;
+
+        ssl_certificate /path/to/cert.pem;
+        ssl_certificate_key /path/to/key.pem;
+
+        location /injstream-ws {
+            proxy_pass http://127.0.0.1:9998;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+    }
+    ```
+  </Accordion>
+  <Accordion title="无身份验证">
+    服务器未实现身份验证。请使用带有身份验证中间件、API 密钥验证或网络级访问控制（防火墙、VPN）的反向代理。
+  </Accordion>
+  <Accordion title="无按客户端的速率限制">
+    虽然 `max-open-connections` 限制了总连接数，但没有按客户端的速率限制。请在代理层实现速率限制：
+
+    ```nginx
+    limit_conn_zone $binary_remote_addr zone=ws_conn:10m;
+    limit_conn ws_conn 10;  # Max 10 connections per IP
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## 运维说明 {#operational-notes}
+
+- 连接关闭时，所有关联的订阅都会自动取消
+- 服务器会定期发送 ping 帧以检测失效连接
+- `subscription_id` 在你的连接内必须唯一；不同连接可以复用相同的 ID
+- 在客户端实现带指数退避的重连逻辑
+- 尽可能使用具体的过滤器而非通配符（`*`），以减少数据量
+- 在生产环境中始终将 `max-open-connections` 设置为合理的上限

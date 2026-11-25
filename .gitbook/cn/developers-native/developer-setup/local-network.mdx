@@ -1,0 +1,78 @@
+---
+title: "运行本地节点"
+description: "配置 genesis 并启动一个单验证者 Injective 链，用于原生开发。"
+updatedAt: "2026-11-18"
+---
+
+运行本地 Injective 链来配置 genesis、测试原生执行模块的行为，或通过 CLI、gRPC 或 REST 查询原生状态。请使用你想测试的版本对应的已发布 `injectived` 二进制文件。对于 Solidity 和 EVM precompile，请使用[预配置的 EVM 本地网络](/developers-evm/local-development)。
+
+## 初始化链 {#initialize-the-chain}
+
+[安装 `injectived`](/developers/injectived/install) 并安装 `jq`。为本地链使用一个全新的目录。以下命令使用 Bash 或 Zsh。
+
+```bash
+LOCAL_CHAIN_ID=injective-1000
+LOCAL_CHAIN_HOME="$HOME/.injectived-local"
+
+injectived init local-validator --chain-id "$LOCAL_CHAIN_ID" --home "$LOCAL_CHAIN_HOME"
+```
+
+`init` 会在 `$LOCAL_CHAIN_HOME/config` 下创建节点的密钥和配置。对每个读取或修改本地节点文件的命令都传入相同的 `--home`。
+
+## 配置 genesis {#configure-genesis}
+
+将 `inj` 用于质押、治理押金、crisis 费用和铸造。
+
+```bash
+GENESIS="$LOCAL_CHAIN_HOME/config/genesis.json"
+
+jq '
+  .app_state.staking.params.bond_denom = "inj"
+  | .app_state.crisis.constant_fee.denom = "inj"
+  | .app_state.gov.params.min_deposit[0].denom = "inj"
+  | .app_state.gov.params.expedited_min_deposit[0].denom = "inj"
+  | .app_state.mint.params.mint_denom = "inj"
+' "$GENESIS" > "$GENESIS.tmp" && mv "$GENESIS.tmp" "$GENESIS"
+```
+
+## 为验证者账户充值 {#fund-the-validator-account}
+
+在本地 test keyring 中创建验证者运营者账户。原生 CLI 命令中的 INJ 数量是以最小单位表示的整数，后接 `inj`。1 INJ 为 `1000000000000000000inj`。
+
+```bash
+injectived keys add local-validator --keyring-backend test --home "$LOCAL_CHAIN_HOME"
+VALIDATOR_ADDRESS=$(injectived keys show local-validator -a \
+  --keyring-backend test --home "$LOCAL_CHAIN_HOME")
+
+injectived genesis add-genesis-account "$VALIDATOR_ADDRESS" 100000000000000000000000inj \
+  --chain-id "$LOCAL_CHAIN_ID" --home "$LOCAL_CHAIN_HOME"
+```
+
+## 将验证者添加到 genesis {#add-the-validator-to-genesis}
+
+创建并收集创世交易（`gentx`）。它会注册运营者、自委托指定的质押数量，并注册本地共识公钥。
+
+```bash
+injectived genesis gentx local-validator 1000000000000000000000inj \
+  --chain-id "$LOCAL_CHAIN_ID" --keyring-backend test --home "$LOCAL_CHAIN_HOME"
+
+injectived genesis collect-gentxs --home "$LOCAL_CHAIN_HOME"
+injectived genesis validate --home "$LOCAL_CHAIN_HOME"
+```
+
+## 启动并查询节点 {#start-and-query-the-node}
+
+在 `$LOCAL_CHAIN_HOME/config/app.toml` 中设置 `minimum-gas-prices`。本地开发时可以使用 `minimum-gas-prices = "0inj"`。同一文件还配置应用的 gRPC 和 REST 服务。CometBFT 设置（例如 RPC 监听器和共识超时）请在 `config.toml` 中配置。
+
+```bash
+injectived start --home "$LOCAL_CHAIN_HOME"
+```
+
+在另一个终端中检查 chain ID，并确认区块高度在增长：
+
+```bash
+curl -fsS http://localhost:26657/status \
+  | jq '{network: .result.node_info.network, height: .result.sync_info.latest_block_height}'
+```
+
+预期结果为 `injective-1000`。要查询 bank 余额或其他模块状态，请使用带 `--node tcp://localhost:26657` 的 `injectived query`。有关 CLI、gRPC、Go 和 REST 示例，请参阅[与节点交互](/infra/interact-node/index)。

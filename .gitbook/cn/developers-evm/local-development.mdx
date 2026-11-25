@@ -1,0 +1,44 @@
+---
+title: "本地 EVM 开发"
+description: "启动 inj-examples 中预配置的 Injective EVM 本地网络，并连接你的钱包和开发工具。"
+updatedAt: "2026-11-18"
+---
+
+使用 [`inj-examples` 中预配置的本地网络](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/precompiles/README.md#local-development)，通过 Ethereum JSON-RPC 部署 Solidity 合约并测试 Injective 的原生 precompile。该示例会启动一个真实的 Injective 节点，并提供预先充值的开发账户和本地 Blockscout 浏览器。
+
+标准 EVM 单元测试请使用 Anvil 或 Hardhat 的内存链。当你的合约调用原生 precompile 时，请使用 Injective 本地网络。如需自定义 genesis、Cosmos SDK 模块或原生协议更改，请参阅[运行本地原生节点](/cn/developers-native/developer-setup/local-network)。
+
+## 启动本地网络 {#start-the-localnet}
+
+安装带 Docker Compose 的 Docker、`jq` 和 Foundry。克隆示例并初始化一次链。
+
+```bash
+git clone https://github.com/InjectiveLabs/inj-examples.git
+cd inj-examples/examples/precompiles
+make local-init
+make local-start
+```
+
+| 设置 | 值 |
+| --- | --- |
+| EVM JSON-RPC | `http://localhost:8545` |
+| EVM chain ID | `1776` |
+| 货币 | INJ |
+| Blockscout | `http://localhost:3000` |
+
+检查你的客户端是否已连接：
+
+```bash
+cast chain-id --rpc-url http://localhost:8545
+cast block-number --rpc-url http://localhost:8545
+```
+
+设置过程会打印访问已充值账户的说明。这些账户仅可在本地链上使用。将已充值的账户导入你的钱包，或在 Foundry 或 Hardhat 中针对本地 RPC 进行配置。
+
+## 部署与测试 {#deploy-and-test}
+
+使用 [precompiles 示例](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/precompiles/README.md#quick-start)部署标准合约或由 Bank 支持的 ERC20。如果你想开始一个新项目，[Foundry 模板](https://github.com/InjectiveLabs/inj-examples/blob/main/templates/foundry/README.md#local-development)包含相同的本地环境。
+
+本地链启动时 swap 白名单为空。如需完整测试（创建市场并将其加入白名单、为订单簿注入流动性并执行兑换），请使用 [swap 本地网络演示](https://github.com/InjectiveLabs/inj-examples/blob/main/examples/swap-precompile/README.md#full-localnet-demo)。
+
+运行 `make local-stop` 停止服务。运行 `make local-start` 以相同状态恢复。

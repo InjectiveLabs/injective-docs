@@ -1,0 +1,196 @@
+---
+title: 升级到 v1.21.0
+description: 面向所有节点运营者的提案 717 计划主网升级说明。
+updatedAt: "2026-11-18"
+---
+
+<Note>
+请关注 [Operator Portal](https://chain.injective.network/upgrades) 获取升级公告。
+</Note>
+
+### 验证者须知 {#for-validators}
+
+有关升级和恢复流程（包括验证者签名状态注意事项），请参阅[验证者故障排除指南](/cn/infra/coordinated-upgrades)。
+
+- [摘要](#summary)
+- [恢复](#recovery)
+- [升级流程](#upgrade-procedure)
+- [验证者注意事项](#notes-for-validators)
+
+## 摘要 {#summary}
+
+Injective Chain 升级到 `v1.21.0` 的目标时间为 **2026 年 11 月 24 日**，目标区块为 **193,145,000**，详见[提案 717](https://injhub.com/proposal/717/)。请关注[区块高度倒计时](https://chain.injective.network/block/193145000)以获取最新的预计时间。
+
+<table>
+  <tbody>
+    <tr><td>网络</td><td>主网，<code>injective-1</code></td></tr>
+    <tr><td>升级计划</td><td><code>v1.21.0</code></td></tr>
+    <tr><td>目标停止高度</td><td><a href="https://chain.injective.network/block/193145000">193,145,000</a></td></tr>
+    <tr><td>目标日期</td><td>2026 年 11 月 24 日。<a href="https://chain.injective.network/block/193145000">区块倒计时</a></td></tr>
+    <tr><td>主网版本</td><td><a href="https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.21.0-1794954936">v1.21.0-1794954936</a></td></tr>
+    <tr><td>二进制源码提交</td><td><code>a13b8b7</code></td></tr>
+  </tbody>
+</table>
+
+已发布的二进制文件使用 **Go 1.27.4** 构建。
+
+以下是升级步骤的简要摘要：
+
+1. 等待节点在区块高度 **193,145,000** 处停止。
+2. 停止进程，并备份配置、数据和验证者签名状态。
+3. 备份完成后删除 Wasm 缓存。
+4. 安装 [v1.21.0](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.21.0-1794954936) 二进制文件和随附的运行时库。
+5. 验证二进制版本、`libwasmvm` 校验和以及加载的库版本 **2.2.11-rc.4**。
+6. 使用新版本的二进制文件重启节点。
+
+## 恢复 {#recovery}
+
+在导出链状态之前，建议验证者在导出高度先进行一次完整的数据快照，然后再继续。快照方式在很大程度上取决于基础设施，但通常可以通过备份 `.injectived` 目录来完成。
+
+在停止 injectived 进程后备份 `.injectived/data/priv_validator_state.json` 文件至关重要。随着你的验证者参与共识轮次，该文件每个区块都会更新。如果升级失败且需要重启之前的链，这个文件对于防止双重签名至关重要。
+
+如果升级未能成功，验证者和运营者必须恢复快照，降级回 Injective Chain 版本 [v1.20.4-safeharbor.5](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.20.4-safeharbor.5-1794335565)，并继续运行这条较早的链，直到下一次升级公告。
+
+升级前拍摄的官方快照将在[链快照页面](https://chain.injective.network/snapshots)上提供，以便运营者在最坏的恢复场景中回滚并从快照恢复。如果运营者在升级过程中出错或遇到错误，请按照[验证者故障排除指南](/cn/infra/coordinated-upgrades)操作，包括其中的快照恢复和验证者签名状态注意事项。
+
+## 升级流程 {#upgrade-procedure}
+
+### 验证者注意事项 {#notes-for-validators}
+
+在替换当前生效的二进制文件之前，请等待链在 **193,145,000** 处停止。在备份数据和验证者签名状态之前，请完全停止 `injectived`。
+
+完成备份后、启动新二进制文件之前，请从实际的节点主目录中删除 Wasm 缓存。对于默认主目录：
+
+```bash
+rm -rf ~/.injectived/wasm/wasm/cache/
+```
+
+### 步骤 {#steps}
+
+1. 在升级前验证你正在运行 `v1.20.4-safeharbor.5`：
+
+   ```bash
+   injectived version
+   ```
+
+   预期版本：
+
+   ```text
+   Version v1.20.4-safeharbor.5 (d37e7f0)
+   ```
+
+2. 等待节点在 **193,145,000** 处停止，然后确认 `injectived` 已停止。备份你的 `.injectived` 目录：
+
+   ```bash
+   cp -r ~/.injectived ./injectived-backup
+   ```
+
+   关闭后保留 `data/priv_validator_state.json`。使用远程签名器的运营者必须保留其签名器的状态。
+
+3. 从[官方版本](https://github.com/InjectiveFoundation/injective-core/releases/tag/v1.21.0-1794954936)下载 Linux amd64 压缩包，验证公布的压缩包校验和，解压后安装版本二进制文件和随附的运行时库：
+
+   ```bash
+   wget https://github.com/InjectiveFoundation/injective-core/releases/download/v1.21.0-1794954936/linux-amd64.zip
+   echo '7237666d823cdf53800d5e553c8a901878b34d7ee71fe3c8e6fe27e74c7eef66  linux-amd64.zip' | sha256sum --check
+   unzip linux-amd64.zip
+   sudo mv injectived peggo /usr/bin
+   sudo mv libwasmvm.x86_64.so /usr/lib
+   sudo ldconfig
+   ```
+
+4. 验证已安装的 `libwasmvm` 库：
+
+   ```bash
+   sha256sum /usr/lib/libwasmvm.x86_64.so
+   ```
+
+   预期输出：
+
+   ```text
+   094178f63d44aae2f600339a3632661d921c20e1f4992e7e248b5c1c6e4067c9  /usr/lib/libwasmvm.x86_64.so
+   ```
+
+   <Warning>
+   运行时库校验和不正确可能导致共识问题。请在重启之前解决任何不匹配问题。
+   </Warning>
+
+   验证已安装的二进制文件加载了正确的库版本：
+
+   ```bash
+   injectived query wasm libwasmvm-version
+   ```
+
+   预期输出：
+
+   ```text
+   2.2.11-rc.4
+   ```
+
+   对于 Docker 镜像，使用以下命令检查随附的库版本：
+
+   ```bash
+   docker run -it --rm injectivelabs/injective-core:v1.21.0 injectived query wasm libwasmvm-version
+   ```
+
+   预期输出：
+
+   ```text
+   2.2.11-rc.4
+   ```
+
+5. 验证已安装的 `injectived` 显示为 **v1.21.0**，并且构建提交与版本说明中公布的一致：
+
+   ```bash
+   injectived version
+   ```
+
+   预期输出：
+
+   ```text
+   Version v1.21.0 (a13b8b7)
+   Compiled at 20261117-2240 using Go go1.27.4 (amd64)
+   ```
+
+6. 启动 `injectived`：
+
+   ```bash
+   injectived start
+   ```
+
+7. 如果你运行 `peggo`，请根据版本说明验证其版本：
+
+   ```bash
+   peggo version
+   ```
+
+   预期输出：
+
+   ```text
+   Version v1.21.0 (a13b8b7)
+   Compiled at 20261117-2246 using Go go1.27.4 (amd64)
+   ```
+
+8. 如果你运营跨链桥 orchestrator，请启动 `peggo`：
+
+   ```bash
+   peggo orchestrator
+   ```
+
+确认节点越过升级高度、追上网络并正常参与共识。对哨兵节点、RPC 节点和其他节点基础设施重复此升级。
+
+### 使用 Cosmovisor {#with-cosmovisor}
+
+在链停止之前，将经过验证的二进制文件放置到与升级计划名称完全一致的目录下：
+
+```text
+$DAEMON_HOME/cosmovisor/upgrades/v1.21.0/bin/injectived
+```
+
+验证放置的二进制版本和可执行权限：
+
+```bash
+chmod +x "$DAEMON_HOME/cosmovisor/upgrades/v1.21.0/bin/injectived"
+"$DAEMON_HOME/cosmovisor/upgrades/v1.21.0/bin/injectived" version
+```
+
+在链停止之前保持当前生效的二进制文件不变。确保在旧进程停止之后、升级后的进程启动之前完成备份。在升级高度，Cosmovisor 会为 `v1.21.0` 选择已放置的二进制文件。重启后，验证当前生效的版本，并确认节点同步和验证者参与情况正常。

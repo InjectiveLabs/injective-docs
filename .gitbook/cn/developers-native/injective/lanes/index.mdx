@@ -1,0 +1,53 @@
+---
+title: Injective Block SDK 集成
+updatedAt: "2025-12-27"
+---
+
+# Injective Block SDK 集成 {#injective-block-sdk-integration}
+
+Injective 集成了 [Block SDK](https://github.com/skip-mev/block-sdk)。我们的方案使用多通道（multi-lane）内存池，将交易分为四个不同的通道：
+
+- **Oracle Lane**：用于包含 oracle 消息的交易。
+- **Governance Lane**：用于 exchange 模块管理员发送的任何交易。
+- **Exchange Lane**：用于仅包含 exchange 消息的交易。
+- **Default Lane**：用于所有其他交易。
+
+## 主要特性 {#key-features}
+
+### 1. 多通道内存池 {#1-multi‑lane-mempool}
+
+- **优先级排序：**  
+  各通道按优先级排序：Oracle Lane 优先级最高，其次是 Governance Lane，然后是 Exchange Lane，最后是 Default Lane。在构建和验证区块提案时，这一排序至关重要。
+
+- **专用通道逻辑：**  
+  每个通道都使用自己的匹配处理器（match handler）。按优先级顺序，我们有以下通道：
+  1. **Oracle Lane** 检查交易是否包含 oracle 消息。
+  2. **Governance Lane** 检查第一个签名者是否为 exchange 模块的管理员。
+  3. **Exchange Lane** 验证所有消息是否都属于 exchange 模块，并使用自定义的费用/优先级逻辑对交易进行排序。
+  4. **Default Lane** 接受所有不匹配其他通道的交易。
+
+### 2. 基于优先级路由交易 {#2-routing-transactions-based-on-priority}
+
+我们集成中的一项关键增强，是基于优先级路由交易的自定义逻辑。
+
+- **如果同一签名者的交易已存在于优先级较低的通道中：**  
+  匹配处理器返回 `false`，这意味着新交易不会被当前（优先级较高的）通道捕获，而是下沉到优先级较低的通道进行处理。
+
+- **否则：**  
+  新交易会被当前通道接受。
+
+此机制可防止账户 sequence 不匹配。**作为用户，你需要注意：即使你提交了一笔优先级更高的新交易，之前优先级较低的交易也可能会先被处理。此外，它们可能会导致你的新交易处理延迟。**
+
+### 3. Exchange Lane 优先级 {#3-exchange-lane-priority}
+
+Exchange Lane 使用自定义优先级逻辑，根据手续费折扣、账户等级以及对清算消息的特殊处理来对交易进行排序。要点包括：
+
+- **自定义交易优先级计算：**  
+  Exchange Lane 通过考虑账户的手续费折扣等级，以及（如适用）交易是否仅包含清算消息，来确定交易的优先级。清算消息被赋予最高优先级。
+
+- **账户等级与手续费折扣：**  
+  对于常规 exchange 交易，该通道会计算最高账户等级（来自交易的签名者数据）作为优先级的衡量标准。等级越高，优先级越高。
+
+### 4. Oracle 和 Governance Lane 的最大 gas 上限 {#4-oracle-and-governance-lane-max-gas-limit}
+
+超过 Oracle 和 Governance Lane 最大 gas 上限的交易会在 `matching` 阶段（交易插入内存池时）被拒绝。如果不在匹配阶段执行此检查，一笔大型交易可能会进入该通道，然后在 `prepare` 阶段（在 PrepareProposal 中）才被拒绝。该交易将无限期地留在内存池中，从而阻止发送方账户提交任何其他交易。

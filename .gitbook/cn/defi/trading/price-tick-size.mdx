@@ -1,0 +1,35 @@
+---
+title: 价格 Tick Size
+description: 查看 Injective 现货和衍生品市场允许的订单价格增量。
+updatedAt: "2026-11-18"
+---
+
+市场的最小价格 tick size 是订单价格必须遵循的增量。如果价格 tick 为 `0.001`，那么 `0.001` 和 `0.002` 等价格都是有效增量，而价格为 `0.0011` 的订单会被拒绝。准备订单时，请使用该市场当前的 `minPriceTickSize`。
+
+## 在显示单位和链上单位之间转换价格 tick {#convert-a-price-tick-between-display-and-chain-units}
+
+对以原生 exchange 链上格式表示的值应用以下转换。如果你的 API 或 SDK 已经以显示单位返回 tick，请直接使用返回的值。
+
+| 市场 | 显示单位转链上单位 | 链上单位转显示单位 |
+| --- | --- | --- |
+| 现货 | 乘以 10 的（quote 小数位数减 base 小数位数）次方 | 乘以 10 的（base 小数位数减 quote 小数位数）次方 |
+| 永续合约和到期期货 | 乘以 10 的 quote 小数位数次方 | 除以 10 的 quote 小数位数次方 |
+
+对于 base 为 18 位小数、quote 为 6 位小数的现货交易对，显示单位为 `0.001` 的 tick 在链上单位中为 `0.000000000000001`。对于 quote 为 6 位小数的永续市场，同样的显示 tick 在链上单位中为 `1000`。
+
+```typescript
+import { toChainFormat, toHumanReadable } from '@injectivelabs/utils'
+
+const baseDecimals = 18
+const quoteDecimals = 6
+const displayTick = '0.001'
+const spotScale = quoteDecimals - baseDecimals
+
+const spotChainTick = toChainFormat(displayTick, spotScale).toFixed()
+const spotDisplayTick = toHumanReadable(spotChainTick, spotScale).toFixed()
+
+const perpetualChainTick = toChainFormat(displayTick, quoteDecimals).toFixed()
+const perpetualDisplayTick = toHumanReadable(perpetualChainTick, quoteDecimals).toFixed()
+```
+
+有关订单数量增量，请参阅[数量 Tick Size](/cn/defi/trading/quantity-tick-size)；有关市场查询，请参阅 [Exchange 查询](/cn/developers-native/query-chain/exchange)。
