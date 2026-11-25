@@ -6,6 +6,10 @@ updatedAt: "2025-12-09"
 
 ## Create Namespace
 
+A namespace can configure separate hooks to run before and after a transfer. The `wasm_hook` and `evm_hook` restrictions run before balances change. The optional `evm_post_hook` runs once per coin and sees the updated balances. An error fails that coin's transfer and normal transaction rollback applies. Transfers initiated by `evm_post_hook` do not invoke the hook again.
+
+The normal bank transaction path reserves 1,500,000 native gas before moving the coin. The hook can use up to 15,000,000 EVM gas, bounded by `contract_hook_max_gas`. Returned logs are limited to 16 KiB per call and 64 KiB per transaction. The reservation is charged even if the hook fails. For exchange transactions that use fixed gas, see [Gas Heuristics](/developers-native/injective/exchange/12_gas_heuristics#additional-gas).
+
 ```protobuf
 message MsgCreateNamespace {
   option (amino.name) = "permissions/MsgCreateNamespace";
@@ -18,13 +22,15 @@ message MsgCreateNamespace {
 // Namespace defines a permissions namespace
 message Namespace {
   string denom = 1; // tokenfactory denom to which this namespace applies to
-  string contract_hook = 2; // address of smart contract to apply code-based restrictions
+  string wasm_hook = 2; // CosmWasm restriction before transfer
 
   repeated Role role_permissions = 3; // permissions for each role
   repeated ActorRoles actor_roles = 4; // roles for each actor
   repeated RoleManager role_managers = 5; //  managers for each role
   repeated PolicyStatus policy_statuses = 6; // status for each policy
   repeated PolicyManagerCapability policy_manager_capabilities = 7; // capabilities for each manager for each policy
+  string evm_hook = 8; // EVM restriction before transfer
+  string evm_post_hook = 9; // EVM hook called after balances move
 }
 
 // Role is only used for storage
@@ -92,6 +98,8 @@ enum Action {
 
 ## Update Namespace
 
+Set `evm_post_hook.new_value` to the deployed hook contract address. An empty `new_value` clears that hook.
+
 ```protobuf
 message MsgUpdateNamespace {
   option (amino.name) = "permissions/MsgUpdateNamespace";
@@ -101,12 +109,14 @@ message MsgUpdateNamespace {
   string denom = 2; // denom whose namespace updates are to be applied
 
   message SetContractHook { string new_value = 1; }
-  SetContractHook contract_hook = 3; // address of smart contract to apply code-based restrictions
+  SetContractHook wasm_hook = 3; // CosmWasm restriction before transfer
 
   repeated Role role_permissions = 4; // role permissions to update
   repeated RoleManager role_managers = 5; //  role managers to update
   repeated PolicyStatus policy_statuses = 6; // policy statuses to update
   repeated PolicyManagerCapability policy_manager_capabilities = 7; // policy manager capabilities to update
+  SetContractHook evm_hook = 8; // EVM restriction before transfer
+  SetContractHook evm_post_hook = 9; // EVM hook called after balances move
 }
 
 message Role {

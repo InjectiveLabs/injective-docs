@@ -55,6 +55,6 @@ To manage chain upgrades, use [Cosmovisor](./cosmovisor/).
 
 ### Node Maintenance (Managing Storage)
 
-As Injective state grows, your disk space may fill up. It's recommended you periodically prune the chain data by downloading new snapshots. Beyond the overhead on the disk, the node is more performant when the chain state is smaller.
+In v1.21.0, `injectived prune` uses the same retention policy for application state, CometBFT blocks, and ABCI responses. It compacts both databases by default. Pass `--force-compact=false` to skip forced compaction. Run `injectived prune --help` to review retention options for your release, and stop the node before running the command. Choose retention based on the history the node needs to serve.
 
-Injective validators take daily light snapshots that you can use to clean the chain state, which grows at about 10-15 GB daily. These snapshots are normally only around 2-3 GB. We recommend pruning the chain data every 300-400 GB. For snapshot download links and usage instructions, see the [Snapshots page on the Chain Portal](https://chain.injective.network/snapshots). For directions on syncing your node, see [Join A Network](./join-a-network/).
+To sync from a recent snapshot, see the [Snapshots page on the Chain Portal](https://chain.injective.network/snapshots) and [Join a Network](/infra/join-a-network).

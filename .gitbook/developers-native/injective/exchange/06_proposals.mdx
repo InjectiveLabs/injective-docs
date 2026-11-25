@@ -69,7 +69,6 @@ type BatchExchangeModificationProposal struct {
 	SpotMarketLaunchProposal             []*SpotMarketLaunchProposal
 	PerpetualMarketLaunchProposal        []*PerpetualMarketLaunchProposal
 	ExpiryFuturesMarketLaunchProposal    []*ExpiryFuturesMarketLaunchProposal
-	TradingRewardCampaignUpdateProposal  *TradingRewardCampaignUpdateProposal
 }
 ```
 
@@ -82,7 +81,6 @@ type BatchExchangeModificationProposal struct {
 - `SpotMarketLaunchProposal` describes the SpotMarketLaunchProposal.
 - `PerpetualMarketLaunchProposal` describes the PerpetualMarketLaunchProposal.
 - `ExpiryFuturesMarketLaunchProposal` describes the ExpiryFuturesMarketLaunchProposal.
-- `TradingRewardCampaignUpdateProposal` describes the TradingRewardCampaignUpdateProposal.
 
 
 ## Proposal/SpotMarketLaunch
@@ -212,73 +210,6 @@ type ExpiryFuturesMarketLaunchProposal struct {
 - `MinPriceTickSize` field describes the minimum tick size of the order's price and margin.
 - `MinQuantityTickSize` field describes the minimum tick size of the order's quantity.
 
-## Binary options market launch proposal
-
-```go
-type BinaryOptionsMarketLaunchProposal struct {
-	Title       string
-	Description string
-	// Ticker for the derivative contract.
-	Ticker string
-	// Oracle symbol
-	OracleSymbol string
-	// Oracle Provider
-	OracleProvider string
-	// Oracle type
-	OracleType types1.OracleType
-	// Scale factor for oracle prices.
-	OracleScaleFactor uint32
-	// expiration timestamp
-	ExpirationTimestamp int64
-	// expiration timestamp
-	SettlementTimestamp int64
-	// admin of the market
-	Admin string
-	// Address of the quote currency denomination for the binary options contract
-	QuoteDenom string
-	// maker_fee_rate defines the maker fee rate of a binary options market
-	MakerFeeRate math.LegacyDec
-	// taker_fee_rate defines the taker fee rate of a derivative market
-	TakerFeeRate math.LegacyDec
-	// min_price_tick_size defines the minimum tick size that the price and margin required for orders in the market
-	MinPriceTickSize math.LegacyDec
-	// min_quantity_tick_size defines the minimum tick size of the quantity required for orders in the market
-	MinQuantityTickSize math.LegacyDec
-}
-```
-
-## Binary options market param update
-
-```go
-type BinaryOptionsMarketParamUpdateProposal struct {
-	Title       string
-	Description string
-	MarketId    string
-	// maker_fee_rate defines the exchange trade fee for makers for the derivative market
-	MakerFeeRate *math.LegacyDec
-	// taker_fee_rate defines the exchange trade fee for takers for the derivative market
-	TakerFeeRate *math.LegacyDec
-	// relayer_fee_share_rate defines the relayer fee share rate for the derivative market
-	RelayerFeeShareRate *math.LegacyDec
-	// min_price_tick_size defines the minimum tick size of the order's price and margin
-	MinPriceTickSize *math.LegacyDec
-	// min_quantity_tick_size defines the minimum tick size of the order's quantity
-	MinQuantityTickSize *math.LegacyDec
-    // min_notional defines the minimum notional for orders
-    MinNotional *math.LegacyDec
-	// expiration timestamp
-	ExpirationTimestamp int64
-	// expiration timestamp
-	SettlementTimestamp int64
-	// new price at which market will be settled
-	SettlementPrice *math.LegacyDec
-	// admin of the market
-	Admin        string
-	Status       MarketStatus
-	OracleParams *ProviderOracleParams
-}
-```
-
 ## Proposal/DerivativeMarketParamUpdate
 
 ```go
@@ -327,45 +258,6 @@ type DerivativeMarketParamUpdateProposal struct {
 - `Status` describes the target status of the market.
 - `OracleParams` describes the new oracle parameters.
 
-## Proposal/TradingRewardCampaignLaunch
-
-`TradingRewardCampaignLaunchProposal` defines an SDK message for proposing to launch a new trading reward campaign.
-
-```go
-type TradingRewardCampaignLaunchProposal struct {
-	Title               string
-	Description         string
-	CampaignInfo        *TradingRewardCampaignInfo
-	CampaignRewardPools []*CampaignRewardPool
-}
-```
-
-**Fields description**
-
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `CampaignInfo` describes the CampaignInfo.
-- `CampaignRewardPools` describes the CampaignRewardPools.
-
-## Proposal/TradingRewardCampaignUpdate
-
-`TradingRewardCampaignUpdateProposal` defines an SDK message for proposing to update an existing trading reward campaign.
-
-```go
-type TradingRewardCampaignUpdateProposal struct {
-	Title                        string
-	Description                  string
-	CampaignInfo                 *TradingRewardCampaignInfo
-	CampaignRewardPoolsAdditions []*CampaignRewardPool
-	CampaignRewardPoolsUpdates   []*CampaignRewardPool
-}
-```
-
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `CampaignRewardPoolsAdditions` describes the CampaignRewardPoolsAdditions.
-- `CampaignRewardPoolsUpdates` describes the CampaignRewardPoolsUpdates.
-
 ## Proposal/FeeDiscount
 
 `FeeDiscountProposal` defines an SDK message for proposing to launch or update a fee discount schedule.
@@ -381,25 +273,3 @@ type FeeDiscountProposal struct {
 - `Title` describes the title of the proposal.
 - `Description` describes the description of the proposal.
 - `Schedule` describes the Fee discount schedule.
-
-## Proposal/TradingRewardPendingPointsUpdate
-
-`TradingRewardPendingPointsUpdateProposal` defines an SDK message to update reward points for certain addresses during the vesting period.
-
-```go
-type TradingRewardPendingPointsUpdateProposal struct {
-	Title                  string
-	Description            string
-	PendingPoolTimestamp   int64
-	RewardPointUpdates     *[]RewardPointUpdate
-}
-```
-
-**Fields description**
-
-- `Title` describes the title of the proposal.
-- `Description` describes the description of the proposal.
-- `PendingPoolTimestamp` describes timestamp of the pending pool.
-- `RewardPointUpdates` describes the RewardPointUpdate.
-
-

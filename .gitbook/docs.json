@@ -557,7 +557,6 @@
                           "developers-native/query-chain/staking",
                           "developers-native/query-chain/tendermint",
                           "developers-native/query-chain/wasm",
-                          "developers-native/query-chain/wasmx",
                           "developers-native/query-chain/token-factory"
                         ]
                       },
@@ -587,7 +586,6 @@
                           "developers-native/query-indexer-stream/archiver",
                           "developers-native/query-indexer-stream/auction",
                           "developers-native/query-indexer-stream/derivatives",
-                          "developers-native/query-indexer-stream/mito",
                           "developers-native/query-indexer-stream/oracle",
                           "developers-native/query-indexer-stream/portfolio",
                           "developers-native/query-indexer-stream/spot",
@@ -618,7 +616,6 @@
                               "developers-native/injective/exchange/index",
                               "developers-native/injective/exchange/00_derivative_market_concepts",
                               "developers-native/injective/exchange/01_spot_market_concepts",
-                              "developers-native/injective/exchange/02_binary_options_markets",
                               "developers-native/injective/exchange/02_other_concepts",
                               "developers-native/injective/exchange/03_state",
                               "developers-native/injective/exchange/04_state_transitions",
@@ -740,18 +737,7 @@
                               "developers-native/injective/tokenfactory/99_errors"
                             ]
                           },
-                          {
-                            "group": "WasmX",
-                            "pages": [
-                              "developers-native/injective/wasmx/index",
-                              "developers-native/injective/wasmx/01_concepts",
-                              "developers-native/injective/wasmx/02_data",
-                              "developers-native/injective/wasmx/03_proposals",
-                              "developers-native/injective/wasmx/04_messages",
-                              "developers-native/injective/wasmx/05_params",
-                              "developers-native/injective/wasmx/99_errors"
-                            ]
-                          },
+
                           "developers-native/injective/lanes",
                           "developers-native/injective/txfees"
                         ]
@@ -2484,6 +2470,10 @@
   },
   "redirects": [
     {
+      "source": "/developers-native/query-indexer-stream/mito",
+      "destination": "/developers-native/query-indexer/mito"
+    },
+    {
       "source": "/infra/indexer-setup",
       "destination": "/developers/concepts/indexer-api#service-setup"
     },
@@ -2858,10 +2848,6 @@
     {
       "source": "/developers/modules/injective/exchange/01_spot_market_concepts",
       "destination": "/developers-native/injective/exchange/01_spot_market_concepts"
-    },
-    {
-      "source": "/developers/modules/injective/exchange/02_binary_options_markets",
-      "destination": "/developers-native/injective/exchange/02_binary_options_markets"
     },
     {
       "source": "/developers/modules/injective/exchange/02_other_concepts",

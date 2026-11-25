@@ -31,7 +31,7 @@ The Permissions module provides native, chain-level access control for any token
 
 ### Contract hooks
 
-The module supports Solidity or WasmVM hooks that are called on every transfer. This enables custom compliance logic like AML threshold checks, KYC verification, sanctions screening, or bank-to-bank transfer restrictions. Circle uses this pattern for USDC compliance on Injective ([reference implementation](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol)).
+Solidity and CosmWasm hooks can enforce restrictions before a transfer, such as KYC checks or rules for transfers between banks. Circle uses this pattern for USDC compliance on Injective ([reference implementation](https://github.com/InjectiveLabs/stablecoin-evm/blob/fiattoken-inj/contracts/v2/PermissionsHook_Inj.sol)). A namespace can also configure a separate EVM hook that runs after a transfer. It sees the updated balances and can emit logs. See [State Transitions](/developers-native/injective/permissions/03_state_transitions) for configuration and gas limits.
 
 ## Getting Started
 

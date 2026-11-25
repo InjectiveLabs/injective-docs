@@ -25,6 +25,8 @@ Knowing this, to achieve fee delegation, we have to sign the transaction using t
 
 ## Web3Gateway API
 
+When preparing a sponsored Web3 transaction, set the `AuthInfo` fee payer to the sponsor identified by the signed Web3 extension. An explicit `AuthInfo` fee payer must match either the first signer or the signed extension fee payer.
+
 Everyone can run the Web3Gateway microservice and provide fee delegation services to their users. An example usage can be developers who build exchange dApps on top of Injective run this microservice to offer a gasless trading environment to their traders.
 
 This microservice exposes an API containing two core methods:

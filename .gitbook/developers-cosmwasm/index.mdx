@@ -3,6 +3,10 @@ title: Overview
 updatedAt: "2025-12-04"
 ---
 
+<Note>
+Effective in v1.21.0, WasmX contract scheduling, registration, and registry queries were removed. Contracts that relied on scheduling need an external trigger. Existing CosmWasm contracts and supported execution, including `MsgExecuteContractCompat`, remain available.
+</Note>
+
 This section is for developers building on Injective using CosmWasm,
 the WebAssembly-based smart contracting platform for the Cosmos ecosystem.
 Whether you're writing Rust contracts, integrating with Injective's native modules, or deploying to mainnet through governance,
@@ -27,8 +31,8 @@ leverage the full depth of Injective's financial primitives.
 | **CosmWasm** | A WebAssembly-based smart contract platform built for Cosmos that enables writing secure, portable contracts in Rust with deterministic execution. |
 | **CW20 Adapter** | A bridge contract that converts CW20 tokens to native TokenFactory denoms, enabling CW20 tokens to interact with Injective's exchange and other native modules. |
 | **Any Messages** | Protobuf-encoded messages (CosmWasm 2.0+) that allow CosmWasm contracts to interact with Injective's native modules like exchange, oracle, and tokenfactory. |
+| **WasmX** | The legacy scheduler and registry were removed in v1.21.0. Batch code uploads through governance and their CLI commands remain available through WasmX compatibility support. See the [Mainnet Deployment Guide](/developers-cosmwasm/mainnet-deployment-guide) for code uploads and instantiation permissions. |
 | **injective-test-tube** | An integration testing library that runs actual Injective chain logic in-memory for testing CosmWasm contracts against real module behavior (not mocks). |
-| **WASMx** | Injective's module that governs CosmWasm contract deployment, including governance proposals for mainnet code uploads and permission management. |
 
 ## Start Building
 

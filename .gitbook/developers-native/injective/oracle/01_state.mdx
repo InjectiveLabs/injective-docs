@@ -161,57 +161,6 @@ Note:
 2. `IbcSourceChannel`, `IbcVersion`, `IbcPortId` are common parameters required for IBC connection.
 3. `IbcRequestInterval` describes the automatic price fetch request interval that is automatically triggered on injective chain on beginblocker.
 
-## Coinbase
-
-Coinbase price data for a given symbol ("key") are represented and stored as follows:
-
-- CoinbasePriceState: `0x21 | []byte(key) -> CoinbasePriceState`
-
-```protobuf
-message CoinbasePriceState {
-  // kind should always be "prices"
-  string kind = 1;
-  // timestamp of the when the price was signed by coinbase
-  uint64 timestamp = 2;
-  // the symbol of the price, e.g. BTC
-  string key = 3;
-  // the value of the price scaled by 1e6
-  uint64 value = 4;
-  // the price state
-  PriceState price_state = 5 [(gogoproto.nullable) = false];
-}
-```
-
-More details about the Coinbase price oracle can be found in the [Coinbase API docs](https://docs.pro.coinbase.com/#oracle) as well as this explanatory [blog post](https://blog.coinbase.com/introducing-the-coinbase-price-oracle-6d1ee22c7068).
-
-Note that the `Value` is the raw USD price data obtained from Coinbase which has is scaled by 1e6 (e.g. a price of 1.42 is 1420000) while the PriceState has the normalized decimal price (e.g. 1.42).
-
-## Pricefeed
-
-Pricefeed price data for a given base quote pair are represented and stored as follows:
-
-- PriceFeedInfo: `0x11 + Keccak256Hash(base + quote) -> PriceFeedInfo`
-
-```protobuf
-message PriceFeedInfo {
-  string base = 1;
-  string quote = 2;
-}
-```
-
-- PriceFeedPriceState: `0x12 + Keccak256Hash(base + quote) -> PriceFeedPriceState`
-
-```protobuf
-message PriceFeedState {
-  string base = 1;
-  string quote = 2;
-  PriceState price_state = 3;
-  repeated string relayers = 4;
-}
-```
-
-- PriceFeedRelayer: `0x13 + Keccak256Hash(base + quote) + relayerAddr -> relayerAddr`
-
 ## Provider 
 Provider price feeds are represented and stored as follows:
 
@@ -246,31 +195,4 @@ message PythPriceState {
   uint64 publish_time = 5;
   PriceState price_state = 6 [(gogoproto.nullable) = false];
 }
-```
-
-## Stork
-
-Stork prices are represented and stored as follows:
-- StorkPriceState: `0x81 + symbol -> PythPriceState`
-```protobuf
-message StorkPriceState {
-  // timestamp of the when the price was signed by stork
-  uint64 timestamp = 1;
-  // the symbol of the price, e.g. BTC
-  string symbol = 2;
-  // the value of the price scaled by 1e18
-  string value = 3 [
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable) = false
-  ];
-  // the price state
-  PriceState price_state = 5 [ (gogoproto.nullable) = false ];
-}
-```
-
-Stork publishers are represented and stored as follows:
-- Publisher: `0x82 + stork_publisher -> publisher`
-
-```protobuf
-string stork_publisher
 ```

@@ -7,7 +7,9 @@ Example code snippets to query the exchange module on the chain.
 
 ## Using gRPC
 
-### Fetch parameters such as the default spot and derivatives fees/trading rewards
+Use chain queries for current exchange state. Effective in v1.21.0, the chain removed its historical trade and oracle price queries and market volatility calculations. For historical trades and market data, use the [Indexer](/developers-native/query-indexer/derivatives). For historical receipts and logs in Ethereum format, use the [EVM Gateway](/developers-evm/evm-gateway).
+
+### Fetch exchange parameters such as default spot and derivative fees
 
 ```ts
 import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
@@ -53,56 +55,6 @@ const feeDiscountAccountInfo =
 console.log(feeDiscountAccountInfo);
 ```
 
-### Fetch the details regarding the trading reward campaign, such as the total reward points
-
-```ts
-import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
-import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
-
-const endpoints = getNetworkEndpoints(Network.Testnet);
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
-
-const tradingRewardsCampaign =
-  await chainGrpcExchangeApi.fetchTradingRewardsCampaign();
-
-console.log(tradingRewardsCampaign);
-```
-
-### Fetch the trading rewards points for an injective address
-
-```ts
-import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
-import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
-
-const endpoints = getNetworkEndpoints(Network.Testnet);
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
-
-const injectiveAddress = "inj...";
-
-const tradeRewardsPoints = await chainGrpcExchangeApi.fetchTradeRewardsPoints(
-  injectiveAddress
-);
-
-console.log(tradeRewardsPoints);
-```
-
-### Fetch the pending trading rewards points for injective addresses
-
-```ts
-import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
-import { ChainGrpcExchangeApi } from "@injectivelabs/sdk-ts/client/chain";
-
-const endpoints = getNetworkEndpoints(Network.Testnet);
-const chainGrpcExchangeApi = new ChainGrpcExchangeApi(endpoints.grpc);
-
-const injectiveAddresses = ["inj..."];
-
-const pendingTradeRewardsPoints =
-  await chainGrpcExchangeApi.fetchPendingTradeRewardPoints(injectiveAddresses);
-
-console.log(pendingTradeRewardsPoints);
-```
-
 #### Fetch the current positions, such as subaccountId, marketId, and position
 
 ```ts
@@ -136,3 +88,38 @@ const subaccountTradeNonce =
 
 console.log(subaccountTradeNonce);
 ```
+
+## Check exchange post-only mode
+
+Both Mainnet queries return JSON in the browser. No SDK setup is needed.
+
+1. Open [Mainnet exchange parameters](https://sentry.lcd.injective.network/injective/exchange/v2/exchangeParams) and read `params.post_only_mode_height_threshold`.
+2. Open [Mainnet node status](https://sentry.tm.injective.network/status) and read `result.sync_info.latest_block_height`.
+3. Compare the two values. Post-only mode is active while the current height is below the threshold. A threshold of `120` is active at height `119` and expires at height `120` unless extended.
+
+After a cancellation request or a chain restart, refresh the parameter and block height before resuming normal routing. See [Post-only mode events](/developers-native/injective/exchange/09_events#post-only-mode-events).
+
+## Check cross margin mode and pool health
+
+These REST queries are available on nodes running v1.21.0 or later. The Mainnet examples require `curl` and the relevant IDs.
+
+### Effective margin mode
+
+This query resolves the mode for one subaccount and one derivative market. Set `SUBACCOUNT_ID` and `MARKET_ID` to their 32-byte hex IDs.
+
+```bash
+curl -fsS "https://sentry.lcd.injective.network/injective/exchange/v2/exchange/effective_market_risk_mode/${SUBACCOUNT_ID}/${MARKET_ID}"
+```
+
+The response contains the effective `mode`. If `is_override` is `true`, an explicit setting for that market selected the mode.
+
+### Cross margin pool snapshot
+
+This query returns balances and risk metrics for one subaccount and quote denom. Set `SUBACCOUNT_ID` to the subaccount's 32-byte hex ID and `QUOTE_DENOM` to the exact denom used by the pool.
+
+```bash
+curl -fsSG "https://sentry.lcd.injective.network/injective/exchange/v2/exchange/cross_margin_pool_snapshot/${SUBACCOUNT_ID}" \
+  --data-urlencode "quote_denom=${QUOTE_DENOM}"
+```
+
+For liquidation monitoring, compare `equity_liquidation` with `maintenance_margin_total`. For order admission, use `equity_admission`. See [Cross margin liquidation](/defi/trading/margin-liquidation#cross-margin-liquidation) for how the recovery target applies to partial closes.

@@ -41,42 +41,6 @@ const market = await indexerGrpcDerivativesApi.fetchMarket(marketId);
 console.log(market);
 ```
 
-### Fetch binary options markets
-
-```ts
-import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
-import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
-
-const endpoints = getNetworkEndpoints(Network.Testnet);
-const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
-  endpoints.indexer
-);
-
-const binaryOptionsMarket =
-  await indexerGrpcDerivativesApi.fetchBinaryOptionsMarkets();
-
-console.log(binaryOptionsMarket);
-```
-
-### Fetch binary options market based on market id
-
-```ts
-import { getNetworkEndpoints, Network } from "@injectivelabs/networks";
-import { IndexerGrpcDerivativesApi } from "@injectivelabs/sdk-ts/client/indexer";
-
-const endpoints = getNetworkEndpoints(Network.Testnet);
-const indexerGrpcDerivativesApi = new IndexerGrpcDerivativesApi(
-  endpoints.indexer
-);
-
-const marketId = "0x...";
-
-const binaryOptionsMarket =
-  await indexerGrpcDerivativesApi.fetchBinaryOptionsMarket(marketId);
-
-console.log(binaryOptionsMarket);
-```
-
 ### Fetch a market's orderbook based on market id
 
 ```ts

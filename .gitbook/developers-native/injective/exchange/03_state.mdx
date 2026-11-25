@@ -39,16 +39,7 @@ type GenesisState struct {
 	IsSpotExchangeEnabled               bool
 	// sets derivative markets as enabled
 	IsDerivativesExchangeEnabled        bool
-	// the current trading reward campaign info
-	TradingRewardCampaignInfo           *TradingRewardCampaignInfo
-	// the current and upcoming trading reward campaign pools
-	TradingRewardPoolCampaignSchedule   []*CampaignRewardPool
-	// the current and upcoming trading reward account points
-	TradingRewardCampaignAccountPoints  []*TradingRewardCampaignAccountPoints
-	// the current and upcoming trading reward campaign pending pools
-	PendingTradingRewardPoolCampaignSchedule []*CampaignRewardPool
-	// the pending trading reward account points
-	PendingTradingRewardCampaignAccountPoints []*TradingRewardCampaignAccountPendingPoints
+
 	// the fee discount schedule
 	FeeDiscountSchedule                 *FeeDiscountSchedule
 	// the cached fee discount account tiers with TTL
@@ -101,8 +92,6 @@ type Params struct {
 	MaxDerivativeOrderSideCount uint32
 	// inj_reward_staked_requirement_threshold defines the threshold on INJ rewards after which one also needs staked INJ to receive more
 	InjRewardStakedRequirementThreshold github_com_cosmos_cosmos_sdk_types.Int
-	// the trading_rewards_vesting_duration defines the vesting times for trading rewards
-	TradingRewardsVestingDuration int64
 }
 ```
 
@@ -447,49 +436,6 @@ type PerpetualMarketFunding struct {
 	// cumulative_price defines the cumulative price for the current hour up to the last timestamp
 	CumulativePrice math.LegacyDec
 	LastTimestamp   int64
-}
-```
-
-## Trading Rewards
-
-### CampaignRewardPool
-
-`CampaignRewardPool` is a structure to be used for getting the upcoming trading reward pools.
-
-```go
-type CampaignRewardPool struct {
-	StartTimestamp int64
-	// max_campaign_rewards are the maximum reward amounts to be disbursed at the end of the campaign
-	MaxCampaignRewards sdk.Coins
-}
-```
-
-### TradingRewardCampaignInfo
-
-`TradingRewardCampaignInfo` is a structure to be used for getting the trading reward campaign info.
-
-```go
-type TradingRewardCampaignInfo struct {
-	// number of seconds of the duration of each campaign
-	CampaignDurationSeconds int64
-	// the trading fee quote denoms which will be counted for the rewards
-	QuoteDenoms []string
-	// the optional boost info for markets
-	TradingRewardBoostInfo *TradingRewardCampaignBoostInfo
-	// the marketIDs which are disqualified from being rewarded
-	DisqualifiedMarketIds []string
-}
-
-type TradingRewardCampaignBoostInfo struct {
-	BoostedSpotMarketIds        []string
-	SpotMarketMultipliers       []PointsMultiplier
-	BoostedDerivativeMarketIds  []string
-	DerivativeMarketMultipliers []PointsMultiplier
-}
-
-type PointsMultiplier struct {
-	MakerPointsMultiplier math.LegacyDec
-	TakerPointsMultiplier math.LegacyDec
 }
 ```
 

@@ -34,3 +34,7 @@ The key difference between iAssets and crypto perps lies in mark price behavior.
 * This allows users to take or unwind positions around the clock, but PNL will not shift until the next price update cycle resumes.
 
 Mark prices for iAssets are sourced via decentralized oracles such as Pyth, which aggregate high-fidelity, low-latency price data from primary market sources. For more information on the price feeds used for iAssets, please visit [Pyth](https://docs.pyth.network/price-feeds/market-hours).
+
+### Mark Price Example
+
+The NVDA/USDC perpetual uses SEDA Fast feeds for the NVIDIA share price in USD and the USDC price in USD. Injective divides the share price by the USDC price to get the mark price in USDC. For example, if the feeds report $150 per share and $0.999 per USDC, the mark price is approximately 150.15 USDC. The exchange uses that mark price to value open positions and determine whether they are eligible for liquidation. See [the NVDA oracle configuration](https://injective.valopers.com/proposals/691).

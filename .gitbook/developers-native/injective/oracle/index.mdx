@@ -3,35 +3,13 @@ title: Oracle
 updatedAt: "2025-12-05"
 ---
 
-## Abstract
+<Note>
+Effective in v1.21.0, Injective removed Coinbase, PriceFeed, and Stork oracle relays and queries. The separate `Provider` oracle type still lets relayers approved through governance publish custom feeds. [Provider Oracle guide](/developers-defi/provider-oracle)
+</Note>
 
-This specification specifies the oracle module, which is primarily used by the `exchange` modules to obtain external price data.
+The Oracle module verifies and stores external price updates. Native Injective modules read those prices for operations such as valuing derivative positions and determining liquidation eligibility. Each oracle type defines how the module identifies its feeds and verifies updates.
 
-## Workflow
-
-1. New price feed providers must first obtain oracle privileges through a governance proposal which grants privileges to a list of relayers. The exception to this is for the Coinbase price oracle, as anyone can send Coinbase price updates since they are already exclusively signed by the Coinbase oracle private key. <br/>
-   **Example Grant Proposals**: `GrantBandOraclePrivilegeProposal`, `GrantPriceFeederPrivilegeProposal`
-2. Once the governance proposal is approved, the specified relayers can publish oracle data by sending relay messages specific to their oracle type.<br/>
-   **Example Relay Messages**:`MsgRelayBandRates`, `MsgRelayPriceFeedPrice`, `MsgRelayCoinbaseMessages` etc
-3. Upon receiving the relay message, the oracle module checks if the relayer account has grant privileges and persists the latest price data in the state.
-4. Other Cosmos-SDK modules can then fetch the latest price data for a specific provider by querying the oracle module.
-
-**Note**: In case of any discrepancy, the price feed privileges can be revoked through governance <br />
-**Example Revoke Proposals**: `RevokeBandOraclePrivilegeProposal`, `RevokePriceFeederPrivilegeProposal` etc
-
-## Band IBC integration flow
-
-Cosmos SDK blockchains are able to interact with each other using IBC and Injective support the feature to fetch price feed from bandchain via IBC.
-
-1. To communicate with BandChain's oracle using IBC, Injective Chain must first initialize a communication channel with the oracle module on the BandChain using relayers.
-
-2. Once the connection has been established, a pair of channel identifiers is generated -- one for the Injective Chain and one for Band. The channel identifier is used by Injective Chain to route outgoing oracle request packets to Band. Similarly, Band's oracle module uses the channel identifier when sending back the oracle response.
-
-3. To enable band IBC integration after setting up communication channel, the governance proposal for `EnableBandIBCProposal` should pass.
-
-4. And then, the list of prices to be fetched via IBC should be determined by `AuthorizeBandOracleRequestProposal` and `UpdateBandOracleRequestProposal`.
-
-5. Once BandIBC is enabled, chain periodically sends price request IBC packets (`OracleRequestPacketData`) to bandchain and bandchain responds with the price via IBC packet (`OracleResponsePacketData`). Band chain is providing prices when there are threshold number of data providers confirm and it takes time to get the price after sending requests. To request price before the configured interval, any user can broadcast `MsgRequestBandIBCRates` message which is instantly executed.
+See [Oracle Queries](/developers-native/query-chain/oracle) for reading prices and the [Provider Oracle guide](/developers-defi/provider-oracle) for publishing custom feeds.
 
 ## Contents
 

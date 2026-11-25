@@ -19,7 +19,7 @@ Injective offers a fully on-chain orderbook with matching engine capabilities bu
 This means exchanges built on Injective share a global
 unified liquidity pool while maintaining their own UI and user relationships—allowing them to
 earn trading fees from orders they originate.
-With native support for perpetual swaps, futures, spots, and binary options,
+With native support for perpetual swaps, futures, and spot markets,
 combined with permissionless market creation and sub-second block times,
 developers can launch sophisticated trading platforms without building backend infrastructure
 or worrying about liquidity fragmentation.
@@ -37,7 +37,7 @@ or managing token metadata, these guides provide the practical knowledge needed 
 |------|-------------|
 | **Exchange Module** | Injective's native on-chain module that handles limit orderbook management, trade execution, order matching, and settlement entirely on-chain. |
 | **Denom** | The native token representation format on Injective (e.g., `factory/{creator}/{subdenom}`, `peggy{ethereumAddress}`). All assets in the Bank module use this format. |
-| **Oracle Provider** | An external party registered through governance that relays price feeds to the chain, enabling custom markets like perpetuals and binary options. |
+| **Oracle Provider** | An external party registered through governance that publishes custom price feeds on Injective. Derivative markets can use these feeds to determine mark prices. |
 | **[Token Factory](/developers-native/injective/tokenfactory)** | A native module allowing permissionless creation of new tokens with the `factory/{creator}/{subdenom}` format. |
 | **Tick Size** | The minimum increment for price and quantity in trading markets, calculated based on asset value and decimals. |
 
@@ -107,7 +107,7 @@ Head to our [DEX tutorial](/developers/dapps/example-dex) to bootstrap your DEX 
     cta="Click here"
     icon="panel-left-close"
     img="/img/code-hero.png">
-    Register as an oracle provider and relay price feeds to power perpetual markets, expiry futures, and binary options on Injective.
+    Register as an oracle provider and relay price feeds to power perpetual markets and expiry futures on Injective.
   </Card>
   <Card
     title="Testnet Faucet Integration"

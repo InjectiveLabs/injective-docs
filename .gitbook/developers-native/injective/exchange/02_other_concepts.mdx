@@ -28,7 +28,6 @@ A common request from new applications built on Cosmwasm is for the ability to b
 
 - `SpotAtomicMarketOrderFeeMultiplier`
 - `DerivativeAtomicMarketOrderFeeMultiplier`
-- `BinaryOptionsAtomicMarketOrderFeeMultiplier`
 
 These multipliers are defined the global exchange parameters. In addition, the exchange parameters also define the `AtomicMarketOrderAccessLevel` which specifies the minimum access level required to execute an atomic market order.
 
@@ -40,24 +39,6 @@ const (
 	AtomicMarketOrderAccessLevel_Everyone                       AtomicMarketOrderAccessLevel = 3
 )
 ```
-
-## Trading Rewards
-
-Governance approves a **TradingRewardCampaignLaunchProposal** which specifies:
-
-- The first campaign's starting timestamp
-- The **TradingRewardCampaignInfo** which specifies
-  - The campaign duration in seconds
-  - The accepted trading fee quote currency denoms
-  - The optional market-specific **boost** info
-  - The disqualified marketIDs for markets in which trades will not earn rewards
-- The **CampaignRewardPools** which specifies the maximum epoch rewards that constitute the trading rewards pool for each successive campaign
-
-During a given campaign, the exchange will record each trader's cumulative trading reward points obtained from trading volume (with boosts applied, if applicable) from all eligible markets, i.e., markets with a matching quote currency that are not in the disqualified list.
-
-At the end of each campaign, i.e., after the `campaign starting timestamp + campaign duration` has elapsed, each trader will receive a pro-rata percentage of the trading rewards pool based off their trading rewards points from that campaign epoch.
-
-Campaigns will not auto-rollover. If there are no additional campaigns defined inside **CampaignRewardPools**, the trading reward campaigns will finish.
 
 ## Fee Discounts
 

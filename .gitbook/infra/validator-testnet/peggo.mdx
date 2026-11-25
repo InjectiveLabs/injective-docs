@@ -15,6 +15,8 @@ cd ~/.peggo
 
 First, update the `PEGGO_ETH_RPC` in the `.env` file with a valid Sepolia EVM RPC Endpoint.
 
+If your Sepolia RPC provider limits the range of `eth_getLogs` requests, set `PEGGO_ORACLE_QUERY_RANGE` to a positive number of blocks below its limit. Peggo defaults to 100 blocks. See [Peggo configuration](/infra/validator-mainnet/peggo#configuration).
+
 To set up your own Sepolia full node, follow the instructions [here](https://ethereum.org/en/developers/docs/nodes-and-clients/run-a-node/). It's possible to use an Alchemy or Infura RPC, but keep in mind that the Peggo bridge is still under development, and the request amount it makes to the RPC is not optimized. Ensure it does not incur high costs on your account.
 
 Peggo also requires access to your validator's Cosmos and Ethereum credentials to sign transactions for the corresponding networks.
