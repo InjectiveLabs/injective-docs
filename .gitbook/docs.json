@@ -229,6 +229,7 @@
                           "defi/wallet/accounts"
                         ]
                       },
+                      "defi/cypheros-testnet",
                       {
                         "group": "Trading",
                         "pages": [
@@ -345,6 +346,13 @@
                 "pages": [
                   "developers-defi/usdc-stablecoin",
                   "developers-defi/usdc-cctp-tutorial"
+                ]
+              },
+              {
+                "group": "Private Transfers",
+                "icon": "user-secret",
+                "pages": [
+                  "developers-defi/cypheros-private-transfers"
                 ]
               },
               {
