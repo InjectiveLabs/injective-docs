@@ -153,10 +153,11 @@
                           "infra/software-compatibility",
                           "infra/coordinated-upgrades/index",
                           "infra/validator-mainnet/canonical-chain-upgrade",
-                          "infra/validator-mainnet/canonical-chain-upgrade-v1.21.0",
+                          "infra/validator-mainnet/canonical-chain-upgrade-v1.21.0-tracefix",
                           {
                             "group": "Historical Upgrades",
                             "pages": [
+                              "infra/validator-mainnet/canonical-chain-upgrade-v1.21.0",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-safeharbor.5",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.3",
                               "infra/validator-mainnet/canonical-chain-upgrade-v1.20.4-bl.2",
@@ -3405,7 +3406,7 @@
     },
     {
       "source": "/upgrade/latest",
-      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.21.0"
+      "destination": "/infra/validator-mainnet/canonical-chain-upgrade-v1.21.0-tracefix"
     }
   ],
   "navbar": {
